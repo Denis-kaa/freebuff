@@ -6,6 +6,30 @@
 
 ---
 
+## [2.8.0***REMOVED*** — 2026-07-28
+
+### Исправлено (Critical Security)
+- **Удалён `exec(code)` из orchestrator.py** — `_run_python` теперь использует
+  `subprocess.run([sys.executable, "-c", code***REMOVED***)` вместо `exec()` с полным `__builtins__`.
+  Код выполняется в изолированном subprocess, не может получить доступ к памяти родительского процесса.
+- **Устранён `shell=True` во всех subprocess вызовах** (5 мест):
+  - `orchestrator.py._run_shell`: `shell=True` → `["sh", "-c", command***REMOVED***`
+  - `orchestrator.py._run_git`: `shell=True` + f-string → `["git"***REMOVED*** + shlex.split(command)`
+  - `tool_runtime.py.GitTool.execute`: `shell=True` + f-string → `["git", command***REMOVED*** + shlex.split(args)`
+  - `tool_runtime.py.ShellTool.execute`: `shell=True` → `["sh", "-c", command***REMOVED***`
+- **Удалён дубликат `_run_shell`** в orchestrator.py (copy-paste bug)
+- **Исправлен `NameError: full_cmd`** в `GitTool.execute` metadata
+- **Добавлен `import shlex`** в orchestrator.py и tool_runtime.py
+- **Очищен git history от API ключей** — `git filter-branch` переписал 14 коммитов,
+  `.keys/` полностью удалён из всех коммитов
+- **`.keys/` добавлен в `.gitignore`** — защита от случайного коммита
+
+### Проверка
+- 572 теста — **0 failures**
+- Code review пройден
+
+---
+
 ## [2.7.0***REMOVED*** — 2026-07-28
 
 ### Добавлено
