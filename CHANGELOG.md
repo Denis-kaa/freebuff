@@ -6,6 +6,32 @@
 
 ---
 
+## [2.9.0***REMOVED*** — 2026-07-28
+
+### Добавлено
+- **Параллельное выполнение шагов Orchestrator'а** (`scripts/orchestrator.py`):
+  - `ThreadPoolExecutor(max_workers=N)` — независимые шаги запускаются параллельно
+  - `concurrent.futures.wait(FIRST_COMPLETED)` — динамическое планирование DAG
+  - `_handle_blocked_steps()` — пропуск шагов с проваленными зависимостями (SKIPPED)
+  - `_publish_workflow_progress()` — событие `workflow.progress` с completed/total counts
+  - `_execute_step()` — полностью thread-safe (lock на status update, context update)
+  - `max_workers` параметр (default 4, 1 = последовательно)
+- **EventBus интеграция расширена:**
+  - `step.retrying` — событие при повторной попытке (retry_count, max_retries, error)
+  - `workflow.progress` — прогресс выполнения (completed_steps / total_steps)
+- **14 новых тестов** (`tests/test_orchestrator.py`):
+  - Parallel: max_workers param/default, independent steps, chain deps, diamond DAG
+  - EventBus: step.retrying, workflow.progress, step.completed, step.failed, lifecycle
+  - Thread safety: context accumulation, blocked steps skip
+- **Docstring обновлён** — step.retrying и workflow.progress в списке EventBus событий
+
+### Проверка
+- 51 тест orchestrator — **0 errors** (37 старых + 14 новых)
+- 586 общих тестов — **0 failures**
+- Code review пройден
+
+---
+
 ## [2.8.0***REMOVED*** — 2026-07-28
 
 ### Исправлено (Critical Security)

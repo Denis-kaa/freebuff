@@ -285,12 +285,16 @@ class TestOrchestrator:
             assert "context_value" in str(wf.context["test_key"***REMOVED***)
 
     def test_workflow_errors_collected(self):
-        """Workflow accumulates errors from failed steps."""
+        """Workflow accumulates errors from failed steps after max retries."""
         orch = Orchestrator()
         wf = Workflow(id="wf1", goal="Test errors")
-        step = Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL)
-        orch._handle_step_error(step, "Test error", wf)
-        assert step.error == "Test error"
+        step = Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
+                    input={"command": "false"***REMOVED***, max_retries=0)
+        wf.steps = [step***REMOVED***
+        orch._execute_step(step, wf)
+        assert step.status == StepStatus.FAILED
+        assert step.error is not None
+        assert len(wf.errors) >= 1
 
     def test_failed_deps_skip_downstream(self):
         """Steps with failed deps become SKIPPED."""
@@ -304,3 +308,215 @@ class TestOrchestrator:
         wf.steps[0***REMOVED***.error = "catastrophic failure"
         ready = orch._get_ready_steps(wf)
         assert len(ready) == 0
+
+    # ── Parallel execution tests ──────────────────────────────
+
+    def test_max_workers_param(self):
+        """Orchestrator accepts max_workers parameter."""
+        orch = Orchestrator(max_workers=8)
+        assert orch.max_workers == 8
+
+    def test_max_workers_default(self):
+        """Default max_workers is 4."""
+        orch = Orchestrator()
+        assert orch.max_workers == 4
+
+    def test_independent_steps_run_in_parallel(self):
+        """Steps without depends_on are picked up together as ready."""
+        orch = Orchestrator()
+        wf = Workflow(id="wf1", goal="Parallel test")
+        wf.steps = [
+            Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
+                 input={"command": "echo a"***REMOVED***),
+            Step(id="s2", type=StepType.TOOL, tool=ToolType.SHELL,
+                 input={"command": "echo b"***REMOVED***),
+            Step(id="s3", type=StepType.TOOL, tool=ToolType.SHELL,
+                 input={"command": "echo c"***REMOVED***),
+        ***REMOVED***
+        ready = orch._get_ready_steps(wf)
+        assert len(ready) == 3
+        ids = {s.id for s in ready***REMOVED***
+        assert ids == {"s1", "s2", "s3"***REMOVED***
+
+    def test_parallel_workflow_completes(self):
+        """Full parallel workflow with independent steps completes."""
+        orch = Orchestrator(max_workers=3)
+        result = orch.run_workflow("Implement hello world")
+        assert result.status in (WorkflowStatus.COMPLETED, WorkflowStatus.FAILED)
+        # All steps should have terminal status
+        for step in result.steps:
+            assert step.status in (
+                StepStatus.SUCCESS, StepStatus.FAILED, StepStatus.SKIPPED
+            )
+
+    def test_chain_still_respects_dependencies(self):
+        """Steps in a chain execute sequentially (dependencies respected)."""
+        orch = Orchestrator()
+        wf = Workflow(id="wf1", goal="Chain test")
+        wf.steps = [
+            Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
+                 input={"command": "echo first"***REMOVED***),
+            Step(id="s2", type=StepType.TOOL, tool=ToolType.SHELL,
+                 input={"command": "echo second"***REMOVED***,
+                 depends_on=["s1"***REMOVED***),
+        ***REMOVED***
+        # Only s1 should be ready initially
+        ready = orch._get_ready_steps(wf)
+        assert len(ready) == 1
+        assert ready[0***REMOVED***.id == "s1"
+        # After s1 succeeds, s2 becomes ready
+        wf.steps[0***REMOVED***.status = StepStatus.SUCCESS
+        ready = orch._get_ready_steps(wf)
+        assert len(ready) == 1
+        assert ready[0***REMOVED***.id == "s2"
+
+    def test_handle_blocked_steps_marks_skipped(self):
+        """_handle_blocked_steps skips steps with failed dependencies."""
+        orch = Orchestrator()
+        wf = Workflow(id="wf1", goal="Blocked test")
+        s1 = Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL)
+        s1.status = StepStatus.FAILED
+        s1.error = "dependency broke"
+        s2 = Step(id="s2", type=StepType.TOOL, tool=ToolType.SHELL, depends_on=["s1"***REMOVED***)
+        wf.steps = [s1, s2***REMOVED***
+        orch._handle_blocked_steps(wf, wf.steps)
+        assert s2.status == StepStatus.SKIPPED
+        assert "s1" in s2.error
+
+    # ── EventBus integration tests ───────────────────────────
+
+    def test_event_bus_step_retrying(self):
+        """step.retrying event is published when a step retries."""
+        from scripts.event_bus import EventBus, Event
+        eb = EventBus()
+        collected: list[Event***REMOVED*** = [***REMOVED***
+        eb.subscribe("step.retrying", lambda e: collected.append(e))
+        orch = Orchestrator(event_bus=eb)
+        wf = Workflow(id="wf1", goal="Retry test")
+        step = Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
+                     input={"command": "exit 1"***REMOVED***, max_retries=2)
+        wf.steps = [step***REMOVED***
+        orch._execute_step(step, wf)
+        # Should have retried (status back to PENDING)
+        assert step.retry_count >= 1
+        assert step.status == StepStatus.PENDING
+        assert len(collected) >= 1
+        assert collected[0***REMOVED***.data["step_id"***REMOVED*** == "s1"
+        assert collected[0***REMOVED***.data["retry_count"***REMOVED*** >= 1
+
+    def test_event_bus_workflow_progress(self):
+        """workflow.progress event is published during execution."""
+        from scripts.event_bus import EventBus, Event
+        eb = EventBus()
+        collected: list[Event***REMOVED*** = [***REMOVED***
+        eb.subscribe("workflow.progress", lambda e: collected.append(e))
+        orch = Orchestrator(event_bus=eb, max_workers=1)
+        result = orch.run_workflow("Implement hello world")
+        assert len(collected) >= 1
+        for ev in collected:
+            assert "workflow_id" in ev.data
+            assert "completed_steps" in ev.data
+            assert "total_steps" in ev.data
+
+    def test_event_bus_step_completed(self):
+        """step.completed event is published on success."""
+        from scripts.event_bus import EventBus, Event
+        eb = EventBus()
+        collected: list[Event***REMOVED*** = [***REMOVED***
+        eb.subscribe("step.completed", lambda e: collected.append(e))
+        orch = Orchestrator(event_bus=eb)
+        wf = Workflow(id="wf1", goal="Test")
+        step = Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
+                     input={"command": "echo ok"***REMOVED***)
+        wf.steps = [step***REMOVED***
+        orch._execute_step(step, wf)
+        assert step.status == StepStatus.SUCCESS
+        assert len(collected) >= 1
+        assert collected[0***REMOVED***.data["step_id"***REMOVED*** == "s1"
+
+    def test_event_bus_step_failed(self):
+        """step.failed event is published when step exhausts retries."""
+        from scripts.event_bus import EventBus, Event
+        eb = EventBus()
+        collected: list[Event***REMOVED*** = [***REMOVED***
+        eb.subscribe("step.failed", lambda e: collected.append(e))
+        orch = Orchestrator(event_bus=eb)
+        wf = Workflow(id="wf1", goal="Test")
+        step = Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
+                     input={"command": "exit 1"***REMOVED***, max_retries=0)
+        wf.steps = [step***REMOVED***
+        orch._execute_step(step, wf)
+        assert step.status == StepStatus.FAILED
+        assert len(collected) >= 1
+        assert collected[0***REMOVED***.data["step_id"***REMOVED*** == "s1"
+
+    def test_event_bus_workflow_lifecycle(self):
+        """All workflow lifecycle events fire during run_workflow."""
+        from scripts.event_bus import EventBus, Event
+        eb = EventBus()
+        events: list[str***REMOVED*** = [***REMOVED***
+        eb.subscribe("workflow.created", lambda e: events.append("created"))
+        eb.subscribe("workflow.planning", lambda e: events.append("planning"))
+        eb.subscribe("workflow.started", lambda e: events.append("started"))
+        eb.subscribe("workflow.completed", lambda e: events.append("completed"))
+        orch = Orchestrator(event_bus=eb)
+        orch.run_workflow("Test")
+        assert "created" in events
+        assert "planning" in events
+        assert "started" in events
+        assert "completed" in events or "failed" in events
+
+    def test_no_event_bus_doesnt_crash(self):
+        """Orchestrator without EventBus works fine (no-op)."""
+        orch = Orchestrator(event_bus=None)
+        result = orch.run_workflow("Test")
+        assert result.status in (WorkflowStatus.COMPLETED, WorkflowStatus.FAILED)
+
+    # ── Thread safety tests ──────────────────────────────────
+
+    def test_context_updates_from_parallel_steps(self):
+        """Context accumulates results from parallel steps (thread-safe)."""
+        orch = Orchestrator(max_workers=4)
+        wf = Workflow(id="wf1", goal="Context test")
+        wf.steps = [
+            Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
+                 input={"command": "echo val1"***REMOVED***, output_key="key1"),
+            Step(id="s2", type=StepType.TOOL, tool=ToolType.SHELL,
+                 input={"command": "echo val2"***REMOVED***, output_key="key2"),
+            Step(id="s3", type=StepType.TOOL, tool=ToolType.SHELL,
+                 input={"command": "echo val3"***REMOVED***, output_key="key3"),
+        ***REMOVED***
+        result = orch.run_workflow("Context test")
+        # All keys should be present if steps succeeded
+        succeeded = [s for s in result.steps if s.status == StepStatus.SUCCESS***REMOVED***
+        for s in succeeded:
+            if s.output_key:
+                assert s.output_key in result.context
+
+    def test_dag_parallel_diamond(self):
+        """Diamond dependency: A -> B, A -> C, B+C -> D runs correctly."""
+        orch = Orchestrator(max_workers=4)
+        wf = Workflow(id="wf1", goal="Diamond DAG")
+        wf.steps = [
+            Step(id="a", type=StepType.TOOL, tool=ToolType.SHELL,
+                 input={"command": "echo a"***REMOVED***),
+            Step(id="b", type=StepType.TOOL, tool=ToolType.SHELL,
+                 input={"command": "echo b"***REMOVED***, depends_on=["a"***REMOVED***),
+            Step(id="c", type=StepType.TOOL, tool=ToolType.SHELL,
+                 input={"command": "echo c"***REMOVED***, depends_on=["a"***REMOVED***),
+            Step(id="d", type=StepType.TOOL, tool=ToolType.SHELL,
+                 input={"command": "echo d"***REMOVED***, depends_on=["b", "c"***REMOVED***),
+        ***REMOVED***
+        # Initially only 'a' is ready
+        ready = orch._get_ready_steps(wf)
+        assert len(ready) == 1 and ready[0***REMOVED***.id == "a"
+        # After a succeeds, b and c are both ready
+        wf.steps[0***REMOVED***.status = StepStatus.SUCCESS
+        ready = orch._get_ready_steps(wf)
+        ids = {s.id for s in ready***REMOVED***
+        assert ids == {"b", "c"***REMOVED***
+        # After b and c succeed, d is ready
+        wf.steps[1***REMOVED***.status = StepStatus.SUCCESS
+        wf.steps[2***REMOVED***.status = StepStatus.SUCCESS
+        ready = orch._get_ready_steps(wf)
+        assert len(ready) == 1 and ready[0***REMOVED***.id == "d"

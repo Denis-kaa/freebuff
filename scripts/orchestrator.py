@@ -33,17 +33,20 @@ orchestrator.py — FSM/DAG Orchestrator для Buffy Project.
 События (EventBus):
   workflow.created   — workflow создан
   workflow.planning  — начато планирование
-  workflow.started   — выполнение начато
+  workflow.started   — выполнение начато (step_count)
+  workflow.progress  — прогресс (completed_steps / total_steps)
   workflow.completed — выполнение завершено успешно
   workflow.failed    — выполнение провалено
   step.started       — шаг начат
   step.completed     — шаг завершён успешно
   step.failed        — шаг провален (последняя попытка)
+  step.retrying      — повторная попытка (retry_count / max_retries)
   step.skipped       — шаг пропущен (зависимость не выполнена)
 """
 
 from __future__ import annotations
 
+import concurrent.futures
 import json
 import os
 import shlex
@@ -51,7 +54,6 @@ import subprocess
 import sys
 import threading
 import uuid
-from collections import deque
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
 from enum import Enum
@@ -511,12 +513,14 @@ class Orchestrator:
         validator: Optional[StepValidator***REMOVED*** = None,
         event_bus: Optional[Any***REMOVED*** = None,  # EventBus instance
         tool_registry: Optional[Any***REMOVED*** = None,  # ToolRegistry instance
+        max_workers: int = 4,  # max parallel steps (1 = sequential)
     ):
         self._planner = planner or DefaultPlanner()
         self._executor = executor or ToolExecutor()
         self._validator = validator or StepValidator()
         self._event_bus = event_bus
         self._tool_registry = tool_registry
+        self.max_workers = max_workers
         self._lock = threading.Lock()
 
     def run_workflow(self, goal: str) -> Workflow:
@@ -555,50 +559,57 @@ class Orchestrator:
             ***REMOVED***)
             return workflow
 
-        # Phase 2: Execute (DAG execution)
+        # Phase 2: Execute (parallel DAG execution)
         workflow.status = WorkflowStatus.RUNNING
         self._publish_event("workflow.started", {
             "workflow_id": workflow.id,
             "goal": goal,
             "step_count": len(steps),
         ***REMOVED***)
-        completed = False
 
-        while not completed:
-            ready_steps = self._get_ready_steps(workflow)
-            if not ready_steps:
-                # Все шаги завершены или все оставшиеся заблокированы
-                remaining = [s for s in steps if s.status in
-                             (StepStatus.PENDING, StepStatus.READY)***REMOVED***
-                if not remaining:
-                    completed = True
-                else:
-                    # Заблокированы — смотрим ошибки в зависимостях
-                    for s in remaining:
-                        failed_deps = [
-                            d for d in s.depends_on
-                            if any(ss.id == d and ss.status == StepStatus.FAILED
-                                   for ss in steps)
+        active_futures: Dict[concurrent.futures.Future, Step***REMOVED*** = {***REMOVED***
+
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=self.max_workers
+        ) as pool:
+            while True:
+                # Get steps whose dependencies are met
+                with self._lock:
+                    ready_steps = self._get_ready_steps(workflow)
+
+                # Submit ready steps to thread pool
+                for step in ready_steps:
+                    future = pool.submit(self._execute_step, step, workflow)
+                    active_futures[future***REMOVED*** = step
+
+                if not active_futures:
+                    # No active work — check if we're done or blocked
+                    with self._lock:
+                        remaining = [
+                            s for s in steps
+                            if s.status in (StepStatus.PENDING, StepStatus.READY)
                         ***REMOVED***
-                        if failed_deps:
-                            s.status = StepStatus.SKIPPED
-                            s.error = f"Dependency failed: {', '.join(failed_deps)***REMOVED***"
-                            self._publish_step_event(s, workflow)
-                        else:
-                            s.status = StepStatus.READY
+                    if not remaining:
+                        break  # All done
+                    # Blocked steps — skip those with failed deps
+                    self._handle_blocked_steps(workflow, steps)
                     continue
 
-            for step in ready_steps:
-                self._execute_step(step, workflow)
+                # Wait for at least one step to finish
+                done, _ = concurrent.futures.wait(
+                    active_futures.keys(),
+                    return_when=concurrent.futures.FIRST_COMPLETED,
+                )
 
-            # Проверяем: все FAILED?
-            all_failed = all(
-                s.status in (StepStatus.FAILED, StepStatus.SKIPPED)
-                for s in steps if s.status != StepStatus.SUCCESS
-            )
-            if all_failed and not ready_steps:
-                workflow.status = WorkflowStatus.FAILED
-                break
+                for future in done:
+                    try:
+                        future.result()  # re-raise thread exceptions
+                    except Exception:
+                        pass  # errors already handled in _execute_step
+                    del active_futures[future***REMOVED***
+
+                # Publish progress
+                self._publish_workflow_progress(workflow)
 
         if workflow.status != WorkflowStatus.FAILED:
             workflow.status = WorkflowStatus.COMPLETED
@@ -670,8 +681,9 @@ class Orchestrator:
             ***REMOVED***)
 
     def _execute_step(self, step: Step, workflow: Workflow) -> None:
-        """Выполняет один шаг."""
-        step.status = StepStatus.RUNNING
+        """Выполняет один шаг. Thread-safe — вызывается из ThreadPoolExecutor."""
+        with self._lock:
+            step.status = StepStatus.RUNNING
 
         # Publish: step started
         self._publish_event("step.started", {
@@ -681,6 +693,10 @@ class Orchestrator:
             "step_type": step.type.value,
             "tool": step.tool.value if step.tool else None,
         ***REMOVED***)
+
+        success = False
+        result = None
+        error: Optional[str***REMOVED*** = None
 
         if step.type == StepType.TOOL:
             # ToolRuntime delegation (если подключён)
@@ -692,31 +708,23 @@ class Orchestrator:
                 success, result, error = self._executor.run(
                     step.tool, step.input, step.timeout_seconds
                 )
-            if success:
-                step.status = StepStatus.SUCCESS
-                step.result = result
-            else:
-                self._handle_step_error(step, error or "Tool execution failed", workflow)
 
         elif step.type == StepType.VALIDATE:
-            # Находим целевой шаг для валидации
             target_id = step.input.get("validate_step_id", "")
-            target = next((s for s in workflow.steps if s.id == target_id), None)
+            with self._lock:
+                target = next((s for s in workflow.steps if s.id == target_id), None)
             if target:
-                is_valid, error = self._validator.validate(target, workflow.context)
+                with self._lock:
+                    is_valid, validation_err = self._validator.validate(target, workflow.context)
                 if is_valid:
-                    step.status = StepStatus.SUCCESS
-                    step.result = "Validation passed"
+                    success = True
+                    result = "Validation passed"
                 else:
-                    step.status = StepStatus.FAILED
-                    step.error = error
-                    workflow.errors.append(f"Validation failed for {target_id***REMOVED***: {error***REMOVED***")
+                    error = f"Validation failed for {target_id***REMOVED***: {validation_err***REMOVED***"
             else:
-                step.status = StepStatus.FAILED
-                step.error = f"Target step not found: {target_id***REMOVED***"
+                error = f"Target step not found: {target_id***REMOVED***"
 
         elif step.type == StepType.MODEL:
-            # Через SmartRouter
             try:
                 from core.router import SmartRouter, ModelCatalog
                 router = SmartRouter(ModelCatalog.default())
@@ -725,21 +733,44 @@ class Orchestrator:
                     required_capabilities=caps,
                     max_tokens_needed=step.input.get("max_tokens", 2000),
                 )
-                step.result = f"Routed to: {decision.model_id***REMOVED***"
-                step.status = StepStatus.SUCCESS
+                result = f"Routed to: {decision.model_id***REMOVED***"
+                success = True
             except Exception as e:
-                self._handle_step_error(step, str(e), workflow)
+                error = str(e)
 
         else:
-            step.status = StepStatus.FAILED
-            step.error = f"Unsupported step type: {step.type***REMOVED***"
+            error = f"Unsupported step type: {step.type***REMOVED***"
+
+        # Thread-safe status update
+        with self._lock:
+            if success:
+                step.status = StepStatus.SUCCESS
+                step.result = result
+            else:
+                step.error = error or "Tool execution failed"
+                if step.retry_count < step.max_retries:
+                    step.retry_count += 1
+                    step.status = StepStatus.PENDING
+                    self._publish_event("step.retrying", {
+                        "step_id": step.id,
+                        "workflow_id": workflow.id,
+                        "retry_count": step.retry_count,
+                        "max_retries": step.max_retries,
+                        "error": error,
+                    ***REMOVED***)
+                else:
+                    step.status = StepStatus.FAILED
+                    workflow.errors.append(
+                        f"Step {step.id***REMOVED*** failed after {step.max_retries***REMOVED*** retries: {error***REMOVED***"
+                    )
 
         # Publish step event after execution
         self._publish_step_event(step, workflow)
 
-        # Сохраняем результат в контекст
-        if step.status == StepStatus.SUCCESS and step.output_key:
-            workflow.context[step.output_key***REMOVED*** = step.result
+        # Thread-safe context update
+        with self._lock:
+            if step.status == StepStatus.SUCCESS and step.output_key:
+                workflow.context[step.output_key***REMOVED*** = step.result
 
     def _run_via_tool_registry(self, step: Step) -> Tuple[bool, Any, Optional[str***REMOVED******REMOVED***:
         """Делегирует выполнение шага в ToolRegistry."""
@@ -770,15 +801,41 @@ class Orchestrator:
         except Exception as e:
             return False, None, f"ToolRuntime error: {e***REMOVED***"
 
-    def _handle_step_error(self, step: Step, error: str, workflow: Workflow) -> None:
-        """Обрабатывает ошибку шага с ретраем."""
-        step.error = error
-        if step.retry_count < step.max_retries:
-            step.retry_count += 1
-            step.status = StepStatus.PENDING
-        else:
-            step.status = StepStatus.FAILED
-            workflow.errors.append(f"Step {step.id***REMOVED*** failed after {step.max_retries***REMOVED*** retries: {error***REMOVED***")
+    def _handle_blocked_steps(
+        self, workflow: Workflow, steps: List[Step***REMOVED***
+    ) -> None:
+        """Skip steps whose dependencies have failed."""
+        skipped: List[Step***REMOVED*** = [***REMOVED***
+        with self._lock:
+            for s in steps:
+                if s.status not in (StepStatus.PENDING, StepStatus.READY):
+                    continue
+                failed_deps = [
+                    d for d in s.depends_on
+                    if any(ss.id == d and ss.status == StepStatus.FAILED
+                           for ss in steps)
+                ***REMOVED***
+                if failed_deps:
+                    s.status = StepStatus.SKIPPED
+                    s.error = f"Dependency failed: {', '.join(failed_deps)***REMOVED***"
+                    skipped.append(s)
+        # Publish outside lock to avoid holding it during EventBus I/O
+        for s in skipped:
+            self._publish_step_event(s, workflow)
+
+    def _publish_workflow_progress(self, workflow: Workflow) -> None:
+        """Publish workflow.progress event with step completion counts."""
+        with self._lock:
+            completed = sum(
+                1 for s in workflow.steps
+                if s.status in (StepStatus.SUCCESS, StepStatus.FAILED, StepStatus.SKIPPED)
+            )
+            total = len(workflow.steps)
+        self._publish_event("workflow.progress", {
+            "workflow_id": workflow.id,
+            "completed_steps": completed,
+            "total_steps": total,
+        ***REMOVED***)
 
     def save_workflow(self, workflow: Workflow) -> None:
         """Сохраняет workflow в Memory Engine."""

@@ -87,7 +87,9 @@
   - Default Planner: код/рефакторинг, исследование, архитектура
   - Error handling с retry
   - CLI: run, list, get
-- [x***REMOVED*** **37 тестов** Orchestrator — 0 errors
+- [x***REMOVED*** **51 тестов** Orchestrator — 0 errors (parallel execution + EventBus)
+- [x***REMOVED*** **Параллельное выполнение шагов** — ThreadPoolExecutor(max_workers), thread-safe DAG
+- [x***REMOVED*** **EventBus интеграция расширена** — step.retrying, workflow.progress
 
 ### ✅ Сделано
 - [x***REMOVED*** **Model Gateway** — scripts/model_gateway.py
@@ -220,7 +222,7 @@
 |------|--------|-----------|-------------|
 | **Phase 1** | ✅ Завершена | 100% | Streaming, Tasks, Router, Memory, Context Builder, Unified Context, 195 тестов |
 | **Phase 2** | ✅ Завершена | 100% | Memory Engine + Knowledge Engine + Graph Search + Semantic Search + auto-index + seeded docs, 99+ тестов |
-| **Phase 3** | 🟡 В РАБОТЕ | ~90% | Router + Orchestrator + ModelGateway + ToolRuntime, 150 тестов. ✅ Groq фикс, ✅ Git, ✅ Streaming (SSE/Gemini/Ollama) |
+| **Phase 3** | 🟡 В РАБОТЕ | ~92% | Router + Orchestrator (parallel DAG + EventBus) + ModelGateway + ToolRuntime, 150+ тестов. ✅ Groq фикс, ✅ Git, ✅ Streaming (SSE/Gemini/Ollama), ✅ Parallel execution, ✅ step.retrying/workflow.progress |
 | **Phase 4** | 🟡 В РАБОТЕ | ~75% | Event Bus + Plugin API + MCP Server (stdio + Streamable HTTP + FastAPI + Cloudflare) + интеграции, 225 тестов. ✅ EventBus, ✅ Knowledge, ✅ MCP Server (12 tools, 9 resources, 3 prompts, 124 тестов), ✅ FastAPI wrapper + Tunnel |
 | **Phase 5** | 🔴 План | 0% | Ничего не начато |
 
