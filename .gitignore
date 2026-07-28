@@ -68,12 +68,18 @@ Thumbs.db
 # Secrets
 .keys/*.keys
 .keys/state.json
+.keys/__pycache__/
 .env
+
+# Telethon session files
+*.session
+*.session-journal
 
 # Project runtime data
 context/
 data/
 logs/
+sessions/
 
 # Node (playground)
 buffy-playground/node_modules/
