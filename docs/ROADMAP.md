@@ -221,7 +221,7 @@
 | **Phase 1** | ✅ Завершена | 100% | Streaming, Tasks, Router, Memory, Context Builder, Unified Context, 195 тестов |
 | **Phase 2** | ✅ Завершена | 100% | Memory Engine + Knowledge Engine + Graph Search + Semantic Search + auto-index + seeded docs, 99+ тестов |
 | **Phase 3** | 🟡 В РАБОТЕ | ~90% | Router + Orchestrator + ModelGateway + ToolRuntime, 150 тестов. ✅ Groq фикс, ✅ Git, ✅ Streaming (SSE/Gemini/Ollama) |
-| **Phase 4** | 🟡 В РАБОТЕ | ~70% | Event Bus + Plugin API + MCP Server (stdio + Streamable HTTP) + интеграции, 190 тестов. ✅ EventBus, ✅ Knowledge, ✅ MCP Server (12 tools, 9 resources, 3 prompts, 89 тестов) |
+| **Phase 4** | 🟡 В РАБОТЕ | ~75% | Event Bus + Plugin API + MCP Server (stdio + Streamable HTTP + FastAPI + Cloudflare) + интеграции, 225 тестов. ✅ EventBus, ✅ Knowledge, ✅ MCP Server (12 tools, 9 resources, 3 prompts, 124 тестов), ✅ FastAPI wrapper + Tunnel |
 | **Phase 5** | 🔴 План | 0% | Ничего не начато |
 
 ---

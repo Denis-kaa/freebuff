@@ -1457,6 +1457,8 @@ Examples:
     parser.add_argument("--read", metavar="URI", help="Read a resource directly")
     parser.add_argument("--async-mode", dest="async_mode", action="store_true", help="Use async stdio transport")
     parser.add_argument("--http", action="store_true", help="Run Streamable HTTP server (POST/GET/DELETE at /mcp)")
+    parser.add_argument("--fastapi", action="store_true", help="Run FastAPI server (requires fastapi+uvicorn)")
+    parser.add_argument("--tunnel", action="store_true", help="Start Cloudflare Tunnel (requires --fastapi)")
     parser.add_argument("--host", default="127.0.0.1", help="HTTP server host (default: 127.0.0.1)")
     parser.add_argument("--port", type=int, default=8765, help="HTTP server port (default: 8765)")
 
@@ -1533,7 +1535,20 @@ Examples:
 
     else:
         # Default: run MCP server
-        if args.http:
+        if args.tunnel and not args.fastapi:
+            print("⚠️  --tunnel requires --fastapi", file=sys.stderr)
+            sys.exit(1)
+        if args.fastapi:
+            try:
+                from scripts.mcp_fastapi import main as fastapi_main
+                sys.argv = [sys.argv[0***REMOVED***, "--host", args.host, "--port", str(args.port)***REMOVED***
+                if args.tunnel:
+                    sys.argv.append("--tunnel")
+                fastapi_main()
+            except ImportError:
+                print("❌ FastAPI not installed. Run: pip install fastapi uvicorn", file=sys.stderr)
+                sys.exit(1)
+        elif args.http:
             server.run_http(host=args.host, port=args.port)
         elif args.async_mode:
             asyncio.run(server.run_stdio())

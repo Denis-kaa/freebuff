@@ -6,6 +6,38 @@
 
 ---
 
+## [2.7.0***REMOVED*** — 2026-07-28
+
+### Добавлено
+- **FastAPI обёртка для MCP Server** (`scripts/mcp_fastapi.py`) — Streamable HTTP через uvicorn:
+  - Async SSE streaming через `asyncio.Queue` (не `queue.Queue`)
+  - `_dispatch()` — обёртка через `asyncio.to_thread()` для не-blocking вызова `BuffyMcpServer.dispatch()`
+  - McpAsyncSession (@dataclass) + McpAsyncSessionManager (asyncio.Lock)
+  - Origin validation через `urlparse().hostname` (DNS rebinding protection)
+  - CLI: `--host`, `--port`, `--tunnel` (Cloudflare Tunnel)
+  - `_start_tunnel()` — запуск `cloudflared tunnel --url` в subprocess, парсинг stderr для URL
+  - `_print_tunnel_config()` — вывод конфига для Claude Desktop / Gemini
+  - Health check `GET /` → `{status, server, protocol, endpoint, transport***REMOVED***`
+- **Cloudflare Tunnel интеграция:**
+  - `python scripts/mcp_fastapi.py --tunnel` — автоматический запуск cloudflared
+  - Публичный HTTPS URL: `https://xxx.trycloudflare.com/mcp`
+  - Конфиг для Claude Desktop выводится в stderr при старте
+  - Cleanup при Ctrl+C: `tunnel_proc.terminate()`
+- **CLI интеграция в mcp_server.py:**
+  - `--fastapi` флаг — делегирует запуск в `mcp_fastapi.main()`
+  - `--tunnel` флаг — передаётся в `mcp_fastapi.main()` (требует `--fastapi`)
+  - Guard: `--tunnel` без `--fastapi` → exit с ошибкой
+- **35 тестов FastAPI** (`tests/test_mcp_fastapi.py`):
+  - uvicorn в daemon thread + `http.client` (тот же паттерн что и test_mcp_server.py)
+  - `_uvicorn_server` fixture (module-scoped) — стартует uvicorn один раз на модуль
+  - POST: initialize, ping, notification, tools/list, resources/list, prompts/list, tools/call, batch, errors
+  - DELETE: session, unknown session, missing session-id
+  - GET: missing session-id, unknown session, SSE content-type (raw socket)
+  - Origin validation: evil.com (403), localhost (200), no origin (200), localhost.evil.com (403)
+  - Async session manager: 7 тестов через `asyncio.run()` (без pytest-asyncio dependency)
+
+---
+
 ## [2.6.0***REMOVED*** — 2026-07-28
 
 ### Добавлено
