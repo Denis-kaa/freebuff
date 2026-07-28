@@ -862,6 +862,7 @@ class ModelGateway:
 
         try:
             provider = self._get_provider(provider_name)
+            self._publish_stream_event(model, provider_name, fallback_used=False)
             for chunk in provider.generate_stream(
                 model=model,
                 messages=messages,
