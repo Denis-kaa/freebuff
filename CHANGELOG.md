@@ -6,6 +6,73 @@
 
 ---
 
+## [4.2.2***REMOVED*** — 2026-07-28
+
+### Изменено
+- **docs/ARCHITECTURE.md** — добавлен раздел "Автоматизация документирования" со ссылкой на `docs/RULES.md`.
+- **docs/WORKERS.md** — добавлен раздел "Авто-документирование", ссылка на `buffy_autodoc.py` и pre-commit hook; чек-лист добавления нового worker дополнен пунктом про `CHANGELOG.md`.
+
+---
+
+## [4.2.1***REMOVED*** — 2026-07-28
+
+### Добавлено
+- **docs/TROUBLESHOOTING.md** — документ с известными проблемами и решениями для:
+  - Lightpanda worker (glibc/ARM64, CLI-флаги, пути к PandaScript, OOM)
+  - Agent Context Bridge (интеграция, сессии, обрезка JSON)
+  - pre-commit hook (обход блокировки)
+
+---
+
+## [4.2.0***REMOVED*** — 2026-07-28
+
+### Добавлено
+- **pre-commit hook для авто-документации**:
+  - `scripts/pre-commit` — tracked версия git pre-commit hook
+  - `scripts/install_hooks.sh` — установка hook в `.git/hooks/pre-commit`
+  - `scripts/buffy_autodoc.py --strict` — строгий режим с exit code 1
+  - `severity=block/warn` у триггеров: `CHANGELOG.md` и `TASK.md` — блокеры, остальные — warning
+- **docs/RULES.md** — добавлен раздел про pre-commit hook и его установку
+
+### Проверка
+- `mypy scripts/buffy_autodoc.py` — 0 errors
+- `pytest tests/test_lightpanda_worker.py tests/test_agent_context_bridge.py` — 13/13 passed
+
+---
+
+## [4.1.0***REMOVED*** — 2026-07-28
+
+### Добавлено
+- **Lightpanda integration v1.0.0:**
+  - `scripts/install_lightpanda.sh` — установка Lightpanda в Termux + proot-distro Ubuntu ARM64
+  - `src/workers/lightpanda_worker.py` — Python-воркер: `execute_agent_task`, `run_script`, `dump_url`, `serve_cdp`, `stop_cdp`
+  - `docs/LIGHTPANDA_INTEGRATION.md` — полный гайд по установке и использованию
+  - `docs/WORKERS.md` — обзор паттерна workers
+  - `docs/ARCHITECTURE.md` — архитектурная схема с Lightpanda
+  - `tests/test_lightpanda_worker.py` — 8 unit-тестов
+
+### Проверка
+- 8/8 тестов `test_lightpanda_worker.py` — **0 failures**
+- `mypy src/workers/lightpanda_worker.py tests/test_lightpanda_worker.py` — **0 errors**
+
+---
+
+## [4.0.0***REMOVED*** — 2026-07-28
+
+### Добавлено
+- **Интеграция ContextManager с termux-ai-agent v4.0:**
+  - `scripts/agent_context_bridge.py` — мост для сохранения диалогов локального агента в freebuff ContextManager
+  - `termux-ai-agent/main.py` — автоматическое логирование user/assistant/system сообщений, авточекпоинты каждые 10 сообщений, CLI `--freebuff-conspect`
+  - Unit-тесты `tests/test_agent_context_bridge.py` (5 тестов)
+- **BUFFY.md / BUFFY_PROJECT.md:** единый источник правил и архитектуры Buffy 2.0
+
+### Проверка
+- 5/5 тестов `test_agent_context_bridge.py` — **0 failures**
+- `mypy scripts/agent_context_bridge.py tests/test_agent_context_bridge.py` — **0 errors**
+- `mypy termux-ai-agent/main.py` — **0 errors**
+
+---
+
 ## [2.9.0***REMOVED*** — 2026-07-28
 
 ### Добавлено

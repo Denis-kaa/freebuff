@@ -2,6 +2,7 @@
 
 > **Источник:** `pompts/promt1.md` — промт «Правила документирования для терминального агента»
 > **Применяется:** Buffy и все AI-агенты экосистемы
+> **Высший источник правил:** [`BUFFY.md`***REMOVED***(../BUFFY.md) — правила здесь лишь операционализируют требования Buffy
 
 ---
 
@@ -41,6 +42,7 @@
 | Документ | Описание | Триггер |
 |----------|----------|---------|
 | **API.md** | Эндпоинты, форматы, примеры | API-изменения |
+| **WORKERS.md** | Паттерн воркеров, ToolRuntime-интеграция, жизненный цикл | Добавление/изменение воркера или инструмента |
 | **DEPLOYMENT.md** | Требования, инструкции, env-переменные | Деплой |
 | **SECURITY.md** | Уязвимости, отчёты, практики | Проблема безопасности |
 | **MIGRATION.md** | Версионирование, breaking changes, обновление | Breaking change |
@@ -134,3 +136,59 @@ docs/
 - [ ***REMOVED*** CHANGELOG.md
 - [ ***REMOVED*** TASK.md (текущая задача)
 - [ ***REMOVED*** docs/TASK_TEMPLATE.md (шаблон задачи)
+
+---
+
+## 🤖 Авто-триггер документирования (`scripts/buffy_autodoc.py`)
+
+Чтобы не забывать обновлять документы, в проекте есть вспомогательный скрипт:
+
+```bash
+# Показать чек-лист документов, которые нужно обновить
+python scripts/buffy_autodoc.py
+
+# Создать недостающие заглушки документов
+python scripts/buffy_autodoc.py --apply
+
+# Запуск в строгом режиме (для pre-commit hook)
+python scripts/buffy_autodoc.py --cached --strict
+```
+
+### pre-commit hook
+
+Чтобы не забывать обновлять `CHANGELOG.md` при изменениях кода, в репозиторий добавлен pre-commit hook:
+
+```bash
+# Установить hook (копирует scripts/pre-commit → .git/hooks/pre-commit)
+bash scripts/install_hooks.sh
+
+# Обойти проверку при крайней необходимости
+git commit --no-verify
+# или
+SKIP_AUTODOC=1 git commit ...
+```
+
+Hook запускает `scripts/buffy_autodoc.py --cached --strict` и **блокирует коммит**, если для изменённого кода не обновлён `CHANGELOG.md` (или другие документы со статусом `severity=block`).
+
+> **Важно:** `.git/hooks/` не версионируется Git. Tracked копия hook лежит в `scripts/pre-commit`, а `scripts/install_hooks.sh` устанавливает её.
+
+Скрипт анализирует `git diff --name-status`, сопоставляет изменённые файлы с правилами и выводит:
+- какие документы должны быть созданы/обновлены;
+- какие файлы спровоцировали триггер.
+
+### Триггеры скрипта
+
+| Триггер | Изменённые файлы | Требуемые документы |
+|---------|------------------|---------------------|
+| New task | всегда | `TASK.md` |
+| Code change | `*.py`, `*.sh`, `*.js`, `*.ts`, `*.html`, `*.css` | `CHANGELOG.md`, `TASK.md` |
+| Architecture change | `src/`, `scripts/`, `freebuff_cli.py` | `docs/ARCHITECTURE.md` |
+| README feature | `freebuff_cli.py`, `scripts/`, `src/` | `README.md` |
+| Architectural decision | файлы с `decision`, `adr`, `architecture` | `docs/DECISIONS.md` |
+| Research / spike | файлы с `research`, `spike`, `experiment` | `docs/BRAINSTORM.md`, `docs/EXPERIMENTS.md` |
+| Bug fix | файлы с `bug`, `fix`, `error` | `docs/TROUBLESHOOTING.md` |
+| API change | файлы с `api`, `mcp_server`, `endpoint` | `docs/API.md` |
+| Worker / tool | файлы с `workers`, `tool_runtime` | `docs/WORKERS.md` |
+| Documentation change | `*.md` | `docs/RULES.md` |
+
+> **Важно:** скрипт — напоминание, а не генератор готового контента. Он помогает не пропустить обязательные документы, но содержание всё равно нужно проверять вручную или с помощью LLM.
