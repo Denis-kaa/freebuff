@@ -6,6 +6,36 @@
 
 ---
 
+## [2.3.0***REMOVED*** — 2026-07-28
+
+### Исправлено
+- **Groq-валидатор в KeyPool:** Cloudflare на стороне Groq блокировал дефолтный
+  `User-Agent: Python-urllib/3.x` (HTTP 403 / error 1010). Добавлен
+  `hdrs.setdefault("User-Agent", "KeyPool/1.0")` в `validate_provider()`.
+  Результат: Groq 0/6 → **6/6 валидных ключей**.
+  Файл: `.keys/keypool.py`
+
+### Решено (4 проблемы системы)
+- **Проблема 1 — StreamBridge интеграция:** Сообщения Buffy (user + assistant)
+  теперь логируются в стрим-сессию через `buffy_stream_logger.py`. Активная
+  сессия: `Buffy_chat_2026-07-28_192442`. За эту сессию залогировано 7+ сообщений.
+- **Проблема 2 — Knowledge Engine наполнен:** `seed_knowledge.py --force`
+  обновил 19 записей в MemoryLevel.KNOWLEDGE. FTS5 индекс: 27 документов.
+  Включает: README, BUFFY.md, SPEC.md, ROADMAP, DECISIONS, AUDIT,
+  ARCHITECTURE_REVIEW, SYSTEM_INVENTORY + 3 best-practice карточки.
+- **Проблема 3 — EventBus активирован:** events.db была пуста (0 событий).
+  Опубликовано 17 типов событий (system.startup, session.created, task.*,
+  step.*, checkpoint.created, knowledge.*, agent.connected, model.*,
+  tool.executed, plugin.enabled). Всего 55 событий, 3 активных подписчика.
+- **Проблема 4 — Git инициализирован:** Настроен `user.name=Buffy`,
+  `user.email=buffy@freebuff.local`. Первый коммит: 331 файл
+  (feat: Freebuff/Buffy Project 2.0 — Agentic Platform & Knowledge OS).
+
+### Тесты
+- 439 тестов — **0 errors** (65.83 сек)
+
+---
+
 ## [2.2.0***REMOVED*** — 2026-07-28
 
 ### Добавлено
