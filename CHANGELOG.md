@@ -28,7 +28,7 @@
 - **Обновление протокола:** `PROTOCOL_VERSION` 2024-11-05 → 2025-03-26
 - **36 новых тестов** (`tests/test_mcp_server.py`):
   - `TestSessionManager` — 10 тестов (create, get, delete, push_notification, thread safety, uniqueness)
-  - `TestHttpTransport` — 27 тестов с реальными HTTP запросами (http.client + raw socket для SSE):
+  - `TestHttpTransport` — 26 тестов с реальными HTTP запросами (http.client + raw socket для SSE):
     - POST: initialize, ping, tools/list, resources/list, prompts/list, tools/call, shutdown, batch,
       notification (202), unknown method, invalid JSON, wrong path, invalid origin (403),
       localhost origin, no origin, invalid session-id (404)

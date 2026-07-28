@@ -157,5 +157,5 @@ External Agent (Claude/Gemini/OpenClaw)
 
 ### Документация
 - [mcp_server.py***REMOVED***(../scripts/mcp_server.py) — McpSession, McpSessionManager, McpHttpServer, McpHTTPRequestHandler
-- [test_mcp_server.py***REMOVED***(../tests/test_mcp_server.py) — 89 тестов (53 stdio + 10 session + 27 HTTP)
+- [test_mcp_server.py***REMOVED***(../tests/test_mcp_server.py) — 89 тестов (53 stdio + 10 session + 26 HTTP)
 - [ROADMAP.md***REMOVED***(ROADMAP.md) — Phase 4 (65% → 70%)

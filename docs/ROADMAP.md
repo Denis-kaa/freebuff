@@ -191,7 +191,7 @@
     - POST: JSON-RPC, GET: SSE stream, DELETE: session termination
     - Mcp-Session-Id header, Origin validation, thread-safe session manager
     - CLI: --http, --host, --port
-  - 89 тестов, 0 errors (53 stdio + 10 session manager + 27 HTTP)
+  - 89 тестов, 0 errors (53 stdio + 10 session manager + 26 HTTP)
 
 ### 🔴 План
 - [ ***REMOVED*** MCP Client — подключение внешних MCP-серверов
