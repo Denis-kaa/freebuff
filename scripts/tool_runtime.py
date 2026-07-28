@@ -35,6 +35,7 @@ from __future__ import annotations
 import io
 import json
 import os
+import shlex
 import sqlite3
 import subprocess
 import sys
@@ -209,11 +210,11 @@ class GitTool(BaseTool):
         if not command:
             return ToolResult(success=False, error="No git command specified", tool_name="git")
 
-        full_cmd = f"git {command***REMOVED*** {args***REMOVED***".strip()
+        cmd_parts = ["git", command***REMOVED*** + (shlex.split(args) if args else [***REMOVED***)
         try:
             start = time.time()
             result = subprocess.run(
-                full_cmd, shell=True, capture_output=True, text=True,
+                cmd_parts, capture_output=True, text=True,
                 timeout=timeout, cwd=cwd,
             )
             duration_ms = (time.time() - start) * 1000
@@ -225,7 +226,7 @@ class GitTool(BaseTool):
                 error=None if success else f"Exit code: {result.returncode***REMOVED***\n{result.stderr[:200***REMOVED******REMOVED***",
                 duration_ms=duration_ms,
                 tool_name="git",
-                metadata={"returncode": result.returncode, "command": full_cmd***REMOVED***,
+                metadata={"returncode": result.returncode, "command": " ".join(cmd_parts)***REMOVED***,
             )
         except subprocess.TimeoutExpired:
             return ToolResult(success=False, error=f"Git timeout ({timeout***REMOVED***s)", tool_name="git")
@@ -586,7 +587,7 @@ class ShellTool(BaseTool):
 
             start = time.time()
             result = subprocess.run(
-                command, shell=True, capture_output=True, text=True,
+                ["sh", "-c", command***REMOVED***, capture_output=True, text=True,
                 timeout=timeout, cwd=cwd, env=env,
             )
             duration_ms = (time.time() - start) * 1000

@@ -46,6 +46,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 import subprocess
 import sys
 import threading
@@ -205,26 +206,7 @@ class ToolExecutor:
         cwd = data.get("cwd", str(WORKSPACE))
         try:
             result = subprocess.run(
-                command, shell=True, capture_output=True, text=True,
-                timeout=timeout, cwd=cwd,
-            )
-            output = result.stdout + result.stderr
-            success = result.returncode == 0
-            return success, output, None if success else f"Exit code: {result.returncode***REMOVED***"
-        except subprocess.TimeoutExpired:
-            return False, "", f"Timeout ({timeout***REMOVED***s)"
-        except Exception as e:
-            return False, "", str(e)
-
-    @staticmethod
-    def _run_shell(data: Dict[str, Any***REMOVED***, timeout: int) -> Tuple[bool, Any, Optional[str***REMOVED******REMOVED***:
-        command = data.get("command", "")
-        if not command:
-            return False, None, "No command specified"
-        cwd = data.get("cwd", str(WORKSPACE))
-        try:
-            result = subprocess.run(
-                command, shell=True, capture_output=True, text=True,
+                ["sh", "-c", command***REMOVED***, capture_output=True, text=True,
                 timeout=timeout, cwd=cwd,
             )
             output = result.stdout + result.stderr
@@ -237,15 +219,21 @@ class ToolExecutor:
 
     @staticmethod
     def _run_python(data: Dict[str, Any***REMOVED***, timeout: int) -> Tuple[bool, Any, Optional[str***REMOVED******REMOVED***:
+        """Execute Python code in an isolated subprocess (no exec())."""
         code = data.get("code", "")
         if not code:
             return False, None, "No code specified"
         try:
-            import io, contextlib
-            stdout = io.StringIO()
-            with contextlib.redirect_stdout(stdout):
-                exec(code, {"__builtins__": __builtins__***REMOVED***)
-            return True, stdout.getvalue(), None
+            result = subprocess.run(
+                [sys.executable, "-c", code***REMOVED***,
+                capture_output=True, text=True,
+                timeout=timeout, cwd=str(WORKSPACE),
+            )
+            output = result.stdout + result.stderr
+            success = result.returncode == 0
+            return success, output, None if success else f"Exit code: {result.returncode***REMOVED***"
+        except subprocess.TimeoutExpired:
+            return False, "", f"Timeout ({timeout***REMOVED***s)"
         except Exception as e:
             return False, "", str(e)
 
@@ -321,10 +309,10 @@ class ToolExecutor:
     def _run_git(data: Dict[str, Any***REMOVED***, timeout: int) -> Tuple[bool, Any, Optional[str***REMOVED******REMOVED***:
         command = data.get("command", "status")
         cwd = data.get("cwd", str(WORKSPACE))
-        full_cmd = f"git {command***REMOVED***"
+        cmd_parts = ["git"***REMOVED*** + shlex.split(command)
         try:
             result = subprocess.run(
-                full_cmd, shell=True, capture_output=True, text=True,
+                cmd_parts, capture_output=True, text=True,
                 timeout=timeout, cwd=cwd,
             )
             output = result.stdout + result.stderr

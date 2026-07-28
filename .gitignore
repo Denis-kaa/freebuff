@@ -85,3 +85,6 @@ sessions/
 buffy-playground/node_modules/
 buffy-playground/dist/
 *.log
+
+# API keys — NEVER commit
+.keys/
