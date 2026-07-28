@@ -3,7 +3,8 @@
 mcp_server.py — MCP Server для Buffy Project.
 
 Model Context Protocol server на чистом Python (без внешних SDK).
-Транспорт: stdio (JSON-RPC 2.0 over stdin/stdout).
+Транспорт: stdio (JSON-RPC 2.0 over stdin/stdout) и Streamable HTTP
+(single endpoint /mcp: POST для запросов, GET для SSE stream, DELETE для session).
 
 Design decision: pure Python без официального `mcp` SDK, т.к. пакет не установлен
 на Termux (ModuleNotFoundError). MCP протокол — это JSON-RPC 2.0, поэтому
@@ -17,7 +18,7 @@ Design decision: pure Python без официального `mcp` SDK, т.к. �
   - Prompts:  context_resume, knowledge_search, task_start
 
 Интеграция с Claude / Gemini / OpenClaw:
-  Claude config (claude_desktop_config.json):
+  Claude config (claude_desktop_config.json) — stdio:
     {
       "mcpServers": {
         "buffy": {
@@ -27,10 +28,16 @@ Design decision: pure Python без официального `mcp` SDK, т.к. �
       ***REMOVED***
     ***REMOVED***
 
-  OpenClaw / Gemini: аналогично через stdio transport.
+  HTTP (Streamable HTTP transport):
+    python scripts/mcp_server.py --http --port 8765
+    Endpoint: http://127.0.0.1:8765/mcp
+    POST: JSON-RPC, GET: SSE stream, DELETE: session
+
+  OpenClaw / Gemini: stdio или HTTP transport.
 
 Использование:
     python scripts/mcp_server.py                    # stdio режим
+    python scripts/mcp_server.py --http             # HTTP режим (port 8765)
     python scripts/mcp_server.py --tools            # список MCP tools
     python scripts/mcp_server.py --resources        # список MCP resources
     python scripts/mcp_server.py --call knowledge_search '{"query": "router"***REMOVED***'
@@ -42,10 +49,14 @@ import asyncio
 import json
 import os
 import sys
+import threading
 import traceback
+import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 ***REMOVED***
+from queue import Queue, Empty
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 WORKSPACE = Path(__file__).resolve().parent.parent
@@ -56,7 +67,7 @@ sys.path.insert(0, str(WORKSPACE))
 # Constants
 # ═══════════════════════════════════════════════════════════════
 
-PROTOCOL_VERSION = "2024-11-05"
+PROTOCOL_VERSION = "2025-03-26"
 SERVER_NAME = "buffy-mcp-server"
 SERVER_VERSION = "1.0.0"
 
@@ -135,6 +146,68 @@ def rpc_notification(method: str, params: Dict[str, Any***REMOVED***) -> str:
         "method": method,
         "params": params,
     ***REMOVED***, ensure_ascii=False)
+
+
+# ═══════════════════════════════════════════════════════════════
+# Session Management (Streamable HTTP)
+# ═══════════════════════════════════════════════════════════════
+
+
+@dataclass
+class McpSession:
+    """MCP HTTP session with notification queue for SSE.
+
+    Note: No automatic TTL/cleanup — sessions persist until DELETE.
+    If a client crashes without DELETE, the session remains in memory.
+    For production use, add a periodic cleanup thread or max-age check.
+    """
+
+    session_id: str
+    notification_queue: Queue = field(default_factory=Queue)
+    active: bool = True
+    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+
+class McpSessionManager:
+    """Thread-safe session manager for Streamable HTTP transport."""
+
+    def __init__(self):
+        self._sessions: Dict[str, McpSession***REMOVED*** = {***REMOVED***
+        self._lock = threading.Lock()
+
+    def create_session(self) -> str:
+        """Create a new session and return its ID."""
+        session_id = str(uuid.uuid4())
+        with self._lock:
+            self._sessions[session_id***REMOVED*** = McpSession(session_id)
+        return session_id
+
+    def get_session(self, session_id: str) -> Optional[McpSession***REMOVED***:
+        """Get a session by ID."""
+        with self._lock:
+            return self._sessions.get(session_id)
+
+    def delete_session(self, session_id: str) -> bool:
+        """Delete a session. Returns True if found and deleted."""
+        with self._lock:
+            session = self._sessions.pop(session_id, None)
+            if session:
+                session.active = False
+                return True
+            return False
+
+    def push_notification(self, session_id: str, message: str) -> bool:
+        """Push a notification to a session's SSE stream."""
+        session = self.get_session(session_id)
+        if session and session.active:
+            session.notification_queue.put(message)
+            return True
+        return False
+
+    def count(self) -> int:
+        """Return number of active sessions."""
+        with self._lock:
+            return len(self._sessions)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1088,6 +1161,257 @@ class BuffyMcpServer:
             for r in sorted(self._resources.values(), key=lambda x: x.uri)
         ***REMOVED***
 
+    # ── Streamable HTTP transport ──────────────────────────
+
+    def run_http(self, host: str = "127.0.0.1", port: int = 8765) -> None:
+        """Run MCP server over Streamable HTTP transport.
+
+        Single endpoint /mcp:
+        - POST: JSON-RPC requests (application/json response)
+        - GET: SSE notification stream (text/event-stream)
+        - DELETE: session termination (204 No Content)
+
+        Session management via Mcp-Session-Id header.
+        Spec: MCP 2025-03-26 Streamable HTTP transport.
+        """
+        session_manager = McpSessionManager()
+        httpd = McpHttpServer(
+            (host, port),
+            McpHTTPRequestHandler,
+            self,
+            session_manager,
+        )
+        print(f"🌐 MCP HTTP Server: http://{host***REMOVED***:{port***REMOVED***/mcp", file=sys.stderr)
+        print(f"   Protocol: {PROTOCOL_VERSION***REMOVED***", file=sys.stderr)
+        print(f"   Tools: {len(self._tools)***REMOVED*** | Resources: {len(self._resources)***REMOVED*** | Prompts: {len(self._prompts)***REMOVED***", file=sys.stderr)
+        print(f"   Press Ctrl+C to stop", file=sys.stderr)
+        try:
+            httpd.serve_forever()
+        except KeyboardInterrupt:
+            print("\n🛑 Shutting down...", file=sys.stderr)
+        finally:
+            httpd.shutdown()
+
+
+# ═══════════════════════════════════════════════════════════════
+# Streamable HTTP Transport (MCP 2025-03-26)
+# ═══════════════════════════════════════════════════════════════
+
+
+class McpHttpServer(ThreadingHTTPServer):
+    """ThreadingHTTPServer with BuffyMcpServer and session manager."""
+
+    daemon_threads = True
+
+    def __init__(self, server_addr, handler_class,
+                 mcp_server: "BuffyMcpServer",
+                 session_manager: McpSessionManager):
+        super().__init__(server_addr, handler_class)
+        self.mcp_server = mcp_server
+        self.session_manager = session_manager
+
+
+class McpHTTPRequestHandler(BaseHTTPRequestHandler):
+    """HTTP handler for MCP Streamable HTTP transport.
+
+    Single endpoint /mcp:
+    - POST: JSON-RPC requests → application/json, or 202 for notifications
+    - GET: SSE stream (text/event-stream) for server-to-client notifications
+    - DELETE: session termination (204 No Content)
+
+    Session management via Mcp-Session-Id header (assigned on initialize).
+    Mcp-Protocol-Version header included in all responses.
+    """
+
+    server_version = "BuffyMCP/1.0"
+    protocol_version = "HTTP/1.1"  # needed for keep-alive / SSE
+
+    @property
+    def _mcp(self) -> "BuffyMcpServer":
+        return self.server.mcp_server
+
+    @property
+    def _sessions(self) -> McpSessionManager:
+        return self.server.session_manager
+
+    # ── Response helpers ───────────────────────────────────
+
+    def _send_json(self, status: int, body: str,
+                   extra_headers: Optional[Dict[str, str***REMOVED******REMOVED*** = None) -> None:
+        """Send a JSON HTTP response."""
+        data = body.encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("Mcp-Protocol-Version", PROTOCOL_VERSION)
+        if extra_headers:
+            for k, v in extra_headers.items():
+                self.send_header(k, v)
+        self.end_headers()
+        self.wfile.write(data)
+
+    def _send_status(self, status: int,
+                     extra_headers: Optional[Dict[str, str***REMOVED******REMOVED*** = None) -> None:
+        """Send a status-only response (no body).
+
+        Per RFC 7230 §3.3.2, 204 responses MUST NOT include Content-Length.
+        """
+        self.send_response(status)
+        if status != 204:
+            self.send_header("Content-Length", "0")
+        self.send_header("Mcp-Protocol-Version", PROTOCOL_VERSION)
+        if extra_headers:
+            for k, v in extra_headers.items():
+                self.send_header(k, v)
+        self.end_headers()
+
+    def _send_error_json(self, status: int, code: int, message: str) -> None:
+        """Send an HTTP error with JSON-RPC error body."""
+        self._send_json(status, rpc_error(None, code, message))
+
+    def _validate_origin(self) -> bool:
+        """Validate Origin header to prevent DNS rebinding attacks.
+
+        Per MCP 2025-03-26 spec, servers MUST validate the Origin header.
+        Allows: no Origin (non-browser clients), localhost, 127.0.0.1.
+        Uses urlparse to prevent bypass via e.g. http://localhost.evil.com.
+        """
+        from urllib.parse import urlparse
+
+        origin = self.headers.get("Origin")
+        if origin is None:
+            return True  # Non-browser clients (curl, CLI) don't send Origin
+        try:
+            parsed = urlparse(origin)
+            return parsed.hostname in ("localhost", "127.0.0.1", "0.0.0.0")
+        except Exception:
+            return False
+
+    # ── POST: JSON-RPC requests ────────────────────────────
+
+    def do_POST(self) -> None:
+        if self.path != "/mcp":
+            self._send_error_json(404, INVALID_REQUEST, f"Unknown path: {self.path***REMOVED***")
+            return
+
+        if not self._validate_origin():
+            self._send_error_json(403, INVALID_REQUEST, "Invalid Origin header")
+            return
+
+        content_length = int(self.headers.get("Content-Length", 0))
+        raw_body = self.rfile.read(content_length) if content_length > 0 else b""
+
+        try:
+            message = json.loads(raw_body)
+        except json.JSONDecodeError as e:
+            self._send_error_json(400, PARSE_ERROR, f"Parse error: {e***REMOVED***")
+            return
+
+        # initialize → create new session, return Mcp-Session-Id
+        if isinstance(message, dict) and message.get("method") == "initialize":
+            session_id = self._sessions.create_session()
+            response = self._mcp.dispatch(message)
+            if response:
+                self._send_json(200, response, {"Mcp-Session-Id": session_id***REMOVED***)
+            else:
+                self._send_status(202, {"Mcp-Session-Id": session_id***REMOVED***)
+            return
+
+        # Non-initialize POSTs require valid Mcp-Session-Id
+        session_id = self.headers.get("Mcp-Session-Id")
+        if session_id and not self._sessions.get_session(session_id):
+            self._send_error_json(404, INVALID_REQUEST, "Session not found")
+            return
+
+        # Batch request
+        if isinstance(message, list):
+            responses = [***REMOVED***
+            for msg in message:
+                resp = self._mcp.dispatch(msg)
+                if resp:
+                    responses.append(json.loads(resp))
+            if responses:
+                self._send_json(200, json.dumps(responses, ensure_ascii=False))
+            else:
+                self._send_status(202)
+            return
+
+        # Single message
+        is_notification = message.get("id") is None
+        response = self._mcp.dispatch(message)
+
+        if is_notification or response is None:
+            self._send_status(202)
+        else:
+            self._send_json(200, response)
+
+    # ── GET: SSE notification stream ────────────────────────
+
+    def do_GET(self) -> None:
+        if self.path != "/mcp":
+            self._send_error_json(404, INVALID_REQUEST, f"Unknown path: {self.path***REMOVED***")
+            return
+
+        if not self._validate_origin():
+            self._send_error_json(403, INVALID_REQUEST, "Invalid Origin header")
+            return
+
+        session_id = self.headers.get("Mcp-Session-Id")
+        if not session_id:
+            self._send_error_json(400, INVALID_REQUEST, "Mcp-Session-Id required for GET")
+            return
+
+        session = self._sessions.get_session(session_id)
+        if not session:
+            self._send_error_json(404, INVALID_REQUEST, "Session not found")
+            return
+
+        # Open SSE stream
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "keep-alive")
+        self.send_header("Mcp-Protocol-Version", PROTOCOL_VERSION)
+        self.end_headers()
+
+        try:
+            while session.active:
+                try:
+                    msg = session.notification_queue.get(timeout=30)
+                    self.wfile.write(f"data: {msg***REMOVED***\n\n".encode("utf-8"))
+                    self.wfile.flush()
+                except Empty:
+                    # Heartbeat to keep connection alive
+                    self.wfile.write(b": heartbeat\n\n")
+                    self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError, OSError):
+            pass  # Client disconnected
+
+    # ── DELETE: session termination ─────────────────────────
+
+    def do_DELETE(self) -> None:
+        if self.path != "/mcp":
+            self._send_error_json(404, INVALID_REQUEST, f"Unknown path: {self.path***REMOVED***")
+            return
+
+        if not self._validate_origin():
+            self._send_error_json(403, INVALID_REQUEST, "Invalid Origin header")
+            return
+
+        session_id = self.headers.get("Mcp-Session-Id")
+        if not session_id:
+            self._send_error_json(400, INVALID_REQUEST, "Mcp-Session-Id required")
+            return
+
+        if self._sessions.delete_session(session_id):
+            self._send_status(204)
+        else:
+            self._send_error_json(404, INVALID_REQUEST, "Session not found")
+
+    def log_message(self, format: str, *args) -> None:
+        """Suppress default logging."""
+        pass
+
 
 # ═══════════════════════════════════════════════════════════════
 # CLI
@@ -1098,10 +1422,10 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="MCP Server для Buffy Project — Model Context Protocol over stdio",
+        description="MCP Server для Buffy Project — Model Context Protocol (stdio + Streamable HTTP)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""\
-Claude integration (claude_desktop_config.json):
+Claude integration (claude_desktop_config.json) — stdio:
   {
     "mcpServers": {
       "buffy": {
@@ -1111,8 +1435,14 @@ Claude integration (claude_desktop_config.json):
     ***REMOVED***
   ***REMOVED***
 
+HTTP integration (Streamable HTTP transport):
+  python scripts/mcp_server.py --http --port 8765
+  Endpoint: http://127.0.0.1:8765/mcp
+  POST: JSON-RPC, GET: SSE stream, DELETE: session
+
 Examples:
   python scripts/mcp_server.py                  # stdio MCP server
+  python scripts/mcp_server.py --http           # HTTP MCP server (port 8765)
   python scripts/mcp_server.py --status         # server status
   python scripts/mcp_server.py --tools          # list MCP tools
   python scripts/mcp_server.py --resources      # list MCP resources
@@ -1126,6 +1456,9 @@ Examples:
     parser.add_argument("--call", nargs=2, metavar=("TOOL", "ARGS"), help="Call a tool directly")
     parser.add_argument("--read", metavar="URI", help="Read a resource directly")
     parser.add_argument("--async-mode", dest="async_mode", action="store_true", help="Use async stdio transport")
+    parser.add_argument("--http", action="store_true", help="Run Streamable HTTP server (POST/GET/DELETE at /mcp)")
+    parser.add_argument("--host", default="127.0.0.1", help="HTTP server host (default: 127.0.0.1)")
+    parser.add_argument("--port", type=int, default=8765, help="HTTP server port (default: 8765)")
 
     args = parser.parse_args()
 
@@ -1199,8 +1532,10 @@ Examples:
             print(f"❌ {e***REMOVED***")
 
     else:
-        # Default: run stdio MCP server
-        if args.async_mode:
+        # Default: run MCP server
+        if args.http:
+            server.run_http(host=args.host, port=args.port)
+        elif args.async_mode:
             asyncio.run(server.run_stdio())
         else:
             server.run_sync()

@@ -6,6 +6,56 @@
 
 ---
 
+## [2.6.0***REMOVED*** — 2026-07-28
+
+### Добавлено
+- **Streamable HTTP транспорт для MCP Server** — реализован согласно спецификации
+  MCP 2025-03-26 (замена устаревшего HTTP+SSE транспорта):
+  - `McpSession` (@dataclass) — session с notification_queue (Queue) для SSE
+  - `McpSessionManager` — thread-safe менеджер сессий (Lock, uuid4, create/get/delete/push)
+  - `McpHttpServer(ThreadingHTTPServer)` — daemon_threads=True для clean shutdown
+  - `McpHTTPRequestHandler(BaseHTTPRequestHandler)` — single endpoint `/mcp`:
+    - **POST**: JSON-RPC запросы → `application/json` или `202 Accepted` для notifications
+    - **GET**: SSE stream (`text/event-stream`) с 30s heartbeat для server-to-client notifications
+    - **DELETE**: termination session → `204 No Content` (без Content-Length per RFC 7230)
+    - `Mcp-Session-Id` header — генерируется при `initialize`, требуется для GET/DELETE
+    - `Mcp-Protocol-Version` header — во всех ответах
+    - `_validate_origin()` — защита от DNS rebinding (urlparse hostname check)
+    - Non-initialize POST с невалидным `Mcp-Session-Id` → 404
+    - HTTP/1.1 protocol_version для keep-alive/SSE
+  - CLI: `--http`, `--host` (default 127.0.0.1), `--port` (default 8765)
+  - `BuffyMcpServer.run_http()` — запуск ThreadingHTTPServer
+- **Обновление протокола:** `PROTOCOL_VERSION` 2024-11-05 → 2025-03-26
+- **36 новых тестов** (`tests/test_mcp_server.py`):
+  - `TestSessionManager` — 10 тестов (create, get, delete, push_notification, thread safety, uniqueness)
+  - `TestHttpTransport` — 27 тестов с реальными HTTP запросами (http.client + raw socket для SSE):
+    - POST: initialize, ping, tools/list, resources/list, prompts/list, tools/call, shutdown, batch,
+      notification (202), unknown method, invalid JSON, wrong path, invalid origin (403),
+      localhost origin, no origin, invalid session-id (404)
+    - GET: without session-id (400), unknown session (404), wrong path (404),
+      SSE stream с notification (raw socket test)
+    - DELETE: terminates session (204), unknown session (404), without session-id (400),
+      no Content-Length header (RFC 7230)
+    - Mcp-Protocol-Version header в всех ответах
+
+### Изменено
+- `docs/ROADMAP.md`: Phase 4 обновлена — MCP Streamable HTTP добавлен (65% → 70%)
+- `docs/DECISIONS.md`: ADR-003 — Streamable HTTP transport (pure Python ThreadingHTTPServer)
+
+### Проверка
+- 89 тестов mcp_server — **0 errors** (53 stdio + 10 session manager + 27 HTTP)
+- Code review: 4 итерации, все issues исправлены
+
+### Исправления по результатам code review (4 итерации)
+1. `204 No Content` — убран `Content-Length: 0` (RFC 7230 §3.3.2)
+2. Origin validation — `startswith()` → `urlparse().hostname` (защита от `localhost.evil.com`)
+3. Mcp-Session-Id validation — non-initialize POST с невалидным session → 404
+4. McpSession → `@dataclass` (консистентность с McpTool/McpResource/McpPrompt)
+5. SSE stream test — переписан на raw socket (http.client блокировал на SSE без Content-Length)
+6. Session TTL note — задокументировано отсутствие automatic cleanup
+
+---
+
 ## [2.5.0***REMOVED*** — 2026-07-28
 
 ### Добавлено

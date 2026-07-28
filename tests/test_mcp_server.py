@@ -36,6 +36,8 @@ from scripts.mcp_server import (
     McpTool,
     McpResource,
     McpPrompt,
+    McpSession,
+    McpSessionManager,
     rpc_response,
     rpc_error,
     rpc_notification,
@@ -47,6 +49,12 @@ from scripts.mcp_server import (
     INVALID_PARAMS,
     INTERNAL_ERROR,
 )
+
+import http.client
+import socket
+import threading
+import time
+from contextlib import contextmanager
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -571,3 +579,429 @@ class TestToolRegistryIntegration:
         data = json.loads(text)
         # Should be successful (returncode 0 for status)
         assert "data" in data
+
+
+# ═══════════════════════════════════════════════════════════════
+# Session Manager (Streamable HTTP)
+# ═══════════════════════════════════════════════════════════════
+
+
+class TestSessionManager:
+    """Test McpSessionManager for Streamable HTTP transport."""
+
+    def test_create_session_returns_id(self):
+        sm = McpSessionManager()
+        sid = sm.create_session()
+        assert isinstance(sid, str)
+        assert len(sid) > 0
+
+    def test_get_session_returns_session(self):
+        sm = McpSessionManager()
+        sid = sm.create_session()
+        session = sm.get_session(sid)
+        assert session is not None
+        assert session.session_id == sid
+        assert session.active is True
+
+    def test_get_session_returns_none_for_unknown(self):
+        sm = McpSessionManager()
+        assert sm.get_session("nonexistent") is None
+
+    def test_delete_session(self):
+        sm = McpSessionManager()
+        sid = sm.create_session()
+        assert sm.delete_session(sid) is True
+        assert sm.get_session(sid) is None
+
+    def test_delete_session_unknown(self):
+        sm = McpSessionManager()
+        assert sm.delete_session("nonexistent") is False
+
+    def test_push_notification(self):
+        sm = McpSessionManager()
+        sid = sm.create_session()
+        assert sm.push_notification(sid, 'data: {"test": true***REMOVED***') is True
+        session = sm.get_session(sid)
+        msg = session.notification_queue.get_nowait()
+        assert '{"test": true***REMOVED***' in msg
+
+    def test_push_notification_to_deleted_session(self):
+        sm = McpSessionManager()
+        sid = sm.create_session()
+        sm.delete_session(sid)
+        assert sm.push_notification(sid, "test") is False
+
+    def test_session_count(self):
+        sm = McpSessionManager()
+        assert sm.count() == 0
+        s1 = sm.create_session()
+        s2 = sm.create_session()
+        assert sm.count() == 2
+        sm.delete_session(s1)
+        assert sm.count() == 1
+
+    def test_session_id_is_unique(self):
+        sm = McpSessionManager()
+        ids = {sm.create_session() for _ in range(100)***REMOVED***
+        assert len(ids) == 100
+
+    def test_session_manager_thread_safe(self):
+        import threading
+        sm = McpSessionManager()
+        results = [***REMOVED***
+
+        def create_sessions():
+            for _ in range(50):
+                results.append(sm.create_session())
+
+        threads = [threading.Thread(target=create_sessions) for _ in range(4)***REMOVED***
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+
+        assert len(results) == 200
+        assert len(set(results)) == 200  # all unique
+
+
+# ═══════════════════════════════════════════════════════════════
+# HTTP Transport (Streamable HTTP — MCP 2025-03-26)
+# ═══════════════════════════════════════════════════════════════
+
+
+@contextmanager
+def _start_http_server(mcp_server: BuffyMcpServer, port: int = 0):
+    """Start McpHttpServer on a random available port, yield (host, port)."""
+    from scripts.mcp_server import McpHttpServer, McpHTTPRequestHandler, McpSessionManager
+
+    session_mgr = McpSessionManager()
+    # Find an available port
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind(("127.0.0.1", 0))
+        port = s.getsockname()[1***REMOVED***
+
+    httpd = McpHttpServer(
+        ("127.0.0.1", port),
+        McpHTTPRequestHandler,
+        mcp_server,
+        session_mgr,
+    )
+    thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    thread.start()
+    try:
+        yield "127.0.0.1", port, session_mgr
+    finally:
+        httpd.shutdown()
+        httpd.server_close()
+
+
+def _http_request(host: str, port: int, method: str, path: str = "/mcp",
+                   body: Optional[str***REMOVED*** = None,
+                   headers: Optional[dict***REMOVED*** = None) -> Tuple[int, dict, str***REMOVED***:
+    """Make an HTTP request and return (status, headers, body)."""
+    conn = http.client.HTTPConnection(host, port, timeout=5)
+    hdrs = {"Content-Type": "application/json"***REMOVED***
+    if headers:
+        hdrs.update(headers)
+    body_bytes = body.encode("utf-8") if body else None
+    conn.request(method, path, body=body_bytes, headers=hdrs)
+    resp = conn.getresponse()
+    status = resp.status
+    resp_headers = {k.lower(): v for k, v in resp.getheaders()***REMOVED***
+    resp_body = resp.read().decode("utf-8")
+    conn.close()
+    return status, resp_headers, resp_body
+
+
+class TestHttpTransport:
+    """Test Streamable HTTP transport (POST/GET/DELETE at /mcp)."""
+
+    def test_post_initialize_creates_session(self, server):
+        """POST initialize should return 200 with Mcp-Session-Id header."""
+        with _start_http_server(server) as (host, port, sm):
+            body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {***REMOVED******REMOVED***)
+            status, headers, resp_body = _http_request(host, port, "POST", body=body)
+            assert status == 200
+            assert "mcp-session-id" in headers
+            assert "mcp-protocol-version" in headers
+            data = json.loads(resp_body)
+            assert data["result"***REMOVED***["protocolVersion"***REMOVED*** == PROTOCOL_VERSION
+            # Session was created
+            session_id = headers["mcp-session-id"***REMOVED***
+            assert sm.get_session(session_id) is not None
+
+    def test_post_ping(self, server):
+        """POST ping should return 200 with JSON-RPC response."""
+        with _start_http_server(server) as (host, port, sm):
+            body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+            status, headers, resp_body = _http_request(host, port, "POST", body=body)
+            assert status == 200
+            data = json.loads(resp_body)
+            assert data["id"***REMOVED*** == 1
+            assert data["result"***REMOVED*** == {***REMOVED***
+
+    def test_post_notification_returns_202(self, server):
+        """POST notification (no id) should return 202 Accepted."""
+        with _start_http_server(server) as (host, port, sm):
+            body = json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized", "params": {***REMOVED******REMOVED***)
+            status, headers, resp_body = _http_request(host, port, "POST", body=body)
+            assert status == 202
+            assert resp_body == ""
+
+    def test_post_tools_list(self, server):
+        """POST tools/list should return 200 with tool list."""
+        with _start_http_server(server) as (host, port, sm):
+            body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/list"***REMOVED***)
+            status, headers, resp_body = _http_request(host, port, "POST", body=body)
+            assert status == 200
+            data = json.loads(resp_body)
+            assert "tools" in data["result"***REMOVED***
+            assert len(data["result"***REMOVED***["tools"***REMOVED***) > 0
+
+    def test_post_resources_list(self, server):
+        """POST resources/list should return 200 with resource list."""
+        with _start_http_server(server) as (host, port, sm):
+            body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "resources/list"***REMOVED***)
+            status, headers, resp_body = _http_request(host, port, "POST", body=body)
+            assert status == 200
+            data = json.loads(resp_body)
+            assert "resources" in data["result"***REMOVED***
+
+    def test_post_prompts_list(self, server):
+        """POST prompts/list should return 200 with prompt list."""
+        with _start_http_server(server) as (host, port, sm):
+            body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "prompts/list"***REMOVED***)
+            status, headers, resp_body = _http_request(host, port, "POST", body=body)
+            assert status == 200
+            data = json.loads(resp_body)
+            assert "prompts" in data["result"***REMOVED***
+
+    def test_post_batch_request(self, server):
+        """POST batch request should return 200 with array of responses."""
+        with _start_http_server(server) as (host, port, sm):
+            batch = [
+                {"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***,
+                {"jsonrpc": "2.0", "id": 2, "method": "tools/list"***REMOVED***,
+            ***REMOVED***
+            body = json.dumps(batch)
+            status, headers, resp_body = _http_request(host, port, "POST", body=body)
+            assert status == 200
+            data = json.loads(resp_body)
+            assert isinstance(data, list)
+            assert len(data) == 2
+            assert data[0***REMOVED***["id"***REMOVED*** == 1
+            assert data[1***REMOVED***["id"***REMOVED*** == 2
+
+    def test_post_batch_all_notifications(self, server):
+        """POST batch with only notifications should return 202."""
+        with _start_http_server(server) as (host, port, sm):
+            batch = [
+                {"jsonrpc": "2.0", "method": "notifications/initialized"***REMOVED***,
+            ***REMOVED***
+            body = json.dumps(batch)
+            status, headers, resp_body = _http_request(host, port, "POST", body=body)
+            assert status == 202
+
+    def test_post_unknown_method(self, server):
+        """POST unknown method should return 200 with JSON-RPC error."""
+        with _start_http_server(server) as (host, port, sm):
+            body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "unknown/method"***REMOVED***)
+            status, headers, resp_body = _http_request(host, port, "POST", body=body)
+            assert status == 200
+            data = json.loads(resp_body)
+            assert data["error"***REMOVED***["code"***REMOVED*** == METHOD_NOT_FOUND
+
+    def test_post_invalid_json(self, server):
+        """POST invalid JSON should return 400 with parse error."""
+        with _start_http_server(server) as (host, port, sm):
+            status, headers, resp_body = _http_request(host, port, "POST", body="{invalid")
+            assert status == 400
+            data = json.loads(resp_body)
+            assert data["error"***REMOVED***["code"***REMOVED*** == PARSE_ERROR
+
+    def test_post_wrong_path(self, server):
+        """POST to wrong path should return 404."""
+        with _start_http_server(server) as (host, port, sm):
+            body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+            status, headers, resp_body = _http_request(host, port, "POST", path="/wrong", body=body)
+            assert status == 404
+
+    def test_delete_terminates_session(self, server):
+        """DELETE with Mcp-Session-Id should terminate session (204)."""
+        with _start_http_server(server) as (host, port, sm):
+            # Create session via initialize
+            init_body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {***REMOVED******REMOVED***)
+            _, init_headers, _ = _http_request(host, port, "POST", body=init_body)
+            session_id = init_headers["mcp-session-id"***REMOVED***
+
+            # Delete it
+            status, headers, resp_body = _http_request(
+                host, port, "DELETE", headers={"Mcp-Session-Id": session_id***REMOVED***
+            )
+            assert status == 204
+            assert sm.get_session(session_id) is None
+
+    def test_delete_unknown_session(self, server):
+        """DELETE with unknown session should return 404."""
+        with _start_http_server(server) as (host, port, sm):
+            status, headers, resp_body = _http_request(
+                host, port, "DELETE", headers={"Mcp-Session-Id": "nonexistent"***REMOVED***
+            )
+            assert status == 404
+
+    def test_delete_without_session_id(self, server):
+        """DELETE without Mcp-Session-Id should return 400."""
+        with _start_http_server(server) as (host, port, sm):
+            status, headers, resp_body = _http_request(host, port, "DELETE")
+            assert status == 400
+
+    def test_get_without_session_id(self, server):
+        """GET without Mcp-Session-Id should return 400."""
+        with _start_http_server(server) as (host, port, sm):
+            status, headers, resp_body = _http_request(host, port, "GET")
+            assert status == 400
+
+    def test_get_unknown_session(self, server):
+        """GET with unknown session should return 404."""
+        with _start_http_server(server) as (host, port, sm):
+            status, headers, resp_body = _http_request(
+                host, port, "GET", headers={"Mcp-Session-Id": "nonexistent"***REMOVED***
+            )
+            assert status == 404
+
+    def test_get_wrong_path(self, server):
+        """GET to wrong path should return 404."""
+        with _start_http_server(server) as (host, port, sm):
+            status, headers, resp_body = _http_request(host, port, "GET", path="/wrong")
+            assert status == 404
+
+    def test_post_tools_call(self, server):
+        """POST tools/call should return 200 with tool result."""
+        with _start_http_server(server) as (host, port, sm):
+            body = json.dumps({
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "tools/call",
+                "params": {"name": "session_status", "arguments": {***REMOVED******REMOVED***,
+            ***REMOVED***)
+            status, headers, resp_body = _http_request(host, port, "POST", body=body)
+            assert status == 200
+            data = json.loads(resp_body)
+            assert "content" in data["result"***REMOVED***
+
+    def test_protocol_version_header(self, server):
+        """All responses should include Mcp-Protocol-Version header."""
+        with _start_http_server(server) as (host, port, sm):
+            body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+            status, headers, resp_body = _http_request(host, port, "POST", body=body)
+            assert headers.get("mcp-protocol-version") == PROTOCOL_VERSION
+
+    def test_post_shutdown(self, server):
+        """POST shutdown should return 200 with empty result."""
+        with _start_http_server(server) as (host, port, sm):
+            body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "shutdown"***REMOVED***)
+            status, headers, resp_body = _http_request(host, port, "POST", body=body)
+            assert status == 200
+            data = json.loads(resp_body)
+            assert data["result"***REMOVED*** == {***REMOVED***
+
+    def test_post_invalid_origin_rejected(self, server):
+        """POST with invalid Origin header should return 403."""
+        with _start_http_server(server) as (host, port, sm):
+            body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+            status, headers, resp_body = _http_request(
+                host, port, "POST", body=body,
+                headers={"Origin": "http://evil.com"***REMOVED***,
+            )
+            assert status == 403
+
+    def test_post_localhost_origin_allowed(self, server):
+        """POST with localhost Origin should be allowed."""
+        with _start_http_server(server) as (host, port, sm):
+            body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+            status, headers, resp_body = _http_request(
+                host, port, "POST", body=body,
+                headers={"Origin": "http://localhost:3000"***REMOVED***,
+            )
+            assert status == 200
+
+    def test_post_no_origin_allowed(self, server):
+        """POST without Origin (CLI client) should be allowed."""
+        with _start_http_server(server) as (host, port, sm):
+            body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+            status, headers, resp_body = _http_request(host, port, "POST", body=body)
+            assert status == 200
+
+    def test_post_with_invalid_session_id_rejected(self, server):
+        """POST with invalid Mcp-Session-Id should return 404."""
+        with _start_http_server(server) as (host, port, sm):
+            body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+            status, headers, resp_body = _http_request(
+                host, port, "POST", body=body,
+                headers={"Mcp-Session-Id": "nonexistent-session"***REMOVED***,
+            )
+            assert status == 404
+
+    def test_get_sse_stream_receives_notification(self, server):
+        """GET SSE stream should receive notifications pushed via session_manager."""
+        with _start_http_server(server) as (host, port, sm):
+            # Create a session
+            sid = sm.create_session()
+
+            # Use raw socket to read SSE with timeout
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(5)
+            sock.connect((host, port))
+            request = (
+                f"GET /mcp HTTP/1.1\r\n"
+                f"Host: {host***REMOVED***:{port***REMOVED***\r\n"
+                f"Mcp-Session-Id: {sid***REMOVED***\r\n"
+                f"Accept: text/event-stream\r\n"
+                f"Connection: keep-alive\r\n"
+                f"\r\n"
+            )
+            sock.sendall(request.encode("utf-8"))
+
+            # Read HTTP headers (until empty line)
+            header_data = b""
+            while b"\r\n\r\n" not in header_data:
+                chunk = sock.recv(4096)
+                if not chunk:
+                    break
+                header_data += chunk
+
+            # Verify we got 200 + text/event-stream
+            header_str = header_data.decode("utf-8", errors="replace")
+            assert "200" in header_str.split("\r\n")[0***REMOVED***, f"Expected 200, got: {header_str.split(chr(13)+chr(10))[0***REMOVED******REMOVED***"
+            assert "text/event-stream" in header_str
+
+            # Push a notification
+            notification = json.dumps({"jsonrpc": "2.0", "method": "notifications/progress", "params": {"progress": 50***REMOVED******REMOVED***)
+            sm.push_notification(sid, notification)
+
+            # Read SSE data (should get 'data: ...\n\n')
+            sse_data = b""
+            try:
+                while b"data:" not in sse_data:
+                    chunk = sock.recv(4096)
+                    if not chunk:
+                        break
+                    sse_data += chunk
+            except socket.timeout:
+                pass
+
+            sock.close()
+
+            sse_text = sse_data.decode("utf-8", errors="replace")
+            assert "data:" in sse_text, f"No 'data:' in SSE response: {sse_text!r***REMOVED***"
+            assert "notifications/progress" in sse_text
+
+    def test_delete_no_content_length_header(self, server):
+        """204 response must NOT have Content-Length header (RFC 7230)."""
+        with _start_http_server(server) as (host, port, sm):
+            sid = sm.create_session()
+            status, headers, resp_body = _http_request(
+                host, port, "DELETE", headers={"Mcp-Session-Id": sid***REMOVED***
+            )
+            assert status == 204
+            assert "content-length" not in headers

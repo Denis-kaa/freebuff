@@ -186,8 +186,12 @@
   - 12 tools: ToolRegistry (git/file/shell/sqlite/http) + knowledge/memory/session/plugins
   - 9 resources: buffy://manifest, buffy://roadmap, buffy://knowledge, buffy://memory, ...
   - 3 prompts: context_resume, knowledge_search, task_start
-  - Protocol 2024-11-05, lazy loading, EventBus integration, workspace-aware
-  - 51 тест, 0 errors
+  - Protocol 2025-03-26, lazy loading, EventBus integration, workspace-aware
+  - **Streamable HTTP транспорт** (MCP 2025-03-26 spec): single endpoint /mcp
+    - POST: JSON-RPC, GET: SSE stream, DELETE: session termination
+    - Mcp-Session-Id header, Origin validation, thread-safe session manager
+    - CLI: --http, --host, --port
+  - 89 тестов, 0 errors (53 stdio + 10 session manager + 27 HTTP)
 
 ### 🔴 План
 - [ ***REMOVED*** MCP Client — подключение внешних MCP-серверов
@@ -217,7 +221,7 @@
 | **Phase 1** | ✅ Завершена | 100% | Streaming, Tasks, Router, Memory, Context Builder, Unified Context, 195 тестов |
 | **Phase 2** | ✅ Завершена | 100% | Memory Engine + Knowledge Engine + Graph Search + Semantic Search + auto-index + seeded docs, 99+ тестов |
 | **Phase 3** | 🟡 В РАБОТЕ | ~90% | Router + Orchestrator + ModelGateway + ToolRuntime, 150 тестов. ✅ Groq фикс, ✅ Git, ✅ Streaming (SSE/Gemini/Ollama) |
-| **Phase 4** | 🟡 В РАБОТЕ | ~65% | Event Bus + Plugin API + MCP Server + интеграции, 152 теста. ✅ EventBus активирован, ✅ Knowledge наполнен, ✅ MCP Server (12 tools, 9 resources, 3 prompts) |
+| **Phase 4** | 🟡 В РАБОТЕ | ~70% | Event Bus + Plugin API + MCP Server (stdio + Streamable HTTP) + интеграции, 190 тестов. ✅ EventBus, ✅ Knowledge, ✅ MCP Server (12 tools, 9 resources, 3 prompts, 89 тестов) |
 | **Phase 5** | 🔴 План | 0% | Ничего не начато |
 
 ---
