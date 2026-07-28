@@ -42,6 +42,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 ***REMOVED***
 from typing import Any, Dict, Optional
+from urllib.parse import urlparse
 
 WORKSPACE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(WORKSPACE))
@@ -151,8 +152,6 @@ if HAS_FASTAPI:
 
     def _validate_origin(request: Request) -> bool:
         """Validate Origin header to prevent DNS rebinding."""
-        from urllib.parse import urlparse
-
         origin = request.headers.get("origin")
         if origin is None:
             return True
