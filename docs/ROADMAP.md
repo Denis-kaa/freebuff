@@ -180,8 +180,16 @@
   - Edge cases: SilentPlugin, FailingPlugin, re-registration, temp plugins
   - Integration: create_plugin_registrar + ToolRegistry
 
+### ✅ Сделано
+- [x***REMOVED*** **MCP Server** — scripts/mcp_server.py
+  - Pure Python MCP server (JSON-RPC 2.0 over stdio, без внешних SDK)
+  - 12 tools: ToolRegistry (git/file/shell/sqlite/http) + knowledge/memory/session/plugins
+  - 9 resources: buffy://manifest, buffy://roadmap, buffy://knowledge, buffy://memory, ...
+  - 3 prompts: context_resume, knowledge_search, task_start
+  - Protocol 2024-11-05, lazy loading, EventBus integration, workspace-aware
+  - 51 тест, 0 errors
+
 ### 🔴 План
-- [ ***REMOVED*** MCP Server — интеграция с Claude, Gemini, OpenClaw
 - [ ***REMOVED*** MCP Client — подключение внешних MCP-серверов
 - [ ***REMOVED*** Плагины: tg_messenger, system_monitor, knowledge_sync
 - [ ***REMOVED*** Distributed Agents — мульти-агентная оркестрация
@@ -209,7 +217,7 @@
 | **Phase 1** | ✅ Завершена | 100% | Streaming, Tasks, Router, Memory, Context Builder, Unified Context, 195 тестов |
 | **Phase 2** | ✅ Завершена | 100% | Memory Engine + Knowledge Engine + Graph Search + Semantic Search + auto-index + seeded docs, 99+ тестов |
 | **Phase 3** | 🟡 В РАБОТЕ | ~85% | Router + Orchestrator + ModelGateway + ToolRuntime, 114 тестов. ✅ Groq фикс (User-Agent), ✅ Git инициализирован |
-| **Phase 4** | 🟡 В РАБОТЕ | ~60% | Event Bus + Plugin API + интеграции, 101 тест. ✅ EventBus активирован (17 типов, 55 событий), ✅ Knowledge Engine наполнен (27 док.) |
+| **Phase 4** | 🟡 В РАБОТЕ | ~65% | Event Bus + Plugin API + MCP Server + интеграции, 152 теста. ✅ EventBus активирован, ✅ Knowledge наполнен, ✅ MCP Server (12 tools, 9 resources, 3 prompts) |
 | **Phase 5** | 🔴 План | 0% | Ничего не начато |
 
 ---

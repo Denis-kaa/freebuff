@@ -6,6 +6,36 @@
 
 ---
 
+## [2.4.0***REMOVED*** — 2026-07-28
+
+### Добавлено
+- **MCP Server** (`scripts/mcp_server.py`) — Model Context Protocol server на чистом Python:
+  - JSON-RPC 2.0 over stdio (без внешних SDK, `mcp` пакет не установлен на Termux)
+  - **12 tools:** git, file, shell, sqlite, http (из ToolRegistry) + knowledge_search,
+    memory_store, memory_retrieve, memory_list, session_status, context_resume, plugins_list
+  - **9 resources:** buffy://manifest, buffy://roadmap, buffy://spec, buffy://changelog,
+    buffy://task, buffy://inventory, buffy://decisions, buffy://knowledge, buffy://memory
+  - **3 prompts:** context_resume, knowledge_search, task_start
+  - Protocol version: 2024-11-05
+  - Lazy loading компонентов (ToolRegistry, KnowledgeEngine, MemoryEngine, ContextManager)
+  - EventBus интеграция (mcp.server.initialized, mcp.tool.called, mcp.knowledge.searched)
+  - Workspace-aware: ToolRegistry использует workspace сервера, не хардкод
+  - CLI: --status, --tools, --resources, --prompts, --call, --read, --async-mode
+  - Интеграция с Claude / Gemini / OpenClaw через claude_desktop_config.json
+- **Тесты MCP Server** (`tests/test_mcp_server.py`) — 51 тест, 0 errors:
+  - JSON-RPC helpers (response, error, notification)
+  - Initialize handshake (protocol version, capabilities, server info)
+  - Tools: list, call (knowledge_search, memory CRUD, session_status, context_resume)
+  - Resources: list, read (manifest, knowledge overview, memory overview)
+  - Prompts: list, get (context_resume, task_start)
+  - Error handling (unknown method, invalid params, notifications)
+  - Batch requests, server status, dataclasses, ToolRegistry integration
+
+### Изменено
+- `docs/ROADMAP.md`: Phase 4 обновлена — MCP Server реализован (55% → 65%)
+
+---
+
 ## [2.3.0***REMOVED*** — 2026-07-28
 
 ### Исправлено
