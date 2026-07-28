@@ -6,6 +6,38 @@
 
 ---
 
+## [2.5.0***REMOVED*** — 2026-07-28
+
+### Добавлено
+- **Streaming для Model Gateway** — реализован real-time streaming для всех 3 провайдеров:
+  - `OpenAICompatibleProvider.generate_stream()` — SSE format (`data: {json***REMOVED***`, `[DONE***REMOVED***` terminator,
+    `delta.content` extraction). DeepSeek, OpenRouter, SambaNova, DashScope.
+  - `GeminiProvider.generate_stream()` — `streamGenerateContent` endpoint с `alt=sse` параметром,
+    `candidates[0***REMOVED***.content.parts[0***REMOVED***.text` extraction.
+  - `OllamaProvider.generate_stream()` — newline-delimited JSON (`stream: true`),
+    `message.content` extraction, `done` flag + usage в финальном chunk.
+  - `ModelGateway.generate_stream()` — fallback между провайдерами при ошибке стрима
+  - `_publish_stream_event()` — EventBus интеграция (`model.called` / `model.fallback` с `streaming=True`)
+  - CLI: `generate-stream` команда с `--timeout` флагом
+- **Рефакторинг провайдеров:**
+  - `_build_body()` method extracted в OpenAICompatibleProvider, GeminiProvider, OllamaProvider
+  - `_convert_messages()` method extracted в GeminiProvider
+  - Устранено дублирование кода между `generate()` и `generate_stream()`
+- **9 новых тестов streaming** (`tests/test_model_gateway.py`):
+  - OpenAI SSE format parsing (content + [DONE***REMOVED***)
+  - Gemini SSE format parsing (streamGenerateContent)
+  - Ollama newline JSON parsing (stream: true, done flag, usage)
+  - BaseProvider fallback streaming (без реального стриминга)
+  - ModelGateway.generate_stream() с моком провайдера
+  - Error handling (no model raises ValueError)
+  - Edge cases: empty lines, invalid JSON skipping
+  - StreamChunk with usage stats
+
+### Проверка
+- 36 тестов model_gateway — **0 errors** (включая 9 streaming тестов)
+
+---
+
 ## [2.4.0***REMOVED*** — 2026-07-28
 
 ### Добавлено

@@ -244,6 +244,268 @@ class TestStreamChunk:
         assert c.finish_reason == "stop"
         assert c.model == "m"
 
+    def test_with_usage(self):
+        c = StreamChunk(content="Hi", model="m", usage={"total_tokens": 42***REMOVED***)
+        assert c.usage["total_tokens"***REMOVED*** == 42
+
+
+class TestStreaming:
+    """Тесты streaming для всех провайдеров."""
+
+    @patch("scripts.model_gateway.httpx.Client")
+    def test_openai_stream_sse_format(self, mock_client):
+        """Тест OpenAI-совместимого streaming (SSE format)."""
+        # Мокаем SSE ответ: data: {json***REMOVED*** lines + data: [DONE***REMOVED***
+        sse_lines = [
+            'data: {"choices": [{"delta": {"content": "Hello"***REMOVED***, "finish_reason": null***REMOVED******REMOVED***, "model": "deepseek-v4-flash"***REMOVED***',
+            'data: {"choices": [{"delta": {"content": " world"***REMOVED***, "finish_reason": null***REMOVED******REMOVED***, "model": "deepseek-v4-flash"***REMOVED***',
+            'data: {"choices": [{"delta": {***REMOVED***, "finish_reason": "stop"***REMOVED******REMOVED***, "model": "deepseek-v4-flash", "usage": {"total_tokens": 15***REMOVED******REMOVED***',
+            'data: [DONE***REMOVED***',
+        ***REMOVED***
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.iter_lines.return_value = iter(sse_lines)
+        mock_resp.raise_for_status = MagicMock()
+
+        mock_stream_ctx = MagicMock()
+        mock_stream_ctx.__enter__.return_value = mock_resp
+        mock_stream_ctx.__exit__.return_value = False
+
+        mock_instance = MagicMock()
+        mock_instance.stream.return_value = mock_stream_ctx
+        mock_client.return_value.__enter__.return_value = mock_instance
+
+        from scripts.model_gateway import OpenAICompatibleProvider
+        provider = OpenAICompatibleProvider(
+            base_url="https://api.deepseek.com/v1",
+            api_key="sk-test",
+            provider_name="deepseek",
+        )
+
+        chunks = list(provider.generate_stream(
+            model="deepseek-v4-flash",
+            messages=[{"role": "user", "content": "Hi"***REMOVED******REMOVED***,
+        ))
+
+        # Should get content chunks + final stop chunk
+        assert len(chunks) >= 2
+        contents = "".join(c.content for c in chunks)
+        assert "Hello" in contents
+        assert "world" in contents
+        # Last chunk should have finish_reason=stop
+        assert any(c.finish_reason == "stop" for c in chunks)
+
+    @patch("scripts.model_gateway.httpx.Client")
+    def test_gemini_stream_sse_format(self, mock_client):
+        """Тест Gemini streaming (streamGenerateContent with alt=sse)."""
+        sse_lines = [
+            'data: {"candidates": [{"content": {"parts": [{"text": "Hello"***REMOVED******REMOVED******REMOVED***, "finishReason": null***REMOVED******REMOVED******REMOVED***',
+            'data: {"candidates": [{"content": {"parts": [{"text": " from Gemini"***REMOVED******REMOVED******REMOVED***, "finishReason": "STOP"***REMOVED******REMOVED***, "usageMetadata": {"totalTokenCount": 20***REMOVED******REMOVED***',
+        ***REMOVED***
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.iter_lines.return_value = iter(sse_lines)
+        mock_resp.raise_for_status = MagicMock()
+
+        mock_stream_ctx = MagicMock()
+        mock_stream_ctx.__enter__.return_value = mock_resp
+        mock_stream_ctx.__exit__.return_value = False
+
+        mock_instance = MagicMock()
+        mock_instance.stream.return_value = mock_stream_ctx
+        mock_client.return_value.__enter__.return_value = mock_instance
+
+        from scripts.model_gateway import GeminiProvider
+        provider = GeminiProvider(api_key="test-key")
+
+        chunks = list(provider.generate_stream(
+            model="gemini-2.5-flash",
+            messages=[{"role": "user", "content": "Hi"***REMOVED******REMOVED***,
+        ))
+
+        contents = "".join(c.content for c in chunks)
+        assert "Hello" in contents
+        assert "Gemini" in contents
+        # Should have a finish chunk
+        assert any(c.finish_reason == "stop" for c in chunks)
+
+    @patch("scripts.model_gateway.httpx.Client")
+    def test_ollama_stream_newline_json(self, mock_client):
+        """Тест Ollama streaming (newline-delimited JSON)."""
+        json_lines = [
+            '{"model": "qwen2.5:1.5b", "message": {"content": "Hello"***REMOVED***, "done": false***REMOVED***',
+            '{"model": "qwen2.5:1.5b", "message": {"content": " world"***REMOVED***, "done": false***REMOVED***',
+            '{"model": "qwen2.5:1.5b", "message": {"content": ""***REMOVED***, "done": true, "prompt_eval_count": 10, "eval_count": 5***REMOVED***',
+        ***REMOVED***
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.iter_lines.return_value = iter(json_lines)
+        mock_resp.raise_for_status = MagicMock()
+
+        mock_stream_ctx = MagicMock()
+        mock_stream_ctx.__enter__.return_value = mock_resp
+        mock_stream_ctx.__exit__.return_value = False
+
+        mock_instance = MagicMock()
+        mock_instance.stream.return_value = mock_stream_ctx
+        mock_client.return_value.__enter__.return_value = mock_instance
+
+        from scripts.model_gateway import OllamaProvider
+        provider = OllamaProvider(api_key="")
+
+        chunks = list(provider.generate_stream(
+            model="qwen2.5:1.5b",
+            messages=[{"role": "user", "content": "Hi"***REMOVED******REMOVED***,
+        ))
+
+        contents = "".join(c.content for c in chunks)
+        assert "Hello" in contents
+        assert "world" in contents
+        # Final chunk should have usage
+        final_chunks = [c for c in chunks if c.usage is not None***REMOVED***
+        assert len(final_chunks) >= 1
+        assert final_chunks[-1***REMOVED***.usage["total_tokens"***REMOVED*** == 15
+
+    def test_base_provider_stream_fallback(self):
+        """Тест fallback streaming в BaseProvider (без реального стриминга)."""
+        from scripts.model_gateway import BaseProvider
+
+        class FakeProvider(BaseProvider):
+            def generate(self, model, messages, temperature=0.7, max_tokens=None, timeout=60):
+                return ModelResponse(content="full response", model=model, provider="fake")
+
+        provider = FakeProvider()
+        chunks = list(provider.generate_stream(
+            model="test",
+            messages=[{"role": "user", "content": "Hi"***REMOVED******REMOVED***,
+        ))
+
+        # BaseProvider fallback yields content then stop
+        assert len(chunks) == 2
+        assert chunks[0***REMOVED***.content == "full response"
+        assert chunks[1***REMOVED***.finish_reason == "stop"
+
+    @patch("scripts.model_gateway.httpx.Client")
+    def test_gateway_generate_stream(self, mock_client):
+        """Тест ModelGateway.generate_stream() с моком провайдера."""
+        sse_lines = [
+            'data: {"choices": [{"delta": {"content": "Hi"***REMOVED***, "finish_reason": null***REMOVED******REMOVED***, "model": "deepseek-v4-flash"***REMOVED***',
+            'data: {"choices": [{"delta": {***REMOVED***, "finish_reason": "stop"***REMOVED******REMOVED***, "model": "deepseek-v4-flash"***REMOVED***',
+            'data: [DONE***REMOVED***',
+        ***REMOVED***
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.iter_lines.return_value = iter(sse_lines)
+        mock_resp.raise_for_status = MagicMock()
+
+        mock_stream_ctx = MagicMock()
+        mock_stream_ctx.__enter__.return_value = mock_resp
+        mock_stream_ctx.__exit__.return_value = False
+
+        mock_instance = MagicMock()
+        mock_instance.stream.return_value = mock_stream_ctx
+        mock_client.return_value.__enter__.return_value = mock_instance
+
+        gw = ModelGateway()
+        mock_pool = MagicMock()
+        mock_pool.rotate.return_value = "sk-test"
+        gw._keypool = mock_pool
+
+        chunks = list(gw.generate_stream(
+            model="deepseek-v4-flash",
+            messages=[{"role": "user", "content": "Hello"***REMOVED******REMOVED***,
+        ))
+
+        assert len(chunks) >= 1
+        assert any(c.content == "Hi" for c in chunks)
+
+    def test_generate_stream_no_model_raises(self):
+        """Тест что generate_stream() без model вызывает ValueError."""
+        gw = ModelGateway()
+        with pytest.raises(ValueError, match="model is required"):
+            list(gw.generate_stream(messages=[{"role": "user", "content": "Hi"***REMOVED******REMOVED***))
+
+    @patch("scripts.model_gateway.httpx.Client")
+    def test_openai_stream_handles_empty_lines(self, mock_client):
+        """Тест что streaming игнорирует пустые строки в SSE."""
+        sse_lines = [
+            '',
+            'data: {"choices": [{"delta": {"content": "A"***REMOVED***, "finish_reason": null***REMOVED******REMOVED******REMOVED***',
+            '',
+            'data: {"choices": [{"delta": {"content": "B"***REMOVED***, "finish_reason": null***REMOVED******REMOVED******REMOVED***',
+            '',
+            'data: [DONE***REMOVED***',
+        ***REMOVED***
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.iter_lines.return_value = iter(sse_lines)
+        mock_resp.raise_for_status = MagicMock()
+
+        mock_stream_ctx = MagicMock()
+        mock_stream_ctx.__enter__.return_value = mock_resp
+        mock_stream_ctx.__exit__.return_value = False
+
+        mock_instance = MagicMock()
+        mock_instance.stream.return_value = mock_stream_ctx
+        mock_client.return_value.__enter__.return_value = mock_instance
+
+        from scripts.model_gateway import OpenAICompatibleProvider
+        provider = OpenAICompatibleProvider(
+            base_url="https://api.test.com/v1",
+            api_key="sk-test",
+        )
+
+        chunks = list(provider.generate_stream(
+            model="test-model",
+            messages=[{"role": "user", "content": "Hi"***REMOVED******REMOVED***,
+        ))
+
+        contents = "".join(c.content for c in chunks)
+        assert "A" in contents
+        assert "B" in contents
+
+    @patch("scripts.model_gateway.httpx.Client")
+    def test_openai_stream_invalid_json_skipped(self, mock_client):
+        """Тест что streaming пропускает невалидный JSON в SSE."""
+        sse_lines = [
+            'data: {invalid json',
+            'data: {"choices": [{"delta": {"content": "OK"***REMOVED***, "finish_reason": null***REMOVED******REMOVED******REMOVED***',
+            'data: [DONE***REMOVED***',
+        ***REMOVED***
+
+        mock_resp = MagicMock()
+        mock_resp.status_code = 200
+        mock_resp.iter_lines.return_value = iter(sse_lines)
+        mock_resp.raise_for_status = MagicMock()
+
+        mock_stream_ctx = MagicMock()
+        mock_stream_ctx.__enter__.return_value = mock_resp
+        mock_stream_ctx.__exit__.return_value = False
+
+        mock_instance = MagicMock()
+        mock_instance.stream.return_value = mock_stream_ctx
+        mock_client.return_value.__enter__.return_value = mock_instance
+
+        from scripts.model_gateway import OpenAICompatibleProvider
+        provider = OpenAICompatibleProvider(
+            base_url="https://api.test.com/v1",
+            api_key="sk-test",
+        )
+
+        chunks = list(provider.generate_stream(
+            model="test-model",
+            messages=[{"role": "user", "content": "Hi"***REMOVED******REMOVED***,
+        ))
+
+        # Invalid JSON should be skipped, valid content should pass
+        contents = "".join(c.content for c in chunks)
+        assert "OK" in contents
+
 
 class TestProviderEndpoints:
     """Тесты конфигурации провайдеров."""

@@ -260,6 +260,25 @@ class OpenAICompatibleProvider(BaseProvider):
             "Content-Type": "application/json",
         ***REMOVED***
 
+    def _build_body(
+        self,
+        model: str,
+        messages: List[Dict[str, Any***REMOVED******REMOVED***,
+        temperature: float,
+        max_tokens: int | None,
+        stream: bool = False,
+    ) -> Dict[str, Any***REMOVED***:
+        body: Dict[str, Any***REMOVED*** = {
+            "model": model,
+            "messages": messages,
+            "temperature": temperature,
+        ***REMOVED***
+        if max_tokens:
+            body["max_tokens"***REMOVED*** = max_tokens
+        if stream:
+            body["stream"***REMOVED*** = True
+        return body
+
     def generate(
         self,
         model: str,
@@ -269,13 +288,7 @@ class OpenAICompatibleProvider(BaseProvider):
         timeout: int = 60,
     ) -> ModelResponse:
         start = time.monotonic()
-        body: Dict[str, Any***REMOVED*** = {
-            "model": model,
-            "messages": messages,
-            "temperature": temperature,
-        ***REMOVED***
-        if max_tokens:
-            body["max_tokens"***REMOVED*** = max_tokens
+        body = self._build_body(model, messages, temperature, max_tokens)
 
         try:
             with httpx.Client(timeout=timeout) as client:
@@ -310,23 +323,76 @@ class OpenAICompatibleProvider(BaseProvider):
             latency_ms=elapsed,
         )
 
-
-class GeminiProvider(BaseProvider):
-    """Провайдер Google Gemini (отдельный API формат)."""
-
-    BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
-
-    def generate(
+    def generate_stream(
         self,
         model: str,
         messages: List[Dict[str, Any***REMOVED******REMOVED***,
         temperature: float = 0.7,
         max_tokens: int | None = None,
         timeout: int = 60,
-    ) -> ModelResponse:
-        start = time.monotonic()
+    ) -> Iterator[StreamChunk***REMOVED***:
+        """Streaming via SSE (Server-Sent Events).
 
-        # Конвертируем OpenAI-формат в Gemini
+        Format: `data: {json_chunk***REMOVED***` lines, terminated by `data: [DONE***REMOVED***`.
+        Each chunk has `choices[0***REMOVED***.delta.content` with partial text.
+        """
+        body = self._build_body(model, messages, temperature, max_tokens, stream=True)
+
+        try:
+            with httpx.Client(timeout=timeout) as client:
+                with client.stream(
+                    "POST",
+                    f"{self.base_url***REMOVED***/chat/completions",
+                    headers=self._headers(),
+                    json=body,
+                ) as resp:
+                    resp.raise_for_status()
+                    for line in resp.iter_lines():
+                        if not line:
+                            continue
+                        # SSE format: lines start with "data: "
+                        if line.startswith("data: "):
+                            data_str = line[len("data: "):***REMOVED***
+                            if data_str.strip() == "[DONE***REMOVED***":
+                                yield StreamChunk(finish_reason="stop", model=model)
+                                return
+                            try:
+                                chunk_data = json.loads(data_str)
+                            except json.JSONDecodeError:
+                                continue
+                            choices = chunk_data.get("choices", [***REMOVED***)
+                            if not choices:
+                                continue
+                            delta = choices[0***REMOVED***.get("delta", {***REMOVED***)
+                            content = delta.get("content", "")
+                            finish = choices[0***REMOVED***.get("finish_reason")
+                            usage = chunk_data.get("usage")
+                            if content or finish:
+                                yield StreamChunk(
+                                    content=content,
+                                    finish_reason=finish,
+                                    model=chunk_data.get("model", model),
+                                    usage=usage if usage else None,
+                                )
+        except httpx.HTTPStatusError as e:
+            raise RuntimeError(f"Stream API error {e.response.status_code***REMOVED***: {e.response.text[:200***REMOVED******REMOVED***") from e
+        except httpx.TimeoutException:
+            raise RuntimeError(f"Stream timeout after {timeout***REMOVED***s for {model***REMOVED***") from None
+        except Exception as e:
+            raise RuntimeError(f"Stream request failed: {e***REMOVED***") from e
+
+
+class GeminiProvider(BaseProvider):
+    """Провайдер Google Gemini (отдельный API формат)."""
+
+    BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
+
+    def _convert_messages(self, messages: List[Dict[str, Any***REMOVED******REMOVED***) -> Tuple[List[Dict[str, Any***REMOVED******REMOVED***, Optional[str***REMOVED******REMOVED***:
+        """Конвертирует OpenAI-формат сообщений в Gemini format.
+
+        Returns:
+            (contents, system_instruction)
+        """
         contents = [***REMOVED***
         system_instruction = None
         for msg in messages:
@@ -337,18 +403,35 @@ class GeminiProvider(BaseProvider):
                 continue
             gemini_role = "model" if role in ("assistant", "model") else "user"
             contents.append({"role": gemini_role, "parts": [{"text": content***REMOVED******REMOVED******REMOVED***)
+        return contents, system_instruction
 
+    def _build_body(
+        self,
+        messages: List[Dict[str, Any***REMOVED******REMOVED***,
+        temperature: float,
+        max_tokens: int | None,
+    ) -> Dict[str, Any***REMOVED***:
+        contents, system_instruction = self._convert_messages(messages)
         body: Dict[str, Any***REMOVED*** = {
             "contents": contents,
-            "generationConfig": {
-                "temperature": temperature,
-            ***REMOVED***,
+            "generationConfig": {"temperature": temperature***REMOVED***,
         ***REMOVED***
         if system_instruction:
             body["systemInstruction"***REMOVED*** = {"parts": [{"text": system_instruction***REMOVED******REMOVED******REMOVED***
         if max_tokens:
             body["generationConfig"***REMOVED***["maxOutputTokens"***REMOVED*** = max_tokens
+        return body
 
+    def generate(
+        self,
+        model: str,
+        messages: List[Dict[str, Any***REMOVED******REMOVED***,
+        temperature: float = 0.7,
+        max_tokens: int | None = None,
+        timeout: int = 60,
+    ) -> ModelResponse:
+        start = time.monotonic()
+        body = self._build_body(messages, temperature, max_tokens)
         url = f"{self.BASE_URL***REMOVED***/models/{model***REMOVED***:generateContent?key={self.api_key***REMOVED***"
 
         try:
@@ -384,11 +467,90 @@ class GeminiProvider(BaseProvider):
             latency_ms=elapsed,
         )
 
+    def generate_stream(
+        self,
+        model: str,
+        messages: List[Dict[str, Any***REMOVED******REMOVED***,
+        temperature: float = 0.7,
+        max_tokens: int | None = None,
+        timeout: int = 60,
+    ) -> Iterator[StreamChunk***REMOVED***:
+        """Streaming via Gemini streamGenerateContent endpoint.
+
+        Gemini returns a JSON array of chunk objects (not SSE format).
+        Each chunk has `candidates[0***REMOVED***.content.parts[0***REMOVED***.text`.
+        """
+        body = self._build_body(messages, temperature, max_tokens)
+        # streamGenerateContent returns chunked JSON array
+        url = f"{self.BASE_URL***REMOVED***/models/{model***REMOVED***:streamGenerateContent?alt=sse&key={self.api_key***REMOVED***"
+
+        try:
+            with httpx.Client(timeout=timeout) as client:
+                with client.stream("POST", url, json=body) as resp:
+                    resp.raise_for_status()
+                    for line in resp.iter_lines():
+                        if not line:
+                            continue
+                        # Gemini with alt=sse returns SSE format: data: {json***REMOVED***
+                        if line.startswith("data: "):
+                            data_str = line[len("data: "):***REMOVED***
+                            # Gemini doesn't send [DONE***REMOVED***, stream just ends
+                            try:
+                                chunk_data = json.loads(data_str)
+                            except json.JSONDecodeError:
+                                continue
+                            candidates = chunk_data.get("candidates", [***REMOVED***)
+                            if not candidates:
+                                continue
+                            parts = candidates[0***REMOVED***.get("content", {***REMOVED***).get("parts", [***REMOVED***)
+                            text = "".join(p.get("text", "") for p in parts)
+                            finish = candidates[0***REMOVED***.get("finishReason")
+                            usage = chunk_data.get("usageMetadata")
+                            if text or finish:
+                                yield StreamChunk(
+                                    content=text,
+                                    finish_reason=finish.lower() if finish else None,
+                                    model=model,
+                                    usage={
+                                        "prompt_tokens": usage.get("promptTokenCount", 0),
+                                        "completion_tokens": usage.get("candidatesTokenCount", 0),
+                                        "total_tokens": usage.get("totalTokenCount", 0),
+                                    ***REMOVED*** if usage else None,
+                                )
+        except httpx.HTTPStatusError as e:
+            raise RuntimeError(f"Gemini stream error {e.response.status_code***REMOVED***: {e.response.text[:200***REMOVED******REMOVED***") from e
+        except httpx.TimeoutException:
+            raise RuntimeError(f"Gemini stream timeout after {timeout***REMOVED***s") from None
+        except Exception as e:
+            raise RuntimeError(f"Gemini stream failed: {e***REMOVED***") from e
+
 
 class OllamaProvider(BaseProvider):
     """Провайдер Ollama (локальный)."""
 
     BASE_URL = "http://localhost:11434"
+
+    def _build_body(
+        self,
+        model: str,
+        messages: List[Dict[str, Any***REMOVED******REMOVED***,
+        temperature: float,
+        max_tokens: int | None,
+        stream: bool = False,
+    ) -> Dict[str, Any***REMOVED***:
+        ollama_messages = [
+            {"role": msg.get("role", "user"), "content": msg.get("content", "")***REMOVED***
+            for msg in messages
+        ***REMOVED***
+        body: Dict[str, Any***REMOVED*** = {
+            "model": model,
+            "messages": ollama_messages,
+            "options": {"temperature": temperature***REMOVED***,
+            "stream": stream,
+        ***REMOVED***
+        if max_tokens:
+            body["options"***REMOVED***["num_predict"***REMOVED*** = max_tokens
+        return body
 
     def generate(
         self,
@@ -399,25 +561,7 @@ class OllamaProvider(BaseProvider):
         timeout: int = 120,
     ) -> ModelResponse:
         start = time.monotonic()
-
-        # Конвертируем в Ollama chat format
-        ollama_messages = [***REMOVED***
-        for msg in messages:
-            ollama_messages.append({
-                "role": msg.get("role", "user"),
-                "content": msg.get("content", ""),
-            ***REMOVED***)
-
-        body: Dict[str, Any***REMOVED*** = {
-            "model": model,
-            "messages": ollama_messages,
-            "options": {
-                "temperature": temperature,
-            ***REMOVED***,
-            "stream": False,
-        ***REMOVED***
-        if max_tokens:
-            body["options"***REMOVED***["num_predict"***REMOVED*** = max_tokens
+        body = self._build_body(model, messages, temperature, max_tokens, stream=False)
 
         try:
             with httpx.Client(timeout=timeout) as client:
@@ -451,6 +595,66 @@ class OllamaProvider(BaseProvider):
             ***REMOVED***,
             latency_ms=elapsed,
         )
+
+    def generate_stream(
+        self,
+        model: str,
+        messages: List[Dict[str, Any***REMOVED******REMOVED***,
+        temperature: float = 0.7,
+        max_tokens: int | None = None,
+        timeout: int = 120,
+    ) -> Iterator[StreamChunk***REMOVED***:
+        """Streaming via Ollama newline-delimited JSON.
+
+        Ollama returns individual JSON objects separated by newlines.
+        Each object has `message.content` with partial text and `done` flag.
+        """
+        body = self._build_body(model, messages, temperature, max_tokens, stream=True)
+
+        try:
+            with httpx.Client(timeout=timeout) as client:
+                with client.stream("POST", f"{self.BASE_URL***REMOVED***/api/chat", json=body) as resp:
+                    resp.raise_for_status()
+                    for line in resp.iter_lines():
+                        if not line:
+                            continue
+                        try:
+                            chunk_data = json.loads(line)
+                        except json.JSONDecodeError:
+                            continue
+                        content = chunk_data.get("message", {***REMOVED***).get("content", "")
+                        done = chunk_data.get("done", False)
+                        if content:
+                            yield StreamChunk(
+                                content=content,
+                                finish_reason="stop" if done else None,
+                                model=chunk_data.get("model", model),
+                            )
+                        if done:
+                            # Final chunk with usage stats
+                            yield StreamChunk(
+                                finish_reason="stop",
+                                model=model,
+                                usage={
+                                    "prompt_tokens": chunk_data.get("prompt_eval_count", 0),
+                                    "completion_tokens": chunk_data.get("eval_count", 0),
+                                    "total_tokens": (
+                                        chunk_data.get("prompt_eval_count", 0)
+                                        + chunk_data.get("eval_count", 0)
+                                    ),
+                                ***REMOVED***,
+                            )
+                            return
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 404:
+                raise RuntimeError(f"Ollama model '{model***REMOVED***' not found. Run: ollama pull {model***REMOVED***") from e
+            raise RuntimeError(f"Ollama stream error {e.response.status_code***REMOVED***") from e
+        except httpx.TimeoutException:
+            raise RuntimeError(f"Ollama stream timeout after {timeout***REMOVED***s") from None
+        except httpx.ConnectError:
+            raise RuntimeError("Ollama not running. Start with: ollama serve") from None
+        except Exception as e:
+            raise RuntimeError(f"Ollama stream failed: {e***REMOVED***") from e
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -634,7 +838,19 @@ class ModelGateway:
         max_tokens: int | None = None,
         timeout: int = 60,
     ) -> Iterator[StreamChunk***REMOVED***:
-        """Генерирует ответ в streaming-режиме."""
+        """Генерирует ответ в streaming-режиме.
+
+        Args:
+            model: имя модели (deepseek-v4-flash, gemini-2.5-flash, ...)
+            messages: список сообщений [{"role": "user", "content": "..."***REMOVED******REMOVED***
+            fallback: модель для fallback при ошибке инициализации стрима
+            temperature: температура (0.0-1.0)
+            max_tokens: максимальное количество токенов в ответе
+            timeout: таймаут запроса в секундах
+
+        Yields:
+            StreamChunk с частичным контентом и/или finish_reason
+        """
         messages = messages or [***REMOVED***
 
         if not model:
@@ -644,16 +860,33 @@ class ModelGateway:
         if not provider_name:
             raise ValueError(f"Cannot determine provider for model: {model***REMOVED***")
 
-        provider = self._get_provider(provider_name)
-
-        for chunk in provider.generate_stream(
-            model=model,
-            messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens,
-            timeout=timeout,
-        ):
-            yield chunk
+        try:
+            provider = self._get_provider(provider_name)
+            for chunk in provider.generate_stream(
+                model=model,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                timeout=timeout,
+            ):
+                yield chunk
+        except Exception as e:
+            if fallback:
+                fb_provider_name = _model_to_provider(fallback)
+                if fb_provider_name and fb_provider_name != provider_name:
+                    # Fallback: переключаемся на другую модель
+                    self._publish_stream_event(fallback, fb_provider_name, True)
+                    fb_provider = self._get_provider(fb_provider_name)
+                    for chunk in fb_provider.generate_stream(
+                        model=fallback,
+                        messages=messages,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        timeout=timeout,
+                    ):
+                        yield chunk
+                    return
+            raise
 
     def generate_by_capabilities(
         self,
@@ -663,6 +896,31 @@ class ModelGateway:
     ) -> ModelResponse:
         """Генерирует ответ, выбирая модель по capabilities."""
         return self.generate(messages=messages, capabilities=capabilities, **kwargs)
+
+    def _publish_stream_event(
+        self,
+        model: str,
+        provider: str,
+        fallback_used: bool = False,
+    ):
+        """Публикует событие streaming вызова модели."""
+        if self._event_bus is None:
+            return
+        try:
+            from scripts.event_bus import Event
+            event_type = "model.fallback" if fallback_used else "model.called"
+            self._event_bus.publish(Event(
+                type=event_type,
+                source="model_gateway",
+                data={
+                    "model": model,
+                    "provider": provider,
+                    "streaming": True,
+                    "fallback_used": fallback_used,
+                ***REMOVED***,
+            ))
+        except Exception:
+            pass
 
     def _publish_event(self, result: ModelResponse, messages: List[Dict[str, Any***REMOVED******REMOVED***):
         """Публикует событие вызова модели."""
@@ -734,6 +992,15 @@ def main():
     p_gen.add_argument("--max-tokens", type=int)
     p_gen.add_argument("--fallback", help="Модель для fallback")
 
+    # generate-stream
+    p_stream = sub.add_parser("generate-stream", help="Streaming вызов модели")
+    p_stream.add_argument("model", help="Имя модели")
+    p_stream.add_argument("prompt", help="Текст запроса")
+    p_stream.add_argument("--system", help="System prompt")
+    p_stream.add_argument("--temp", type=float, default=0.7)
+    p_stream.add_argument("--max-tokens", type=int)
+    p_stream.add_argument("--timeout", type=int, default=120)
+
     # status
     sub.add_parser("status", help="Статус Gateway")
 
@@ -770,6 +1037,35 @@ def main():
                   f"{' (fallback)' if result.fallback_used else ''***REMOVED***")
         except Exception as e:
             print(f"❌ Error: {e***REMOVED***", file=sys.stderr)
+            sys.exit(1)
+
+    elif args.command == "generate-stream":
+        messages = [***REMOVED***
+        if args.system:
+            messages.append({"role": "system", "content": args.system***REMOVED***)
+        messages.append({"role": "user", "content": args.prompt***REMOVED***)
+
+        kwargs = {
+            "model": args.model,
+            "messages": messages,
+            "temperature": args.temp,
+            "timeout": args.timeout,
+        ***REMOVED***
+        if args.max_tokens:
+            kwargs["max_tokens"***REMOVED*** = args.max_tokens
+
+        try:
+            print(f"\n{'─' * 60***REMOVED***", flush=True)
+            for chunk in gw.generate_stream(**kwargs):
+                if chunk.content:
+                    print(chunk.content, end="", flush=True)
+                if chunk.finish_reason == "stop" and chunk.usage:
+                    print(f"\n{'─' * 60***REMOVED***")
+                    print(f"  Model: {chunk.model***REMOVED***")
+                    print(f"  Tokens: {chunk.usage.get('total_tokens', 0)***REMOVED***")
+            print(flush=True)
+        except Exception as e:
+            print(f"\n❌ Stream error: {e***REMOVED***", file=sys.stderr)
             sys.exit(1)
 
     elif args.command == "status":
