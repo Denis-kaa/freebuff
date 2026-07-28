@@ -16,14 +16,14 @@
 | **Total Python LOC** | **21,832** |
 | Классов | 77 |
 | Функций | 439 |
-| Тестов | **500 passed, 1 skipped** |
+| Тестов | **500 passed, 1 skipped** (⚠️ SYSTEM_INVENTORY указывает устаревшие 439/195) |
 | Git коммитов | 7 |
 | TODO/FIXME/HACK | 3 |
 | Bare `except:pass` | 0 |
 | Broad `except Exception:` | 40 |
 | Документов (docs/) | 17 |
 | Внешних зависимостей | 2 (httpx, numpy) |
-| mypy | ~5 ошибок (б Zeitgeist) |
+| mypy | ~5 ошибок (⚠️ не верифицировано — таймаут на Termux) |
 
 ---
 
@@ -146,7 +146,7 @@
 | Streaming | ✅ SSE/Gemini/Ollama | ❌ | ❌ |
 | Зрелость | MVP (Phase 1-4) | Beta | Alpha |
 
-**Вердикт:** Buffy Project — **самый функциональный** agent framework на Termux. DroidClaw выигрывает в "эмоциональной" памяти (SOMA/amygdala), Nanobot — в лёгкости. Buffy — в архитектурной глубине.
+**Вердикт:** Buffy Project — один из **наиболее архитектурно проработанных** agent-фреймворков на Termux, но без независимого тестирования DroidClaw/Nanobot это сравнение основано на документации, а не на empirical сравнении. DroidClaw может выигрывать в "эмоциональной" памяти (SOMA/amygdala), Nanobot — в лёгкости (<4K LOC). Buffy выделяется архитектурной глубиной и тестовым покрытием.
 
 ### Enterprise конкуренты
 
@@ -165,6 +165,38 @@
 
 **Вердикт:** Buffy сопоставим по архитектуре с enterprise решениями, но проигрывает в зрелости (MVP vs Production) и community (0 vs 25K stars).
 
+### CLI / Desktop конкуренты
+
+| Критерий | **Buffy** | **Aider** | **Continue.dev** | **Cursor** | **OpenClaw** |
+|----------|-----------|-----------|------------------|-----------|--------------|
+| Платформа | Termux (CLI) | CLI/Terminal | VS Code | IDE | Node.js CLI |
+| Архитектура | 11 слоёв | Single-file | Extension | Electron | Agent framework |
+| Multi-model | ✅ 6 провайдеров | ✅ | ✅ | ✅ | ✅ |
+| Memory | 5 уровней + Knowledge | Repo-chat | Context | Context | Memory module |
+| Knowledge Engine | ✅ FTS+TF-IDF+Graph | ❌ | ❌ | ❌ | ❌ |
+| MCP | ✅ Server | ❌ | ✅ Client | ✅ Client | ❌ |
+| Streaming | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Plugin System | ✅ | ❌ | ✅ Extensions | ✅ Extensions | ❌ |
+| Tests | 500 | ~500 | ~300 | N/A | ~50 |
+| GitHub stars | 0 (private) | 15K+ | 20K+ | 30K+ | <100 |
+| Production-ready | 🟡 MVP | ✅ | ✅ | ✅ | 🟡 Alpha |
+
+**Вердикт:** Aider, Continue.dev и Cursor — это **coding assistants** (IDE-centric), а Buffy — **agentic platform** (memory + knowledge + orchestration). OpenClaw — ближайший архитектурный аналог (agent framework), но без Knowledge Engine и тестового покрытия.
+
+### Autonomy конкуренты
+
+| Критерий | **Buffy** | **AutoGPT** | **BabyAGI** |
+|----------|-----------|-----------|-----------|
+| Подход | Agentic platform (manual + auto) | Fully autonomous | Task-driven autonomous |
+| Memory | 5 уровней + Knowledge Engine | File-based | Task queue |
+| Orchestration | ✅ Workflow + DAG | ❌ (free-form) | ✅ Task creation |
+| Knowledge Engine | ✅ FTS+TF-IDF+Graph | ❌ | ❌ |
+| Tests | 500 | ~200 | ~20 |
+| GitHub stars | 0 (private) | 170K+ | 20K+ |
+| Production-ready | 🟡 MVP | 🟡 Experimental | 🔴 Experimental |
+
+**Вердикт:** AutoGPT и BabyAGI — это **autonomous loops** (self-prompting), а Buffy — **human-in-the-loop platform** с persistent memory. Разные парадигмы: Buffy фокусируется на контекстной персистентности и knowledge management, а не на autonomy.
+
 ---
 
 ## 📈 Оценка по 100-балльной шкале
@@ -172,16 +204,16 @@
 | Категория | Вес | Балл | Взвешенный |
 |-----------|-----|------|------------|
 | **Архитектура** | 20% | 90 | 18.0 |
-| **Тестирование** | 15% | 90 | 13.5 |
+| **Тестирование** | 15% | 85 | 12.75 |
 | **Качество кода** | 15% | 72 | 10.8 |
 | **Функциональность** | 15% | 85 | 12.75 |
 | **Документация** | 10% | 80 | 8.0 |
 | **Безопасность** | 10% | 65 | 6.5 |
 | **Инновационность** | 10% | 88 | 8.8 |
 | **Зрелость/Production-ready** | 5% | 50 | 2.5 |
-| | | **ИТОГО:** | **80.85** |
+| | | **ИТОГО:** | **80.1** |
 
-### 🏆 Итоговая оценка: **81 / 100**
+### 🏆 Итоговая оценка: **80 / 100**
 
 ---
 
@@ -193,11 +225,13 @@
 - ❌ Orchestrator незавершён (статический planner, _run_shell дубликат)
 - ❌ Нет параллельного выполнения шагов
 
-### Тестирование: 90/100
+### Тестирование: 85/100
 - ✅ 500 тестов, 0 errors, покрытие всех компонентов
 - ✅ Mock HTTP, edge cases, skipif для git
 - ❌ Нет transport тестов (run_sync/run_stdio для MCP)
 - ❌ Нет integration тестов (реальные API вызовы)
+- ❌ Нет benchmark/performance тестов
+- ❌ Нет mutation testing (оценка качества тестов)
 
 ### Качество кода: 72/100
 - ✅ `from __future__ import annotations`, dataclasses, ABC
@@ -238,10 +272,13 @@
 
 ### Зрелость: 50/100
 - ✅ 7 коммитов, git инициализирован
-- ❌ Нет CI/CD, нет deployment pipeline
-- ❌ Нет remote repo (GitHub)
-- ❌ Нет semantic versioning tags
-- ❌ Нет release artifacts
+- ❌ Нет CI/CD pipeline (GitHub Actions, pre-commit hooks)
+- ❌ Нет deployment pipeline
+- ❌ Нет remote repo (GitHub) — SSH ключ готов, но не запушен
+- ❌ Нет semantic versioning tags (нет git tag)
+- ❌ Нет release artifacts (packages, Docker images)
+- ❌ Нет пользователей / beta-тестеров
+- ❌ Нет bug tracking (issues, milestones)
 
 ---
 
@@ -273,12 +310,23 @@
 
 | Система | Оценка | Сильная сторона | Слабая сторона |
 |---------|--------|-----------------|----------------|
-| **Buffy Project** | **81/100** | Архитектура, тесты, Knowledge Engine | Зрелость, безопасность |
+| **Buffy Project** | **80/100** | Архитектура, тесты, Knowledge Engine | Зрелость, безопасность, нет CI/CD |
 | DroidClaw | ~75/100 | SOMA memory, "эмоциональный" агент | Меньше тестов, нет MCP |
 | Nanobot | ~60/100 | Лёгкость (<4K LOC), MCP-first | Мало функций, нет Knowledge |
 | CrewAI | ~88/100 | Production-ready, community 25K+ | Heavy, не для mobile |
 | LangGraph | ~85/100 | Durable State, graph workflows | Сложный, enterprise-only |
 | MemGPT/Letta | ~82/100 | Memory-first architecture | Нет MCP, нет plugins |
+
+---
+
+## 📐 Методология и ограничения
+
+- **LOC подсчитан** через `xargs cat | wc -l` — включает blank lines и комментарии (raw LOC, не SLOC)
+- **mypy оценка не верифицирована** — команда таймаутила на Termux (90s limit), число ~5 оценочно
+- **Сравнение с DroidClaw/Nanobot** основано на их документации, а не на empirical тестировании
+- **GitHub stars для аналогов** — приблизительные значения на момент исследования (июль 2026)
+- **Оценки enterprise/CLI конкурентов** (CrewAI 88, LangGraph 85 и т.д.) — экспертные оценки без глубокого анализа их кода
+- **SYSTEM_INVENTORY.md** содержит устаревшие метрики (439/195 тестов vs актуальные 500) — требует обновления
 
 ---
 
