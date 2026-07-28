@@ -115,10 +115,10 @@ docs/
 ├── RULES.md              # ← этот файл
 ├── AGENTS.md             # для чат-ботов/агентов
 ├── SESSION_GUIDE.md      # инструкция по сессиям
-├── architecture/         # ARCHITECTURE.md проектов
-├── decisions/            # DECISIONS.md (ADR)
 ├── session_dumps/        # SESSION_DUMP.md
 ├── audit/                # AUDIT_*.md
+├── ARCHITECTURE.md       # архитектура текущего проекта
+├── DECISIONS.md          # ADR
 ├── ARCHITECTURE_REVIEW.md
 └── termux_agent_README.md
 ```

@@ -162,6 +162,78 @@ External Agent (Claude/Gemini/OpenClaw)
 
 ---
 
+## ADR-005: ContextManager Bridge for termux-ai-agent
+
+**Дата:** 2026-07-28
+**Статус:** ✅ Принято
+**Контекст:** Интеграция локального агента с freebuff ContextManager (SPEC.md, v4.0)
+
+### Проблема
+`termux-ai-agent` не сохранял историю диалогов между запусками. После OOM-kill или перезапуска TUI контекст терялся.
+
+### Альтернативы
+
+| Вариант | Плюсы | Минусы |
+|---------|-------|--------|
+| **A. JSON-лог в termux-ai-agent** | Просто | Нет суммаризации, чекпоинтов, RAG |
+| **B. Своя SQLite в termux-ai-agent** | Контроль | Дублирование ContextManager |
+| **C. Reuse freebuff ContextManager** | Единый source of truth, авто-конспекты, checkpoints | Требует sys.path манипуляций |
+
+### Решение
+Выбран **вариант C**: `scripts/agent_context_bridge.py` как singleton-мост. Он:
+- восстанавливает/создаёт сессию при первом вызове;
+- логирует `user`, `assistant`, `system` сообщения;
+- делает авточекпоинт каждые 10 сообщений;
+- сохраняет конспект через `auto_conspect()`.
+
+### Ключевые решения
+1. **Singleton** — несколько вызовов `run()` делят одну сессию.
+2. **Graceful degradation** — ошибки freebuff не ломают `run()`.
+3. **Lazy import** — `get_context_bridge()` создаёт bridge только при первом использовании.
+4. **Compact response** — `log_assistant()` хранит только `status`, `tool`, `error`, `metrics`, не весь JSON.
+
+### Документация
+- [scripts/agent_context_bridge.py***REMOVED***(../scripts/agent_context_bridge.py)
+- [tests/test_agent_context_bridge.py***REMOVED***(../tests/test_agent_context_bridge.py)
+- [TASK.md***REMOVED***(../TASK.md)
+
+---
+
+## ADR-006: Lightpanda Headless Browser Integration
+
+**Дата:** 2026-07-28
+**Статус:** ✅ Принято
+**Контекст:** Phase 4, веб-автоматизация для Buffy
+
+### Проблема
+Для веб-автоматизации (скрапинг, поиск, тестирование) нужен headless-браузер. Chrome/Chromium слишком тяжёлые для Termux ARM64.
+
+### Альтернативы
+
+| Вариант | Плюсы | Минусы |
+|---------|-------|--------|
+| **A. Playwright/Chromium** | Зрелый API | >1 GB RAM, OOM-kill, сложная установка |
+| **B. requests + BeautifulSoup** | Лёгкий | Не работает с JS-сайтами |
+| **C. Lightpanda** | Лёгкий (123 MB), быстрый, Agent Mode, CDP, MCP | Beta, требует glibc/proot |
+
+### Решение
+Выбран **вариант C**: Lightpanda через `proot-distro Ubuntu`.
+
+### Ключевые решения
+1. **proot-distro Ubuntu** — предоставляет glibc без root на Android.
+2. **Wrapper `.tools/lightpanda`** — делегирует вызовы в proot.
+3. **Python-класс `LightpandaWorker`** — унифицированный API для скриптов и агента.
+4. **Stateless subprocess** — каждый запрос = новый процесс, устойчив к OOM.
+5. **CDP-сервер** — background `Popen` для Puppeteer/Playwright.
+
+### Документация
+- [docs/LIGHTPANDA_INTEGRATION.md***REMOVED***(LIGHTPANDA_INTEGRATION.md)
+- [src/workers/lightpanda_worker.py***REMOVED***(../src/workers/lightpanda_worker.py)
+- [scripts/install_lightpanda.sh***REMOVED***(../scripts/install_lightpanda.sh)
+- [tests/test_lightpanda_worker.py***REMOVED***(../tests/test_lightpanda_worker.py)
+
+---
+
 ## ADR-004: FastAPI Wrapper + Cloudflare Tunnel
 
 **Дата:** 2026-07-28

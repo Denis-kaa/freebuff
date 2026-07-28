@@ -6,6 +6,39 @@
 
 ---
 
+## [4.2.5***REMOVED*** — 2026-07-28
+
+### Изменено
+- **scripts/auto_conspect.py** — демо-код вынесен в `scripts/demo_auto_conspect.py`; добавлены CLI-флаги `--demo` и `session_id`.
+- **scripts/cron_conspect.sh** — убран непреднамеренный запуск демо-режима.
+- **freebuff_cli.py** — добавлены команды `task start` и `task archive` для создания/архивации `TASK.md`.
+- **tests/test_mcp_server.py** — исправлены импорты `typing.Optional` и `typing.Tuple`.
+- **tests/test_freebuff.py** и **tests/test_auto_conspect.py** — добавлены тесты CLI `task` и `auto_conspect`.
+- **scripts/session_utils.py** — вынесен shared helper `resolve_session_id`; убрано дублирование между `auto_conspect.py` и `freebuff_cli.py`.
+- **tests/conftest.py** и **tests/test_session_utils.py** — добавлена shared `context_manager` fixture и 5 тестов для `resolve_session_id`.
+- **tests/test_cron_conspect.py** — добавлен unit-тест, проверяющий, что `scripts/cron_conspect.sh` не запускает `auto_conspect` в demo-режиме.
+- **projects/tg_terminal_messenger**:
+  - `src/ui/app.py`: горячие клавиши переназначены с `Ctrl+S/Ctrl+Q` на `Ctrl+F/Ctrl+X` (терминальный XON/XOFF); отправка сообщений починена через `@on(Input.Submitted)` + `event.stop()` + `dialog.input_entity`; автоматический фокус на поле ввода.
+  - `src/main.py`: добавлена точка входа.
+  - `README.md`: актуализирована таблица горячих клавиш.
+  - Удалён дублирующий каталог `/storage/emulated/0/PROJECTS/workstation/tg_terminal_messenger`; спецификации скопированы в `docs/original/`.
+  - Проведён аудит против `tg_toolkit` (сравнительный анализ: multi-account, quick reply, bulk, export, profile).
+
+---
+
+## [4.2.3***REMOVED*** — 2026-07-28
+
+### Изменено
+- **scripts/seed_knowledge.py** — документы теперь авто-обнаруживаются из `docs/**/*.md` вместо жёстко зашитого списка. Добавлены исключения: `docs/AUDIT_*.md` и `docs/TASK_TEMPLATE.md`.
+- **tests/test_seed_knowledge.py** — добавлены тесты для `_collect_doc_sources` и исключений.
+- **docs/RULES.md** — убраны ссылки на пустые `docs/architecture/` и `docs/decisions/`.
+- **BUFFY_PROJECT.md** — актуализированы статусы: Knowledge Engine, Event Bus, Orchestrator отмечены как MVP/Каркас.
+
+### Удалено
+- **docs/architecture/** и **docs/decisions/** — пустые директории-призраки.
+
+---
+
 ## [4.2.2***REMOVED*** — 2026-07-28
 
 ### Изменено

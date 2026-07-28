@@ -96,7 +96,7 @@
 - Working Memory + Project Memory + RAG + TASK.md + ADR + CHANGELOG
 - После объединения → Unified Context → модели
 
-### 🟦 Слой 3 — Orchestrator (FSM/DAG) 🔴
+### 🟦 Слой 3 — Orchestrator (FSM/DAG) 🟡
 Goal → Planner → Step → Tool → Validator → Reviewer → Done
 Повторные попытки, валидация, ревью, передача между моделями
 
@@ -111,7 +111,7 @@ Goal → Planner → Step → Tool → Validator → Reviewer → Done
 Shell, Python, Filesystem, Git, SQLite, HTTP, MCP, Termux API
 Никакой логики инструментов внутри модели
 
-### 🟦 Слой 6 — Knowledge Engine 🔴
+### 🟦 Слой 6 — Knowledge Engine 🟡
 Не просто RAG, а комбинация:
 - Vector Search + SQLite FTS + Keyword Search + Graph Search + Semantic Search
 - Система выбирает лучший способ поиска под задачу
@@ -124,7 +124,7 @@ Shell, Python, Filesystem, Git, SQLite, HTTP, MCP, Termux API
 - **Personal** — предпочтения, стиль кода (Memory Engine JSON)
 - **Archive** — старые проекты, логи (отдельно, не в контексте)
 
-### 🟦 Слой 8 — Event Bus 🔴
+### 🟦 Слой 8 — Event Bus 🟡
 Компоненты публикуют события, минимум прямых вызовов:
 TaskCreated → CheckpointCreated → ContextUpdated → SummaryGenerated
 
@@ -162,8 +162,8 @@ LLM — сменный исполнитель. Система не зависи�
 | Фаза | Фокус | Статус |
 |------|-------|--------|
 | **Phase 1** | Project State + Context Builder + Streaming Context + Task System | 🟡 **Сейчас** |
-| **Phase 2** | Memory Layers + Knowledge Engine + RAG | 🟡 В разработке |
-| **Phase 3** | Capability Router + Orchestrator + Tool Runtime | 🔴 План |
+| **Phase 2** | Memory Layers + Knowledge Engine + RAG + Event Bus |  В разработке |
+| **Phase 3** | Capability Router + Orchestrator + Tool Runtime + MCP |  План |
 | **Phase 4** | Plugin API + MCP + Local Models | 🔴 План |
 | **Phase 5** | Flutter UI + Android Service + Remote Sync | 🔴 План |
 
@@ -179,9 +179,9 @@ LLM — сменный исполнитель. Система не зависи�
 | Memory Engine | ✅ Production | scripts/memory_engine.py — 5 уровней |
 | Context Builder | 🟡 Каркас | MemoryEngine.build_context(), StreamBridge |
 | Tool Runtime | 🟡 Каркас | overlay_server, auto_save, SDK bridge |
-| Knowledge Engine | 🔴 Не начат | Только поиск в Memory Engine |
-| Event Bus | 🔴 Не начат | Прямые вызовы компонентов |
-| Orchestrator | 🔴 Не начат | FSM/DAG запланирован |
+| Knowledge Engine | 🟡 MVP | TF-IDF + SVD индекс, поиск в scripts/knowledge_engine.py |
+| Event Bus | 🟡 Каркас | scripts/event_bus.py + event_subscribers.py |
+| Orchestrator | 🟡 Каркас | FSM/DAG, шаги, валидаторы, parallel execution |
 | Plugin System | 🔴 Не начат | В Phase 4 |
 | Flutter UI | 🔴 Не начат | В Phase 5 |
 

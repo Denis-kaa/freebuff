@@ -9,8 +9,10 @@ from datetime import datetime, timezone
 sys.path.insert(0, os.path.dirname(__file__))
 
 from context_manager import ContextManager, SessionStatus, CheckpointType
+from session_utils ***REMOVED***solve_session_id
 
-WORKSPACE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+WORKSPACE = os.environ.get("FREEBUFF_ROOT", PROJECT_ROOT)
 
 
 def auto_conspect(session_id: str) -> str:
@@ -46,21 +48,45 @@ def auto_conspect(session_id: str) -> str:
 
 
 if __name__ == "__main__":
-    # Пример использования
-    cm = ContextManager(WORKSPACE)
-    sessions = cm.list_sessions(status=SessionStatus.ACTIVE)
+    import argparse
 
-    if not sessions:
-        print("No active sessions. Starting a test session...")
-        snap = cm.start_session(project="freebuff", topic="Auto-conspect test")
-        print(f"Created session: {snap.session_id***REMOVED***")
-        cm.add_message(snap.session_id, "user", "Test message 1", token_count=20)
-        cm.add_message(snap.session_id, "assistant", "Test response 1", token_count=50)
-        cm.save_checkpoint(snap.session_id, "Test checkpoint", ctype=CheckpointType.AUTO_INTERVAL)
-        result = auto_conspect(snap.session_id)
-        print(f"Conspect saved to: {result***REMOVED***")
+    parser = argparse.ArgumentParser(description="Auto-conspect Freebuff sessions")
+    parser.add_argument(
+        "session_id",
+        nargs="?",
+        help="UUID сессии или первые 8 символов. Если не указан — обрабатываются все активные сессии.",
+    )
+    parser.add_argument(
+        "--demo",
+        action="store_true",
+        help="Запустить демо-режим (создаёт тестовую сессию). Для ручного использования; не для cron.",
+    )
+    args = parser.parse_args()
+
+    if args.demo:
+        # Demo moved to a separate script; keep a thin wrapper here for backwards compatibility.
+        from scripts.demo_auto_conspect import main as demo_main
+
+        demo_main()
+        sys.exit(0)
+
+    cm = ContextManager(WORKSPACE)
+
+    if args.session_id:
+        full_id = resolve_session_id(cm, args.session_id)
+        if full_id is None:
+            print(f"❌ Сессия не найдена: {args.session_id***REMOVED***")
+            sys.exit(1)
+        targets = [full_id***REMOVED***
     else:
-        for s in sessions:
-            print(f"Conspecting session: {s['session_id'***REMOVED***[:8***REMOVED******REMOVED*** ({s['topic'***REMOVED******REMOVED***)")
-            result = auto_conspect(s["session_id"***REMOVED***)
-            print(f"  → {result***REMOVED***")
+        targets = [s["session_id"***REMOVED*** for s in cm.list_sessions(status=SessionStatus.ACTIVE)***REMOVED***
+
+    if not targets:
+        print("No active sessions.")
+        sys.exit(0)
+
+    for sid in targets:
+        session = cm.get_session(sid)
+        print(f"Conspecting session: {sid[:8***REMOVED******REMOVED*** ({session.topic if session else '?'***REMOVED***)" if session else f"Conspecting session: {sid[:8***REMOVED******REMOVED***")
+        result = auto_conspect(sid)
+        print(f"  → {result***REMOVED***")

@@ -3,7 +3,10 @@ Unit tests for freebuff interaction system.
 """
 import json
 import os
+import subprocess
 import sys
+***REMOVED***
+
 import pytest
 from unittest.mock import MagicMock, patch, mock_open
 
@@ -262,3 +265,44 @@ class TestFreebuffCLI:
         )
         assert "СТАТУС FREEBUFF" in result.stdout
         assert "Здоровье" in result.stdout
+
+
+class TestTaskCLI:
+    """Тесты команд task start / task archive."""
+
+    @pytest.fixture
+    def project_root(self) -> Path:
+        return Path(__file__).resolve().parent.parent
+
+    def _run_task(self, project_root: Path, workspace: Path, *args: str) -> subprocess.CompletedProcess:
+        env = os.environ.copy()
+        env["FREEBUFF_ROOT"***REMOVED*** = str(workspace)
+        return subprocess.run(
+            [sys.executable, str(project_root / "freebuff_cli.py"), "task", *args***REMOVED***,
+            capture_output=True,
+            text=True,
+            cwd=str(project_root),
+            env=env,
+        )
+
+    def test_task_start_creates_task_md(self, project_root, tmp_path):
+        result = self._run_task(project_root, tmp_path, "start", "Test task", "Test description")
+        assert result.returncode == 0, result.stderr
+        assert (tmp_path / "TASK.md").exists()
+        text = (tmp_path / "TASK.md").read_text(encoding="utf-8")
+        assert "Test task" in text
+        assert "Test description" in text
+
+    def test_task_start_archives_existing_task(self, project_root, tmp_path):
+        (tmp_path / "TASK.md").write_text("# Old task\n", encoding="utf-8")
+        result = self._run_task(project_root, tmp_path, "start", "New task")
+        assert result.returncode == 0, result.stderr
+        assert "архивирована" in result.stdout
+        archives = list((tmp_path / "docs" / "task_archive").glob("TASK_*.md"))
+        assert len(archives) == 1
+        assert archives[0***REMOVED***.read_text(encoding="utf-8") == "# Old task\n"
+
+    def test_task_archive_requires_existing_task(self, project_root, tmp_path):
+        result = self._run_task(project_root, tmp_path, "archive")
+        assert result.returncode == 0, result.stderr
+        assert "не найден" in result.stdout

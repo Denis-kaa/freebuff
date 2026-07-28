@@ -13,7 +13,7 @@ import pytest
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from scripts.seed_knowledge import seed, _safe_key
+from scripts.seed_knowledge import seed, _safe_key, _collect_doc_sources
 from scripts.memory_engine import MemoryEngine, MemoryLevel
 from scripts.knowledge_engine import KnowledgeEngine
 
@@ -104,3 +104,32 @@ class TestSeedKnowledge:
         assert count > 0
         # MemoryEngine should have published memory.stored events
         assert any(e.type == "memory.stored" for e in bus.events)
+
+
+class TestCollectDocSources:
+    def test_core_manifests_plus_discovered_docs(self, tmp_path: Path):
+        """_collect_doc_sources includes core manifests and docs/*.md."""
+        (tmp_path / "README.md").write_text("# README")
+        (tmp_path / "BUFFY.md").write_text("# BUFFY")
+        (tmp_path / "docs").mkdir()
+        (tmp_path / "docs" / "AGENTS.md").write_text("# AGENTS")
+        (tmp_path / "docs" / "RULES.md").write_text("# RULES")
+
+        sources = _collect_doc_sources(tmp_path)
+        assert "README.md" in sources
+        assert "BUFFY.md" in sources
+        assert "docs/AGENTS.md" in sources
+        assert "docs/RULES.md" in sources
+
+    def test_excluded_patterns_are_skipped(self, tmp_path: Path):
+        """_collect_doc_sources skips AUDIT files and templates."""
+        (tmp_path / "README.md").write_text("# README")
+        (tmp_path / "docs").mkdir()
+        (tmp_path / "docs" / "AGENTS.md").write_text("# AGENTS")
+        (tmp_path / "docs" / "AUDIT_2026-07-28.md").write_text("# AUDIT")
+        (tmp_path / "docs" / "TASK_TEMPLATE.md").write_text("# TEMPLATE")
+
+        sources = _collect_doc_sources(tmp_path)
+        assert "docs/AGENTS.md" in sources
+        assert "docs/AUDIT_2026-07-28.md" not in sources
+        assert "docs/TASK_TEMPLATE.md" not in sources

@@ -30,25 +30,49 @@ from scripts.knowledge_engine import KnowledgeEngine
 # ═══════════════════════════════════════════════════════════════
 
 DEFAULT_DOC_SOURCES = [
-    # Core manifests
+    # Core manifests (always indexed, even if no docs/ folder exists yet)
     "README.md",
     "BUFFY.md",
     "BUFFY_PROJECT.md",
     "SPEC.md",
     "CHANGELOG.md",
     "TASK.md",
-    # Documentation
-    "docs/AGENTS.md",
-    "docs/SESSION_GUIDE.md",
-    "docs/RULES.md",
-    "docs/DECISIONS.md",
-    "docs/ROADMAP.md",
-    "docs/TROUBLESHOOTING.md",
-    "docs/REFERENCES.md",
-    "docs/ARCHITECTURE_REVIEW.md",
-    "docs/SYSTEM_INVENTORY.md",
-    "docs/OVERLAY_IMPLEMENTATION.md",
 ***REMOVED***
+
+# Patterns that generate noise or are not useful for knowledge retrieval.
+# Unix shell-style wildcards are supported via fnmatch.
+EXCLUDED_DOC_PATTERNS = [
+    "docs/AUDIT_*.md",
+    "docs/TASK_TEMPLATE.md",
+***REMOVED***
+
+
+def _is_excluded(rel_path: str) -> bool:
+    """Return True if a doc path should be skipped during auto-discovery."""
+    from fnmatch import fnmatch
+
+    for pattern in EXCLUDED_DOC_PATTERNS:
+        if fnmatch(rel_path, pattern):
+            return True
+    return False
+
+
+def _collect_doc_sources(ws: Path) -> list[str***REMOVED***:
+    """Return all Markdown docs that should be seeded into Knowledge Memory.
+
+    Combines core project manifests with every *.md file inside docs/,
+    except explicitly excluded patterns (AUDIT files, templates, etc.).
+    """
+    sources: list[str***REMOVED*** = list(DEFAULT_DOC_SOURCES)
+    docs_dir = ws / "docs"
+    if docs_dir.exists() and docs_dir.is_dir():
+        for md_file in sorted(docs_dir.rglob("*.md")):
+            rel = str(md_file.relative_to(ws))
+            if _is_excluded(rel):
+                continue
+            if rel not in sources:
+                sources.append(rel)
+    return sources
 
 # Knowledge "best practice" cards that are not tied to a single file
 DEFAULT_KNOWLEDGE_CARDS = {
@@ -109,8 +133,8 @@ def seed(
 
     stored = 0
 
-    # 1. Project docs
-    for rel_path in DEFAULT_DOC_SOURCES:
+    # 1. Project docs (core manifests + auto-discovered docs/*.md)
+    for rel_path in _collect_doc_sources(ws):
         path = ws / rel_path
         if not path.exists():
             continue

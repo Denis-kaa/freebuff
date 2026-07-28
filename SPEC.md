@@ -158,13 +158,15 @@ CREATE INDEX idx_checkpoints_session ON checkpoints(session_id, created_at);
   - `def health_check() -> dict` — сводка: `{"memory_ok": bool, "cpu_ok": bool, ...***REMOVED***`
 - **Интеграция:** переиспользовать `llm_gateway/watchdog.py:check_available_memory()`
 
-### 5. Интеграция с termux-ai-agent (🔲 требуется)
-- **Файл:** `main.py` → обновить до v4.0
+### 5. Интеграция с termux-ai-agent (✅ реализовано v4.0)
+- **Файл:** `scripts/agent_context_bridge.py` + `termux-ai-agent/main.py`
 - **Назначение:** Подключить ContextManager к основному пайплайну
 - **Изменения:**
-  - При старте: восстановление контекста из `freebuff/data/context.db`
-  - При каждом запросе: `add_message()` с авточекпоинтом
-  - При завершении: `auto_conspect()`
+  - `AgentContextBridge` сохраняет user/assistant/system сообщения в `freebuff/data/context.db`
+  - При старте: восстановление активной сессии проекта `termux-ai-agent`
+  - При каждом запросе: `add_message()` + авточекпоинт каждые 10 сообщений
+  - CLI `--freebuff-conspect` для ручного конспекта
+  - Unit-тесты: `tests/test_agent_context_bridge.py`
 
 ### 6. Миграция существующих сессий (🔲 требуется)
 - **Файл:** `scripts/import_sessions.py`

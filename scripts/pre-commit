@@ -1,0 +1,21 @@
+#!/bin/sh
+# pre-commit — Buffy Auto-Doc enforcement
+# Blocks the commit if required documentation files are missing from the staged diff.
+#
+# Usage:
+#   Install:   ./scripts/install_hooks.sh
+#   Bypass:    git commit --no-verify
+#   Or:        SKIP_AUTODOC=1 git commit ...
+
+set -e
+
+if [ "$SKIP_AUTODOC" = "1" ***REMOVED***; then
+    echo "SKIP_AUTODOC=1 detected, bypassing autodoc checks."
+    exit 0
+fi
+
+# Ensure we run from the repository root, so scripts/buffy_autodoc.py resolves.
+cd "$(git rev-parse --show-toplevel)"
+
+echo "Running buffy_autodoc.py (strict)..."
+python3 scripts/buffy_autodoc.py --cached --strict

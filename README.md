@@ -56,6 +56,27 @@ bash scripts/tg_popup.sh start
 ```
 Скрипт сам убьёт зависшие процессы и почистит лок-файлы.
 
+### 🔌 External Agent Integration
+
+Freebuff теперь интегрирован с локальным агентом и веб-автоматизацией:
+
+- **`scripts/agent_context_bridge.py`** — сохраняет диалоги `termux-ai-agent` в `freebuff/data/context.db`.
+- **`src/workers/lightpanda_worker.py`** — управляет headless-браузером Lightpanda (Agent Mode, PandaScript, CDP).
+- **`scripts/install_lightpanda.sh`** — устанавливает Lightpanda в Termux + proot-distro Ubuntu ARM64.
+
+**Как запустить:**
+```bash
+# Интеграция termux-ai-agent — сообщения автоматически пишутся в freebuff
+python termux-ai-agent/main.py "найди документацию Python"
+
+# Lightpanda dump
+python - <<'PY'
+from src.workers.lightpanda_worker import LightpandaWorker
+w = LightpandaWorker()
+print(w.dump_url("https://example.com").data)
+PY
+```
+
 ### 📊 FreeBuff CLI
 
 ```bash

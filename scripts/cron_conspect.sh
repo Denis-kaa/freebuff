@@ -12,7 +12,7 @@ mkdir -p "$FREEBUFF/logs"
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')***REMOVED*** Cron: auto-conspect" >> "$LOG"
 
-# Суммаризируем активные сессии
+# Суммаризируем активные сессии (без demo-режима)
 python scripts/auto_conspect.py >> "$LOG" 2>&1
 
 # Проверяем здоровье

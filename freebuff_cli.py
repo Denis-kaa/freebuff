@@ -12,14 +12,19 @@ v1.0.0: 7 команд для работы с сессиями, контекст
     python freebuff_cli.py checkpoint "Обсудили архитектуру"
     python freebuff_cli.py restore
     python freebuff_cli.py qwen-resume <session_id>
+    python freebuff_cli.py task start "Название задачи" "Описание"
+    python freebuff_cli.py task archive
 
 Архитектура по Kwork Arbitr v3:
     Explainer → LISA (TC=5 Medium) → Decomposer → Architect → Developer → Tester → Acceptance
 """
 import os
+import shutil
 import sys
+from datetime import datetime, timezone
+***REMOVED***
 
-WORKSPACE = os.path.dirname(os.path.abspath(__file__))
+WORKSPACE = os.environ.get("FREEBUFF_ROOT", os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, WORKSPACE)
 
 from scripts.context_manager import ContextManager, SessionStatus, CheckpointType
@@ -27,6 +32,77 @@ from scripts.system_monitor import health_check
 from scripts.context_builder import ContextBuilder
 from scripts.event_bus import get_default_event_bus
 from scripts.seed_knowledge import seed as seed_knowledge
+from scripts.session_utils ***REMOVED***solve_session_id
+
+
+# ── TASK.md helpers ────────────────────────────────────────────
+
+def _task_path() -> Path:
+    return Path(WORKSPACE) / "TASK.md"
+
+
+def _archive_task_path() -> Path:
+    archive_dir = Path(WORKSPACE) / "docs" / "task_archive"
+    archive_dir.mkdir(parents=True, exist_ok=True)
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%S")
+    return archive_dir / f"TASK_{ts***REMOVED***.md"
+
+
+def _archive_current_task() -> Path | None:
+    """Archive current TASK.md if it exists. Returns archive path or None."""
+    current = _task_path()
+    if not current.exists():
+        return None
+    archive = _archive_task_path()
+    shutil.copy2(current, archive)
+    return archive
+
+
+def cmd_task_start(title: str, description: str = "") -> None:
+    """Создаёт новую TASK.md, архивируя предыдущую."""
+    if not title:
+        print("❌ Укажи заголовок задачи: python freebuff_cli.py task start 'Название задачи'")
+        return
+
+    archive = _archive_current_task()
+
+    task_md = f"""# TASK: {title***REMOVED***
+
+**Статус:** активна  
+**Создана:** {datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")***REMOVED***  
+**Описание:** {description or '(нет)'***REMOVED***  
+
+## Цель
+
+<!-- Опиши цель задачи -->
+
+## Шаги
+
+- [ ***REMOVED*** Шаг 1
+
+## Связанные файлы
+
+- `README.md`
+- `TASK.md`
+
+## Контекст
+
+<!-- Дополнительный контекст, конспекты, ссылки -->
+"""
+    _task_path().write_text(task_md, encoding="utf-8")
+
+    if archive:
+        print(f"📦 Предыдущая TASK.md архивирована: {archive***REMOVED***")
+    print(f"📝 Новая TASK.md создана: {title***REMOVED***")
+
+
+def cmd_task_archive() -> None:
+    """Вручную архивирует текущую TASK.md."""
+    archive = _archive_current_task()
+    if archive is None:
+        print("⚠️ TASK.md не найден, нечего архивировать.")
+        return
+    print(f"📦 TASK.md архивирована: {archive***REMOVED***")
 
 
 def cmd_start(project: str, topic: str = "") -> str:
@@ -100,19 +176,6 @@ def cmd_resume() -> str | None:
     return None
 
 
-def _resolve_session_id(cm: ContextManager, partial_id: str | None) -> str | None:
-    """Находит полный session_id по частичному (первые 8 символов)."""
-    if partial_id is None:
-        return None
-    if len(partial_id) >= 32:  # уже полный UUID
-        return partial_id if cm.get_session(partial_id) else None
-    # Ищем по префиксу
-    for s in cm.list_sessions():
-        if s['session_id'***REMOVED***.startswith(partial_id):
-            return str(s['session_id'***REMOVED***)
-    return None
-
-
 def cmd_conspect(session_id: str | None = None) -> str:
     """Создаёт конспект сессии для инжекта в новый контекст."""
     cm = ContextManager(WORKSPACE)
@@ -124,7 +187,7 @@ def cmd_conspect(session_id: str | None = None) -> str:
             return ""
         session_id = active[0***REMOVED***['session_id'***REMOVED***
 
-    full_id = _resolve_session_id(cm, session_id)
+    full_id = resolve_session_id(cm, session_id)
     if full_id is None:
         print(f"❌ Сессия не найдена: {session_id[:8***REMOVED*** if session_id else '?'***REMOVED***")
         return ""
@@ -166,7 +229,7 @@ def cmd_checkpoint(session_id: str | None, summary: str) -> None:
     cm = ContextManager(WORKSPACE)
 
     if session_id is not None:
-        full_id = _resolve_session_id(cm, session_id)
+        full_id = resolve_session_id(cm, session_id)
         if full_id is None:
             print(f"❌ Сессия не найдена: {session_id[:8***REMOVED******REMOVED***")
             return
@@ -360,6 +423,20 @@ def main():
         elif cmd == "seed":
             cmd_seed()
 
+        elif cmd == "task":
+            sub = sys.argv[2***REMOVED*** if len(sys.argv) > 2 else None
+            if sub == "start":
+                title = sys.argv[3***REMOVED*** if len(sys.argv) > 3 else ""
+                description = sys.argv[4***REMOVED*** if len(sys.argv) > 4 else ""
+                cmd_task_start(title, description)
+            elif sub == "archive":
+                cmd_task_archive()
+            else:
+                print("Использование:")
+                print("  python freebuff_cli.py task start 'Название задачи' ['Описание'***REMOVED***")
+                print("  python freebuff_cli.py task archive")
+                sys.exit(1)
+
         elif cmd == "buffy":
             # Запуск коммуникации с Buffy — собирает Unified Context.
             # Перед сборкой синхронизируем Knowledge Memory.
@@ -372,7 +449,7 @@ def main():
 
         else:
             print(f"❌ Неизвестная команда: {cmd***REMOVED***")
-            print("Доступные: start, status, resume, conspect, list, checkpoint, restore, qwen-resume, buffy, seed")
+            print("Доступные: start, status, resume, conspect, list, checkpoint, restore, qwen-resume, task, buffy, seed")
             sys.exit(1)
 
     except Exception as e:

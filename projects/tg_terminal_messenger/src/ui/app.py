@@ -20,6 +20,7 @@ import sys
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from textual import on
 from textual.app import App, ComposeResult
 from textual.containers import Horizontal, Container
 from textual.message import Message
@@ -194,6 +195,7 @@ class ChatViewScreen(Screen):
     def on_mount(self) -> None:
         self._saved_subtitle = self.app.sub_title
         self.app.sub_title = f"💬 {self._dialog.name***REMOVED***"
+        self.query_one("#msg-input", Input).focus()
         self._tg_app.run_worker(self._load_messages())
 
     async def _load_messages(self) -> None:
@@ -234,13 +236,15 @@ class ChatViewScreen(Screen):
     def action_quit_app(self) -> None:
         self._tg_app.action_quit()
 
-    async def on_input_submitted(self, event: Input.Submitted) -> None:
+    @on(Input.Submitted, "#msg-input")
+    async def _on_msg_input_submitted(self, event: Input.Submitted) -> None:
+        event.stop()
         text = event.value.strip()
         if not text or self._tg_app._tg is None:
             return
         try:
             await self._tg_app._await_tg(
-                self._tg_app._tg.send_message_async(self._dialog.entity, text)
+                self._tg_app._tg.send_message_async(self._dialog.input_entity, text)
             )
             event.input.value = ""
             self.notify("✅ Отправлено", timeout=1)
@@ -304,12 +308,12 @@ class TGApp(App):
     """
 
     BINDINGS = [
-        Binding("ctrl+s", "toggle_search", "Поиск", show=True),
+        Binding("ctrl+f", "toggle_search", "Поиск", show=True),
         Binding("ctrl+e", "toggle_favorite", "⭐ Избр.", show=True),
         Binding("ctrl+r", "refresh", "Обновить", show=True),
-        Binding("ctrl+q", "quit", "Выход", show=True),
+        Binding("ctrl+x", "quit", "Выход", show=True),
         Binding("escape", "escape", "", show=False),
-        Binding("ctrl+f", "focus_input", "Писать", show=True),
+        Binding("ctrl+i", "focus_input", "Писать", show=True),
     ***REMOVED***
 
     def __init__(self):
@@ -341,9 +345,7 @@ class TGApp(App):
     # ── TG bridge ──────────────────────────────────────────
 
     async def _await_tg(self, future):
-        while not future.done():
-            await asyncio.sleep(0.05)
-        return future.result()
+        return await asyncio.wrap_future(future)
 
     async def _connect_bg(self) -> None:
         try:
