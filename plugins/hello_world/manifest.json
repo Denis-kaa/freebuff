@@ -1,0 +1,10 @@
+{
+    "name": "hello_world",
+    "version": "1.0.0",
+    "description": "Демонстрационный плагин — приветствие мира и эхо-команда",
+    "author": "Buffy",
+    "tags": ["demo", "example", "hello-world"***REMOVED***,
+    "events_subscribed": ["system.*", "plugin.*"***REMOVED***,
+    "dependencies": [***REMOVED***,
+    "license": "MIT"
+***REMOVED***

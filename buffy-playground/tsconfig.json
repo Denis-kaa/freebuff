@@ -1,0 +1,7 @@
+{
+  "files": [***REMOVED***,
+  "references": [
+    { "path": "./tsconfig.app.json" ***REMOVED***,
+    { "path": "./tsconfig.node.json" ***REMOVED***
+  ***REMOVED***
+***REMOVED***
