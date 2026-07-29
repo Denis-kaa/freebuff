@@ -1,8 +1,8 @@
 # ROADMAP — Buffy Project
 
-> **Версия:** 2.0.0
-> **Актуально:** 2026-07-28
-> **Основание:** [promt3.md***REMOVED***(../pompts/promt3.md) — конституция Buffy 2.0
+> **Версия:** 3.0.0
+> **Актуально:** 2026-07-29
+> **Основание:** [promt16.md***REMOVED***(../../pompts/promt16.md) — полный аудит и реструктуризация проекта
 
 ---
 
@@ -123,10 +123,10 @@
 
 ---
 
-## 🔴 Phase 4: Plugin API + MCP + Local Models
+## 🟡 Phase 4: Plugin API + MCP + Event Platform + Runtime
 
-**Статус:** 🟡 В РАБОТЕ (Event Bus + интеграция готовы)
-**Фокус:** Событийно-ориентированная архитектура
+**Статус:** 🟡 В РАБОТЕ (~93%)
+**Фокус:** Событийно-ориентированная архитектура, мульти-агентность, абстракция Runtime
 
 ### ✅ Сделано
 - [x***REMOVED*** **Event Bus** — scripts/event_bus.py
@@ -193,12 +193,63 @@
     - POST: JSON-RPC, GET: SSE stream, DELETE: session termination
     - Mcp-Session-Id header, Origin validation, thread-safe session manager
     - CLI: --http, --host, --port
-  - 89 тестов, 0 errors (53 stdio + 10 session manager + 26 HTTP)
+  - **FastAPI обёртка**: SSE streaming, Cloudflare Tunnel, health check
+  - 120 тестов, 0 errors (53 stdio + 10 session manager + 26 HTTP + 18 RAL + 12 bootstrap + 1 FastAPI)
+- [x***REMOVED*** **MCP Client** — freebuff_plugin/mcp_client.py (v4.6.0)
+  - Два транспорта: StdioMCPClient (подпроцесс + stdin/stdout) + HTTPMCPClient (Streamable HTTP)
+  - Reader thread, очередь ответов с фильтрацией stale ID
+  - Поддержка MCP 2025-03-26: initialize, tools/list, tools/call, resources/list, prompts/list, ping
+- [x***REMOVED*** **Bridge Layer (MCP ↔ ACP)** — freebuff_plugin/bridge_layer.py (v4.6.0)
+  - Трансляция MCP ↔ Agent Collaboration Protocol
+  - connect_mcp_stdio / connect_mcp_http, автоматический reconnect
+  - 4 MCP инструмента: bridge_connect, bridge_list, bridge_disconnect, bridge_rpc
+  - 60 тестов
+- [x***REMOVED*** **ACP Protocol** — freebuff_plugin/acp_protocol.py (v4.6.0)
+  - AgentRegistry + ACPHandler + AgentInfo/AgentStatus/ACPTask/ACPResult
+  - Heartbeat loop, авто-саморегистрация, фильтрация задач по target
+- [x***REMOVED*** **Event Platform** — freebuff_plugin/event/ (v4.7.0)
+  - EventStore (SQLite + FTS5, CRUD, batch, миграция, агрегация)
+  - EventReplay (instant/realtime, rebuild из snapshot)
+  - TimelineEngine, AuditEngine, PulseEngine
+  - 5 MCP инструментов: event_search, event_timeline, event_replay, event_audit, event_pulse
+  - 61 тест
+- [x***REMOVED*** **Bootstrap Engine** — freebuff_plugin/bootstrap/ (v4.7.0)
+  - 6 модулей: engine, checker, installer, doctor, state, profiles.yaml
+  - 3 MCP инструмента: bootstrap_check, bootstrap_run, bootstrap_status
+  - 61 тест
+- [x***REMOVED*** **Runtime Abstraction Layer** — freebuff_plugin/runtime/ (v4.9.0)
+  - RuntimeAdapter ABC + StdioMCPAdapter + HTTPMCPAdapter + AdapterRegistry
+  - RuntimeRegistry (JSON persistence) + RuntimeCapabilityRegistry
+  - FreebuffAdapter + ClaudeCodeAdapter
+  - 5 MCP инструментов: runtime_list, runtime_connect, runtime_disconnect, runtime_select, runtime_generate
+  - Provider auto-discovery: YAML-манифесты (freebuff, claude_code, openclaw)
+  - Marketplace-ready: новый Runtime без изменения ядра
+  - 69 тестов
+- [x***REMOVED*** **Scenario Engine** — freebuff_plugin/scenario_engine.py (v4.5.0)
+  - YAML front matter + markdown, 11 сценариев
+  - 83 теста
+- [x***REMOVED*** **Telegram Bot** — freebuff_plugin/tgbot.py + scripts/telegram_bot.py (v4.5.0)
+  - /scenarios list/apply/search, inline keyboard, state management
+  - 44 теста
+- [x***REMOVED*** **doctor.py** — scripts/doctor.py (Task 2)
+  - CLI-инструмент диагностики: --full, --check, --json
+  - EventBus интеграция, проверка Python/SQLite/Git/Node/Disk/RAM/путей
+- [x***REMOVED*** **INTEGRATION_CONTRACT.md** — freebuff_plugin/ (Task 2)
+  - Контракт между ядром и плагином
+- [x***REMOVED*** **CODE_QUALITY_STANDART** — pompts/CODE_QUALITY_STANDART.md
+  - Интегрирован как обязательный production-ready регламент
+- [x***REMOVED*** **Promt16.md full audit** — Tasks 0-6 полностью выполнены (v5.0.0)
+  - Стратегический слой (ARCHITECTURE_PRINCIPLES, COMPATIBILITY_MATRIX, RUNTIME_VALIDATION_FRAMEWORK)
+  - Реорганизация docs/ (45 файлов → 7 подпапок, INDEX.md)
+  - Граница ядро↔плагин (imports через __init__.py, try/except, убраны жёсткие пути)
+  - Унификация projects/ (README.md + MANIFEST.md для всех 4 проектов)
+  - Чистка data/context.db (91→45 сессий)
+  - Аудит scripts/ (4 мёртвых → archive/)
+  - Smoke-test: 1152 passed, 1 skipped, 0 failures
 
 ### 🔴 План
-- [ ***REMOVED*** MCP Client — подключение внешних MCP-серверов
-- [ ***REMOVED*** Плагины: tg_messenger, system_monitor, knowledge_sync
 - [ ***REMOVED*** Distributed Agents — мульти-агентная оркестрация
+- [ ***REMOVED*** Плагины: tg_messenger, system_monitor, knowledge_sync (коннекторы)
 
 ---
 
@@ -222,9 +273,8 @@
 |------|--------|-----------|-------------|
 | **Phase 1** | ✅ Завершена | 100% | Streaming, Tasks, Router, Memory, Context Builder, Unified Context, 195 тестов |
 | **Phase 2** | ✅ Завершена | 100% | Memory Engine + Knowledge Engine + Graph Search + Semantic Search + auto-index + seeded docs, 99+ тестов |
-| **Phase 3** | 🟡 В РАБОТЕ | ~92% | Router + Orchestrator (parallel DAG + EventBus) + ModelGateway + ToolRuntime, 150+ тестов. ✅ Groq фикс, ✅ Git, ✅ Streaming (SSE/Gemini/Ollama), ✅ Parallel execution, ✅ step.retrying/workflow.progress |
-| **Phase 4** | 🟡 В РАБОТЕ | ~75% | Event Bus + Plugin API + MCP Server (stdio + Streamable HTTP + FastAPI + Cloudflare) + интеграции, 225 тестов. ✅ EventBus, ✅ Knowledge, ✅ MCP Server (12 tools, 9 resources, 3 prompts, 124 тестов), ✅ FastAPI wrapper + Tunnel |
-| **Phase 5** | 🔴 План | 0% | Ничего не начато |
+| **Phase 3** | 🟡 В РАБОТЕ | ~93% | Router + Orchestrator (parallel DAG + EventBus) + ModelGateway + ToolRuntime, 150+ тестов. ✅ Groq фикс, ✅ Git, ✅ Streaming (SSE/Gemini/Ollama), ✅ Parallel execution, ✅ step.retrying/workflow.progress || **Phase 4** | 🟡 В РАБОТЕ | ~93% | Event Bus + Plugin API + MCP Server (stdio + HTTP + FastAPI + Cloudflare) + MCP Client + Bridge Layer (MCP↔ACP) + ACP Protocol + Event Platform + Bootstrap Engine + Runtime Abstraction Layer + Scenario Engine + Telegram Bot + doctor.py + Marketplace-ready + INTEGRATION_CONTRACT, 500+ тестов. ✅ Все promt16.md tasks (0-6) | **Phase 5** | 🔴 План | 0% | Ничего не начато |
+| **Всего** | — | — | **1152 тестов** (305s), 1 skipped, 0 failures |
 
 ---
 
@@ -232,8 +282,8 @@
 
 1. ✅ **Phase 1** — Фундамент закрыт
 2. 🟡 **Phase 2** — Knowledge Engine + Graph Search + Semantic Search
-3. ✅ **Phase 3** — Router + Orchestrator + Model Gateway + Tool Runtime
-4. 🟡 **Phase 4** — Plugin API ✅ → MCP Server → MCP Client → Distributed Agents
+3. ✅ **Phase 3** — Router + Orchestrator + Model Gateway + Tool Runtime (~93%)
+4. 🟢 **Phase 4** — Plugin API ✅ → MCP Server ✅ → MCP Client ✅ → Bridge Layer ✅ → ACP ✅ → Event Platform ✅ → Runtime Abstraction ✅ → Scenario Engine ✅ → Marketplace ✅ → Distributed Agents 🔜
 5. 🔴 **Phase 5** — Flutter UI / Android Service / Remote Sync
 
 ---
