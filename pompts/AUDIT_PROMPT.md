@@ -1,9 +1,9 @@
-# ПРОМПТ: Полный архитектурный аудит + реструктуризация проекта Freebuff
+ПРОМТ: Полный архитектурный аудит + оценка качества кода по стандарту
 
-> **Назначение:** Запустить масштабный аудит всего проекта Freebuff
-> **Когда использовать:** После перезапуска терминала
-> **Команда запуска:** `cd /storage/emulated/0/PROJECTS/workstation/freebuff && freebuff`
-> **Стартовая фраза:** скопируй текст ниже → отправь агенту
+Назначение: Запустить масштабный аудит всего проекта Freebuff с проверкой соответствия CODE_QUALITY_STANDARD.md
+Когда использовать: После перезапуска терминала, перед релизом, после крупных изменений
+Команда запуска: cd /storage/emulated/0/PROJECTS/workstation/freebuff && freebuff
+Стартовая фраза: скопируй текст ниже → отправь агенту
 
 ---
 
@@ -14,326 +14,564 @@
 
 ---
 
-## 📋 Контекст проекта
+📋 Контекст проекта
 
-**Проект:** Freebuff AI Engineering Workspace
-**Путь:** `/storage/emulated/0/PROJECTS/workstation/freebuff/`
-**Среда:** Termux на Android (ARM64), Python 3.14, 8 ГБ RAM
-**Текущая версия:** v4.9.0
-**Тестов:** 1123 passed, 1 skipped, 0 failures
-**Фреймворк методологии:** Kwork Arbitr v3
-**Путь к blueprints_v3:** `/storage/emulated/0/PROJECTS/workstation/blueprints_v3/` (реальный путь, содержит 17 агентов-блюпринтов + registry.yaml + MANIFEST.md)
-
-### Blueprints v3 — что это
-
-Это методологический фреймворк для AI-разработки, основанный на 17 специализированных агентах (ролях), каждый из которых отвечает за свой этап жизненного цикла проекта:
-- **Этап 1: Analysis & Estimation** — Orchestrator, Context Keeper, Explainer, LISA Estimator, Risk Manager
-- **Этап 2: Architecture** — Decomposer, Architect, Auditor
-- **Этап 3: Communication** — Response Writer
-- **Этап 4: Implementation** — Developer, Frontend Dev, DevOps
-- **Этап 5: Validation** — Tester, Fixer, Acceptance Agent
-- **Этап 6: Delivery** — Documenter
-- **Этап 7: Evolution** — Retrospective Agent
-
-**Ключевые файлы blueprints_v3:** `/storage/emulated/0/PROJECTS/workstation/blueprints_v3/MANIFEST.md`, `registry.yaml`, `00_orchestrator.md`–`16_retrospective_agent.md`
-
-### SPEC.md — ТЗ на freebuff
-
-`/storage/emulated/0/PROJECTS/workstation/freebuff/SPEC.md` — техническое задание на платформу, написанное по методологии blueprints_v3. Должно быть эталоном для проверки соответствия.
+Проект: Freebuff AI Engineering Workspace
+Путь: /storage/emulated/0/PROJECTS/workstation/freebuff/
+Среда: Termux на Android (ARM64), Python 3.14, 8 ГБ RAM
+Текущая версия: v4.9.0
+Тестов: 1123 passed, 1 skipped, 0 failures
+Стандарт качества: docs/core/CODE_QUALITY_STANDARD.md (v2.0.0) — все проверки проводятся по этому документу
+Фреймворк методологии: Kwork Arbitr v3 (blueprints_v3)
+Путь к blueprints_v3: /storage/emulated/0/PROJECTS/workstation/blueprints_v3/ — 17 агентов-блюпринтов
 
 ---
 
-## 🎯 Задание 1: Аудит функциональности кода
+🎯 Задание 1: Функциональность и тесты
 
-### 1.1 Проверка работоспособности
+1.1 Тестовый прогон
 
-1. **Запусти полный тестовый прогон:** `python -m pytest tests/ -q --tb=short`
-   - Зафиксируй: сколько тестов, сколько упало, какие именно упали (если есть)
-   - Сравни с предыдущим результатом: **1123 passed, 1 skipped, 0 failures**
+```bash
+python -m pytest tests/ -q --tb=short --cov=scripts --cov=freebuff_plugin --cov=core
+```
 
-2. **Проверь импорт всех ключевых модулей:**
-   - `from freebuff_plugin.runtime import ...` — Runtime Abstraction Layer
-   - `from freebuff_plugin.bootstrap.engine import BootstrapEngine` — Bootstrap Engine
-   - `from freebuff_plugin.bridge_layer import BridgeLayer` — Bridge Layer
-   - `from freebuff_plugin.event.store import EventStore` — Event Platform
-   - `from freebuff_plugin.scenario_engine import ScenarioEngine` — Scenario Engine
-   - `from freebuff_plugin.tgbot import ScenarioBot` — Telegram Bot
-   - `from scripts.mcp_server import BuffyMcpServer` — MCP Server
-   - `from scripts.event_bus import EventBus` — Event Bus
-   - `from scripts.orchestrator import Orchestrator` — Orchestrator
-   - `from scripts.model_gateway import ModelGateway` — Model Gateway
-   - `from scripts.knowledge_engine import KnowledgeEngine` — Knowledge Engine
-   - `from scripts.memory_engine import MemoryEngine` — Memory Engine
-   - `from scripts.graph_index import GraphIndex` — Graph Index
-   - `from scripts.tool_runtime import ToolRegistry` — Tool Runtime
-   - `from scripts.plugin_api import PluginRegistry` — Plugin API
-   - `from scripts.context_manager import ContextManager` — Context Manager
+Зафиксируй:
 
-3. **Проверь CLI:** `python freebuff_cli.py status` — работает ли?
+· Общее количество тестов
+· Сколько прошло / упало / пропущено
+· Покрытие кода (coverage) в % по каждому модулю
+· Сравни с предыдущим результатом: 1123 passed, 1 skipped, 0 failures
 
-### 1.2 Анализ тестового покрытия
+1.2 Тестовое покрытие по модулям
 
-1. Для каждого модуля определи количество тестов:
-   - `tests/test_runtime_abstraction.py` — 60 тестов
-   - `tests/test_mcp_server.py` — 101 тест (включая 12 bootstrap)
-   - `tests/test_bootstrap_engine.py` — 61 тест
-   - `tests/test_bridge_layer.py` — 60 тестов
-   - `tests/test_scenario_engine.py` — 83 теста
-   - `tests/test_tgbot.py` — 44 теста
-   - `tests/test_orchestrator.py` — 51 тест
-   - `tests/test_event_bus.py` — 30 тестов
-   - `tests/test_event_store.py` — 61 тест
-   - `tests/test_model_gateway.py` — 36 тестов
-   - `tests/test_knowledge_engine.py` — 42 теста
-   - `tests/test_graph_index.py` — 42 теста
-   - `tests/test_memory_engine.py` — 30 тестов
-   - `tests/test_tool_runtime.py` — 50 тестов
-   - `tests/test_plugin_api.py` — 65 тестов
-   - `tests/test_freebuff.py` — 25 тестов
+Модуль Тестов Покрытие Статус
+test_runtime_abstraction.py 60 % 
+test_mcp_server.py 101 % 
+test_bootstrap_engine.py 61 % 
+test_bridge_layer.py 60 % 
+test_scenario_engine.py 83 % 
+test_tgbot.py 44 % 
+test_orchestrator.py 51 % 
+test_event_bus.py 30 % 
+test_event_store.py 61 % 
+test_model_gateway.py 36 % 
+test_knowledge_engine.py 42 % 
+test_graph_index.py 42 % 
+test_memory_engine.py 30 % 
+test_tool_runtime.py 50 % 
+test_plugin_api.py 65 % 
+test_freebuff.py 25 % 
+ИТОГО ~800  
 
-2. Найди модули без своих тестов:
-   - StreamSession — нет отдельного теста?
-   - StreamBridge — нет отдельного теста?
-   - Plugin API — какие файлы без покрытия?
-   - Docker/конфиг-файлы без тестов?
+Критерий стандарта: 11.6 — 1143+ passed, 0 failures
 
-3. Оцени общее покрытие: какие критические модули не имеют тестов?
+1.3 Модули без тестов
 
-### 1.3 Dead code / неиспользуемые файлы
+Найди компоненты, у которых нет выделенного тест-файла:
 
-1. Найди `.py` файлы, которые никуда не импортируются
-2. Найди `__pycache__/` и другие артефакты
-3. Найди `.bak` и дублирующие файлы
-4. Найди файлы, на которые нет ссылок ни в одном документе
+· StreamSession — tests/test_stream_session.py?
+· StreamBridge — tests/test_stream_bridge.py?
+· ContextManager — tests/test_context_manager.py?
+· KeyPool — tests/test_keypool.py?
+· API endpoints — tests/test_api.py?
+· Phone MCP Server — tests/test_phone_mcp_server.py?
 
----
+1.4 Импорты всех ключевых модулей
 
-## 🎯 Задание 2: Архитектурный анализ
+Проверь, что все импорты работают:
 
-### 2.1 Соответствие Vision 3.0 — AI Infrastructure Layer
+```python
+from freebuff_plugin.runtime import RuntimeAbstractionLayer
+from freebuff_plugin.bootstrap.engine import BootstrapEngine
+from freebuff_plugin.bridge_layer import BridgeLayer
+from freebuff_plugin.event.store import EventStore
+from freebuff_plugin.scenario_engine import ScenarioEngine
+from freebuff_plugin.tgbot import ScenarioBot
+from scripts.mcp_server import BuffyMcpServer
+from scripts.event_bus import EventBus
+from scripts.orchestrator import Orchestrator
+from scripts.model_gateway import ModelGateway
+from scripts.knowledge_engine import KnowledgeEngine
+from scripts.memory_engine import MemoryEngine
+from scripts.graph_index import GraphIndex
+from scripts.tool_runtime import ToolRegistry
+from scripts.plugin_api import PluginRegistry
+from scripts.context_manager import ContextManager
+```
 
-Проверь текущую архитектуру (`docs/core/ARCHITECTURE_3.0.md`, `docs/vision/VISION_3.0.md`) против реального кода:
-
-| Компонент | Статус по доке | Статус в коде | Соответствие |
-|-----------|---------------|---------------|--------------|
-| ContextManager | ✅ Production | | |
-| Memory Engine | ✅ Production | | |
-| Knowledge Engine | ✅ Production | | |
-| Graph Index | ✅ Production | | |
-| Event Bus | ✅ Production | | |
-| Orchestrator | 🟡 MVP | | |
-| Policy Engine | 💡 План | | |
-| Bootstrap Engine | 💡 План (по доке — устарело) | ✅ Реализован | |
-| MCP Server | ✅ Production | | |
-| MCP Client | 🆕 Реализован | | |
-| Bridge Layer | 🆕 Реализован | | |
-| ACP Protocol | 🆕 Реализован | | |
-| Runtime Abstraction | 💡 План (по доке — устарело) | ✅ Реализован | |
-| Scenario Engine | ✅ Production | | |
-| Provider Pool | 🟡 Частично | | |
-| Key Pool | 🟡 Частично | | |
-| OOM Protection | ✅ Production | | |
-
-Обнови таблицу: где дока отстаёт от кода, где код отстаёт от доки.
-
-### 2.2 Соответствие blueprints_v3 (Kwork Arbitr)
-
-Проверь структуру проекта на соответствие методологии blueprints_v3:
-
-1. **Проанализируй `SPEC.md`** — соответствует ли ТЗ текущей реализации?
-2. **Найди 17 ролей blueprints_v3** в реальной структуре проекта:
-   - Какие роли реализованы как код?
-   - Какие роли реализованы как документация?
-   - Какие роли отсутствуют?
-3. **Проверь пайплайн:** есть ли conditional routing? Есть ли closed loops (Auditor ↔ Architect)?
-4. **LESSONS.md** — существует ли механизм самообучения?
-
-### 2.3 Зависимости и связи между модулями
-
-1. Построй dependency graph:
-   - `Event Bus` → кто публикует, кто подписывается
-   - `Bridge Layer` → зависимости от MCP Client
-   - `Runtime Abstraction` → зависимость от MCP Client, Bootstrap Engine
-   - `MCP Server` → зависимости от ToolRegistry, KnowledgeEngine, MemoryEngine, BootstrapEngine, BridgeLayer
-
-2. Найди циклические зависимости (A → B → A)
-3. Найди нарушения Core/Extensions/Labs: core-компоненты не должны импортировать extensions
-
-### 2.4 Архитектурные решения
-
-1. **Прочитай `docs/decisions/DECISIONS.md`** — все ли ADR актуальны?
-   - ADR-001..ADR-007 — какие решения устарели?
-2. **Проверь `IDEAS.md`** — какие идеи можно закрыть как реализованные?
-3. **Проверь `ROADMAP.md`** — актуален ли план?
+Результат: список failed импортов (если есть)
 
 ---
 
-## 🎯 Задание 3: Чистота кода
+🎯 Задание 2: Архитектура
 
-### 3.1 Качество кода
+2.1 Соответствие Vision 3.0 (AI Infrastructure Layer)
 
-1. **mypy:** `python -m mypy scripts/ freebuff_plugin/ core/ --ignore-missing-imports --strict-optional 2>&1 | tail -50`
-2. **Стиль:** проверь на violations:
-   - Длинные строки (>120 символов)
-   - Неиспользуемые импорты
-   - Хардкоженные пути вместо `Path()`
-   - Голый `except:` вместо `except Exception:`
-   - `shell=True` в subprocess — критическая уязвимость!
-   - `exec()` / `eval()` — критическая уязвимость!
+Проверь документацию (docs/core/ARCHITECTURE_3.0.md, docs/vision/VISION_3.0.md) против кода:
 
-3. **Документирование:**
-   - У всех ли модулей есть docstring?
-   - У всех ли публичных функций/методов есть docstring?
-   - Есть ли модули без единой документации?
+Компонент Статус по доке Статус в коде Соответствие
+ContextManager ✅ Production  
+Memory Engine ✅ Production  
+Knowledge Engine ✅ Production  
+Graph Index ✅ Production  
+Event Bus ✅ Production  
+Orchestrator 🟡 MVP  
+Policy Engine 💡 План  
+Bootstrap Engine 💡 План (устарело) ✅ Реализован 
+MCP Server ✅ Production  
+MCP Client 🆕 Реализован  
+Bridge Layer 🆕 Реализован  
+ACP Protocol 🆕 Реализован  
+Runtime Abstraction 💡 План (устарело) ✅ Реализован 
+Scenario Engine ✅ Production  
+OOM Protection ✅ Production  
 
-### 3.2 Конфигурация и пути
+Где дока отстаёт от кода?
+Где код отстаёт от доки?
 
-1. Найди все хардкоженные пути (например, `/storage/emulated/0/PROJECTS/workstation/`)
-2. Проверь что все они используют `Path(__file__).resolve().parent`
-3. Проверь `.gitignore` — не забыты ли `.env`, `.keys/`, `__pycache__`
+2.2 Соответствие blueprints_v3 (Kwork Arbitr)
 
-### 3.3 Безопасность
+Проверь SPEC.md и структуру проекта на методологию blueprints_v3:
 
-1. Нет ли где-то `shell=True` в subprocess? (было исправлено в v2.8.0, но могло вернуться)
-2. Нет ли хардкоженных API-ключей?
-3. Есть ли защита от path traversal?
-4. Есть ли .env в gitignore?
+Роль Реализация (код/дока/отсутствует)
+00 Orchestrator 
+01 Context Keeper 
+02 Explainer 
+03 LISA Estimator 
+04 Risk Manager 
+05 Decomposer 
+06 Architect 
+07 Auditor 
+08 Response Writer 
+09 Developer 
+10 Frontend Dev 
+11 DevOps 
+12 Tester 
+13 Fixer 
+14 Acceptance Agent 
+15 Documenter 
+16 Retrospective Agent 
+
+2.3 Dependency Graph
+
+Построй граф зависимостей:
+
+```
+Event Bus ← кто публикует? кто подписывается?
+Bridge Layer ← зависимости от MCP Client, Runtime Abstraction?
+Runtime Abstraction ← зависимости от MCP Client, Bootstrap Engine?
+MCP Server ← зависимости от ToolRegistry, KnowledgeEngine, MemoryEngine, BootstrapEngine?
+```
+
+Найди:
+
+· Циклические зависимости (A → B → A)
+· Нарушения Core/Extensions/Labs (core не должен импортировать extensions)
+
+2.4 ADR и решения
+
+Проверь актуальность docs/decisions/DECISIONS.md:
+
+· ADR-001..ADR-007 — какие устарели?
+· IDEAS.md — какие идеи можно закрыть?
+· ROADMAP.md — актуален ли план?
 
 ---
 
-## 🎯 Задание 4: Структура файлов и реструктуризация
+🎯 Задание 3: Качество кода по CODE_QUALITY_STANDARD.md (v2.0.0)
 
-### 4.1 Текущее состояние хаоса
+Стандарт: docs/core/CODE_QUALITY_STANDARD.md — обязателен для всех компонентов.
 
-Проект разросся, файлы разбросаны хаотично:
-- `scripts/` — 30+ скриптов разного назначения
-- `freebuff_plugin/` — 8 поддиректорий, нужна систематизация
-- `docs/` — 30+ документов без иерархии
-- `pompts/` — 20+ промптов, неясно какие актуальны
-- Корень — 15+ файлов (AGENTS, BUFFY, CLAUDE, CODY, README, SPEC, TASK...)
-- `projects/` — внешние проекты, встроенные в структуру freebuff
+3.1 Архитектура (раздел 1 стандарта)
 
-### 4.2 Задача: создать реестр документов и файлов
+# Требование Выполняется? Пример нарушения
+1.1 Модульность (Single Responsibility)  
+1.2 Минимальная связанность  
+1.3 Понятная структура каталогов  
+1.4 Нет дублирования (DRY)  
+1.5 Нет магических чисел/строк  
+1.6 Loosely coupled (EventBus)  
+1.7 Infrastructure Plugin  
+
+Оценка: X/10
+
+3.2 Читаемость (раздел 2 стандарта)
+
+# Требование Выполняется? Пример нарушения
+2.1 Docstrings на русском (Google-style)  
+2.2 Понятные имена  
+2.3 Module docstring  
+2.4 README/инструкция  
+2.5 Единый стиль  
+2.6 Type hints  
+
+Оценка: X/10
+
+3.3 Надёжность (раздел 3 стандарта)
+
+# Требование Выполняется? Пример нарушения
+3.1 Обработка ошибок (try/except)  
+3.2 Логирование (EventBus)  
+3.3 Корректное завершение  
+3.4 Атомарные операции  
+3.5 Проверка существования файлов  
+3.6 Проверка прав доступа  
+3.7 Идемпотентность  
+3.8 Восстановление после сбоя  
+3.9 Graceful Degradation  
+
+Оценка: X/10
+
+3.4 Безопасность (раздел 4 стандарта)
+
+# Требование Выполняется? Пример нарушения
+4.1 Не использовать root  
+4.2 Не хранить секреты в коде  
+4.3 Переменные окружения для секретов  
+4.4 Валидация входных данных  
+4.5 Не выполнять shell без проверки  
+4.6 Экранирование ввода  
+4.7 Нет хардкоженных путей  
+4.8 Интеграция через публичные API  
+
+Критические проверки:
+
+```bash
+# Найти shell=True
+grep -r "shell=True" scripts/ freebuff_plugin/ --include="*.py"
+
+# Найти exec/eval
+grep -r "exec(" scripts/ freebuff_plugin/ --include="*.py"
+grep -r "eval(" scripts/ freebuff_plugin/ --include="*.py"
+
+# Найти хардкоженные пути
+grep -r "/storage/emulated/0" scripts/ freebuff_plugin/ --include="*.py"
+grep -r "/data/data/com.termux" scripts/ freebuff_plugin/ --include="*.py"
+```
+
+Оценка: X/10
+
+3.5 Совместимость (раздел 5 стандарта)
+
+# Требование Выполняется?
+5.1 Совместимость с Termux 
+5.2 Работа на Android ARM64 
+5.3 POSIX-совместимые команды 
+5.4 pathlib вместо строк 
+5.5 Проверка утилит перед запуском 
+5.6 Python 3.11+ 
+
+Оценка: X/10
+
+3.6 Производительность (раздел 6 стандарта)
+
+# Требование Выполняется?
+6.1 Минимизация RAM (lazy imports) 
+6.2 Кэширование 
+6.3 Избегать лишних процессов 
+6.4 Кэширование (lru_cache) 
+6.5 Не выполнять тяжёлые операции повторно 
+6.6 Lazy loading 
+
+Оценка: X/10
+
+3.7 Логирование (раздел 7 стандарта)
+
+# Требование Выполняется?
+7.1 Логировать начало работы 
+7.2 Логировать завершение 
+7.3 Логировать ошибки 
+7.4 Логировать предупреждения 
+7.5 Режим DEBUG 
+7.6 Режим QUIET 
+7.7 EventBus публикация событий 
+7.8 Structured logging (JSON) 
+
+Оценка: X/10
+
+3.8 Конфигурация (раздел 8 стандарта)
+
+# Требование Выполняется?
+8.1 Настройки в конфиг-файле 
+8.2 Значения по умолчанию 
+8.3 Документировать параметры 
+8.4 Не изменять конфиг автоматически 
+
+Оценка: X/10
+
+3.9 UX (раздел 9 стандарта)
+
+# Требование Выполняется?
+9.1 Понятный прогресс 
+9.2 Дружелюбные сообщения об ошибках 
+9.3 Не засорять терминал 
+9.4 --help 
+9.5 --version 
+9.6 Корректные exit-коды 
+
+Оценка: X/10
+
+3.10 Документация (раздел 10 стандарта)
+
+# Требование Выполняется?
+10.1 Инструкция установки 
+10.2 Инструкция запуска 
+10.3 Примеры использования 
+10.4 Описание параметров CLI 
+10.5 Описание структуры проекта 
+10.6 Список зависимостей 
+10.7 CHANGELOG.md 
+10.8 ADR для решений 
+
+Оценка: X/10
+
+3.11 Тестируемость (раздел 11 стандарта)
+
+# Требование Выполняется?
+11.1 Легко тестироваться (DI) 
+11.2 Тестовые сценарии (unit+integration+boundary) 
+11.3 Примеры входных данных 
+11.4 Ожидаемый результат 
+11.5 Boundary Testing 
+11.6 Регрессионные тесты 
+
+Оценка: X/10
+
+3.12 Масштабируемость (раздел 12 стандарта)
+
+# Требование Выполняется?
+12.1 Легко расширяться 
+12.2 Не требовать переписывания 
+12.3 Поддерживать плагины 
+12.4 Marketplace-ready 
+
+Оценка: X/10
+
+3.13 Стандарты разработки (раздел 13 стандарта)
+
+# Требование Выполняется?
+13.1 KISS 
+13.2 DRY 
+13.3 SOLID 
+13.4 Избегать преждевременной оптимизации 
+13.5 Код, понятный через год 
+13.6 Code review 
+13.7 mypy type checking 
+
+Оценка: X/10
+
+3.14 Buffy-специфические требования (раздел 14 стандарта)
+
+# Требование Выполняется?
+14.1 EventBus first 
+14.2 Plugin-safe imports 
+14.3 Bridge-only 
+14.4 No hardcoded paths 
+14.5 OOM aware 
+14.6 1143+ tests, 0 failures 
+14.7 Android tested 
+14.8 Runtime validated 
+
+Оценка: X/10
+
+---
+
+3.15 Mypy строгий анализ
+
+```bash
+python -m mypy scripts/ freebuff_plugin/ core/ --strict --ignore-missing-imports 2>&1 | tee mypy_report.txt
+```
+
+Тип ошибки Количество Критичность Пример файла
+union-attr  HIGH 
+no-any-return  MEDIUM 
+arg-type  HIGH 
+assignment  MEDIUM 
+name-defined  LOW 
+attr-defined  MEDIUM 
+ИТОГО   
+
+Цель по стандарту 13.7: 0 ошибок
+
+---
+
+3.16 Проверка "Золотого правила"
+
+"Любой созданный код считается production-ready"
+
+Проверь каждый модуль:
+
+· Все публичные функции имеют docstrings и type hints
+· Все внешние вызовы (HTTP, SQL, файлы) обёрнуты в try/except
+· Есть graceful degradation: если модуль недоступен, система не падает
+· Повторный запуск не ломает состояние (идемпотентность)
+· Все значимые операции логируются через EventBus
+· Все входные данные валидируются
+· Нет хардкоженных путей, секретов, магических чисел
+· Есть тесты для всех критических путей
+
+Сводка: [X***REMOVED*** из 8 пунктов выполнены → [X***REMOVED***% готовности к production
+
+---
+
+3.17 Сводная оценка качества кода
+
+# Раздел стандарта Оценка (1-10) Комментарий
+1 Архитектура  
+2 Читаемость  
+3 Надёжность  
+4 Безопасность  
+5 Совместимость  
+6 Производительность  
+7 Логирование  
+8 Конфигурация  
+9 UX  
+10 Документация  
+11 Тестируемость  
+12 Масштабируемость  
+13 Стандарты разработки  
+14 Buffy-специфические  
+СРЕДНЯЯ  X/10 
+
+Вердикт:
+
+· 9.0-10.0 — Отлично (production-ready)
+· 7.0-8.9 — Хорошо (требует доработок)
+· 5.0-6.9 — Удовлетворительно (много проблем)
+· <5.0 — Критично (требует рефакторинга)
+
+---
+
+🎯 Задание 4: Структура файлов
+
+4.1 Реестр файлов
 
 Составь таблицу КАЖДОГО файла в проекте:
 
-```
-| Путь | Тип | Категория | Краткое содержание | Статус | Примечание |
-|------|-----|-----------|-------------------|--------|------------|
-```
+Путь Тип Категория Краткое содержание Статус
+scripts/orchestrator.py CODE SERVICE Workflow engine ✅ Active
+freebuff_plugin/... PLUGIN   
+...    
 
-Категории:
-- **CODE** — исполняемые скрипты, модули
-- **CONFIG** — конфигурация, env, yaml, json
-- **TEST** — тесты
-- **DOC-ARCH** — архитектурная документация
-- **DOC-AUDIT** — аудиты
-- **DOC-SPEC** — спецификации
-- **DOC-AGENT** — инструкции для агентов
-- **DOC-SESSION** — дампы сессий
-- **PROMPT** — промпты
-- **PROJECT** — внешние проекты
-- **DATA** — данные, БД
-- **PLUGIN** — плагин-модули
-- **SCRIPT-UTIL** — утилиты
-- **SCRIPT-SERVICE** — сервисы (EventBus, Orchestrator...)
-- **OTHER** — прочее
+Категории: CODE, CONFIG, TEST, DOC-ARCH, DOC-AUDIT, DOC-SPEC, DOC-AGENT, DOC-SESSION, PROMPT, PROJECT, DATA, PLUGIN, SCRIPT-UTIL, SCRIPT-SERVICE, OTHER
 
-### 4.3 Задача: предложить новую структуру папок
+4.2 Дубликаты и пересечения
+
+Найди файлы с одинаковым или пересекающимся содержанием:
+
+· AGENTS.md vs docs/ops/AGENTS.md vs .freebuff/AGENTS.md
+· BUFFY.md vs CLAUDE.md vs CODY.md vs .cursorrules
+· scripts/mcp_server.py vs freebuff_plugin/mcp_server.py
+· scripts/event_bus.py vs freebuff_plugin/event/store.py
+· pompts/promt*.md — какие актуальны?
+
+4.3 Dead code / артефакты
+
+Найди:
+
+· .py файлы, которые никуда не импортируются
+· __pycache__/ и другие артефакты
+· .bak файлы
+· Неиспользуемые зависимости в requirements.txt
+
+4.4 Предлагаемая структура
 
 На основе реестра предложи новую иерархию:
 
 ```
 freebuff/
-├── core/                    # Ядро системы (было scripts/ — часть)
-├── services/                # Сервисы (EventBus, ModelGateway, Orchestrator...)
-├── plugins/                 # Плагины (freebuff_plugin/*)
-├── cli/                     # CLI-инструменты (freebuff_cli.py)
-├── storage/                 # Базы данных, хранилища
-├── scripts/                 # Утилиты (админские скрипты)
+├── core/                    # Ядро (было scripts/core-*)
+├── services/                # Сервисы (было scripts/)
+├── plugins/                 # Плагины (freebuff_plugin/)
+├── cli/                     # CLI-инструменты
+├── storage/                 # Базы данных
+├── scripts/                 # Утилиты (админские)
 ├── tests/                   # Тесты
 ├── docs/
-│   ├── 01-architecture/     # Архитектурные документы
-│   ├── 02-specs/            # Спецификации
-│   ├── 03-audits/           # Аудиты
-│   ├── 04-decisions/        # ADR
-│   ├── 05-agents/           # Инструкции для агентов
-│   ├── 06-sessions/         # Дампы сессий
-│   ├── 07-roadmap/          # Планы развития
-│   └── 08-references/       # Референсы
+│   ├── 01-architecture/
+│   ├── 02-specs/
+│   ├── 03-audits/
+│   ├── 04-decisions/
+│   ├── 05-agents/
+│   ├── 06-sessions/
+│   ├── 07-roadmap/
+│   └── 08-references/
 ├── prompts/                 # Промпты
 ├── projects/                # Внешние проекты
 ├── data/                    # Данные
-├── BUFFY.md                 # Оставить в корне
-├── README.md                # Оставить в корне
-├── CHANGELOG.md             # Оставить в корне
-└── config/                  # Конфигурация (новое)
+├── config/                  # Конфигурация
+├── BUFFY.md
+├── README.md
+└── CHANGELOG.md
 ```
 
 Проверь: не сломает ли новая структура существующие импорты?
 
-### 4.4 Определи дубликаты
+---
 
-Найди файлы с одинаковым или пересекающимся содержанием:
-- `AGENTS.md` vs `docs/ops/AGENTS.md` vs `.freebuff/AGENTS.md`
-- `BUFFY.md` vs `CLAUDE.md` vs `CODY.md` vs `.cursorrules`
-- `scripts/mcp_server.py` vs `freebuff_plugin/mcp_server.py`
-- `scripts/event_bus.py` vs `freebuff_plugin/event/store.py`
-- pompts/promt*.md — какие актуальны, какие устарели?
+🎯 Задание 5: Итоговый отчёт
+
+Сформируй единый документ docs/audits/AUDIT_FULL_[DATE***REMOVED***.md:
+
+Раздел 1: Executive Summary
+
+· Общая оценка здоровья проекта (1-10)
+· Количество файлов, строк кода, тестов
+· Ключевые проблемы (top-5)
+· Ключевые сильные стороны (top-5)
+
+Раздел 2: Code Health
+
+· Результаты тестов (количество, покрытие)
+· Mypy ошибки (по типам)
+· Dead code
+· Проблемы безопасности
+
+Раздел 3: Architecture
+
+· Соответствие Vision 3.0 / blueprints_v3
+· Проблемы в зависимостях
+· Отставание документации от кода
+
+Раздел 4: Code Quality (по стандарту)
+
+· Сводная таблица по 14 разделам CODE_QUALITY_STANDARD.md
+· Итоговая оценка X/10
+· Top-5 нарушений стандарта
+
+Раздел 5: File Structure
+
+· Реестр всех файлов
+· Предлагаемая структура
+· Дубликаты и мусор
+
+Раздел 6: Recommendations
+
+· P0: Критические (делать сейчас)
+· P1: Высокие (делать в этом спринте)
+· P2: Средние (делать в следующем спринте)
+· P3: Низкие (когда будет время)
+
+Раздел 7: Action Plan
+
+· Конкретные шаги по порядку
+· Оценка сложности каждого шага (S/M/L/XL)
+· Связанные файлы
 
 ---
 
-## 🎯 Задание 5: Итоговый отчёт
-
-Сформируй единый документ `docs/audits/AUDIT_FULL_2026-07-29.md` со следующими разделами:
-
-### Раздел 1: Executive Summary
-- Общая оценка здоровья проекта (1-10)
-- Количество файлов, строк кода, тестов
-- Ключевые проблемы (top-5)
-- Ключевые сильные стороны (top-5)
-
-### Раздел 2: Code Health
-- Результаты тестов: сколько, покрытие, узкие места
-- Mypy errors
-- Dead code
-- Проблемы безопасности
-
-### Раздел 3: Architecture
-- Соответствие Vision 3.0 / blueprints_v3
-- Проблемы в зависимостях
-- Отставание документации от кода
-- ADR — какие актуальны
-
-### Раздел 4: File Structure
-- Реестр всех файлов с категориями
-- Предлагаемая новая структура
-- Дубликаты и мусор
-
-### Раздел 5: Recommendations
-- P0: Критические (делать сейчас)
-- P1: Высокие (делать в этом спринте)
-- P2: Средние (делать в следующем спринте)
-- P3: Низкие (когда будет время)
-
-### Раздел 6: Action Plan
-- Конкретные шаги по порядку
-- Оценка сложности каждого шага (S/M/L/XL)
-- Связанные файлы для каждого шага
-
----
-
-## ✅ Формат ответа
+✅ Формат ответа
 
 1. Начни с краткого Executive Summary
 2. Используй таблицы для структурирования
-3. Каждый раздел начинай с заголовка `##`
+3. Каждый раздел начинай с заголовка ##
 4. В конце — Action Plan с приоритетами
 5. Не предлагай изменений без оценки сложности
 6. Выводы должны быть конкретными, не общими
+7. Все проверки проводи по CODE_QUALITY_STANDARD.md (v2.0.0)
 
-**Все найденные проблемы задокументируй в `docs/audits/AUDIT_FULL_2026-07-29.md`**
+Все найденные проблемы задокументируй в docs/audits/AUDIT_FULL_[DATE***REMOVED***.md
 
 ---
 
-**Это аналитический запрос. Никаких изменений кода не производить.**
+Это аналитический запрос. Никаких изменений кода не производить.

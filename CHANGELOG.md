@@ -761,3 +761,4 @@
 - **Cron:** автоматическая суммаризация каждые 30 минут
 - **Тесты:** 15 тестов для ContextManager
 - **Документация:** BUFFY.md, SPEC.md, RULES.md, SESSION_GUIDE.md, DECISIONS.md
+### Добавлено\n- **Session Mesh v2.0** — спецификация и промпт для внедрения
