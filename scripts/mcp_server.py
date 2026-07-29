@@ -251,6 +251,7 @@ class BuffyMcpServer:
         self._bootstrap_engine = None
         self._runtime_registry = None
         self._runtime_capability_registry = None
+        self._policy_engine = None
 
         # Register all MCP capabilities
         self._register_tools()
@@ -356,6 +357,24 @@ class BuffyMcpServer:
                 print(f"⚠️ MCP: RuntimeRegistry init failed: {e***REMOVED***", file=sys.stderr)
                 return None
         return self._runtime_registry
+
+    def _get_policy_engine(self):
+        """Lazy-load Policy Engine for capability-based runtime selection."""
+        if self._policy_engine is None:
+            try:
+                from freebuff_plugin.policy import PolicyEngine
+                registry = self._get_runtime_registry()
+                cap_reg = self._runtime_capability_registry
+                if registry is None or cap_reg is None:
+                    return None
+                self._policy_engine = PolicyEngine(registry, cap_reg)
+            except ImportError as e:
+                print(f"⚠️ MCP: PolicyEngine unavailable (plugin not loaded): {e***REMOVED***", file=sys.stderr)
+                return None
+            except Exception as e:
+                print(f"⚠️ MCP: PolicyEngine init failed: {e***REMOVED***", file=sys.stderr)
+                return None
+        return self._policy_engine
 
     def _publish(self, event_type: str, data: Dict[str, Any***REMOVED***) -> None:
         """Publish MCP event to EventBus."""
@@ -1419,13 +1438,17 @@ class BuffyMcpServer:
         if explicit_name:
             runtime_name = explicit_name
         elif capability:
-            cap_reg = self._runtime_capability_registry
-            if cap_reg is None:
-                return {"success": False, "error": "RuntimeCapabilityRegistry not available"***REMOVED***
-            best = cap_reg.get_runtime_for_capability(capability)
-            if best is None:
-                return {"success": False, "error": f"No runtime available for capability: {capability***REMOVED***"***REMOVED***
-            runtime_name = best["runtime"***REMOVED***
+            policy_engine = self._get_policy_engine()
+            if policy_engine is not None:
+                runtime_name = policy_engine.select_runtime(capability)
+            if runtime_name is None:
+                cap_reg = self._runtime_capability_registry
+                if cap_reg is None:
+                    return {"success": False, "error": "RuntimeCapabilityRegistry not available"***REMOVED***
+                best = cap_reg.get_runtime_for_capability(capability)
+                if best is None:
+                    return {"success": False, "error": f"No runtime available for capability: {capability***REMOVED***"***REMOVED***
+                runtime_name = best["runtime"***REMOVED***
             if registry.get(runtime_name) is None:
                 return {"success": False, "error": f"Runtime selected for capability is not registered: {runtime_name***REMOVED***"***REMOVED***
         else:

@@ -6,6 +6,19 @@
 
 ---
 
+## [5.2.0***REMOVED*** — 2026-07-29
+
+### Добавлено
+- **Policy Engine — пользовательские политики выбора Runtime:**
+  - `freebuff_plugin/policy/` — модуль Policy Engine (`engine.py`, `config.py`, `rules.py`)
+  - `PolicyEngine` — выбор Runtime по capability с fallback chain и constraints
+  - Поддержка правил: `min_confidence`, `max_latency`, `exclude`, `required_flags`
+  - `runtime/policies.json` — пользовательские политики в JSON (не gitignored)
+  - Интеграция в `scripts/mcp_server.py`: `runtime_generate` сначала использует PolicyEngine, затем fallback на `RuntimeCapabilityRegistry`
+  - 16 тестов (`tests/test_policy_engine.py`) — 0 failures
+
+---
+
 ## [5.1.0***REMOVED*** — 2026-07-29
 
 ### Добавлено

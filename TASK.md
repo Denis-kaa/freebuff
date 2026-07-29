@@ -2,8 +2,8 @@
 
 **Статус:** ✅ promt16.md Tasks 0-6 завершены, переход к Policy Engine
 **Создана:** 2026-07-29 19:56 UTC
-**Версия проекта:** v5.0.0
-**Коммит:** da4b60c
+**Версия проекта:** v5.1.0
+**Коммит:** 4d29f6b
 **Обновлено:** 2026-07-29
 
 ---
@@ -53,20 +53,29 @@
 - CHANGELOG.md v5.0.0, ROADMAP.md v3.0.0
 - Коммит: da4b60c (256 files, +51753/−1116)
 
+### v5.1.0 — structure.md + promt17.md Phase 0 ✅
+- docs/core/DISTRIBUTED_SESSION_SPECIFICATION_v2.0.md + PROMPT_IMPLEMENTATION_v1.0.md
+- freebuff_plugin/mesh/ структура (Phase 0)
+- requirements.txt: ulid-py, websocket-client, diff-match-patch
+- Корневые файлы отсортированы (IDEAS.md → docs/decisions/, FILE_REGISTRY.md → docs/projects_meta/)
+- Коммит: 4d29f6b
+
 ### Тест-статус
 ```
-1152 passed, 1 skipped, 0 failures (305s)
+189 passed, 1 skipped, 0 failures (runtime + mcp subset)
+1152 passed, 1 skipped, 0 failures (full suite, previous run)
 ```
 
 ---
 
 ## 📋 Следующие шаги (Phase 1 — приоритет)
 
-### Шаг 1: Policy Engine 🔜
+### Шаг 1: Policy Engine ✅
 Пользовательские политики выбора Runtime по capability.
-YAML-конфиг для маппинга capability → runtime.
+JSON-конфиг `runtime/policies.json`, интеграция в MCP `runtime_generate`.
+16 тестов, 0 failures.
 
-### Шаг 2: Capability Registry (доработка) 🔜
+### Шаг 2: Capability Registry (доработка) 
 Выбор capability вместо модели. Интеграция с Policy Engine.
 
 ### Шаг 3: Runtime Installer 🔜
