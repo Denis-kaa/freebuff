@@ -269,21 +269,19 @@ freebuff/
 ├── README.md                 # описание воркспейса
 ├── SPEC.md                   # ТЗ на freebuff (по blueprints_v3)
 ├── BUFFY_PROJECT.md          # архитектура проекта
-├── AGENTS.md                 # инструкции для AI-агентов
-├── IDEAS.md                  # реестр архитектурных идей
+├── AGENTS.md                 # инструкции для AI-агентов (корень)
+
 ├── sessions/                 # сырые логи
 ├── logs/                     # системные логи
 ├── docs/
-│   ├── AGENTS.md             # для чат-ботов и агентов
-│   ├── ROADMAP.md            # план развития (6 фаз)
-│   ├── VISION_2.0.md         # стратегическое видение
-│   ├── RULES.md              # правила документирования
-│   ├── DECISIONS.md          # архитектурные решения
-│   ├── ARCHITECTURE.md       # архитектура системы
-│   ├── WORKERS.md            # паттерн workers
-│   ├── SYSTEM_INVENTORY.md   # инвентаризация
-│   ├── AUDIT_*.md            # аудиты системы
-│   └── session_dumps/        # дампы сессий
+│   ├── INDEX.md              # навигация по документации
+│   ├── core/                 # спецификации, архитектурные принципы
+│   ├── vision/               # VISION, ROADMAP, PRODUCT_MANIFESTO
+│   ├── decisions/            # ADR, DECISIONS, IDEAS
+│   ├── audits/               # история аудитов
+│   ├── plugin/               # документация плагина
+│   ├── projects_meta/        # PROJECT_REGISTRY, WORKERS, FILE_REGISTRY
+│   └── ops/                  # TROUBLESHOOTING, AGENTS, RULES, шаблоны
 ├── pompts/                   # промпты и логи сессий
 ├── context/
 │   ├── checkpoints/          # чекпоинты Markdown
@@ -317,6 +315,8 @@ freebuff/
 │   ├── test_scenario_engine.py  # 83 теста
 │   ├── test_tgbot.py            # 44 теста
 │   └── ...
+├── freebuff_plugin/mesh/     # 🆕 Session Mesh v2.0 (распределённый слой)
+├── runtime/                  # Marketplace-ready провайдеры
 └── data/
     └── context.db            # основная БД
 ```
@@ -372,9 +372,18 @@ Buffy эволюционирует в **Companion Engine** — универса�
 
 **Что уже есть:** Event Bus, ContextManager v3, Memory/Knowledge/Graph Engines, Plugin API, MCP Server, Scenario Engine, Telegram Bot, Intent Router, IDEAS Registry, Vision 2.0
 
-**Что предстоит:** Bridge Layer, Agent Collaboration Protocol (ACP), Presence, Live Collaboration, RAG 2.0
+**Что предстоит:** Session Mesh v2.0 (распределённый слой), Presence, Live Collaboration, RAG 2.0
 
-Подробнее: [VISION_2.0.md***REMOVED***(docs/vision/archive/VISION_2.0.md), [IDEAS.md***REMOVED***(IDEAS.md), [ROADMAP.md***REMOVED***(docs/vision/ROADMAP.md), [BUFFY_PROJECT.md***REMOVED***(BUFFY_PROJECT.md)
+Подробнее: [VISION_2.0.md***REMOVED***(docs/vision/archive/VISION_2.0.md), [IDEAS.md***REMOVED***(docs/decisions/IDEAS.md), [ROADMAP.md***REMOVED***(docs/vision/ROADMAP.md), [BUFFY_PROJECT.md***REMOVED***(BUFFY_PROJECT.md)
+
+### 🆕 Session Mesh v2.0
+
+Распределённый слой для Buffy AI Infrastructure Layer:
+- **Спецификация:** [docs/core/DISTRIBUTED_SESSION_SPECIFICATION_v2.0.md***REMOVED***(docs/core/DISTRIBUTED_SESSION_SPECIFICATION_v2.0.md)
+- **Промпт реализации:** [docs/core/PROMPT_IMPLEMENTATION_v1.0.md***REMOVED***(docs/core/PROMPT_IMPLEMENTATION_v1.0.md)
+- **Код:** `freebuff_plugin/mesh/` — Node Mesh, Session Mesh, Agent Mesh
+
+Трёхуровневая архитектура: Node Mesh (устройства) → Session Mesh (контекст) → Agent Mesh (агенты)
 
 ---
 

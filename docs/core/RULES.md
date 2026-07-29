@@ -112,16 +112,21 @@
 
 ```
 docs/
-├── RULES.md              # ← этот файл
-├── AGENTS.md             # для чат-ботов/агентов
-├── SESSION_GUIDE.md      # инструкция по сессиям
-├── session_dumps/        # SESSION_DUMP.md
-├── audit/                # AUDIT_*.md
-├── ARCHITECTURE.md       # архитектура текущего проекта
-├── DECISIONS.md          # ADR
-├── ARCHITECTURE_REVIEW.md
-└── termux_agent_README.md
+├── INDEX.md              # навигация
+├── core/                 # спецификации, архитектурные принципы, RULES
+├── vision/               # VISION_3.0, ROADMAP, PRODUCT_MANIFESTO
+├── decisions/            # ADR, DECISIONS, IDEAS
+├── audits/               # AUDIT_*.md, DRIFT_REPORT
+├── plugin/               # FREEBUFF_PLUGIN_*
+├── projects_meta/        # PROJECT_REGISTRY, WORKERS, FILE_REGISTRY
+├── ops/                  # TROUBLESHOOTING, SESSION_GUIDE, AGENTS, шаблоны
+└── 02-specs/             # (зарезервировано для будущих спецификаций)
 ```
+
+### 🆕 Session Mesh v2.0
+- **Спецификация:** `docs/core/DISTRIBUTED_SESSION_SPECIFICATION_v2.0.md`
+- **Промпт реализации:** `docs/core/PROMPT_IMPLEMENTATION_v1.0.md` (→ `pompts/promt17.md`)
+- **Код:** `freebuff_plugin/mesh/`
 
 ---
 

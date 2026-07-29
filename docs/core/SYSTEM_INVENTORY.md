@@ -1,8 +1,8 @@
 # SYSTEM INVENTORY — Полный каталог Buffy Project
 
-> **Версия:** 1.0.0
-> **Дата инвентаризации:** 2026-07-28
-> **Всего компонентов:** ~52
+> **Версия:** 2.0.0
+> **Дата инвентаризации:** 2026-07-29
+> **Всего компонентов:** ~55
 > **Работоспособность:** 100% (все компоненты active/production)
 
 ---
@@ -196,10 +196,16 @@
 ### 🟢 `RULES.md` — Правила документирования
 ### 🟢 `../decisions/DECISIONS.md` — Архитектурные решения
 ### 🟢 `../vision/ROADMAP.md` — План развития 🆕
-### 🟢 `../ops/SESSION_GUIDE.md` — Инструкция по сессиям
-### 🟢 `../ops/AGENTS.md` — Для чат-ботов
-### 🟢 `../ops/REFERENCES.md` — Источники
-### 🟢 `../ops/TROUBLESHOOTING.md` — Решение проблем
+### 🟢 `IDEAS.md` — Реестр архитектурных идей
+- **Путь:** `docs/decisions/IDEAS.md` (перемещён из `docs/ops/` 2026-07-29)
+- 12+ архитектурных идей со статусами, категориями, приоритетами
+- 6 идей закрыты как реализованные (Bridge Layer, ACP, MCP Client, Runtime Abstraction, Marketplace, Event Platform)
+- **Статус:** ✅ Актуален
+
+### 🟢 `FILE_REGISTRY.md` — Реестр файлов
+- **Путь:** `docs/projects_meta/FILE_REGISTRY.md` (перемещён из корня 2026-07-29)
+- Полный реестр всех файлов проекта с категориями
+- **Статус:** ✅ Актуален
 ### 🟢 `../audits/AUDIT_2026-07-27.md` — Аудит системы
 ### 🟢 `ARCHITECTURE_REVIEW.md` — Архитектурный обзор
 ### 🟢 `../projects_meta/OVERLAY_IMPLEMENTATION.md` — Документация оверлея
@@ -208,7 +214,30 @@
 
 ---
 
-## 🧪 Слой 8: Тесты
+## 🌐 Слой 8: Session Mesh v2.0 🆕
+
+### 🟢 `docs/core/DISTRIBUTED_SESSION_SPECIFICATION_v2.0.md` — Спецификация
+- Трёхуровневая распределённая архитектура: Node Mesh → Session Mesh → Agent Mesh
+- EventStore (интерфейс + реализации), Vector Clock, Lease Manager
+- Offline-first стратегия, Capability Engine
+- **Статус:** 💡 Спецификация (к реализации)
+
+### 🟢 `docs/core/PROMPT_IMPLEMENTATION_v1.0.md` — Промпт реализации
+- Поэтапный план: 9 фаз, ~145 тестов, 17-21 дней
+- Ссылка на полный текст: `pompts/promt17.md`
+- **Статус:** 📋 Фаза 0 готова, Фазы 1-8 — план
+
+### 🟡 `freebuff_plugin/mesh/` — Код Mesh
+- 7 подпакетов: core/, node/, session/, agent/, transport/, storage/
+- **Статус:** 🟡 Фаза 0 (структура создана, реализации нет)
+
+### 🟢 `requirements.txt` — Mesh-зависимости
+- `ulid-py`, `websocket-client`, `diff-match-patch`
+- **Статус:** ✅ Добавлены
+
+---
+
+## 🧪 Слой 9: Тесты
 
 ### 🟢 `tests/test_freebuff.py` — 24 теста
 - ContextManager (15 тестов): старт, сообщения, чекпоинты, авто-оценка токенов,
@@ -223,7 +252,7 @@
 
 ---
 
-## 🔄 Слой 9: Автоматизация
+## 🔄 Слой 10: Автоматизация
 
 ### 🟢 `scripts/cron_conspect.sh` — Cron
 - Каждые 30 мин: автосуммаризация + health check
@@ -245,9 +274,10 @@
 | 🎭 Overlay/UI | 6 | ✅ Все production |
 | 📱 Проекты | 1 | 🟡 TG в работе |
 | 📚 Документация | 17 | ✅ Все заполнены |
+| 🌐 Session Mesh v2.0 | 4 | 🟡 Фаза 0 готова |
 | 🧪 Тесты | 24 | ✅ 100% pass |
 | 🔄 Автоматизация | 2 | ✅ Production |
-| **ИТОГО** | **~52** | **🎯 96% готово (аудит промта 16: задачи 3-5 выполнены)** |
+| **ИТОГО** | **~55** | **🎯 promt16.md + structure.md + promt17.md Phase 0 выполнены** |
 
 ---
 

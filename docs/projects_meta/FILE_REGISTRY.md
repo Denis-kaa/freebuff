@@ -114,7 +114,7 @@
 | `docs/core/ARCHITECTURE_3.0.md` | DOC-ARCH | update | `docs/01-architecture/ARCHITECTURE_3.0.md` | Update component statuses |
 | `docs/vision/ROADMAP.md` | DOC-ARCH | update | `docs/07-roadmap/ROADMAP.md` | Update roadmap |
 | `docs/decisions/DECISIONS.md` | DOC-ARCH | keep | `docs/04-decisions/DECISIONS.md` | ADRs |
-| `docs/ops/IDEAS.md` | DOC-ARCH | keep | `docs/01-architecture/IDEAS.md` | Ideas registry |
+| `docs/decisions/IDEAS.md` | DOC-ARCH | keep | `docs/decisions/IDEAS.md` | Ideas registry |
 | `docs/audits/AUDIT_FULL_2026-07-29.md` | DOC-AUDIT | keep | `docs/03-audits/AUDIT_FULL_2026-07-29.md` | This audit |
 | `docs/ops/SESSION_GUIDE.md` | DOC-SESSION | keep | `docs/06-sessions/SESSION_GUIDE.md` | Session guide |
 | `pompts/*.md` | PROMPT | archive | `pompts/` or `prompts/` | Add `pompts/README.md` index |

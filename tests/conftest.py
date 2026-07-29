@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import os
 import threading
+***REMOVED***
 from typing import TYPE_CHECKING
 
 import pytest
@@ -34,3 +35,22 @@ def context_manager(tmp_path) -> "ContextManager":
 
     manager._init_db()
     return manager
+
+
+# ═══════════════════════════════════════════════════
+# Session Mesh v2.0 fixtures
+# ═══════════════════════════════════════════════════
+
+
+@pytest.fixture
+def mesh_tmp_db(tmp_path: Path):
+    """Temporary SQLite database path for Mesh event store tests."""
+    db_path = tmp_path / "test_events.db"
+    yield db_path
+    db_path.unlink(missing_ok=True)
+
+
+@pytest.fixture
+def offline_queue_path(tmp_path: Path):
+    """Temporary storage path for OfflineQueue tests."""
+    yield tmp_path

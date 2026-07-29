@@ -6,6 +6,23 @@
 
 ---
 
+## [5.1.0***REMOVED*** — 2026-07-29
+
+### Добавлено
+- **structure.md — реорганизация документации:**
+  - `docs/core/DISTRIBUTED_SESSION_SPECIFICATION_v2.0.md` — спецификация Session Mesh v2.0
+  - `docs/core/PROMPT_IMPLEMENTATION_v1.0.md` — промпт реализации (копия promt17.md)
+  - `docs/INDEX.md` — обновлён: добавлены Mesh-документы, IDEAS, FILE_REGISTRY
+  - `BUFFY.md` — добавлена секция «Session Mesh v2.0», обновлены пути
+- **promt17.md — Session Mesh v2.0 Phase 0:**
+  - `freebuff_plugin/mesh/` — структура директорий (core/, node/, session/, agent/, transport/, storage/) — 7 файлов `__init__.py` с docstrings
+  - `requirements.txt` — добавлены mesh-зависимости: ulid-py, websocket-client, diff-match-patch
+- **Сортировка корневых файлов:**
+  - `IDEAS.md` → `docs/decisions/IDEAS.md`
+  - `FILE_REGISTRY.md` → `docs/projects_meta/FILE_REGISTRY.md`
+
+---
+
 ## [5.0.0***REMOVED*** — 2026-07-29
 
 ### Добавлено

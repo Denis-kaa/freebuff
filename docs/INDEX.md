@@ -46,8 +46,12 @@
 | **Bootstrap Spec** | [`core/BOOTSTRAP_SPECIFICATION.md`***REMOVED***(core/BOOTSTRAP_SPECIFICATION.md) |
 | **Event Platform Spec** | [`core/EVENT_PLATFORM_SPECIFICATION.md`***REMOVED***(core/EVENT_PLATFORM_SPECIFICATION.md) |
 | **Policy Engine Spec** | [`core/POLICY_ENGINE_SPECIFICATION.md`***REMOVED***(core/POLICY_ENGINE_SPECIFICATION.md) |
+| **Session Mesh v2.0 Spec** 🆕 | [`core/DISTRIBUTED_SESSION_SPECIFICATION_v2.0.md`***REMOVED***(core/DISTRIBUTED_SESSION_SPECIFICATION_v2.0.md) |
+| **Session Mesh Implementation** 🆕 | [`core/PROMPT_IMPLEMENTATION_v1.0.md`***REMOVED***(core/PROMPT_IMPLEMENTATION_v1.0.md) |
 | **Code Quality Standard** | [`core/CODE_QUALITY_STANDARD.md`***REMOVED***(core/CODE_QUALITY_STANDARD.md) |
 | **Plugin Architecture** | [`plugin/FREEBUFF_PLUGIN_ARCHITECTURE.md`***REMOVED***(plugin/FREEBUFF_PLUGIN_ARCHITECTURE.md) |
+| **IDEAS Registry** | [`decisions/IDEAS.md`***REMOVED***(decisions/IDEAS.md) |
+| **File Registry** | [`projects_meta/FILE_REGISTRY.md`***REMOVED***(projects_meta/FILE_REGISTRY.md) |
 | **Agent Instructions** | [`ops/AGENTS.md`***REMOVED***(ops/AGENTS.md) |
 
 ---
