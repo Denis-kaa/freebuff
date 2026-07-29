@@ -15,6 +15,9 @@ echo "[$(date '+%Y-%m-%d %H:%M:%S')***REMOVED*** Cron: auto-conspect" >> "$LOG"
 # Суммаризируем активные сессии (без demo-режима)
 python scripts/auto_conspect.py >> "$LOG" 2>&1
 
+# Ежедневная проверка дрейфа документации/кода (внутри rate-limit once/day)
+python scripts/drift_check.py >> "$LOG" 2>&1
+
 # Проверяем здоровье
 python -c "
 from scripts.system_monitor import health_check

@@ -42,6 +42,25 @@
 | **Telethon** | 1.44.0 | Telegram MTProto клиент |
 | **Git** | стандартный | Управление версиями |
 
+### Реестр проектов
+
+Проекты из `~/leviathan/opt` автоматически зарегистрированы в:
+- **`data/context.db`** → таблица `projects` (имя, путь, язык, git, категория)
+- **Knowledge Engine** → поиск по `project:<имя>` (FTS5 + TF-IDF)
+
+Категории проектов: `ai`, `telegram`, `web`, `tool`, `infra`, `personal`, `other`, `leviathan`.
+
+Команды для работы с реестром:
+```bash
+python scripts/scan_projects.py --status    # список всех проектов
+python scripts/scan_projects.py              # пересканировать
+python scripts/scan_projects.py --rebuild    # очистить и пересканировать
+```
+
+Всего зарегистрировано: **62 проекта**.
+
+---
+
 ### Модели
 | Модель | Размер | Где используется |
 |--------|--------|-----------------|
@@ -71,7 +90,7 @@
 1. Ты живёшь в Termux. У тебя нет браузера, но есть CLI: bash, git, python, pytest, mypy.
 2. Ты работаешь с кодом напрямую — читаешь, редактируешь, создаёшь файлы.
 3. Ты всегда проверяешь изменения: тесты + mypy + code-review.
-4. Ты ведёшь документацию по правилам в `docs/RULES.md`.
+4. Ты ведёшь документацию по правилам в `docs/core/RULES.md`.
 5. Ты сохраняешь контекст сессий в `freebuff/data/context.db`.
 6. **Создавай документы когда требуется** — не жди явной команды. Изменилась архитектура → обнови ARCHITECTURE.md. Принято решение → запиши в DECISIONS.md. Нашёл баг → добавь в TROUBLESHOOTING.md.
 
@@ -87,6 +106,12 @@
 - **Простота:** Минимум изменений для решения задачи
 - **Переиспользование:** Не переписывай существующие функции
 
+### CODE QUALITY STANDARD — базовый регламент, всегда применяемый
+> **Источник:** `docs/core/CODE_QUALITY_STANDARD.md` — перед любой правкой или созданием кода перечитывать.  
+> **Золотое правило:** при конфликте «быстро» vs «надёжно» — всегда выбирать надёжное. Любой созданный код считается **production-ready**.
+
+Все правки и новые скрипты должны следовать стандарту: модульность, обработка ошибок, логирование, идемпотентность, безопасность (no root, no secrets в коде, валидация ввода, экранирование), Termux-совместимость, POSIX, документация, тесты, `--help`/`--version`.
+
 ### Безопасность
 - Никогда не хардкодь токены, пароли, ключи
 - Используй `.env` для секретов
@@ -100,7 +125,7 @@
 - **При завершении:** `auto_conspect.py` создаёт конспект для следующей сессии
 - **Лимит токенов:** следи за объёмом контекста, сжимай при необходимости
 
-### 📝 Правила документирования (подробно: docs/RULES.md)
+### 📝 Правила документирования (подробно: docs/core/RULES.md)
 
 **Всегда создавай/обновляй:**
 - `ARCHITECTURE.md` — при изменении структуры проекта
@@ -110,13 +135,16 @@
 **При необходимости создавай:**
 - `DECISIONS.md` — архитектурные решения (проблема → альтернативы → выбор → обоснование)
 - `docs/AUDIT_*.md` — аудит системы (ключи, проекты, архитектура)
-- `docs/ARCHITECTURE_REVIEW.md` — глубокий анализ экосистемы
+- `docs/audits/AUDIT_TEMPLATE.md` — шаблон для post-task аудита изменённых продуктов (заполнять после каждой задачи)
+- `docs/core/ARCHITECTURE_REVIEW.md` — глубокий анализ экосистемы
 - `TROUBLESHOOTING.md` — частые ошибки и решения
 - `BRAINSTORM.md` — идеи с оценкой сложности
 - `EXPERIMENTS.md` — результаты экспериментов
 - `COMPARISON.md` — сравнение с аналогами (OpenClaw, Aider, etc.)
-- `ROADMAP.md` — план развития
+- `ROADMAP.md` — план развития (см. Phase 6: CoWork/Companion)
 - `API.md` — API-документация
+- `IDEAS.md` — реестр архитектурных идей со статусами (никогда не удаляются)
+- `docs/vision/archive/VISION_2.0.md` — стратегическое видение Buffy как Companion Engine
 - `DEPLOYMENT.md` — развёртывание
 
 **Формат всех документов:** Markdown с заголовками, таблицами, код-блоками, диаграммами Mermaid, перекрёстными ссылками.
@@ -240,27 +268,55 @@ freebuff/
 ├── BUFFY.md                  # ← ты читаешь этот файл
 ├── README.md                 # описание воркспейса
 ├── SPEC.md                   # ТЗ на freebuff (по blueprints_v3)
+├── BUFFY_PROJECT.md          # архитектура проекта
+├── AGENTS.md                 # инструкции для AI-агентов
+├── IDEAS.md                  # реестр архитектурных идей
 ├── sessions/                 # сырые логи
 ├── logs/                     # системные логи
 ├── docs/
-│   ├── architecture/         # архитектурные решения
-│   ├── decisions/            # ADR
-│   ├── session_dumps/        # дампы сессий
 │   ├── AGENTS.md             # для чат-ботов и агентов
-│   └── SESSION_GUIDE.md      # инструкция по сессиям
-├── pompts/                   # промпты (TERMINAL_AI_STUDIO_MOBILE.md)
+│   ├── ROADMAP.md            # план развития (6 фаз)
+│   ├── VISION_2.0.md         # стратегическое видение
+│   ├── RULES.md              # правила документирования
+│   ├── DECISIONS.md          # архитектурные решения
+│   ├── ARCHITECTURE.md       # архитектура системы
+│   ├── WORKERS.md            # паттерн workers
+│   ├── SYSTEM_INVENTORY.md   # инвентаризация
+│   ├── AUDIT_*.md            # аудиты системы
+│   └── session_dumps/        # дампы сессий
+├── pompts/                   # промпты и логи сессий
 ├── context/
 │   ├── checkpoints/          # чекпоинты Markdown
 │   └── summaries/            # конспекты сессий
-├── config/                   # конфигурация
-├── projects/
-│   └── tg_terminal_messenger/  # Telegram-клиент
+├── freebuff_plugin/          # плагин-обёртка для Codebuff
+│   ├── scenario_engine.py    # сценарный движок (11 сценариев)
+│   ├── scenarios/            # markdown-сценарии
+│   ├── tgbot.py              # Telegram бот для сценариев
+│   ├── router.py             # Intent Router
+│   ├── bridge.py             # мост к ContextManager
+│   ├── wrapper.py            # обёртка launch()
+│   └── mcp_server.py         # MCP сервер плагина
 ├── scripts/
 │   ├── context_manager.py    # менеджер сессий (SQLite)
 │   ├── auto_conspect.py      # автосуммаризация
-│   ├── import_qwen.py        # импорт Qwen → context.db
-│   ├── phone_mcp_server.py   # MCP-сервер телефона
-│   └── sdk_bridge.py         # freebuff.core ↔ termux-ai-agent
+│   ├── memory_engine.py      # 5 уровней памяти
+│   ├── knowledge_engine.py   # FTS5 + TF-IDF поиск
+│   ├── graph_index.py        # графовая память
+│   ├── orchestrator.py       # FSM/DAG оркестратор
+│   ├── event_bus.py          # publish/subscribe шина
+│   ├── model_gateway.py      # единый API для LLM
+│   ├── tool_runtime.py       # Git/SQLite/HTTP/Shell/File инструменты
+│   ├── plugin_api.py         # Plugin lifecycle
+│   ├── mcp_server.py         # MCP Server (stdio + HTTP)
+│   ├── mcp_fastapi.py        # FastAPI обёртка
+│   ├── telegram_bot.py       # Telegram бот freebuff
+│   ├── bootstrap.py          # старт сессии
+│   ├── oom_protect.sh        # OOM protection
+│   └── monitor.sh            # мониторинг плагина
+├── tests/                    # 650+ тестов
+│   ├── test_scenario_engine.py  # 83 теста
+│   ├── test_tgbot.py            # 44 теста
+│   └── ...
 └── data/
     └── context.db            # основная БД
 ```
@@ -292,17 +348,50 @@ freebuff/
 
 Buffy — это не просто coding assistant. Это **агентная платформа**:
 
-- **Сейчас:** Buffy (я) = мозг на DeepSeek v4 Flash + контекст на диске
-- **Завтра:** +локальные модели (Qwen через llama.cpp/Ollama) для простых задач
-- **Послезавтра:** +vLLM для batch-инференса, мультимодельный роутер
+### Фазы развития
+| Фаза | Статус | Суть | Документ |
+|------|--------|------|----------|
+| **Phase 1-3** | ✅ Завершены | Фундамент: стриминг, задачи, память, RAG, оркестратор, Model Gateway | [ROADMAP.md***REMOVED***(docs/vision/ROADMAP.md) |
+| **Phase 4** | 🟡 В РАБОТЕ (~85%) | Event Bus, Plugin API, MCP, Telegram Bot, Scenario Engine (11 сценариев) | [ROADMAP.md***REMOVED***(docs/vision/ROADMAP.md) |
+| **Phase 5** | 🔴 План | Flutter UI, Android Service, Remote Sync | [ROADMAP.md***REMOVED***(docs/vision/ROADMAP.md) |
+| **Phase 6** | 🟢 Аудит (~40%) | **CoWork / Companion Platform** — см. ниже | [VISION_2.0.md***REMOVED***(docs/vision/archive/VISION_2.0.md) |
 
-Ключевые принципы:
-- **Model-Agnostic** — архитектура не привязана к модели
-- **Context Persistence** — каждое сообщение в SQLite + файлы
-- **Task-Driven** — TASK.md для каждой задачи
-- **Неубиваемость** — OOM-kill не страшен, контекст на диске
+### Phase 6: CoWork / Companion Platform
 
-Подробнее: [BUFFY_PROJECT.md***REMOVED***(BUFFY_PROJECT.md)
+Buffy эволюционирует в **Companion Engine** — универсальную инфраструктурную надстройку над существующими агентами:
+
+> *Buffy — не конкурент Claude Code, Cursor или OpenClaw. Buffy — универсальная надстройка, которую подключают к уже существующим агентам, чтобы усилить их.*
+
+**Ключевые концепции:**
+- **Companion Engine** — работает рядом с любым AI-агентом, не заменяя его
+- **LLM Sparingly** — детерминированные алгоритмы где можно, LLM только где нужно
+- **Event Bus** — вся система событийная (уже готово)
+- **Live Collaboration** — несколько пользователей + агентов + устройств в реальном времени
+- **Presence + Project Pulse** — система присутствия и лента изменений
+- **Bridge Layer** — универсальный мост между агентными экосистемами (MCP ↔ ACP)
+
+**Что уже есть:** Event Bus, ContextManager v3, Memory/Knowledge/Graph Engines, Plugin API, MCP Server, Scenario Engine, Telegram Bot, Intent Router, IDEAS Registry, Vision 2.0
+
+**Что предстоит:** Bridge Layer, Agent Collaboration Protocol (ACP), Presence, Live Collaboration, RAG 2.0
+
+Подробнее: [VISION_2.0.md***REMOVED***(docs/vision/archive/VISION_2.0.md), [IDEAS.md***REMOVED***(IDEAS.md), [ROADMAP.md***REMOVED***(docs/vision/ROADMAP.md), [BUFFY_PROJECT.md***REMOVED***(BUFFY_PROJECT.md)
+
+---
+
+## 🤖 Работа через Freebuff CLI
+
+Когда этот проект открыт через `freebuff` (Codebuff CLI), агент уже знает:
+
+- **Роль:** Buffy, главный AI-ассистент Freebuff.
+- **Среда:** Termux на Android (ARM64).
+- **Ключевые файлы:** `BUFFY.md`, `BUFFY_PROJECT.md`, `SPEC.md`, `TASK.md`, `CHANGELOG.md`, `freebuff_cli.py`.
+- **Правила:** читать BUFFY.md, проверять тесты + mypy, обновлять CHANGELOG.md.
+- **Рабочий каталог:** `/mnt/sdcard/PROJECTS/workstation/freebuff`.
+
+Дополнительный контекст:
+- Корневой `AGENTS.md` — быстрый протокол для агента.
+- `.freebuff/AGENTS.md` — инструкции специально для Freebuff CLI.
+- `.freebuff/config.json` — метаданные проекта и preferred commands.
 
 ---
 

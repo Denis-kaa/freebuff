@@ -3,7 +3,7 @@
 Тест Telegram-подключения для tg-terminal-toolkit.
 
 Запуск:
-    cd /storage/emulated/0/PROJECTS/workstation/freebuff/projects/tg_terminal_messenger
+    cd projects/tg_terminal_messenger
     python test_tg.py
 
 Проверяет:

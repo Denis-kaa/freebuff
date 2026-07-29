@@ -18,6 +18,7 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+import sys
 import threading
 import uuid
 from contextlib import contextmanager
@@ -28,12 +29,13 @@ from typing import Any
 
 # ── Версионирование схемы ──────────────────────────────────────
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 """Текущая версия схемы БД.
 
 История:
   1 — начальная схема (2026-07)
   2 — добавлены колонки: checkpoint_count, token_threshold (2026-07)
+  3 — projects table, project_id FK в sessions (2026-07)
 """
 
 # ── Порог контекста ────────────────────────────────────────────
@@ -66,7 +68,8 @@ class SessionSnapshot:
     session_id: str
     status: SessionStatus
     project: str
-    topic: str
+    project_id: str | None = None
+    topic: str = ""
     message_count: int = 0
     token_estimate: int = 0
     last_summary: str = ""
@@ -76,12 +79,13 @@ class SessionSnapshot:
     updated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
+
 class ContextManager:
     """
     Универсальный менеджер контекста для freebuff workspace.
 
     Использование:
-        cm = ContextManager("/storage/emulated/0/PROJECTS/workstation/freebuff/")
+        cm = ContextManager("/path/to/freebuff")
         cm.start_session(project="termux-ai-agent", topic="v4.0 architecture")
         cm.save_checkpoint(summary="Implemented Worker Queue", ctype=CheckpointType.POST_STEP)
         cm.add_message({"role": "user", "content": "..."***REMOVED***)
@@ -132,6 +136,8 @@ class ContextManager:
             # Применяем миграции последовательно
             if current_version < 2:
                 self._migrate_v1_to_v2(conn)
+            if current_version < 3:
+                self._migrate_v2_to_v3(conn)
 
             # Если версия выше текущей — несовместимость
             if current_version > SCHEMA_VERSION:
@@ -142,19 +148,21 @@ class ContextManager:
 
     @staticmethod
     def _create_schema_v1(conn: sqlite3.Connection) -> None:
-        """Схема v1 — начальная."""
+        """Схема v1 — начальная (с v3 включает projects table)."""
         conn.executescript("""
             CREATE TABLE IF NOT EXISTS sessions (
                 session_id TEXT PRIMARY KEY,
                 status TEXT NOT NULL DEFAULT 'active',
                 project TEXT NOT NULL DEFAULT '',
+                project_id TEXT DEFAULT NULL,
                 topic TEXT NOT NULL DEFAULT '',
                 message_count INTEGER NOT NULL DEFAULT 0,
                 token_estimate INTEGER NOT NULL DEFAULT 0,
                 last_summary TEXT NOT NULL DEFAULT '',
                 metadata TEXT NOT NULL DEFAULT '{***REMOVED***',
                 created_at TEXT NOT NULL,
-                updated_at TEXT NOT NULL
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY (project_id) REFERENCES projects(name)
             );
             CREATE TABLE IF NOT EXISTS messages (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -175,6 +183,22 @@ class ContextManager:
                 created_at TEXT NOT NULL,
                 FOREIGN KEY (session_id) REFERENCES sessions(session_id)
             );
+            CREATE TABLE IF NOT EXISTS projects (
+                name TEXT PRIMARY KEY,
+                path TEXT NOT NULL DEFAULT '',
+                description TEXT DEFAULT '',
+                language TEXT DEFAULT '',
+                git_remote TEXT DEFAULT '',
+                readme_preview TEXT DEFAULT '',
+                has_requirements INTEGER DEFAULT 0,
+                has_package_json INTEGER DEFAULT 0,
+                has_dockerfile INTEGER DEFAULT 0,
+                has_makefile INTEGER DEFAULT 0,
+                has_pyproject INTEGER DEFAULT 0,
+                category TEXT DEFAULT '',
+                status TEXT DEFAULT 'active',
+                last_scanned TEXT DEFAULT ''
+            );
             CREATE INDEX IF NOT EXISTS idx_messages_session
                 ON messages(session_id, timestamp);
             CREATE INDEX IF NOT EXISTS idx_checkpoints_session
@@ -189,6 +213,53 @@ class ContextManager:
         на уровне Python, схема БД осталась той же.
         """
         conn.execute(f"PRAGMA user_version = 2")
+        conn.commit()
+
+    @staticmethod
+    def _migrate_v2_to_v3(conn: sqlite3.Connection) -> None:
+        """Миграция v2→v3: добавляет projects table и project_id в sessions."""
+        conn.execute("CREATE TABLE IF NOT EXISTS projects ("
+                     "name TEXT PRIMARY KEY,"
+                     "path TEXT NOT NULL DEFAULT '',"
+                     "description TEXT DEFAULT '',"
+                     "language TEXT DEFAULT '',"
+                     "git_remote TEXT DEFAULT '',"
+                     "readme_preview TEXT DEFAULT '',"
+                     "has_requirements INTEGER DEFAULT 0,"
+                     "has_package_json INTEGER DEFAULT 0,"
+                     "has_dockerfile INTEGER DEFAULT 0,"
+                     "has_makefile INTEGER DEFAULT 0,"
+                     "has_pyproject INTEGER DEFAULT 0,"
+                     "category TEXT DEFAULT '',"
+                     "status TEXT DEFAULT 'active',"
+                     "last_scanned TEXT DEFAULT ''"
+                     ")")
+
+        # Add project_id column if it doesn't exist yet (safe re-run)
+        columns = [col["name"***REMOVED*** for col in conn.execute("PRAGMA table_info(sessions)").fetchall()***REMOVED***
+        if "project_id" not in columns:
+            conn.execute(
+                "ALTER TABLE sessions ADD COLUMN project_id TEXT DEFAULT NULL REFERENCES projects(name)"
+            )
+
+        # Populate projects from existing sessions
+        existing_projects = conn.execute(
+            "SELECT DISTINCT project FROM sessions WHERE project != ''"
+        ).fetchall()
+        for row in existing_projects:
+            name = row["project"***REMOVED***
+            conn.execute(
+                """INSERT OR IGNORE INTO projects (name, path, description, category, last_scanned)
+                   VALUES (?, ?, ?, ?, ?)""",
+                (name, name, f"Project: {name***REMOVED***", "other",
+                 datetime.now(timezone.utc).isoformat()),
+            )
+            conn.execute(
+                "UPDATE sessions SET project_id = ? WHERE project = ? AND project_id IS NULL",
+                (name, name),
+            )
+
+        conn.execute(f"PRAGMA user_version = 3")
         conn.commit()
 
     # ═══════════════════════════════════════════════════════════
@@ -220,6 +291,7 @@ class ContextManager:
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA journal_mode=WAL")
         conn.execute("PRAGMA busy_timeout=5000")
+        conn.execute("PRAGMA foreign_keys=ON")
         try:
             yield conn
         finally:
@@ -234,8 +306,13 @@ class ContextManager:
         project: str = "",
         topic: str = "",
         session_id: str | None = None,
+        project_id: str | None = None,
     ) -> SessionSnapshot:
-        """Начинает новую сессию или загружает существующую."""
+        """Начинает новую сессию или загружает существующую.
+
+        Если project указан, но project_id не задан — автоматически
+        создаёт или находит запись в таблице projects.
+        """
         if session_id is None:
             session_id = str(uuid.uuid4())
 
@@ -251,6 +328,7 @@ class ContextManager:
                     session_id=existing["session_id"***REMOVED***,
                     status=SessionStatus(existing["status"***REMOVED***),
                     project=existing["project"***REMOVED***,
+                    project_id=existing["project_id"***REMOVED***,
                     topic=existing["topic"***REMOVED***,
                     message_count=existing["message_count"***REMOVED***,
                     token_estimate=existing["token_estimate"***REMOVED***,
@@ -260,11 +338,17 @@ class ContextManager:
                     updated_at=existing["updated_at"***REMOVED***,
                 )
 
+            # Auto-register project if needed
+            if project and not project_id:
+                project_id = self._ensure_project(conn, project)
+            elif not project_id:
+                project_id = None
+
             conn.execute(
                 """INSERT INTO sessions
-                   (session_id, status, project, topic, created_at, updated_at)
-                   VALUES (?, ?, ?, ?, ?, ?)""",
-                (session_id, SessionStatus.ACTIVE.value, project, topic, now, now),
+                   (session_id, status, project, project_id, topic, created_at, updated_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (session_id, SessionStatus.ACTIVE.value, project, project_id, topic, now, now),
             )
             conn.commit()
 
@@ -288,6 +372,7 @@ class ContextManager:
             session_id=session_id,
             status=SessionStatus.ACTIVE,
             project=project,
+            project_id=project_id,
             topic=topic,
         )
 
@@ -503,6 +588,18 @@ _Generated by ContextManager_
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(content)
 
+    def _ensure_project(self, conn: sqlite3.Connection, project_name: str) -> str | None:
+        """Ensure a project row exists, return its name or None."""
+        if not project_name:
+            return None
+        now = datetime.now(timezone.utc).isoformat()
+        conn.execute(
+            """INSERT OR IGNORE INTO projects (name, path, description, category, last_scanned)
+               VALUES (?, ?, ?, ?, ?)""",
+            (project_name, project_name, f"Project: {project_name***REMOVED***", "other", now),
+        )
+        return project_name
+
     def get_session(self, session_id: str) -> SessionSnapshot | None:
         """Загружает сессию."""
         with self._lock, self._get_conn() as conn:
@@ -517,6 +614,7 @@ _Generated by ContextManager_
                 session_id=row["session_id"***REMOVED***,
                 status=SessionStatus(row["status"***REMOVED***),
                 project=row["project"***REMOVED***,
+                project_id=row["project_id"***REMOVED***,
                 topic=row["topic"***REMOVED***,
                 message_count=row["message_count"***REMOVED***,
                 token_estimate=row["token_estimate"***REMOVED***,
@@ -621,14 +719,14 @@ _Generated by ContextManager_
         with self._lock, self._get_conn() as conn:
             if status:
                 rows = conn.execute(
-                    """SELECT session_id, status, project, topic, message_count,
+                    """SELECT session_id, status, project, project_id, topic, message_count,
                                token_estimate, updated_at
                        FROM sessions WHERE status = ? ORDER BY updated_at DESC""",
                     (status.value,),
                 ).fetchall()
             else:
                 rows = conn.execute(
-                    """SELECT session_id, status, project, topic, message_count,
+                    """SELECT session_id, status, project, project_id, topic, message_count,
                                token_estimate, updated_at
                        FROM sessions ORDER BY updated_at DESC"""
                 ).fetchall()
@@ -636,7 +734,58 @@ _Generated by ContextManager_
         return [dict(row) for row in rows***REMOVED***
 
     # ═══════════════════════════════════════════════════════════
-    # Очистка ABANDONED сессий
+    # Project Management
+    # ═══════════════════════════════════════════════════════════
+
+    def register_project(
+        self,
+        name: str,
+        path: str = "",
+        description: str = "",
+        language: str = "",
+        git_remote: str = "",
+        category: str = "other",
+    ) -> None:
+        """Register or update a project in the projects table."""
+        now = datetime.now(timezone.utc).isoformat()
+        with self._lock, self._get_conn() as conn:
+            conn.execute(
+                """INSERT INTO projects (name, path, description, language, git_remote, category, last_scanned)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)
+                   ON CONFLICT(name) DO UPDATE SET
+                       path=excluded.path,
+                       description=excluded.description,
+                       language=excluded.language,
+                       git_remote=excluded.git_remote,
+                       category=excluded.category,
+                       last_scanned=excluded.last_scanned""",
+                (name, path, description, language, git_remote, category, now),
+            )
+            conn.commit()
+
+    def get_project(self, name: str) -> dict[str, Any***REMOVED*** | None:
+        """Get a project by name."""
+        with self._lock, self._get_conn() as conn:
+            row = conn.execute(
+                "SELECT * FROM projects WHERE name = ?", (name,)
+            ).fetchone()
+            if row is None:
+                return None
+            return dict(row)
+
+    def list_projects(self, category: str | None = None) -> list[dict[str, Any***REMOVED******REMOVED***:
+        """List all projects, optionally filtered by category."""
+        with self._lock, self._get_conn() as conn:
+            if category:
+                rows = conn.execute(
+                    "SELECT * FROM projects WHERE category = ? ORDER BY name",
+                    (category,),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT * FROM projects ORDER BY category, name"
+                ).fetchall()
+        return [dict(row) for row in rows***REMOVED***
     # ═══════════════════════════════════════════════════════════
 
     def prune_abandoned(self, days: int = 1) -> int:

@@ -89,11 +89,25 @@ python freebuff_cli.py list      # все сессии
 
 | Файл | О чём |
 |------|-------|
-| `docs/TROUBLESHOOTING.md` | Частые ошибки и решения |
-| `docs/DECISIONS.md` | Архитектурные решения |
-| `docs/RULES.md` | Правила документирования |
-| `docs/REFERENCES.md` | Ссылки на инструменты |
+| `docs/ops/TROUBLESHOOTING.md` | Частые ошибки и решения |
+| `docs/decisions/DECISIONS.md` | Архитектурные решения |
+| `docs/core/RULES.md` | Правила документирования |
+| `docs/ops/REFERENCES.md` | Ссылки на инструменты |
 | `BUFFY.md` | Главный файл агента |
+| `AGENTS.md` | Инструкции для Freebuff/Codebuff CLI |
+| `.freebuff/AGENTS.md` | Контекст специально для Freebuff CLI |
+| `.freebuff/config.json` | Метаданные проекта для Freebuff CLI |
+
+###  Freebuff CLI
+
+Этот проект готов к работе через `freebuff` CLI:
+
+```bash
+cd /mnt/sdcard/PROJECTS/workstation/freebuff
+freebuff
+```
+
+Агент получит контекст из `AGENTS.md`, `BUFFY.md`, `TASK.md` и `CHANGELOG.md`.
 
 ---
 

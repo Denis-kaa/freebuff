@@ -125,11 +125,13 @@ class TestCollectDocSources:
         """_collect_doc_sources skips AUDIT files and templates."""
         (tmp_path / "README.md").write_text("# README")
         (tmp_path / "docs").mkdir()
-        (tmp_path / "docs" / "AGENTS.md").write_text("# AGENTS")
-        (tmp_path / "docs" / "AUDIT_2026-07-28.md").write_text("# AUDIT")
-        (tmp_path / "docs" / "TASK_TEMPLATE.md").write_text("# TEMPLATE")
+        (tmp_path / "docs" / "ops").mkdir()
+        (tmp_path / "docs" / "audits").mkdir()
+        (tmp_path / "docs" / "ops" / "AGENTS.md").write_text("# AGENTS")
+        (tmp_path / "docs" / "audits" / "AUDIT_2026-07-28.md").write_text("# AUDIT")
+        (tmp_path / "docs" / "ops" / "TASK_TEMPLATE.md").write_text("# TEMPLATE")
 
         sources = _collect_doc_sources(tmp_path)
-        assert "docs/AGENTS.md" in sources
-        assert "docs/AUDIT_2026-07-28.md" not in sources
-        assert "docs/TASK_TEMPLATE.md" not in sources
+        assert "docs/ops/AGENTS.md" in sources
+        assert "docs/audits/AUDIT_2026-07-28.md" not in sources
+        assert "docs/ops/TASK_TEMPLATE.md" not in sources

@@ -43,7 +43,7 @@
 - **Результат:** Первый коммит — 331 файл (feat: Freebuff/Buffy Project 2.0)
 
 ### 7. Прочитаны и оценены все промты
-- promt1.md — Правила документирования → ✅ Реализованы (docs/RULES.md, 16 документов)
+- promt1.md — Правила документирования → ✅ Реализованы (../core/RULES.md, 16 документов)
 - promt2.md — Planning Architect → ✅ Используется как методология
 - promt3.md — Buffy 2.0 конституция → ✅ Реализована (BUFFY_PROJECT.md)
 - promt4.md — Distributed Agent Platform → 🟡 Частично (Phase 4)
@@ -70,7 +70,7 @@
 |------|-----------|
 | `.keys/keypool.py` | +2 строки: `hdrs.setdefault("User-Agent", "KeyPool/1.0")` |
 | `CHANGELOG.md` | +секция [2.3.0***REMOVED*** с 4 исправлениями |
-| `docs/ROADMAP.md` | Обновлены Phase 3 (85%) и Phase 4 (60%) |
+| `../vision/ROADMAP.md` | Обновлены Phase 3 (85%) и Phase 4 (60%) |
 | `docs/session_dumps/2026-07-28_system_fixes.md` | Новый файл (этот дамп) |
 | `.keys/state.json` | Groq: valid=false → valid=true (6 ключей) |
 | `context/events.db` | 19 → 55 событий, 1 → 17 типов |

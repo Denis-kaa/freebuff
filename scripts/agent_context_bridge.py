@@ -24,12 +24,13 @@ import json
 import os
 import sys
 from datetime import datetime, timezone
+***REMOVED***
 from typing import Any, Dict, Optional
 
 from scripts.context_manager import ContextManager, SessionStatus, CheckpointType
 
 
-_FREEBUFF_ROOT = "/storage/emulated/0/PROJECTS/workstation/freebuff"
+_FREEBUFF_ROOT = str(Path(__file__).resolve().parent.parent)
 
 
 class AgentContextBridge:

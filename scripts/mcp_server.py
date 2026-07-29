@@ -247,6 +247,10 @@ class BuffyMcpServer:
         self._memory_engine = None
         self._context_manager = None
         self._event_bus = None
+        self._bridge_layer = None
+        self._bootstrap_engine = None
+        self._runtime_registry = None
+        self._runtime_capability_registry = None
 
         # Register all MCP capabilities
         self._register_tools()
@@ -297,6 +301,61 @@ class BuffyMcpServer:
             except Exception:
                 pass  # EventBus optional
         return self._event_bus
+
+    def _get_bridge_layer(self):
+        """Lazy-load Bridge Layer with graceful degradation."""
+        if self._bridge_layer is None:
+            try:
+                from freebuff_plugin import BridgeLayer
+                bus = self._get_event_bus()
+                self._bridge_layer = BridgeLayer(
+                    event_bus=bus or None,
+                    agent_name="buffy-mcp",
+                    agent_version="1.0.0",
+                )
+                self._bridge_layer.start()
+            except ImportError as e:
+                print(f"⚠️ MCP: BridgeLayer unavailable (plugin not loaded): {e***REMOVED***", file=sys.stderr)
+                return None
+            except Exception as e:
+                print(f"⚠️ MCP: BridgeLayer init failed: {e***REMOVED***", file=sys.stderr)
+                return None
+        return self._bridge_layer
+
+    def _get_bootstrap_engine(self):
+        """Lazy-load Bootstrap Engine with graceful degradation."""
+        if self._bootstrap_engine is None:
+            try:
+                from freebuff_plugin import BootstrapEngine
+                bus = self._get_event_bus()
+                self._bootstrap_engine = BootstrapEngine(
+                    workspace_root=str(self.workspace),
+                    event_bus=bus or None,
+                )
+            except ImportError as e:
+                print(f"⚠️ MCP: BootstrapEngine unavailable (plugin not loaded): {e***REMOVED***", file=sys.stderr)
+                return None
+            except Exception as e:
+                print(f"⚠️ MCP: BootstrapEngine init failed: {e***REMOVED***", file=sys.stderr)
+                return None
+        return self._bootstrap_engine
+
+    def _get_runtime_registry(self):
+        """Lazy-load Runtime Registry with graceful degradation."""
+        if self._runtime_registry is None:
+            try:
+                from freebuff_plugin import RuntimeRegistry, RuntimeCapabilityRegistry
+                storage = self.workspace / "data" / "runtime_registry.json"
+                self._runtime_registry = RuntimeRegistry(storage_path=storage)
+                self._runtime_registry.load()
+                self._runtime_capability_registry = RuntimeCapabilityRegistry(self._runtime_registry)
+            except ImportError as e:
+                print(f"⚠️ MCP: RuntimeRegistry unavailable (plugin not loaded): {e***REMOVED***", file=sys.stderr)
+                return None
+            except Exception as e:
+                print(f"⚠️ MCP: RuntimeRegistry init failed: {e***REMOVED***", file=sys.stderr)
+                return None
+        return self._runtime_registry
 
     def _publish(self, event_type: str, data: Dict[str, Any***REMOVED***) -> None:
         """Publish MCP event to EventBus."""
@@ -410,6 +469,239 @@ class BuffyMcpServer:
             category="plugins",
         )
 
+        # 6. Bridge Layer tools (Phase 6: CoWork/Companion)
+        self._tools["bridge_connect"***REMOVED*** = McpTool(
+            name="bridge_connect",
+            description="Connect to an external MCP server via stdio or HTTP. The server's tools become available as ACP capabilities.",
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "transport": {
+                        "type": "string",
+                        "description": "Transport type",
+                        "enum": ["stdio", "http"***REMOVED***,
+                    ***REMOVED***,
+                    "command": {
+                        "type": "string",
+                        "description": "Command for stdio transport (e.g., 'python')",
+                    ***REMOVED***,
+                    "args": {
+                        "type": "string",
+                        "description": "Space-separated args for stdio (e.g., 'scripts/mcp_server.py')",
+                    ***REMOVED***,
+                    "endpoint": {
+                        "type": "string",
+                        "description": "HTTP endpoint (e.g., 'http://127.0.0.1:8765/mcp')",
+                    ***REMOVED***,
+                    "name": {
+                        "type": "string",
+                        "description": "Optional custom name for the server",
+                    ***REMOVED***,
+                ***REMOVED***,
+                "required": ["transport"***REMOVED***,
+            ***REMOVED***,
+            handler=self._handle_bridge_connect,
+            category="bridge",
+        )
+
+        self._tools["bridge_list"***REMOVED*** = McpTool(
+            name="bridge_list",
+            description="List all connected MCP servers and their available tools.",
+            input_schema={"type": "object", "properties": {***REMOVED******REMOVED***,
+            handler=self._handle_bridge_list,
+            category="bridge",
+        )
+
+        self._tools["bridge_disconnect"***REMOVED*** = McpTool(
+            name="bridge_disconnect",
+            description="Disconnect a connected MCP server by name.",
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Server name to disconnect (from bridge_list)",
+                    ***REMOVED***,
+                ***REMOVED***,
+                "required": ["name"***REMOVED***,
+            ***REMOVED***,
+            handler=self._handle_bridge_disconnect,
+            category="bridge",
+        )
+
+        self._tools["bridge_rpc"***REMOVED*** = McpTool(
+            name="bridge_rpc",
+            description="Send a JSON-RPC request to a connected MCP server (e.g., tools/call, resources/list, ping).",
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "server": {
+                        "type": "string",
+                        "description": "Server name (from bridge_list)",
+                    ***REMOVED***,
+                    "method": {
+                        "type": "string",
+                        "description": "MCP JSON-RPC method (tools/list, resources/list, tools/call, ping)",
+                    ***REMOVED***,
+                    "tool": {
+                        "type": "string",
+                        "description": "Tool name for tools/call",
+                    ***REMOVED***,
+                    "arguments": {
+                        "type": "string",
+                        "description": "JSON arguments for tools/call",
+                    ***REMOVED***,
+                ***REMOVED***,
+                "required": ["server", "method"***REMOVED***,
+            ***REMOVED***,
+            handler=self._handle_bridge_rpc,
+            category="bridge",
+        )
+
+        # 7. Bootstrap Engine tools
+        self._tools["bootstrap_check"***REMOVED*** = McpTool(
+            name="bootstrap_check",
+            description="Check the current environment state (OS, Python, Node, Git, Disk, RAM, packages). Returns detailed environment report.",
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "quick": {
+                        "type": "boolean",
+                        "description": "Quick check (OS, Python, Git, Disk only)",
+                        "default": False,
+                    ***REMOVED***,
+                ***REMOVED***,
+            ***REMOVED***,
+            handler=self._handle_bootstrap_check,
+            category="bootstrap",
+        )
+
+        self._tools["bootstrap_run"***REMOVED*** = McpTool(
+            name="bootstrap_run",
+            description="Run full bootstrap: check environment → load profile → install components → diagnose → report. Idempotent — skips already-installed components.",
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "profile": {
+                        "type": "string",
+                        "description": "Profile name: minimal, developer, offline, cloud, android",
+                        "default": "minimal",
+                    ***REMOVED***,
+                ***REMOVED***,
+            ***REMOVED***,
+            handler=self._handle_bootstrap_run,
+            category="bootstrap",
+        )
+
+        self._tools["bootstrap_status"***REMOVED*** = McpTool(
+            name="bootstrap_status",
+            description="Get Bootstrap Engine status — whether bootstrap was ever run, last profile, warnings, errors.",
+            input_schema={"type": "object", "properties": {***REMOVED******REMOVED***,
+            handler=self._handle_bootstrap_status,
+            category="bootstrap",
+        )
+
+        # 8. Runtime Abstraction Layer tools
+        self._tools["runtime_list"***REMOVED*** = McpTool(
+            name="runtime_list",
+            description="List all discovered AI runtimes, their connection status, capabilities, and the active runtime.",
+            input_schema={"type": "object", "properties": {***REMOVED******REMOVED***,
+            handler=self._handle_runtime_list,
+            category="runtime",
+        )
+
+        self._tools["runtime_connect"***REMOVED*** = McpTool(
+            name="runtime_connect",
+            description="Connect to a registered AI runtime by name (e.g., freebuff, claude-code). Performs MCP handshake.",
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Runtime name to connect",
+                    ***REMOVED***,
+                ***REMOVED***,
+                "required": ["name"***REMOVED***,
+            ***REMOVED***,
+            handler=self._handle_runtime_connect,
+            category="runtime",
+        )
+
+        self._tools["runtime_disconnect"***REMOVED*** = McpTool(
+            name="runtime_disconnect",
+            description="Disconnect an active AI runtime by name.",
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Runtime name to disconnect",
+                    ***REMOVED***,
+                ***REMOVED***,
+                "required": ["name"***REMOVED***,
+            ***REMOVED***,
+            handler=self._handle_runtime_disconnect,
+            category="runtime",
+        )
+
+        self._tools["runtime_select"***REMOVED*** = McpTool(
+            name="runtime_select",
+            description="Select the active default AI runtime by name.",
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Runtime name to set as active",
+                    ***REMOVED***,
+                ***REMOVED***,
+                "required": ["name"***REMOVED***,
+            ***REMOVED***,
+            handler=self._handle_runtime_select,
+            category="runtime",
+        )
+
+        self._tools["runtime_generate"***REMOVED*** = McpTool(
+            name="runtime_generate",
+            description="Generate a response from an AI runtime. Selects runtime by capability, explicit name, or active runtime.",
+            input_schema={
+                "type": "object",
+                "properties": {
+                    "prompt": {
+                        "type": "string",
+                        "description": "Single prompt/message to send",
+                    ***REMOVED***,
+                    "messages": {
+                        "type": "array",
+                        "description": "Optional list of {role, content***REMOVED*** messages (overrides prompt)",
+                    ***REMOVED***,
+                    "name": {
+                        "type": "string",
+                        "description": "Explicit runtime name (optional)",
+                    ***REMOVED***,
+                    "capability": {
+                        "type": "string",
+                        "description": "Select runtime by capability, e.g. coding (optional)",
+                    ***REMOVED***,
+                    "system": {
+                        "type": "string",
+                        "description": "System prompt (optional)",
+                    ***REMOVED***,
+                    "temperature": {
+                        "type": "number",
+                        "description": "Generation temperature",
+                        "default": 0.7,
+                    ***REMOVED***,
+                    "max_tokens": {
+                        "type": "integer",
+                        "description": "Maximum tokens to generate",
+                    ***REMOVED***,
+                ***REMOVED***,
+            ***REMOVED***,
+            handler=self._handle_runtime_generate,
+            category="runtime",
+        )
+
     def _register_toolregistry_tools(self) -> None:
         """Auto-discover and register ToolRegistry tools as MCP tools."""
         try:
@@ -467,12 +759,12 @@ class BuffyMcpServer:
         # 1. Project documents
         doc_resources = [
             ("buffy://manifest", "buffy_manifest", "BUFFY.md — master prompt / agent manifesto", "BUFFY.md"),
-            ("buffy://roadmap", "buffy_roadmap", "ROADMAP.md — project roadmap with 5 phases", "docs/ROADMAP.md"),
+            ("buffy://roadmap", "buffy_roadmap", "ROADMAP.md — project roadmap with 5 phases", "docs/vision/ROADMAP.md"),
             ("buffy://spec", "buffy_spec", "SPEC.md — technical specification", "SPEC.md"),
             ("buffy://changelog", "buffy_changelog", "CHANGELOG.md — version history", "CHANGELOG.md"),
             ("buffy://task", "buffy_task", "TASK.md — current task", "TASK.md"),
-            ("buffy://inventory", "buffy_inventory", "SYSTEM_INVENTORY.md — full component catalog", "docs/SYSTEM_INVENTORY.md"),
-            ("buffy://decisions", "buffy_decisions", "DECISIONS.md — architecture decision records", "docs/DECISIONS.md"),
+            ("buffy://inventory", "buffy_inventory", "SYSTEM_INVENTORY.md — full component catalog", "docs/core/SYSTEM_INVENTORY.md"),
+            ("buffy://decisions", "buffy_decisions", "DECISIONS.md — architecture decision records", "docs/decisions/DECISIONS.md"),
         ***REMOVED***
         for uri, name, desc, rel_path in doc_resources:
             self._resources[uri***REMOVED*** = McpResource(
@@ -802,6 +1094,387 @@ class BuffyMcpServer:
             return {"success": True, "data": state***REMOVED***
         except Exception as e:
             return {"success": False, "error": str(e)***REMOVED***
+
+    # ── Bridge Layer handlers ──────────────────────────────
+
+    def _handle_bridge_connect(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Connect to an external MCP server."""
+        bridge = self._get_bridge_layer()
+        if bridge is None:
+            return {"success": False, "error": "BridgeLayer not available"***REMOVED***
+
+        transport = arguments.get("transport", "")
+        name = arguments.get("name")
+
+        try:
+            if transport == "stdio":
+                command = arguments.get("command", "")
+                args_str = arguments.get("args", "")
+                args_list = args_str.split() if args_str else [***REMOVED***
+
+                if not command:
+                    return {"success": False, "error": "command is required for stdio transport"***REMOVED***
+
+                result = bridge.connect_mcp_stdio(
+                    command=command,
+                    args=args_list,
+                    cwd=str(self.workspace),
+                    name=name,
+                )
+                self._publish("bridge.connected", {"transport": "stdio", "server": result.get("server", command), "tools": result.get("tools", 0)***REMOVED***)
+                return result
+
+            elif transport == "http":
+                endpoint = arguments.get("endpoint", "")
+                if not endpoint:
+                    return {"success": False, "error": "endpoint is required for http transport"***REMOVED***
+
+                result = bridge.connect_mcp_http(
+                    endpoint=endpoint,
+                    name=name,
+                )
+                self._publish("bridge.connected", {"transport": "http", "server": result.get("server", endpoint), "tools": result.get("tools", 0)***REMOVED***)
+                return result
+
+            else:
+                return {"success": False, "error": f"Unknown transport: {transport***REMOVED***. Use 'stdio' or 'http'."***REMOVED***
+
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_bridge_list(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """List connected MCP servers."""
+        bridge = self._get_bridge_layer()
+        if bridge is None:
+            return {"success": False, "error": "BridgeLayer not available"***REMOVED***
+
+        servers = bridge.list_mcp_servers()
+        return {
+            "success": True,
+            "data": {
+                "servers": servers,
+                "total": len(servers),
+            ***REMOVED***,
+        ***REMOVED***
+
+    def _handle_bridge_disconnect(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Disconnect an MCP server."""
+        bridge = self._get_bridge_layer()
+        if bridge is None:
+            return {"success": False, "error": "BridgeLayer not available"***REMOVED***
+
+        name = arguments.get("name", "")
+        if not name:
+            return {"success": False, "error": "name is required"***REMOVED***
+
+        ok = bridge.disconnect_mcp(name)
+        self._publish("bridge.disconnected", {"server": name, "success": ok***REMOVED***)
+        return {
+            "success": ok,
+            "data": {"disconnected": ok, "server": name***REMOVED***,
+            "error": None if ok else f"Server not found: {name***REMOVED***",
+        ***REMOVED***
+
+    def _handle_bridge_rpc(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Send JSON-RPC to a connected MCP server."""
+        bridge = self._get_bridge_layer()
+        if bridge is None:
+            return {"success": False, "error": "BridgeLayer not available"***REMOVED***
+
+        server_name = arguments.get("server", "")
+        method = arguments.get("method", "")
+
+        if not server_name:
+            return {"success": False, "error": "server is required"***REMOVED***
+        if not method:
+            return {"success": False, "error": "method is required"***REMOVED***
+
+        # Build params based on method
+        if method == "tools/call":
+            tool = arguments.get("tool", "")
+            args_str = arguments.get("arguments", "{***REMOVED***")
+            try:
+                args_dict = json.loads(args_str)
+            except json.JSONDecodeError:
+                args_dict = {***REMOVED***
+
+            params = {"name": tool, "arguments": args_dict***REMOVED***
+        else:
+            params = {***REMOVED***
+
+        result = bridge._rpc_to_server(server_name, method, params)
+        self._publish("bridge.rpc", {"server": server_name, "method": method, "success": result.get("success", False)***REMOVED***)
+        return result
+
+    # ── Bootstrap Engine handlers ──────────────────────────
+
+    def _handle_bootstrap_check(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Check environment state via Bootstrap Engine."""
+        engine = self._get_bootstrap_engine()
+        if engine is None:
+            return {"success": False, "error": "BootstrapEngine not available"***REMOVED***
+
+        try:
+            quick = arguments.get("quick", False)
+            if quick:
+                env = engine._checker.check_quick()
+            else:
+                env = engine.check()
+
+            self._publish("bootstrap.checked", {"quick": quick, "os": env.os_type***REMOVED***)
+
+            return {
+                "success": True,
+                "data": {
+                    "os": env.os_type,
+                    "is_termux": env.is_termux,
+                    "python_version": env.python_version,
+                    "node_version": env.node_version,
+                    "git_available": env.git_available,
+                    "disk_free_gb": env.disk_free_gb,
+                    "ram_total_mb": env.ram_total_mb,
+                    "ram_available_mb": env.ram_available_mb,
+                    "pip_packages": len(env.pip_packages),
+                    "has_git": env.has_git,
+                    "has_env_file": env.has_env_file,
+                    "workspace": env.workspace,
+                ***REMOVED***,
+            ***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_bootstrap_run(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Run full bootstrap cycle."""
+        profile = arguments.get("profile", "minimal")
+
+        try:
+            from freebuff_plugin import BootstrapEngine
+            bus = self._get_event_bus()
+            engine = BootstrapEngine(
+                workspace_root=str(self.workspace),
+                profile=profile,
+                event_bus=bus or None,
+            )
+            report = engine.run()
+
+            self._publish("bootstrap.ran", {
+                "profile": profile,
+                "success": report.success,
+                "duration_ms": report.duration_ms,
+                "steps": len(report.steps),
+            ***REMOVED***)
+
+            return {
+                "success": report.success,
+                "data": {
+                    "profile": report.profile,
+                    "duration_ms": report.duration_ms,
+                    "steps": [
+                        {
+                            "name": s.name,
+                            "status": s.status,
+                            "duration_ms": s.duration_ms,
+                            "error": s.error,
+                        ***REMOVED***
+                        for s in report.steps
+                    ***REMOVED***,
+                    "warnings": report.warnings[:10***REMOVED***,
+                    "errors": report.errors[:10***REMOVED***,
+                    "diagnosis": {
+                        "health_score": report.diagnosis.health_score if report.diagnosis else None,
+                        "path_issues": report.diagnosis.path_issues if report.diagnosis else [***REMOVED***,
+                        "runtime_issues": report.diagnosis.runtime_issues if report.diagnosis else [***REMOVED***,
+                        "dependency_issues": report.diagnosis.dependency_issues if report.diagnosis else [***REMOVED***,
+                        "key_issues": report.diagnosis.key_issues if report.diagnosis else [***REMOVED***,
+                    ***REMOVED*** if report.diagnosis else None,
+                    "environment": {
+                        "os": report.environment.os_type if report.environment else "unknown",
+                        "python": report.environment.python_version if report.environment else "",
+                        "git": report.environment.git_available if report.environment else False,
+                    ***REMOVED*** if report.environment else None,
+                ***REMOVED***,
+            ***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_bootstrap_status(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Get bootstrap status."""
+        engine = self._get_bootstrap_engine()
+        if engine is None:
+            return {"success": False, "error": "BootstrapEngine not available"***REMOVED***
+
+        try:
+            status = engine.get_status()
+            return {
+                "success": True,
+                "data": status,
+            ***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    # ── Runtime Abstraction Layer handlers ─────────────────
+
+    def _handle_runtime_list(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """List discovered runtimes and active runtime."""
+        registry = self._get_runtime_registry()
+        if registry is None:
+            return {"success": False, "error": "RuntimeRegistry not available"***REMOVED***
+
+        try:
+            status = registry.get_status()
+            self._publish("runtime.listed", {"total": status.get("total", 0), "active": status.get("active")***REMOVED***)
+            return {"success": True, "data": status***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_runtime_connect(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Connect to a runtime by name."""
+        registry = self._get_runtime_registry()
+        if registry is None:
+            return {"success": False, "error": "RuntimeRegistry not available"***REMOVED***
+
+        name = arguments.get("name", "")
+        if not name:
+            return {"success": False, "error": "name is required"***REMOVED***
+
+        try:
+            ok, msg = registry.connect(name)
+            self._publish("runtime.connected", {"runtime": name, "success": ok, "message": msg***REMOVED***)
+            return {"success": ok, "data": {"runtime": name, "connected": ok, "message": msg***REMOVED******REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_runtime_disconnect(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Disconnect a runtime by name."""
+        registry = self._get_runtime_registry()
+        if registry is None:
+            return {"success": False, "error": "RuntimeRegistry not available"***REMOVED***
+
+        name = arguments.get("name", "")
+        if not name:
+            return {"success": False, "error": "name is required"***REMOVED***
+
+        try:
+            ok = registry.disconnect(name)
+            self._publish("runtime.disconnected", {"runtime": name, "success": ok***REMOVED***)
+            return {"success": ok, "data": {"runtime": name, "disconnected": ok***REMOVED******REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_runtime_select(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Set active runtime by name."""
+        registry = self._get_runtime_registry()
+        if registry is None:
+            return {"success": False, "error": "RuntimeRegistry not available"***REMOVED***
+
+        name = arguments.get("name", "")
+        if not name:
+            return {"success": False, "error": "name is required"***REMOVED***
+
+        try:
+            ok = registry.set_active(name)
+            if not ok:
+                return {"success": False, "error": f"Runtime not registered: {name***REMOVED***"***REMOVED***
+            self._publish("runtime.selected", {"runtime": name***REMOVED***)
+            return {"success": True, "data": {"runtime": name, "active": True***REMOVED******REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_runtime_generate(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Generate a response from a runtime."""
+        registry = self._get_runtime_registry()
+        if registry is None:
+            return {"success": False, "error": "RuntimeRegistry not available"***REMOVED***
+
+        capability = arguments.get("capability")
+        explicit_name = arguments.get("name")
+        prompt = arguments.get("prompt", "")
+        messages = arguments.get("messages")
+        system = arguments.get("system")
+        try:
+            temperature = float(arguments.get("temperature", 0.7))
+        except (TypeError, ValueError):
+            return {"success": False, "error": "temperature must be a number"***REMOVED***
+        max_tokens = arguments.get("max_tokens")
+        if max_tokens is not None:
+            try:
+                max_tokens = int(max_tokens)
+                if max_tokens <= 0:
+                    return {"success": False, "error": "max_tokens must be positive"***REMOVED***
+            except (TypeError, ValueError):
+                return {"success": False, "error": "max_tokens must be an integer"***REMOVED***
+
+        # Build and validate messages list
+        if messages is None:
+            if not prompt:
+                return {"success": False, "error": "prompt or messages is required"***REMOVED***
+            messages = [{"role": "user", "content": prompt***REMOVED******REMOVED***
+        elif not isinstance(messages, list) or not all(
+            isinstance(m, dict) and "role" in m and "content" in m for m in messages
+        ):
+            return {"success": False, "error": "messages must be a list of dicts with role and content"***REMOVED***
+
+        # Determine target runtime
+        runtime_name = None
+        if explicit_name:
+            runtime_name = explicit_name
+        elif capability:
+            cap_reg = self._runtime_capability_registry
+            if cap_reg is None:
+                return {"success": False, "error": "RuntimeCapabilityRegistry not available"***REMOVED***
+            best = cap_reg.get_runtime_for_capability(capability)
+            if best is None:
+                return {"success": False, "error": f"No runtime available for capability: {capability***REMOVED***"***REMOVED***
+            runtime_name = best["runtime"***REMOVED***
+            if registry.get(runtime_name) is None:
+                return {"success": False, "error": f"Runtime selected for capability is not registered: {runtime_name***REMOVED***"***REMOVED***
+        else:
+            active = registry.get_active()
+            if active is None:
+                return {"success": False, "error": "No active runtime. Use runtime_select or provide name/capability."***REMOVED***
+            runtime_name = active.name
+
+        if not runtime_name or not isinstance(runtime_name, str):
+            return {"success": False, "error": "Could not determine target runtime"***REMOVED***
+
+        # Ensure connected
+        adapter = registry.get_adapter(runtime_name)
+        if adapter is None or not adapter.is_connected():
+            ok, msg = registry.connect(runtime_name)
+            if not ok:
+                return {"success": False, "error": f"Could not connect to runtime {runtime_name***REMOVED***: {msg***REMOVED***"***REMOVED***
+            adapter = registry.get_adapter(runtime_name)
+            if adapter is None:
+                return {"success": False, "error": f"Runtime adapter unavailable after connect: {runtime_name***REMOVED***"***REMOVED***
+
+        try:
+            result = adapter.generate(
+                messages=messages,
+                system=system,
+                temperature=temperature,
+                max_tokens=max_tokens,
+            )
+            self._publish("runtime.generated", {
+                "runtime": runtime_name,
+                "success": result.error is None,
+                "model_used": result.model_used,
+            ***REMOVED***)
+            if result.error:
+                return {"success": False, "error": result.error, "data": {"runtime": runtime_name***REMOVED******REMOVED***
+            return {
+                "success": True,
+                "data": {
+                    "runtime": runtime_name,
+                    "content": result.content,
+                    "model_used": result.model_used,
+                    "provider_used": result.provider_used,
+                    "latency_ms": result.latency_ms,
+                    "usage": result.usage,
+                    "finish_reason": result.finish_reason,
+                ***REMOVED***,
+            ***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e), "data": {"runtime": runtime_name***REMOVED******REMOVED***
 
     # ── MCP protocol handlers ──────────────────────────────
 

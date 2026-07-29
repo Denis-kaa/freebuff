@@ -84,6 +84,14 @@ sessions/
 # Node (playground)
 buffy-playground/node_modules/
 buffy-playground/dist/
+
+# Backup / cache artifacts
+*.bak
+*.tmp
+*.orig
+.mypy_cache/
+*.pyc
+*.pyo
 *.log
 
 # API keys — NEVER commit

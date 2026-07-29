@@ -1,0 +1,46 @@
+# OpenClaw — Provider Manifest
+# Версия формата: 1.0.0
+
+name: openclaw
+display_name: OpenClaw
+description: >
+  Open-source AI agent framework. Специализируется на research-задачах
+  и базовом coding. Отличный fallback, когда Claude Code недоступен.
+
+# ── Adapter ──────────────────────────────────────────────────
+adapter_type: stdio_mcp
+bin_names: [***REMOVED***                         # Нет единого бинарника — определяется при discover
+args:
+  - "--mcp"
+
+# ── Capabilities (confidence 0.0–1.0) ───────────────────────
+capabilities:
+  coding: 0.70
+  research: 0.85
+
+# ── Platforms ────────────────────────────────────────────────
+platforms:
+  - linux
+  - macos
+  - android
+
+# ── Installation ─────────────────────────────────────────────
+install:
+  type: git
+  repo: "https://github.com/openclaw/openclaw.git"
+  command: "git clone https://github.com/openclaw/openclaw.git && cd openclaw && pip install -r requirements.txt"
+  check: "python openclaw/main.py --version"
+  android_note: >
+    Установка через git clone + pip install.
+    Требует Python 3.11+ и ~500MB диска для зависимостей.
+
+# ── Requirements ─────────────────────────────────────────────
+requirements:
+  python: ">=3.11"
+  memory_mb: 512
+
+# ── Metadata ─────────────────────────────────────────────────
+version: auto
+maintainer: OpenClaw Community
+docs_url: https://github.com/openclaw/openclaw
+recipe: recipes/openclaw/RECIPE.md

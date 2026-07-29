@@ -93,11 +93,11 @@ case "$CMD" in
         echo "  Остановить:  tmux kill-session -t $SESS"
         ;;
     view)
-        if [ -f "$FREEBUFF/docs/TROUBLESHOOTING.md" ***REMOVED***; then
+        if [ -f "$FREEBUFF/docs/ops/TROUBLESHOOTING.md" ***REMOVED***; then
             if command -v less &>/dev/null; then
-                less "$FREEBUFF/docs/TROUBLESHOOTING.md"
+                less "$FREEBUFF/docs/ops/TROUBLESHOOTING.md"
             else
-                cat "$FREEBUFF/docs/TROUBLESHOOTING.md"
+                cat "$FREEBUFF/docs/ops/TROUBLESHOOTING.md"
             fi
         else
             echo "❌ TROUBLESHOOTING.md не найден"

@@ -42,8 +42,8 @@ DEFAULT_DOC_SOURCES = [
 # Patterns that generate noise or are not useful for knowledge retrieval.
 # Unix shell-style wildcards are supported via fnmatch.
 EXCLUDED_DOC_PATTERNS = [
-    "docs/AUDIT_*.md",
-    "docs/TASK_TEMPLATE.md",
+    "docs/audits/AUDIT_*.md",
+    "docs/ops/TASK_TEMPLATE.md",
 ***REMOVED***
 
 
@@ -231,7 +231,7 @@ def main() -> None:
         epilog="""
 Примеры:
   python scripts/seed_knowledge.py
-  python scripts/seed_knowledge.py --workspace /storage/emulated/0/PROJECTS/workstation/freebuff
+  python scripts/seed_knowledge.py --workspace /path/to/freebuff
   python scripts/seed_knowledge.py --no-rebuild
         """,
     )

@@ -11,18 +11,101 @@ v2.0.0: читает BUFFY.md, загружает последний консп�
 
 from __future__ import annotations
 
-import json
 import os
+***REMOVED***
 import sys
 from datetime import datetime, timezone
 
 WORKSPACE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, WORKSPACE)
 
-from scripts.context_manager import ContextManager, SessionStatus, CheckpointType
+from scripts.context_manager import ContextManager, SessionStatus
 from scripts.event_bus import get_default_event_bus
 from scripts.memory_engine import MemoryEngine, MemoryLevel
 from scripts.stream_bridge import StreamBridge
+
+
+def _load_buffy_manifest(path: str) -> list[str***REMOVED***:
+    """Validate the Buffy rules/identity manifest and return warnings."""
+    warnings: list[str***REMOVED*** = [***REMOVED***
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+        if not content.strip():
+            warnings.append("BUFFY.md is empty")
+        elif "BUFFY" not in content and "Buffy" not in content:
+            warnings.append("BUFFY.md may be corrupted (no Buffy marker found)")
+    except FileNotFoundError:
+        warnings.append("BUFFY.md not found — conventions/identity unavailable")
+    except Exception as exc:
+        warnings.append(f"BUFFY.md read error: {exc***REMOVED***")
+    return warnings
+
+
+def _load_last_real_conspect(workspace: str) -> tuple[str, str***REMOVED*** | None:
+    """Return (filename, content) of the latest non-test conspect, or None."""
+    summaries_dir = os.path.join(workspace, "context", "summaries")
+    if not os.path.isdir(summaries_dir):
+        return None
+
+    files = sorted(
+        [f for f in os.listdir(summaries_dir) if f.endswith(".md")***REMOVED***,
+        reverse=True,
+    )
+    content_markers = ["auto-conspect test", "auto conspect test", "demo", "test session"***REMOVED***
+    filename_markers = ["test", "demo", "auto"***REMOVED***
+    for name in files:
+        filepath = os.path.join(summaries_dir, name)
+        try:
+            with open(filepath, "r", encoding="utf-8") as f:
+                content = f.read()
+        except Exception:
+            continue
+        lower = content.lower()
+        if any(marker in lower for marker in content_markers):
+            continue
+        lower_name = name.lower()
+        if any(re.search(rf"\b{marker***REMOVED***\b", lower_name) for marker in filename_markers):
+            continue
+        if content.strip():
+            return name, content
+    return None
+
+
+def _check_task_status(workspace: str, stale_days: int = 3) -> list[str***REMOVED***:
+    """Warn if TASK.md is stale or missing/final."""
+    warnings: list[str***REMOVED*** = [***REMOVED***
+    task_path = os.path.join(workspace, "TASK.md")
+    if not os.path.exists(task_path):
+        warnings.append("TASK.md not found — no active task context")
+        return warnings
+
+    try:
+        mtime = datetime.fromtimestamp(os.path.getmtime(task_path), tz=timezone.utc)
+        age_days = (datetime.now(timezone.utc) - mtime).days
+        with open(task_path, "r", encoding="utf-8") as f:
+            text = f.read().lower()
+        final = any(status in text for status in ("🟢", "completed", "done", "готово"))
+        if age_days > stale_days and not final:
+            warnings.append(
+                f"TASK.md is {age_days***REMOVED*** days old and not marked final — consider updating or archiving"
+            )
+    except Exception as exc:
+        warnings.append(f"TASK.md check error: {exc***REMOVED***")
+    return warnings
+
+
+def run_startup_self_check(workspace: str, stale_days: int = 3) -> list[str***REMOVED***:
+    """Trigger 1: perform the session-start self-check.
+
+    Returns a list of human-readable warnings. An empty list means all checks passed.
+    """
+    warnings: list[str***REMOVED*** = [***REMOVED***
+    warnings.extend(_load_buffy_manifest(os.path.join(workspace, "BUFFY.md")))
+    if _load_last_real_conspect(workspace) is None:
+        warnings.append("No real conspect found — all saved conspects are auto/test generated")
+    warnings.extend(_check_task_status(workspace, stale_days=stale_days))
+    return warnings
 
 
 def _seed_knowledge() -> int:
@@ -104,23 +187,20 @@ def bootstrap(
             print(f"🟢 Новая сессия: {snap.session_id[:8***REMOVED******REMOVED***")
             print(f"   Проект: {snap.project***REMOVED*** | Тема: {snap.topic***REMOVED***")
 
-    # 3. Загружаем последний конспект
-    summaries_dir = os.path.join(WORKSPACE, "context", "summaries")
-    if os.path.isdir(summaries_dir):
-        files = sorted(
-            [f for f in os.listdir(summaries_dir) if f.endswith(".md")***REMOVED***,
-            reverse=True,
-        )
-        if files:
-            filepath = os.path.join(summaries_dir, files[0***REMOVED***)
-            with open(filepath, "r", encoding="utf-8") as f:
-                result["conspect"***REMOVED*** = f.read()
-            if not quiet:
-                print(f"\n📋 Последний конспект: {files[0***REMOVED******REMOVED***")
-                print("-" * 50)
-                print(result["conspect"***REMOVED***[:500***REMOVED***)
-                if len(result["conspect"***REMOVED***) > 500:
-                    print("... (обрезано)")
+    # 3. Загружаем последний конспект (игнорируем тестовые/автоматические)
+    conspect_info = _load_last_real_conspect(WORKSPACE)
+    if conspect_info:
+        conspect_name, conspect_content = conspect_info
+        result["conspect"***REMOVED*** = conspect_content
+        if not quiet:
+            print(f"\n📋 Последний конспект: {conspect_name***REMOVED***")
+            print("-" * 50)
+            print(result["conspect"***REMOVED***[:500***REMOVED***)
+            if len(result["conspect"***REMOVED***) > 500:
+                print("... (обрезано)")
+    else:
+        if not quiet:
+            print("\n⚠️ Нет подходящего конспекта (все найденные — тестовые/автоматические).")
 
     # 4. Запуск StreamBridge (авто-стриминг)
     if start_stream:
@@ -138,7 +218,13 @@ def bootstrap(
             if not quiet:
                 print(f"\n⚠️ StreamBridge: {e***REMOVED***", file=sys.stderr)
 
-    # 5. Формируем стартовый промпт для Buffy
+    # 5. Запускаем триггер самопроверки (не должен ломать старт)
+    try:
+        result["warnings"***REMOVED*** = run_startup_self_check(WORKSPACE)
+    except Exception as exc:
+        result["warnings"***REMOVED*** = [f"Self-check failed: {exc***REMOVED***"***REMOVED***
+
+    # 6. Формируем стартовый промпт для Buffy
     result["buffy_prompt"***REMOVED*** = _build_buffy_prompt(result)
 
     if not quiet:
@@ -160,6 +246,13 @@ def _build_buffy_prompt(result: dict) -> str:
 
     if result.get("stream_active"):
         lines.append(f"Stream ID: {result.get('stream_id', '?')***REMOVED*** (active)")
+
+    warnings = result.get("warnings", [***REMOVED***)
+    if warnings:
+        lines.append("")
+        lines.append("## ⚠️ Self-check warnings")
+        for warning in warnings:
+            lines.append(f"- {warning***REMOVED***")
 
     if result["conspect"***REMOVED***:
         lines.append("")

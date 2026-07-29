@@ -2,7 +2,7 @@
 """Buffy Auto-Doc — auto-trigger documentation maintenance helper.
 
 Scans the current git working tree (or a provided diff) and produces a checklist
-of documentation updates required by the project rules in docs/RULES.md.
+of documentation updates required by the project rules in docs/core/RULES.md.
 
 Usage:
     python scripts/buffy_autodoc.py
@@ -47,14 +47,14 @@ class Trigger:
 TRIGGERS: Tuple[Trigger, ...***REMOVED*** = (
     Trigger("New task", ["TASK.md"***REMOVED***, always=True, severity="warn"),
     Trigger("Code change", ["CHANGELOG.md", "TASK.md"***REMOVED***, file_suffixes=(".py", ".sh", ".js", ".ts", ".html", ".css"), severity="block"),
-    Trigger("Architecture change", ["docs/ARCHITECTURE.md"***REMOVED***, file_patterns=["src/", "scripts/", "freebuff_cli.py"***REMOVED***),
+    Trigger("Architecture change", ["docs/core/ARCHITECTURE_3.0.md"***REMOVED***, file_patterns=["src/", "scripts/", "freebuff_cli.py"***REMOVED***),
     Trigger("README feature", ["README.md"***REMOVED***, file_patterns=["freebuff_cli.py", "scripts/", "src/"***REMOVED***),
-    Trigger("Architectural decision", ["docs/DECISIONS.md"***REMOVED***, file_patterns=["decision", "adr", "architecture"***REMOVED***),
-    Trigger("Research / spike", ["docs/BRAINSTORM.md", "docs/EXPERIMENTS.md"***REMOVED***, file_patterns=["research", "spike", "experiment"***REMOVED***),
-    Trigger("Bug fix", ["docs/TROUBLESHOOTING.md"***REMOVED***, file_patterns=["bug", "fix", "error"***REMOVED***),
-    Trigger("API change", ["docs/API.md"***REMOVED***, file_patterns=["api", "mcp_server", "endpoint"***REMOVED***),
-    Trigger("Worker / tool", ["docs/WORKERS.md"***REMOVED***, file_patterns=["workers", "tool_runtime"***REMOVED***),
-    Trigger("Documentation change", ["docs/RULES.md"***REMOVED***, file_suffixes=(".md",)),
+    Trigger("Architectural decision", ["docs/decisions/DECISIONS.md"***REMOVED***, file_patterns=["decision", "adr", "architecture"***REMOVED***),
+    Trigger("Research / spike", ["docs/ops/IDEAS.md"***REMOVED***, file_patterns=["research", "spike", "experiment"***REMOVED***),
+    Trigger("Bug fix", ["docs/ops/TROUBLESHOOTING.md"***REMOVED***, file_patterns=["bug", "fix", "error"***REMOVED***),
+    Trigger("API change", ["docs/ops/API.md"***REMOVED***, file_patterns=["api", "mcp_server", "endpoint"***REMOVED***),
+    Trigger("Worker / tool", ["docs/projects_meta/WORKERS.md"***REMOVED***, file_patterns=["workers", "tool_runtime"***REMOVED***),
+    Trigger("Documentation change", ["docs/core/RULES.md"***REMOVED***, file_suffixes=(".md",)),
 )
 
 

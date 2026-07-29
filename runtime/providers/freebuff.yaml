@@ -1,0 +1,57 @@
+# Freebuff CLI (Codebuff) — Provider Manifest
+# Версия формата: 1.0.0
+# Этот файл определяет Runtime, его capabilities и метод установки.
+# Добавление нового Runtime не требует изменения кода ядра —
+# достаточно создать YAML-файл в runtime/providers/.
+
+name: freebuff
+display_name: Freebuff CLI (Codebuff)
+description: >
+  AI coding assistant, работающий через Codebuff CLI.
+  Основной Runtime в экосистеме Buffy — всегда доступен,
+  так как сам Buffy построен на его основе.
+
+# ── Adapter ──────────────────────────────────────────────────
+adapter_type: stdio_mcp
+bin_names:
+  - freebuff
+  - codebuff
+args:
+  - mcp
+
+# ── Capabilities (confidence 0.0–1.0) ───────────────────────
+capabilities:
+  coding: 0.85
+  planning: 0.85
+  architecture: 0.80
+  testing: 0.80
+  research: 0.70
+  refactoring: 0.85
+
+# ── Platforms ────────────────────────────────────────────────
+platforms:
+  - linux
+  - macos
+  - android
+
+# ── Installation ─────────────────────────────────────────────
+install:
+  type: npm
+  command: "npm install -g @freebuff/cli"
+  fallback: "pip install freebuff"
+  check: "freebuff --version"
+  android_note: >
+    На Android/Termux используйте pip install freebuff.
+    npm install может не работать из-за прав доступа к /usr/lib/node_modules.
+
+# ── Requirements ─────────────────────────────────────────────
+requirements:
+  python: ">=3.11"
+  node: ">=18 (опционально)"
+  memory_mb: 256
+
+# ── Metadata ─────────────────────────────────────────────────
+version: auto                         # auto = определять при запуске
+maintainer: Freebuff Community
+docs_url: https://freebuff.com
+recipe: recipes/freebuff/RECIPE.md

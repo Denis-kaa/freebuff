@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "freebuff-plugin": {
+      "type": "stdio",
+      "command": "python3",
+      "args": [
+        "/storage/emulated/0/PROJECTS/workstation/freebuff/freebuff_plugin/mcp_server.py"
+      ***REMOVED***,
+      "description": "Freebuff Plugin: context memory, session logging, intent routing"
+    ***REMOVED***
+  ***REMOVED***
+***REMOVED***

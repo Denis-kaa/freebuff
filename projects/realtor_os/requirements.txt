@@ -1,0 +1,6 @@
+requests>=2.31.0
+pycryptodome>=3.20.0
+pyyaml>=6.0.1
+
+# Optional dev
+cryptography>=42.0.0; platform_machine != 'aarch64'

@@ -1,0 +1,102 @@
+# Bootstrap Profiles
+# Основание: docs/BOOTSTRAP_SPECIFICATION.md §4
+
+profiles:
+  - name: minimal
+    description: "Быстрый старт — только Core компоненты"
+    runtimes: ["freebuff"***REMOVED***
+    extensions: [***REMOVED***
+    labs: [***REMOVED***
+    system_packages: ["curl", "git"***REMOVED***
+    python_packages: [***REMOVED***
+    npm_packages: [***REMOVED***
+    env_vars:
+      FREE_BUFF_PROFILE: "minimal"
+    aliases: {***REMOVED***
+    default_runtime: "freebuff"
+    default_provider: ""
+    default_model: ""
+    offline_mode: false
+    auto_update: true
+
+  - name: developer
+    description: "Повседневная разработка — Core + MCP + Bridge + Scenario"
+    runtimes: ["freebuff", "claude-code"***REMOVED***
+    extensions:
+      - "mcp_server"
+      - "scenario_engine"
+      - "bridge_layer"
+    labs: [***REMOVED***
+    system_packages: ["curl", "git", "wget", "build-essential"***REMOVED***
+    python_packages: ["requests", "pyyaml"***REMOVED***
+    npm_packages: [***REMOVED***
+    env_vars:
+      FREE_BUFF_PROFILE: "developer"
+    aliases:
+      bb: "freebuff"
+      bbs: "freebuff --status"
+    default_runtime: "freebuff"
+    default_provider: "anthropic"
+    default_model: "claude-3.5-sonnet"
+    offline_mode: false
+    auto_update: true
+
+  - name: offline
+    description: "Работа без интернета — локальные модели"
+    runtimes: ["freebuff"***REMOVED***
+    extensions:
+      - "knowledge_engine"
+    labs: [***REMOVED***
+    system_packages: ["curl", "git"***REMOVED***
+    python_packages: [***REMOVED***
+    npm_packages: [***REMOVED***
+    env_vars:
+      FREE_BUFF_PROFILE: "offline"
+      FREE_BUFF_OFFLINE: "1"
+    aliases: {***REMOVED***
+    default_runtime: "freebuff"
+    default_provider: "ollama"
+    default_model: "qwen2.5:7b"
+    offline_mode: true
+    auto_update: false
+
+  - name: cloud
+    description: "Мощные модели по запросу через API"
+    runtimes: ["freebuff", "claude-code"***REMOVED***
+    extensions:
+      - "mcp_server"
+      - "policy_engine"
+      - "provider_pool"
+    labs: [***REMOVED***
+    system_packages: ["curl", "git"***REMOVED***
+    python_packages: ["requests"***REMOVED***
+    npm_packages: [***REMOVED***
+    env_vars:
+      FREE_BUFF_PROFILE: "cloud"
+    aliases: {***REMOVED***
+    default_runtime: "claude-code"
+    default_provider: "anthropic"
+    default_model: "claude-3.5-sonnet"
+    offline_mode: false
+    auto_update: true
+
+  - name: android
+    description: "Нативное использование на телефоне (Termux)"
+    runtimes: ["freebuff"***REMOVED***
+    extensions:
+      - "telegram_bot"
+      - "oom_protection"
+      - "system_monitor"
+    labs: [***REMOVED***
+    system_packages: ["curl", "git", "termux-api"***REMOVED***
+    python_packages: [***REMOVED***
+    npm_packages: [***REMOVED***
+    env_vars:
+      FREE_BUFF_PROFILE: "android"
+      TERMUX_API: "1"
+    aliases: {***REMOVED***
+    default_runtime: "freebuff"
+    default_provider: "openrouter"
+    default_model: "deepseek-v3"
+    offline_mode: false
+    auto_update: true

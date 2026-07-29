@@ -1,0 +1,28 @@
+{
+  "project": "realtor_os",
+  "version": "0.1.0",
+  "owner": "realtor_etagi_poykovsky",
+  "description": "Local privacy-first automation system for a realtor",
+  "environment": "Termux/Android/ARM64",
+  "root_required": false,
+  "commands": {
+    "status": "PYTHONPATH=src python -m realtor_os.cli status",
+    "start": "bash scripts/start_system.sh",
+    "ingest": "PYTHONPATH=src python -m realtor_os.cli ingest --file",
+    "ask": "PYTHONPATH=src python -m realtor_os.cli ask",
+    "ocr": "PYTHONPATH=src python -m realtor_os.cli ocr --file",
+    "learn": "PYTHONPATH=src python -m realtor_os.cli learn",
+    "manifest": "PYTHONPATH=src python -m realtor_os.cli manifest"
+  ***REMOVED***,
+  "state_file": "companion/state.json",
+  "log_file": "logs/realtor_os.log",
+  "config_file": "config.yaml",
+  "docs": {
+    "readme": "README.md",
+    "manifest": "MANIFEST.md",
+    "passport": "PASSPORT.md",
+    "architecture": "docs/ARCHITECTURE.md",
+    "roadmap": "docs/ROADMAP.md",
+    "changelog": "docs/CHANGELOG.md"
+  ***REMOVED***
+***REMOVED***

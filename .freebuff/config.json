@@ -1,0 +1,48 @@
+{
+  "name": "freebuff-workspace",
+  "displayName": "Freebuff AI Engineering Workspace",
+  "description": "Android/Termux AI Engineering Platform: Buffy agent, Context Manager, Knowledge Engine, Event Bus, Orchestrator, Tool Runtime, and Telegram TUI.",
+  "language": "python",
+  "rootFiles": [
+    "BUFFY.md",
+    "README.md",
+    "SPEC.md",
+    "BUFFY_PROJECT.md",
+    "TASK.md",
+    "CHANGELOG.md",
+    "freebuff_cli.py"
+  ***REMOVED***,
+  "keyDirectories": {
+    "scripts": "Python tools and workers (context_manager, memory_engine, knowledge_engine, orchestrator, etc.)",
+    "core": "Core interfaces and capability-based router",
+    "tests": "pytest suite",
+    "docs": "Project documentation and ADR",
+    "context": "Runtime state: sessions, streams, checkpoints, summaries",
+    "data": "SQLite databases and runtime artifacts",
+    "projects": "Sub-projects (e.g. tg_terminal_messenger)"
+  ***REMOVED***,
+  "agentContext": {
+    "primaryInstructions": "BUFFY.md",
+    "projectOverview": "BUFFY_PROJECT.md",
+    "techSpec": "SPEC.md",
+    "agentProtocol": ".freebuff/AGENTS.md"
+  ***REMOVED***,
+  "preferredCommands": {
+    "test": "python -m pytest tests/ -v",
+    "typecheck": "python -m mypy scripts/ --ignore-missing-imports",
+    "status": "python freebuff_cli.py status",
+    "seed": "python scripts/seed_knowledge.py"
+  ***REMOVED***,
+  "models": {
+    "default": "DeepSeek V4 Flash",
+    "local": "Qwen 2.5 0.5B / 1.5B via llama.cpp/Ollama"
+  ***REMOVED***,
+  "rules": [
+    "Always read BUFFY.md before making changes.",
+    "Respect existing conventions in scripts/ and core/.",
+    "Run tests and mypy after non-trivial edits.",
+    "Update CHANGELOG.md and relevant docs when architecture changes.",
+    "Never commit secrets; use .env and .keys/.",
+    "Prefer Python 3.11+ and standard library where possible."
+  ***REMOVED***
+***REMOVED***

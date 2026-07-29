@@ -23,10 +23,13 @@ from typing import Dict, List, Optional
 
 # ── Конфигурация ──────────────────────────────────────────────
 
-WORKSTATION = "/storage/emulated/0/PROJECTS/workstation"
-QWEN_HOME = os.path.expanduser("~/.qwen")
-TERMUX_HOME = "/data/data/com.termux/files/home"
-OPENCLAW_HOME = os.path.expanduser("~/.openclaw")
+WORKSTATION = os.environ.get(
+    "FREEBUFF_WORKSTATION",
+    str(Path.home() / "storage" / "PROJECTS" / "workstation"),
+)
+QWEN_HOME = Path(os.environ.get("QWEN_HOME", str(Path.home() / ".qwen")))
+TERMUX_HOME = os.environ.get("TERMUX_HOME", str(Path.home()))
+OPENCLAW_HOME = Path(os.environ.get("OPENCLAW_HOME", str(Path.home() / ".openclaw")))
 
 # Категории паттернов
 PATTERNS: Dict[str, List[str***REMOVED******REMOVED*** = {

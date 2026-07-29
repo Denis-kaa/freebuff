@@ -39,7 +39,7 @@ API_ID = 37035907
 API_HASH = "383bbe0942526db1133edc23d8ba8023"
 PHONE = "+79223919054"
 
-SESSION_DIR = Path("/storage/emulated/0/PROJECTS/workstation/freebuff/projects/tg_terminal_messenger")
+SESSION_DIR = Path(__file__).resolve().parent.parent.parent
 
 
 class TGClient:

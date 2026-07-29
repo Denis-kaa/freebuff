@@ -6,6 +6,362 @@
 
 ---
 
+## [5.0.0***REMOVED*** — 2026-07-29
+
+### Добавлено
+
+#### Стратегический слой (Task 0)
+- **VISION_3.0.md** — раздел «Три режима работы» (Local/Cloud/Hybrid), честная фиксация gaps по ACP/Bridge/KeyPool
+- **`docs/core/ARCHITECTURE_PRINCIPLES.md`** — 8 архитектурных принципов платформы (§2.7 Marketplace-Ready)
+- **`docs/core/COMPATIBILITY_MATRIX.md`** — матрица совместимости Runtime и протоколов
+- **`docs/core/RUNTIME_VALIDATION_FRAMEWORK.md`** — фреймворк валидации Runtime
+
+#### Реорганизация docs/ (Task 1)
+- **45 файлов мигрированы** из flat `docs/` в 7 подпапок:
+  - `docs/core/` — спецификации и архитектурные документы
+  - `docs/vision/` — ROADMAP, VISION_2.0/3.0, PRODUCT_MANIFESTO
+  - `docs/decisions/` — ADR и DECISIONS
+  - `docs/audits/` — аудиты (DRIFT_REPORT, AUDIT_*)
+  - `docs/plugin/` — FREEBUFF_PLUGIN_*
+  - `docs/projects_meta/` — WORKERS, LIGHTPANDA_INTEGRATION, PROJECT_REGISTRY
+  - `docs/ops/` — TROUBLESHOOTING, TASK_TEMPLATE, AGENTS
+- **`docs/INDEX.md`** — навигационный индекс по всем документам
+- **Все перекрёстные ссылки обновлены** в коде, тестах, и документах
+- **`PROJECT_REGISTRY.md`** и **`seed_knowledge.py`** — пути обновлены
+
+#### Граница ядро↔плагин (Task 2)
+- **`scripts/mcp_server.py`** — импортирует плагин только через `__init__.py` с try/except graceful degradation
+- **`freebuff_plugin/mcp_client.py`** и **`bridge_layer.py`** — убраны жёсткие пути, импорты обёрнуты
+- **`freebuff_plugin/INTEGRATION_CONTRACT.md`** — контракт между ядром и плагином
+- **`scripts/doctor.py`** — CLI-инструмент диагностики (`--full`, `--check`) с EventBus интеграцией
+- **`runtime/recipes/freebuff.md`** и **`runtime/recipes/claude_code.md`** — Runtime Recipes
+
+#### Marketplace-ready архитектура (Task 2.3)
+- **`runtime/providers/`** — YAML-манифесты для freebuff, claude_code, openclaw
+- **`runtime/plugins/`** — плагин-система (расширения без изменения ядра)
+- **`runtime/MARKETPLACE.md`** — трёхслойная архитектура, проверка «без изменения ядра»
+- **Provider auto-discovery** — `load_providers_from_dir()`, `register_provider()`, fallback YAML-парсер
+- **69 тестов** (+9 новых TestProviderLoading + TestProviderIntegration)
+
+#### Унификация projects/ (Task 3)
+- **`diet_platform/`** — созданы README.md + MANIFEST.md (из TEAM_NOTES.md/PRODUCT_BACKLOG.md)
+- **`realtor_automation/`** — создан MANIFEST.md
+- **`tg_terminal_messenger/`** — `manifest.md` → `MANIFEST.md` (единый регистр, two-step rename для git)
+
+#### Чистка data/context.db (Task 4)
+- **91 → 45 сессий** (удалено 46 тестовых/мусорных: Auto-conspect, Imported from Aider/OpenClaw, freebuff session, TMUX_OK, bridge OK, Тест стриминг)
+- **data/ и context/** — чисто (только штатные conversation.log)
+- **`.gitignore`** — добавлены `*.pyc`, `*.pyo`
+
+#### Аудит scripts/ (Task 5)
+- **4 мёртвых скрипта → `scripts/archive/`**:
+  - `import_qwen.py` (0 code references)
+  - `import_sessions.py` (0 code references)
+  - `phone_mcp_server.py` (0 code references)
+  - `dashboard_api.py` (0 code references)
+- **`FILE_REGISTRY.md`** и **`docs/core/SYSTEM_INVENTORY.md`** — ссылки обновлены
+
+#### Полный smoke-test (Task 6)
+- **1152 passed**, 1 skipped, 0 failures (305s)
+- Импорт mcp_server + plugin __init__: OK
+- seed_knowledge DEFAULT_DOC_SOURCES: все 6 путей валидны
+- doc_reminder.sh: синтаксис + пути OK
+- doctor.py --full: 58% health (11 OK, 6 warnings — допустимо для Termux)
+- Граница ядро↔плагин: CLEAN
+
+#### Интеграция CODE_QUALITY_STANDART
+- **`pompts/CODE_QUALITY_STANDART.md`** — интегрирован как обязательный production-ready регламент
+- Адаптирован под экосистему Freebuff, сохранены все пункты, добавлены специфичные
+
+### Исправлено
+- **`freebuff_plugin/event/replay.py:61`** — `IndentationError`: `import create_event` был на одной строке с комментарием в `elif self._bus:` блоке. Исправлена индентация, `import` вынесен на отдельную строку. Без фикса 61 тест не собирался.
+- **`freebuff_plugin/runtime/registry.py`** — fallback YAML-парсер: dead code исправлен (`capabilities`/`bin_names`/`platforms`/`args` присваиваются в result), `current_section` больше не сбрасывается при индентированных `key: value`
+- **`freebuff_plugin/runtime/registry.py`** — `_ensure_scores_loaded`: merge вместо overwrite (защита пользовательских `set_score()`)
+- **`freebuff_plugin/runtime/registry.py`** — type mismatch: `List[str***REMOVED***` ← `Dict[str, float***REMOVED***` конверсия в `discover()`
+- **`freebuff_plugin/runtime/registry.py`** — `_load_builtin_fallback`: merge вместо skip
+- **`tests/test_runtime_abstraction.py`** — `test_custom_providers_dir`: `pytest.importorskip("yaml")` вместо безусловного импорта
+
+### Проверка
+- **1152 тестов** — 0 failures (305s)
+- Граница Plugin→Core: CLEAN
+- Граница Core→Plugin: CLEAN
+- 3 провайдера загружаются: marketplace-ready
+- Все 4 проекта унифицированы (README.md + MANIFEST.md)
+- data/context.db: 91→45 сессий
+- Smoke-test: все 6 проверок пройдены
+
+---
+
+## [4.10.0***REMOVED*** — 2026-07-29
+
+### Добавлено
+- **MCP + Runtime Abstraction Layer интеграция:**
+  - `scripts/mcp_server.py` — добавлен `_get_runtime_registry()` lazy accessor (паттерн как у BridgeLayer / BootstrapEngine)
+  - 5 новых MCP инструментов (секция 8: Runtime Abstraction Layer tools):
+    - `runtime_list` — список зарегистрированных Runtime
+    - `runtime_connect` — подключиться к Runtime
+    - `runtime_disconnect` — отключиться от Runtime
+    - `runtime_select` — выбрать активный Runtime
+    - `runtime_generate` — генерация через выбранный Runtime (name / capability / active)
+  - Выбор Runtime по capability через `RuntimeCapabilityRegistry`
+  - Авто-подключение Runtime при генерации, если адаптер не активен
+  - Валидация `messages` (список dict с `role` и `content`) и `temperature`/`max_tokens`
+  - EventBus публикация: `runtime.listed`, `runtime.connected`, `runtime.disconnected`, `runtime.selected`, `runtime.generated`
+  - 18 тестов (`tests/test_mcp_server.py::TestRuntimeTools`) — 0 failures:
+    - list/connect/disconnect/select
+    - generate by name / capability / active runtime
+    - error paths: missing prompt, invalid temperature/max_tokens, invalid messages, connect failure, registry unavailable, capability unregistered, lazy accessor without auto-discovery
+
+### Проверка
+- 120 тестов MCP Server — **0 failures** (28s)
+- Code review: 3 итерации (messages validation, no auto-discover, error paths)
+
+---
+
+## [4.9.0***REMOVED*** — 2026-07-29
+
+### Добавлено
+- **Runtime Abstraction Layer — Phase 1: Infrastructure Core (docs/core/RUNTIME_ABSTRACTION_SPECIFICATION.md):**
+  - `freebuff_plugin/runtime/__init__.py` — типы: RuntimeStatus, SessionStatus, AdapterType, RuntimeConfig, RuntimeDefinition, RuntimeResult, RuntimeCapability, RuntimeSession, RuntimeHealth
+  - `freebuff_plugin/runtime/adapter.py` — RuntimeAdapter ABC (connect/disconnect/ping/health/generate/list_capabilities) + StdioMCPAdapter (MCP STDIO транспорт) + HTTPMCPAdapter (MCP HTTP транспорт) + AdapterRegistry + default_adapter_registry
+  - `freebuff_plugin/runtime/registry.py` — RuntimeRegistry: register, unregister, get, list, discover, set_active, connect/disconnect, get_status, JSON persistence; RuntimeCapabilityRegistry: list_capabilities, get_runtime_for_capability, score_runtime, set_score
+  - `freebuff_plugin/runtime/adapters/__init__.py` — re-export FreebuffAdapter и ClaudeCodeAdapter
+  - `freebuff_plugin/runtime/adapters/freebuff.py` — FreebuffAdapter: поиск бинарника (which, ~/.local/bin, pip), MCP STDIO транспорт, 5 capability (coding, planning, architecture, testing, research)
+  - `freebuff_plugin/runtime/adapters/claude.py` — ClaudeCodeAdapter: поиск claude (which, npm root -g), MCP STDIO транспорт, 5 capability (coding, review, architecture, documentation, planning)
+  - **Композиция с Bridge Platform** — адаптеры используют `StdioMCPClient` и `HTTPMCPClient` из MCP Client, не дублируют транспортный слой
+  - **60 тестов** (`tests/test_runtime_abstraction.py`) — 0 failures:
+    - TestTypes (8): RuntimeConfig, RuntimeDefinition, RuntimeResult, RuntimeCapability, RuntimeSession, RuntimeHealth
+    - TestRuntimeAdapter + TestStdioMCPAdapter + TestHTTPMCPAdapter (10): lifecycle, connect/disconnect, ping, health, generate
+    - TestAdapterRegistry (5): register, get, create, list_types
+    - TestRuntimeRegistry (12): register, unregister, list, discover, set_active, save/load, connect/disconnect, status
+    - TestRuntimeCapabilityRegistry (8): list_capabilities, get_runtime_for_capability, score, set_score, preference, fallback
+    - TestFreebuffAdapter + TestClaudeCodeAdapter (8): name, capabilities, find binary/falback
+    - TestIntegration (3): registry+adapter, multi-runtime selection, save/load cycle
+
+### Проверка
+- 60 тестов Runtime Abstraction Layer — **0 failures** (65s)
+- 1123 общих тестов — **0 failures** (254s)
+- Code review: 3 замечания исправлены (unused imports, private attr access, missing import)
+
+---
+
+## [4.8.0***REMOVED*** — 2026-07-29
+
+### Добавлено
+- **Bootstrap Engine — интеграция с MCP Server:**
+  - `scripts/mcp_server.py` — добавлен `_get_bootstrap_engine()` lazy accessor (паттерн как у BridgeLayer)
+  - 3 новых MCP инструмента (секция 7: Bootstrap Engine tools):
+    - `bootstrap_check` — проверка окружения (OS, Python, Node, Git, Disk, RAM, пакеты). Параметр: `quick: bool`
+    - `bootstrap_run` — полный bootstrap: check → load profile → install → diagnose → report. Параметр: `profile: str` (minimal по умолчанию)
+    - `bootstrap_status` — статус bootstrap: был ли запущен, профиль, ошибки, предупреждения
+  - EventBus публикация: `bootstrap.checked`, `bootstrap.ran`
+  - 12 тестов (`tests/test_mcp_server.py::TestBootstrapTools`) — 0 failures:
+    - check: full, quick, engine unavailable
+    - run: minimal, default, developer, unknown profile (graceful fallback)
+    - status: never run, after run
+    - tools: in list, schemas, RPC dispatch
+
+### Проверка
+- 101 тест MCP Server — **0 failures** (26s)
+- 1063 общих теста — **0 failures** (206s)
+- Code review: 3 замечания исправлены (MagicMock serialization, private API access, profile fallback test)
+
+---
+
+## [4.7.0***REMOVED*** — 2026-07-29
+
+### Добавлено
+- **Event Platform — реализация (docs/core/EVENT_PLATFORM_SPECIFICATION.md):**
+  - `freebuff_plugin/event/__init__.py` — типы: EventEntry, EventQuery, ReplayResult, Timeline, Audit*, PulseEntry + EVENT_ICONS + get_event_icon
+  - `freebuff_plugin/event/schema.sql` — SQLite schema: event_store таблица, FTS5, 3 триггера (INSERT/UPDATE/DELETE)
+  - `freebuff_plugin/event/store.py` — EventStore: CRUD (store, get_by_id, query), FTS5 search с wildcard поддержкой, batch, миграция из event_log, агрегация, clear
+  - `freebuff_plugin/event/replay.py` — EventReplay: replay (instant/realtime), rebuild (snapshot → clear → replay → snapshot с идемпотентностью)
+  - `freebuff_plugin/event/timeline.py` — TimelineEngine: get_timeline, format с иконками, search, by_session/by_user
+  - `freebuff_plugin/event/audit.py` — AuditEngine: log_decision/action/config_change + audit trail + форматирование для CLI
+  - `freebuff_plugin/event/pulse.py` — PulseEngine: подписка на EventBus, FTS5 маркер + fallback по категориям
+  - **MCP интеграция** (`freebuff_plugin/mcp_server.py`):
+    - `_get_event_store()` — lazy accessor
+    - 5 новых MCP инструментов: `event_search`, `event_timeline`, `event_replay`, `event_audit`, `event_pulse`
+    - Каждый инструмент возвращает форматированные JSON/текст результаты
+
+### Исправлено
+- `freebuff_plugin/event/store.py`:
+  - `conn.commit()` был вне `with self._connect() as conn:` блока (вызов на закрытом соединении) — исправлено
+  - `sqlite3.Row.get()` не существует на Android/Termux → `dict(row)` конвертация
+  - `store_batch` использовал `conn.total_changes` (аккумулятор) вместо `SELECT changes()` — исправлено
+  - `_builtin_schema()` не содержал FTS5 триггеры — добавлены
+- `freebuff_plugin/event/pulse.py`:
+  - PulseEngine FTS5 поиск не находил события (маркер `_pulse` в metadata, не в data_json) — добавлен `data["_pulse"***REMOVED*** = True`
+  - Добавлен fallback поиск по категориям при пустом FTS5 результате
+
+### Проверка
+- 61 тест Event Platform — **0 failures** (18.05s)
+- Code review: 7 замечаний исправлены (FTS5 sync, total_changes, Pulse FTS5, миграция, builtin triggers, 4 тестовых падения)
+
+---
+
+## [4.6.0***REMOVED*** — 2026-07-29
+
+### Добавлено
+- **Bridge Layer — Phase 6: CoWork/Companion Platform (MCP ↔ ACP):**
+  - `freebuff_plugin/acp_protocol.py` — Agent Collaboration Protocol (ACP):
+    - AgentRegistry: регистрация, поиск, статус (online/offline/busy), heartbeat, prune offline
+    - ACPHandler: подписка на ACP события через Event Bus, обработка discover/task/result/broadcast/status
+    - AgentInfo + AgentStatus + ACPTask + ACPResult — dataclasses протокола
+    - Система отправки задач с ожиданием результата (send_task + wait_for_result с timeout)
+    - Heartbeat loop (30s) + автоматическая саморегистрация в локальном реестре при start()
+    - Фильтрация задач по target (только себе), корректная обработка неизвестных tools
+  - `freebuff_plugin/mcp_client.py` — MCP Client (два транспорта):
+    - MCPClientBase: единый интерфейс (connect/disconnect/list_tools/call_tool/list_resources)
+    - StdioMCPClient: подпроцесс + stdin/stdout, reader thread, очередь ответов с фильтрацией stale ID
+    - HTTPMCPClient: Streamable HTTP (POST/GET/DELETE), Mcp-Session-Id, handshake initialize
+    - Поддержка MCP 2025-03-26 протокола: initialize, tools/list, tools/call, resources/list, resources/read, prompts/list, prompts/get, ping
+  - `freebuff_plugin/bridge_layer.py` — Bridge Layer (трансляция MCP ↔ ACP):
+    - BridgeLayer: центральный координатор, запускает ACP и sync loop
+    - connect_mcp_stdio / connect_mcp_http — подключение внешних MCP серверов
+    - Connection params сохранены в BridgeMCPServer для автоматического reconnect
+    - _forward_to_mcp — перенаправление ACP задач на MCP серверы
+    - _rpc_to_server — произвольные JSON-RPC запросы к подключённым серверам
+    - Sync loop: ping каждые 60s, автоматический reconnect, prune offline агентов
+    - Регистрация MCP инструментов как ACP capabilities (префикс mcp.{server***REMOVED***.{tool***REMOVED***)
+    - BridgeMCPServer: dataclass с connection_params для надёжного reconnect
+    - 60 тестов (`tests/test_bridge_layer.py`) — 0 errors
+  - **Bridge Layer интегрирован в MCP Server** (`scripts/mcp_server.py`):
+    - `_get_bridge_layer()` — lazy accessor, создаёт BridgeLayer с EventBus
+    - 4 новых MCP инструмента: `bridge_connect` (stdio/HTTP), `bridge_list`, `bridge_disconnect`, `bridge_rpc`
+    - События EventBus: `bridge.connected`, `bridge.disconnected`, `bridge.rpc`
+
+### Проверка
+- 149 тестов MCP Server + Bridge Layer — **0 failures** (89 + 60)
+- Code review: 4 итерации (name bug, connection_params, active_request_ids, sync loop logging, event publishing)
+- Все 4 инструмента (bridge_connect, bridge_list, bridge_disconnect, bridge_rpc) зарегистрированы в MCP tools/list
+
+---
+
+## [4.5.0***REMOVED*** — 2026-07-29
+
+### Добавлено
+- **Scenario Engine** — `freebuff_plugin/scenario_engine.py`:
+  - Сценарный движок с YAML-парсингом (YAML front matter + markdown тело)
+  - `Scenario` dataclass: slug, title, description, category, complexity, tags, prompt, variables, template
+  - `ScenarioEngine`: загрузка из `scenarios/`, list/search/get/apply, reload, stripping YAML
+  - 83 теста (`tests/test_scenario_engine.py`) — 0 errors
+- **11 готовых сценариев** в `freebuff_plugin/scenarios/`:
+  - `freelance_parser.md` — Парсер сайта (категория: freelancing, сложность: средняя)
+  - `freelance_tg_bot.md` — Telegram бот для заказов (категория: freelancing)
+  - `agent_setup.md` — Настройка AI-агента (категория: ai)
+  - `task_framework.md` — Фреймворк задач (категория: tool)
+  - `freelance_tg_parser.md` — Парсер Telegram (категория: freelancing)
+  - `freelance_mail_collector.md` — Сборщик почты (категория: freelancing)
+  - `freelance_seo_auditor.md` — SEO аудитор (категория: freelancing, сложность: высокая)
+  - `freelance_report_generator.md` — Генератор отчётов (категория: freelancing)
+  - +3 существующих сценария из plugin
+- **Telegram Bot для сценариев** — `freebuff_plugin/tgbot.py`:
+  - `/scenarios list` — список сценариев с фильтрацией по категории
+  - `/scenarios apply <slug>` — применить сценарий с вводом переменных
+  - `/scenarios search <query>` — поиск по сценариям
+  - Inline keyboard навигация: категории → сценарии → детали → применить
+  - State management с TTL (600с) и лимитом 1000 записей
+  - `_send_prompt_result` — статический метод (устраняет дублирование)
+  - Text handler с поддержкой JSON, key=value, "готово"
+  - 44 теста (`tests/test_tgbot.py`) — 0 errors
+- **Стратегические документы:**
+  - `IDEAS.md` — реестр архитектурных идей (12 идей со статусами, категориями, приоритетами)
+    - Идеи: Bridge Layer, ACP, Presence, RAG 2.0, Session Manager, Workflow Engine, Live Collaboration, IDEAS v2, Summarization, MCP Client, Async Workers, Auto-Docs
+  - `docs/vision/archive/VISION_2.0.md` — стратегическое видение Buffy как Companion Engine
+    - Философия: «Buffy — не конкурент Claude/Cursor/OpenClaw, а универсальная надстройка»
+    - 6 архитектурных принципов (LLM Sparingly, Event Bus, Live Collaboration, Presence, Project Pulse, Collaboration Roles)
+    - Матрица анализа 12 концепций (ценность/риски/сложность/альтернативы)
+    - Поэтапный план реализации (3 этапа, оценённые в часах)
+  - `docs/vision/ROADMAP.md` — обновлён до v2.0.0:
+    - Добавлена Phase 6: CoWork / Companion Platform
+    - Phase 3 отмечена как ✅ ЗАВЕРШЕНА (с детальным содержанием)
+    - Phase 4 расширена (Telegram Bot + Scenario Engine, ~85%)
+    - Phase 6: foundation (Event Bus, ContextManager v3, Memory/Knowledge/Graph Engines, Plugin API, MCP, Scenario Engine, TG Bot, Intent Router, IDEAS, VISION 2.0)
+  - `BUFFY.md` — обновлён раздел видения: добавлена Phase 6, IDEAS.md, VISION_2.0.md в документацию
+- **Архитектурный аудит** — проведён полный аудит текущей архитектуры:
+  - Проанализированы все модули: ContextManager, MemoryEngine, KnowledgeEngine, GraphIndex, EventBus, Orchestrator, ModelGateway, ToolRuntime, PluginAPI, MCPServer, ScenarioEngine, TelegramBot
+  - Выявлены пробелы: отсутствие Bridge Layer, ACP, Presence, Live Collaboration
+  - Создана карта архитектуры с фазами развития
+
+### Исправлено
+- `docs/vision/ROADMAP.md` — восстановлено детальное содержание Phase 3 (потеряно при обновлении), исправлен дубликат строки в конце
+
+### Проверка
+- Все тесты проходят — **0 failures** (Scenario Engine: 83, Telegram Bot: 44, существующие: 649+)
+- Scenario Engine: 83 теста (list, search, apply, yaml_parsing, Scenario class, CLI, edge cases)
+- Telegram Bot: 44 теста (handlers, callbacks, state management, "готово" flow)
+- Все 11 сценариев загружаются корректно
+- Code review пройден (3 итерации фиксов: state leak, code duplication, unused imports)
+
+---
+
+## [4.4.0***REMOVED*** — 2026-07-29
+
+### Добавлено
+- **OOM Protection System (защита от Signal 9/SIGKILL):**
+  - `scripts/oom_protect.sh` — скрипт защиты от OOM: проверяет MemAvailable, убивает старые freebuff процессы при пороге <512 MB, чистит зависшие tmux сессии и PID-файлы плагина
+  - Режимы: `--status` (диагностика), `--force` (принудительная очистка), `--check` (автоматический режим с условной очисткой)
+  - Защита от самозацикливания: не убивает себя, python-процессы, tmux, bash-обёртки и proot
+- **Интеграция OOM Protection в freebuff plugin:**
+  - `freebuff_plugin/wrapper.py` — `_run_oom_protection()` вызывается перед `launch()` и `synchronous_oneshot()`; ошибки логируются, а не глотаются молча
+  - `~/.local/bin/freebuff` — v4 wrapper: добавлена Фаза 0 (OOM Protection) перед стартом сессии; добавлен `set -u` с безопасными дефолтами для переменных
+  - При каждом запуске `freebuff` (через CLI или Python wrapper) сначала запускается OOM protection, убивающий старые процессы
+
+### Исправлено
+- `freebuff_plugin/monitor.sh` — починен `PREFIX: unbound variable`: `${PREFIX***REMOVED***` заменён на `${PREFIX:-/data/data/com.termux/files/usr***REMOVED***`
+- `scripts/oom_protect.sh` — удалён дублирующий `pgrep` блок в `kill_old_freebuff()` (оставлен только один проход по `ps aux`)
+- `scripts/oom_protect.sh` — `return 1` заменён на `exit 1` (скрипт не sourced)
+- `scripts/oom_protect.sh` — починен pipeline subshell bug в `clean_tmux_sessions()` (переменная `cleaned` теперь в главном shell)
+- `scripts/oom_protect.sh` — `${PREFIX***REMOVED***` подстрахован дефолтным значением
+
+### Проверка
+- 649/649 pytest тестов — **0 failures** (114s)
+- Self-check (bootstrap): все проверки пройдены
+- OOM protection `--status` и `--check` — работают корректно
+- Wrapper syntax: `bash -n` проходит
+
+---
+
+## [4.3.0***REMOVED*** — 2026-07-28
+
+### Добавлено
+- **Интеграция с freebuff CLI (out-of-the-box):**
+  - `.freebuff/config.json` — метаданные проекта, корневые файлы, preferred commands
+  - `.freebuff/AGENTS.md` — инструкции для свободного/Codebuff CLI
+  - `AGENTS.md` — корневой канонический протокол агента
+  - `.cursorrules` — fallback для Cursor-совместимости
+  - `CLAUDE.md` — fallback для Claude-совместимости
+  - `CODY.md` — fallback для Cody-совместимости
+  - `BUFFY.md` — раздел «Работа через Freebuff CLI» с конфигурацией и стартовой последовательностью
+  - `README.md` — секция про `freebuff` CLI
+  - `docs/ops/AGENTS.md` — ссылка на корневой `AGENTS.md`
+- **Telegram bot frontend для freebuff:**
+  - `scripts/telegram_bot.py` — Bot API бот с ContextManager-сессиями, ModelGateway LLM-ответами, .env загрузкой, typing indicator, error handling
+  - `tests/test_telegram_bot.py` — 6 unit-тестов (session ID, создание, сообщения, статус, fallback, новая сессия)
+  - `scripts/start_telegram_bot.sh` — стартовый скрипт с .env sourcing
+  - `requirements.txt` — добавлен `python-telegram-bot>=20.0,<21.0`
+
+### Изменено
+- `scripts/drift_check.py` — убраны runtime/кэш-директории из скана (`context/`, `data/`, `logs/` и др.); хрупкий regex заменён на line-based парсер (корректно обрабатывает пары ``` ``` и tree-диаграммы с вложенностью)
+
+---
+
+## [4.2.6***REMOVED*** — 2026-07-28
+
+### Добавлено
+- **Self-check triggers (promt10):**
+  - `scripts/bootstrap.py` — startup self-check (Trigger 1): проверяет `BUFFY.md`, фильтрует тестовые/демо-конспекты, проверяет актуальность `TASK.md`.
+  - `scripts/drift_check.py` — daily drift-check (Trigger 2): сравнивает статус-таблицы `BUFFY_PROJECT.md` с реальными файлами, индекс `seed_knowledge` с фактическими документами, структуру директорий с `BUFFY.md`/`docs/core/RULES.md`. Пишет `docs/audits/DRIFT_REPORT.md`, rate-limit — раз в день.
+  - `scripts/cron_conspect.sh` — запускает `drift_check.py` каждые 30 минут (внутренний rate-limit once/day).
+  - `tests/test_bootstrap.py` — 5 unit-тестов для самопроверки при старте.
+  - `tests/test_drift_check.py` — 9 unit-тестов для drift-check.
+
+### Исправлено
+- `scripts/bootstrap.py` — `***REMOVED***` перенесён наверх; самопроверка обёрнута в `try/except`, чтобы не ломать старт.
+
+---
+
 ## [4.2.5***REMOVED*** — 2026-07-28
 
 ### Изменено
@@ -29,9 +385,9 @@
 ## [4.2.3***REMOVED*** — 2026-07-28
 
 ### Изменено
-- **scripts/seed_knowledge.py** — документы теперь авто-обнаруживаются из `docs/**/*.md` вместо жёстко зашитого списка. Добавлены исключения: `docs/AUDIT_*.md` и `docs/TASK_TEMPLATE.md`.
+- **scripts/seed_knowledge.py** — документы теперь авто-обнаруживаются из `docs/**/*.md` вместо жёстко зашитого списка. Добавлены исключения: `docs/AUDIT_*.md` и `docs/ops/TASK_TEMPLATE.md`.
 - **tests/test_seed_knowledge.py** — добавлены тесты для `_collect_doc_sources` и исключений.
-- **docs/RULES.md** — убраны ссылки на пустые `docs/architecture/` и `docs/decisions/`.
+- **docs/core/RULES.md** — убраны ссылки на пустые `docs/architecture/` и `docs/decisions/`.
 - **BUFFY_PROJECT.md** — актуализированы статусы: Knowledge Engine, Event Bus, Orchestrator отмечены как MVP/Каркас.
 
 ### Удалено
@@ -42,15 +398,15 @@
 ## [4.2.2***REMOVED*** — 2026-07-28
 
 ### Изменено
-- **docs/ARCHITECTURE.md** — добавлен раздел "Автоматизация документирования" со ссылкой на `docs/RULES.md`.
-- **docs/WORKERS.md** — добавлен раздел "Авто-документирование", ссылка на `buffy_autodoc.py` и pre-commit hook; чек-лист добавления нового worker дополнен пунктом про `CHANGELOG.md`.
+- **docs/vision/archive/ARCHITECTURE.md** — добавлен раздел "Автоматизация документирования" со ссылкой на `docs/core/RULES.md`.
+- **docs/projects_meta/WORKERS.md** — добавлен раздел "Авто-документирование", ссылка на `buffy_autodoc.py` и pre-commit hook; чек-лист добавления нового worker дополнен пунктом про `CHANGELOG.md`.
 
 ---
 
 ## [4.2.1***REMOVED*** — 2026-07-28
 
 ### Добавлено
-- **docs/TROUBLESHOOTING.md** — документ с известными проблемами и решениями для:
+- **docs/ops/TROUBLESHOOTING.md** — документ с известными проблемами и решениями для:
   - Lightpanda worker (glibc/ARM64, CLI-флаги, пути к PandaScript, OOM)
   - Agent Context Bridge (интеграция, сессии, обрезка JSON)
   - pre-commit hook (обход блокировки)
@@ -65,7 +421,7 @@
   - `scripts/install_hooks.sh` — установка hook в `.git/hooks/pre-commit`
   - `scripts/buffy_autodoc.py --strict` — строгий режим с exit code 1
   - `severity=block/warn` у триггеров: `CHANGELOG.md` и `TASK.md` — блокеры, остальные — warning
-- **docs/RULES.md** — добавлен раздел про pre-commit hook и его установку
+- **docs/core/RULES.md** — добавлен раздел про pre-commit hook и его установку
 
 ### Проверка
 - `mypy scripts/buffy_autodoc.py` — 0 errors
@@ -79,9 +435,9 @@
 - **Lightpanda integration v1.0.0:**
   - `scripts/install_lightpanda.sh` — установка Lightpanda в Termux + proot-distro Ubuntu ARM64
   - `src/workers/lightpanda_worker.py` — Python-воркер: `execute_agent_task`, `run_script`, `dump_url`, `serve_cdp`, `stop_cdp`
-  - `docs/LIGHTPANDA_INTEGRATION.md` — полный гайд по установке и использованию
-  - `docs/WORKERS.md` — обзор паттерна workers
-  - `docs/ARCHITECTURE.md` — архитектурная схема с Lightpanda
+  - `docs/projects_meta/LIGHTPANDA_INTEGRATION.md` — полный гайд по установке и использованию
+  - `docs/projects_meta/WORKERS.md` — обзор паттерна workers
+  - `docs/vision/archive/ARCHITECTURE.md` — архитектурная схема с Lightpanda
   - `tests/test_lightpanda_worker.py` — 8 unit-тестов
 
 ### Проверка
@@ -221,8 +577,8 @@
     - Mcp-Protocol-Version header в всех ответах
 
 ### Изменено
-- `docs/ROADMAP.md`: Phase 4 обновлена — MCP Streamable HTTP добавлен (65% → 70%)
-- `docs/DECISIONS.md`: ADR-003 — Streamable HTTP transport (pure Python ThreadingHTTPServer)
+- `docs/vision/ROADMAP.md`: Phase 4 обновлена — MCP Streamable HTTP добавлен (65% → 70%)
+- `docs/decisions/DECISIONS.md`: ADR-003 — Streamable HTTP transport (pure Python ThreadingHTTPServer)
 
 ### Проверка
 - 89 тестов mcp_server — **0 errors** (53 stdio + 10 session manager + 27 HTTP)
@@ -296,7 +652,7 @@
   - Batch requests, server status, dataclasses, ToolRegistry integration
 
 ### Изменено
-- `docs/ROADMAP.md`: Phase 4 обновлена — MCP Server реализован (55% → 65%)
+- `docs/vision/ROADMAP.md`: Phase 4 обновлена — MCP Server реализован (55% → 65%)
 
 ---
 
@@ -347,7 +703,7 @@
   - `tests/test_seed_knowledge.py`: 3 теста на `seed_knowledge.py`
 
 ### Изменено
-- `docs/ROADMAP.md`: Phase 2 отмечена как завершённая (100%)
+- `docs/vision/ROADMAP.md`: Phase 2 отмечена как завершённая (100%)
 
 ## [2.0.0***REMOVED*** — 2026-07-28
 
@@ -365,7 +721,7 @@
   - `scripts/stream_session.py`: in-memory кэш счётчика сообщений
   - `scripts/bootstrap.py`: интеграция StreamBridge при старте сессии
 - **Документация:**
-  - `docs/TASK_TEMPLATE.md` — шаблон TASK.md для новых задач
+  - `docs/ops/TASK_TEMPLATE.md` — шаблон TASK.md для новых задач
   - `TASK.md` — файл текущей задачи (стриминг контекста v2.0)
   - `CHANGELOG.md` — этот файл
 
@@ -374,7 +730,7 @@
 - `scripts/context_manager.py`: `get_messages()` сортирует ASC (старые→новые)
 - `scripts/context_manager.py`: `_get_conn()` — timeout + busy_timeout
 - `scripts/stream_session.py`: `log_message()` пишет в файлы асинхронно
-- `docs/RULES.md`: добавлены TASK.md и CHANGELOG.md в обязательные документы
+- `docs/core/RULES.md`: добавлены TASK.md и CHANGELOG.md в обязательные документы
 
 ### Исправлено
 - `scripts/context_manager.py`: удалены неиспользуемые импорты `re`, `time`

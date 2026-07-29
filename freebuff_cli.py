@@ -329,7 +329,7 @@ def cmd_qwen_resume(session_id: str) -> None:
     
     Аналог: qwen --resume <session_id>
     """
-    qwen_history = "/data/data/com.termux/files/home/.qwen/file-history"
+    qwen_history = Path.home() / ".qwen" / "file-history"
     session_dir = os.path.join(qwen_history, session_id)
 
     if not os.path.isdir(session_dir):

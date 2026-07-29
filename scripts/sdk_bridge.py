@@ -20,7 +20,7 @@ import sys
 from typing import Any, Dict, Optional
 
 # Добавляем freebuff в путь (если не установлен как пакет)
-FREEBUFF = Path("/storage/emulated/0/PROJECTS/workstation/freebuff")
+FREEBUFF = Path(__file__).resolve().parent.parent
 if str(FREEBUFF) not in sys.path:
     sys.path.insert(0, str(FREEBUFF))
 

@@ -49,6 +49,7 @@ from scripts.mcp_server import (
     INVALID_PARAMS,
     INTERNAL_ERROR,
 )
+from freebuff_plugin.runtime import RuntimeResult
 
 import http.client
 import socket
@@ -537,6 +538,425 @@ class TestDataclasses:
 # ═══════════════════════════════════════════════════════════════
 # ToolRegistry integration
 # ═══════════════════════════════════════════════════════════════
+
+
+# ═══════════════════════════════════════════════════════════════
+# Bootstrap Engine tools (MCP integration)
+# ═══════════════════════════════════════════════════════════════
+
+
+class TestBootstrapTools:
+    """Test bootstrap_check, bootstrap_run, bootstrap_status MCP tools."""
+
+    @staticmethod
+    def _mock_subprocess(returncode: int = 0, stdout: str = "", stderr: str = ""):
+        """Helper: patch subprocess.run with proper return values."""
+        return patch("subprocess.run", return_value=type("Proc", (), {
+            "returncode": returncode, "stdout": stdout, "stderr": stderr,
+        ***REMOVED***)())
+
+    def _check_result(self, result, expect_success=True):
+        """Helper: parse tool call result and return data dict."""
+        assert result["isError"***REMOVED*** is False
+        data = json.loads(result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***)
+        if expect_success:
+            assert data["success"***REMOVED*** is True, f"Expected success, got: {data.get('error', '')***REMOVED***"
+        return data
+
+    def test_bootstrap_check_returns_env(self, server):
+        """bootstrap_check returns environment state."""
+        with self._mock_subprocess():
+            result = server.handle_tools_call({
+                "name": "bootstrap_check",
+                "arguments": {***REMOVED***,
+            ***REMOVED***)
+            data = self._check_result(result)
+            assert "python_version" in data["data"***REMOVED***
+            assert data["data"***REMOVED***["workspace"***REMOVED*** == str(server.workspace)
+
+    def test_bootstrap_check_quick(self, server):
+        """bootstrap_check with quick=True."""
+        with self._mock_subprocess():
+            result = server.handle_tools_call({
+                "name": "bootstrap_check",
+                "arguments": {"quick": True***REMOVED***,
+            ***REMOVED***)
+            data = self._check_result(result)
+            assert "os" in data["data"***REMOVED***
+
+    def test_bootstrap_check_engine_unavailable(self, server):
+        """bootstrap_check raises error if engine unavailable."""
+        with patch.object(server, "_get_bootstrap_engine", return_value=None):
+            result = server.handle_tools_call({
+                "name": "bootstrap_check",
+                "arguments": {***REMOVED***,
+            ***REMOVED***)
+            assert result["isError"***REMOVED*** is True
+            text = result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***
+            assert "not available" in text
+
+    def test_bootstrap_run_minimal_profile(self, server):
+        """bootstrap_run with minimal profile."""
+        with self._mock_subprocess():
+            result = server.handle_tools_call({
+                "name": "bootstrap_run",
+                "arguments": {"profile": "minimal"***REMOVED***,
+            ***REMOVED***)
+            data = self._check_result(result)
+            assert data["data"***REMOVED***["profile"***REMOVED*** == "minimal"
+            assert "duration_ms" in data["data"***REMOVED***
+            assert "steps" in data["data"***REMOVED***
+            assert "diagnosis" in data["data"***REMOVED***
+
+    def test_bootstrap_run_default_profile(self, server):
+        """bootstrap_run with default (minimal) profile."""
+        with self._mock_subprocess():
+            result = server.handle_tools_call({
+                "name": "bootstrap_run",
+                "arguments": {***REMOVED***,
+            ***REMOVED***)
+            data = self._check_result(result)
+            assert data["data"***REMOVED***["profile"***REMOVED*** == "minimal"
+
+    def test_bootstrap_run_developer_profile(self, server):
+        """bootstrap_run with developer profile."""
+        with self._mock_subprocess():
+            result = server.handle_tools_call({
+                "name": "bootstrap_run",
+                "arguments": {"profile": "developer"***REMOVED***,
+            ***REMOVED***)
+            data = self._check_result(result)
+            assert data["data"***REMOVED***["profile"***REMOVED*** == "developer"
+
+    def test_bootstrap_run_unknown_profile_handled_gracefully(self, server):
+        """bootstrap_run with unknown profile handles gracefully (falls back to minimal)."""
+        with self._mock_subprocess():
+            result = server.handle_tools_call({
+                "name": "bootstrap_run",
+                "arguments": {"profile": "nonexistent_profile_xyz"***REMOVED***,
+            ***REMOVED***)
+            # Engine stores the original profile name in report
+            # but internally falls back to 'minimal' profile
+            data = self._check_result(result, expect_success=True)
+            assert "nonexistent_profile_xyz" in data["data"***REMOVED***["profile"***REMOVED***
+            assert "duration_ms" in data["data"***REMOVED***
+            assert isinstance(data["data"***REMOVED***["steps"***REMOVED***, list)
+
+    def test_bootstrap_status_never_run(self, server):
+        """bootstrap_status when never run."""
+        result = server.handle_tools_call({
+            "name": "bootstrap_status",
+            "arguments": {***REMOVED***,
+        ***REMOVED***)
+        data = self._check_result(result)
+        assert data["data"***REMOVED***["status"***REMOVED*** == "never_run"
+
+    def test_bootstrap_status_after_run(self, server):
+        """bootstrap_status after bootstrap_run."""
+        with self._mock_subprocess():
+            # Run bootstrap first
+            server.handle_tools_call({
+                "name": "bootstrap_run",
+                "arguments": {"profile": "minimal"***REMOVED***,
+            ***REMOVED***)
+            # Check status
+            result = server.handle_tools_call({
+                "name": "bootstrap_status",
+                "arguments": {***REMOVED***,
+            ***REMOVED***)
+            data = self._check_result(result)
+            assert data["data"***REMOVED***["profile"***REMOVED*** == "minimal"
+
+    def test_bootstrap_tools_in_list(self, server):
+        """bootstrap tools are listed in tools/list."""
+        result = server.handle_tools_list({***REMOVED***)
+        names = [t["name"***REMOVED*** for t in result["tools"***REMOVED******REMOVED***
+        assert "bootstrap_check" in names
+        assert "bootstrap_run" in names
+        assert "bootstrap_status" in names
+
+    def test_bootstrap_tools_have_schemas(self, server):
+        """bootstrap tools have proper input schemas."""
+        result = server.handle_tools_list({***REMOVED***)
+        tools = {t["name"***REMOVED***: t for t in result["tools"***REMOVED******REMOVED***
+
+        check = tools["bootstrap_check"***REMOVED***
+        assert "quick" in check["inputSchema"***REMOVED***["properties"***REMOVED***
+
+        run = tools["bootstrap_run"***REMOVED***
+        assert "profile" in run["inputSchema"***REMOVED***["properties"***REMOVED***
+
+        status = tools["bootstrap_status"***REMOVED***
+        assert status["inputSchema"***REMOVED***["properties"***REMOVED*** == {***REMOVED***
+
+    def test_dispatch_bootstrap_check_via_rpc(self, server):
+        """bootstrap_check works via JSON-RPC dispatch."""
+        with self._mock_subprocess():
+            msg = {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "tools/call",
+                "params": {"name": "bootstrap_check", "arguments": {***REMOVED******REMOVED***,
+            ***REMOVED***
+            resp = json.loads(server.dispatch(msg))
+            assert resp["id"***REMOVED*** == 1
+            assert "content" in resp["result"***REMOVED***
+            data = json.loads(resp["result"***REMOVED***["content"***REMOVED***[0***REMOVED***["text"***REMOVED***)
+            assert data["success"***REMOVED*** is True
+
+
+class TestRuntimeTools:
+    """Test runtime_list, runtime_connect, runtime_disconnect, runtime_select, runtime_generate MCP tools."""
+
+    def _mock_registry(self, server):
+        """Install mock runtime registry and capability registry on server."""
+        mock_reg = MagicMock()
+        mock_cap = MagicMock()
+        server._runtime_registry = mock_reg
+        server._runtime_capability_registry = mock_cap
+        return mock_reg, mock_cap
+
+    def test_runtime_list(self, server):
+        """runtime_list returns registry status."""
+        mock_reg, _ = self._mock_registry(server)
+        mock_reg.get_status.return_value = {
+            "active": "freebuff",
+            "total": 1,
+            "connected": 0,
+            "runtimes": [***REMOVED***,
+            "known": [***REMOVED***,
+        ***REMOVED***
+        result = server.handle_tools_call({"name": "runtime_list", "arguments": {***REMOVED******REMOVED***)
+        data = json.loads(result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***)
+        assert data["success"***REMOVED*** is True
+        assert "active" in data["data"***REMOVED***
+        assert data["data"***REMOVED***["total"***REMOVED*** == 1
+
+    def test_runtime_connect(self, server):
+        """runtime_connect delegates to registry.connect."""
+        mock_reg, _ = self._mock_registry(server)
+        mock_reg.connect.return_value = (True, "connected")
+        result = server.handle_tools_call({"name": "runtime_connect", "arguments": {"name": "freebuff"***REMOVED******REMOVED***)
+        data = json.loads(result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***)
+        assert data["success"***REMOVED*** is True
+        assert data["data"***REMOVED***["connected"***REMOVED*** is True
+        mock_reg.connect.assert_called_once_with("freebuff")
+
+    def test_runtime_disconnect(self, server):
+        """runtime_disconnect delegates to registry.disconnect."""
+        mock_reg, _ = self._mock_registry(server)
+        mock_reg.disconnect.return_value = True
+        result = server.handle_tools_call({"name": "runtime_disconnect", "arguments": {"name": "freebuff"***REMOVED******REMOVED***)
+        data = json.loads(result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***)
+        assert data["success"***REMOVED*** is True
+        assert data["data"***REMOVED***["disconnected"***REMOVED*** is True
+        mock_reg.disconnect.assert_called_once_with("freebuff")
+
+    def test_runtime_select(self, server):
+        """runtime_select sets active runtime."""
+        mock_reg, _ = self._mock_registry(server)
+        mock_reg.set_active.return_value = True
+        result = server.handle_tools_call({"name": "runtime_select", "arguments": {"name": "freebuff"***REMOVED******REMOVED***)
+        data = json.loads(result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***)
+        assert data["success"***REMOVED*** is True
+        assert data["data"***REMOVED***["active"***REMOVED*** is True
+        mock_reg.set_active.assert_called_once_with("freebuff")
+
+    def test_runtime_select_unknown_runtime(self, server):
+        """runtime_select returns error when runtime is not registered."""
+        mock_reg, _ = self._mock_registry(server)
+        mock_reg.set_active.return_value = False
+        result = server.handle_tools_call({"name": "runtime_select", "arguments": {"name": "unknown"***REMOVED******REMOVED***)
+        data = json.loads(result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***)
+        assert data["success"***REMOVED*** is False
+        assert "not registered" in data["error"***REMOVED***
+
+    def test_runtime_generate_by_name(self, server):
+        """runtime_generate with explicit name."""
+        mock_reg, _ = self._mock_registry(server)
+        adapter = MagicMock()
+        adapter.is_connected.return_value = True
+        adapter.generate.return_value = RuntimeResult(
+            content="generated text",
+            runtime="freebuff",
+            model_used="deepseek-v4",
+            latency_ms=42,
+        )
+        mock_reg.get_adapter.return_value = adapter
+        result = server.handle_tools_call({
+            "name": "runtime_generate",
+            "arguments": {"name": "freebuff", "prompt": "hello"***REMOVED***,
+        ***REMOVED***)
+        data = json.loads(result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***)
+        assert data["success"***REMOVED*** is True
+        assert data["data"***REMOVED***["content"***REMOVED*** == "generated text"
+        assert data["data"***REMOVED***["runtime"***REMOVED*** == "freebuff"
+
+    def test_runtime_generate_by_capability(self, server):
+        """runtime_generate with capability selects runtime via capability registry."""
+        mock_reg, mock_cap = self._mock_registry(server)
+        mock_cap.get_runtime_for_capability.return_value = {"runtime": "claude-code", "confidence": 0.95***REMOVED***
+        adapter = MagicMock()
+        adapter.is_connected.return_value = True
+        adapter.generate.return_value = RuntimeResult(
+            content="code review result",
+            runtime="claude-code",
+        )
+        mock_reg.get_adapter.return_value = adapter
+        result = server.handle_tools_call({
+            "name": "runtime_generate",
+            "arguments": {"capability": "review", "prompt": "review this"***REMOVED***,
+        ***REMOVED***)
+        data = json.loads(result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***)
+        assert data["success"***REMOVED*** is True
+        assert data["data"***REMOVED***["runtime"***REMOVED*** == "claude-code"
+        mock_cap.get_runtime_for_capability.assert_called_once_with("review")
+
+    def test_runtime_generate_by_active_runtime(self, server):
+        """runtime_generate falls back to active runtime."""
+        mock_reg, _ = self._mock_registry(server)
+        active_runtime = MagicMock()
+        active_runtime.name = "freebuff"
+        mock_reg.get_active.return_value = active_runtime
+        adapter = MagicMock()
+        adapter.is_connected.return_value = True
+        adapter.generate.return_value = RuntimeResult(
+            content="active runtime response",
+            runtime="freebuff",
+        )
+        mock_reg.get_adapter.return_value = adapter
+        result = server.handle_tools_call({
+            "name": "runtime_generate",
+            "arguments": {"prompt": "hello"***REMOVED***,
+        ***REMOVED***)
+        data = json.loads(result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***)
+        assert data["success"***REMOVED*** is True
+        assert data["data"***REMOVED***["content"***REMOVED*** == "active runtime response"
+
+    def test_runtime_generate_requires_prompt_or_messages(self, server):
+        """runtime_generate returns error when neither prompt nor messages provided."""
+        mock_reg, _ = self._mock_registry(server)
+        result = server.handle_tools_call({
+            "name": "runtime_generate",
+            "arguments": {"name": "freebuff"***REMOVED***,
+        ***REMOVED***)
+        data = json.loads(result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***)
+        assert data["success"***REMOVED*** is False
+        assert "prompt or messages is required" in data["error"***REMOVED***
+
+    def test_runtime_generate_connects_if_not_connected(self, server):
+        """runtime_generate auto-connects if adapter not connected."""
+        mock_reg, _ = self._mock_registry(server)
+        adapter = MagicMock()
+        adapter.is_connected.return_value = False
+        adapter.generate.return_value = RuntimeResult(
+            content="after connect",
+            runtime="freebuff",
+        )
+        mock_reg.get_adapter.return_value = adapter
+        mock_reg.connect.return_value = (True, "connected")
+        result = server.handle_tools_call({
+            "name": "runtime_generate",
+            "arguments": {"name": "freebuff", "prompt": "hello"***REMOVED***,
+        ***REMOVED***)
+        data = json.loads(result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***)
+        assert data["success"***REMOVED*** is True
+        mock_reg.connect.assert_called_once_with("freebuff")
+
+    def test_runtime_tools_in_list(self, server):
+        """runtime tools are listed in tools/list."""
+        result = server.handle_tools_list({***REMOVED***)
+        names = [t["name"***REMOVED*** for t in result["tools"***REMOVED******REMOVED***
+        assert "runtime_list" in names
+        assert "runtime_connect" in names
+        assert "runtime_disconnect" in names
+        assert "runtime_select" in names
+        assert "runtime_generate" in names
+
+    def test_runtime_tools_have_schemas(self, server):
+        """runtime tools have proper input schemas."""
+        result = server.handle_tools_list({***REMOVED***)
+        tools = {t["name"***REMOVED***: t for t in result["tools"***REMOVED******REMOVED***
+        assert "name" in tools["runtime_connect"***REMOVED***["inputSchema"***REMOVED***["properties"***REMOVED***
+        assert "name" in tools["runtime_select"***REMOVED***["inputSchema"***REMOVED***["properties"***REMOVED***
+        assert "prompt" in tools["runtime_generate"***REMOVED***["inputSchema"***REMOVED***["properties"***REMOVED***
+
+    def test_runtime_list_registry_unavailable(self, server):
+        """runtime_list returns error when registry is unavailable."""
+        server._runtime_registry = None
+        with patch.object(server, "_get_runtime_registry", return_value=None):
+            result = server.handle_tools_call({"name": "runtime_list", "arguments": {***REMOVED******REMOVED***)
+        data = json.loads(result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***)
+        assert data["success"***REMOVED*** is False
+        assert "not available" in data["error"***REMOVED***
+
+    def test_runtime_generate_invalid_temperature(self, server):
+        """runtime_generate rejects non-numeric temperature."""
+        mock_reg, _ = self._mock_registry(server)
+        result = server.handle_tools_call({
+            "name": "runtime_generate",
+            "arguments": {"name": "freebuff", "prompt": "hi", "temperature": "hot"***REMOVED***,
+        ***REMOVED***)
+        data = json.loads(result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***)
+        assert data["success"***REMOVED*** is False
+        assert "temperature" in data["error"***REMOVED***
+
+    def test_runtime_generate_invalid_max_tokens(self, server):
+        """runtime_generate rejects non-positive max_tokens."""
+        mock_reg, _ = self._mock_registry(server)
+        result = server.handle_tools_call({
+            "name": "runtime_generate",
+            "arguments": {"name": "freebuff", "prompt": "hi", "max_tokens": -10***REMOVED***,
+        ***REMOVED***)
+        data = json.loads(result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***)
+        assert data["success"***REMOVED*** is False
+        assert "max_tokens" in data["error"***REMOVED***
+
+    def test_runtime_generate_capability_unregistered(self, server):
+        """runtime_generate returns error when capability selects an unregistered runtime."""
+        mock_reg, mock_cap = self._mock_registry(server)
+        mock_cap.get_runtime_for_capability.return_value = {"runtime": "openclaw", "confidence": 0.95***REMOVED***
+        mock_reg.get.return_value = None
+        result = server.handle_tools_call({
+            "name": "runtime_generate",
+            "arguments": {"capability": "research", "prompt": "hello"***REMOVED***,
+        ***REMOVED***)
+        data = json.loads(result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***)
+        assert data["success"***REMOVED*** is False
+        assert "not registered" in data["error"***REMOVED***
+
+    def test_runtime_registry_lazy_accessor_does_not_auto_discover(self, server):
+        """_get_runtime_registry should not auto-discover runtimes on access."""
+        with patch("freebuff_plugin.runtime.registry.RuntimeRegistry") as MockRegistry:
+            instance = MockRegistry.return_value
+            instance.load.return_value = None
+            registry = server._get_runtime_registry()
+            assert registry is instance
+            instance.discover.assert_not_called()
+
+    def test_runtime_generate_connect_fails(self, server):
+        """runtime_generate surfaces error when runtime cannot connect."""
+        mock_reg, _ = self._mock_registry(server)
+        mock_reg.get_adapter.return_value = None
+        mock_reg.connect.return_value = (False, "binary not found")
+        result = server.handle_tools_call({
+            "name": "runtime_generate",
+            "arguments": {"name": "freebuff", "prompt": "hello"***REMOVED***,
+        ***REMOVED***)
+        data = json.loads(result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***)
+        assert data["success"***REMOVED*** is False
+        assert "binary not found" in data["error"***REMOVED***
+
+    def test_runtime_generate_invalid_messages_shape(self, server):
+        """runtime_generate rejects malformed messages."""
+        mock_reg, _ = self._mock_registry(server)
+        result = server.handle_tools_call({
+            "name": "runtime_generate",
+            "arguments": {"name": "freebuff", "messages": "not a list"***REMOVED***,
+        ***REMOVED***)
+        data = json.loads(result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***)
+        assert data["success"***REMOVED*** is False
+        assert "messages must be a list" in data["error"***REMOVED***
 
 
 class TestToolRegistryIntegration:

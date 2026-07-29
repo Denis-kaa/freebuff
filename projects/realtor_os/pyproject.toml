@@ -1,0 +1,45 @@
+[build-system***REMOVED***
+requires = ["setuptools>=61.0", "wheel"***REMOVED***
+build-backend = "setuptools.build_meta"
+
+[project***REMOVED***
+name = "realtor-os"
+version = "0.1.0"
+description = "Local privacy-first automation system for a realtor"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"***REMOVED***
+authors = [
+    {name = "Realtor OS Team"***REMOVED***
+***REMOVED***
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Office/Business"
+***REMOVED***
+dependencies = [
+    "requests>=2.31.0",
+    "pycryptodome>=3.20.0",
+    "pyyaml>=6.0.1",
+***REMOVED***
+
+[project.optional-dependencies***REMOVED***
+dev = [
+    "pytest>=7.0.0",
+    "mypy>=1.0.0",
+***REMOVED***
+
+[tool.setuptools.packages.find***REMOVED***
+where = ["src"***REMOVED***
+
+[tool.mypy***REMOVED***
+python_version = "3.11"
+ignore_missing_imports = true
+strict_optional = true
+
+[tool.pytest.ini_options***REMOVED***
+testpaths = ["tests"***REMOVED***
+pythonpath = ["src"***REMOVED***

@@ -1,0 +1,47 @@
+{
+  "app": {
+    "name": "realtor_automation",
+    "version": "0.1.0",
+    "log_level": "INFO",
+    "quiet": false
+  ***REMOVED***,
+  "paths": {
+    "data": "data",
+    "knowledge": "data/knowledge",
+    "documents": "data/documents",
+    "logs": "logs",
+    "state_file": "data/project_state.json"
+  ***REMOVED***,
+  "llm": {
+    "provider": "ollama",
+    "url": "http://127.0.0.1:11434",
+    "model": "qwen2.5:7b",
+    "timeout": 300
+  ***REMOVED***,
+  "rag": {
+    "db_path": "data/knowledge.db",
+    "chunk_size": 500,
+    "chunk_overlap": 50
+  ***REMOVED***,
+  "security": {
+    "pii_encryption_key_env": "PII_ENCRYPTION_KEY"
+  ***REMOVED***,
+  "integrations": {
+    "yandex_disk": {
+      "enabled": false,
+      "token_env": "YANDEX_DISK_TOKEN",
+      "upload_folder": "/realtor_automation/encrypted"
+    ***REMOVED***,
+    "email": {
+      "enabled": false,
+      "host_env": "EMAIL_HOST",
+      "port_env": "EMAIL_PORT",
+      "user_env": "EMAIL_USER",
+      "pass_env": "EMAIL_PASS"
+    ***REMOVED***
+  ***REMOVED***,
+  "ocr": {
+    "binary": "tesseract",
+    "lang": "rus+eng"
+  ***REMOVED***
+***REMOVED***

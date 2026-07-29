@@ -8,7 +8,7 @@
 
 Я разрабатываю проект "Мобильный ТарминAIтор" — терминальный AI-агент для Android (Termux + proot-distro ubuntu). В экосистеме уже есть:
 
-· Оркестратор (локальная LLM: GLM-5.2 / Qwen 3.5)
+· Оркестратор (freebuff LLM: GLM-5.2 / Qwen 3.5)
 · Воркеры: FreeBuff (кодинг), shell_exec (системные команды)
 · Flutter-приложение (в планах) с Foreground Service
 
@@ -127,9 +127,9 @@ Lightpanda — headless-браузер, написанный с нуля на Zi
 
 Все результаты зафиксировать в:
 
-· docs/LIGHTPANDA_INTEGRATION.md — полный гайд
-· docs/WORKERS.md — обновить раздел с воркерами
-· docs/ARCHITECTURE.md — обновить архитектурную схему
+· docs/projects_meta/LIGHTPANDA_INTEGRATION.md — полный гайд
+· docs/projects_meta/WORKERS.md — обновить раздел с воркерами
+· docs/vision/archive/ARCHITECTURE.md — обновить архитектурную схему
 · src/workers/lightpanda_worker.py — код воркера
 · scripts/install_lightpanda.sh — скрипт установки
 

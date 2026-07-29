@@ -26,7 +26,7 @@ MISSION: Buffy Interoperability Layer — Universal Agent Integration Architectu
 - Claude Code
 - Codex CLI
 - Aider
-- локальные агенты
+- freebuff агенты
 - будущие агентные платформы
 
 Каждый развивается независимо.
@@ -146,7 +146,7 @@ Capabilities
 
 Среднюю задержку
 
-Наличие локального режима
+Наличие freebuff режима
 
 Использование GPU
 
@@ -175,7 +175,7 @@ INTELLIGENT ROUTING
 Требуется:
 
 - глубокий архитектурный анализ;
-- локальное выполнение;
+- freebuff выполнение;
 - отсутствие облака.
 
 Router самостоятельно выбирает наиболее подходящего исполнителя.
@@ -232,7 +232,7 @@ DISCOVERY
 
 Поддержать:
 
-локальную сеть;
+freebuff сеть;
 
 localhost;
 
@@ -264,7 +264,7 @@ NEGOTIATION
 
 стоимость;
 
-локальность;
+freebuff;
 
 нагрузку;
 

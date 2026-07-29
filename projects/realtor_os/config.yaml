@@ -1,0 +1,41 @@
+# Realtor OS configuration
+# All paths are relative to the project root.
+
+app:
+  name: "Realtor OS"
+  version: "0.1.0"
+  log_level: INFO
+  data_dir: "data"
+  logs_dir: "logs"
+
+rag:
+  db_path: "data/knowledge.db"
+  chunk_size: 512
+  overlap: 64
+  max_results: 5
+
+ocr:
+  tesseract_cmd: "tesseract"
+  lang: "rus+eng"
+
+llm:
+  base_url: "http://127.0.0.1:11434"
+  model: "qwen2.5:7b"
+  timeout: 60
+
+security:
+  pii_mask: "***"
+
+integrations:
+  yandex_disk:
+    enabled: false
+    api_url: "https://cloud-api.yandex.net/v1/disk"
+  email:
+    enabled: false
+    host: "smtp.yandex.ru"
+    port: 465
+
+companion:
+  manifest: "buffy_manifest.json"
+  state: "companion/state.json"
+  heartbeat_interval: 300

@@ -1,0 +1,21 @@
+# .cursorrules for Freebuff Workspace
+
+You are working on the Freebuff AI Engineering Workspace at `/mnt/sdcard/PROJECTS/workstation/freebuff`.
+
+## Context files
+
+- `BUFFY.md` — main agent manifest (read first)
+- `AGENTS.md` — quick agent protocol
+- `BUFFY_PROJECT.md` — architecture and roadmap
+- `SPEC.md` — technical specification
+- `TASK.md` — current task
+- `CHANGELOG.md` — recent changes
+
+## Rules
+
+1. Read `BUFFY.md` before making any changes.
+2. Follow existing conventions in `scripts/` and `core/`.
+3. Run `python -m pytest tests/ -v` and `python -m mypy scripts/ core/ --ignore-missing-imports` after significant changes.
+4. Update `CHANGELOG.md` and relevant docs when architecture changes.
+5. Keep secrets in `.env` and `.keys/`, never in code.
+6. Prefer minimal changes and reuse existing helpers.

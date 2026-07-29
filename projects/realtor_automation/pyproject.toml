@@ -1,0 +1,23 @@
+[build-system***REMOVED***
+requires = ["setuptools>=61.0"***REMOVED***
+build-backend = "setuptools.build_meta"
+
+[project***REMOVED***
+name = "realtor_automation"
+version = "0.1.0"
+description = "Local automation toolkit for a real-estate agent."
+requires-python = ">=3.11"
+dependencies = [
+    "cryptography>=42.0.0",
+    "pytesseract>=0.3.10",
+    "Pillow>=10.0.0",
+    "requests>=2.31.0",
+    "python-dotenv>=1.0.0",
+***REMOVED***
+
+[tool.setuptools.packages.find***REMOVED***
+where = ["src"***REMOVED***
+
+[tool.pytest.ini_options***REMOVED***
+pythonpath = ["src"***REMOVED***
+testpaths = ["tests"***REMOVED***

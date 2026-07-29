@@ -2,7 +2,7 @@
 
 > **Сессия:** MCP Server Phase 4
 > **Статус:** 🟢 Завершена
-> **Связано:** [ROADMAP.md***REMOVED***(../docs/ROADMAP.md) Phase 4, [DECISIONS.md***REMOVED***(DECISIONS.md) ADR-002
+> **Связано:** [ROADMAP.md***REMOVED***(../../vision/ROADMAP.md) Phase 4, [DECISIONS.md***REMOVED***(DECISIONS.md) ADR-002
 
 ---
 
@@ -69,8 +69,8 @@
 | `scripts/mcp_server.py` | Новый | MCP Server (~600 строк) |
 | `tests/test_mcp_server.py` | Новый | 53 теста |
 | `CHANGELOG.md` | Изменён | Секция [2.4.0***REMOVED*** |
-| `docs/ROADMAP.md` | Изменён | Phase 4: 55% → 65%, MCP Server в "Сделано" |
-| `docs/DECISIONS.md` | Изменён | ADR-002: Pure Python vs SDK |
+| `../vision/ROADMAP.md` | Изменён | Phase 4: 55% → 65%, MCP Server в "Сделано" |
+| `../decisions/DECISIONS.md` | Изменён | ADR-002: Pure Python vs SDK |
 | `docs/session_dumps/2026-07-28_mcp_server.md` | Новый | Этот дамп |
 
 ---
@@ -87,9 +87,9 @@
 
 - [BUFFY.md***REMOVED***(../BUFFY.md) — мастер-промт
 - [CHANGELOG.md***REMOVED***(../CHANGELOG.md) — [2.4.0***REMOVED***
-- [ROADMAP.md***REMOVED***(../docs/ROADMAP.md) — Phase 4
-- [DECISIONS.md***REMOVED***(../docs/DECISIONS.md) — ADR-002
-- [SYSTEM_INVENTORY.md***REMOVED***(../docs/SYSTEM_INVENTORY.md) — каталог компонентов
+- [ROADMAP.md***REMOVED***(../../vision/ROADMAP.md) — Phase 4
+- [DECISIONS.md***REMOVED***(../../decisions/DECISIONS.md) — ADR-002
+- [SYSTEM_INVENTORY.md***REMOVED***(../../core/SYSTEM_INVENTORY.md) — каталог компонентов
 
 ---
 

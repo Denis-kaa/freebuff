@@ -45,7 +45,7 @@ class LightpandaWorker:
         binary_path: Optional[str***REMOVED*** = None,
         workspace_root: Optional[str***REMOVED*** = None,
     ) -> None:
-        self._workspace_root = Path(workspace_root or "/storage/emulated/0/PROJECTS/workstation/freebuff")
+        self._workspace_root = Path(workspace_root or str(Path(__file__).resolve().parent.parent.parent))
         self._binary_path = self._resolve_binary(binary_path)
         self._cdp_process: Optional[subprocess.Popen***REMOVED*** = None
 
