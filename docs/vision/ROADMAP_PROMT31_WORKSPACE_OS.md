@@ -122,7 +122,7 @@ Transform the project from a collection of engines into a coherent **Workspace O
 | | |
 |---|---|
 | **Status** | ✅ Exists |
-| **Current** | `docs/decisions/DECISIONS.md` + EM Decision Journal template |
+| **Current** | `docs/decisions/DECISIONS.md` (индекс) + `docs/engineering-memory/decisions/` (ADR) + EM Decision Journal template |
 | **Gap** | Two separate sources of decisions |
 | **Decision** | **Merge.** Move core decisions into `docs/engineering-memory/decisions/` and make `DECISIONS.md` an index. |
 
@@ -134,7 +134,7 @@ Transform the project from a collection of engines into a coherent **Workspace O
 
 **Deliverables:**
 - `docs/engineering-memory/decisions/` directory with migrated ADRs
-- `docs/decisions/DECISIONS.md` as an index
+- `docs/decisions/DECISIONS.md` as an index → done
 - Updated `scripts/engineering_memory.py` helpers
 
 ---
@@ -349,7 +349,7 @@ Transform the project from a collection of engines into a coherent **Workspace O
 
 - [ ***REMOVED*** All 12 subsystems have a documented status and owner.
 - [ ***REMOVED*** `docs/core/` contains: `MODULE_REGISTRY.md`, `AGENT_REGISTRY.md`, `INTEGRATION_REGISTRY.md`, `ARCHITECTURAL_DEBT.md`.
-- [ ***REMOVED*** `docs/engineering-memory/decisions/` replaces `docs/decisions/DECISIONS.md`.
+- [x***REMOVED*** `docs/engineering-memory/decisions/` holds individual ADRs; `docs/decisions/DECISIONS.md` remains as an index.
 - [ ***REMOVED*** `scripts/notification.py` emits progress/stage notifications from EventBus.
 - [ ***REMOVED*** `scripts/engineering_memory.py` auto-drafts retrospectives and incidents.
 - [ ***REMOVED*** `scripts/drift_check.py` feeds `ARCHITECTURAL_DEBT.md`.

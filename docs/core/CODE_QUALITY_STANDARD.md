@@ -153,7 +153,7 @@
 | 10.5 | Описание структуры проекта | [INDEX.md***REMOVED***(../INDEX.md), [PROJECT_REGISTRY.md***REMOVED***(PROJECT_REGISTRY.md) |
 | 10.6 | Список зависимостей | `requirements.txt` с версиями |
 | 10.7 | CHANGELOG.md — все изменения документируются | Каждый релиз: Added/Changed/Fixed/Removed |
-| 10.8 | ADR для архитектурных решений | [decisions/DECISIONS.md***REMOVED***(../decisions/DECISIONS.md), [decisions/ADR_001_*.md***REMOVED***(../decisions/) |
+| 10.8 | ADR для архитектурных решений | [decisions/DECISIONS.md***REMOVED***(../decisions/DECISIONS.md) (индекс), [engineering-memory/decisions/***REMOVED***(../engineering-memory/decisions/) (ADR) |
 
 ---
 

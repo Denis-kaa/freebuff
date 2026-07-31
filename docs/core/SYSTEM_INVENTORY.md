@@ -194,7 +194,11 @@
 ### 🟢 `TASK.md` — Текущая задача 🆕
 ### 🟢 `CHANGELOG.md` — Журнал изменений 🆕
 ### 🟢 `RULES.md` — Правила документирования
-### 🟢 `../decisions/DECISIONS.md` — Архитектурные решения
+### 🟢 `../decisions/DECISIONS.md` — Индекс архитектурных решений
+
+- Полные ADR перемещены в `docs/engineering-memory/decisions/`.
+- `docs/decisions/DECISIONS.md` теперь служит индексом со ссылками на отдельные ADR.
+
 ### 🟢 `../vision/ROADMAP.md` — План развития 🆕
 ### 🟢 `IDEAS.md` — Реестр архитектурных идей
 - **Путь:** `docs/decisions/IDEAS.md` (перемещён из `docs/ops/` 2026-07-29)

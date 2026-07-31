@@ -4,7 +4,7 @@ context_builder.py — Unified Context для Buffy.
 
 Собирает динамический контекст из всех источников перед каждым запросом:
   Memory Engine (все уровни, кроме ARCHIVE)
-  + TASK.md, CHANGELOG.md, ADR (DECISIONS.md)
+  + TASK.md, CHANGELOG.md, ADR index (docs/decisions/DECISIONS.md)
   + StreamBridge (последний конспект сессии)
 
 Результат → Unified Context → инжект в промпт модели.

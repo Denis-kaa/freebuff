@@ -49,7 +49,7 @@ TRIGGERS: Tuple[Trigger, ...***REMOVED*** = (
     Trigger("Code change", ["CHANGELOG.md", "TASK.md"***REMOVED***, file_suffixes=(".py", ".sh", ".js", ".ts", ".html", ".css"), severity="block"),
     Trigger("Architecture change", ["docs/core/ARCHITECTURE_3.0.md"***REMOVED***, file_patterns=["src/", "scripts/", "freebuff_cli.py"***REMOVED***),
     Trigger("README feature", ["README.md"***REMOVED***, file_patterns=["freebuff_cli.py", "scripts/", "src/"***REMOVED***),
-    Trigger("Architectural decision", ["docs/decisions/DECISIONS.md"***REMOVED***, file_patterns=["decision", "adr", "architecture"***REMOVED***),
+    Trigger("Architectural decision", ["docs/decisions/DECISIONS.md", "docs/engineering-memory/decisions/"***REMOVED***, file_patterns=["decision", "adr", "architecture"***REMOVED***),
     Trigger("Research / spike", ["docs/decisions/IDEAS.md"***REMOVED***, file_patterns=["research", "spike", "experiment"***REMOVED***),
     Trigger("Bug fix", ["docs/ops/TROUBLESHOOTING.md"***REMOVED***, file_patterns=["bug", "fix", "error"***REMOVED***),
     Trigger("API change", ["docs/ops/API.md"***REMOVED***, file_patterns=["api", "mcp_server", "endpoint"***REMOVED***),

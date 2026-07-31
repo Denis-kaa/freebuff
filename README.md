@@ -90,7 +90,7 @@ python freebuff_cli.py list      # все сессии
 | Файл | О чём |
 |------|-------|
 | `docs/ops/TROUBLESHOOTING.md` | Частые ошибки и решения |
-| `docs/decisions/DECISIONS.md` | Архитектурные решения |
+| `docs/decisions/DECISIONS.md` | Индекс архитектурных решений |
 | `docs/core/RULES.md` | Правила документирования |
 | `docs/ops/REFERENCES.md` | Ссылки на инструменты |
 | `BUFFY.md` | Главный файл агента |

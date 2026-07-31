@@ -22,7 +22,7 @@
 
 | Документ | Описание | Триггер |
 |----------|----------|---------|
-| **DECISIONS.md** | Проблема → альтернативы → выбор → обоснование → последствия | Архитектурное решение |
+| **docs/decisions/DECISIONS.md** | Индекс архитектурных решений (ADR) | Ссылка на индекс; сами ADR — в `docs/engineering-memory/decisions/` |
 | **IMPLEMENTATION.md** | Пошаговые инструкции, ключевые файлы, зависимости | Новая фича |
 | **REFERENCES.md** | Ссылки на документацию, статьи, аналоги | Исследование |
 | **ROADMAP.md** | Этапы, статус, планы, сроки | Планирование |
@@ -79,7 +79,7 @@
 3. Зафиксировать все изменения
 
 ### При архитектурном решении:
-→ `DECISIONS.md`: проблема, альтернативы, выбор, обоснование
+→ `docs/engineering-memory/decisions/ADR_NNN_*.md`: проблема, альтернативы, выбор, обоснование; `docs/decisions/DECISIONS.md` — индекс
 
 ### При исследовании:
 → `BRAINSTORM.md` + `EXPERIMENTS.md` (если был эксперимент)
@@ -189,7 +189,7 @@ Hook запускает `scripts/buffy_autodoc.py --cached --strict` и **бло
 | Code change | `*.py`, `*.sh`, `*.js`, `*.ts`, `*.html`, `*.css` | `CHANGELOG.md`, `TASK.md` |
 | Architecture change | `src/`, `scripts/`, `freebuff_cli.py` | `ARCHITECTURE.md` |
 | README feature | `freebuff_cli.py`, `scripts/`, `src/` | `README.md` |
-| Architectural decision | файлы с `decision`, `adr`, `architecture` | `../decisions/DECISIONS.md` |
+| Architectural decision | файлы с `decision`, `adr`, `architecture` | `../decisions/DECISIONS.md` (индекс) и `../engineering-memory/decisions/` (ADR) |
 | Research / spike | файлы с `research`, `spike`, `experiment` | `docs/BRAINSTORM.md`, `docs/EXPERIMENTS.md` |
 | Bug fix | файлы с `bug`, `fix`, `error` | `../ops/TROUBLESHOOTING.md` |
 | API change | файлы с `api`, `mcp_server`, `endpoint` | `../ops/API.md` |

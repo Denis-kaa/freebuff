@@ -1469,7 +1469,7 @@ class BuffyMcpServer:
             ("buffy://changelog", "buffy_changelog", "CHANGELOG.md — version history", "CHANGELOG.md"),
             ("buffy://task", "buffy_task", "TASK.md — current task", "TASK.md"),
             ("buffy://inventory", "buffy_inventory", "SYSTEM_INVENTORY.md — full component catalog", "docs/core/SYSTEM_INVENTORY.md"),
-            ("buffy://decisions", "buffy_decisions", "DECISIONS.md — architecture decision records", "docs/decisions/DECISIONS.md"),
+            ("buffy://decisions", "buffy_decisions", "DECISIONS.md — index of architecture decision records", "docs/decisions/DECISIONS.md"),
         ***REMOVED***
         for uri, name, desc, rel_path in doc_resources:
             self._resources[uri***REMOVED*** = McpResource(
