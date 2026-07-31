@@ -32,11 +32,14 @@ Claude Desktop config (Streamable HTTP):
 from __future__ import annotations
 
 import asyncio
+import hmac
 import json
+import os
 ***REMOVED***
 import subprocess
 import sys
 import threading
+import time
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -56,12 +59,19 @@ from scripts.mcp_server import (
 )
 
 try:
-    from fastapi import FastAPI, Request, Response
+    from fastapi import Depends, FastAPI, HTTPException, Request, Response
     from fastapi.responses import JSONResponse, StreamingResponse
 
     HAS_FASTAPI = True
 except ImportError:
     HAS_FASTAPI = False
+
+try:
+    import hvac
+
+    HAS_HVAC = True
+except ImportError:
+    HAS_HVAC = False
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -133,12 +143,15 @@ if HAS_FASTAPI:
 
     _server: Optional[BuffyMcpServer***REMOVED*** = None
     _sessions: Optional[McpAsyncSessionManager***REMOVED*** = None
+    _metrics: Optional[Any***REMOVED*** = None  # MetricsEngine lazy init
 
     @app.on_event("startup")
     async def _startup() -> None:
-        global _server, _sessions
+        global _server, _sessions, _metrics
         _server = BuffyMcpServer()
         _sessions = McpAsyncSessionManager()
+        # MetricsEngine инициализируется лениво (может не быть БД)
+        _metrics = None
         print(
             f"🚀 Buffy MCP FastAPI server started\n"
             f"   Protocol: {PROTOCOL_VERSION***REMOVED***\n"
@@ -177,8 +190,142 @@ if HAS_FASTAPI:
 
     # ── POST /mcp — JSON-RPC requests ──────────────────────
 
+    # ── Bearer-token authentication (Vault-backed) ───────
+
+    _cached_token: Optional[str***REMOVED*** = None
+    _token_expires_at: float = 0.0
+
+    def _get_active_token() -> Optional[str***REMOVED***:
+        """Ожидаемый Bearer-токен: Vault (с кешем TTL) -> env fallback.
+
+        Логика:
+        - Если задан FREEBUFF_VAULT_ADDR: идём в Vault через hvac.
+          Поддерживает AppRole (FREEBUFF_VAULT_ROLE_ID + _SECRET_ID)
+          или root-token (FREEBUFF_VAULT_TOKEN).
+          Результат кешируется на FREEBUFF_VAULT_TOKEN_CACHE_TTL (default 300).
+          Если Vault недоступен — возвращаем None (fail-closed).
+        - Если FREEBUFF_VAULT_ADDR не задан: возвращаем FREEBUFF_MCP_TOKEN
+          напрямую (env-only path). Кеш для этого path НЕ используется —
+          это позволяет тестам подменять токен через monkeypatch.
+        """
+        global _cached_token, _token_expires_at
+        now = time.time()
+        if _cached_token is not None and now < _token_expires_at:
+            return _cached_token
+
+        vault_addr = os.getenv("FREEBUFF_VAULT_ADDR")
+        if not vault_addr:
+            # env-only path, no cache (для тестов и dev)
+            return os.getenv("FREEBUFF_MCP_TOKEN")
+
+        if not HAS_HVAC:
+            print(
+                "[mcp_fastapi***REMOVED*** hvac не установлен — /mcp будет закрыт",
+                file=sys.stderr,
+            )
+            return None
+
+        try:
+            client = hvac.Client(url=vault_addr)
+            role_id = os.getenv("FREEBUFF_VAULT_ROLE_ID")
+            secret_id = os.getenv("FREEBUFF_VAULT_SECRET_ID")
+            vault_token = os.getenv("FREEBUFF_VAULT_TOKEN")
+
+            if role_id and secret_id:
+                client.auth.approle.login(
+                    role_id=role_id, secret_id=secret_id
+                )
+            elif vault_token:
+                client.token = vault_token
+            else:
+                print(
+                    "[mcp_fastapi***REMOVED*** FREEBUFF_VAULT_ADDR задан, но без auth — "
+                    "fail-closed",
+                    file=sys.stderr,
+                )
+                return None
+
+            path = os.getenv(
+                "FREEBUFF_VAULT_PATH", "freebuff/mcp"
+            )
+            # hvac python принимает путь без префикса mount/data/.
+            # Поддерживаем несколько стандартных mount-ов (secret, kv, kv2 и пр.)
+            if "/data/" in path:
+                idx = path.find("/data/") + len("/data/")
+                path = path[idx:***REMOVED***
+            key = os.getenv("FREEBUFF_VAULT_KEY", "token")
+
+            resp = client.secrets.kv.v2.read_secret_version(path=path)
+            token = resp["data"***REMOVED***["data"***REMOVED***.get(key)
+            if not isinstance(token, str) or not token:
+                return None
+
+            ttl_sec = float(
+                os.getenv("FREEBUFF_VAULT_TOKEN_CACHE_TTL", "300")
+            )
+            _cached_token = token
+            _token_expires_at = now + ttl_sec
+            return token
+        except Exception as e:
+            print(
+                f"[mcp_fastapi***REMOVED*** Vault fetch failed: {e***REMOVED***",
+                file=sys.stderr,
+            )
+            return None
+
+    def _reset_token_cache() -> None:
+        """Принудительный сброс кеша (для тестов с monkeypatch)."""
+        global _cached_token, _token_expires_at
+        _cached_token = None
+        _token_expires_at = 0.0
+
+    def _unauthorized() -> HTTPException:
+        """401 + WWW-Authenticate header (RFC 6750)."""
+        return HTTPException(
+            status_code=401,
+            detail={
+                "error": {
+                    "code": INVALID_REQUEST,
+                    "message": "Unauthorized",
+                ***REMOVED***
+            ***REMOVED***,
+            headers={"WWW-Authenticate": 'Bearer realm="buffy-mcp"'***REMOVED***,
+        )
+
+    def verify_bearer_token(request: Request) -> None:
+        """FastAPI Depends: проверяет Authorization: Bearer <token>.
+
+        Bypass возможен ТОЛЬКО при FREEBUFF_ENV=test И FREEBUFF_MCP_AUTH_DISABLED=1
+        (двойной lock — случайное включение bypass в production невозможно).
+        Сравнение токенов — через hmac.compare_digest (constant-time).
+        """
+        if (
+            os.getenv("FREEBUFF_ENV") == "test"
+            and os.getenv("FREEBUFF_MCP_AUTH_DISABLED") == "1"
+        ):
+            return
+
+        auth = request.headers.get("authorization", "")
+        if not auth.startswith("Bearer "):
+            raise _unauthorized()
+        provided = auth[len("Bearer ") :***REMOVED***.strip()
+        # DoS-защита: токены реалистично ≤1KB; больше — сразу 401
+        if len(provided) > 1024:
+            raise _unauthorized()
+        expected = _get_active_token()
+        if not expected:
+            raise _unauthorized()
+        if not hmac.compare_digest(
+            provided.encode("utf-8"),
+            expected.encode("utf-8"),
+        ):
+            raise _unauthorized()
+
     @app.post("/mcp")
-    async def mcp_post(request: Request) -> Response:
+    async def mcp_post(
+        request: Request,
+        _auth: None = Depends(verify_bearer_token),
+    ) -> Response:
         if not _validate_origin(request):
             return _json_error(403, INVALID_REQUEST, "Invalid Origin header")
 
@@ -227,7 +374,10 @@ if HAS_FASTAPI:
     # ── GET /mcp — SSE notification stream ──────────────────
 
     @app.get("/mcp")
-    async def mcp_get(request: Request) -> Response:
+    async def mcp_get(
+        request: Request,
+        _auth: None = Depends(verify_bearer_token),
+    ) -> Response:
         if not _validate_origin(request):
             return _json_error(403, INVALID_REQUEST, "Invalid Origin header")
 
@@ -264,7 +414,10 @@ if HAS_FASTAPI:
     # ── DELETE /mcp — session termination ───────────────────
 
     @app.delete("/mcp")
-    async def mcp_delete(request: Request) -> Response:
+    async def mcp_delete(
+        request: Request,
+        _auth: None = Depends(verify_bearer_token),
+    ) -> Response:
         if not _validate_origin(request):
             return _json_error(403, INVALID_REQUEST, "Invalid Origin header")
 
@@ -287,7 +440,118 @@ if HAS_FASTAPI:
             "protocol": PROTOCOL_VERSION,
             "endpoint": "/mcp",
             "transport": "streamable-http",
+            "dashboard": "/dashboard",
         ***REMOVED***
+
+    # ── GET /dashboard — Metrics Dashboard (HTML) ────────────
+
+    @app.get("/dashboard")
+    async def metrics_dashboard():
+        """Serve the Metrics Dashboard HTML page."""
+        dashboard_path = WORKSPACE / "buffy-playground" / "public" / "metrics-dashboard.html"
+        if not dashboard_path.exists():
+            return JSONResponse(
+                status_code=404,
+                content={"error": "Dashboard not found"***REMOVED***,
+            )
+        from fastapi.responses import HTMLResponse
+        html = dashboard_path.read_text(encoding="utf-8")
+        return HTMLResponse(content=html)
+
+    # ── Metrics helper ──────────────────────────────────────
+
+    def _get_metrics() -> Any:
+        """Lazy init of MetricsEngine."""
+        global _metrics
+        if _metrics is None:
+            from scripts.metrics import MetricsEngine
+            _metrics = MetricsEngine()
+        return _metrics
+
+    def _metrics_response(data: dict, fmt: str) -> JSONResponse | dict:
+        """Return JSONResponse or plain dict based on format."""
+        if fmt == "json":
+            return JSONResponse(content=data)
+        # text format: pretty-print interpretation
+        lines = [***REMOVED***
+        for key, value in data.items():
+            if isinstance(value, dict):
+                lines.append(f"{key***REMOVED***:")
+                for k, v in value.items():
+                    lines.append(f"  {k***REMOVED***: {v***REMOVED***")
+            else:
+                lines.append(f"{key***REMOVED***: {value***REMOVED***")
+        return {"content": "\n".join(lines), "format": "text"***REMOVED***
+
+    def _metric_to_dict(m: Any) -> dict:
+        from dataclasses import asdict
+        return asdict(m)
+
+    # ── GET /metrics/report — полный отчёт ──────────────────
+
+    @app.get("/metrics/report")
+    async def metrics_report(fmt: str = "json"):
+        """Full metrics report with all 5 metrics."""
+        engine = _get_metrics()
+        try:
+            report = engine.compute_report(save=False)
+            data = report.to_dict()
+            data["health_score"***REMOVED*** = _compute_health_score_fn(report)
+            return _metrics_response(data, fmt)
+        except Exception as e:
+            return _metrics_response({"error": str(e)***REMOVED***, fmt)
+
+    # ── GET /metrics/{name***REMOVED*** — одна метрика ──────────────────
+
+    def _compute_health_score_fn(report: Any) -> int:
+        from scripts.metrics import _compute_health_score
+        return _compute_health_score(report)
+
+    @app.get("/metrics/vcr")
+    async def metrics_vcr(fmt: str = "json"):
+        engine = _get_metrics()
+        return _metrics_response(_metric_to_dict(engine.compute_vcr()), fmt)
+
+    @app.get("/metrics/srg")
+    async def metrics_srg(fmt: str = "json"):
+        engine = _get_metrics()
+        return _metrics_response(_metric_to_dict(engine.compute_srg()), fmt)
+
+    @app.get("/metrics/cpvo")
+    async def metrics_cpvo(fmt: str = "json"):
+        engine = _get_metrics()
+        return _metrics_response(_metric_to_dict(engine.compute_cpvo()), fmt)
+
+    @app.get("/metrics/rrr")
+    async def metrics_rrr(fmt: str = "json"):
+        engine = _get_metrics()
+        return _metrics_response(_metric_to_dict(engine.compute_rrr()), fmt)
+
+    @app.get("/metrics/ttd")
+    async def metrics_ttd(fmt: str = "json"):
+        engine = _get_metrics()
+        return _metrics_response(_metric_to_dict(engine.compute_ttd()), fmt)
+
+    # ── GET /metrics/trend/{name***REMOVED*** — тренд метрики ───────────
+
+    @app.get("/metrics/trend/{name***REMOVED***")
+    async def metrics_trend(name: str, limit: int = 10, fmt: str = "json"):
+        engine = _get_metrics()
+        available = {"vcr", "srg", "cpvo", "rrr", "ttd"***REMOVED***
+        if name not in available:
+            return _metrics_response(
+                {"error": f"Unknown metric: {name***REMOVED***. Available: {', '.join(sorted(available))***REMOVED***"***REMOVED***,
+                fmt,
+            )
+        history = engine.get_trend(name, limit=limit)
+        return _metrics_response({"metric": name, "history": history***REMOVED***, fmt)
+
+    # ── GET /metrics/status — статус Metrics Engine ─────────
+
+    @app.get("/metrics/status")
+    async def metrics_status(fmt: str = "json"):
+        engine = _get_metrics()
+        return _metrics_response(engine.get_status(), fmt)
 
 
 # ═══════════════════════════════════════════════════════════════

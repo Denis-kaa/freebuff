@@ -9,6 +9,8 @@ Avoids FastAPI TestClient compatibility issues with httpx.
 import asyncio
 import http.client
 import json
+import os
+***REMOVED***
 import socket
 import sys
 import threading
@@ -20,9 +22,14 @@ import pytest
 WORKSPACE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(WORKSPACE))
 
+# Auth bypass для всего модуля тестов (TestAuthorization override их)
+os.environ.setdefault("FREEBUFF_ENV", "test")
+os.environ.setdefault("FREEBUFF_MCP_AUTH_DISABLED", "1")
+
 fastapi = pytest.importorskip("fastapi")
 
 from scripts.mcp_fastapi import app, McpAsyncSessionManager  # noqa: E402
+from scripts import mcp_fastapi as _mcp_fastapi  # noqa: E402
 from scripts.mcp_server import PROTOCOL_VERSION, PARSE_ERROR, METHOD_NOT_FOUND  # noqa: E402
 
 
@@ -455,3 +462,281 @@ class TestAsyncSessionManager:
             await sm.delete_session(sid)
             assert await sm.push_notification(sid, "msg") is False
         asyncio.run(_test())
+
+
+# ═══════════════════════════════════════════════════════════════
+# GET /metrics/*
+# ═══════════════════════════════════════════════════════════════
+
+
+class TestMetricsEndpoints:
+    """Tests for HTTP /metrics/* endpoints."""
+
+    def test_metrics_report_returns_200(self, addr):
+        host, port = addr
+        status, headers, body = _http(host, port, "GET", "/metrics/report")
+        assert status == 200
+        data = json.loads(body)
+        assert "metrics" in data
+        assert "total_tasks" in data
+        assert "health_score" in data
+        # All 5 metrics present
+        for name in ("vcr", "srg", "cpvo", "rrr", "ttd"):
+            assert name in data["metrics"***REMOVED***
+            assert "value" in data["metrics"***REMOVED***[name***REMOVED***
+
+    def test_metrics_report_default_format(self, addr):
+        host, port = addr
+        status, headers, body = _http(host, port, "GET", "/metrics/report")
+        data = json.loads(body)
+        assert "total_tasks" in data
+
+    def test_metrics_vcr(self, addr):
+        host, port = addr
+        status, headers, body = _http(host, port, "GET", "/metrics/vcr")
+        assert status == 200
+        data = json.loads(body)
+        assert data["name"***REMOVED*** == "vcr"
+        assert "value" in data
+        assert "unit" in data
+
+    def test_metrics_srg(self, addr):
+        host, port = addr
+        status, headers, body = _http(host, port, "GET", "/metrics/srg")
+        assert status == 200
+        data = json.loads(body)
+        assert data["name"***REMOVED*** == "srg"
+        assert "interpretation" in data
+
+    def test_metrics_cpvo(self, addr):
+        host, port = addr
+        status, headers, body = _http(host, port, "GET", "/metrics/cpvo")
+        assert status == 200
+        data = json.loads(body)
+        assert data["name"***REMOVED*** == "cpvo"
+        assert data["unit"***REMOVED*** == "ms/verification"
+
+    def test_metrics_rrr(self, addr):
+        host, port = addr
+        status, headers, body = _http(host, port, "GET", "/metrics/rrr")
+        assert status == 200
+        data = json.loads(body)
+        assert data["name"***REMOVED*** == "rrr"
+        assert "value" in data
+
+    def test_metrics_ttd(self, addr):
+        host, port = addr
+        status, headers, body = _http(host, port, "GET", "/metrics/ttd")
+        assert status == 200
+        data = json.loads(body)
+        assert data["name"***REMOVED*** == "ttd"
+        assert data["unit"***REMOVED*** == "minutes"
+
+    def test_metrics_status(self, addr):
+        host, port = addr
+        status, headers, body = _http(host, port, "GET", "/metrics/status")
+        assert status == 200
+        data = json.loads(body)
+        assert data["status"***REMOVED*** == "ok"
+        assert "databases" in data
+
+    def test_metrics_trend_known(self, addr):
+        host, port = addr
+        status, headers, body = _http(host, port, "GET", "/metrics/trend/vcr")
+        assert status == 200
+        data = json.loads(body)
+        assert data["metric"***REMOVED*** == "vcr"
+        assert "history" in data
+
+    def test_metrics_trend_unknown(self, addr):
+        host, port = addr
+        status, headers, body = _http(host, port, "GET", "/metrics/trend/unknown_metric")
+        assert status == 200
+        data = json.loads(body)
+        assert "error" in data
+        assert "unknown_metric" in data["error"***REMOVED***
+
+    def test_metrics_trend_with_limit(self, addr):
+        host, port = addr
+        status, headers, body = _http(host, port, "GET", "/metrics/trend/vcr?limit=5")
+        assert status == 200
+        data = json.loads(body)
+        assert data["metric"***REMOVED*** == "vcr"
+        assert isinstance(data["history"***REMOVED***, list)
+
+    def test_all_metrics_endpoints_return_json(self, addr):
+        """Проверка Content-Type для всех metrics endpoints."""
+        host, port = addr
+        endpoints = [
+            "/metrics/report",
+            "/metrics/vcr",
+            "/metrics/srg",
+            "/metrics/cpvo",
+            "/metrics/rrr",
+            "/metrics/ttd",
+            "/metrics/status",
+            "/metrics/trend/vcr",
+        ***REMOVED***
+        for endpoint in endpoints:
+            status, headers, body = _http(host, port, "GET", endpoint)
+            assert status == 200, f"{endpoint***REMOVED*** returned {status***REMOVED***"
+            ct = headers.get("content-type", "")
+            assert "json" in ct, f"{endpoint***REMOVED*** Content-Type is {ct***REMOVED***"
+
+
+# ═══════════════════════════════════════════════════════════════
+# Bearer Token Authorization (pompts/TASK_SECURE_MCP_ACCESS.md Step 2)
+# ═══════════════════════════════════════════════════════════════
+
+
+class TestAuthorization:
+    """Проверки Bearer-token auth_middleware на /mcp endpoints.
+
+    Модульный setdefault даёт bypass для существующих тестов;
+    здесь — отключаем bypass (FREEBUFF_MCP_AUTH_DISABLED=0) и подкладываем
+    FREEBUFF_MCP_TOKEN; чистим кеш токена перед каждым тестом.
+    """
+
+    TEST_TOKEN = "test-token-secret-aaaaaa"
+
+    def _setup_auth(
+        self,
+        monkeypatch,
+        token: str = TEST_TOKEN,
+    ) -> None:
+        """Disable bypass, set env token + env=test, clear cache."""
+        monkeypatch.setenv("FREEBUFF_MCP_AUTH_DISABLED", "0")
+        monkeypatch.setenv("FREEBUFF_MCP_TOKEN", token)
+        monkeypatch.setenv("FREEBUFF_ENV", "test")
+        _mcp_fastapi._reset_token_cache()
+
+    def test_no_authorization_header_returns_401(self, addr, monkeypatch):
+        self._setup_auth(monkeypatch)
+        host, port = addr
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+        status, headers, resp = _http(host, port, "POST", body=body)
+        assert status == 401
+        assert "www-authenticate" in headers
+        assert 'Bearer realm="buffy-mcp"' in headers.get(
+            "www-authenticate", ""
+        )
+
+    def test_wrong_bearer_returns_401(self, addr, monkeypatch):
+        self._setup_auth(monkeypatch, token="correct-token-xxxxxx")
+        host, port = addr
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+        status, headers, resp = _http(
+            host,
+            port,
+            "POST",
+            body=body,
+            headers={"Authorization": "Bearer wrong-token-yyyyyy"***REMOVED***,
+        )
+        assert status == 401
+
+    def test_non_bearer_scheme_returns_401(self, addr, monkeypatch):
+        self._setup_auth(monkeypatch)
+        host, port = addr
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+        for bad_auth in ("a", "Basic xyz", "Bearer", "Token 123", ""):
+            status, _, _ = _http(
+                host,
+                port,
+                "POST",
+                body=body,
+                headers={"Authorization": bad_auth***REMOVED***,
+            )
+            assert status == 401, f"{bad_auth!r***REMOVED*** should be 401"
+
+    def test_correct_bearer_returns_200(self, addr, monkeypatch):
+        token = "right-token-abcdef123456"
+        self._setup_auth(monkeypatch, token=token)
+        host, port = addr
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+        status, headers, resp = _http(
+            host,
+            port,
+            "POST",
+            body=body,
+            headers={"Authorization": f"Bearer {token***REMOVED***"***REMOVED***,
+        )
+        assert status == 200
+        assert json.loads(resp)["result"***REMOVED*** == {***REMOVED***
+
+    def test_correct_bearer_for_delete_returns_204(self, addr, monkeypatch):
+        token = "right-token-abcdef123456"
+        self._setup_auth(monkeypatch, token=token)
+        host, port = addr
+        body = json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": 1,
+                "method": "initialize",
+                "params": {***REMOVED***,
+            ***REMOVED***
+        )
+        _, init_h, _ = _http(
+            host,
+            port,
+            "POST",
+            body=body,
+            headers={"Authorization": f"Bearer {token***REMOVED***"***REMOVED***,
+        )
+        sid = init_h["mcp-session-id"***REMOVED***
+        status, headers, resp = _http(
+            host,
+            port,
+            "DELETE",
+            headers={
+                "Authorization": f"Bearer {token***REMOVED***",
+                "Mcp-Session-Id": sid,
+            ***REMOVED***,
+        )
+        assert status == 204
+
+    def test_no_token_configured_returns_401(self, addr, monkeypatch):
+        """Никакого токена в env, Vault не задан — всё 401."""
+        monkeypatch.setenv("FREEBUFF_MCP_AUTH_DISABLED", "0")
+        monkeypatch.delenv("FREEBUFF_MCP_TOKEN", raising=False)
+        monkeypatch.delenv("FREEBUFF_VAULT_ADDR", raising=False)
+        monkeypatch.setenv("FREEBUFF_ENV", "test")
+        _mcp_fastapi._reset_token_cache()
+        host, port = addr
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+        status, _, _ = _http(
+            host,
+            port,
+            "POST",
+            body=body,
+            headers={"Authorization": "Bearer anything-not-real"***REMOVED***,
+        )
+        assert status == 401
+
+    def test_health_endpoint_unprotected(self, addr):
+        """GET / НЕ требует Bearer (для liveness probe)."""
+        host, port = addr
+        status, headers, body = _http(host, port, "GET", "/")
+        assert status == 200
+
+    def test_metrics_observability_unaffected(self, addr):
+        """GET /metrics/* НЕ требует Bearer (для observability при сбое auth)."""
+        host, port = addr
+        status, _, _ = _http(host, port, "GET", "/metrics/status")
+        assert status == 200
+
+    def test_dashboard_unprotected(self, addr):
+        """GET /dashboard НЕ требует Bearer (статический HTML)."""
+        host, port = addr
+        status, _, _ = _http(host, port, "GET", "/dashboard")
+        # 200 если HTML есть, 404 если нет — но НЕ 401
+        assert status in (200, 404)
+
+    def test_hmac_compare_digest_used_no_eq_compare(self):
+        """Sanity: исходник использует hmac.compare_digest, а не == для токенов."""
+        src = Path(_mcp_fastapi.__file__).read_text(encoding="utf-8")
+        assert "hmac.compare_digest" in src
+        # Анти-регрессия: ловим `==` сравнения с provided/expected в любом порядке
+        bad = re.search(r"==\s*(provided|expected)\b", src)
+        assert bad is None, (
+            "Found '== provided/expected' — must use hmac.compare_digest"
+        )
