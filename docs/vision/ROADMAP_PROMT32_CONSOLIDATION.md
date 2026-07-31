@@ -63,7 +63,7 @@
 | Этап 5. Консолидация промтов | `AGENTS.md` / `BUFFY.md` / `CLAUDE.md` / `CODY.md` / `.cursorrules` (5 файлов!) | 🔴 Не начато |
 | Этап 3. Архитектурный манифест | — | ✅ Создан (`docs/core/ARCHITECTURE_MANIFEST.md`) |
 | Этап 7. Единая терминология | — | ✅ Создан глоссарий (`docs/core/GLOSSARY.md`) |
-| Этап 8. Lifecycle | promt31 4.9 (lifecycle events) | 🔴 Не начато |
+| Этап 8. Lifecycle | promt31 4.9 (lifecycle events) | ✅ Создан реестр (`docs/core/LIFECYCLE.md`) |
 
 **Вывод:** часть работы promt31 (Phase A: notification, DECISIONS merge, ARCHITECTURAL_DEBT) уже выполнена и совпадает с Этапами 4/9. Остальные этапы promt32 — новый фронт работ.
 
@@ -107,9 +107,10 @@
 - [x***REMOVED*** Разрешённые неоднозначности и запрещённые синонимы зафиксированы
 - [x***REMOVED*** Единые определения связаны с Manifest / ARCHITECTURE_CANONICAL / CORE_PROMPT
 
-### Этап 8 — Lifecycle
-- [ ***REMOVED*** Для каждого ключевого компонента: создание, инициализация, работа, обновление, завершение, архивация, удаление
-- [ ***REMOVED*** Ни один компонент без описанного Lifecycle
+### Этап 8 — Lifecycle ✅
+- [x***REMOVED*** Реестр создан: `docs/core/LIFECYCLE.md` — 7 стадий для Core C1–C6 + State S1–S7 + инфраструктурные слои
+- [x***REMOVED*** Эталонные паттерны зафиксированы (graceful shutdown, миграции, lazy init, graceful degradation)
+- [x***REMOVED*** Правило: компонент без описанного Lifecycle запрещён к регистрации в SYSTEM_INVENTORY
 
 ### Этап 9 — Самоконсистентность
 - [ ***REMOVED*** Механизм авто-проверки: дрейф, устаревшая документация, битые ссылки, дубли, неиспользуемые модули, несоответствие Roadmap/Registry/Project Book

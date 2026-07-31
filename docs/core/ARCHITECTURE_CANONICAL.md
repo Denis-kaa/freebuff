@@ -5,7 +5,7 @@
 > **Статус:** 🟢 КАНОНИЧЕСКИЙ — фиксирует единую структуру Workspace OS и границы движков
 > **Миссия:** Этап 2 консолидации (`pompts/promt32.md`)
 > **Высший закон:** [ARCHITECTURE_MANIFEST.md***REMOVED***(ARCHITECTURE_MANIFEST.md)
-> **Связанные:** [SYSTEM_INVENTORY.md***REMOVED***(SYSTEM_INVENTORY.md) (каталог), [GLOSSARY.md***REMOVED***(GLOSSARY.md) (терминология), [ARCHITECTURAL_DEBT.md***REMOVED***(ARCHITECTURAL_DEBT.md) (долги)
+> **Связанные:** [SYSTEM_INVENTORY.md***REMOVED***(SYSTEM_INVENTORY.md) (каталог), [GLOSSARY.md***REMOVED***(GLOSSARY.md) (терминология), [LIFECYCLE.md***REMOVED***(LIFECYCLE.md) (жизненные циклы), [ARCHITECTURAL_DEBT.md***REMOVED***(ARCHITECTURAL_DEBT.md) (долги)
 
 ---
 
@@ -160,4 +160,4 @@ ProjectPulse ──► EventBus
 
 ---
 
-*Связанные документы: [ARCHITECTURE_MANIFEST.md***REMOVED***(ARCHITECTURE_MANIFEST.md), [GLOSSARY.md***REMOVED***(GLOSSARY.md), [SYSTEM_INVENTORY.md***REMOVED***(SYSTEM_INVENTORY.md), [ARCHITECTURAL_DEBT.md***REMOVED***(ARCHITECTURAL_DEBT.md), [ROADMAP_PROMT32_CONSOLIDATION.md***REMOVED***(../vision/ROADMAP_PROMT32_CONSOLIDATION.md)*
+*Связанные документы: [ARCHITECTURE_MANIFEST.md***REMOVED***(ARCHITECTURE_MANIFEST.md), [GLOSSARY.md***REMOVED***(GLOSSARY.md), [LIFECYCLE.md***REMOVED***(LIFECYCLE.md), [SYSTEM_INVENTORY.md***REMOVED***(SYSTEM_INVENTORY.md), [ARCHITECTURAL_DEBT.md***REMOVED***(ARCHITECTURAL_DEBT.md), [ROADMAP_PROMT32_CONSOLIDATION.md***REMOVED***(../vision/ROADMAP_PROMT32_CONSOLIDATION.md)*
