@@ -150,7 +150,7 @@ Workspace (корень) — 🟡 нет класса Workspace, есть WORKSP
 | **Project ↔ Knowledge+Memory** | `scan_projects` пишет в KnowledgeEngine + MemoryEngine | `scan_projects.py:241,288` |
 | **Knowledge ↔ Graph** | `knowledge_engine` вызывает `GraphIndex.auto_discover` | `knowledge_engine.py:48` |
 | **Knowledge ↔ RAG** | `rag_engine` импортирует `KnowledgeEngine` (semantic mode) | `rag_engine.py:172` |
-| **Memory ↔ Knowledge** | плагин `knowledge_sync` на событие `memory.stored` | `plugins/knowledge_sync/__init__.py` |
+| **Memory ↔ Knowledge** | плагин `knowledge_sync` на событие `memory.stored` (исходник 🔶 pyc-only — плагин утерян, см. 8.6) | `plugins/knowledge_sync/__pycache__/__init__.cpython-314.pyc` |
 | **Task ↔ Memory/Knowledge** | `Orchestrator` подключает MemoryEngine + KnowledgeEngine | `orchestrator.py:244,271` |
 | **Task ↔ Verifier** | `Orchestrator._verify_step()` + подписка `task.claimed` | `orchestrator.py`, `verifier.py:955` |
 | **Task ↔ Distributed** | `DistributedCoordinator` исполняет задачи, `execute_agent_task()` | `distributed_agents.py:483+` |
