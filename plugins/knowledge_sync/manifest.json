@@ -1,0 +1,10 @@
+{
+    "name": "knowledge_sync",
+    "version": "1.0.0",
+    "description": "Knowledge Sync — синхронизация между Memory Engine и Knowledge Engine",
+    "author": "Buffy",
+    "tags": ["knowledge", "memory", "sync", "index"***REMOVED***,
+    "events_subscribed": ["memory.stored", "memory.deleted", "knowledge.*"***REMOVED***,
+    "dependencies": [***REMOVED***,
+    "license": "MIT"
+***REMOVED***

@@ -34,6 +34,20 @@ from scripts.event_bus import get_default_event_bus
 from scripts.seed_knowledge import seed as seed_knowledge
 from scripts.session_utils ***REMOVED***solve_session_id
 
+# MANDATORY RUNTIME CONTRACT (v5.24.0): системные уведомления о завершении CLI-задач.
+# Graceful degradation: если notification-модуль недоступен (FREEBUFF_NO_NOTIFY=1
+# или ImportError) — CLI работает как раньше, без уведомлений.
+# Все вызовы ниже защищены флагом _HAS_NOTIFICATION, поэтому отдельные
+# no-op фолбэки не нужны (dead code исключён).
+try:
+    from scripts.notification import notify_error, notify_task_complete
+
+    _HAS_NOTIFICATION = True
+except ImportError:
+    _HAS_NOTIFICATION = False
+    notify_task_complete = None
+    notify_error = None
+
 
 # ── TASK.md helpers ────────────────────────────────────────────
 
@@ -375,6 +389,61 @@ def cmd_qwen_resume(session_id: str) -> None:
 
 # ── CLI Entry Point ────────────────────────────────────────────
 
+
+def _main_with_notification() -> int:
+    """Обёртка main(): отправляет системное уведомление о завершении CLI-задачи.
+
+    MANDATORY RUNTIME CONTRACT (v5.24.0): каждая завершённая задача ОБЯЗАНА
+    отправить уведомление пользователю. Эта обёртка гарантирует это для всех
+    команд freebuff_cli.py через try/finally.
+
+    Returns:
+        Exit code (0 — успех, иначе код ошибки).
+    """
+    import time as _time
+
+    started = _time.monotonic()
+    exit_code = 0
+    try:
+        main()
+    except SystemExit as e:
+        # main() использует sys.exit(code) для ошибок — перехватываем код.
+        exit_code = e.code if isinstance(e.code, int) else 1
+        if exit_code == 0:
+            return 0
+        # Ошибка: уведомляем и пробрасываем код дальше.
+        if _HAS_NOTIFICATION:
+            notify_error(
+                "Freebuff CLI",
+                error=f"Команда завершилась с кодом {exit_code***REMOVED***: {' '.join(sys.argv[1:***REMOVED***)***REMOVED***",
+                stage=sys.argv[1***REMOVED*** if len(sys.argv) > 1 else "",
+            )
+        return exit_code
+    except Exception as e:  # noqa: BLE001
+        print(f"❌ Ошибка: {e***REMOVED***")
+        exit_code = 1
+        if _HAS_NOTIFICATION:
+            notify_error(
+                "Freebuff CLI",
+                error=str(e),
+                stage=sys.argv[1***REMOVED*** if len(sys.argv) > 1 else "",
+            )
+        return 1
+    finally:
+        # Успех (или SystemExit(0)): уведомляем о завершении задачи.
+        if exit_code == 0 and _HAS_NOTIFICATION:
+            duration = f"{_time.monotonic() - started:.0f***REMOVED***s"
+            try:
+                notify_task_complete(
+                    task_name="Freebuff CLI",
+                    status="Успешно",
+                    duration=duration,
+                    details=" ".join(sys.argv[1:***REMOVED***) or "(без аргументов)",
+                )
+            except Exception:  # noqa: BLE001
+                pass
+
+
 def main():
     if len(sys.argv) < 2:
         print(__doc__)
@@ -458,4 +527,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(_main_with_notification())

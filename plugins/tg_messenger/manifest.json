@@ -1,0 +1,10 @@
+{
+    "name": "tg_messenger",
+    "version": "1.0.0",
+    "description": "Telegram Messenger — отправка сообщений и авто-форвардинг событий",
+    "author": "Buffy",
+    "tags": ["telegram", "messenger", "connector", "events"***REMOVED***,
+    "events_subscribed": ["system.*", "plugin.*", "collab.*"***REMOVED***,
+    "dependencies": ["httpx"***REMOVED***,
+    "license": "MIT"
+***REMOVED***

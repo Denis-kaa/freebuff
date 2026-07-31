@@ -1,0 +1,10 @@
+{
+    "name": "system_monitor",
+    "version": "1.0.0",
+    "description": "System Monitor — CPU, память, батарея, температура, health check",
+    "author": "Buffy",
+    "tags": ["system", "monitor", "metrics", "health"***REMOVED***,
+    "events_subscribed": ["system.*"***REMOVED***,
+    "dependencies": [***REMOVED***,
+    "license": "MIT"
+***REMOVED***
