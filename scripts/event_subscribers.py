@@ -34,6 +34,44 @@ from scripts.notification ***REMOVED***gister_notification_subscribers
 
 _KE_CACHE: Dict[str, Any***REMOVED*** = {***REMOVED***
 
+# ═══════════════════════════════════════════════════════════════
+# Cached EMEngine instances per workspace
+# ═══════════════════════════════════════════════════════════════
+
+_EM_ENGINE_CACHE: Dict[str, Any***REMOVED*** = {***REMOVED***
+
+
+def _get_em_engine(workspace_root: str) -> "EMEngine":
+    """Возвращает кэшированный EMEngine для workspace."""
+    from scripts.engineering_memory import EMEngine
+
+    key = str(Path(workspace_root).resolve())
+    if key not in _EM_ENGINE_CACHE:
+        _EM_ENGINE_CACHE[key***REMOVED*** = EMEngine(workspace_root=key)
+    return _EM_ENGINE_CACHE[key***REMOVED***
+
+
+def _should_create_retrospective(data: Dict[str, Any***REMOVED***) -> bool:
+    """Определяет, достаточно ли задача значима для автоматического ретроспективы."""
+    # Проваленные задачи всегда значимы
+    if data.get("status") in ("failed", "error", "Ошибка"):
+        return True
+    # Длительность > 10 минут
+    try:
+        duration_seconds = float(data.get("duration_seconds", 0) or 0)
+    except (TypeError, ValueError):
+        duration_seconds = 0.0
+    if duration_seconds >= 600:
+        return True
+    # LOC > 100
+    try:
+        loc = int(data.get("loc") or data.get("lines_changed") or 0)
+    except (TypeError, ValueError):
+        loc = 0
+    if loc > 100:
+        return True
+    return False
+
 
 def _get_knowledge_engine(workspace_root: str) -> Any:
     """Возвращает кэшированный KnowledgeEngine для workspace."""
@@ -157,3 +195,124 @@ def register_all(event_bus: Any, workspace_root: str | Path | None = None) -> No
 
     # Notification system: task/workflow progress, stages, completion, errors
     register_notification_subscribers(event_bus)
+
+    # Engineering Memory auto-triggers: task completed/failed, git.merge, system.error
+    _register_em_auto_triggers(event_bus, workspace_root)
+
+
+def _register_em_auto_triggers(event_bus: Any, workspace_root: str | Path | None) -> None:
+    """Регистрирует подписчиков, которые автоматически создают EM-драфты."""
+    if not workspace_root:
+        return
+
+    root = str(workspace_root)
+
+    def _on_task_completed(event: Any) -> None:
+        try:
+            if not hasattr(event, "data"):
+                return
+            data = event.data
+            if not _should_create_retrospective(data):
+                return
+
+            em = _get_em_engine(root)
+            task_id = str(data.get("task_id") or data.get("task_name") or "unknown")
+            ref = f"task_completed_{task_id***REMOVED***"
+            if em.has_auto_trigger(ref):
+                return
+
+            draft_id = em.record_task_retrospective(
+                title=f"Ретроспектива: {data.get('task_name', task_id)***REMOVED***",
+                intent=data.get("intent") or data.get("goal") or "(авто-триггер)",
+                reality=data.get("details") or data.get("result") or "(завершено)",
+                friction=data.get("friction", ""),
+                discoveries=data.get("discoveries", ""),
+                follow_ups=data.get("follow_ups", ""),
+                tags=["auto-trigger", "retrospective", "task"***REMOVED***,
+                related_tasks=[task_id***REMOVED***,
+            )
+            em.set_auto_trigger(ref)
+            print(f" Auto EM draft created: task retrospective ({draft_id***REMOVED***)")
+        except Exception as exc:
+            print(f"⚠️ EM auto-trigger task.completed: {exc***REMOVED***")
+
+    def _on_task_failed(event: Any) -> None:
+        try:
+            if not hasattr(event, "data"):
+                return
+            data = event.data
+            em = _get_em_engine(root)
+            task_id = str(data.get("task_id") or data.get("task_name") or "unknown")
+            ref = f"task_failed_{task_id***REMOVED***"
+            if em.has_auto_trigger(ref):
+                return
+
+            draft_id = em.record_incident(
+                title=f"Инцидент: {data.get('task_name', task_id)***REMOVED***",
+                summary=f"Задача {task_id***REMOVED*** завершилась ошибкой",
+                root_cause=data.get("error") or data.get("root_cause") or "(неизвестно)",
+                resolution=data.get("resolution") or "(требует анализа)",
+                prevention=data.get("prevention", ""),
+                tags=["auto-trigger", "incident", "task"***REMOVED***,
+                related_tasks=[task_id***REMOVED***,
+            )
+            em.set_auto_trigger(ref)
+            print(f" Auto EM draft created: incident from task failure ({draft_id***REMOVED***)")
+        except Exception as exc:
+            print(f"⚠️ EM auto-trigger task.failed: {exc***REMOVED***")
+
+    def _on_git_merge(event: Any) -> None:
+        try:
+            if not hasattr(event, "data"):
+                return
+            data = event.data
+            em = _get_em_engine(root)
+            branch = str(data.get("branch") or data.get("ref") or "unknown")
+            ref = f"git_merge_{branch***REMOVED***"
+            if em.has_auto_trigger(ref):
+                return
+
+            draft_id = em.record_task_retrospective(
+                title=f"Merge: {branch***REMOVED***",
+                intent=data.get("intent") or f"Объединить ветку {branch***REMOVED***",
+                reality=data.get("details") or f"Merge завершён: {branch***REMOVED***",
+                friction=data.get("friction", ""),
+                discoveries=data.get("discoveries", ""),
+                follow_ups=data.get("follow_ups", ""),
+                tags=["auto-trigger", "git", "merge"***REMOVED***,
+                related_commits=[data.get("commit", "")***REMOVED*** if data.get("commit") else [***REMOVED***,
+            )
+            em.set_auto_trigger(ref)
+            print(f"📝 Auto EM draft created: merge retrospective ({draft_id***REMOVED***)")
+        except Exception as exc:
+            print(f"⚠️ EM auto-trigger git.merge: {exc***REMOVED***")
+
+    def _on_system_error(event: Any) -> None:
+        try:
+            if not hasattr(event, "data"):
+                return
+            data = event.data
+            em = _get_em_engine(root)
+            error_id = str(data.get("error_id") or data.get("component") or "system")
+            ref = f"system_error_{error_id***REMOVED***"
+            if em.has_auto_trigger(ref):
+                return
+
+            draft_id = em.record_incident(
+                title=f"Системная ошибка: {error_id***REMOVED***",
+                summary=data.get("summary") or data.get("message") or "(авто-триггер)",
+                root_cause=data.get("root_cause") or data.get("error") or "(неизвестно)",
+                resolution=data.get("resolution") or "(требует анализа)",
+                impact=data.get("impact", ""),
+                tags=["auto-trigger", "incident", "system"***REMOVED***,
+                related_components=[error_id***REMOVED***,
+            )
+            em.set_auto_trigger(ref)
+            print(f"📝 Auto EM draft created: system error incident ({draft_id***REMOVED***)")
+        except Exception as exc:
+            print(f"⚠️ EM auto-trigger system.error: {exc***REMOVED***")
+
+    event_bus.subscribe("task.completed", _on_task_completed)
+    event_bus.subscribe("task.failed", _on_task_failed)
+    event_bus.subscribe("git.merge", _on_git_merge)
+    event_bus.subscribe("system.error", _on_system_error)

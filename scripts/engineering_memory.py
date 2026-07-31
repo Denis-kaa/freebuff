@@ -654,6 +654,23 @@ class EMEngine:
         """Возвращает список доступных шаблонов EM."""
         return self.template_renderer.list_templates()
 
+    # ── Auto-trigger helpers ───────────────────────────────
+
+    def has_auto_trigger(self, ref: str) -> bool:
+        """Проверяет, был ли уже создан авто-драфт для данного ref."""
+        return self._memory.retrieve(MemoryLevel.PROJECT, f"em_auto_trigger_{ref***REMOVED***") is not None
+
+    def set_auto_trigger(self, ref: str) -> None:
+        """Сохраняет маркер, что авто-драфт для данного ref уже создан."""
+        self._memory.store(
+            level=MemoryLevel.PROJECT,
+            key=f"em_auto_trigger_{ref***REMOVED***",
+            content="auto-trigger marker",
+            content_type=ContentType.TEXT,
+            summary=f"EM auto-trigger marker for {ref***REMOVED***",
+            metadata={"em_auto_trigger": True, "ref": ref***REMOVED***,
+        )
+
     # ── Internal helpers ────────────────────────────────────
 
     def _create_draft(

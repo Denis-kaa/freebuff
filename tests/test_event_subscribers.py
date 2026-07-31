@@ -93,3 +93,124 @@ class TestCheckpointLogger:
         # Should not raise
         delivered = bus.publish(event)
         assert delivered >= 1
+
+
+class TestEMAutoTriggers:
+    """Tests for Engineering Memory auto-trigger subscribers."""
+
+    def test_task_completed_long_duration_creates_retrospective(self, bus: EventBus, tmp_path: Path):
+        """task.completed with duration >= 10 min creates a retrospective draft."""
+        from scripts.engineering_memory import EMEngine
+
+        em = EMEngine(workspace_root=str(tmp_path))
+
+        event = Event(
+            type="task.completed",
+            data={
+                "task_id": "t1",
+                "task_name": "Long task",
+                "duration_seconds": 900,
+                "details": "done",
+            ***REMOVED***,
+        )
+        delivered = bus.publish(event)
+        assert delivered >= 1
+
+        drafts = em.list_drafts()
+        assert any(d["type"***REMOVED*** == "task_retrospective" for d in drafts)
+
+    def test_task_completed_short_duration_does_not_create_retrospective(self, bus: EventBus, tmp_path: Path):
+        """task.completed with short duration does not create a retrospective draft."""
+        from scripts.engineering_memory import EMEngine
+
+        em = EMEngine(workspace_root=str(tmp_path))
+
+        event = Event(
+            type="task.completed",
+            data={
+                "task_id": "t2",
+                "task_name": "Short task",
+                "duration_seconds": 5,
+                "details": "done",
+            ***REMOVED***,
+        )
+        bus.publish(event)
+
+        drafts = em.list_drafts()
+        assert not any(d["type"***REMOVED*** == "task_retrospective" for d in drafts)
+
+    def test_task_failed_creates_incident(self, bus: EventBus, tmp_path: Path):
+        """task.failed creates an incident draft."""
+        from scripts.engineering_memory import EMEngine
+
+        em = EMEngine(workspace_root=str(tmp_path))
+
+        event = Event(
+            type="task.failed",
+            data={
+                "task_id": "t3",
+                "task_name": "Failing task",
+                "error": "something went wrong",
+            ***REMOVED***,
+        )
+        bus.publish(event)
+
+        drafts = em.list_drafts()
+        assert any(d["type"***REMOVED*** == "incident_report" for d in drafts)
+
+    def test_git_merge_creates_retrospective(self, bus: EventBus, tmp_path: Path):
+        """git.merge creates a retrospective draft."""
+        from scripts.engineering_memory import EMEngine
+
+        em = EMEngine(workspace_root=str(tmp_path))
+
+        event = Event(
+            type="git.merge",
+            data={
+                "branch": "feature-42",
+                "commit": "abc123",
+            ***REMOVED***,
+        )
+        bus.publish(event)
+
+        drafts = em.list_drafts()
+        assert any(d["type"***REMOVED*** == "task_retrospective" and "feature-42" in d["title"***REMOVED*** for d in drafts)
+
+    def test_system_error_creates_incident(self, bus: EventBus, tmp_path: Path):
+        """system.error creates an incident draft."""
+        from scripts.engineering_memory import EMEngine
+
+        em = EMEngine(workspace_root=str(tmp_path))
+
+        event = Event(
+            type="system.error",
+            data={
+                "error_id": "db-conn",
+                "component": "database",
+                "summary": "DB connection lost",
+            ***REMOVED***,
+        )
+        bus.publish(event)
+
+        drafts = em.list_drafts()
+        assert any(d["type"***REMOVED*** == "incident_report" for d in drafts)
+
+    def test_duplicate_task_event_is_idempotent(self, bus: EventBus, tmp_path: Path):
+        """Publishing the same task event twice creates only one EM draft."""
+        from scripts.engineering_memory import EMEngine
+
+        em = EMEngine(workspace_root=str(tmp_path))
+
+        event = Event(
+            type="task.completed",
+            data={
+                "task_id": "t4",
+                "task_name": "Long task",
+                "duration_seconds": 900,
+            ***REMOVED***,
+        )
+        bus.publish(event)
+        bus.publish(event)
+
+        drafts = em.list_drafts()
+        assert len([d for d in drafts if d["type"***REMOVED*** == "task_retrospective"***REMOVED***) == 1
