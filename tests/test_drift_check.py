@@ -183,6 +183,69 @@ def test_check_markdown_links_includes_root_level_md(tmp_path) -> None:
     assert issues == [***REMOVED***
 
 
+def test_directory_structure_respects_adr_redirect(tmp_path) -> None:
+    (tmp_path / "BUFFY.md").write_text("""
+```
+freebuff/
+├── docs/
+│   └── decisions/
+```
+""", encoding="utf-8")
+    (tmp_path / "docs").mkdir()
+    # docs/decisions directory is intentionally missing; canonical location exists
+    adr_dir = tmp_path / "docs" / "engineering-memory" / "decisions"
+    adr_dir.mkdir(parents=True)
+    adr_dir.joinpath("ADR_001_test.md").write_text("# Test", encoding="utf-8")
+    issues = dc.check_directory_structure(tmp_path)
+    dirs = {i["dir"***REMOVED*** for i in issues***REMOVED***
+    assert "docs/decisions" not in dirs
+
+
+def test_directory_structure_respects_adr_redirect_empty_dir(tmp_path) -> None:
+    (tmp_path / "BUFFY.md").write_text("""
+```
+freebuff/
+├── docs/
+│   └── decisions/
+```
+""", encoding="utf-8")
+    (tmp_path / "docs").mkdir()
+    # docs/decisions exists but is empty; canonical location supersedes it
+    (tmp_path / "docs" / "decisions").mkdir()
+    adr_dir = tmp_path / "docs" / "engineering-memory" / "decisions"
+    adr_dir.mkdir(parents=True)
+    adr_dir.joinpath("ADR_001_test.md").write_text("# Test", encoding="utf-8")
+    issues = dc.check_directory_structure(tmp_path)
+    dirs = {i["dir"***REMOVED*** for i in issues***REMOVED***
+    assert "docs/decisions" not in dirs
+
+
+def test_check_adr_canonical_location_passes(tmp_path) -> None:
+    adr_dir = tmp_path / "docs" / "engineering-memory" / "decisions"
+    adr_dir.mkdir(parents=True)
+    adr_dir.joinpath("ADR_001_test.md").write_text("# Test", encoding="utf-8")
+    (tmp_path / "docs" / "decisions" / "DECISIONS.md").parent.mkdir(parents=True)
+    (tmp_path / "docs" / "decisions" / "DECISIONS.md").write_text("# Index", encoding="utf-8")
+    issues = dc.check_adr_canonical_location(tmp_path)
+    assert issues == [***REMOVED***
+
+
+def test_check_adr_canonical_location_fails_missing_dir(tmp_path) -> None:
+    issues = dc.check_adr_canonical_location(tmp_path)
+    assert len(issues) == 1
+    assert issues[0***REMOVED***["dir"***REMOVED*** == "docs/engineering-memory/decisions"
+
+
+def test_check_adr_canonical_location_fails_empty(tmp_path) -> None:
+    adr_dir = tmp_path / "docs" / "engineering-memory" / "decisions"
+    adr_dir.mkdir(parents=True)
+    (tmp_path / "docs" / "decisions" / "DECISIONS.md").parent.mkdir(parents=True)
+    (tmp_path / "docs" / "decisions" / "DECISIONS.md").write_text("# Index", encoding="utf-8")
+    issues = dc.check_adr_canonical_location(tmp_path)
+    assert len(issues) == 1
+    assert "empty" in issues[0***REMOVED***["issue"***REMOVED***
+
+
 def test_check_markdown_links_ignores_links_in_code_blocks(tmp_path) -> None:
     (tmp_path / "docs").mkdir()
     md = tmp_path / "docs" / "index.md"

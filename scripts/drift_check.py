@@ -221,6 +221,15 @@ _KNOWLEDGE_IGNORE_DIRS = {
     "dist",
 ***REMOVED***
 
+# ADR canonical location and legacy redirects.
+_ADR_CANONICAL_DIR = Path("docs/engineering-memory/decisions")
+_ADR_INDEX = Path("docs/decisions/DECISIONS.md")
+# Described paths that historically pointed to ADRs but have moved.
+_ADR_REDIRECTS: dict[str, tuple[str, ...***REMOVED******REMOVED*** = {
+    "decisions": (str(_ADR_CANONICAL_DIR), str(_ADR_INDEX)),
+    "docs/decisions": (str(_ADR_CANONICAL_DIR), str(_ADR_INDEX)),
+***REMOVED***
+
 # Markdown link patterns: [text***REMOVED***(target) and ![alt***REMOVED***(target)
 _MARKDOWN_LINK_RE = re.compile(r"!?\[([^\***REMOVED******REMOVED****)\***REMOVED***\(([^)***REMOVED***+)\)")
 # External URLs, anchors and other non-file targets we cannot/should not resolve.
@@ -434,6 +443,13 @@ def check_markdown_links(workspace: Path) -> list[dict[str, Any***REMOVED******R
     return issues
 
 
+def _is_redirect_satisfied(workspace: Path, described_path: str) -> bool:
+    """Return True if a described path has moved to a known canonical location."""
+    if described_path not in _ADR_REDIRECTS:
+        return False
+    return any((workspace / target).exists() for target in _ADR_REDIRECTS[described_path***REMOVED***)
+
+
 def check_directory_structure(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
     """Compare directory structure described in BUFFY.md/RULES.md with reality."""
     issues: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
@@ -450,8 +466,14 @@ def check_directory_structure(workspace: Path) -> list[dict[str, Any***REMOVED**
     for d in sorted(described_paths):
         p = workspace / d
         if not p.exists():
+            if _is_redirect_satisfied(workspace, d):
+                # ADR location has been redirected to a canonical location.
+                continue
             issues.append({"dir": d, "issue": "described but does not exist"***REMOVED***)
         elif p.is_dir() and not any(p.iterdir()):
+            if _is_redirect_satisfied(workspace, d):
+                # Directory exists but is effectively superseded by canonical ADR location.
+                continue
             issues.append({"dir": d, "issue": "described but empty"***REMOVED***)
 
     # Check real top-level dirs not described
@@ -461,6 +483,45 @@ def check_directory_structure(workspace: Path) -> list[dict[str, Any***REMOVED**
     ***REMOVED***
     for d in sorted(real_dirs - described_paths):
         issues.append({"dir": d, "issue": "exists but not described in BUFFY.md/RULES.md"***REMOVED***)
+
+    return issues
+
+
+def check_adr_canonical_location(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+    """Verify the canonical ADR directory exists and contains ADR files.
+
+    Returns issues if the canonical location is missing, empty, or contains
+    no ADR-style files.
+    """
+    issues: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    adr_dir = workspace / _ADR_CANONICAL_DIR
+    if not adr_dir.exists():
+        issues.append({
+            "dir": str(_ADR_CANONICAL_DIR),
+            "issue": "canonical ADR directory does not exist",
+        ***REMOVED***)
+        return issues
+    if not adr_dir.is_dir():
+        issues.append({
+            "dir": str(_ADR_CANONICAL_DIR),
+            "issue": "canonical ADR path is not a directory",
+        ***REMOVED***)
+        return issues
+
+    adr_files = sorted(adr_dir.glob("ADR_*.md"))
+    if not adr_files:
+        issues.append({
+            "dir": str(_ADR_CANONICAL_DIR),
+            "issue": "canonical ADR directory is empty (no ADR_*.md files)",
+        ***REMOVED***)
+
+    # Also ensure the index still exists
+    index = workspace / _ADR_INDEX
+    if not index.exists():
+        issues.append({
+            "dir": str(_ADR_INDEX),
+            "issue": "ADR index file is missing",
+        ***REMOVED***)
 
     return issues
 
@@ -497,12 +558,14 @@ def build_report(workspace: Path) -> dict[str, Any***REMOVED***:
         "status_tables": check_buffy_project_status(workspace),
         "knowledge_index": check_knowledge_index(workspace),
         "directory_structure": check_directory_structure(workspace),
+        "adr_canonical_location": check_adr_canonical_location(workspace),
         "markdown_links": check_markdown_links(workspace),
     ***REMOVED***
     all_issues = (
         report["status_tables"***REMOVED***
         + report["knowledge_index"***REMOVED***
         + report["directory_structure"***REMOVED***
+        + report["adr_canonical_location"***REMOVED***
         + report["markdown_links"***REMOVED***
     )
     report["has_drift"***REMOVED*** = bool(all_issues)
@@ -548,6 +611,13 @@ def format_report(report: dict[str, Any***REMOVED***, workspace: Path) -> str:
     if not report["directory_structure"***REMOVED***:
         lines.append("_No discrepancies found._")
     for item in report["directory_structure"***REMOVED***:
+        lines.append(f"- `{item['dir'***REMOVED******REMOVED***`: {item['issue'***REMOVED******REMOVED***")
+
+    lines.append("")
+    lines.append("## ADR canonical location drift")
+    if not report["adr_canonical_location"***REMOVED***:
+        lines.append("_No discrepancies found._")
+    for item in report["adr_canonical_location"***REMOVED***:
         lines.append(f"- `{item['dir'***REMOVED******REMOVED***`: {item['issue'***REMOVED******REMOVED***")
 
     lines.append("")
