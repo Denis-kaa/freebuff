@@ -217,11 +217,11 @@
 | **ContextManager** | ✅ `__init__` | ✅ `_init_db()`, `SCHEMA_VERSION = 5` | ✅ сессии/сообщения/чекпоинты, CONTEXT_FULL (28K) | ✅ `prune_abandoned()`, `auto_abandon_stale()` GC | Миграции `PRAGMA user_version` v1→v5 |
 | **ToolRuntime** | ✅ `BaseTool` | ✅ `validate_params()` (pre-execution) | ✅ `execute()` | ✅ валидация результатов | Контракт ToolResult |
 | **PluginAPI** | ✅ `BasePlugin` | ✅ `on_load()` | ✅ `enable()`/`disable()` | ✅ `unload()` | Lifecycle-события плагина |
-| **MCP Server** | ✅ `_get_*()` accessor'ы | ✅ `_get_tool_registry()`, lazy init | ✅ 51 инструмент, STDIO+HTTP | ✅ тесты (101) | Реестр инструментов |
+| **MCP Server** | ✅ `_get_*()` accessor'ы | ✅ `_get_tool_registry()`, lazy init | ✅ 51 инструмент (на 2026-07-31), STDIO+HTTP | ✅ тесты (101) | Реестр инструментов |
 | **Bridge Layer** | ✅ | ✅ Lazy accessor | ✅ MCP↔ACP трансляция | ✅ | — |
 | **Runtime Abstraction** | ✅ StdioMCPAdapter/HTTPMCPAdapter | ✅ RuntimeRegistry | ✅ generate/connect/disconnect/select | ✅ `runtime_disconnect` | Capability Registry |
 | **Scenario Engine** | ✅ | ✅ 11+ сценариев | ✅ исполнение сценариев | ✅ | — |
-| **Notification** | ✅ `notify()` | ✅ 3-канальный cascade (retry 1s/2s/4s) | ✅ notify/notify_task_complete/notify_error | ✅ FREEBUFF_NO_NOTIFY bypass | Возврат True при хоть одном канале |
+| **Notification** | ✅ `notify()` | ✅ 4-канальный cascade (notification → toast → log → visual fallback, retry 1s/2s/4s) | ✅ notify/notify_task_complete/notify_error | ✅ FREEBUFF_NO_NOTIFY bypass | Возврат True при хоть одном канале |
 
 ---
 
