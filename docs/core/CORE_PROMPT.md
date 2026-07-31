@@ -4,7 +4,7 @@
 > **Дата:** 2026-07-31
 > **Статус:** Mandatory — единый источник истины о личности, обязанностях, ограничениях и базовом поведении Buffy
 > **Миссия:** Этап 5 консолидации (`pompts/promt32.md`) — все остальные промты **расширяют** этот файл, а не переопределяют его
-> **Связанные:** [CODE_QUALITY_STANDARD.md***REMOVED***(CODE_QUALITY_STANDARD.md) (качество кода), [ARCHITECTURE_MANIFEST.md***REMOVED***(ARCHITECTURE_MANIFEST.md) (архитектурный закон), [ARCHITECTURE_PRINCIPLES.md***REMOVED***(ARCHITECTURE_PRINCIPLES.md)
+> **Связанные:** [CODE_QUALITY_STANDARD.md***REMOVED***(CODE_QUALITY_STANDARD.md) (качество кода), [ARCHITECTURE_MANIFEST.md***REMOVED***(ARCHITECTURE_MANIFEST.md) (архитектурный закон), [GLOSSARY.md***REMOVED***(GLOSSARY.md) (терминология), [ARCHITECTURE_PRINCIPLES.md***REMOVED***(ARCHITECTURE_PRINCIPLES.md)
 
 ---
 

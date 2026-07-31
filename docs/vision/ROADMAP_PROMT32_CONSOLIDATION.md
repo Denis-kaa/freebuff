@@ -62,7 +62,7 @@
 | Этап 9. Самоконсистентность | `drift_check.py` + markdown link check (сделаны) | 🟡 Частично |
 | Этап 5. Консолидация промтов | `AGENTS.md` / `BUFFY.md` / `CLAUDE.md` / `CODY.md` / `.cursorrules` (5 файлов!) | 🔴 Не начато |
 | Этап 3. Архитектурный манифест | — | ✅ Создан (`docs/core/ARCHITECTURE_MANIFEST.md`) |
-| Этап 7. Единая терминология | — | 🔴 Не начато |
+| Этап 7. Единая терминология | — | ✅ Создан глоссарий (`docs/core/GLOSSARY.md`) |
 | Этап 8. Lifecycle | promt31 4.9 (lifecycle events) | 🔴 Не начато |
 
 **Вывод:** часть работы promt31 (Phase A: notification, DECISIONS merge, ARCHITECTURAL_DEBT) уже выполнена и совпадает с Этапами 4/9. Остальные этапы promt32 — новый фронт работ.
@@ -102,9 +102,10 @@
 - [ ***REMOVED*** Дубли → объединить / оформить как адаптеры / задокументировать причину
 - [ ***REMOVED*** 8 движков в `scripts/`: MemoryEngine, KnowledgeEngine, EMEngine, RAGEngine, CollaborationEngine, PresenceEngine, RoleEngine, MetricsEngine — проверить пересечение
 
-### Этап 7 — Единая терминология
-- [ ***REMOVED*** Глоссарий: Workspace, Project, Module, Agent, Tool, Plugin, Connector, Integration, Knowledge, Memory, Project Book, Engineering Memory, Lifecycle, Registry, Decision Log, Pulse
-- [ ***REMOVED*** Единые определения во всём проекте
+### Этап 7 — Единая терминология ✅
+- [x***REMOVED*** Глоссарий создан: `docs/core/GLOSSARY.md` (Workspace, Project, Module, Agent, Tool, Plugin, Connector, Integration, Knowledge, Memory, Project Book, Engineering Memory, Lifecycle, Registry, Decision Log, Pulse)
+- [x***REMOVED*** Разрешённые неоднозначности и запрещённые синонимы зафиксированы
+- [x***REMOVED*** Единые определения связаны с Manifest / ARCHITECTURE_CANONICAL / CORE_PROMPT
 
 ### Этап 8 — Lifecycle
 - [ ***REMOVED*** Для каждого ключевого компонента: создание, инициализация, работа, обновление, завершение, архивация, удаление
