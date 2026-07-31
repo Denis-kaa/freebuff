@@ -408,7 +408,13 @@ def _main_with_notification() -> int:
         main()
     except SystemExit as e:
         # main() использует sys.exit(code) для ошибок — перехватываем код.
-        exit_code = e.code if isinstance(e.code, int) else 1
+        # sys.exit(None) по спецификации Python эквивалентен exit 0.
+        if e.code is None:
+            exit_code = 0
+        elif isinstance(e.code, int):
+            exit_code = e.code
+        else:
+            exit_code = 1
         if exit_code != 0 and _HAS_NOTIFICATION:
             notify_error(
                 "Freebuff CLI",
