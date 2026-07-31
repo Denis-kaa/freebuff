@@ -3,7 +3,7 @@
 > **Версия:** 1.0.0  
 > **Дата:** 2026-07-29  
 > **Статус:** ✅ Production (Bridge Layer + ACP + MCP Client — 60 тестов)  
-> **Основание:** [VISION_3.0.md***REMOVED***(VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(ARCHITECTURE_3.0.md), [promt14.md***REMOVED***(../pompts/promt14.md) (концепция #22)  
+> **Основание:** [VISION_3.0.md***REMOVED***(../vision/VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(../core/ARCHITECTURE_3.0.md), [promt14.md***REMOVED***(../../pompts/promt14.md) (концепция #22)  
 
 ---
 
@@ -737,4 +737,4 @@ tests/
 
 ---
 
-*Связанные документы: [VISION_3.0.md***REMOVED***(VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(ARCHITECTURE_3.0.md), [RUNTIME_ABSTRACTION_SPECIFICATION.md***REMOVED***(RUNTIME_ABSTRACTION_SPECIFICATION.md), [POLICY_ENGINE_SPECIFICATION.md***REMOVED***(POLICY_ENGINE_SPECIFICATION.md), [freebuff_plugin/bridge_layer.py***REMOVED***(../freebuff_plugin/bridge_layer.py), [freebuff_plugin/acp_protocol.py***REMOVED***(../freebuff_plugin/acp_protocol.py), [freebuff_plugin/mcp_client.py***REMOVED***(../freebuff_plugin/mcp_client.py)*
+*Связанные документы: [VISION_3.0.md***REMOVED***(../vision/VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(../core/ARCHITECTURE_3.0.md), [RUNTIME_ABSTRACTION_SPECIFICATION.md***REMOVED***(../core/RUNTIME_ABSTRACTION_SPECIFICATION.md), [POLICY_ENGINE_SPECIFICATION.md***REMOVED***(../core/POLICY_ENGINE_SPECIFICATION.md), [freebuff_plugin/bridge_layer.py***REMOVED***(../../freebuff_plugin/bridge_layer.py), [freebuff_plugin/acp_protocol.py***REMOVED***(../../freebuff_plugin/acp_protocol.py), [freebuff_plugin/mcp_client.py***REMOVED***(../../freebuff_plugin/mcp_client.py)*

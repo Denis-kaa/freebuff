@@ -3,7 +3,7 @@
 > **Статус:** ✅ Принято  
 > **Дата:** 2026-07-29  
 > **Автор:** Buffy (DeepSeek v4 Flash)  
-> **Контекст:** [VISION_3.0.md***REMOVED***(VISION_3.0.md), [promt14.md***REMOVED***(../pompts/promt14.md), [PRODUCT_MANIFESTO.md***REMOVED***(PRODUCT_MANIFESTO.md)  
+> **Контекст:** [VISION_3.0.md***REMOVED***(../vision/VISION_3.0.md), [promt14.md***REMOVED***(../../pompts/promt14.md), [PRODUCT_MANIFESTO.md***REMOVED***(../vision/PRODUCT_MANIFESTO.md)  
 
 ---
 
@@ -457,4 +457,4 @@ v5.0+ — AI Infrastructure Layer  (текущее решение)
 
 ---
 
-*Связанные документы: [VISION_3.0.md***REMOVED***(VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(ARCHITECTURE_3.0.md), [PRODUCT_MANIFESTO.md***REMOVED***(PRODUCT_MANIFESTO.md), [DECISIONS.md***REMOVED***(DECISIONS.md), [IDEAS.md***REMOVED***(IDEAS.md), [BUFFY.md***REMOVED***(../BUFFY.md)*
+*Связанные документы: [VISION_3.0.md***REMOVED***(../vision/VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(../core/ARCHITECTURE_3.0.md), [PRODUCT_MANIFESTO.md***REMOVED***(../vision/PRODUCT_MANIFESTO.md), [DECISIONS.md***REMOVED***(DECISIONS.md), [IDEAS.md***REMOVED***(IDEAS.md), [BUFFY.md***REMOVED***(../../BUFFY.md)*

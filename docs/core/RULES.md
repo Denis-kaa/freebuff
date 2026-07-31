@@ -2,7 +2,7 @@
 
 > **Источник:** `pompts/promt1.md` — промт «Правила документирования для терминального агента»
 > **Применяется:** Buffy и все AI-агенты экосистемы
-> **Высший источник правил:** [`BUFFY.md`***REMOVED***(../BUFFY.md) — правила здесь лишь операционализируют требования Buffy
+> **Высший источник правил:** [`BUFFY.md`***REMOVED***(../../BUFFY.md) — правила здесь лишь операционализируют требования Buffy
 
 ---
 
@@ -111,16 +111,16 @@
 ## 📂 Структура docs/
 
 ```
-docs/
-├── INDEX.md              # навигация
-├── core/                 # спецификации, архитектурные принципы, RULES
-├── vision/               # VISION_3.0, ROADMAP, PRODUCT_MANIFESTO
-├── decisions/            # ADR, DECISIONS, IDEAS
-├── audits/               # AUDIT_*.md, DRIFT_REPORT
-├── plugin/               # FREEBUFF_PLUGIN_*
-├── projects_meta/        # PROJECT_REGISTRY, WORKERS, FILE_REGISTRY
-├── ops/                  # TROUBLESHOOTING, SESSION_GUIDE, AGENTS, шаблоны
-└── 02-specs/             # (зарезервировано для будущих спецификаций)
+freebuff/
+└── docs/
+    ├── INDEX.md              # навигация
+    ├── core/                 # спецификации, архитектурные принципы, RULES
+    ├── vision/               # VISION_3.0, ROADMAP, PRODUCT_MANIFESTO
+    ├── decisions/            # ADR, DECISIONS, IDEAS
+    ├── audits/               # AUDIT_*.md, DRIFT_REPORT
+    ├── plugin/               # FREEBUFF_PLUGIN_*
+    ├── projects_meta/        # PROJECT_REGISTRY, WORKERS, FILE_REGISTRY
+    └── ops/                  # TROUBLESHOOTING, SESSION_GUIDE, AGENTS, шаблоны
 ```
 
 ### 🆕 Session Mesh v2.0

@@ -81,7 +81,7 @@ graph TB
 
 - `scripts/buffy_autodoc.py` — сканирует `git diff` и выводит чек-лист документов, которые нужно обновить.
 - `scripts/pre-commit` + `scripts/install_hooks.sh` — git pre-commit hook, который блокирует коммит, если для кода не обновлён `CHANGELOG.md`.
-- Подробнее: [`RULES.md` — Авто-триггер документирования***REMOVED***(RULES.md).
+- Подробнее: [`RULES.md` — Авто-триггер документирования***REMOVED***(../../core/RULES.md).
 
 ## Слои изоляции
 

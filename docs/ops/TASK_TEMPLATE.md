@@ -89,4 +89,4 @@ DoD:
 
 ---
 
-_Связанные файлы: [../decisions/DECISIONS.md***REMOVED***(../../decisions/DECISIONS.md), [CHANGELOG.md***REMOVED***(../CHANGELOG.md)_
+_Связанные файлы: [../decisions/DECISIONS.md***REMOVED***(../decisions/DECISIONS.md), [CHANGELOG.md***REMOVED***(../../CHANGELOG.md)_

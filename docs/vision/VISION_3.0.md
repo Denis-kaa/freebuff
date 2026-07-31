@@ -4,7 +4,7 @@
 > **Дата:** 2026-07-29  
 > **Статус:** Черновик  
 > **Авторы:** Buffy (DeepSeek v4 Flash)  
-> **Основание:** [promt12.md***REMOVED***(../pompts/promt12.md), [promt13.md***REMOVED***(../pompts/promt13.md), [promt14.md***REMOVED***(../pompts/promt14.md), [IDEAS.md***REMOVED***(IDEAS.md)
+> **Основание:** [promt12.md***REMOVED***(../../pompts/promt12.md), [promt13.md***REMOVED***(../../pompts/promt13.md), [promt14.md***REMOVED***(../../pompts/promt14.md), [IDEAS.md***REMOVED***(../decisions/IDEAS.md)
 
 ---
 
@@ -555,4 +555,4 @@ Translation │ Testing │ Architecture │ Refactoring
 
 ---
 
-*Связанные документы: [IDEAS.md***REMOVED***(IDEAS.md), [ROADMAP.md***REMOVED***(ROADMAP.md), [ARCHITECTURE.md***REMOVED***(ARCHITECTURE.md), [BUFFY.md***REMOVED***(../BUFFY.md)*
+*Связанные документы: [IDEAS.md***REMOVED***(../decisions/IDEAS.md), [ROADMAP.md***REMOVED***(ROADMAP.md), [ARCHITECTURE.md***REMOVED***(../engineering-memory/ARCHITECTURE.md), [BUFFY.md***REMOVED***(../../BUFFY.md)*

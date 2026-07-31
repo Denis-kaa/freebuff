@@ -3,7 +3,7 @@
 > **Версия:** 1.0.0  
 > **Дата:** 2026-07-29  
 > **Статус:** 🟡 Production (Event Bus) + План (Event Store, Replay, Timeline, Audit)  
-> **Основание:** [VISION_3.0.md***REMOVED***(VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(ARCHITECTURE_3.0.md), [promt14.md***REMOVED***(../pompts/promt14.md) (концепция #14)  
+> **Основание:** [VISION_3.0.md***REMOVED***(../vision/VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(ARCHITECTURE_3.0.md), [promt14.md***REMOVED***(../../pompts/promt14.md) (концепция #14)  
 
 ---
 
@@ -1008,4 +1008,4 @@ def migrate_from_event_log(event_store: EventStore) -> int:
 
 ---
 
-*Связанные документы: [VISION_3.0.md***REMOVED***(VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(ARCHITECTURE_3.0.md), [POLICY_ENGINE_SPECIFICATION.md***REMOVED***(POLICY_ENGINE_SPECIFICATION.md), [scripts/event_bus.py***REMOVED***(../scripts/event_bus.py), [scripts/event_subscribers.py***REMOVED***(../scripts/event_subscribers.py)*
+*Связанные документы: [VISION_3.0.md***REMOVED***(../vision/VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(ARCHITECTURE_3.0.md), [POLICY_ENGINE_SPECIFICATION.md***REMOVED***(POLICY_ENGINE_SPECIFICATION.md), [scripts/event_bus.py***REMOVED***(../../scripts/event_bus.py), [scripts/event_subscribers.py***REMOVED***(../../scripts/event_subscribers.py)*

@@ -3,7 +3,7 @@
 > **Версия:** 1.0.0  
 > **Дата:** 2026-07-29  
 > **Статус:** Спецификация (к реализации)  
-> **Основание:** [VISION_3.0.md***REMOVED***(VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(ARCHITECTURE_3.0.md), [promt14.md***REMOVED***(../pompts/promt14.md) (концепция #3)  
+> **Основание:** [VISION_3.0.md***REMOVED***(../vision/VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(ARCHITECTURE_3.0.md), [promt14.md***REMOVED***(../../pompts/promt14.md) (концепция #3)  
 
 ---
 
@@ -1169,4 +1169,4 @@ freebuff_plugin/runtime/
 
 ---
 
-*Связанные документы: [VISION_3.0.md***REMOVED***(VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(ARCHITECTURE_3.0.md), [BOOTSTRAP_SPECIFICATION.md***REMOVED***(BOOTSTRAP_SPECIFICATION.md), [BRIDGE_PLATFORM_SPECIFICATION.md***REMOVED***(BRIDGE_PLATFORM_SPECIFICATION.md) (план), [POLICY_ENGINE_SPECIFICATION.md***REMOVED***(POLICY_ENGINE_SPECIFICATION.md) (план), [scripts/model_gateway.py***REMOVED***(../scripts/model_gateway.py)*
+*Связанные документы: [VISION_3.0.md***REMOVED***(../vision/VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(ARCHITECTURE_3.0.md), [BOOTSTRAP_SPECIFICATION.md***REMOVED***(BOOTSTRAP_SPECIFICATION.md), [BRIDGE_PLATFORM_SPECIFICATION.md***REMOVED***(../plugin/BRIDGE_PLATFORM_SPECIFICATION.md) (план), [POLICY_ENGINE_SPECIFICATION.md***REMOVED***(POLICY_ENGINE_SPECIFICATION.md) (план), [scripts/model_gateway.py***REMOVED***(../../scripts/model_gateway.py)*

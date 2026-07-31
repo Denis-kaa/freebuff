@@ -48,3 +48,9 @@ jobs:
           PYTHONPATH: ${{ github.workspace ***REMOVED******REMOVED***
         run: |
           python scripts/consistency_check.py --report
+
+      - name: Run drift check (Stage 9 — docs vs. reality, hard fail)
+        env:
+          PYTHONPATH: ${{ github.workspace ***REMOVED******REMOVED***
+        run: |
+          python scripts/drift_check.py --force --report

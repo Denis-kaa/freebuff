@@ -423,6 +423,40 @@ def check_consistency(report: DoctorReport) -> None:
         )
 
 
+def check_drift(report: DoctorReport) -> None:
+    """Проверяет дрейф документации vs. реальность (Этап 9).
+
+    Запускает scripts/drift_check.py — битые ссылки, расхождения дерева
+    каталогов, непроиндексированные доки, статус-таблицы BUFFY_PROJECT.
+    """
+    try:
+        if str(WORKSPACE) not in sys.path:
+            sys.path.insert(0, str(WORKSPACE))
+        from scripts.drift_check import build_report as build_drift_report
+
+        result = build_drift_report(WORKSPACE)
+    except Exception as e:
+        report.checks.append(CheckResult("Drift", "warn", f"Cannot run: {e***REMOVED***"))
+        return
+
+    if not result.get("has_drift", False):
+        report.checks.append(CheckResult("Drift", "ok", "No drift (docs match reality)"))
+        return
+
+    total = sum(
+        len(result.get(k, [***REMOVED***))
+        for k in ("status_tables", "knowledge_index", "directory_structure",
+                  "adr_canonical_location", "markdown_links")
+    )
+    report.checks.append(
+        CheckResult(
+            "Drift",
+            "warn" if total <= 3 else "fail",
+            f"{total***REMOVED*** drift issue(s) — run `python scripts/drift_check.py --force --report`",
+        )
+    )
+
+
 def check_tests(report: DoctorReport) -> None:
     """Проверяет тесты (быстрый прогон)."""
     tests_dir = WORKSPACE / "tests"
@@ -482,6 +516,7 @@ def run_diagnostics(
     check_ram(report)
     check_workspace(report)
     check_consistency(report)
+    check_drift(report)
 
     # Опционально
     if full or runtime == "freebuff":

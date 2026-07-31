@@ -2,7 +2,7 @@
 
 > **Сессия:** MCP Server Phase 4
 > **Статус:** 🟢 Завершена
-> **Связано:** [ROADMAP.md***REMOVED***(../../vision/ROADMAP.md) Phase 4, [DECISIONS.md***REMOVED***(DECISIONS.md) ADR-002
+> **Связано:** [ROADMAP.md***REMOVED***(../vision/ROADMAP.md) Phase 4, [DECISIONS.md***REMOVED***(../decisions/DECISIONS.md) ADR-002
 
 ---
 
@@ -85,11 +85,11 @@
 
 ## 🔗 Релевантные документы
 
-- [BUFFY.md***REMOVED***(../BUFFY.md) — мастер-промт
-- [CHANGELOG.md***REMOVED***(../CHANGELOG.md) — [2.4.0***REMOVED***
-- [ROADMAP.md***REMOVED***(../../vision/ROADMAP.md) — Phase 4
-- [DECISIONS.md***REMOVED***(../../decisions/DECISIONS.md) — ADR-002
-- [SYSTEM_INVENTORY.md***REMOVED***(../../core/SYSTEM_INVENTORY.md) — каталог компонентов
+- [BUFFY.md***REMOVED***(../../BUFFY.md) — мастер-промт
+- [CHANGELOG.md***REMOVED***(../../CHANGELOG.md) — [2.4.0***REMOVED***
+- [ROADMAP.md***REMOVED***(../vision/ROADMAP.md) — Phase 4
+- [DECISIONS.md***REMOVED***(../decisions/DECISIONS.md) — ADR-002
+- [SYSTEM_INVENTORY.md***REMOVED***(../core/SYSTEM_INVENTORY.md) — каталог компонентов
 
 ---
 

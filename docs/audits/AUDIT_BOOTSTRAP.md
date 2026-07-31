@@ -4,7 +4,7 @@
 > **Дата:** 2026-07-29  
 > **Модуль:** `freebuff_plugin/bootstrap/` (8 файлов)  
 > **Тип аудита:** Архитектурный (PROMPT_BASE.md §1.2)  
-> **Основание:** [BOOTSTRAP_SPECIFICATION.md***REMOVED***(BOOTSTRAP_SPECIFICATION.md)  
+> **Основание:** [BOOTSTRAP_SPECIFICATION.md***REMOVED***(../core/BOOTSTRAP_SPECIFICATION.md)  
 
 ---
 
@@ -310,4 +310,4 @@ Bootstrap Engine — хорошо спроектированный модуль 
 
 ---
 
-*Связанные документы: [BOOTSTRAP_SPECIFICATION.md***REMOVED***(BOOTSTRAP_SPECIFICATION.md), [test_plan_bootstrap.md***REMOVED***(test_plan_bootstrap.md), [tests/test_bootstrap_engine.py***REMOVED***(../tests/test_bootstrap_engine.py)*
+*Связанные документы: [BOOTSTRAP_SPECIFICATION.md***REMOVED***(../core/BOOTSTRAP_SPECIFICATION.md), [test_plan_bootstrap.md***REMOVED***(../ops/test_plan_bootstrap.md), [tests/test_bootstrap_engine.py***REMOVED***(../../tests/test_bootstrap_engine.py)*

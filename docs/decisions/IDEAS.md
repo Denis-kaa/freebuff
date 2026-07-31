@@ -2,7 +2,7 @@
 
 > **Версия:** 1.0.0  
 > **Создан:** 2026-07-29  
-> **Основание:** [promt12.md***REMOVED***(../pompts/promt12.md), [promt13.md***REMOVED***(../pompts/promt13.md)  
+> **Основание:** [promt12.md***REMOVED***(../../pompts/promt12.md), [promt13.md***REMOVED***(../../pompts/promt13.md)  
 > **Принцип:** Никакие идеи не удаляются. Каждая имеет статус. История решений сохраняется.
 
 ---

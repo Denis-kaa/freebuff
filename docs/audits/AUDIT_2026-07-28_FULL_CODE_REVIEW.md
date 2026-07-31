@@ -331,4 +331,4 @@
 ---
 
 _Аудит проведён Buffy (z-ai/glm-5.2) — 2026-07-28_
-_Связанные файлы: [ROADMAP.md***REMOVED***(ROADMAP.md), [SYSTEM_INVENTORY.md***REMOVED***(SYSTEM_INVENTORY.md), [ARCHITECTURE_REVIEW.md***REMOVED***(ARCHITECTURE_REVIEW.md), [DECISIONS.md***REMOVED***(DECISIONS.md)_
+_Связанные файлы: [ROADMAP.md***REMOVED***(../vision/ROADMAP.md), [SYSTEM_INVENTORY.md***REMOVED***(../core/SYSTEM_INVENTORY.md), [ARCHITECTURE_REVIEW.md***REMOVED***(../core/ARCHITECTURE_REVIEW.md), [DECISIONS.md***REMOVED***(../decisions/DECISIONS.md)_

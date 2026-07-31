@@ -40,7 +40,7 @@
 
 Изменение воркера автоматически активирует триггер **Worker / tool** в `scripts/buffy_autodoc.py`. Это означает, что при коммите кода в `src/workers/` pre-commit hook ожидает обновления `WORKERS.md` и `CHANGELOG.md`.
 
-- Подробнее о триггерах: [`../core/RULES.md` — Авто-триггер документирования***REMOVED***(RULES.md)
+- Подробнее о триггерах: [`../core/RULES.md` — Авто-триггер документирования***REMOVED***(../core/RULES.md)
 - Установить pre-commit hook: `bash scripts/install_hooks.sh`
 
 ## Конвенции

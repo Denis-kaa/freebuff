@@ -11,6 +11,8 @@ consistency_check.py — Stage 9: self-consistency audit (registries as data).
   4. GLOSSARY TERMS     — все 16 обязательных терминов присутствуют в GLOSSARY.md
   5. ROADMAP REFS       — файлы, на которые ссылается ROADMAP_PROMT32, существуют
   6. CROSS REFERENCES   — канонические документы ссылаются друг на друга (взаимно)
+  7. PROJECT BOOK       — PROJECT_BOOK.md существует и связан с реестрами (несоответствие
+                          Roadmap/Registry/Project Book не проходит незамеченным)
 
 Роль: инструмент Этапа 9 консолидации (promt32) — «реестры как данные для проверки».
 Не изменяет код/документы автоматически.
@@ -23,6 +25,9 @@ consistency_check.py — Stage 9: self-consistency audit (registries as data).
   - check_cross_references проверяет ВЗАИМНЫЕ УПОМИНАНИЯ имён документов,
     а не синтаксис markdown-ссылок `[...***REMOVED***(...)` — битые ссылки как таковые
     детектит scripts/drift_check.py (link checker).
+  - check_project_book тоже mention-based: достаточно вхождения
+    «PROJECT_BOOK»/«Project Book» в MANIFEST/ROADMAP (в т.ч. в таблицах
+    запретов), а не обязательной markdown-ссылки на файл.
 
 Использование:
     python scripts/consistency_check.py            # запуск, exit 0/1
@@ -48,6 +53,7 @@ MODULE_CONSOLIDATION = Path("docs/core/MODULE_CONSOLIDATION.md")
 GLOSSARY = Path("docs/core/GLOSSARY.md")
 MANIFEST = Path("docs/core/ARCHITECTURE_MANIFEST.md")
 ROADMAP = Path("docs/vision/ROADMAP_PROMT32_CONSOLIDATION.md")
+PROJECT_BOOK = Path("docs/engineering-memory/PROJECT_BOOK.md")
 
 # Документы ядра, которые обязаны ссылаться друг на друга (взаимно).
 CORE_DOCS = {
@@ -245,6 +251,42 @@ def check_cross_references(workspace: Path) -> list[dict[str, Any***REMOVED*****
 
 
 # ═══════════════════════════════════════════════════════════════
+# 7. Project Book consistency
+# ═══════════════════════════════════════════════════════════════
+
+
+def check_project_book(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+    """Project Book существует и связан с каноническими реестрами.
+
+    Проверяет три вещи (несоответствие Roadmap/Registry/Project Book):
+      1. PROJECT_BOOK.md существует в docs/engineering-memory/
+      2. На него ссылается ARCHITECTURE_MANIFEST (канонический реестр)
+      3. Он упоминается в ROADMAP_PROMT32 (план работ)
+    """
+    issues: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+
+    text = _read(workspace, PROJECT_BOOK)
+    if text is None:
+        return [{"check": "project_book", "issue": "PROJECT_BOOK.md missing in docs/engineering-memory/"***REMOVED******REMOVED***
+
+    manifest_text = _read(workspace, MANIFEST) or ""
+    if "PROJECT_BOOK" not in manifest_text and "Project Book" not in manifest_text:
+        issues.append({
+            "check": "project_book",
+            "issue": "PROJECT_BOOK.md not referenced from ARCHITECTURE_MANIFEST.md",
+        ***REMOVED***)
+
+    roadmap_text = _read(workspace, ROADMAP) or ""
+    if "PROJECT_BOOK" not in roadmap_text and "Project Book" not in roadmap_text:
+        issues.append({
+            "check": "project_book",
+            "issue": "Project Book not mentioned in ROADMAP_PROMT32_CONSOLIDATION.md",
+        ***REMOVED***)
+
+    return issues
+
+
+# ═══════════════════════════════════════════════════════════════
 # Report
 # ═══════════════════════════════════════════════════════════════
 
@@ -259,6 +301,7 @@ def build_report(workspace: Path) -> dict[str, Any***REMOVED***:
         "glossary_terms": check_glossary_terms(workspace),
         "roadmap_refs": check_roadmap_refs(workspace),
         "cross_references": check_cross_references(workspace),
+        "project_book": check_project_book(workspace),
     ***REMOVED***
     all_issues = (
         report["engine_files"***REMOVED***
@@ -267,6 +310,7 @@ def build_report(workspace: Path) -> dict[str, Any***REMOVED***:
         + report["glossary_terms"***REMOVED***
         + report["roadmap_refs"***REMOVED***
         + report["cross_references"***REMOVED***
+        + report["project_book"***REMOVED***
     )
     report["total_issues"***REMOVED*** = len(all_issues)
     report["consistent"***REMOVED*** = not all_issues
@@ -295,6 +339,7 @@ def format_report(report: dict[str, Any***REMOVED***) -> str:
         ("glossary_terms", "Glossary terms (GLOSSARY.md)"),
         ("roadmap_refs", "Roadmap references (ROADMAP_PROMT32)"),
         ("cross_references", "Cross references (canonical docs link each other)"),
+        ("project_book", "Project Book consistency (docs/engineering-memory)"),
     ***REMOVED***
     for key, title in sections:
         items = report[key***REMOVED***

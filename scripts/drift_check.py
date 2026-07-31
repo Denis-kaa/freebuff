@@ -195,6 +195,10 @@ def _collect_indexed_sources(workspace: Path) -> list[str***REMOVED***:
         "SPEC.md",
         "CHANGELOG.md",
         "TASK.md",
+        # Agent instruction files at workspace root (mirror of seed_knowledge)
+        "AGENTS.md",
+        "CLAUDE.md",
+        "CODY.md",
     ***REMOVED***
     docs_dir = workspace / "docs"
     if docs_dir.is_dir():

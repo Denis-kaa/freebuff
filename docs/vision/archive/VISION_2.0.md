@@ -4,7 +4,7 @@
 > **Дата:** 2026-07-29  
 > **Статус:** Черновик  
 > **Авторы:** Buffy (DeepSeek v4 Flash)  
-> **Основание:** [promt12.md***REMOVED***(../pompts/promt12.md), [promt13.md***REMOVED***(../pompts/promt13.md), [IDEAS.md***REMOVED***(IDEAS.md)
+> **Основание:** [promt12.md***REMOVED***(../../../pompts/promt12.md), [promt13.md***REMOVED***(../../../pompts/promt13.md), [IDEAS.md***REMOVED***(../../decisions/IDEAS.md)
 
 ---
 
@@ -280,4 +280,4 @@ Buffy не заменяет существующие инструменты. Buf
 
 ---
 
-*Подробнее: [IDEAS.md***REMOVED***(IDEAS.md) — реестр идей, [ROADMAP.md***REMOVED***(ROADMAP.md) — дорожная карта*
+*Подробнее: [IDEAS.md***REMOVED***(../../decisions/IDEAS.md) — реестр идей, [ROADMAP.md***REMOVED***(../ROADMAP.md) — дорожная карта*

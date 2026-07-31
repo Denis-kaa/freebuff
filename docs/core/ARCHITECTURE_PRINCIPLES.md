@@ -3,7 +3,7 @@
 > **Версия:** 1.0.0
 > **Дата:** 2026-07-29
 > **Статус:** Утверждён
-> **Основание:** [promt16.md***REMOVED***(../../pompts/promt16.md), [VISION_3.0.md***REMOVED***(../VISION_3.0.md)
+> **Основание:** [promt16.md***REMOVED***(../../pompts/promt16.md), [VISION_3.0.md***REMOVED***(../vision/VISION_3.0.md)
 
 ---
 
@@ -170,7 +170,7 @@ Single → Cowork → Teamwork → Organization → Community
 Каждый следующий уровень надстраивается над предыдущим, не ломая его.
 Архитектурные решения на уровне Single не должны препятствовать переходу к Teamwork.
 
-См. [VISION_3.0.md***REMOVED***(../VISION_3.0.md), раздел «Три режима работы».
+См. [VISION_3.0.md***REMOVED***(../vision/VISION_3.0.md), раздел «Три режима работы».
 
 ---
 

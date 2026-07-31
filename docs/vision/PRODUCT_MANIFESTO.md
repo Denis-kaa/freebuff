@@ -3,7 +3,7 @@
 > **Версия:** 1.0.0  
 > **Дата:** 2026-07-29  
 > **Статус:** Утверждён  
-> **Основание:** [VISION_3.0.md***REMOVED***(VISION_3.0.md), [promt14.md***REMOVED***(../pompts/promt14.md)  
+> **Основание:** [VISION_3.0.md***REMOVED***(VISION_3.0.md), [promt14.md***REMOVED***(../../pompts/promt14.md)  
 
 ---
 
@@ -276,4 +276,4 @@ Buffy делает:
 
 ---
 
-*Связанные документы: [VISION_3.0.md***REMOVED***(VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(ARCHITECTURE_3.0.md), [IDEAS.md***REMOVED***(IDEAS.md), [ROADMAP.md***REMOVED***(ROADMAP.md)*
+*Связанные документы: [VISION_3.0.md***REMOVED***(VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(../core/ARCHITECTURE_3.0.md), [IDEAS.md***REMOVED***(../decisions/IDEAS.md), [ROADMAP.md***REMOVED***(ROADMAP.md)*

@@ -88,11 +88,11 @@
 
 ## 🔗 Релевантные документы
 
-- [BUFFY.md***REMOVED***(../BUFFY.md) — мастер-промт
-- [CHANGELOG.md***REMOVED***(../CHANGELOG.md) — журнал изменений [2.3.0***REMOVED***
-- [ROADMAP.md***REMOVED***(ROADMAP.md) — план развития
-- [SYSTEM_INVENTORY.md***REMOVED***(SYSTEM_INVENTORY.md) — каталог компонентов
-- [AUDIT_2026-07-27.md***REMOVED***(AUDIT_2026-07-27.md) — аудит ключей
+- [BUFFY.md***REMOVED***(../../BUFFY.md) — мастер-промт
+- [CHANGELOG.md***REMOVED***(../../CHANGELOG.md) — журнал изменений [2.3.0***REMOVED***
+- [ROADMAP.md***REMOVED***(../vision/ROADMAP.md) — план развития
+- [SYSTEM_INVENTORY.md***REMOVED***(../core/SYSTEM_INVENTORY.md) — каталог компонентов
+- [AUDIT_2026-07-27.md***REMOVED***(../audits/AUDIT_2026-07-27.md) — аудит ключей
 
 ---
 

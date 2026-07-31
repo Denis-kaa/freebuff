@@ -4,7 +4,7 @@
 > **Дата:** 2026-07-29  
 > **Компонент:** `freebuff_plugin/bootstrap/` (8 файлов)  
 > **Существующие тесты:** 53 (в `tests/test_bootstrap_engine.py`)  
-> **Основание:** [BOOTSTRAP_SPECIFICATION.md***REMOVED***(BOOTSTRAP_SPECIFICATION.md), [PROMPT_BASE.md***REMOVED***(PROMPT_BASE.md) §6.3  
+> **Основание:** [BOOTSTRAP_SPECIFICATION.md***REMOVED***(../core/BOOTSTRAP_SPECIFICATION.md), [PROMPT_BASE.md***REMOVED***(PROMPT_BASE.md) §6.3  
 
 ---
 
@@ -221,4 +221,4 @@ find /tmp -name "bootstrap_state.json" -delete
 
 ---
 
-*Связанные документы: [BOOTSTRAP_SPECIFICATION.md***REMOVED***(BOOTSTRAP_SPECIFICATION.md), [AUDIT_BOOTSTRAP.md***REMOVED***(AUDIT_BOOTSTRAP.md), [tests/test_bootstrap_engine.py***REMOVED***(../tests/test_bootstrap_engine.py)*
+*Связанные документы: [BOOTSTRAP_SPECIFICATION.md***REMOVED***(../core/BOOTSTRAP_SPECIFICATION.md), [AUDIT_BOOTSTRAP.md***REMOVED***(../audits/AUDIT_BOOTSTRAP.md), [tests/test_bootstrap_engine.py***REMOVED***(../../tests/test_bootstrap_engine.py)*

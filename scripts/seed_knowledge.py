@@ -37,6 +37,10 @@ DEFAULT_DOC_SOURCES = [
     "SPEC.md",
     "CHANGELOG.md",
     "TASK.md",
+    # Agent instruction files at workspace root (knowledge sources)
+    "AGENTS.md",
+    "CLAUDE.md",
+    "CODY.md",
 ***REMOVED***
 
 # Patterns that generate noise or are not useful for knowledge retrieval.

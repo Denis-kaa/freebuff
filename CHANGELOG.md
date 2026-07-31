@@ -681,7 +681,7 @@
   - `docs/audits/LEVIATHAN_CONTEXT_AUDIT.md` — 10-раздельный анализ (модель LEVIATHAN, сопоставление с Buffy, пересечения, дублирование, пробелы, Red Team, эволюционный план, дорожная карта, оценка 7.0/10 vs 5.3/10, каноническая архитектура)
   - `docs/vision/ROADMAP.md` — LEVIATHAN раздел обновлён: 4 фазы интеграции (Schema Extension → Verification Framework → Metrics Engine → Vector Memory) с оценкой часов, рисков и тестов
 
-- **Компонентная документация по шаблону ([promt19.md***REMOVED***(pompts/promt19.md)):**
+- **Компонентная документация по шаблону (promt19.md):**
   - `docs/core/EVENT_STORE_SPECIFICATION.md` — полная документация EventStore по шаблону (9 разделов: назначение, архитектура, интерфейс, реализация, тесты, конфигурация, ошибки, примеры, связи)
   - `docs/core/SESSION_MESH_SPECIFICATION.md` — документация SessionMesh по шаблону
   - `docs/core/NODE_MESH_SPECIFICATION.md` — документация NodeMesh по шаблону
@@ -725,7 +725,7 @@
 ## [5.3.0***REMOVED*** — 2026-07-30
 
 ### Добавлено
-- **LEVIATHAN Context Integration & Component Documentation Template ([promt18.md***REMOVED***(pompts/promt18.md), [promt19.md***REMOVED***(pompts/promt19.md)):**
+- **LEVIATHAN Context Integration & Component Documentation Template ([promt18.md***REMOVED***(pompts/promt18.md), promt19.md):**
   - `docs/core/TEMPLATE_COMPONENT_DOCUMENTATION.md` — универсальный шаблон документирования компонентов (9 разделов: назначение, архитектура, интерфейс, реализация, тесты, конфигурация, ошибки, примеры, связанные компоненты)
   - `docs/vision/ROADMAP.md` v3.1.0 — добавлены:
     - LEVIATHAN Context Integration (unified context schema, `buffy-ctx` CLI, task queue, handoff, reaper, context HTTP API)

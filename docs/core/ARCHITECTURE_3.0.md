@@ -3,7 +3,7 @@
 > **Версия:** 3.0.0  
 > **Дата:** 2026-07-29  
 > **Статус:** Черновик (ревизия существующей архитектуры)  
-> **Основание:** [VISION_3.0.md***REMOVED***(VISION_3.0.md), [SYSTEM_INVENTORY.md***REMOVED***(SYSTEM_INVENTORY.md), [IDEAS.md***REMOVED***(IDEAS.md)  
+> **Основание:** [VISION_3.0.md***REMOVED***(../vision/VISION_3.0.md), [SYSTEM_INVENTORY.md***REMOVED***(SYSTEM_INVENTORY.md), [IDEAS.md***REMOVED***(../decisions/IDEAS.md)  
 
 ---
 
@@ -506,4 +506,4 @@ W = Write (публикует/сохраняет)
 
 ---
 
-*Связанные документы: [VISION_3.0.md***REMOVED***(VISION_3.0.md), [SYSTEM_INVENTORY.md***REMOVED***(SYSTEM_INVENTORY.md), [IDEAS.md***REMOVED***(IDEAS.md), [ROADMAP.md***REMOVED***(ROADMAP.md), [BUFFY.md***REMOVED***(../BUFFY.md)*
+*Связанные документы: [VISION_3.0.md***REMOVED***(../vision/VISION_3.0.md), [SYSTEM_INVENTORY.md***REMOVED***(SYSTEM_INVENTORY.md), [IDEAS.md***REMOVED***(../decisions/IDEAS.md), [ROADMAP.md***REMOVED***(../vision/ROADMAP.md), [BUFFY.md***REMOVED***(../../BUFFY.md)*

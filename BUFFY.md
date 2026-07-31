@@ -251,7 +251,17 @@ freebuff/
 ├── SPEC.md                   # ТЗ на freebuff (по blueprints_v3)
 ├── BUFFY_PROJECT.md          # архитектура проекта
 ├── AGENTS.md                 # инструкции для AI-агентов (корень)
-
+├── core/                     # интерфейсы ядра (interfaces.py, router.py)
+├── src/                      # пакетные модули (workers/)
+├── cli/                      # CLI-слой
+├── frontend/                 # фронтенд (BuffyDashboard.tsx)
+├── plugins/                  # плагины (tg_messenger, system_monitor, …)
+├── services/                 # сервисы (system/monitor)
+├── projects/                 # пользовательские проекты
+├── infa/                     # инфраструктурные материалы
+├── buffy-playground/         # песочница для экспериментов
+├── screenshots/              # скриншоты
+├── trash/                    # временный мусор
 ├── sessions/                 # сырые логи
 ├── logs/                     # системные логи
 ├── docs/
@@ -291,11 +301,8 @@ freebuff/
 │   ├── telegram_bot.py       # Telegram бот freebuff
 │   ├── bootstrap.py          # старт сессии
 │   ├── oom_protect.sh        # OOM protection
-│   └── monitor.sh            # мониторинг плагина
-├── tests/                    # 650+ тестов
-│   ├── test_scenario_engine.py  # 83 теста
-│   ├── test_tgbot.py            # 44 теста
-│   └── ...
+│   └── system_monitor.py     # мониторинг системы
+├── tests/                    # 1000+ тестов
 ├── freebuff_plugin/mesh/     # 🆕 Session Mesh v2.0 (распределённый слой)
 ├── runtime/                  # Marketplace-ready провайдеры
 └── data/

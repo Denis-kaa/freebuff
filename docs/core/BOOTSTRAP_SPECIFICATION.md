@@ -3,7 +3,7 @@
 > **Версия:** 1.0.0  
 > **Дата:** 2026-07-29  
 > **Статус:** Спецификация (к реализации)  
-> **Основание:** [VISION_3.0.md***REMOVED***(VISION_3.0.md), [promt14.md***REMOVED***(../pompts/promt14.md) (концепция #4)  
+> **Основание:** [VISION_3.0.md***REMOVED***(../vision/VISION_3.0.md), [promt14.md***REMOVED***(../../pompts/promt14.md) (концепция #4)  
 
 > **⚠️ Важно:** Существующий `scripts/bootstrap.py` отвечает за **сессионный bootstrap** (создание сессии, конспект, StreamBridge).
 > Новая спецификация описывает **environment bootstrap** (развёртывание окружения).
@@ -588,4 +588,4 @@ Bootstrap Engine должен корректно восстанавливать�
 
 ---
 
-*Связанные документы: [VISION_3.0.md***REMOVED***(VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(ARCHITECTURE_3.0.md), [scripts/bootstrap.py***REMOVED***(../scripts/bootstrap.py)*
+*Связанные документы: [VISION_3.0.md***REMOVED***(../vision/VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(ARCHITECTURE_3.0.md), [scripts/bootstrap.py***REMOVED***(../../scripts/bootstrap.py)*

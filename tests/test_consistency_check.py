@@ -30,13 +30,22 @@ from scripts.consistency_check import (
     check_glossary_terms,
     check_lifecycle_coverage,
     check_module_areas,
+    check_project_book,
     check_roadmap_refs,
     extract_engine_rows,
     run_consistency_check,
 )
 
 # ── Импорт должен работать и с фактическим проектом.
-from scripts.consistency_check import CANONICAL, LIFECYCLE, GLOSSARY, MODULE_CONSOLIDATION, ROADMAP  # noqa: E402
+from scripts.consistency_check import (  # noqa: E402
+    CANONICAL,
+    GLOSSARY,
+    LIFECYCLE,
+    MANIFEST,
+    MODULE_CONSOLIDATION,
+    PROJECT_BOOK,
+    ROADMAP,
+)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -102,15 +111,21 @@ def workspace(tmp_path: Path) -> Path:
                        "Integration", "Knowledge", "Memory", "Project Book", "Engineering Memory",
                        "Lifecycle", "Registry", "Decision Log", "Pulse"***REMOVED***)
     _write(ws / GLOSSARY, f"# GLOSSARY\n\n{terms***REMOVED***\n\n{core_links***REMOVED***\n")
-    # MANIFEST ссылается на все документы ядра.
-    _write(ws / CANONICAL.parent / "ARCHITECTURE_MANIFEST.md", core_links + "\n")
+    # MANIFEST ссылается на все документы ядра + PROJECT_BOOK.
+    _write(
+        ws / CANONICAL.parent / "ARCHITECTURE_MANIFEST.md",
+        core_links + f"\nПроект: расширять {PROJECT_BOOK.name***REMOVED***\n",
+    )
+    # PROJECT_BOOK существует в каноническом месте.
+    _write(ws / PROJECT_BOOK, "# Project Book\n\nНарратив проекта.\n")
     # Файлы движков существуют.
     _write(ws / "scripts/memory_engine.py", "class MemoryEngine:\n    pass\n")
     _write(ws / "scripts/rag_engine.py", "class RAGEngine:\n    pass\n")
-    # Роадмап ссылается на существующие файлы.
+    # Роадмап ссылается на существующие файлы + упоминает Project Book.
     _write(
         ws / ROADMAP,
-        "Этап: `docs/core/ARCHITECTURE_CANONICAL.md` и `docs/core/GLOSSARY.md`",
+        "Этап: `docs/core/ARCHITECTURE_CANONICAL.md` и `docs/core/GLOSSARY.md`. "
+        "Project Book — нарратив инженерии.",
     )
     return ws
 
@@ -228,6 +243,31 @@ class TestCheckCrossReferences:
 # ═══════════════════════════════════════════════════════════════
 # Report / CLI
 # ═══════════════════════════════════════════════════════════════
+
+
+class TestCheckProjectBook:
+    def test_all_clean(self, workspace: Path):
+        assert check_project_book(workspace) == [***REMOVED***
+
+    def test_missing_book_reported(self, tmp_path: Path):
+        issues = check_project_book(tmp_path)
+        assert issues and issues[0***REMOVED***["check"***REMOVED*** == "project_book"
+        assert "PROJECT_BOOK.md missing" in issues[0***REMOVED***["issue"***REMOVED***
+
+    def test_missing_manifest_ref(self, tmp_path: Path):
+        ws = tmp_path / "ws"
+        _write(ws / PROJECT_BOOK, "# Project Book\n")
+        _write(ws / MANIFEST, "# Manifest без упоминания книги проекта\n")
+        issues = check_project_book(ws)
+        assert any("ARCHITECTURE_MANIFEST" in i["issue"***REMOVED*** for i in issues)
+
+    def test_missing_roadmap_ref(self, tmp_path: Path):
+        ws = tmp_path / "ws"
+        _write(ws / PROJECT_BOOK, "# Project Book\n")
+        _write(ws / MANIFEST, "# Manifest\n| Запрещено | Вместо |\n| Второй Project Book | расширять PROJECT_BOOK.md |\n")
+        _write(ws / ROADMAP, "# Roadmap без упоминания книги проекта\n")
+        issues = check_project_book(ws)
+        assert any("ROADMAP_PROMT32" in i["issue"***REMOVED*** for i in issues)
 
 
 class TestReport:

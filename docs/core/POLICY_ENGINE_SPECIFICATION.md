@@ -3,7 +3,7 @@
 > **Версия:** 1.0.0  
 > **Дата:** 2026-07-29  
 > **Статус:** Спецификация (к реализации)  
-> **Основание:** [VISION_3.0.md***REMOVED***(VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(ARCHITECTURE_3.0.md), [promt14.md***REMOVED***(../pompts/promt14.md) (концепции #10–12)  
+> **Основание:** [VISION_3.0.md***REMOVED***(../vision/VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(ARCHITECTURE_3.0.md), [promt14.md***REMOVED***(../../pompts/promt14.md) (концепции #10–12)  
 
 ---
 
@@ -912,4 +912,4 @@ freebuff_plugin/policy/
 
 ---
 
-*Связанные документы: [CAPABILITY_SPECIFICATION.md***REMOVED***(CAPABILITY_SPECIFICATION.md), [VISION_3.0.md***REMOVED***(VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(ARCHITECTURE_3.0.md), [RUNTIME_ABSTRACTION_SPECIFICATION.md***REMOVED***(RUNTIME_ABSTRACTION_SPECIFICATION.md)*
+*Связанные документы: [CAPABILITY_SPECIFICATION.md***REMOVED***(CAPABILITY_SPECIFICATION.md), [VISION_3.0.md***REMOVED***(../vision/VISION_3.0.md), [ARCHITECTURE_3.0.md***REMOVED***(ARCHITECTURE_3.0.md), [RUNTIME_ABSTRACTION_SPECIFICATION.md***REMOVED***(RUNTIME_ABSTRACTION_SPECIFICATION.md)*

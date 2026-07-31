@@ -288,4 +288,4 @@
 
 ---
 
-_Связанные файлы: [BUFFY_PROJECT.md***REMOVED***(../BUFFY_PROJECT.md), [TASK.md***REMOVED***(../TASK.md), [CHANGELOG.md***REMOVED***(../CHANGELOG.md), [SYSTEM_INVENTORY.md***REMOVED***(SYSTEM_INVENTORY.md)_
+_Связанные файлы: [BUFFY_PROJECT.md***REMOVED***(../../BUFFY_PROJECT.md), [TASK.md***REMOVED***(../../TASK.md), [CHANGELOG.md***REMOVED***(../../CHANGELOG.md), [SYSTEM_INVENTORY.md***REMOVED***(../core/SYSTEM_INVENTORY.md)_

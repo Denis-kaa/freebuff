@@ -1339,4 +1339,4 @@ freebuff_plugin/{category***REMOVED***/{module***REMOVED***/
 
 ---
 
-*Связанные документы: [BOOTSTRAP_SPECIFICATION.md***REMOVED***(BOOTSTRAP_SPECIFICATION.md), [EVENT_PLATFORM_SPECIFICATION.md***REMOVED***(EVENT_PLATFORM_SPECIFICATION.md), [freebuff_plugin/scenarios/***REMOVED***(../freebuff_plugin/scenarios/), [PROMPT_BASE.md***REMOVED***(PROMPT_BASE.md)*
+*Связанные документы: [BOOTSTRAP_SPECIFICATION.md***REMOVED***(../core/BOOTSTRAP_SPECIFICATION.md), [EVENT_PLATFORM_SPECIFICATION.md***REMOVED***(../core/EVENT_PLATFORM_SPECIFICATION.md), [freebuff_plugin/scenarios/***REMOVED***(../../freebuff_plugin/scenarios), [PROMPT_BASE.md***REMOVED***(PROMPT_BASE.md)*

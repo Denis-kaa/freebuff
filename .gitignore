@@ -79,7 +79,9 @@ Thumbs.db
 context/
 data/
 logs/
-sessions/
+# Keep the sessions/ directory itself (referenced in BUFFY.md tree)
+sessions/*
+!sessions/.gitkeep
 
 # Node (playground)
 buffy-playground/node_modules/
@@ -99,3 +101,6 @@ buffy-playground/dist/
 
 # Project Pulse runtime snapshot (workspace root for MCP server)
 *.pulse_snapshot.json
+
+# Generated drift report (drift_check writes it on every run)
+docs/DRIFT_REPORT.md
