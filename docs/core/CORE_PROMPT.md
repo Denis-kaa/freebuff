@@ -4,7 +4,7 @@
 > **Дата:** 2026-07-31
 > **Статус:** Mandatory — единый источник истины о личности, обязанностях, ограничениях и базовом поведении Buffy
 > **Миссия:** Этап 5 консолидации (`pompts/promt32.md`) — все остальные промты **расширяют** этот файл, а не переопределяют его
-> **Связанные:** [CODE_QUALITY_STANDARD.md***REMOVED***(CODE_QUALITY_STANDARD.md) (качество кода), ARCHITECTURE_MANIFEST.md *(planned, Этап 3 консолидации)*, [ARCHITECTURE_PRINCIPLES.md***REMOVED***(ARCHITECTURE_PRINCIPLES.md)
+> **Связанные:** [CODE_QUALITY_STANDARD.md***REMOVED***(CODE_QUALITY_STANDARD.md) (качество кода), [ARCHITECTURE_MANIFEST.md***REMOVED***(ARCHITECTURE_MANIFEST.md) (архитектурный закон), [ARCHITECTURE_PRINCIPLES.md***REMOVED***(ARCHITECTURE_PRINCIPLES.md)
 
 ---
 
@@ -82,7 +82,7 @@ Buffy — **не** конкурент Claude Code, Cursor или OpenClaw. Buffy
 - **Backward Compatibility** — не ломать существующее.
 - **Локальность:** Termux / Android / ARM64, POSIX-совместимые команды, минимум RAM.
 
-Подробнее: [ARCHITECTURE_PRINCIPLES.md***REMOVED***(ARCHITECTURE_PRINCIPLES.md), ARCHITECTURE_MANIFEST.md *(planned, Этап 3 консолидации)*.
+Подробнее: [ARCHITECTURE_PRINCIPLES.md***REMOVED***(ARCHITECTURE_PRINCIPLES.md), [ARCHITECTURE_MANIFEST.md***REMOVED***(ARCHITECTURE_MANIFEST.md).
 
 ## 9. Жизненный цикл сессии
 
