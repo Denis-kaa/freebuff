@@ -6,6 +6,51 @@
 
 ---
 
+## [5.25.1***REMOVED*** — 2026-07-31
+
+### Added
+- **Mandatory security audit `pompts/TASK_SECURE_MCP_ACCESS.md` — Шаг 2 (Bearer auth в `scripts/mcp_fastapi.py`)**
+
+#### Шаг 2 — Bearer-token auth на `/mcp` (риск №7 аудита)
+- `scripts/mcp_fastapi.py`:
+  - `verify_bearer_token(request)` — FastAPI `Depends`, проверяет `Authorization: Bearer <token>` через `hmac.compare_digest` (constant-time, anti-timing-attack)
+  - `_get_active_token()` — Vault first (hvac), env fallback; TTL-кеш 300 s для Vault-пути, env-путь без кеша (для тестов с monkeypatch)
+  - Поддержка AppRole (`FREEBUFF_VAULT_ROLE_ID + _SECRET_ID`) И root token (`FREEBUFF_VAULT_TOKEN`); fail-closed если Vault сконфигурирован, но недоступен
+  - KV v2 path-stripping — поддержка любых mount-names (`secret`, `kv`, `kv2`) через `/data/` split
+  - `401 Unauthorized` + `WWW-Authenticate: Bearer realm="buffy-mcp"` (RFC 6750)
+  - Тестовый bypass: двойной lock `FREEBUFF_ENV=test AND FREEBUFF_MCP_AUTH_DISABLED=1` (случайное включение в prod невозможно)
+  - DoS-защита: токены `len > 1024` отклоняются до encode
+  - `_reset_token_cache()` — exposed для тестов
+  - Применён к **только `/mcp` (POST/GET/DELETE)**; `/`, `/dashboard`, `/metrics/*` остаются публичными (observability + liveness)
+- `scripts/mcp_fastapi.py` импорты: `hmac, os, time` + `Depends, HTTPException` (fastapi) + `hvac` (try-import с `HAS_HVAC`)
+- `tests/test_mcp_fastapi.py`:
+  - Module-level setdefault bypass — существующие 47 тестов остаются зелёными без изменений
+  - Новый класс **`TestAuthorization`** (10 тестов): 401 без auth, 401 неверный, 401 non-Bearer scheme, 200 корректный bearer (POST), 204 корректный bearer (DELETE), 401 нет token в env, 200 на `/`, 200 на `/metrics/status`, 200/404 на `/dashboard`, anti-regression на `== provided/expected`
+- `requirements.txt`:
+  - `hvac>=2.0.0` добавлен (hvac был не установлен; теперь доступен)
+
+### Backward compatibility
+- 47 существующих тестов (TestHealth, TestPost*, TestDelete, TestGet, TestOriginValidation, TestAsyncSessionManager, TestMetricsEndpoints) проходят без изменений — благодаря автобупасу при `FREEBUFF_ENV=test`.
+- Старые клиенты, не передающие `Authorization: Bearer ...`, получают **`401 Unauthorized`** на `/mcp` — это breaking change. Шаг 4 (ручное действие Дениса) обновит MCP-коннектор.
+
+### Tests
+- `python -m pytest tests/test_mcp_fastapi.py -q`: **57 passed in 7.19 s, 0 failures** (47 + 10 TestAuthorization)
+- `python -m py_compile scripts/mcp_fastapi.py tests/test_mcp_fastapi.py`: 0 errors
+
+### Code review
+- `code-reviewer-minimax-m3` (parallel with tests): **ship-it approved** (0 critical, 0 major, 3 minor hardening все применены)
+- `thinker-with-files-gemini` (parallel): рекомендовал **только защищать /mcp** (не /, не /metrics, не /dashboard) + Vault-first с env fallback + 5-min cache TTL на Vault-пути
+
+### Артефакты
+- This CHANGELOG entry (5.25.1)
+- TASK.md checkpoints обновлены
+
+### Отложено (требуются данные / согласование)
+- **Шаг 3 (cloudflared perimeter)** — решение оставить quick tunnel или перейти на именованный
+- **Шаг 4** — ручное действие Дениса: добавить URL + токен в MCP-коннектор
+
+---
+
 ## [5.25.0***REMOVED*** — 2026-07-31
 
 ### Added

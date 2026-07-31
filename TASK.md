@@ -1,13 +1,14 @@
 # TASK: LEVIATHAN Integration — все 5 фаз завершены
 
-**Статус:** ✅ Project Pulse завершён + ✅ Шаг 0+Шаг 1 security audit `pompts/TASK_SECURE_MCP_ACCESS.md` (v5.25.0)
+**Статус:** ✅ Project Pulse завершён + ✅ Шаг 0+Шаг 1+Шаг 2 security audit `pompts/TASK_SECURE_MCP_ACCESS.md` (v5.25.1)
 **Создана:** 2026-07-30
-**Версия проекта:** v5.25.0
+**Версия проекта:** v5.25.1
 **Обновлено:** 2026-07-31
 
 > Security audit checkpoint (2026-07-31):
 > - Шаг 0 (диагностика): 0 совпадений по `check_command` в MCP-маршрутах; ни один `cloudflared`/`mcp_fastapi`/`mcp_server` не запущен; `pkill` не требуется — `docs/audits/AUDIT_STEP0_2026-07-31.md`.
-> - Шаг 1 (закрытие free shell): `_run_shell`, `_check_shell`, `_check_content_match` удалены; `_check_pytest` переписан на argv-list с `shell=False`; 75/75 тестов зелёные; code-reviewer approved.
+> - Шаг 1 (закрытие free shell): `_run_shell`, `_check_shell`, `_check_content_match` удалены; `_check_pytest` переписан на argv-list с `shell=False`; 75/75 тестов зелёные; code-reviewer approved — коммит c51ce49.
+> - Шаг 2 (Bearer auth): `verify_bearer_token` + `Depends` на `/mcp` (POST/GET/DELETE); `hmac.compare_digest`; Vault-first через hvac (KV v2, AppRole + root token), env fallback, TTL-кеш 300 s; тестовый bypass только при `FREEBUFF_ENV=test` AND `FREEBUFF_MCP_AUTH_DISABLED=1`; 401 + `WWW-Authenticate: Bearer realm="buffy-mcp"`. 57 passed in 7.19 s; code-reviewer shipped.
 
 ---
 
