@@ -73,15 +73,15 @@
 
 | # | Движок | Файл | Назначение | Ответственность | Хранилище | Тесты |
 |---|--------|------|-----------|-----------------|-----------|-------|
-| S1 | `RAGEngine` | `scripts/rag_engine.py` | Семантический поиск с ранжированием | 5 режимов (keyword/semantic/hybrid/RRF), re-ranking | поверх `KnowledgeEngine` | 🔴 0 (файл отсутствует) |
-| S2 | `CollaborationEngine` | `scripts/collaboration.py` | Коллаборативные сессии | сессии, участники, роли owner/editor/viewer, история | `data/collaboration.db` | 🔴 0 (файл отсутствует) |
-| S3 | `PresenceEngine` | `scripts/presence.py` | Присутствие агентов | статусы online/offline/busy, heartbeat, prune | `data/presence.db` | 🔴 0 (файл отсутствует) |
-| S4 | `RoleEngine` | `scripts/roles.py` | Роли и capabilities | 6 стандартных ролей, маппинг capabilities | `data/roles.db` | 🔴 0 (файл отсутствует) |
-| S5 | `MetricsEngine` | `scripts/metrics.py` | Метрики качества разработки | VCR/SRG/CpVO/RRR/TTD, Health Score | `data/metrics.db` | 🔴 0 (файл отсутствует) |
-| S6 | `ProjectPulse` | `scripts/project_pulse.py` | Лента изменений проекта | git-коммиты, файлы, события EventBus | SQLite | 🔴 0 (файл отсутствует) |
+| S1 | `RAGEngine` | `scripts/rag_engine.py` | Семантический поиск с ранжированием | 5 режимов (keyword/semantic/hybrid/RRF), re-ranking | поверх `KnowledgeEngine` | ✅ 34 |
+| S2 | `CollaborationEngine` | `scripts/collaboration.py` | Коллаборативные сессии | сессии, участники, роли owner/editor/viewer, история | `data/collaboration.db` | ✅ 48 |
+| S3 | `PresenceEngine` | `scripts/presence.py` | Присутствие агентов | статусы online/offline/busy, heartbeat, prune | `data/presence.db` | ✅ 42 |
+| S4 | `RoleEngine` | `scripts/roles.py` | Роли и capabilities | 6 стандартных ролей, маппинг capabilities | `data/roles.db` | ✅ 44 |
+| S5 | `MetricsEngine` | `scripts/metrics.py` | Метрики качества разработки | VCR/SRG/CpVO/RRR/TTD, Health Score | `data/metrics.db` | ✅ 23 |
+| S6 | `ProjectPulse` | `scripts/project_pulse.py` | Лента изменений проекта | git-коммиты, файлы, события EventBus | SQLite | ✅ 34 |
 | S7 | `DriftCheck` | `scripts/drift_check.py` | Самодиагностика | дрейф документации, битые ссылки, ADR-расположение | `docs/DRIFT_REPORT.md` | ✅ |
 
-> **Важно (факт 2026-07-31):** CHANGELOG декларирует 60+ тестов для S1–S6, но файлы `tests/test_rag_engine.py`, `tests/test_collaboration.py`, `tests/test_presence.py`, `tests/test_roles.py`, `tests/test_metrics.py`, `tests/test_project_pulse.py` **отсутствуют** в `tests/` и в git-истории. Это зафиксировано в [ARCHITECTURAL_DEBT.md***REMOVED***(ARCHITECTURAL_DEBT.md) как критический долг (код без тестов).
+> **Факт 2026-07-31 (обновлено):** CHANGELOG декларировал 60+ тестов для S1–S6, но файлы отсутствовали в `tests/` и в git-истории — долг был зафиксирован в [ARCHITECTURAL_DEBT.md***REMOVED***(ARCHITECTURAL_DEBT.md) как критический. **Тесты восстановлены** (2026-07-31): S1=34, S2=48, S3=42, S4=44, S5=23, S6=34 → **225 тестов, 0 failures**. Долг закрыт (см. Resolved Debt).
 
 ---
 
@@ -130,10 +130,10 @@ ProjectPulse ──► EventBus
 | Движок | Владелец | Уровень поддержки |
 |--------|----------|-------------------|
 | Core (C1–C6) | Buffy (я) | ✅ Production, полные тесты |
-| RAGEngine | Buffy (я) | 🟡 Код есть, тестов нет |
-| Collaboration/Presence/Roles | Buffy (я) | 🟡 Код есть, тестов нет |
-| MetricsEngine | Buffy (я) | 🟡 Код восстановлен из байткода, тестов нет |
-| ProjectPulse | Buffy (я) | 🟡 Код есть, тестов нет |
+| RAGEngine | Buffy (я) | ✅ Production, 34 теста |
+| Collaboration/Presence/Roles | Buffy (я) | ✅ Production, 48/42/44 теста |
+| MetricsEngine | Buffy (я) | ✅ Production, 23 теста |
+| ProjectPulse | Buffy (я) | ✅ Production, 34 теста |
 | DriftCheck | Buffy (я) | ✅ Production |
 
 ---
@@ -145,7 +145,7 @@ ProjectPulse ──► EventBus
 | 1 | RAGEngine отдельный vs фича KnowledgeEngine | **Фича KnowledgeEngine** (целевое состояние). Отдельный файл сохраняется, но без собственного хранилища. |
 | 2 | MetricsEngine vs ProjectPulse vs DriftCheck | Metrics = метрики качества; Pulse = лента событий; DriftCheck = самодиагностика. Разные домены, не дублируют друг друга. |
 | 3 | RoleEngine без EventBus | Оставить DI через конструктор; при необходимости перевести на события в v6. |
-| 4 | Отсутствие тестов у 6 движков | **Критический долг** — восстановить тест-файлы (см. ARCHITECTURAL_DEBT). |
+| 4 | Отсутствие тестов у 6 движков | **Закрыт** (2026-07-31): тест-файлы восстановлены, 225 тестов (см. ARCHITECTURAL_DEBT → Resolved). |
 
 ---
 
@@ -156,7 +156,7 @@ ProjectPulse ──► EventBus
 - [x***REMOVED*** Зависимости проверены по коду (раздел 4)
 - [x***REMOVED*** Жизненный цикл и владельцы определены (разделы 5–6)
 - [x***REMOVED*** Неоднозначности зафиксированы (раздел 7)
-- [ ***REMOVED*** Тесты восстановлены для S1–S6 (передано в ARCHITECTURAL_DEBT)
+- [x***REMOVED*** Тесты восстановлены для S1–S6 (225 тестов, 0 failures — 2026-07-31)
 
 ---
 

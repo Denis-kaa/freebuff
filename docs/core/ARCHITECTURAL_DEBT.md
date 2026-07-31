@@ -119,7 +119,17 @@ This document tracks **architectural debt** identified by the daily self-audit i
 
 ## 5. Resolved Debt
 
-_None yet. When a debt item above is fixed, move it here with the commit hash and date._
+### 5.1 Missing Tests for 6 Engines (S1–S6) — RESOLVED
+
+| Field | Value |
+|-------|-------|
+| **ID** | DEBT-2026-07-31-006 |
+| **Component** | `RAGEngine`, `CollaborationEngine`, `PresenceEngine`, `RoleEngine`, `MetricsEngine`, `ProjectPulse` |
+| **Severity** | 🔴 Critical → ✅ Resolved |
+| **Type** | Test coverage |
+| **Description** | Test files for 6 engines were absent from `tests/` and git history despite CHANGELOG claims of 60+ tests (noted in `ARCHITECTURE_CANONICAL.md` §3.2). Restored on 2026-07-31: `test_rag_engine.py` (34), `test_collaboration.py` (48), `test_presence.py` (42), `test_roles.py` (44), `test_metrics.py` (23), `test_project_pulse.py` (34). |
+| **Evidence** | `python -m pytest tests/test_rag_engine.py tests/test_collaboration.py tests/test_presence.py tests/test_roles.py tests/test_metrics.py tests/test_project_pulse.py -q` → **225 passed, 0 failed** (~56s). |
+| **Resolved** | 2026-07-31 — см. коммит «test: restore test suites for 6 engines (close critical debt)». |
 
 ---
 
