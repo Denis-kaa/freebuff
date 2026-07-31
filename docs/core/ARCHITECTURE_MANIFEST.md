@@ -4,7 +4,7 @@
 > **Дата:** 2026-07-31
 > **Статус:** 🟢 КАНОНИЧЕСКИЙ — главный архитектурный закон проекта
 > **Миссия:** Этап 3 консолидации (`pompts/promt32.md`)
-> **Компаньоны:** [CORE_PROMPT.md***REMOVED***(CORE_PROMPT.md) (поведение агента), [CODE_QUALITY_STANDARD.md***REMOVED***(CODE_QUALITY_STANDARD.md) (качество кода), [GLOSSARY.md***REMOVED***(GLOSSARY.md) (терминология), [LIFECYCLE.md***REMOVED***(LIFECYCLE.md) (жизненные циклы)
+> **Компаньоны:** [CORE_PROMPT.md***REMOVED***(CORE_PROMPT.md) (поведение агента), [CODE_QUALITY_STANDARD.md***REMOVED***(CODE_QUALITY_STANDARD.md) (качество кода), [GLOSSARY.md***REMOVED***(GLOSSARY.md) (терминология), [LIFECYCLE.md***REMOVED***(LIFECYCLE.md) (жизненные циклы), [MODULE_CONSOLIDATION.md***REMOVED***(MODULE_CONSOLIDATION.md) (модули)
 > **Источники синтеза:** [ARCHITECTURE_PRINCIPLES.md***REMOVED***(ARCHITECTURE_PRINCIPLES.md), [VISION_3.0.md***REMOVED***(../vision/VISION_3.0.md), [SYSTEM_INVENTORY.md***REMOVED***(SYSTEM_INVENTORY.md), [ARCHITECTURAL_DEBT.md***REMOVED***(ARCHITECTURAL_DEBT.md)
 
 ---
@@ -213,4 +213,4 @@ Single → Cowork → Teamwork → Organization → Community
 
 ---
 
-_Связанные документы: [ARCHITECTURE_PRINCIPLES.md***REMOVED***(ARCHITECTURE_PRINCIPLES.md), [ARCHITECTURE_CANONICAL.md***REMOVED***(ARCHITECTURE_CANONICAL.md) (границы движков), [GLOSSARY.md***REMOVED***(GLOSSARY.md) (терминология), [LIFECYCLE.md***REMOVED***(LIFECYCLE.md) (жизненные циклы), [VISION_3.0.md***REMOVED***(../vision/VISION_3.0.md), [SYSTEM_INVENTORY.md***REMOVED***(SYSTEM_INVENTORY.md), [CORE_PROMPT.md***REMOVED***(CORE_PROMPT.md), [CODE_QUALITY_STANDARD.md***REMOVED***(CODE_QUALITY_STANDARD.md), [ARCHITECTURAL_DEBT.md***REMOVED***(ARCHITECTURAL_DEBT.md), [ROADMAP_PROMT32_CONSOLIDATION.md***REMOVED***(../vision/ROADMAP_PROMT32_CONSOLIDATION.md)_
+_Связанные документы: [ARCHITECTURE_PRINCIPLES.md***REMOVED***(ARCHITECTURE_PRINCIPLES.md), [ARCHITECTURE_CANONICAL.md***REMOVED***(ARCHITECTURE_CANONICAL.md) (границы движков), [GLOSSARY.md***REMOVED***(GLOSSARY.md) (терминология), [LIFECYCLE.md***REMOVED***(LIFECYCLE.md) (жизненные циклы), [MODULE_CONSOLIDATION.md***REMOVED***(MODULE_CONSOLIDATION.md) (модули), [VISION_3.0.md***REMOVED***(../vision/VISION_3.0.md), [SYSTEM_INVENTORY.md***REMOVED***(SYSTEM_INVENTORY.md), [CORE_PROMPT.md***REMOVED***(CORE_PROMPT.md), [CODE_QUALITY_STANDARD.md***REMOVED***(CODE_QUALITY_STANDARD.md), [ARCHITECTURAL_DEBT.md***REMOVED***(ARCHITECTURAL_DEBT.md), [ROADMAP_PROMT32_CONSOLIDATION.md***REMOVED***(../vision/ROADMAP_PROMT32_CONSOLIDATION.md)_

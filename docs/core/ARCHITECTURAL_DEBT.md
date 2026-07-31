@@ -98,6 +98,23 @@ This document tracks **architectural debt** identified by the daily self-audit i
 
 ---
 
+### 3.5 Duplicate Telegram Bots
+
+| Field | Value |
+|-------|-------|
+| **ID** | DEBT-2026-07-31-007 |
+| **Component** | `scripts/telegram_bot.py` (`TelegramFreebuffBot`) + `freebuff_plugin/tgbot.py` (`ScenarioTGBot`) |
+| **Severity** | 🟡 Medium |
+| **Type** | Duplicate functionality (found in Stage 6 module consolidation) |
+| **Description** | Two independent Telegram bots with overlapping responsibilities (message sending, command handling), each with its own test file (`tests/test_telegram_bot.py`, `tests/test_tgbot.py`) and start script (`scripts/start_telegram_bot.sh`, `scripts/start_tgbot.sh`). |
+| **Evidence** | `docs/core/MODULE_CONSOLIDATION.md` §B — verified by code search: `TelegramFreebuffBot` (scripts/telegram_bot.py:82), `ScenarioTGBot` (freebuff_plugin/tgbot.py:91). |
+| **Impact** | Two ways to run a Telegram bot, divergent features, duplicated maintenance. |
+| **Owner** | `scripts/telegram_bot.py` + `freebuff_plugin/tgbot.py` |
+| **Remediation** | 1. Introduce shared `BaseTGBot` (sending, commands, health) and make both bots inherit, keeping layer separation (scripts = notifications, freebuff_plugin = scenarios). <br> 2. Or route both through EventBus as adapters. <br> 3. Keep the older start script as a thin alias; update tests. |
+| **ETA** | 2026-08-10 (after consolidation Stage 6/9 complete) |
+
+---
+
 ## 4. False Positives and Tooling Debt
 
 ### 4.1 `drift_check.py` Path Resolution

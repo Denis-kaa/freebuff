@@ -58,7 +58,7 @@
 | Этап 1. Полный аудит | `ARCHITECTURAL_AUDIT_PROMT31_2026-07-31.md` | ✅ Stage 1 выполнен (`docs/audits/CONSOLIDATION_STAGE1_AUDIT_2026-07-31.md`) |
 | Этап 2. Каноническая архитектура | — | ✅ Создана (`docs/core/ARCHITECTURE_CANONICAL.md`) |
 | Этап 4. Консолидация документации | promt31 4.4 (DECISIONS merge — done), `drift_check.py` | 🟡 Частично |
-| Этап 6. Консолидация модулей | promt31 4.6 (Module Registry), 4.7 (Agent Registry) | 🟡 Частично |
+| Этап 6. Консолидация модулей | promt31 4.6 (Module Registry), 4.7 (Agent Registry) | ✅ Аудит выполнен (`docs/core/MODULE_CONSOLIDATION.md`) |
 | Этап 9. Самоконсистентность | `drift_check.py` + markdown link check (сделаны) | 🟡 Частично |
 | Этап 5. Консолидация промтов | `AGENTS.md` / `BUFFY.md` / `CLAUDE.md` / `CODY.md` / `.cursorrules` (5 файлов!) | 🔴 Не начато |
 | Этап 3. Архитектурный манифест | — | ✅ Создан (`docs/core/ARCHITECTURE_MANIFEST.md`) |
@@ -97,10 +97,11 @@
 - [ ***REMOVED*** Удалить дубли/устаревшие/конфликтующие правила (37 файлов в `pompts/`)
 - [ ***REMOVED*** Устранить расхождение: `AGENTS.md`, `BUFFY.md`, `CLAUDE.md`, `CODY.md`, `.cursorrules`
 
-### Этап 6 — Консолидация модулей
-- [ ***REMOVED*** Проверить: Router, Telegram, MCP, Memory, Knowledge, Registry, Context, Tool Runtime, Plugin API, EventBus
-- [ ***REMOVED*** Дубли → объединить / оформить как адаптеры / задокументировать причину
-- [ ***REMOVED*** 8 движков в `scripts/`: MemoryEngine, KnowledgeEngine, EMEngine, RAGEngine, CollaborationEngine, PresenceEngine, RoleEngine, MetricsEngine — проверить пересечение
+### Этап 6 — Консолидация модулей ✅
+- [x***REMOVED*** Аудит выполнен: `docs/core/MODULE_CONSOLIDATION.md` — 10 областей (Router, Telegram, MCP, Memory, Knowledge, Registry, Context, Tool Runtime, Plugin API, EventBus)
+- [x***REMOVED*** Матрица 10 движков проверена по импортам — пересечений ответственности нет
+- [x***REMOVED*** 1 реальный дубль найден (Telegram: 2 бота) → передан в ARCHITECTURAL_DEBT
+- [x***REMOVED*** Осознанные повторы зафиксированы с причиной (Router-слои, Registry-паттерн, Plugin-терминология)
 
 ### Этап 7 — Единая терминология ✅
 - [x***REMOVED*** Глоссарий создан: `docs/core/GLOSSARY.md` (Workspace, Project, Module, Agent, Tool, Plugin, Connector, Integration, Knowledge, Memory, Project Book, Engineering Memory, Lifecycle, Registry, Decision Log, Pulse)
