@@ -301,3 +301,74 @@ class TestEMTemplates:
     def test_template_renderer_unknown_template_raises(self, em):
         with pytest.raises(FileNotFoundError):
             em.render_template("nonexistent.md")
+
+
+class TestEMDecisionIndex:
+    """Тесты авто-обновления индекса архитектурных решений."""
+
+    def test_finalize_decision_updates_index(self, em):
+        draft_id = em.record_decision(
+            title="Use SQLite",
+            decision="SQLite",
+            rationale="Zero setup",
+        )
+        path = em.finalize_draft(draft_id)
+
+        index_path = em._root / "docs" / "decisions" / "DECISIONS.md"
+        assert index_path.exists()
+        content = index_path.read_text(encoding="utf-8")
+        assert "Use SQLite" in content
+        assert "engineering-memory/decisions" in content
+        assert "ADR-" in content
+
+    def test_em_generated_adr_gets_assigned_id(self, em):
+        draft_id = em.record_decision(
+            title="Use SQLite",
+            decision="SQLite",
+            rationale="Zero setup",
+        )
+        path = em.finalize_draft(draft_id)
+        content = path.read_text(encoding="utf-8")
+        assert "adr_id:" in content
+        assert '"ADR-' in content
+
+    def test_index_contains_existing_and_new_adrs(self, em):
+        # Ручной ADR
+        decisions_dir = em._root / "docs" / "engineering-memory" / "decisions"
+        decisions_dir.mkdir(parents=True, exist_ok=True)
+        manual_adr = decisions_dir / "ADR_001_Test.md"
+        manual_adr.write_text(
+            "# ADR-001: Test Decision\\n\\n"
+            "**Дата:** 2026-07-28\\n"
+            "**Статус:** ✅ Принято\\n\\n"
+            "## Context\\n\\nTest.\\n",
+            encoding="utf-8",
+        )
+
+        # EM-generated ADR
+        draft_id = em.record_decision(
+            title="Use SQLite",
+            decision="SQLite",
+            rationale="Zero setup",
+        )
+        em.finalize_draft(draft_id)
+
+        index_path = em._root / "docs" / "decisions" / "DECISIONS.md"
+        content = index_path.read_text(encoding="utf-8")
+        assert "Test Decision" in content
+        assert "Use SQLite" in content
+        assert "ADR-001" in content
+        assert "ADR-002" in content
+
+    def test_regenerate_decision_index_no_decisions_dir(self, em):
+        # Убедимся, что finalize создаёт директорию и индекс с нуля
+        draft_id = em.record_decision(
+            title="Use SQLite",
+            decision="SQLite",
+            rationale="Zero setup",
+        )
+        em.finalize_draft(draft_id)
+
+        index_path = em._root / "docs" / "decisions" / "DECISIONS.md"
+        assert index_path.exists()
+        assert "Use SQLite" in index_path.read_text(encoding="utf-8")

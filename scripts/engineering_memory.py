@@ -31,12 +31,15 @@ EM сохраняет опыт проекта: почему принималис
 from __future__ import annotations
 
 import json
+import logging
 ***REMOVED***
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 ***REMOVED***
 from typing import Any, Dict, List, Optional
+
+logger = logging.getLogger(__name__)
 
 from scripts.event_bus import Event
 from scripts.memory_engine import MemoryEngine, MemoryLevel, ContentType
@@ -474,6 +477,11 @@ class EMEngine:
             status="final",
             reviewer=reviewer,
         )
+
+        # Decision journals receive an canonical ADR id and update the index
+        if doc_type == "decision_journal" and "adr_id" not in frontmatter:
+            frontmatter["adr_id"***REMOVED*** = self._next_adr_id()
+
         frontmatter_str = self._frontmatter_to_string(frontmatter)
 
         # Содержимое документа
@@ -482,6 +490,18 @@ class EMEngine:
 
         # Сохраняем файл
         target_path.write_text(full_content, encoding="utf-8")
+
+        # Обновляем индекс ADR при финализации решения
+        if doc_type == "decision_journal":
+            try:
+                self._regenerate_decision_index()
+            except Exception as exc:
+                logger.warning("Failed to regenerate ADR index: %s", exc)
+                self._maybe_publish("em.index_failed", {
+                    "draft_id": draft_id,
+                    "path": str(self._root / "docs" / "decisions" / "DECISIONS.md"),
+                    "error": str(exc),
+                ***REMOVED***)
 
         # Индексируем в KnowledgeEngine
         try:
@@ -752,8 +772,146 @@ class EMEngine:
         text = re.sub(r"-+", "-", text)
         return text.strip("-")[:50***REMOVED***
 
+    # ── ADR index helpers ─────────────────────────────────────
 
-# ═══════════════════════════════════════════════════════════════
+    def _next_adr_id(self) -> str:
+        """Возвращает следующий свободный ADR id (например, ADR-008)."""
+        decisions_dir = self._em_dir / "decisions"
+        max_num = 0
+        if decisions_dir.exists():
+            for path in decisions_dir.glob("*.md"):
+                try:
+                    text = path.read_text(encoding="utf-8")
+                    for match in re.finditer(r"\bADR-(\d{3,***REMOVED***)\b", text):
+                        max_num = max(max_num, int(match.group(1)))
+                except Exception:
+                    continue
+        return f"ADR-{max_num + 1:03d***REMOVED***"
+
+    @staticmethod
+    def _extract_adr_metadata(path: Path) -> Optional[Dict[str, str***REMOVED******REMOVED***:
+        """Извлекает метаданные ADR из файла (ручной или EM-generated формат)."""
+        try:
+            text = path.read_text(encoding="utf-8")
+        except Exception:
+            return None
+
+        # EM-generated файлы с YAML frontmatter
+        if text.startswith("---"):
+            try:
+                lines = text.splitlines()
+                end_index = lines[1:***REMOVED***.index("---") + 1
+                frontmatter: Dict[str, Any***REMOVED*** = {***REMOVED***
+                for line in lines[1:end_index***REMOVED***:
+                    if ":" in line:
+                        key, value = line.split(":", 1)
+                        key = key.strip()
+                        value = value.strip()
+                        try:
+                            frontmatter[key***REMOVED*** = json.loads(value)
+                        except json.JSONDecodeError:
+                            frontmatter[key***REMOVED*** = value
+
+                title = frontmatter.get("title", "").strip()
+                adr_id = str(frontmatter.get("adr_id", "")).strip()
+                date = str(frontmatter.get("date", "")).strip()
+                status = str(frontmatter.get("status", "")).strip()
+                if title and adr_id:
+                    return {
+                        "id": adr_id,
+                        "title": title,
+                        "date": date,
+                        "status": status,
+                        "path": str(path),
+                    ***REMOVED***
+            except Exception:
+                pass
+
+        # Ручной формат: # ADR-XXX: Title, **Дата:** ..., **Статус:** ...
+        h1_match = re.search(r"^# (ADR-\d{3,***REMOVED***):\s*(.+)$", text, re.MULTILINE)
+        if h1_match:
+            adr_id = h1_match.group(1)
+            title = h1_match.group(2).strip()
+            date_match = re.search(r"\*\*Дата:\*\*\s*(\d{4***REMOVED***-\d{2***REMOVED***-\d{2***REMOVED***)", text)
+            date = date_match.group(1) if date_match else ""
+            status_match = re.search(r"\*\*Статус:\*\*\s*(.+)", text)
+            status = status_match.group(1).strip() if status_match else ""
+            return {
+                "id": adr_id,
+                "title": title,
+                "date": date,
+                "status": status,
+                "path": str(path),
+            ***REMOVED***
+
+        return None
+
+    def _regenerate_decision_index(self) -> None:
+        """Перегенерирует docs/decisions/DECISIONS.md на основе файлов в docs/engineering-memory/decisions/."""
+        decisions_dir = self._em_dir / "decisions"
+        index_path = self._root / "docs" / "decisions" / "DECISIONS.md"
+
+        adrs: List[Dict[str, str***REMOVED******REMOVED*** = [***REMOVED***
+        if decisions_dir.exists():
+            for path in sorted(decisions_dir.glob("*.md")):
+                meta = self._extract_adr_metadata(path)
+                if meta:
+                    adrs.append(meta)
+
+        def _sort_key(adr: Dict[str, str***REMOVED***) -> tuple[int, int, str***REMOVED***:
+            match = re.match(r"ADR-(\d+)", adr["id"***REMOVED***)
+            if match:
+                return (0, int(match.group(1)), "")
+            return (1, 0, adr["id"***REMOVED***)
+
+        adrs.sort(key=_sort_key)
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+        lines: List[str***REMOVED*** = [
+            "# Decisions — Архитектурные решения Buffy Project",
+            "",
+            f"> **Последнее обновление:** {today***REMOVED***",
+            "> ",
+            "> Этот файл больше не хранит ADR в одном месте. Каждое решение вынесено в отдельный журнал в [`docs/engineering-memory/decisions/`***REMOVED***(../engineering-memory/decisions/).",
+            "",
+            "---",
+            "",
+            "## Индекс архитектурных решений",
+            "",
+            "| ID | Название | Дата | Статус | Ссылка |",
+            "|----|----------|------|--------|--------|",
+        ***REMOVED***
+
+        for adr in adrs:
+            link = f"../engineering-memory/decisions/{Path(adr['path'***REMOVED***).name***REMOVED***"
+            title = adr["title"***REMOVED***.replace("|", "\\|")
+            status = adr.get("status", "").replace("|", "\\|")
+            date = adr.get("date", "")
+            lines.append(
+                f"| {adr['id'***REMOVED******REMOVED*** | {title***REMOVED*** | {date***REMOVED*** | {status***REMOVED*** | [{Path(adr['path'***REMOVED***).name***REMOVED******REMOVED***({link***REMOVED***) |"
+            )
+
+        lines.extend([
+            "",
+            "---",
+            "",
+            "## Почему разделение?",
+            "",
+            "- **Единый источник правды:** индекс хранит ссылки, а полные ADR живут в Engineering Memory.",
+            "- **Повторное использование:** шаблоны Engineering Memory (`decision_journal.md`) обеспечивают единый формат.",
+            "- **Автоматизация:** drift-check и другие инструменты могут сканировать отдельные ADR без парсинга одного большого файла.",
+            "",
+            "---",
+            "",
+            "_См. также [Engineering Memory***REMOVED***(../engineering-memory/ARCHITECTURE.md) и [Project Book***REMOVED***(../engineering-memory/PROJECT_BOOK.md)_.",
+            "",
+        ***REMOVED***)
+
+        index_path.parent.mkdir(parents=True, exist_ok=True)
+        index_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+# ══════════════════════════════════════════════════════════════
 # CLI
 # ═══════════════════════════════════════════════════════════════
 
