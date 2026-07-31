@@ -14,6 +14,7 @@
 | **Архитектурные принципы** | [`core/`***REMOVED***(core/) | ARCHITECTURE_PRINCIPLES, CODE_QUALITY_STANDARD, RULES, спецификации |
 | **Архитектурные решения** | [`decisions/`***REMOVED***(decisions/) | DECISIONS, ADR |
 | **Аудиты системы** | [`audits/`***REMOVED***(audits/) | Хронологические аудиты, DRIFT_REPORT |
+| **Engineering Memory** | [`engineering-memory/`***REMOVED***(engineering-memory/) | Архитектура, Книга проекта, шаблоны |
 | **Плагин freebuff_plugin** | [`plugin/`***REMOVED***(plugin/) | API, архитектура, Quickstart, Bridge |
 | **Интеграции и проекты** | [`projects_meta/`***REMOVED***(projects_meta/) | Lightpanda, Overlay, Workers |
 | **Операционная документация** | [`ops/`***REMOVED***(ops/) | Гайды, troubleshooting, шаблоны |

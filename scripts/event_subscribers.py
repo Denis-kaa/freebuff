@@ -127,3 +127,28 @@ def register_all(event_bus: Any, workspace_root: str | Path | None = None) -> No
             pass
 
     event_bus.subscribe("memory.cleared", _on_memory_cleared)
+
+    # Engineering Memory: draft created / finalized / discarded
+    def _on_em_draft_created(event):
+        try:
+            data = event.data
+            draft_id = data.get("draft_id", "unknown")
+            doc_type = data.get("type", "record")
+            title = data.get("title", "")
+            print(f"📝 EM draft created: [{doc_type***REMOVED******REMOVED*** {title***REMOVED*** ({draft_id***REMOVED***)")
+        except Exception:
+            pass
+
+    def _on_em_document_finalized(event):
+        try:
+            data = event.data
+            doc_id = data.get("doc_id", "unknown")
+            doc_type = data.get("type", "record")
+            title = data.get("title", "")
+            path = data.get("path", "")
+            print(f"✅ EM document finalized: [{doc_type***REMOVED******REMOVED*** {title***REMOVED*** ({doc_id***REMOVED***) -> {path***REMOVED***")
+        except Exception:
+            pass
+
+    event_bus.subscribe("em.draft_created", _on_em_draft_created)
+    event_bus.subscribe("em.document_finalized", _on_em_document_finalized)
