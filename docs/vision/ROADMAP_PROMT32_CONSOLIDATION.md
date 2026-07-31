@@ -55,7 +55,8 @@
 
 | Этап promt32 | Пересекается с | Статус |
 |--------------|----------------|--------|
-| Этап 1. Полный аудит | `ARCHITECTURAL_AUDIT_PROMT31_2026-07-31.md` | 🔴 Выполнить заново как Stage 1 (см. `docs/audits/CONSOLIDATION_STAGE1_AUDIT_2026-07-31.md`) |
+| Этап 1. Полный аудит | `ARCHITECTURAL_AUDIT_PROMT31_2026-07-31.md` | ✅ Stage 1 выполнен (`docs/audits/CONSOLIDATION_STAGE1_AUDIT_2026-07-31.md`) |
+| Этап 2. Каноническая архитектура | — | ✅ Создана (`docs/core/ARCHITECTURE_CANONICAL.md`) |
 | Этап 4. Консолидация документации | promt31 4.4 (DECISIONS merge — done), `drift_check.py` | 🟡 Частично |
 | Этап 6. Консолидация модулей | promt31 4.6 (Module Registry), 4.7 (Agent Registry) | 🟡 Частично |
 | Этап 9. Самоконсистентность | `drift_check.py` + markdown link check (сделаны) | 🟡 Частично |
@@ -74,10 +75,11 @@
 - [x***REMOVED*** Собраны факты (модули, документы, промты, дубли, мёртвые файлы)
 - [x***REMOVED*** Отчёт: `docs/audits/CONSOLIDATION_STAGE1_AUDIT_2026-07-31.md`
 
-### Этап 2 — Каноническая архитектура
-- [ ***REMOVED*** Определить единую структуру Workspace OS
-- [ ***REMOVED*** Для каждого компонента: назначение, ответственность, зависимости, lifecycle, владелец
-- [ ***REMOVED*** Устранить неоднозначности
+### Этап 2 — Каноническая архитектура ✅
+- [x***REMOVED*** Определена единая структура Workspace OS (`docs/core/ARCHITECTURE_CANONICAL.md`)
+- [x***REMOVED*** Для каждого компонента: назначение, ответственность, зависимости, lifecycle, владелец
+- [x***REMOVED*** Устранены неоднозначности (RAG=фича Knowledge, Metrics/Pulse/Drift разделены, RoleEngine-DI)
+- [x***REMOVED*** Выявлен критический долг: тесты для 6 движков отсутствуют (→ ARCHITECTURAL_DEBT)
 
 ### Этап 3 — Архитектурный манифест ✅
 - [x***REMOVED*** Создан `docs/core/ARCHITECTURE_MANIFEST.md`
