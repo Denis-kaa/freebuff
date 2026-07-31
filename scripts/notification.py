@@ -37,10 +37,15 @@ import os
 import shutil
 import subprocess
 import sys
+import threading
 import time
+from dataclasses import dataclass
 from datetime import datetime, timezone
 ***REMOVED***
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
+
+if TYPE_CHECKING:
+    from scripts.event_bus import Subscription as _EventSubscription
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s***REMOVED*** %(message)s", stream=sys.stderr)
 logger = logging.getLogger("notification")
@@ -402,6 +407,424 @@ def notify_error(
     if not ok:
         return False
     return {"title": title, "content": content***REMOVED***
+
+
+# ═══════════════════════════════════════════════════════════════
+# EventBus-driven notification layer (Phase A, Promt 28/31)
+# ═══════════════════════════════════════════════════════════════
+
+
+@dataclass
+class NotificationConfig:
+    """Настройки EventBus-уведомлений."""
+
+    enabled: bool = True
+    # Уведомлять ли о начале задачи/workflow
+    notify_on_start: bool = True
+    # Уведомлять ли о смене этапа
+    notify_on_stage_change: bool = True
+    # Минимальный интервал (сек) между progress-уведомлениями одного таска
+    progress_interval_seconds: float = 30.0
+    # Тихий режим: только завершение/ошибка (без стартов и прогресса)
+    quiet: bool = False
+    # Только завершение/ошибка (альтернатива quiet)
+    completion_only: bool = False
+
+    @classmethod
+    def from_env(cls) -> "NotificationConfig":
+        """Создаёт конфиг из переменных окружения."""
+        quiet = os.environ.get("FREEBUFF_NOTIFY_QUIET", "").strip().lower() in ("1", "true", "yes")
+        completion_only = os.environ.get("FREEBUFF_NOTIFY_COMPLETION_ONLY", "").strip().lower() in ("1", "true", "yes")
+        no_notify = os.environ.get("FREEBUFF_NO_NOTIFY", "").strip().lower() in ("1", "true", "yes")
+        notify_on_stage = os.environ.get("FREEBUFF_NOTIFY_STAGE", "1").strip().lower() not in ("0", "false", "no", "n")
+        try:
+            progress_interval = float(os.environ.get("FREEBUFF_NOTIFY_PROGRESS_INTERVAL", "30"))
+        except ValueError:
+            progress_interval = 30.0
+        return cls(
+            enabled=not no_notify,
+            quiet=quiet,
+            completion_only=completion_only,
+            notify_on_stage_change=notify_on_stage,
+            progress_interval_seconds=max(5.0, progress_interval),
+        )
+
+    @property
+    def should_notify_on_start(self) -> bool:
+        return self.enabled and not self.quiet and not self.completion_only and self.notify_on_start
+
+    @property
+    def should_notify_on_stage(self) -> bool:
+        return self.enabled and not self.quiet and not self.completion_only and self.notify_on_stage_change
+
+    @property
+    def should_notify_on_progress(self) -> bool:
+        return self.enabled and not self.quiet and not self.completion_only
+
+
+class NotificationManager:
+    """Подписчик EventBus, который отправляет уведомления о ходе задач.
+
+    Поддерживает события:
+      - task.started, task.stage_changed, task.progress, task.completed, task.failed, task.warning
+      - workflow.started, workflow.progress, workflow.completed, workflow.failed
+      - step.started, step.completed, step.failed, step.retrying, step.skipped
+
+    Использует rate-limiting, чтобы не завалить пользователя уведомлениями:
+      - progress-уведомления одного task_id/workflow_id не чаще чем progress_interval_seconds
+      - stage-уведомления без throttle, но можно отключить через конфиг
+      - start/complete/error — немедленно (enabled/quiet permitting)
+    """
+
+    def __init__(self, config: Optional[NotificationConfig***REMOVED*** = None):
+        self.config = config or NotificationConfig()
+        # event_type -> callable
+        self._handlers: Dict[str, Callable[[Any***REMOVED***, None***REMOVED******REMOVED*** = {
+            "task.started": self._on_task_started,
+            "task.stage_changed": self._on_task_stage_changed,
+            "task.progress": self._on_task_progress,
+            "task.completed": self._on_task_completed,
+            "task.failed": self._on_task_failed,
+            "task.warning": self._on_task_warning,
+            "workflow.started": self._on_workflow_started,
+            "workflow.progress": self._on_workflow_progress,
+            "workflow.completed": self._on_workflow_completed,
+            "workflow.failed": self._on_workflow_failed,
+            "step.started": self._on_step_started,
+            "step.completed": self._on_step_completed,
+            "step.failed": self._on_step_failed,
+            "step.retrying": self._on_step_retrying,
+            "step.skipped": self._on_step_skipped,
+        ***REMOVED***
+        # key (task_id or workflow_id) -> timestamp of last progress notification
+        self._last_progress: Dict[str, float***REMOVED*** = {***REMOVED***
+        self._subscriptions: List["_EventSubscription"***REMOVED*** = [***REMOVED***
+        self._lock = threading.Lock()
+
+    # ── Registration ───────────────────────────────────────
+
+    def register(self, event_bus: Any) -> None:
+        """Подписывает менеджер на все поддерживаемые события."""
+        for event_type in self._handlers:
+            sub = event_bus.subscribe(event_type, self._on_event)
+            self._subscriptions.append(sub)
+
+    def unregister(self, event_bus: Any) -> None:
+        """Отписывает менеджер от всех событий."""
+        for sub in self._subscriptions:
+            event_bus.unsubscribe(sub)
+        self._subscriptions.clear()
+
+    # ── Dispatch ─────────────────────────────────────────────
+
+    def _on_event(self, event: Any) -> None:
+        """Диспетчеризует событие в соответствующий handler."""
+        if not self.config.enabled:
+            return
+        handler = self._handlers.get(event.type)
+        if handler:
+            try:
+                handler(event)
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("[WARN***REMOVED*** Notification handler error for %s: %s", event.type, exc)
+
+    # ── Rate limiting helpers ────────────────────────────────
+
+    def _allow_throttled(self, key: str) -> bool:
+        """Возвращает True, если с последнего уведомления key прошло
+        достаточно времени, и обновляет timestamp."""
+        with self._lock:
+            now = time.monotonic()
+            last = self._last_progress.get(key)
+            if last is None or now - last >= self.config.progress_interval_seconds:
+                self._last_progress[key***REMOVED*** = now
+                return True
+            return False
+
+    # ── Task handlers ────────────────────────────────────────
+
+    def _on_task_started(self, event: Any) -> None:
+        if not self.config.should_notify_on_start:
+            return
+        data = event.data
+        task_name = data.get("task_name") or data.get("task_id") or "task"
+        stage = data.get("stage", "")
+        body = f" Начата задача: {task_name***REMOVED***"
+        if stage:
+            body += f"\nЭтап: {stage***REMOVED***"
+        notify(title="🚀 AI Agent", content=body)
+
+    def _on_task_stage_changed(self, event: Any) -> None:
+        if not self.config.should_notify_on_stage:
+            return
+        data = event.data
+        task_name = data.get("task_name") or data.get("task_id") or "task"
+        stage = data.get("stage", "неизвестен")
+        notify(title="🔄 AI Agent", content=f"{task_name***REMOVED***\nЭтап: {stage***REMOVED***")
+
+    def _on_task_progress(self, event: Any) -> None:
+        if not self.config.should_notify_on_progress:
+            return
+        data = event.data
+        task_id = data.get("task_id") or data.get("task_name") or "task"
+        if not self._allow_throttled(str(task_id)):
+            return
+        task_name = data.get("task_name") or task_id
+        percent = data.get("percent")
+        message = data.get("message", "")
+        parts = [f"{task_name***REMOVED***"***REMOVED***
+        if percent is not None:
+            parts.append(f"{percent***REMOVED***%")
+        if message:
+            parts.append(message)
+        notify(title="⏳ AI Agent", content="\n".join(parts))
+
+    def _on_task_completed(self, event: Any) -> None:
+        data = event.data
+        notify_task_complete(
+            task_name=data.get("task_name") or data.get("task_id") or "Задача",
+            status=data.get("status", "Успешно"),
+            duration=data.get("duration", ""),
+            details=data.get("details", ""),
+        )
+
+    def _on_task_failed(self, event: Any) -> None:
+        data = event.data
+        notify_error(
+            task_name=data.get("task_name") or data.get("task_id") or "Задача",
+            error=data.get("error", "Неизвестная ошибка"),
+            stage=data.get("stage", ""),
+            duration=data.get("duration", ""),
+        )
+
+    def _on_task_warning(self, event: Any) -> None:
+        data = event.data
+        task_name = data.get("task_name") or data.get("task_id") or "Задача"
+        warning = data.get("warning") or data.get("message", "")
+        notify(title="⚠ AI Agent", content=f"{task_name***REMOVED***\n⚠ {warning***REMOVED***")
+
+    # ── Workflow handlers ────────────────────────────────────
+
+    def _on_workflow_started(self, event: Any) -> None:
+        if not self.config.should_notify_on_start:
+            return
+        data = event.data
+        goal = data.get("goal") or data.get("workflow_id") or "workflow"
+        notify(title="🚀 AI Agent", content=f"Начат workflow:\n{goal***REMOVED***")
+
+    def _on_workflow_progress(self, event: Any) -> None:
+        if not self.config.should_notify_on_progress:
+            return
+        data = event.data
+        workflow_id = data.get("workflow_id") or "workflow"
+        if not self._allow_throttled(str(workflow_id)):
+            return
+        completed = data.get("completed_steps", 0)
+        total = data.get("total_steps", 0)
+        percent = int((completed / total) * 100) if total else 0
+        notify(
+            title="⏳ AI Agent",
+            content=f"Workflow {workflow_id***REMOVED***\nПрогресс: {completed***REMOVED***/{total***REMOVED*** ({percent***REMOVED***%)",
+        )
+
+    def _on_workflow_completed(self, event: Any) -> None:
+        data = event.data
+        notify_task_complete(
+            task_name=data.get("goal") or data.get("workflow_id") or "Workflow",
+            status=data.get("status", "Успешно"),
+            duration=data.get("duration", ""),
+            details=data.get("details", ""),
+            task_type="workflow",
+        )
+
+    def _on_workflow_failed(self, event: Any) -> None:
+        data = event.data
+        notify_error(
+            task_name=data.get("goal") or data.get("workflow_id") or "Workflow",
+            error=data.get("error", "Неизвестная ошибка"),
+            stage=data.get("stage", ""),
+            duration=data.get("duration", ""),
+        )
+
+    # ── Step handlers ────────────────────────────────────────
+
+    def _on_step_started(self, event: Any) -> None:
+        # Не уведомляем о каждом шаге, чтобы не спамить.
+        # Логируем только в debug.
+        logger.debug("[DEBUG***REMOVED*** step.started — no notification (anti-spam)")
+
+    def _on_step_completed(self, event: Any) -> None:
+        logger.debug("[DEBUG***REMOVED*** step.completed — no notification (anti-spam)")
+
+    def _on_step_failed(self, event: Any) -> None:
+        data = event.data
+        step_name = data.get("step_name") or data.get("step_id") or "шаг"
+        error = data.get("error", "неизвестная ошибка")
+        notify_error(task_name=f"Шаг {step_name***REMOVED***", error=error)
+
+    def _on_step_retrying(self, event: Any) -> None:
+        data = event.data
+        step_id = str(data.get("step_id") or data.get("step_name") or "step")
+        # Rate-limit retry notifications to avoid spam on many quick retries.
+        if not self._allow_throttled(f"retry:{step_id***REMOVED***"):
+            return
+        step_name = data.get("step_name") or data.get("step_id") or "шаг"
+        retry_count = data.get("retry_count", 0)
+        max_retries = data.get("max_retries", 1)
+        notify(
+            title="🔄 AI Agent",
+            content=f"Шаг {step_name***REMOVED***\nПовторная попытка {retry_count***REMOVED***/{max_retries***REMOVED***",
+        )
+
+    def _on_step_skipped(self, event: Any) -> None:
+        data = event.data
+        step_name = data.get("step_name") or data.get("step_id") or "шаг"
+        notify(title="⏭ AI Agent", content=f"Шаг пропущен:\n{step_name***REMOVED***")
+
+
+class ProgressTracker:
+    """Удобный контекстный менеджер/хелпер для эмиссии событий прогресса.
+
+    Пример:
+        with ProgressTracker("Долгая задача", event_bus=bus) as pt:
+            pt.set_stage("Загрузка")
+            for i in range(10):
+                pt.update_progress((i + 1) * 10, "загружаем...")
+            pt.complete(details="Всё готово")
+
+    Если event_bus не передан, события просто игнорируются (graceful degradation).
+    """
+
+    def __init__(
+        self,
+        task_name: str,
+        event_bus: Optional[Any***REMOVED*** = None,
+        task_id: Optional[str***REMOVED*** = None,
+        source: str = "runtime",
+    ):
+        self.task_name = task_name
+        self.task_id = task_id or task_name
+        self.event_bus = event_bus
+        self.source = source
+        self._stage: str = ""
+        self._start_time: Optional[float***REMOVED*** = None
+        self._finalized: bool = False
+
+    # ── Event emission helpers ───────────────────────────────
+
+    def _emit(self, event_type: str, data: Dict[str, Any***REMOVED***) -> None:
+        if self.event_bus is None:
+            return
+        # Lazy import to avoid circular dependency at module load
+        from scripts.event_bus import Event
+        self.event_bus.publish(Event(type=event_type, data=data, source=self.source))
+
+    def start(self, stage: str = "") -> None:
+        self._start_time = time.monotonic()
+        data: Dict[str, Any***REMOVED*** = {"task_id": self.task_id, "task_name": self.task_name***REMOVED***
+        if stage:
+            self._stage = stage
+            data["stage"***REMOVED*** = stage
+        self._emit("task.started", data)
+
+    def set_stage(self, stage: str) -> None:
+        self._stage = stage
+        self._emit("task.stage_changed", {
+            "task_id": self.task_id,
+            "task_name": self.task_name,
+            "stage": stage,
+        ***REMOVED***)
+
+    def update_progress(self, percent: int, message: str = "") -> None:
+        data: Dict[str, Any***REMOVED*** = {
+            "task_id": self.task_id,
+            "task_name": self.task_name,
+            "percent": max(0, min(100, percent)),
+        ***REMOVED***
+        if message:
+            data["message"***REMOVED*** = message
+        self._emit("task.progress", data)
+
+    def complete(self, status: str = "Успешно", details: str = "") -> None:
+        if self._finalized:
+            return
+        self._finalized = True
+        duration = ""
+        if self._start_time is not None:
+            seconds = time.monotonic() - self._start_time
+            duration = self._format_duration(seconds)
+        self._emit("task.completed", {
+            "task_id": self.task_id,
+            "task_name": self.task_name,
+            "status": status,
+            "duration": duration,
+            "details": details,
+        ***REMOVED***)
+
+    def fail(self, error: str, stage: str = "") -> None:
+        if self._finalized:
+            return
+        self._finalized = True
+        duration = ""
+        if self._start_time is not None:
+            seconds = time.monotonic() - self._start_time
+            duration = self._format_duration(seconds)
+        self._emit("task.failed", {
+            "task_id": self.task_id,
+            "task_name": self.task_name,
+            "error": error,
+            "stage": stage or self._stage,
+            "duration": duration,
+        ***REMOVED***)
+
+    def warning(self, message: str) -> None:
+        self._emit("task.warning", {
+            "task_id": self.task_id,
+            "task_name": self.task_name,
+            "warning": message,
+        ***REMOVED***)
+
+    @staticmethod
+    def _format_duration(seconds: float) -> str:
+        if seconds < 60:
+            return f"{int(seconds)***REMOVED*** сек"
+        minutes = seconds / 60
+        if minutes < 60:
+            return f"{int(minutes)***REMOVED*** мин"
+        return f"{minutes / 60:.1f***REMOVED*** ч"
+
+    # ── Context manager support ──────────────────────────────
+
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_val is not None:
+            self.fail(str(exc_val))
+        else:
+            self.complete()
+        return False
+
+
+def register_notification_subscribers(
+    event_bus: Any,
+    config: Optional[NotificationConfig***REMOVED*** = None,
+) -> NotificationManager:
+    """Регистрирует NotificationManager как подписчика EventBus.
+
+    Args:
+        event_bus: экземпляр EventBus
+        config: конфигурация (если None — берётся из переменных окружения).
+
+    Returns:
+        Экземпляр NotificationManager (для отладки и тестирования).
+    """
+    if config is None:
+        config = NotificationConfig.from_env()
+    manager = NotificationManager(config=config)
+    manager.register(event_bus)
+    return manager
 
 
 def main() -> int:

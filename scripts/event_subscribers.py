@@ -25,6 +25,8 @@ from __future__ import annotations
 ***REMOVED***
 from typing import Any, Dict
 
+from scripts.notification ***REMOVED***gister_notification_subscribers
+
 
 # ═══════════════════════════════════════════════════════════════
 # Cached KnowledgeEngine instances per workspace
@@ -152,3 +154,6 @@ def register_all(event_bus: Any, workspace_root: str | Path | None = None) -> No
 
     event_bus.subscribe("em.draft_created", _on_em_draft_created)
     event_bus.subscribe("em.document_finalized", _on_em_document_finalized)
+
+    # Notification system: task/workflow progress, stages, completion, errors
+    register_notification_subscribers(event_bus)
