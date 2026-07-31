@@ -29,13 +29,77 @@ from typing import Any
 
 # ── Версионирование схемы ──────────────────────────────────────
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 5
 """Текущая версия схемы БД.
 
 История:
-  1 — начальная схема (2026-07)
-  2 — добавлены колонки: checkpoint_count, token_threshold (2026-07)
-  3 — projects table, project_id FK в sessions (2026-07)
+  1 - начальная схема (2026-07)
+  2 - добавлены колонки: checkpoint_count, token_threshold (2026-07)
+  3 - projects table, project_id FK в sessions (2026-07)
+  4 - arch_decisions, invariants (2026-07)
+  5 - action_verifications (2026-07)
+"""
+
+# SQL-фрагменты для таблиц v4 и v5. Используются при создании схемы с нуля
+# и в соответствующих миграциях, чтобы избежать дублирования определений.
+_SCHEMA_V4_TABLES = """
+CREATE TABLE IF NOT EXISTS arch_decisions (
+    id TEXT PRIMARY KEY,
+    session_id TEXT DEFAULT '',
+    title TEXT NOT NULL,
+    context TEXT DEFAULT '',
+    decision TEXT NOT NULL,
+    alternatives TEXT DEFAULT '',
+    rationale TEXT DEFAULT '',
+    consequences TEXT DEFAULT '',
+    status TEXT DEFAULT 'accepted',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_arch_decisions_session
+    ON arch_decisions(session_id);
+CREATE INDEX IF NOT EXISTS idx_arch_decisions_status
+    ON arch_decisions(status);
+
+CREATE TABLE IF NOT EXISTS invariants (
+    id TEXT PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,
+    description TEXT DEFAULT '',
+    assertion_type TEXT NOT NULL,
+    assertion_params TEXT DEFAULT '{***REMOVED***',
+    enabled INTEGER DEFAULT 1,
+    severity TEXT DEFAULT 'major',
+    last_checked TEXT DEFAULT '',
+    last_result INTEGER DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_invariants_enabled
+    ON invariants(enabled);
+"""
+
+_SCHEMA_V5_TABLES = """
+CREATE TABLE IF NOT EXISTS action_verifications (
+    id TEXT PRIMARY KEY,
+    session_id TEXT DEFAULT '',
+    message_id INTEGER DEFAULT NULL,
+    task_id TEXT DEFAULT '',
+    claimed_status TEXT DEFAULT 'pending',
+    verified_status TEXT DEFAULT 'unverified',
+    verified_by TEXT DEFAULT '',
+    verified_at TEXT DEFAULT '',
+    verification_results TEXT DEFAULT '[***REMOVED***',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_action_verifications_session
+    ON action_verifications(session_id);
+CREATE INDEX IF NOT EXISTS idx_action_verifications_task
+    ON action_verifications(task_id);
+CREATE INDEX IF NOT EXISTS idx_action_verifications_claimed
+    ON action_verifications(claimed_status);
+CREATE INDEX IF NOT EXISTS idx_action_verifications_verified
+    ON action_verifications(verified_status);
 """
 
 # ── Порог контекста ────────────────────────────────────────────
@@ -127,8 +191,8 @@ class ContextManager:
             current_version = conn.execute("PRAGMA user_version").fetchone()[0***REMOVED***
 
             if current_version == 0:
-                # Свежая БД — создаём всё с нуля
-                self._create_schema_v1(conn)
+                # Свежая БД - создаём всё с нуля
+                self._create_schema_v5(conn)
                 conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION***REMOVED***")
                 conn.commit()
                 return
@@ -138,8 +202,12 @@ class ContextManager:
                 self._migrate_v1_to_v2(conn)
             if current_version < 3:
                 self._migrate_v2_to_v3(conn)
+            if current_version < 4:
+                self._migrate_v3_to_v4(conn)
+            if current_version < 5:
+                self._migrate_v4_to_v5(conn)
 
-            # Если версия выше текущей — несовместимость
+            # Если версия выше текущей - несовместимость
             if current_version > SCHEMA_VERSION:
                 raise RuntimeError(
                     f"Schema version {current_version***REMOVED*** > {SCHEMA_VERSION***REMOVED***. "
@@ -147,8 +215,8 @@ class ContextManager:
                 )
 
     @staticmethod
-    def _create_schema_v1(conn: sqlite3.Connection) -> None:
-        """Схема v1 — начальная (с v3 включает projects table)."""
+    def _create_schema_v5(conn: sqlite3.Connection) -> None:
+        """Создаёт актуальную схему v5 (sessions + projects + v4/v5 tables)."""
         conn.executescript("""
             CREATE TABLE IF NOT EXISTS sessions (
                 session_id TEXT PRIMARY KEY,
@@ -197,27 +265,27 @@ class ContextManager:
                 has_pyproject INTEGER DEFAULT 0,
                 category TEXT DEFAULT '',
                 status TEXT DEFAULT 'active',
-                last_scanned TEXT DEFAULT ''
+                last_scanned TEXT NOT NULL DEFAULT ''
             );
             CREATE INDEX IF NOT EXISTS idx_messages_session
                 ON messages(session_id, timestamp);
             CREATE INDEX IF NOT EXISTS idx_checkpoints_session
                 ON checkpoints(session_id, created_at);
-        """)
+        """ + _SCHEMA_V4_TABLES + _SCHEMA_V5_TABLES)
 
     @staticmethod
     def _migrate_v1_to_v2(conn: sqlite3.Connection) -> None:
-        """Миграция v1→v2: без изменений схемы, только версия.
+        """Миграция v1->v2: без изменений схемы, только версия.
 
-        В v2 добавили логику CONTEXT_FULL триггера — она работает
+        В v2 добавили логику CONTEXT_FULL триггера - она работает
         на уровне Python, схема БД осталась той же.
         """
-        conn.execute(f"PRAGMA user_version = 2")
+        conn.execute("PRAGMA user_version = 2")
         conn.commit()
 
     @staticmethod
     def _migrate_v2_to_v3(conn: sqlite3.Connection) -> None:
-        """Миграция v2→v3: добавляет projects table и project_id в sessions."""
+        """Миграция v2->v3: добавляет projects table и project_id в sessions."""
         conn.execute("CREATE TABLE IF NOT EXISTS projects ("
                      "name TEXT PRIMARY KEY,"
                      "path TEXT NOT NULL DEFAULT '',"
@@ -260,6 +328,20 @@ class ContextManager:
             )
 
         conn.execute(f"PRAGMA user_version = 3")
+        conn.commit()
+
+    @staticmethod
+    def _migrate_v3_to_v4(conn: sqlite3.Connection) -> None:
+        """Миграция v3->v4: добавляет arch_decisions и invariants."""
+        conn.executescript(_SCHEMA_V4_TABLES)
+        conn.execute("PRAGMA user_version = 4")
+        conn.commit()
+
+    @staticmethod
+    def _migrate_v4_to_v5(conn: sqlite3.Connection) -> None:
+        """Миграция v4->v5: добавляет action_verifications."""
+        conn.executescript(_SCHEMA_V5_TABLES)
+        conn.execute("PRAGMA user_version = 5")
         conn.commit()
 
     # ═══════════════════════════════════════════════════════════
@@ -310,7 +392,7 @@ class ContextManager:
     ) -> SessionSnapshot:
         """Начинает новую сессию или загружает существующую.
 
-        Если project указан, но project_id не задан — автоматически
+        Если project указан, но project_id не задан - автоматически
         создаёт или находит запись в таблице projects.
         """
         if session_id is None:
@@ -387,10 +469,10 @@ class ContextManager:
         """
         Добавляет сообщение в сессию.
 
-        Если token_count не указан — вычисляется автоматически.
+        Если token_count не указан - вычисляется автоматически.
         Если auto_checkpoint_interval > 0 и количество сообщений
-        кратно интервалу — создаёт авточекпоинт.
-        Если общий token_estimate превышает context_threshold —
+        кратно интервалу - создаёт авточекпоинт.
+        Если общий token_estimate превышает context_threshold -
         создаёт CONTEXT_FULL чекпоинт.
 
         Возвращает словарь чекпоинта, если он был создан, иначе None.
@@ -457,7 +539,7 @@ class ContextManager:
     ) -> dict[str, Any***REMOVED***:
         """Сохраняет чекпоинт с суммаризацией.
 
-        Если тип чекпоинта CONTEXT_FULL — дополнительно сохраняет
+        Если тип чекпоинта CONTEXT_FULL - дополнительно сохраняет
         автоматический rollup-конспект в context/context_full_rollup.md
         для быстрой вставки в новый контекст.
 
@@ -547,7 +629,7 @@ class ContextManager:
         ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
         rollup = (
             f"> 🔄 **Auto-Rollup** generated at {ts***REMOVED***\n"
-            f"> *Context threshold reached — inject this into the next session to maintain continuity*\n"
+            f"> *Context threshold reached - inject this into the next session to maintain continuity*\n"
             f">\n"
             f"> File: `context/context_full_rollup.md`\n"
             f"\n"

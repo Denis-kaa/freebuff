@@ -1,10 +1,10 @@
 ---
-id: "em-retrospective-{slug***REMOVED***-{YYYY-MM-DD***REMOVED***"
+id: "em-retrospective-{slug***REMOVED***-{date***REMOVED***"
 type: "task_retrospective"
-title: ""
-date: "{YYYY-MM-DD***REMOVED***"
-authors: [***REMOVED***
-tags: ["retrospective"***REMOVED***
+title: "{title***REMOVED***"
+date: "{date***REMOVED***"
+authors: {authors***REMOVED***
+tags: {tags***REMOVED***
 related_components: [***REMOVED***
 related_commits: [***REMOVED***
 related_tasks: [***REMOVED***
@@ -13,20 +13,30 @@ status: "final"
 
 ## Intent
 
-Что планировалось.
+{intent***REMOVED***
+
+<!-- Что планировалось? Какие цели и критерии успеха? -->
 
 ## Reality
 
-Что произошло.
+{reality***REMOVED***
+
+<!-- Что произошло по факту? -->
 
 ## Friction
 
-Что замедлило.
+{friction***REMOVED***
+
+<!-- Что замедлило? Технический долг, неясные требования, инфраструктура? -->
 
 ## Discoveries
 
-Неожиданные находки.
+{discoveries***REMOVED***
+
+<!-- Неожиданные находки, инсайты, «а-ха» моменты. -->
 
 ## Follow-ups
 
-Что осталось.
+{follow_ups***REMOVED***
+
+<!-- Что осталось? Ссылки на новые задачи или риски. -->

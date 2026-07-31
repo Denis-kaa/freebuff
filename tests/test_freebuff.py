@@ -306,3 +306,43 @@ class TestTaskCLI:
         result = self._run_task(project_root, tmp_path, "archive")
         assert result.returncode == 0, result.stderr
         assert "не найден" in result.stdout
+
+
+class TestProjectBookCLI:
+    """Тесты команд project-book и project-context."""
+
+    @pytest.fixture
+    def project_root(self) -> Path:
+        return Path(__file__).resolve().parent.parent
+
+    def _run(self, project_root: Path, *args: str) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            [sys.executable, str(project_root / "freebuff_cli.py"), *args***REMOVED***,
+            capture_output=True,
+            text=True,
+            cwd=str(project_root),
+        )
+
+    def test_project_book_lists_chapters(self, project_root):
+        result = self._run(project_root, "project-book")
+        assert result.returncode == 0, result.stderr
+        # Должны появиться ключевые главы
+        assert "Глава 1. Genesis" in result.stdout
+        assert "Глава 8. Поворот к Workspace OS" in result.stdout
+
+    def test_project_book_specific_chapter(self, project_root):
+        result = self._run(project_root, "project-book", "Workspace OS")
+        assert result.returncode == 0, result.stderr
+        assert "Глава 8. Поворот к Workspace OS" in result.stdout
+        assert "Ключевые принципы Workspace OS" in result.stdout
+
+    def test_project_context_finds_query(self, project_root):
+        result = self._run(project_root, "project-context", "July 31 Crisis")
+        assert result.returncode == 0, result.stderr
+        assert "July 31 Crisis" in result.stdout
+
+    def test_project_book_unknown_chapter_shows_list(self, project_root):
+        result = self._run(project_root, "project-book", "Nonexistent")
+        assert result.returncode == 0, result.stderr
+        assert "Глава не найдена" in result.stdout
+        assert "Глава 1. Genesis" in result.stdout

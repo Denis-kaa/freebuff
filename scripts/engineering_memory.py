@@ -99,6 +99,84 @@ class DraftNotFoundError(EMEngineError):
 
 
 # ═══════════════════════════════════════════════════════════════
+# Template Renderer
+# ═══════════════════════════════════════════════════════════════
+
+
+class TemplateRenderer:
+    """Рендерит Markdown-шаблоны из docs/engineering-memory/templates/.
+
+    Плейсхолдеры в шаблоне: `{title***REMOVED***`, `{context***REMOVED***`, `{date***REMOVED***` и т.д.
+    Если значение для плейсхолдера не передано, он остаётся как есть,
+    что позволяет использовать шаблон и как руководство для ручного заполнения.
+    """
+
+    _LIST_FIELDS = {"authors", "tags", "related_components", "related_commits", "related_tasks"***REMOVED***
+
+    def __init__(self, templates_dir: Path | None = None):
+        if templates_dir is None:
+            templates_dir = DEFAULT_WORKSPACE / "docs" / "engineering-memory" / "templates"
+        self._templates_dir = Path(templates_dir)
+
+    def render(self, template_name: str, **values: Any) -> str:
+        """Рендерит шаблон, заменяя плейсхолдеры на значения.
+
+        Args:
+            template_name: имя файла шаблона (например, "decision_journal.md")
+            **values: значения для плейсхолдеров
+
+        Returns:
+            Рендеренный Markdown.
+        """
+        template_path = self._templates_dir / template_name
+        if not template_path.exists():
+            raise FileNotFoundError(f"Template not found: {template_path***REMOVED***")
+
+        content = template_path.read_text(encoding="utf-8")
+
+        # Автоматически заполняем дату, если не передана
+        if "date" not in values:
+            values["date"***REMOVED*** = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+        # Простая замена плейсхолдеров
+        for key, value in values.items():
+            placeholder = "{" + key + "***REMOVED***"
+            if placeholder in content:
+                serialized = self._serialize_value(key, value)
+                content = content.replace(placeholder, serialized)
+
+        return content
+
+    def _serialize_value(self, key: str, value: Any) -> str:
+        """Сериализует значение для вставки в Markdown-шаблон."""
+        # Автоматически нормализуем строки в списки для list-полей
+        if key in self._LIST_FIELDS and isinstance(value, str):
+            value = [value***REMOVED*** if value.strip() else [***REMOVED***
+
+        if isinstance(value, list):
+            items = [json.dumps(str(item), ensure_ascii=False) for item in value***REMOVED***
+            return "[" + ", ".join(items) + "***REMOVED***"
+        if isinstance(value, bool):
+            return "true" if value else "false"
+        if value is None:
+            return ""
+        return str(value)
+
+    def list_templates(self) -> List[str***REMOVED***:
+        """Возвращает список доступных шаблонов."""
+        if not self._templates_dir.exists():
+            return [***REMOVED***
+        return sorted(
+            p.name for p in self._templates_dir.iterdir()
+            if p.suffix == ".md" and p.is_file() and p.name.lower() != "readme.md"
+        )
+
+    def available_for(self, doc_type: str) -> bool:
+        """Проверяет, есть ли шаблон для данного типа документа."""
+        return (self._templates_dir / f"{doc_type***REMOVED***.md").exists()
+
+
+# ═══════════════════════════════════════════════════════════════
 # Engineering Memory Engine
 # ═══════════════════════════════════════════════════════════════
 
@@ -122,6 +200,7 @@ class EMEngine:
         memory_engine: MemoryEngine | None = None,
         knowledge_engine: Any | None = None,
         event_bus: Any | None = None,
+        templates_dir: str | Path | None = None,
     ):
         """Инициализирует EMEngine.
 
@@ -154,6 +233,10 @@ class EMEngine:
         self._knowledge: Any | None = knowledge_engine
         self._knowledge_owned = False
 
+        # TemplateRenderer: lazy init
+        self._template_renderer: TemplateRenderer | None = None
+        self._templates_dir_override: Path | None = Path(templates_dir) if templates_dir else None
+
     # ── Внутренние свойства ─────────────────────────────────
 
     @property
@@ -167,6 +250,14 @@ class EMEngine:
             )
             self._knowledge_owned = True
         return self._knowledge
+
+    @property
+    def template_renderer(self) -> TemplateRenderer:
+        """Lazy init TemplateRenderer."""
+        if self._template_renderer is None:
+            templates_dir = self._templates_dir_override or self._templates_dir
+            self._template_renderer = TemplateRenderer(templates_dir)
+        return self._template_renderer
 
     # ── Public: record_* methods ──────────────────────────────
 
@@ -484,13 +575,73 @@ class EMEngine:
             return False
         return self._memory.delete(MemoryLevel.PROJECT, draft_id)
 
+    # ── Template rendering ───────────────────────────────────
+
+    def render_template(self, template_name: str, **values: Any) -> str:
+        """Рендерит шаблон по имени.
+
+        Args:
+            template_name: имя файла шаблона (например, "decision_journal.md")
+            **values: значения для плейсхолдеров
+
+        Returns:
+            Рендеренный Markdown.
+        """
+        return self.template_renderer.render(template_name, **values)
+
+    def create_draft_from_template(
+        self,
+        template_name: str,
+        title: str,
+        **values: Any,
+    ) -> str:
+        """Создаёт драфт EM из рендеренного шаблона.
+
+        Args:
+            template_name: имя файла шаблона
+            title: название документа
+            **values: значения для плейсхолдеров шаблона
+
+        Returns:
+            draft_id — ключ созданного драфта.
+        """
+        rendered = self.render_template(template_name, **values)
+        body = self._strip_frontmatter(rendered)
+        doc_type = Path(template_name).stem
+
+        # Нормализуем list-поля: строки → список, если это возможно
+        def _as_list(value: Any) -> List[str***REMOVED***:
+            if value is None:
+                return [***REMOVED***
+            if isinstance(value, list):
+                return [str(v) for v in value***REMOVED***
+            if isinstance(value, str):
+                return [value***REMOVED*** if value.strip() else [***REMOVED***
+            return [str(value)***REMOVED***
+
+        return self._create_draft(
+            type=doc_type,
+            title=title,
+            content=body,
+            authors=_as_list(values.get("authors")),
+            tags=_as_list(values.get("tags")),
+            related_components=_as_list(values.get("related_components")),
+            related_commits=_as_list(values.get("related_commits")),
+            related_tasks=_as_list(values.get("related_tasks")),
+        )
+
+    def list_templates(self) -> List[str***REMOVED***:
+        """Возвращает список доступных шаблонов EM."""
+        return self.template_renderer.list_templates()
+
     # ── Internal helpers ────────────────────────────────────
 
     def _create_draft(
         self,
         type: str,
         title: str,
-        sections: Dict[str, str***REMOVED***,
+        sections: Dict[str, str***REMOVED*** | None = None,
+        content: str | None = None,
         authors: List[str***REMOVED*** | None = None,
         tags: List[str***REMOVED*** | None = None,
         related_components: List[str***REMOVED*** | None = None,
@@ -502,24 +653,28 @@ class EMEngine:
         now = datetime.now(timezone.utc)
         date = now.strftime("%Y-%m-%d")
 
-        record = EMRecord(
-            id=draft_id,
-            type=type,
-            title=title,
-            date=date,
-            authors=authors or ["Buffy"***REMOVED***,
-            tags=tags or [***REMOVED***,
-            related_components=related_components or [***REMOVED***,
-            related_commits=related_commits or [***REMOVED***,
-            related_tasks=related_tasks or [***REMOVED***,
-            status="draft",
-            sections=sections,
-        )
+        if content is None:
+            if sections is None:
+                sections = {***REMOVED***
+            record = EMRecord(
+                id=draft_id,
+                type=type,
+                title=title,
+                date=date,
+                authors=authors or ["Buffy"***REMOVED***,
+                tags=tags or [***REMOVED***,
+                related_components=related_components or [***REMOVED***,
+                related_commits=related_commits or [***REMOVED***,
+                related_tasks=related_tasks or [***REMOVED***,
+                status="draft",
+                sections=sections,
+            )
+            content = record.content
 
         self._memory.store(
             level=MemoryLevel.PROJECT,
             key=draft_id,
-            content=record.content,
+            content=content,
             content_type=ContentType.MARKDOWN,
             summary=f"EM draft: {type***REMOVED*** — {title***REMOVED***",
             metadata={
@@ -527,11 +682,11 @@ class EMEngine:
                 "type": type,
                 "title": title,
                 "date": date,
-                "authors": record.authors,
-                "tags": record.tags,
-                "related_components": record.related_components,
-                "related_commits": record.related_commits,
-                "related_tasks": record.related_tasks,
+                "authors": authors or ["Buffy"***REMOVED***,
+                "tags": tags or [***REMOVED***,
+                "related_components": related_components or [***REMOVED***,
+                "related_commits": related_commits or [***REMOVED***,
+                "related_tasks": related_tasks or [***REMOVED***,
                 "status": "draft",
             ***REMOVED***,
         )
@@ -567,6 +722,26 @@ class EMEngine:
             self._event_bus.publish(Event(type=event_type, data=data, source="engineering_memory"))
         except Exception:
             pass
+
+    @staticmethod
+    def _strip_frontmatter(markdown: str) -> str:
+        """Удаляет YAML frontmatter из Markdown и возвращает body.
+
+        Args:
+            markdown: Markdown с опциональным YAML frontmatter.
+
+        Returns:
+            Markdown без frontmatter (с сохранением оригинальных пустых строк).
+        """
+        lines = markdown.splitlines()
+        if not lines or lines[0***REMOVED***.strip() != "---":
+            return markdown
+        try:
+            end_index = lines[1:***REMOVED***.index("---") + 1
+        except ValueError:
+            return markdown
+        body_lines = lines[end_index + 1:***REMOVED***
+        return "\n".join(body_lines).strip("\n")
 
     @staticmethod
     def _slugify(text: str) -> str:

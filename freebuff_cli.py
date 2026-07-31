@@ -14,6 +14,9 @@ v1.0.0: 7 команд для работы с сессиями, контекст
     python freebuff_cli.py qwen-resume <session_id>
     python freebuff_cli.py task start "Название задачи" "Описание"
     python freebuff_cli.py task archive
+    python freebuff_cli.py project-book
+    python freebuff_cli.py project-book "Workspace OS"
+    python freebuff_cli.py project-context "July 31 Crisis"
 
 Архитектура по Kwork Arbitr v3:
     Explainer → LISA (TC=5 Medium) → Decomposer → Architect → Developer → Tester → Acceptance
@@ -26,6 +29,8 @@ from datetime import datetime, timezone
 
 WORKSPACE = os.environ.get("FREEBUFF_ROOT", os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, WORKSPACE)
+
+PROJECT_BOOK_PATH = Path(WORKSPACE) / "docs" / "engineering-memory" / "PROJECT_BOOK.md"
 
 from scripts.context_manager import ContextManager, SessionStatus, CheckpointType
 from scripts.system_monitor import health_check
@@ -70,6 +75,101 @@ def _archive_current_task() -> Path | None:
     archive = _archive_task_path()
     shutil.copy2(current, archive)
     return archive
+
+
+# ── Project Book helpers ─────────────────────────────────────
+
+def _load_project_book() -> str:
+    """Возвращает содержимое Project Book или пустую строку, если файл отсутствует."""
+    try:
+        return PROJECT_BOOK_PATH.read_text(encoding="utf-8")
+    except (FileNotFoundError, OSError):
+        return ""
+
+
+def _project_book_headings(text: str) -> list[str***REMOVED***:
+    """Извлекает список заголовков второго уровня (##) из Project Book."""
+    return [line.strip()[3:***REMOVED***.strip() for line in text.splitlines() if line.strip().startswith("## ")***REMOVED***
+
+
+def _project_book_chapter(text: str, chapter_query: str) -> str:
+    """Извлекает главу по номеру или подстроке заголовка.
+
+    Args:
+        text: содержимое Project Book.
+        chapter_query: номер главы ("3") или подстрока заголовка ("Workspace OS").
+
+    Returns:
+        Текст главы с заголовком или пустая строка, если не найдена.
+    """
+    if not text:
+        return ""
+
+    lines = text.splitlines()
+    query_lower = chapter_query.lower()
+
+    # Если запрос — число, ищем "Глава N."
+    is_number = query_lower.isdigit()
+
+    start_idx = -1
+    for i, line in enumerate(lines):
+        heading = line.strip()
+        if not heading.startswith("## "):
+            continue
+        title = heading[3:***REMOVED***.strip().lower()
+        if is_number and f"глава {query_lower***REMOVED***" in title:
+            start_idx = i
+            break
+        if query_lower in title:
+            start_idx = i
+            break
+
+    if start_idx < 0:
+        return ""
+
+    # Идём до следующего заголовка второго уровня
+    end_idx = len(lines)
+    for j in range(start_idx + 1, len(lines)):
+        if lines[j***REMOVED***.strip().startswith("## "):
+            end_idx = j
+            break
+
+    return "\n".join(lines[start_idx:end_idx***REMOVED***).strip()
+
+
+def _project_book_context(text: str, query: str, limit: int = 10) -> str:
+    """Находит абзацы, содержащие запрос, с небольшим контекстом.
+
+    Args:
+        text: содержимое Project Book.
+        query: поисковый запрос.
+        limit: максимальное количество абзацев.
+
+    Returns:
+        Строка с найденными абзацами или пустая строка.
+    """
+    if not text or not query:
+        return ""
+
+    query_lower = query.lower()
+    # Разбиваем на абзацы по пустым строкам, сохраняя позицию в тексте
+    paragraphs = [***REMOVED***
+    current = [***REMOVED***
+    for line in text.splitlines():
+        if line.strip():
+            current.append(line)
+        else:
+            if current:
+                paragraphs.append("\n".join(current))
+                current = [***REMOVED***
+    if current:
+        paragraphs.append("\n".join(current))
+
+    matches = [p for p in paragraphs if query_lower in p.lower()***REMOVED***
+    if not matches:
+        return ""
+
+    return "\n\n".join(matches[:limit***REMOVED***)
 
 
 def cmd_task_start(title: str, description: str = "") -> None:
@@ -274,6 +374,82 @@ def cmd_seed() -> None:
         print(f"❌ Ошибка при заполнении Knowledge Memory: {e***REMOVED***")
 
 
+def cmd_project_book(chapter: str | None = None) -> str:
+    """Выводит Project Book: либо оглавление, либо конкретную главу.
+
+    Args:
+        chapter: номер главы или подстрока её заголовка. Если None —
+                 выводится оглавление.
+
+    Returns:
+        Выведенный текст (для тестов).
+    """
+    text = _load_project_book()
+    if not text:
+        print("⚠️ Project Book не найден.")
+        return ""
+
+    if chapter:
+        chapter_text = _project_book_chapter(text, chapter)
+        if not chapter_text:
+            print(f"❌ Глава не найдена: {chapter***REMOVED***")
+            print("Доступные главы:")
+            for h in _project_book_headings(text):
+                print(f"  • {h***REMOVED***")
+            return ""
+        print(chapter_text)
+        return chapter_text
+
+    # По умолчанию — оглавление + введение
+    headings = _project_book_headings(text)
+    print("\n".join(headings))
+    return "\n".join(headings)
+
+
+def _project_book_summary() -> str:
+    """Возвращает краткую сводку Project Book для включения в стартовый контекст."""
+    text = _load_project_book()
+    if not text:
+        return ""
+    headings = _project_book_headings(text)
+    if not headings:
+        return ""
+    summary = "\n".join(f"  • {h***REMOVED***" for h in headings[:12***REMOVED***)
+    return f"""Книга проекта ({PROJECT_BOOK_PATH***REMOVED***):
+{summary***REMOVED***
+Запросить главу: python freebuff_cli.py project-book '<глава>'
+Запросить контекст: python freebuff_cli.py project-context '<запрос>'"""
+
+
+def cmd_project_context(query: str, limit: int = 10) -> str:
+    """Ищет и выводит фрагменты Project Book, релевантные запросу.
+
+    Args:
+        query: поисковый запрос.
+        limit: максимальное количество абзацев.
+
+    Returns:
+        Найденный текст или пустая строка.
+    """
+    text = _load_project_book()
+    if not text:
+        print("⚠️ Project Book не найден.")
+        return ""
+
+    if not query:
+        print("❌ Укажи запрос: python freebuff_cli.py project-context '<query>'")
+        return ""
+
+    result = _project_book_context(text, query, limit=limit)
+    if not result:
+        print(f"🔍 По запросу '{query***REMOVED***' ничего не найдено.")
+        return ""
+
+    print(f"🔍 Результаты для '{query***REMOVED***':\n")
+    print(result)
+    return result
+
+
 def cmd_buffy() -> None:
     """Генерирует Unified Context для старта диалога с Buffy.
 
@@ -282,6 +458,7 @@ def cmd_buffy() -> None:
       - TASK.md — текущая задача
       - CHANGELOG.md — последние изменения
       - StreamBridge — последний конспект сессии
+      - Project Book — ключевые главы и контекст проекта
 
     Выводит готовый промпт для вставки в начало диалога.
     """
@@ -307,14 +484,18 @@ def cmd_buffy() -> None:
    Здоровье: {'✅ OK' if all(health.values()) else '⚠️ ПРОБЛЕМЫ'***REMOVED***
 """
 
-    # Формируем итоговый промпт
+    # Сохраняем Unified Context в файл
+    ctx_path = os.path.join(WORKSPACE, "context", "unified_context.md")
     if unified_ctx:
-        # Сохраняем в файл для удобства
-        ctx_path = os.path.join(WORKSPACE, "context", "unified_context.md")
         os.makedirs(os.path.dirname(ctx_path), exist_ok=True)
         with open(ctx_path, "w", encoding="utf-8") as f:
             f.write(unified_ctx)
 
+    # Project Book summary для стартового контекста
+    project_book_summary = _project_book_summary()
+
+    # Формируем итоговый промпт
+    if unified_ctx:
         print("╔══════════════════════════════════════════════════════╗")
         print("║      UNIFIED CONTEXT — СТАРТ ДИАЛОГА С BUFFY       ║")
         print("╚══════════════════════════════════════════════════════╝")
@@ -328,6 +509,9 @@ def cmd_buffy() -> None:
         print(system_status)
         print(f"💾 Контекст сохранён: {ctx_path***REMOVED***")
         print(f"   Размер: {len(unified_ctx)***REMOVED*** chars, ~{len(unified_ctx) // 4***REMOVED*** токенов")
+        if project_book_summary:
+            print()
+            print(project_book_summary)
     else:
         print("⚠️ Unified Context пуст (нет данных в памяти).")
         print()
@@ -336,6 +520,9 @@ def cmd_buffy() -> None:
         print("Я начинаю новую сессию. Расскажи кратко что было в прошлой сессии")
         print("и что мы продолжаем.")
         print("=" * 60)
+        if project_book_summary:
+            print()
+            print(project_book_summary)
 
 
 def cmd_qwen_resume(session_id: str) -> None:
@@ -510,6 +697,14 @@ def main():
                 print("  python freebuff_cli.py task archive")
                 sys.exit(1)
 
+        elif cmd == "project-book":
+            chapter = sys.argv[2***REMOVED*** if len(sys.argv) > 2 else None
+            cmd_project_book(chapter)
+
+        elif cmd == "project-context":
+            query = " ".join(sys.argv[2:***REMOVED***) if len(sys.argv) > 2 else ""
+            cmd_project_context(query)
+
         elif cmd == "buffy":
             # Запуск коммуникации с Buffy — собирает Unified Context.
             # Перед сборкой синхронизируем Knowledge Memory.
@@ -522,7 +717,7 @@ def main():
 
         else:
             print(f"❌ Неизвестная команда: {cmd***REMOVED***")
-            print("Доступные: start, status, resume, conspect, list, checkpoint, restore, qwen-resume, task, buffy, seed")
+            print("Доступные: start, status, resume, conspect, list, checkpoint, restore, qwen-resume, task, buffy, seed, project-book, project-context")
             sys.exit(1)
 
     except Exception as e:

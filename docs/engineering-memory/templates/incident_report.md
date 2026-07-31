@@ -1,10 +1,10 @@
 ---
-id: "em-incident-{slug***REMOVED***-{YYYY-MM-DD***REMOVED***"
+id: "em-incident-{slug***REMOVED***-{date***REMOVED***"
 type: "incident_report"
-title: ""
-date: "{YYYY-MM-DD***REMOVED***"
-authors: [***REMOVED***
-tags: ["incident"***REMOVED***
+title: "{title***REMOVED***"
+date: "{date***REMOVED***"
+authors: {authors***REMOVED***
+tags: {tags***REMOVED***
 related_components: [***REMOVED***
 related_commits: [***REMOVED***
 related_tasks: [***REMOVED***
@@ -13,28 +13,42 @@ status: "final"
 
 ## Summary
 
-Краткое описание инцидента.
+{summary***REMOVED***
+
+<!-- Краткое описание инцидента: что сломалось, где, какова серьёзность. -->
 
 ## Timeline
 
-Хронология событий.
+{timeline***REMOVED***
+
+<!-- Хронология событий с метками времени. -->
 
 ## Root Cause
 
-Корневая причина.
+{root_cause***REMOVED***
+
+<!-- Корневая причина. Почему это произошло, а не просто что произошло. -->
 
 ## Impact
 
-Последствия.
+{impact***REMOVED***
+
+<!-- Последствия: какие системы, пользователи, данные затронуты. -->
 
 ## Resolution
 
-Как было починено.
+{resolution***REMOVED***
+
+<!-- Как было починено. Шаги, принятые меры. -->
 
 ## Lessons Learned
 
-Выводы.
+{lessons***REMOVED***
+
+<!-- Выводы. Что мы узнали? -->
 
 ## Prevention
 
-Как избежать повторения.
+{prevention***REMOVED***
+
+<!-- Как избежать повторения: конкретные действия, мониторинг, изменения процесса. -->

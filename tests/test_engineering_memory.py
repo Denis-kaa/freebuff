@@ -3,6 +3,7 @@ Tests for scripts/engineering_memory.py — Engineering Memory Engine.
 """
 
 import os
+import shutil
 import sys
 ***REMOVED***
 
@@ -16,8 +17,10 @@ from scripts.memory_engine import MemoryEngine, MemoryLevel
 
 @pytest.fixture
 def em(tmp_path):
-    """EMEngine с временной директорией."""
-    return EMEngine(workspace_root=tmp_path)
+    """EMEngine с временной директорией и реальными шаблонами."""
+    project_root = Path(__file__).resolve().parent.parent
+    templates_dir = project_root / "docs" / "engineering-memory" / "templates"
+    return EMEngine(workspace_root=tmp_path, templates_dir=templates_dir)
 
 
 class TestEMRecordDraft:
@@ -214,3 +217,87 @@ class TestEMEvents:
         finalized_events = [e for e in published if e.type == "em.document_finalized"***REMOVED***
         assert len(finalized_events) == 1
         assert finalized_events[0***REMOVED***.data["type"***REMOVED*** == "decision_journal"
+
+
+class TestEMTemplates:
+    """Тесты рендеринга шаблонов."""
+
+    def test_list_templates_includes_core_templates(self, em):
+        templates = em.list_templates()
+        assert "decision_journal.md" in templates
+        assert "incident_report.md" in templates
+        assert "task_retrospective.md" in templates
+        assert "lessons_learned.md" in templates
+
+    def test_render_decision_journal_template(self, em):
+        rendered = em.render_template(
+            "decision_journal.md",
+            title="Use SQLite",
+            context="Need durable state",
+            options="SQLite, LevelDB",
+            decision="SQLite",
+            rationale="Zero setup",
+            consequences="Single-node only",
+            authors="Buffy",
+            date="2026-07-31",
+        )
+        assert "Use SQLite" in rendered
+        assert "Need durable state" in rendered
+        assert "## Context" in rendered
+        assert "## Decision" in rendered
+
+    def test_render_template_missing_placeholders_left_as_is(self, em):
+        rendered = em.render_template(
+            "lessons_learned.md",
+            title="Avoid shell=True",
+            lesson="Never use shell=True with user input",
+        )
+        assert "Avoid shell=True" in rendered
+        assert "Never use shell=True with user input" in rendered
+        # unreplaced placeholders remain as {placeholder***REMOVED***
+        assert "{context***REMOVED***" in rendered
+
+    def test_create_draft_from_template(self, em):
+        draft_id = em.create_draft_from_template(
+            "decision_journal.md",
+            title="Use SQLite",
+            context="Need durable state",
+            options="SQLite, LevelDB",
+            decision="SQLite",
+            rationale="Zero setup",
+            consequences="Single-node only",
+            authors="Buffy",
+        )
+        entry = em._memory.retrieve(MemoryLevel.PROJECT, draft_id)
+        assert entry is not None
+        assert entry.metadata["type"***REMOVED*** == "decision_journal"
+        assert entry.metadata["title"***REMOVED*** == "Use SQLite"
+        assert "## Context" in entry.content
+
+    def test_finalize_draft_from_template_has_single_frontmatter(self, em):
+        draft_id = em.create_draft_from_template(
+            "decision_journal.md",
+            title="Use SQLite",
+            context="Need durable state",
+            options="SQLite, LevelDB",
+            decision="SQLite",
+            rationale="Zero setup",
+            consequences="Single-node only",
+            authors=["Buffy"***REMOVED***,
+        )
+        path = em.finalize_draft(draft_id)
+        content = path.read_text(encoding="utf-8")
+
+        # Count YAML frontmatter blocks: should be exactly one
+        assert content.startswith("---")
+        delimiter_count = content.count("\n---")
+        assert delimiter_count == 1, "Finalized doc should contain exactly one frontmatter block"
+
+        # The body should come from the template, not have a wrapper '## Content'
+        assert "## Context" in content
+        assert "## Decision" in content
+        assert "## Content" not in content
+
+    def test_template_renderer_unknown_template_raises(self, em):
+        with pytest.raises(FileNotFoundError):
+            em.render_template("nonexistent.md")

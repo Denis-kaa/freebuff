@@ -1,10 +1,10 @@
 ---
-id: "em-lesson-{slug***REMOVED***-{YYYY-MM-DD***REMOVED***"
+id: "em-lesson-{slug***REMOVED***-{date***REMOVED***"
 type: "lessons_learned"
-title: ""
-date: "{YYYY-MM-DD***REMOVED***"
-authors: [***REMOVED***
-tags: ["lesson"***REMOVED***
+title: "{title***REMOVED***"
+date: "{date***REMOVED***"
+authors: {authors***REMOVED***
+tags: {tags***REMOVED***
 related_components: [***REMOVED***
 related_commits: [***REMOVED***
 related_tasks: [***REMOVED***
@@ -13,16 +13,24 @@ status: "final"
 
 ## Lesson
 
-Суть урока.
+{lesson***REMOVED***
+
+<!-- Суть урока в одном-двух предложениях. -->
 
 ## Context
 
-В каком контексте возник.
+{context***REMOVED***
+
+<!-- В каком контексте возник? Какие обстоятельства привели к этому выводу? -->
 
 ## Example
 
-Конкретный пример.
+{example***REMOVED***
+
+<!-- Конкретный пример из практики. -->
 
 ## Consequences
 
-Что изменилось после усвоения урока.
+{consequences***REMOVED***
+
+<!-- Что изменилось после усвоения урока? Как мы будем действовать дальше? -->
