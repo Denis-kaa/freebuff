@@ -4,8 +4,10 @@ You are working on the Freebuff AI Engineering Workspace at `/mnt/sdcard/PROJECT
 
 ## Context files
 
-- `BUFFY.md` — main agent manifest (read first)
-- `AGENTS.md` — quick agent protocol
+- `docs/core/CORE_PROMPT.md` — **single source of truth**: identity, duties, constraints, behavior (read first)
+- `BUFFY.md` — main agent manifest (workspace environment, tools, vision)
+- `AGENTS.md` — quick agent protocol / session checkpoint
+- `docs/core/CODE_QUALITY_STANDARD.md` — code quality standard (mandatory)
 - `BUFFY_PROJECT.md` — architecture and roadmap
 - `SPEC.md` — technical specification
 - `TASK.md` — current task
@@ -13,9 +15,10 @@ You are working on the Freebuff AI Engineering Workspace at `/mnt/sdcard/PROJECT
 
 ## Rules
 
-1. Read `BUFFY.md` before making any changes.
+1. Read `docs/core/CORE_PROMPT.md` before making any changes — it defines behavior and constraints.
 2. Follow existing conventions in `scripts/` and `core/`.
 3. Run `python -m pytest tests/ -v` and `python -m mypy scripts/ core/ --ignore-missing-imports` after significant changes.
 4. Update `CHANGELOG.md` and relevant docs when architecture changes.
 5. Keep secrets in `.env` and `.keys/`, never in code.
 6. Prefer minimal changes and reuse existing helpers.
+7. Do not add new user-facing features during active consolidation (see `docs/vision/ROADMAP_PROMT32_CONSOLIDATION.md`).
