@@ -395,7 +395,7 @@ def _main_with_notification() -> int:
 
     MANDATORY RUNTIME CONTRACT (v5.24.0): каждая завершённая задача ОБЯЗАНА
     отправить уведомление пользователю. Эта обёртка гарантирует это для всех
-    команд freebuff_cli.py через try/finally.
+    команд freebuff_cli.py.
 
     Returns:
         Exit code (0 — успех, иначе код ошибки).
@@ -409,16 +409,12 @@ def _main_with_notification() -> int:
     except SystemExit as e:
         # main() использует sys.exit(code) для ошибок — перехватываем код.
         exit_code = e.code if isinstance(e.code, int) else 1
-        if exit_code == 0:
-            return 0
-        # Ошибка: уведомляем и пробрасываем код дальше.
-        if _HAS_NOTIFICATION:
+        if exit_code != 0 and _HAS_NOTIFICATION:
             notify_error(
                 "Freebuff CLI",
                 error=f"Команда завершилась с кодом {exit_code***REMOVED***: {' '.join(sys.argv[1:***REMOVED***)***REMOVED***",
                 stage=sys.argv[1***REMOVED*** if len(sys.argv) > 1 else "",
             )
-        return exit_code
     except Exception as e:  # noqa: BLE001
         print(f"❌ Ошибка: {e***REMOVED***")
         exit_code = 1
@@ -428,9 +424,9 @@ def _main_with_notification() -> int:
                 error=str(e),
                 stage=sys.argv[1***REMOVED*** if len(sys.argv) > 1 else "",
             )
-        return 1
     finally:
-        # Успех (или SystemExit(0)): уведомляем о завершении задачи.
+        # Успешное завершение (нормальное или SystemExit(0)):
+        # отправляем уведомление о завершении задачи.
         if exit_code == 0 and _HAS_NOTIFICATION:
             duration = f"{_time.monotonic() - started:.0f***REMOVED***s"
             try:
@@ -442,6 +438,8 @@ def _main_with_notification() -> int:
                 )
             except Exception:  # noqa: BLE001
                 pass
+
+    return exit_code
 
 
 def main():
