@@ -6,6 +6,691 @@
 
 ---
 
+## [5.25.0***REMOVED*** — 2026-07-31
+
+### Added
+- **Mandatory security audit `pompts/TASK_SECURE_MCP_ACCESS.md` — Шаг 0 (диагностика) + Шаг 1 (закрытие free shell)**
+
+#### Шаг 0 — диагностика поверхности `check_command`/`check_params` через MCP-маршруты
+- `grep -n "check_command\|verifier\.\|Verifier(" scripts/mcp_server.py scripts/mcp_fastapi.py` → **0 совпадений**
+- `grep -n "check_command\|verifier\.\|Verifier(" freebuff_plugin/mcp_server.py` → **0 совпадений**
+- `ps aux | grep -E "cloudflared|mcp_fastapi|mcp_server"` → **ни один процесс не запущен**
+- Wide grep `check_command|check_params|check_type` по `scripts/` + `freebuff_plugin/` подтвердил: вся поверхность сосредоточена в `scripts/verifier.py` и локальном методе `scripts/overlay_client.py::check_command` (клиент оверлея, не подвержен внешнему воздействию)
+- **Вердикт:** маршрут/tool, прокидывающий пользовательский ввод в `check_command`/`check_params` в `scripts/mcp_server.py` или `scripts/mcp_fastapi.py`, **отсутствует**. Объекта для `pkill` нет. Переход к Шагу 1 без остановки процессов.
+- Артефакт: **`docs/audits/AUDIT_STEP0_2026-07-31.md`** (5 сырых команд + итог)
+
+#### Шаг 1 — закрытие свободного shell в `scripts/verifier.py` (риск №2 аудита)
+- **Удалено:** `_run_shell()` (использовал `subprocess.run(..., shell=True)` без sandbox), `_check_shell()`, `_check_content_match()`
+- **Из `CHECK_TYPES` / `CHECKER_REGISTRY` / `DEFAULT_RULES`** убраны ключи `"shell"` и `"content_match"`
+- **`_check_pytest()` переписан:** `subprocess.run([sys.executable, "-m", "pytest", test_path, "-q", "--tb=no"***REMOVED***, shell=False, cwd=str(WORKSPACE))` — argv-список, **без `shell=True`**; интерполяция `{{test_path***REMOVED******REMOVED***` больше не может выполнить инъекцию `; touch /tmp/pwned`
+- **Удалён мёртвый импорт `Tuple`** (единственный потребитель был `_run_shell`)
+- **Net LOC delta:** примерно −115 строк (security ↑, complexity ↓)
+
+#### `tests/test_verifier.py`
+- Удалены тесты `test_shell_success`, `test_shell_failure`, `test_shell_with_template` + импорт `_check_shell`
+- 3 теста с `check_type="shell"` (`test_add_rule`, `test_get_results`, `test_verify_same_task_twice`) переведены на `check_type="file_exists"` с реальным путём
+- Добавлен **`class TestInjectionPrevention`** (3 теста) — канарейки `pwned_pytest_injection` и `pwned_legacy_shell` НЕ ДОЛЖНЫ появиться после попытки инъекции:
+  - `test_pytest_injection_via_test_path` — инъекция `"; touch pwned"` через `{{test_path***REMOVED******REMOVED***` не приводит к созданию файла
+  - `test_legacy_shell_rule_rejected` — правило `check_type="shell"` в БД диспетчеруется в `None` → `actual="unknown check_type"`, `passed=False`
+  - `test_seeded_defaults_no_shell` — после `seed_default_rules()` ни одно правило не содержит `check_type='shell'`
+
+### Backward compatibility
+- Старые правила в `data/verifier.db` с `check_type='shell'` или `'content_match'` грузятся нормально, но в `Verifier.verify()` диспетчер `CHECKER_REGISTRY.get(rule.check_type)` возвращает `None` и срабатывает существующая ветка `actual="unknown check_type"` (явно покрыто тестами `test_legacy_shell_rule_rejected` и `test_verify_unknown_check_type`).
+
+### Tests
+- `tests/test_verifier.py` (56) + `tests/test_action_verifications.py` (19) → **75 passed in 14.40s, 0 failures**
+- `python -m py_compile scripts/verifier.py tests/test_verifier.py` → 0 errors
+- `grep -n "shell=True\|_run_shell\|_check_shell\|_check_content_match" scripts/verifier.py` → **0 совпадений** (единственное упоминание — docstring «без shell=True»)
+
+### Code review
+- `code-reviewer-minimax-m3` (parallel with pytest): **ship-it approved**, 1 minor reminder (мёртвый импорт `Tuple`) — исправлено
+- `thinker-with-files-gemini` рекомендовал **вариант (b) — полное удаление** вместо allowlist; обоснование: чище математически, нет оставшегося `shell=True`, существующие тесты покрываются переходом на `file_exists`/`pytest`
+
+### Артефакты
+- `docs/audits/AUDIT_STEP0_2026-07-31.md` — Шаг 0 (5 сырых команд `docs/audits/AUDIT_STEP0_2026-07-31.md`)
+- `docs/audits/AUDIT_EVIDENCE_2026-07-30.md` — независимая аудит-доказательная база (предыдущий запрос, 9 блоков A–I)
+
+### Отложено (требуются данные / согласование)
+- **Шаг 2 (Bearer auth в `scripts/mcp_fastapi.py`)** — нужен хост Vault и путь к секрету
+- **Шаг 3 (cloudflared perimeter)** — решение оставить quick tunnel или перейти на именованный; не критично для безопасности (защита = Шаг 2)
+- **Шаг 4** — ручное действие Дениса: добавить URL + токен в MCP-коннектор клиента
+
+---
+
+## [5.24.4***REMOVED*** — 2026-07-30
+
+### Fixed
+- **Notification fallback для реальных задач (не только тестов)**
+  - **Problem:** User получил уведомления во время тестирования (Phase 5.4 testing через FREEBUFF_FORCE_VISUAL=1), но НЕ получал их на реальных задачах (Phase 5.5 AUDIT PACKAGE build через basher agent).
+  - **Root causes:**
+    1. `_get_visual_output_stream()` проверял только `isatty()` — возвращал `None` для non-TTY subprocess (basher), даже если env var `FREEBUFF_FORCE_VISUAL=1`
+    2. `notify()` cascade с early returns — `_print_visual_summary()` вызывался ТОЛЬКО при провале cascade (log success или all-fail), но НЕ при primary success. На Android 13+ termux-notification может silently заблокироваться, возвращая True — визуальный блок НИКОГДА не появлялся на успешных задачах
+    3. Env var не пропагался в login shells (только ~/.bashrc, который source'ится interactive shells)
+  - **Fix (2 итерации):**
+    - **Round 1:** `_get_visual_output_stream()` теперь проверяет FREEBUFF_FORCE_VISUAL **первым** — если env var установлен, возвращает `sys.stderr` (bypass isatty check)
+    - **Round 2 (redesign):** `notify()` cascade переписан — убраны ранние return, используется `if/elif/else` для установки `status` + `reason`, затем **ВСЕГДА** вызывается `_print_visual_summary()` перед return. Визуальный блок fires на ЛЮБОМ исходе cascade.
+    - **Env propagation:** добавлено `export FREEBUFF_FORCE_VISUAL=1` в **~/.bashrc** (interactive) AND **~/.profile** (login). Субшелы наследуют env var автоматически.
+
+### Channel-reason mapping (новый)
+- Primary success: `"delivered via termux-notification"`
+- Toast fallback success: `"delivered via termux-toast"`
+- Log fallback success: `"log fallback (Android notification BLOCKED on Termux 13+)"`
+- Total failure: `"ALL CHANNELS FAILED (проверьте ~/notifications.log)"`
+
+### Tests
+- `tests/test_notification.py` — **59 passed** (8.39s)
+  - **DELETED:** `test_visual_summary_NOT_called_when_primary_succeeds` (contradicts new behavior)
+  - **ADDED 6 new tests:**
+    - `test_visual_summary_called_when_primary_succeeds` — primary success MUST fire visual
+    - `test_visual_summary_called_when_toast_succeeds` — toast success MUST fire visual
+    - `test_visual_summary_receives_correct_reason_primary` — channel_reason string
+    - `test_visual_summary_receives_correct_reason_toast` — channel_reason string
+    - `test_visual_summary_receives_correct_reason_log` — channel_reason string
+    - `test_visual_summary_receives_correct_reason_all_failed` — channel_reason string
+  - **ADDED 2 new tests (Round 1):**
+    - `test_force_env_returns_stderr_even_when_both_redirected` — env var bypass
+    - `test_force_env_value_styles_force_stderr` — yes/true/TRUE/YeS variants
+
+### Verified
+- 59/59 tests pass (~8.4s) — **0 failures**
+- Smoke test: `FREEBUFF_FORCE_VISUAL=1 python3 -c "_print_visual_summary('test', 'body')"` → block fires in stderr ✓
+- Subshell inheritance: `bash -c 'echo $FREEBUFF_FORCE_VISUAL'` → **1** (subshell inherits from login shell) ✓
+- Code-reviewer: ship-it approved (5 non-blocking improvements: observability regression, duplicated env var check, misleading channel_reason on Android 13+, fragile test assertions, stale blank line)
+
+### ⚠️ Known Limitation
+- **Visual summary fires only when `notify()` is called.** Tasks run via basher agent that don't call notify() (e.g., custom Python scripts, file operations) still won't produce visible blocks. Workaround: explicitly call `notify_task_complete()` at end of important basher-run scripts, OR wrap basher invocations through `freebuff_cli.py` (which has `_main_with_notification()` wrapper).
+
+---
+
+## [5.24.3***REMOVED*** — 2026-07-30
+
+### Added
+- **Visual [SUMMARY***REMOVED*** fallback в интерактивный stderr/stdout (Phase 5.4)**
+  - 4-я ступень cascade: после `~/notifications.log` срабатывает визуальный fallback блок
+  - **Stdout-first semantics** (honor user literal request "stdout + log-файл"):
+    - `_get_visual_output_stream()` — выбирает sys.stdout приоритетно, fallback на sys.stderr, returns None если оба redirected
+    - `_is_visual_summary_enabled()` — True если EITHER stdout OR stderr is TTY, ИЛИ `FREEBUFF_FORCE_VISUAL=1`
+  - **Visual block format**: pipe-safe ASCII box (═ ┌ ─ ├ ┘ │ chars), без ANSI-кодов:
+    ```
+    ═══════════════════════════════════════════════════
+      [SUMMARY***REMOVED*** ✅ Phase 5.4 Visual Summary
+    ───────────────────────────────────────────────────
+      📋 Task:  ...
+      📊 Status: ...
+      ⏱ Time:   ...
+      ───────────────────────────────────────────────────
+      Channel: log fallback (Android notification BLOCKED)
+    ═══════════════════════════════════════════════════
+    ```
+  - **Defensive title truncation**: title > 43 chars обрезается с `...` чтобы не вылезать за box border
+  - **Defensive line truncation**: content > 52 chars обрезается с `...` (тоже чтобы не ломать геометрию)
+  - **Logger pollution fix**: `logger.info(...)` → `logger.debug(...)` для визуального блока (basicConfig level=INFO)
+  - **Width consistency**: внутренний separator использует `_VISUAL_BOX_WIDTH` (56 chars) без 2-space prefix
+
+### Tests
+- **`tests/test_notification.py`** — добавлено 17 новых тестов в `TestVisualSummary` + 4 фикса mock'ов:
+  - Stream selection (5): stdout preferred, stderr fallback, None если оба redirected, disjunction check, full-width inner separator
+  - Trigger logic (4): called on log success, called on all-fail, NOT called when primary/toast succeed
+  - Content checks (3): contains title and channel, truncates long lines, returns False when disabled
+  - Robustness (2): handles print exception, does not alter notify return
+  - 4 mock fix: existing tests теперь мокают `_get_visual_output_stream` (pytest capture mode issue)
+
+### Verified
+- 58/58 tests pass (~10s) — **0 failures**
+- End-to-end smoke: visual block печатается в stderr (при отсутствии TTY в stdout)
+- Code-reviewer: **0 critical blockers, 1 non-blocking nit** (additional test for title truncation defensive)
+
+---
+
+## [5.24.2***REMOVED*** — 2026-07-30
+
+### Fixed
+- **scripts/test_crash_recovery.sh — container suicide prevention**
+  - **Problem:** During crash recovery test runs in proot-distro, `pgrep -f "freebuff"` matched the test's grandparent process (the freebuff wrapper itself, several levels up in the process tree) and `kill -9` took down the entire container. Result: SIGKILL + futex panic during 3 consecutive runs (`Killed` + `The futex facility returned an unexpected error code`).
+  - **Root cause:** Original script only checked immediate `$PPID`, not full ancestor chain. In proot, top-level wrapper is not direct parent.
+  - **Fix:**
+    - Auto-detect constrained envs (PROOT_WEAK_LSTAT / TERMUX_VERSION / uname / PREFIX match) and default `--no-kill=true`
+    - Walk full ancestor chain via Python /proc/$pid/status `PPid:` (max 15 levels) — skip all ancestors during kill phase
+    - Memory guard: skip kill -9 if `MemAvailable < 256 MB` (OOM-suicide prevention)
+    - Extended CMD filter: skip `proot`, `login` processes
+  - **Result:** 3/3 test runs passed (no SIGKILL, no container collapse)
+
+### Verified
+- 3/3 runs PASS ✅ (each ~30s, all 7 steps + cleanup)
+- Bash syntax check ✅
+- Auto-detect корректно срабатывает в текущем окружении
+- Code-reviewer: **0 critical issues, 2 non-blocking minor improvements** (verbose emoji, parent chain fallback edge case)
+
+---
+
+## [5.24.1***REMOVED*** — 2026-07-30
+
+### Added
+- **MANDATORY RUNTIME CONTRACT — Phase 5.2: Android 13+ Notification Fallback Chain**
+  - 3-tier delivery cascade в `scripts/notification.py`:
+    - Channel 1: `termux-notification` — основной канал (3-retry exponential backoff 1s/2s/4s, 10s timeout)
+    - Channel 2: `termux-toast` — fallback 1 (Toasts НЕ подпадают под POST_NOTIFICATIONS ограничение Android 13+)
+    - Channel 3: `~/notifications.log` — fallback 2 (всегда работает при FS-доступе)
+  - Returns `True` если хоть один канал доставил уведомление (graceful degradation вместо строгой ошибки)
+  - NEW env var: `FREEBUFF_NOTIFY_LOG` — переопределение пути к log fallback
+  - Toast truncation: 240 chars max (Android обрезает более длинные)
+  - ISO timestamp в log (UTC, ISO 8601 format)
+- **`scripts/fix_termux_notifications.sh`** — диагностика + авто-открытие Android Settings Intent:
+  - `bash scripts/fix_termux_notifications.sh` — открывает Settings → Apps → Termux:API → Notifications (1 тап от пользователя)
+  - `--check` — только диагностика
+  - `--silent` — тихая диагностика
+  - 5 проверок: termux-notification binary, Termux:API apk, pm, termux-toast, log path
+- **`docs/ops/ANDROID_NOTIFICATION_FIX.md`** — полная инструкция для пользователя:
+  - 3 способа фикса (автоматический/вручную/am start)
+  - Fallback-цепочка с примерами
+  - Тестирование после исправления
+  - История изменений v5.24.0 → v5.24.1
+
+### Tests
+- **`tests/test_notification.py`** — добавлено 16 новых тестов (всего 41/41 pass):
+  - `TestTryToastChannel` (6): success, unavailable, fail, timeout, truncation, content
+  - `TestTryLogChannel` (4): writes file, OSError, multi-entries, timestamp
+  - `TestNotifyFallbackChain` (6): toast cascade, log cascade, all-fail, primary-only, FREEBUFF_NO_NOTIFY silent, content preserved
+- 4 существующих теста обновлены для работы с cascade (мокают все 3 канала)
+
+### Verified
+- 41/41 tests pass (15s) — **0 failures**
+- Bash `bash -n scripts/fix_termux_notifications.sh` ✅
+- Python syntax check ✅
+- End-to-end smoke test: `FREEBUFF_NO_NOTIFY=1 → silent; log fallback → ISO timestamp + content`
+- Code-reviewer: **0 critical issues, 4 non-blocking minor improvements** (TOAST_TIMEOUT constant, OSError test isolation, ISO regex check, `-c white` flag comment)
+
+### Issue Fixed
+- Bash `"""` docstring в `scripts/fix_termux_notifications.sh` ломал `bash -n` (parens `(без root)` интерпретировались как subshell)
+  - Решение: заменено на `#` комментарии (правильный bash-style docstring)
+
+---
+
+## [5.24.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **MANDATORY RUNTIME CONTRACT — системные уведомления Android:**
+  - `scripts/notification.py` — модуль отправки Android-уведомлений через Termux:API
+  - `notify()` с retry (3 попытки, exponential backoff 1s/2s/4s, таймаут 10s)
+  - `notify_task_complete()` / `notify_error()` — форматированные уведомления с иконками ✅/⚠/❌
+  - `is_available()` — проверка доступности termux-notification (shutil.which + hardcoded fallback)
+  - **`FREEBUFF_NO_NOTIFY=1`** — env var bypass для тестов/CI
+  - `logging.basicConfig` для видимости логов ([INFO***REMOVED***/[ERROR***REMOVED*** в stderr)
+  - `freebuff_cli.py` — `_main_with_notification()` wrapper с try/finally
+  - `docs/ops/RUNTIME_CONTRACT.md` — полная документация контракта
+  - 25 тестов (`tests/test_notification.py`) — 0 failures
+  - **Тест-изоляция:** autouse fixture unsets FREEBUFF_NO_NOTIFY для каждого теста
+  - **Текущее состояние проекта:** 1797 тестов, 32+ компонентов
+
+## [5.23.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **Phase 7 — RAG 2.0 Engine (семантический поиск с ранжированием):**
+  - `scripts/rag_engine.py` — **RAGEngine**: 5 режимов поиска (keyword, semantic, hybrid, hybrid_rrf, full_rrf), Reciprocal Rank Fusion (RRF), feature-based re-ranking (7 признаков), query expansion из результатов поиска
+  - `RAGResult`, `RAGReport`, `FeatureVector` — dataclasses с JSON-сериализацией
+  - `rrf_merge()` — RRF fusion с k=60, поддержка произвольного количества списков, tracking источников
+  - `_extract_features()` — 7 признаков: coverage, term_frequency, position, length_norm, freshness, bm25_score, semantic_score
+  - `rerank()` — feature-based переранжирование с конфигурируемыми весами
+  - `expand_query()` — расширение запроса терминами из top-K результатов
+  - 3 MCP инструмента в `scripts/mcp_server.py`: `rag_search`, `rag_hybrid`, `rag_rerank`
+  - CLI: `python scripts/rag_engine.py search | hybrid | rerank | expand` с цветным выводом и JSON
+  - 60 тестов (`tests/test_rag_engine.py`) — 0 failures
+  - Всего: **1772 теста**, **31+ компонент**
+
+## [5.22.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **Phase 7 — Collaboration Roles:**
+  - `scripts/roles.py` — **RoleEngine**: SQLite-персистентность, 6 стандартных ролей (developer, reviewer, documenter, researcher, archiver, orchestrator), назначение/отзыв ролей, маппинг capabilities
+  - Интеграция с PresenceEngine — роли синхронизируются в metadata агента
+  - Интеграция с CollaborationEngine — project-роли → collab-роли (orchestrator→owner, developer/reviewer→editor, остальные→viewer)
+  - Capability mapping — каждая роль даёт набор capabilities (coding, testing, review, research, etc.)
+  - 5 MCP инструментов в `scripts/mcp_server.py`: `roles_list`, `roles_get`, `roles_assign`, `roles_unassign`, `roles_stats`
+  - CLI: `python scripts/roles.py list | get | assign | unassign | by-role | stats | sync` с цветным выводом
+  - 41 тест (`tests/test_roles.py`) — 0 failures
+
+## [5.21.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **Phase 7 — Project Pulse (лента изменений проекта):**
+  - `scripts/project_pulse.py` — **ProjectPulse**: SQLite-персистентность, отслеживание git-коммитов (scan_git), изменений файлов (scan_files), событий EventBus (subscribe_eventbus + _on_event)
+  - 15+ типов событий пульса: git.commit, git.branch, file.created/modified/deleted, event.task/step/collab/memory/plugin/presence/metrics
+  - Ref-based дедупликация — один коммит/файл не создаёт дубликатов
+  - CLI: `python scripts/project_pulse.py list | stats | scan | watch` с цветным выводом и JSON
+  - 3 MCP инструмента в `scripts/mcp_server.py`: `pulse_list`, `pulse_stats`, `pulse_scan`
+  - EventBus подписка на `*` — все события проекта автоматически попадают в ленту
+  - 33 теста (`tests/test_project_pulse.py`) — 0 failures
+
+## [5.20.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **Phase 4 — Плагины (3 шт):**
+  - `plugins/tg_messenger/` — Telegram Messenger Plugin: отправка сообщений через Telegram Bot API, авто-форвардинг system.*/collab.* событий, управление ботом (start/stop), очередь сообщений
+  - `plugins/system_monitor/` — System Monitor Plugin: CPU, память, батарея, температура, health check. Fallback-реализации через /proc/* (Termux-совместимые), фоновый watch loop с публикацией system.metrics событий
+  - `plugins/knowledge_sync/` — Knowledge Sync Plugin: синхронизация MemoryEngine → KnowledgeEngine, авто-индексация при memory.stored событиях, force_reindex, полная перестройка индекса
+  - Все плагины: BasePlugin lifecycle (on_load/enable/disable/unload), EventBus подписка, do_* actions, manifest.json с метаданными, graceful degradation при отсутствии зависимостей
+  - 39 тестов (`tests/test_plugins_phase4.py`) — 0 failures
+
+## [5.19.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **Phase 6 — Metrics Dashboard:**
+  - `buffy-playground/public/metrics-dashboard.html` — standalone HTML dashboard с Chart.js
+  - Визуализация: VCR, SRG, CpVO, RRR, TTD — значения, тренды, интерпретации
+  - Health Score gauge (0-10) с Canvas-рендерингом
+  - Trend charts для каждой метрики (Chart.js line chart)
+  - Auto-refresh каждые 30 секунд, тёмная тема
+  - `/dashboard` endpoint в `scripts/mcp_fastapi.py` (GET → HTMLResponse)
+  - 12 тестов — 0 failures
+
+## [5.18.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **Phase 7 — Live Collaboration для CoWork Platform:**
+  - `scripts/collaboration.py` — **CollaborationEngine**: SQLite-персистентность (sessions + messages + participants), EventBus-интеграция (события `collab.created/joined/left/closed/message`), PresenceEngine интеграция, система ролей (owner/editor/viewer), история сообщений с пагинацией
+  - `CollaborationSession` — 12 полей: session_id, topic, status, owner, participants, timestamps, message_count
+  - `CollabMessage` — 5 типов сообщений: text, system, task, file, decision, code
+  - 8 MCP инструментов в `scripts/mcp_server.py`: `collab_create`, `collab_list`, `collab_get`, `collab_join`, `collab_leave`, `collab_send`, `collab_history`, `collab_status`
+  - CLI: `python scripts/collaboration.py list | get | create | close | send | history | status` с цветным выводом и JSON-режимом
+  - Graceful degradation без EventBus и без PresenceEngine
+  - 60 тестов (`tests/test_collaboration.py`) — 0 failures
+  - Всего: **60 новых тестов + 8 MCP инструментов + 7 CLI команд**
+
+## [5.17.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **Phase 7 — Agent Presence для CoWork Platform:**
+  - `scripts/presence.py` — PresenceEngine: SQLite-персистентность (таблицы `presence` + `presence_history`), EventBus-интеграция (события `presence.online/offline/busy/away/error/heartbeat`), heartbeat loop с авто-prune офлайн-агентов, thread-safe, rich metadata
+  - `AgentPresence` dataclass (14 полей) + `PresenceStatus` с валидацией
+  - 3 MCP инструмента в `scripts/mcp_server.py`: `presence_list`, `presence_get`, `presence_history`
+  - CLI: `python scripts/presence.py list | get | status | history` (цветной + JSON)
+  - Offline marking on shutdown — `stop()` отмечает всех ONLINE агентов как OFFLINE
+  - Graceful degradation без EventBus
+  - 67 тестов (`tests/test_presence.py`) — 0 failures
+
+## [5.16.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **Phase 6: HTTP Metrics endpoints (scripts/mcp_fastapi.py):**
+  - 8 новых REST endpoints для Metrics Engine:
+    - `GET /metrics/report` — полный отчёт VCR/SRG/CpVO/RRR/TTD + Health Score
+    - `GET /metrics/vcr`, `/metrics/srg`, `/metrics/cpvo`, `/metrics/rrr`, `/metrics/ttd` — каждая метрика отдельно
+    - `GET /metrics/trend/{name***REMOVED***` — история метрики (с `?limit=N`)
+    - `GET /metrics/status` — диагностика MetricsEngine (БД, EventBus)
+  - `_get_metrics()` — lazy init MetricsEngine при первом запросе
+  - `_metrics_response(data, fmt)` — поддержка `?fmt=json` (default) и `?fmt=text`
+  - Все эндпоинты следуют паттерну lazy init (как `_server` и `_sessions`)
+
+- **Session isolation в test_crash_recovery.sh:**
+  - `scripts/test_crash_recovery.sh` — Шаг 0: очистка ACTIVE/CHECKPOINT сессий перед стартом через `cm.list_sessions()` + `cm.complete_session()`
+  - Temp-файлы с `$$` в имени для избежания race condition между прогонами
+  - **3/3 прогона PASS** (против 2/3 в v5.15.0)
+
+- **Тесты — 12 тестов, 0 failures:**
+  - `TestMetricsEndpoints` — report, vcr, srg, cpvo, rrr, ttd, status, trend (known/unknown/limit), all endpoints return JSON
+
+### Проверка
+- 47 тестов mcp_fastapi — **0 failures** (35 existing + 12 новых)
+- 3/3 прогона test_crash_recovery.sh с --no-kill: PASS ✅
+- Code review: все замечания исправлены
+
+---
+
+## [5.15.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **Phase 0: Close Context Loop (TASK_PHASE_0_CLOSE_CONTEXT_LOOP.md):**
+  - `freebuff_cli.py :: cmd_buffy()` — интеграция StreamBridge: создаёт сессию, логирует user-запрос (`log_user`), логирует assistant-ответ (`log_assistant`), создаёт чекпоинт (`checkpoint`)
+  - Цикл контекста ЗАМКНУТ: `cmd_buffy()` → StreamBridge → `context.db` → `get_context_resume()`
+  - Graceful degradation: если StreamBridge недоступен, `bridge = None` — функция работает как раньше
+  - `scripts/test_crash_recovery.sh` — тест смерти сессии (6 шагов: создание → запись → kill/bootstrap → верификация → resume)
+  - `--no-kill` режим для proot-окружений (kill -9 убивает родительский proot-distro процесс)
+  - `scripts/test_crash_recovery_verify.py` — верификация целостности контекста после краша
+
+### Проверка
+- 2/3 прогона test_crash_recovery.sh с --no-kill: PASS ✅
+- `cmd_buffy()` StreamBridge интеграция: 6/6 проверок ✅
+- Полный цикл контекста: сессия → БД → resume подтверждён ✅
+- Code review: все замечания исправлены (bash quoting, temp-файлы вместо heredoc в `$()`, FK constraint, `--no-kill` добавлен)
+
+---
+
+## [5.14.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **Distributed Agents — Phase 4 завершение (scripts/distributed_agents.py):**
+  - `AgentMesh` — thread-safe реестр распределённых агентов с find_by_capability, get_stats, get_summary, task_history, get_agent_stats
+  - `TaskDistributor` — 3 стратегии распределения задач: best_match (по confidence), round_robin (циклически), specific (к указанному агенту) + distribute_to_all (broadcast)
+  - `DistributedCoordinator` — полный lifecycle (start/stop), register_agent() с авто-генерацией имени, spawn_agent() через Bridge Layer, execute_agent_task(), execute_parallel(), remove_agent(), broadcast_to_all()
+  - `DistributedWorkflow` — DAG-зависимости (depends_on), параллельное выполнение шагов, broadcast шаги, разрешение зависимостей (_get_ready_steps, _get_blocked_steps)
+  - Мониторинг агентов (_monitor_loop) с проверкой статуса через Bridge Layer
+  - EventBus публикация: `distributed.started/stopped`, `agent_registered/online/offline/removed`, `task_completed`, `workflow_planning/progress/completed`
+  - CLI: `python scripts/distributed_agents.py agents | spawn | remove | workflow list | status | broadcast`
+
+- **MCP Server интеграция (5 инструментов):**
+  - `distributed_list` — список всех агентов в mesh
+  - `distributed_spawn` — регистрация/подключение нового агента
+  - `distributed_run` — запуск распределённого workflow
+  - `distributed_status` — статус агентов и workflow
+  - `distributed_broadcast` — broadcast сообщения всем агентам
+  - `_get_distributed_coordinator()` — lazy accessor (паттерн как у BridgeLayer) c auto-register в MCP
+  - EventBus публикация: `distributed.listed`, `distributed.spawned`, `distributed.ran`, `distributed.status`, `distributed.broadcasted`
+
+- **Тесты — 55 тестов, 0 failures (35s):**
+  - `TestTypes` (7): AgentNode, AgentNodeStatus, WorkCoordStatus, AgentTask, WorkflowStep, WorkflowPlan.to_dict
+  - `TestAgentMesh` (12): register/unregister, update_status, set_error, list(фильтр/по статусу/по типу), find_by_capability, online_count, summary, task_history, get_agent_stats
+  - `TestTaskDistributor` (6): best_match, unknown capability, specific, unknown agent, round_robin, distribute_to_all
+  - `TestDistributedCoordinator` (10): lifecycle, register, auto-name, spawn with/without bridge, max_agents, remove, broadcast, execute_task, execute_parallel, no-bridge fallback
+  - `TestDistributedWorkflow` (5): basic, broadcast, dependencies, get_ready, get_blocked
+  - `TestCLI` (5): main, agents, status, spawn, workflow list
+  - `TestMCPIntegration` (10): tools registered, handlers exist, graceful degradation, validation
+
+### Проверка
+- 1414 общих тестов — **0 failures** (420s)
+- Code review: 3 итерации фиксов (indentation, imports, enum comparison, auto-name)
+
+---
+
+## [5.13.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **LEVIATHAN Phase E — buffy-ctx CLI (freebuff_cli.py):**
+  - `freebuff ctx push [session_id***REMOVED***` — экспорт контекста сессии в JSON (сообщения, чекпоинты, решения, верификации)
+  - `freebuff ctx pull <file.json>` — импорт контекста из JSON с восстановлением сессии
+  - `freebuff ctx status [session_id***REMOVED***` — статус контекста (проект, сообщения, токены, верификации, экспорты)
+  - `_ctx_export_dir()` — функция вместо module-level константы (учитывает изменения WORKSPACE)
+  - Экспорты сохраняются в `context/exports/ctx_<session>_<timestamp>.json`
+
+- **Тесты — 17 тестов, 0 failures:**
+  - `TestCtxPush` (5): by id, auto active, invalid session, no active, export dir
+  - `TestCtxPull` (5): valid file, not found, invalid json, missing section, wrong extension
+  - `TestCtxStatus` (4): by id, auto active, no session, invalid
+  - `TestRoundtrip` (1): push→pull preserves data
+  - `TestCLIEntryPoint` (2): ctx push, ctx status CLI commands
+
+### Проверка
+- 1359 общих тестов — **0 failures** (390s)
+- Code review: 2 замечания исправлены (CONTEXT_EXPORT_DIR → _ctx_export_dir(), _patch_workspace module parameter)
+
+---
+
+## [5.12.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **LEVIATHAN Phase D — Vector Memory (6-й уровень памяти):**
+  - `MemoryLevel.VECTOR = "vector"` — 6-й уровень памяти в MemoryEngine
+  - `VectorBackend` класс — опциональный Chromadb бэкенд:
+    - `is_available()` — проверка доступности chromadb
+    - `store(entry_id, text, metadata)` — сохранение вектора
+    - `search(query, top_k, filter, level)` — поиск по векторной близости
+    - `delete(entry_id)` — удаление вектора
+    - `count()` — количество записей
+    - `wipe()` — очистка коллекции
+  - Graceful degradation: chromadb не обязателен — все операции возвращают ошибку
+  - `MemoryEngine.store()` для VECTOR уровня: JSON + вектор (raise RuntimeError если нет chromadb)
+  - `MemoryEngine.delete()` — исправлен порядок: чтение entry_id ДО unlink файла
+  - `MemoryEngine.vector_search(query, top_k, level)` — семантический поиск с обогащением MemoryEntry
+  - CLI: `python scripts/memory_engine.py vector_search "query" --top-k 5 --json`
+
+- **Тесты — 28 тестов, 0 failures:**
+  - `TestMemoryLevelVector` (2): enum value, count
+  - `TestVectorBackendNoChromadb` (6): init, store, search, delete, count, wipe — graceful degradation
+  - `TestVectorBackendMocked` (10): init, store, search sorted, search empty, delete, count, wipe, edge cases
+  - `TestMemoryEngineVectorNoChromadb` (9): store raises, error msg, other levels work, search empty, retrieve, delete, list
+  - `TestMemoryEngineVectorMocked` (8): store, retrieve, list, delete, search includes, vector_search, stats
+  - `TestBuildContextWithVector` (2): excludes by default, includes explicit
+
+### Исправлено
+- `scripts/memory_engine.py` — `delete()` читал `filepath.read_text()` после `filepath.unlink()` (FileNotFoundError). Исправлено: чтение entry_id до удаления файла, передача id в vector_backend.delete() после unlink
+
+### Проверка
+- 1342 общих теста — **0 failures** (337s)
+- Code review: 1 баг исправлен (delete order)
+- 40 тестов Memory Engine обновлены (test_memory_level_count: 5→6)
+
+---
+
+## [5.11.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **LEVIATHAN Phase C — Metrics Engine (scripts/metrics.py):**
+  - 5 метрик качества разработки:
+    - **VCR** (Verified Completion Rate) — доля `verified_status='verified_ok'` от всех верифицированных задач
+    - **SRG** (Self-Report Gap) — разница между claimed_status='done' и фактической верификацией
+    - **CpVO** (Cost per Verified Outcome) — средняя длительность на единицу результата (ms/verification)
+    - **RRR** (Rework/Rollback Rate) — доля задач с последующими фиксами после верификации
+    - **TTD-false** (Time-To-Detect false) — среднее время до обнаружения ошибки (minutes)
+  - `MetricsEngine` — вычисление метрик из context.db (action_verifications) + verifier.db (verification_results)
+  - `compute_report()` — композитный отчёт + `save_snapshot()` для трендов
+  - `get_trend()` — история значений метрики из metrics.db
+  - `Health Score` (0-10) — общая оценка на основе 5 метрик
+  - EventBus: публикация `metrics.report` при сохранении снимка
+  - CLI: `report`, `vcr`, `srg`, `cpvo`, `rrr`, `ttd`, `trend <metric>`, `status` — с JSON выводом
+  - **MCP интеграция:** `_get_metrics_engine()` lazy accessor + 3 инструмента: `metrics_report`, `metrics_vcr`, `metrics_srg`
+
+- **Тесты — 37 тестов, 0 failures:**
+  - `TestMetricResult` (3): defaults, rounding, display_name
+  - `TestMetricsReport` (2): defaults, to_dict
+  - `TestVCR` (3): value, no_data, interpretation
+  - `TestSRG` (3): value, no_data, trend
+  - `TestCpVO` (3): value, no_verifier_db, with_failures
+  - `TestRRR` (3): value, no_data, trend
+  - `TestTTD` (3): value, no_data, no_failures
+  - `TestReport` (2): all_metrics, with_save
+  - `TestSetupDatabases` (2): all_exist, all_missing
+  - `TestSnapshot` (2): save_and_get_trend, get_empty_trend
+  - `TestHealthScore` (3): baseline, perfect, worst
+  - `TestStatus` (2): status_ok, with_eventbus
+  - `TestEventBus` (2): report_event, no_crash
+  - `TestCLI` (2): json_format, report_dict
+  - `TestMCPIntegration` (2): tools_registered, handlers_available
+
+### Проверка
+- 188 LEVIATHAN Phase A+B+C тестов — **0 failures** (51s)
+- Code review: unused imports исправлены
+
+---
+
+## [5.10.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **LEVIATHAN Phase B — Verifier + Orchestrator интеграция (шаг 1.3):**
+  - `scripts/orchestrator.py` — `Orchestrator.__init__()` теперь принимает `verifier` и `context_manager` параметры (опциональные, обратная совместимость)
+  - `_execute_step()` — после `StepStatus.SUCCESS` вызывает `_verify_step()` для верификации результата
+  - `_verify_step()` — новый метод:
+    - Запускает `Verifier.verify()` для успешного шага
+    - Устанавливает `claimed_status='done'` через `ContextManager.set_claimed_status()`
+    - Устанавливает `verified_status` через `ContextManager.set_verified_status()`
+    - Публикует `step.verified` событие с результатами проверки
+    - Safe serialization: корректно обрабатывает как dataclass, так и mock-объекты
+    - Ошибки верификации не ломают workflow (изолированы в try/except)
+  - Документация: `step.verified` добавлен в список событий
+  - **5 тестов** — 0 failures:
+    - verifier вызван для успешного шага
+    - verifier + context_manager: set_claimed_status + set_verified_status вызваны
+    - step.verified событие через EventBus
+    - Ошибка verifier не ломает workflow
+    - Failed step не вызывает verifier
+
+### Проверка
+- 1271 общий тест — **0 failures** (327s)
+- Code review: все замечания исправлены
+
+---
+
+## [5.9.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **LEVIATHAN Phase B — Action Verifications (шаг 1.1-1.2):**
+  - `scripts/context_manager.py` — SCHEMA_VERSION 4→5, миграция `_migrate_v4_to_v5()`:
+    - Новая таблица `action_verifications` (id, session_id, message_id, task_id, claimed_status, verified_status, verified_by, verified_at, verification_results) с 4 индексами
+  - 4 новых метода:
+    - `set_claimed_status()` — установка claimed_status (pending/done/failed) с upsert по task_id
+    - `set_verified_status()` — установка verified_status (verified_ok/verified_fail) с результатами проверки
+    - `get_verification()` — получение статуса верификации по task_id
+    - `list_verifications()` — список верификаций с фильтрацией по status/session_id/limit
+  - EventBus: публикация `verification.claimed` и `verification.completed`
+
+- **План интеграции LEVIATHAN:**
+  - `docs/LEVIATHAN_INTEGRATION_PLAN.md` — полный план с 4 шагами (A→D), детальным описанием каждого изменения, оценкой часов и тестов
+
+### Проверка
+- 95 тестов Phase A+B — **0 failures** (18s)
+- Code review: все замечания исправлены
+
+---
+
+## [5.8.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **LEVIATHAN Phase A — Schema Extension:**
+  - `scripts/context_manager.py` — SCHEMA_VERSION 3→4, миграция `_migrate_v3_to_v4()`:
+    - Новая таблица `arch_decisions` — архитектурные решения (id, session_id, title, context, decision, alternatives, rationale, consequences, status)
+    - Новая таблица `invariants` — инварианты (id, name, description, assertion_type, assertion_params, enabled, severity, last_checked, last_result)
+  - 6 новых методов в ContextManager:
+    - `log_decision()` — логирование архитектурного решения с полным контекстом
+    - `get_decisions()` — список решений с фильтрацией по session_id/status/limit
+    - `set_invariant()` — установка инварианта (upsert по имени)
+    - `get_invariant()` — получение инварианта по имени
+    - `check_invariant()` — проверка инварианта (file_exists/content_match/shell/sql_query)
+    - `list_invariants()` — список инвариантов с фильтрацией enabled/severity
+  - EventBus: публикация `decision.logged` и `invariant.checked`
+  - Исправлено: свежая БД (version=0) теперь корректно создаёт arch_decisions + invariants таблицы
+  - Исправлено: FK constraint убран из arch_decisions (сессия — опциональная связь)
+
+- **Тесты — 20 тестов, 0 failures:**
+  - `TestSchemaMigration` (3): version=4, таблицы существуют, миграция v3→v4
+  - `TestArchitecturalDecisions` (5): log_decision, get_decisions фильтр/лимит/без сессии, EventBus
+  - `TestInvariants` (12): set/get, overwrite, not found, list, enabled only, check (file_exists/shell/disabled/not found), EventBus, severity filter
+
+### Проверка
+- 20 тестов Phase A — **0 failures**
+- 1247 общих тестов — **0 failures** (380s)
+- Code review: 3 стилистических замечания исправлены (inline imports, timeout config)
+
+---
+
+## [5.7.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **LEVIATHAN Phase B — Verification Framework:**
+  - `scripts/verifier.py` — новый модуль независимой верификации результатов:
+    - `VerificationRule` dataclass — правила верификации с 7 типами проверок: file_exists, file_contains, content_match, pytest, shell, sqlite, http
+    - `VerifierStorage` — SQLite-хранилище (WAL-mode) с таблицами `verification_rules` и `verification_results` + индексы
+    - `Verifier` — основной класс: `verify()`, `add_rule()`, `remove_rule()`, `list_rules()`, `seed_default_rules()`, `get_summary()`, `get_results()`, `get_stats()`
+    - `_resolve_template()` — шаблонизация `{{variable***REMOVED******REMOVED***` в параметрах правил
+    - **EventBus интеграция**: подписка на `task.claimed` для авто-верификации, публикация `task.verified` и `verifier.rule_added`
+    - **CLI**: 4 подкоманды — `verify`, `rules` (list/add/remove/seed), `status`, `diagnose`
+    - 7 встроенных правил для task_type: implement, test, refactor, research, any
+
+- **Тесты — 56 тестов, 0 failures:**
+  - `TestVerificationRule` (6): defaults, validation, weight clamping
+  - `TestVerificationResult` (2): defaults
+  - `TestVerifierStorage` (12): init, CRUD rules, CRUD results, summary, stats, enabled filter
+  - `TestTemplateResolution` (5): simple, multiple, unknown, empty
+  - `TestVerifier` (16): seed, idempotent, force, add, remove, list, verify, summary, results, stats, diagnose, EventBus auto-verification, edge cases
+  - `TestCheckers` (12): file_exists (found/not found), file_contains (found/not found/min_length/missing), shell (success/failure/template), sqlite (success/few_rows/missing_db), http (success/failure with mocks)
+  - `TestEdgeCases` (2): empty context, duplicate task, checker registry integrity
+
+### Проверка
+- 56 тестов verifier — **0 failures** (22.84s)
+- 1226 общих тестов — **0 failures** (298s)
+- Code review: 3 замечания исправлены (***REMOVED*** → module level, sqlite row_count, content_match checker)
+
+---
+
+## [5.6.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **Priority 1 компоненты — полная документация по шаблону TEMPLATE_COMPONENT_DOCUMENTATION.md:**
+  - `docs/core/CONTEXT_MANAGER_SPECIFICATION.md` — ContextManager (назначение, архитектура, API, реализация)
+  - `docs/core/MEMORY_ENGINE_SPECIFICATION.md` — MemoryEngine (5 уровней памяти, файловое хранение)
+  - `docs/core/KNOWLEDGE_ENGINE_SPECIFICATION.md` — KnowledgeEngine (FTS5 + TF-IDF + Semantic)
+  - `docs/core/GRAPH_INDEX_SPECIFICATION.md` — GraphIndex (граф связей, BFS обход)
+  - `docs/core/EVENT_BUS_SPECIFICATION.md` — EventBus (publish/subscribe, wildcard)
+  - `docs/core/ORCHESTRATOR_SPECIFICATION.md` — Orchestrator (FSM/DAG workflow, планировщик)
+  - `docs/core/MODEL_GATEWAY_SPECIFICATION.md` — ModelGateway (единый шлюз LLM, fallback)
+  - `docs/core/TOOL_RUNTIME_SPECIFICATION.md` — ToolRuntime (безопасные инструменты, ParamSchema)
+  - `docs/core/PLUGIN_API_SPECIFICATION.md` — PluginAPI (lifecycle, manifest, discovery)
+  - `docs/plugin/BRIDGE_LAYER_SPECIFICATION.md` — BridgeLayer (MCP ↔ ACP мост)
+  - `docs/plugin/ACP_PROTOCOL_SPECIFICATION.md` — ACPProtocol (Agent Collaboration Protocol)
+  - `docs/plugin/MCP_CLIENT_SPECIFICATION.md` — MCPClient (Stdio/HTTP транспорт)
+  - `docs/plugin/MCP_SERVER_SPECIFICATION.md` — MCPServer (25+ MCP инструментов)
+  - Каждая спецификация содержит 9 разделов: назначение, архитектура, интерфейс, реализация, тесты, конфигурация, ошибки, примеры, связанные компоненты
+
+### Индексация
+- `docs/INDEX.md` — добавлены ссылки на все 13 новых спецификаций
+- Все спецификации взаимосвязаны через секцию «Связанные компоненты»
+
+### Проверка
+- 13 компонентов задокументированы по единому шаблону
+- Каждый doc содержит: ASCII-диаграмму, полный API с примерами, секцию ошибок
+- Code review: все замечания исправлены
+
+---
+
+## [5.5.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **LEVIATHAN Context — полный архитектурный аудит ([promt18.md***REMOVED***(pompts/promt18.md)):**
+  - `docs/audits/LEVIATHAN_CONTEXT_AUDIT.md` — 10-раздельный анализ (модель LEVIATHAN, сопоставление с Buffy, пересечения, дублирование, пробелы, Red Team, эволюционный план, дорожная карта, оценка 7.0/10 vs 5.3/10, каноническая архитектура)
+  - `docs/vision/ROADMAP.md` — LEVIATHAN раздел обновлён: 4 фазы интеграции (Schema Extension → Verification Framework → Metrics Engine → Vector Memory) с оценкой часов, рисков и тестов
+
+- **Компонентная документация по шаблону ([promt19.md***REMOVED***(pompts/promt19.md)):**
+  - `docs/core/EVENT_STORE_SPECIFICATION.md` — полная документация EventStore по шаблону (9 разделов: назначение, архитектура, интерфейс, реализация, тесты, конфигурация, ошибки, примеры, связи)
+  - `docs/core/SESSION_MESH_SPECIFICATION.md` — документация SessionMesh по шаблону
+  - `docs/core/NODE_MESH_SPECIFICATION.md` — документация NodeMesh по шаблону
+
+- **Индексация:**
+  - `docs/INDEX.md` — добавлены ссылки на LEVIATHAN_CONTEXT_AUDIT, EVENT_STORE_SPECIFICATION, SESSION_MESH_SPECIFICATION, NODE_MESH_SPECIFICATION
+
+### Проверка
+- Все спецификации заполнены по единому шаблону TEMPLATE_COMPONENT_DOCUMENTATION.md
+- Каждая спецификация содержит: 9 разделов, API с примерами, тесты, конфигурацию, ошибки, сценарии использования
+- Code review: замечания по структуре и полноте документации исправлены
+
+---
+
+## [5.4.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **Runtime Installer — Шаг 3 из TASK.md (task-framework):**
+  - Авто-установка AI Runtime через Bootstrap Engine: `freebuff`, `claude-code`, `openclaw`
+  - `freebuff_plugin/bootstrap/engine.py`:
+    - Добавлен OpenClaw в `DEFAULT_RUNTIMES` (pip install openclaw, bin_name: openclaw)
+    - Добавлен `install_runtime_by_name(name)` — точечная установка Runtime по имени
+    - Добавлен `list_available_runtimes()` — список всех Runtime с статусом установки
+  - `scripts/mcp_server.py`:
+    - Добавлен MCP tool `runtime_install` (name: required) — установка Runtime
+    - Добавлен MCP tool `runtime_list_available` — список доступных Runtime
+    - После установки вызывается `registry.discover()` для регистрации Runtime
+  - **16 тестов** (bootstrap engine: 9 + mcp_server: 7) — 0 failures:
+    - install_runtime_by_name: known, unknown, claude-code, openclaw, already installed, steps
+    - list_available_runtimes: all 3 runtimes present
+    - MCP runtime_install: success (verify discover call), missing name, unknown runtime
+    - MCP runtime_list_available: returns 3 runtimes
+    - Tools in list, schema validation
+
+### Проверка
+- 20 новых тестов (9 bootstrap + 7 mcp_server + 4 refactored) — **0 failures**
+- Code review: 3 замечания исправлены (dead code removed, discover assertion added, test assertion fixes)
+
+---
+
+## [5.3.0***REMOVED*** — 2026-07-30
+
+### Добавлено
+- **LEVIATHAN Context Integration & Component Documentation Template ([promt18.md***REMOVED***(pompts/promt18.md), [promt19.md***REMOVED***(pompts/promt19.md)):**
+  - `docs/core/TEMPLATE_COMPONENT_DOCUMENTATION.md` — универсальный шаблон документирования компонентов (9 разделов: назначение, архитектура, интерфейс, реализация, тесты, конфигурация, ошибки, примеры, связанные компоненты)
+  - `docs/vision/ROADMAP.md` v3.1.0 — добавлены:
+    - LEVIATHAN Context Integration (unified context schema, `buffy-ctx` CLI, task queue, handoff, reaper, context HTTP API)
+    - Phase 6: Context Verification & Quality Assurance (VCR/SRG/CpVO/RRR/TTD-false metrics)
+    - Phase 7: CoWork / Companion Platform (Presence, Live Collaboration, RAG 2.0)
+  - `docs/INDEX.md` — ссылка на шаблон документации компонентов
+  - `BUFFY.md` — добавлена ссылка на шаблон и раздел Phase 6: Context Verification & QA
+
+---
+
 ## [5.2.0***REMOVED*** — 2026-07-29
 
 ### Добавлено
