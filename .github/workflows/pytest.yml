@@ -42,3 +42,9 @@ jobs:
           PYTHONPATH: ${{ github.workspace ***REMOVED******REMOVED***
         run: |
           python -m pytest tests/ -v --tb=short
+
+      - name: Run consistency check (Stage 9 — registries as data)
+        env:
+          PYTHONPATH: ${{ github.workspace ***REMOVED******REMOVED***
+        run: |
+          python scripts/consistency_check.py --report

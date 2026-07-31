@@ -390,6 +390,39 @@ def check_workspace(report: DoctorReport) -> None:
         report.checks.append(CheckResult("context.db", "warn", "Not found"))
 
 
+def check_consistency(report: DoctorReport) -> None:
+    """Проверяет самоконсистентность канонических реестров (Этап 9).
+
+    Запускает scripts/consistency_check.py — реестры (ARCHITECTURE_CANONICAL,
+    LIFECYCLE, MODULE_CONSOLIDATION, GLOSSARY, ROADMAP) как данные.
+    """
+    try:
+        # При запуске `python scripts/doctor.py` sys.path[0***REMOVED*** = scripts/,
+        # поэтому workspace добавляем в путь явно для `import scripts.*`.
+        if str(WORKSPACE) not in sys.path:
+            sys.path.insert(0, str(WORKSPACE))
+        from scripts.consistency_check import build_report
+
+        result = build_report(WORKSPACE)
+    except Exception as e:
+        report.checks.append(
+            CheckResult("Consistency", "warn", f"Cannot run: {e***REMOVED***")
+        )
+        return
+
+    total = result.get("total_issues", 0)
+    if result.get("consistent", False):
+        report.checks.append(CheckResult("Consistency", "ok", "All registries consistent"))
+    else:
+        report.checks.append(
+            CheckResult(
+                "Consistency",
+                "warn" if total <= 3 else "fail",
+                f"{total***REMOVED*** issue(s) — run `python scripts/consistency_check.py --report`",
+            )
+        )
+
+
 def check_tests(report: DoctorReport) -> None:
     """Проверяет тесты (быстрый прогон)."""
     tests_dir = WORKSPACE / "tests"
@@ -448,6 +481,7 @@ def run_diagnostics(
     check_disk(report)
     check_ram(report)
     check_workspace(report)
+    check_consistency(report)
 
     # Опционально
     if full or runtime == "freebuff":

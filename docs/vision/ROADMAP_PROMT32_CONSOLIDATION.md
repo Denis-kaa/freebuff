@@ -55,11 +55,11 @@
 
 | Этап promt32 | Пересекается с | Статус |
 |--------------|----------------|--------|
-| Этап 1. Полный аудит | `ARCHITECTURAL_AUDIT_PROMT31_2026-07-31.md` | ✅ Stage 1 выполнен (`docs/audits/CONSOLIDATION_STAGE1_AUDIT_2026-07-31.md`) |
+| Этап 1. Полный аудит | `docs/audits/ARCHITECTURAL_AUDIT_PROMT31_2026-07-31.md` | ✅ Stage 1 выполнен (`docs/audits/CONSOLIDATION_STAGE1_AUDIT_2026-07-31.md`) |
 | Этап 2. Каноническая архитектура | — | ✅ Создана (`docs/core/ARCHITECTURE_CANONICAL.md`) |
-| Этап 4. Консолидация документации | promt31 4.4 (DECISIONS merge — done), `drift_check.py` | 🟡 Частично |
+| Этап 4. Консолидация документации | promt31 4.4 (DECISIONS merge — done), `scripts/drift_check.py` | 🟡 Частично |
 | Этап 6. Консолидация модулей | promt31 4.6 (Module Registry), 4.7 (Agent Registry) | ✅ Аудит выполнен (`docs/core/MODULE_CONSOLIDATION.md`) |
-| Этап 9. Самоконсистентность | `drift_check.py` + markdown link check (сделаны) | 🟡 Частично |
+| Этап 9. Самоконсистентность | `scripts/drift_check.py` + `scripts/consistency_check.py` (реестры как данные) | ✅ Выполнен |
 | Этап 5. Консолидация промтов | `AGENTS.md` / `BUFFY.md` / `CLAUDE.md` / `CODY.md` / `.cursorrules` (5 файлов!) | 🔴 Не начато |
 | Этап 3. Архитектурный манифест | — | ✅ Создан (`docs/core/ARCHITECTURE_MANIFEST.md`) |
 | Этап 7. Единая терминология | — | ✅ Создан глоссарий (`docs/core/GLOSSARY.md`) |
@@ -113,10 +113,10 @@
 - [x***REMOVED*** Эталонные паттерны зафиксированы (graceful shutdown, миграции, lazy init, graceful degradation)
 - [x***REMOVED*** Правило: компонент без описанного Lifecycle запрещён к регистрации в SYSTEM_INVENTORY
 
-### Этап 9 — Самоконсистентность
-- [ ***REMOVED*** Механизм авто-проверки: дрейф, устаревшая документация, битые ссылки, дубли, неиспользуемые модули, несоответствие Roadmap/Registry/Project Book
-- [ ***REMOVED*** Реестры (Module/Agent/Integration) — как данные для проверки
-- [ ***REMOVED*** Подключить CI / `doctor.py`
+### Этап 9 — Самоконсистентность ✅
+- [x***REMOVED*** Создан `scripts/consistency_check.py` — авто-проверка: файлы движков из реестра, покрытие LIFECYCLE, области MODULE_CONSOLIDATION, термины GLOSSARY, ссылки ROADMAP, взаимные ссылки канонических документов
+- [x***REMOVED*** Реестры как данные: ARCHITECTURE_CANONICAL / LIFECYCLE / MODULE_CONSOLIDATION / GLOSSARY / ROADMAP
+- [x***REMOVED*** Подключен в `scripts/doctor.py` (проверка Consistency) и CI (`.github/workflows/pytest.yml`, шаг consistency_check)
 
 ### Этап 10 — Финальная структура
 - [ ***REMOVED*** Архитектурная схема, структура каталогов, реестр компонентов
@@ -147,7 +147,7 @@
 
 Консолидация завершена, когда:
 - [ ***REMOVED*** код, документация и промты полностью согласованы;
-- [ ***REMOVED*** существует `ARCHITECTURE_MANIFEST.md`;
+- [ ***REMOVED*** существует `docs/core/ARCHITECTURE_MANIFEST.md`;
 - [ ***REMOVED*** существует единый Core Prompt;
 - [ ***REMOVED*** устранены критические дублирования;
 - [ ***REMOVED*** вся документация имеет статус ACTIVE/LEGACY/ARCHIVED;
