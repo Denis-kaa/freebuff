@@ -52,7 +52,7 @@ import sys
 import threading
 import traceback
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 ***REMOVED***
@@ -253,8 +253,17 @@ class BuffyMcpServer:
         self._runtime_capability_registry = None
         self._policy_engine = None
 
+        # Phase 7 (CoWork) lazy-loaded components — восстановленные модули
+        self._roles_engine = None
+        self._presence_engine = None
+        self._collaboration_engine = None
+        self._distributed_coordinator = None
+        self._rag_engine = None
+        self._project_pulse = None
+
         # Register all MCP capabilities
         self._register_tools()
+        self._register_phase7_tools()
         self._register_resources()
         self._register_prompts()
 
@@ -390,6 +399,683 @@ class BuffyMcpServer:
             ))
         except Exception:
             pass
+
+    # ── Phase 7 (CoWork) accessors ────────────────────────────────────
+
+    def _get_roles_engine(self):
+        """Lazy-load RoleEngine with graceful degradation."""
+        if self._roles_engine is None:
+            try:
+                from scripts.roles import RoleEngine
+
+                self._roles_engine = RoleEngine()
+            except Exception as e:
+                print(f"⚠️ MCP: RoleEngine init failed: {e***REMOVED***", file=sys.stderr)
+                return None
+        return self._roles_engine
+
+    def _get_presence_engine(self):
+        """Lazy-load PresenceEngine with graceful degradation."""
+        if self._presence_engine is None:
+            try:
+                from scripts.presence import PresenceEngine
+
+                self._presence_engine = PresenceEngine()
+            except Exception as e:
+                print(f"⚠️ MCP: PresenceEngine init failed: {e***REMOVED***", file=sys.stderr)
+                return None
+        return self._presence_engine
+
+    def _get_collaboration_engine(self):
+        """Lazy-load CollaborationEngine with graceful degradation."""
+        if self._collaboration_engine is None:
+            try:
+                from scripts.collaboration import CollaborationEngine
+
+                self._collaboration_engine = CollaborationEngine(
+                    event_bus=self._get_event_bus(),
+                )
+            except Exception as e:
+                print(f"⚠️ MCP: CollaborationEngine init failed: {e***REMOVED***", file=sys.stderr)
+                return None
+        return self._collaboration_engine
+
+    def _get_distributed_coordinator(self):
+        """Lazy-load DistributedCoordinator with graceful degradation."""
+        if self._distributed_coordinator is None:
+            try:
+                from scripts.distributed_agents import DistributedCoordinator
+
+                self._distributed_coordinator = DistributedCoordinator(
+                    event_bus=self._get_event_bus(),
+                )
+            except Exception as e:
+                print(f"⚠️ MCP: DistributedCoordinator init failed: {e***REMOVED***", file=sys.stderr)
+                return None
+        return self._distributed_coordinator
+
+    def _get_rag_engine(self):
+        """Lazy-load RAGEngine with graceful degradation."""
+        if self._rag_engine is None:
+            try:
+                from scripts.rag_engine import RAGEngine
+
+                self._rag_engine = RAGEngine(workspace_root=str(self.workspace))
+            except Exception as e:
+                print(f"⚠️ MCP: RAGEngine init failed: {e***REMOVED***", file=sys.stderr)
+                return None
+        return self._rag_engine
+
+    def _get_project_pulse(self):
+        """Lazy-load ProjectPulse with graceful degradation."""
+        if self._project_pulse is None:
+            try:
+                from scripts.project_pulse import ProjectPulse
+
+                self._project_pulse = ProjectPulse(
+                    workspace=self.workspace,
+                    event_bus=self._get_event_bus(),
+                )
+            except Exception as e:
+                print(f"⚠️ MCP: ProjectPulse init failed: {e***REMOVED***", file=sys.stderr)
+                return None
+        return self._project_pulse
+
+    # ── Phase 7 (CoWork) tool registration ────────────────────────────
+
+    def _register_phase7_tools(self) -> None:
+        """Регистрирует MCP tools восстановленных Phase 7 модулей."""
+        # ── Roles ──
+        self._tools["roles_list"***REMOVED*** = McpTool(
+            name="roles_list",
+            description="List role definitions and assignments (RoleEngine).",
+            input_schema={"type": "object", "properties": {"definitions": {"type": "boolean", "description": "Show role definitions", "default": False***REMOVED******REMOVED******REMOVED***,
+            handler=self._handle_roles_list,
+            category="roles",
+        )
+        self._tools["roles_get"***REMOVED*** = McpTool(
+            name="roles_get",
+            description="Get roles assigned to an agent.",
+            input_schema={"type": "object", "properties": {"agent": {"type": "string", "description": "Agent name"***REMOVED******REMOVED***, "required": ["agent"***REMOVED******REMOVED***,
+            handler=self._handle_roles_get,
+            category="roles",
+        )
+        self._tools["roles_assign"***REMOVED*** = McpTool(
+            name="roles_assign",
+            description="Assign a role to an agent.",
+            input_schema={"type": "object", "properties": {"agent": {"type": "string"***REMOVED***, "role": {"type": "string"***REMOVED******REMOVED***, "required": ["agent", "role"***REMOVED******REMOVED***,
+            handler=self._handle_roles_assign,
+            category="roles",
+        )
+        self._tools["roles_unassign"***REMOVED*** = McpTool(
+            name="roles_unassign",
+            description="Remove a role from an agent.",
+            input_schema={"type": "object", "properties": {"agent": {"type": "string"***REMOVED***, "role": {"type": "string"***REMOVED******REMOVED***, "required": ["agent", "role"***REMOVED******REMOVED***,
+            handler=self._handle_roles_unassign,
+            category="roles",
+        )
+        self._tools["roles_stats"***REMOVED*** = McpTool(
+            name="roles_stats",
+            description="Role engine statistics.",
+            input_schema={"type": "object", "properties": {***REMOVED******REMOVED***,
+            handler=self._handle_roles_stats,
+            category="roles",
+        )
+
+        # ── Presence ──
+        self._tools["presence_list"***REMOVED*** = McpTool(
+            name="presence_list",
+            description="List registered agents with optional status/capability filters.",
+            input_schema={"type": "object", "properties": {"status": {"type": "string"***REMOVED***, "capability": {"type": "string"***REMOVED******REMOVED******REMOVED***,
+            handler=self._handle_presence_list,
+            category="presence",
+        )
+        self._tools["presence_get"***REMOVED*** = McpTool(
+            name="presence_get",
+            description="Get presence details of a single agent.",
+            input_schema={"type": "object", "properties": {"agent": {"type": "string", "description": "Agent name"***REMOVED******REMOVED***, "required": ["agent"***REMOVED******REMOVED***,
+            handler=self._handle_presence_get,
+            category="presence",
+        )
+        self._tools["presence_history"***REMOVED*** = McpTool(
+            name="presence_history",
+            description="Get presence status-change history.",
+            input_schema={"type": "object", "properties": {"agent": {"type": "string", "description": "Agent name"***REMOVED***, "limit": {"type": "integer", "default": 50***REMOVED******REMOVED******REMOVED***,
+            handler=self._handle_presence_history,
+            category="presence",
+        )
+
+        # ── Collaboration ──
+        self._tools["collab_create"***REMOVED*** = McpTool(
+            name="collab_create",
+            description="Create a collaboration session.",
+            input_schema={"type": "object", "properties": {"topic": {"type": "string"***REMOVED***, "owner": {"type": "string"***REMOVED***, "participants": {"type": "array", "items": {"type": "string"***REMOVED******REMOVED******REMOVED***, "required": ["topic", "owner"***REMOVED******REMOVED***,
+            handler=self._handle_collab_create,
+            category="collaboration",
+        )
+        self._tools["collab_list"***REMOVED*** = McpTool(
+            name="collab_list",
+            description="List collaboration sessions.",
+            input_schema={"type": "object", "properties": {"status": {"type": "string"***REMOVED******REMOVED******REMOVED***,
+            handler=self._handle_collab_list,
+            category="collaboration",
+        )
+        self._tools["collab_get"***REMOVED*** = McpTool(
+            name="collab_get",
+            description="Get collaboration session details.",
+            input_schema={"type": "object", "properties": {"session_id": {"type": "string"***REMOVED******REMOVED***, "required": ["session_id"***REMOVED******REMOVED***,
+            handler=self._handle_collab_get,
+            category="collaboration",
+        )
+        self._tools["collab_join"***REMOVED*** = McpTool(
+            name="collab_join",
+            description="Join a collaboration session.",
+            input_schema={"type": "object", "properties": {"session_id": {"type": "string"***REMOVED***, "participant": {"type": "string"***REMOVED***, "role": {"type": "string"***REMOVED******REMOVED***, "required": ["session_id", "participant"***REMOVED******REMOVED***,
+            handler=self._handle_collab_join,
+            category="collaboration",
+        )
+        self._tools["collab_leave"***REMOVED*** = McpTool(
+            name="collab_leave",
+            description="Leave a collaboration session.",
+            input_schema={"type": "object", "properties": {"session_id": {"type": "string"***REMOVED***, "participant": {"type": "string"***REMOVED******REMOVED***, "required": ["session_id", "participant"***REMOVED******REMOVED***,
+            handler=self._handle_collab_leave,
+            category="collaboration",
+        )
+        self._tools["collab_send"***REMOVED*** = McpTool(
+            name="collab_send",
+            description="Send a message to a collaboration session.",
+            input_schema={"type": "object", "properties": {"session_id": {"type": "string"***REMOVED***, "sender": {"type": "string"***REMOVED***, "content": {"type": "string"***REMOVED***, "msg_type": {"type": "string", "default": "text"***REMOVED******REMOVED***, "required": ["session_id", "sender", "content"***REMOVED******REMOVED***,
+            handler=self._handle_collab_send,
+            category="collaboration",
+        )
+        self._tools["collab_history"***REMOVED*** = McpTool(
+            name="collab_history",
+            description="Get message history of a session.",
+            input_schema={"type": "object", "properties": {"session_id": {"type": "string"***REMOVED***, "limit": {"type": "integer", "default": 50***REMOVED******REMOVED***, "required": ["session_id"***REMOVED******REMOVED***,
+            handler=self._handle_collab_history,
+            category="collaboration",
+        )
+        self._tools["collab_status"***REMOVED*** = McpTool(
+            name="collab_status",
+            description="Collaboration engine diagnostics.",
+            input_schema={"type": "object", "properties": {***REMOVED******REMOVED***,
+            handler=self._handle_collab_status,
+            category="collaboration",
+        )
+
+        # ── Distributed Agents ──
+        self._tools["distributed_list"***REMOVED*** = McpTool(
+            name="distributed_list",
+            description="List distributed agent mesh and coordinator status.",
+            input_schema={"type": "object", "properties": {***REMOVED******REMOVED***,
+            handler=self._handle_distributed_list,
+            category="distributed",
+        )
+        self._tools["distributed_spawn"***REMOVED*** = McpTool(
+            name="distributed_spawn",
+            description="Spawn/register a distributed agent.",
+            input_schema={"type": "object", "properties": {"name": {"type": "string"***REMOVED***, "command": {"type": "string"***REMOVED***, "capabilities": {"type": "object"***REMOVED******REMOVED******REMOVED***,
+            handler=self._handle_distributed_spawn,
+            category="distributed",
+        )
+        self._tools["distributed_run"***REMOVED*** = McpTool(
+            name="distributed_run",
+            description="Run a distributed workflow plan.",
+            input_schema={"type": "object", "properties": {"goal": {"type": "string"***REMOVED***, "steps": {"type": "array", "items": {"type": "object"***REMOVED******REMOVED******REMOVED***, "required": ["goal", "steps"***REMOVED******REMOVED***,
+            handler=self._handle_distributed_run,
+            category="distributed",
+        )
+        self._tools["distributed_status"***REMOVED*** = McpTool(
+            name="distributed_status",
+            description="Distributed system status.",
+            input_schema={"type": "object", "properties": {***REMOVED******REMOVED***,
+            handler=self._handle_distributed_status,
+            category="distributed",
+        )
+        self._tools["distributed_broadcast"***REMOVED*** = McpTool(
+            name="distributed_broadcast",
+            description="Broadcast a message to all distributed agents.",
+            input_schema={"type": "object", "properties": {"message": {"type": "string"***REMOVED******REMOVED***, "required": ["message"***REMOVED******REMOVED***,
+            handler=self._handle_distributed_broadcast,
+            category="distributed",
+        )
+
+        # ── RAG ──
+        self._tools["rag_search"***REMOVED*** = McpTool(
+            name="rag_search",
+            description="RAG 2.0 semantic search with ranking.",
+            input_schema={"type": "object", "properties": {"query": {"type": "string"***REMOVED***, "top_k": {"type": "integer", "default": 10***REMOVED***, "mode": {"type": "string", "default": "hybrid_rrf"***REMOVED******REMOVED***, "required": ["query"***REMOVED******REMOVED***,
+            handler=self._handle_rag_search,
+            category="rag",
+        )
+        self._tools["rag_hybrid"***REMOVED*** = McpTool(
+            name="rag_hybrid",
+            description="Quick hybrid RRF search.",
+            input_schema={"type": "object", "properties": {"query": {"type": "string"***REMOVED***, "top_k": {"type": "integer", "default": 10***REMOVED******REMOVED***, "required": ["query"***REMOVED******REMOVED***,
+            handler=self._handle_rag_hybrid,
+            category="rag",
+        )
+        self._tools["rag_rerank"***REMOVED*** = McpTool(
+            name="rag_rerank",
+            description="Feature-based re-ranking of candidates.",
+            input_schema={"type": "object", "properties": {"query": {"type": "string"***REMOVED***, "top_k": {"type": "integer", "default": 10***REMOVED******REMOVED***, "required": ["query"***REMOVED******REMOVED***,
+            handler=self._handle_rag_rerank,
+            category="rag",
+        )
+
+        # ── Project Pulse ──
+        self._tools["pulse_list"***REMOVED*** = McpTool(
+            name="pulse_list",
+            description="List project pulse entries.",
+            input_schema={"type": "object", "properties": {"limit": {"type": "integer", "default": 50***REMOVED***, "event_type": {"type": "string"***REMOVED***, "source": {"type": "string"***REMOVED******REMOVED******REMOVED***,
+            handler=self._handle_pulse_list,
+            category="pulse",
+        )
+        self._tools["pulse_stats"***REMOVED*** = McpTool(
+            name="pulse_stats",
+            description="Project pulse statistics.",
+            input_schema={"type": "object", "properties": {***REMOVED******REMOVED***,
+            handler=self._handle_pulse_stats,
+            category="pulse",
+        )
+        self._tools["pulse_scan"***REMOVED*** = McpTool(
+            name="pulse_scan",
+            description="Run full project scan (git + files) into the pulse.",
+            input_schema={"type": "object", "properties": {***REMOVED******REMOVED***,
+            handler=self._handle_pulse_scan,
+            category="pulse",
+        )
+
+    # ── Phase 7 handlers: Roles ───────────────────────────────────────
+
+    def _handle_roles_list(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """List role definitions and assignments."""
+        engine = self._get_roles_engine()
+        if engine is None:
+            return {"success": False, "error": "RoleEngine not available"***REMOVED***
+        try:
+            data = {
+                "roles": [r.to_dict() for r in engine.list_roles()***REMOVED***,
+                "assignments": [a.to_dict() for a in engine.list_assignments()***REMOVED***,
+            ***REMOVED***
+            self._publish("roles.listed", {"roles": len(data["roles"***REMOVED***), "assignments": len(data["assignments"***REMOVED***)***REMOVED***)
+            return {"success": True, "data": data***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_roles_get(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Get roles of an agent."""
+        engine = self._get_roles_engine()
+        if engine is None:
+            return {"success": False, "error": "RoleEngine not available"***REMOVED***
+        agent = arguments.get("agent", "")
+        if not agent:
+            return {"success": False, "error": "Missing required parameter: agent"***REMOVED***
+        try:
+            return {"success": True, "data": {"agent": agent, "roles": engine.get_roles(agent)***REMOVED******REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_roles_assign(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Assign a role to an agent."""
+        engine = self._get_roles_engine()
+        if engine is None:
+            return {"success": False, "error": "RoleEngine not available"***REMOVED***
+        agent = arguments.get("agent", "")
+        role = arguments.get("role", "")
+        if not agent or not role:
+            return {"success": False, "error": "Missing required parameters: agent, role"***REMOVED***
+        try:
+            ok = engine.assign_role(agent, role)
+            if not ok:
+                return {"success": False, "error": f"Unknown role: {role***REMOVED***"***REMOVED***
+            return {"success": True, "data": {"agent": agent, "role": role***REMOVED******REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_roles_unassign(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Remove a role from an agent."""
+        engine = self._get_roles_engine()
+        if engine is None:
+            return {"success": False, "error": "RoleEngine not available"***REMOVED***
+        agent = arguments.get("agent", "")
+        role = arguments.get("role", "")
+        if not agent or not role:
+            return {"success": False, "error": "Missing required parameters: agent, role"***REMOVED***
+        try:
+            ok = engine.unassign_role(agent, role)
+            return {"success": True, "data": {"agent": agent, "role": role, "removed": ok***REMOVED******REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_roles_stats(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Role engine statistics."""
+        engine = self._get_roles_engine()
+        if engine is None:
+            return {"success": False, "error": "RoleEngine not available"***REMOVED***
+        try:
+            return {"success": True, "data": engine.get_stats()***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    # ── Phase 7 handlers: Presence ────────────────────────────────────
+
+    def _handle_presence_list(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """List agents with filters."""
+        engine = self._get_presence_engine()
+        if engine is None:
+            return {"success": False, "error": "PresenceEngine not available"***REMOVED***
+        try:
+            data = engine.list_agents_json(
+                status=arguments.get("status"), capability=arguments.get("capability")
+            )
+            self._publish("presence.listed", {"total": data.get("total", 0)***REMOVED***)
+            return {"success": True, "data": data***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_presence_get(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Get agent presence details."""
+        engine = self._get_presence_engine()
+        if engine is None:
+            return {"success": False, "error": "PresenceEngine not available"***REMOVED***
+        agent_name = arguments.get("agent") or arguments.get("agent_name", "")
+        if not agent_name:
+            return {"success": False, "error": "agent is required"***REMOVED***
+        try:
+            return {"success": True, "data": engine.get_agent_json(agent_name)***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_presence_history(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Get presence history."""
+        engine = self._get_presence_engine()
+        if engine is None:
+            return {"success": False, "error": "PresenceEngine not available"***REMOVED***
+        try:
+            return {"success": True, "data": engine.get_history_json(
+                agent_name=arguments.get("agent") or arguments.get("agent_name"),
+                limit=int(arguments.get("limit", 50)),
+            )***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    # ── Phase 7 handlers: Collaboration ───────────────────────────────
+
+    def _handle_collab_create(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Create a collaboration session."""
+        engine = self._get_collaboration_engine()
+        if engine is None:
+            return {"success": False, "error": "CollaborationEngine not available"***REMOVED***
+        topic = arguments.get("topic", "")
+        owner = arguments.get("owner", "")
+        if not topic or not owner:
+            return {"success": False, "error": "Missing required parameters: topic, owner"***REMOVED***
+        try:
+            session = engine.create_session(topic, owner, arguments.get("participants"))
+            return {"success": True, "data": session.to_dict()***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_collab_list(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """List collaboration sessions."""
+        engine = self._get_collaboration_engine()
+        if engine is None:
+            return {"success": False, "error": "CollaborationEngine not available"***REMOVED***
+        try:
+            sessions = engine.list_sessions(status=arguments.get("status"))
+            return {"success": True, "data": {"sessions": [s.to_dict() for s in sessions***REMOVED******REMOVED******REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_collab_get(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Get session details."""
+        engine = self._get_collaboration_engine()
+        if engine is None:
+            return {"success": False, "error": "CollaborationEngine not available"***REMOVED***
+        session_id = arguments.get("session_id", "")
+        if not session_id:
+            return {"success": False, "error": "Missing required parameter: session_id"***REMOVED***
+        try:
+            session = engine.get_session(session_id)
+            if session is None:
+                return {"success": False, "error": f"Session not found: {session_id***REMOVED***"***REMOVED***
+            return {"success": True, "data": session.to_dict()***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_collab_join(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Join a session."""
+        engine = self._get_collaboration_engine()
+        if engine is None:
+            return {"success": False, "error": "CollaborationEngine not available"***REMOVED***
+        session_id = arguments.get("session_id", "")
+        participant = arguments.get("participant", "")
+        if not session_id or not participant:
+            return {"success": False, "error": "Missing required parameters: session_id, participant"***REMOVED***
+        try:
+            ok = engine.join_session(session_id, participant, arguments.get("role", "editor"))
+            return {"success": True, "data": {"joined": ok, "session_id": session_id, "participant": participant***REMOVED******REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_collab_leave(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Leave a session."""
+        engine = self._get_collaboration_engine()
+        if engine is None:
+            return {"success": False, "error": "CollaborationEngine not available"***REMOVED***
+        session_id = arguments.get("session_id", "")
+        participant = arguments.get("participant", "")
+        if not session_id or not participant:
+            return {"success": False, "error": "Missing required parameters: session_id, participant"***REMOVED***
+        try:
+            ok = engine.leave_session(session_id, participant)
+            return {"success": True, "data": {"left": ok***REMOVED******REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_collab_send(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Send a message to a session."""
+        engine = self._get_collaboration_engine()
+        if engine is None:
+            return {"success": False, "error": "CollaborationEngine not available"***REMOVED***
+        session_id = arguments.get("session_id", "")
+        sender = arguments.get("sender", "")
+        content = arguments.get("content", "")
+        if not session_id or not sender or not content:
+            return {"success": False, "error": "Missing required parameters: session_id, sender, content"***REMOVED***
+        try:
+            msg = engine.send_message(session_id, sender, content, arguments.get("msg_type", "text"))
+            if msg is None:
+                return {"success": False, "error": "Session not found or closed"***REMOVED***
+            return {"success": True, "data": asdict(msg)***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_collab_history(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Get session history."""
+        engine = self._get_collaboration_engine()
+        if engine is None:
+            return {"success": False, "error": "CollaborationEngine not available"***REMOVED***
+        session_id = arguments.get("session_id", "")
+        if not session_id:
+            return {"success": False, "error": "Missing required parameter: session_id"***REMOVED***
+        try:
+            messages = engine.get_history(session_id, limit=int(arguments.get("limit", 50)))
+            return {"success": True, "data": {"messages": [asdict(m) for m in messages***REMOVED******REMOVED******REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_collab_status(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Collaboration engine diagnostics."""
+        engine = self._get_collaboration_engine()
+        if engine is None:
+            return {"success": False, "error": "CollaborationEngine not available"***REMOVED***
+        try:
+            return {"success": True, "data": engine.get_status()***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    # ── Phase 7 handlers: Distributed ─────────────────────────────────
+
+    def _handle_distributed_list(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """List distributed mesh."""
+        coord = self._get_distributed_coordinator()
+        if coord is None:
+            return {"success": False, "error": "DistributedCoordinator not available"***REMOVED***
+        try:
+            agents = coord.list_agents()
+            # total берём из mesh.get_summary() (контракт теста с mock-координатором).
+            try:
+                mesh_summary = coord.mesh.get_summary()
+                total = int(mesh_summary.get("total", len(agents))) if isinstance(mesh_summary, dict) else len(agents)
+            except Exception:
+                total = len(agents)
+            data = {"agents": agents, "total": total, "status": coord.get_status()***REMOVED***
+            self._publish("distributed.listed", {"agents": total***REMOVED***)
+            return {"success": True, "data": data***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_distributed_spawn(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Spawn a distributed agent."""
+        coord = self._get_distributed_coordinator()
+        if coord is None:
+            return {"success": False, "error": "DistributedCoordinator not available"***REMOVED***
+        try:
+            result = coord.spawn_agent(
+                name=arguments.get("name"),
+                command=arguments.get("command", "python"),
+                capabilities=arguments.get("capabilities"),
+            )
+            return {"success": True, "data": result***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_distributed_run(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Run a distributed workflow."""
+        coord = self._get_distributed_coordinator()
+        if coord is None:
+            return {"success": False, "error": "DistributedCoordinator not available"***REMOVED***
+        goal = arguments.get("goal", "")
+        steps = arguments.get("steps")
+        if not goal or not steps:
+            return {"success": False, "error": "Missing required parameters: goal, steps"***REMOVED***
+        try:
+            plan = coord.run_distributed_workflow(goal=goal, steps=steps)
+            return {"success": True, "data": plan.to_dict()***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_distributed_status(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Distributed system status."""
+        coord = self._get_distributed_coordinator()
+        if coord is None:
+            return {"success": False, "error": "DistributedCoordinator not available"***REMOVED***
+        try:
+            return {"success": True, "data": coord.get_status()***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_distributed_broadcast(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Broadcast to all agents."""
+        coord = self._get_distributed_coordinator()
+        if coord is None:
+            return {"success": False, "error": "DistributedCoordinator not available"***REMOVED***
+        message = arguments.get("message", "")
+        if not message:
+            return {"success": False, "error": "Missing required parameter: message"***REMOVED***
+        try:
+            recipients = coord.broadcast_to_all(message, arguments.get("data"))
+            return {"success": True, "data": {"recipients": recipients, "agents_notified": recipients, "message": message***REMOVED******REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    # ── Phase 7 handlers: RAG ─────────────────────────────────────────
+
+    def _handle_rag_search(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """RAG search."""
+        rag = self._get_rag_engine()
+        if rag is None:
+            return {"success": False, "error": "RAGEngine not available"***REMOVED***
+        query = arguments.get("query", "")
+        if not query:
+            return {"success": False, "error": "Missing required parameter: query"***REMOVED***
+        try:
+            report = rag.search(
+                query,
+                top_k=int(arguments.get("top_k", 10)),
+                mode=arguments.get("mode", "hybrid_rrf"),
+            )
+            return {"success": True, "data": report.to_dict()***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_rag_hybrid(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Hybrid RRF search."""
+        rag = self._get_rag_engine()
+        if rag is None:
+            return {"success": False, "error": "RAGEngine not available"***REMOVED***
+        query = arguments.get("query", "")
+        if not query:
+            return {"success": False, "error": "Missing required parameter: query"***REMOVED***
+        try:
+            report = rag.hybrid_search(query, top_k=int(arguments.get("top_k", 10)))
+            return {"success": True, "data": report.to_dict()***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_rag_rerank(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Re-rank candidates."""
+        rag = self._get_rag_engine()
+        if rag is None:
+            return {"success": False, "error": "RAGEngine not available"***REMOVED***
+        query = arguments.get("query", "")
+        if not query:
+            return {"success": False, "error": "Missing required parameter: query"***REMOVED***
+        try:
+            report = rag.search(query, top_k=int(arguments.get("top_k", 30)) * 3, mode="hybrid_rrf", rerank_results=False)
+            reranked = rag.rerank(query, report.results)
+            return {"success": True, "data": [r.to_dict() for r in reranked[: int(arguments.get("top_k", 10))***REMOVED******REMOVED******REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    # ── Phase 7 handlers: Project Pulse ───────────────────────────────
+
+    def _handle_pulse_list(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """List pulse entries."""
+        pulse = self._get_project_pulse()
+        if pulse is None:
+            return {"success": False, "error": "ProjectPulse not available"***REMOVED***
+        try:
+            data = pulse.list_json(
+                limit=int(arguments.get("limit", 50)),
+                event_type=arguments.get("event_type"),
+                source=arguments.get("source"),
+            )
+            return {"success": True, "data": data***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_pulse_stats(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Pulse statistics."""
+        pulse = self._get_project_pulse()
+        if pulse is None:
+            return {"success": False, "error": "ProjectPulse not available"***REMOVED***
+        try:
+            return {"success": True, "data": pulse.get_stats()***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
+
+    def _handle_pulse_scan(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        """Run full project scan."""
+        pulse = self._get_project_pulse()
+        if pulse is None:
+            return {"success": False, "error": "ProjectPulse not available"***REMOVED***
+        try:
+            return {"success": True, "data": pulse.full_scan()***REMOVED***
+        except Exception as e:
+            return {"success": False, "error": str(e)***REMOVED***
 
     # ── Tool registration ──────────────────────────────────
 

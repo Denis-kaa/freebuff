@@ -96,3 +96,6 @@ buffy-playground/dist/
 
 # API keys — NEVER commit
 .keys/
+
+# Project Pulse runtime snapshot
+scripts/.pulse_snapshot.json
