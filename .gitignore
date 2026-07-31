@@ -97,5 +97,5 @@ buffy-playground/dist/
 # API keys — NEVER commit
 .keys/
 
-# Project Pulse runtime snapshot
-scripts/.pulse_snapshot.json
+# Project Pulse runtime snapshot (workspace root for MCP server)
+*.pulse_snapshot.json
