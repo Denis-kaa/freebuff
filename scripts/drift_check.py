@@ -221,6 +221,21 @@ _KNOWLEDGE_IGNORE_DIRS = {
     "dist",
 ***REMOVED***
 
+# Markdown link patterns: [text***REMOVED***(target) and ![alt***REMOVED***(target)
+_MARKDOWN_LINK_RE = re.compile(r"!?\[([^\***REMOVED******REMOVED****)\***REMOVED***\(([^)***REMOVED***+)\)")
+# External URLs, anchors and other non-file targets we cannot/should not resolve.
+_EXTERNAL_LINK_PREFIXES = (
+    "http://",
+    "https://",
+    "ftp://",
+    "ftps://",
+    "mailto:",
+    "tel:",
+    "data:",
+    "#",
+    "javascript:",
+)
+
 
 def _is_knowledge_doc(path: Path, workspace: Path) -> bool:
     """Return True if path is a project markdown doc worth indexing."""
@@ -313,6 +328,112 @@ def _extract_tree_paths(text: str) -> list[tuple[str, str***REMOVED******REMOVED
     return paths
 
 
+def _is_external_link(target: str) -> bool:
+    """Return True if target is an external URL, anchor-only or mailto link."""
+    target_stripped = target.strip()
+    return any(target_stripped.startswith(prefix) for prefix in _EXTERNAL_LINK_PREFIXES)
+
+
+def _strip_code_blocks(text: str) -> str:
+    """Replace fenced code blocks with blank lines to avoid false-positive links."""
+    lines = text.splitlines()
+    result: list[str***REMOVED*** = [***REMOVED***
+    inside = False
+    fence: str | None = None
+    for line in lines:
+        stripped = line.strip()
+        if not inside and stripped.startswith("```"):
+            inside = True
+            fence = stripped
+            result.append("")
+            continue
+        if inside:
+            if stripped.startswith("```"):
+                inside = False
+                fence = None
+            result.append("")
+            continue
+        result.append(line)
+    return "\n".join(result)
+
+
+def _extract_markdown_links(text: str) -> list[tuple[int, str, str***REMOVED******REMOVED***:
+    """Extract markdown links from text.
+
+    Returns a list of (line_number, link_text, target) tuples.
+    Content inside fenced code blocks is ignored.
+    """
+    links: list[tuple[int, str, str***REMOVED******REMOVED*** = [***REMOVED***
+    cleaned_text = _strip_code_blocks(text)
+    for line_no, line in enumerate(cleaned_text.splitlines(), start=1):
+        for match in _MARKDOWN_LINK_RE.finditer(line):
+            link_text = match.group(1).strip()
+            target = match.group(2).strip()
+            links.append((line_no, link_text, target))
+    return links
+
+
+def check_markdown_links(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+    """Scan project markdown docs and report broken relative links.
+
+    Checks only files under docs/ and root-level .md files.
+    External URLs, anchors and mailto links are skipped.
+    """
+    issues: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    if not workspace.exists():
+        return issues
+
+    markdown_files: list[Path***REMOVED*** = [***REMOVED***
+    docs_dir = workspace / "docs"
+    if docs_dir.is_dir():
+        markdown_files.extend(docs_dir.rglob("*.md"))
+    for root_md in workspace.glob("*.md"):
+        markdown_files.append(root_md)
+
+    for md_path in markdown_files:
+        # Skip runtime/cache directories and task archive
+        rel_parts = md_path.relative_to(workspace).parts
+        if any(part in _KNOWLEDGE_IGNORE_DIRS for part in rel_parts):
+            continue
+        if "task_archive" in str(md_path):
+            continue
+
+        try:
+            text = md_path.read_text(encoding="utf-8")
+        except Exception:
+            continue
+
+        for line_no, link_text, target in _extract_markdown_links(text):
+            if _is_external_link(target):
+                continue
+            if not target:
+                continue
+            # Resolve relative to the markdown file's directory
+            base_dir = md_path.parent
+            # Strip fragment and query from target for file existence check
+            target_clean = target.split("#")[0***REMOVED***.split("?")[0***REMOVED***
+            if not target_clean:
+                continue
+            # Absolute links (leading /) resolve against workspace root
+            if target_clean.startswith("/"):
+                target_path = workspace / target_clean.lstrip("/")
+            else:
+                target_path = base_dir / target_clean
+            try:
+                if not target_path.exists():
+                    issues.append({
+                        "file": str(md_path.relative_to(workspace)),
+                        "line": line_no,
+                        "text": link_text,
+                        "target": target,
+                        "issue": "broken relative link",
+                    ***REMOVED***)
+            except Exception:
+                continue
+
+    return issues
+
+
 def check_directory_structure(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
     """Compare directory structure described in BUFFY.md/RULES.md with reality."""
     issues: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
@@ -376,8 +497,14 @@ def build_report(workspace: Path) -> dict[str, Any***REMOVED***:
         "status_tables": check_buffy_project_status(workspace),
         "knowledge_index": check_knowledge_index(workspace),
         "directory_structure": check_directory_structure(workspace),
+        "markdown_links": check_markdown_links(workspace),
     ***REMOVED***
-    all_issues = report["status_tables"***REMOVED*** + report["knowledge_index"***REMOVED*** + report["directory_structure"***REMOVED***
+    all_issues = (
+        report["status_tables"***REMOVED***
+        + report["knowledge_index"***REMOVED***
+        + report["directory_structure"***REMOVED***
+        + report["markdown_links"***REMOVED***
+    )
     report["has_drift"***REMOVED*** = bool(all_issues)
     return report
 
@@ -422,6 +549,16 @@ def format_report(report: dict[str, Any***REMOVED***, workspace: Path) -> str:
         lines.append("_No discrepancies found._")
     for item in report["directory_structure"***REMOVED***:
         lines.append(f"- `{item['dir'***REMOVED******REMOVED***`: {item['issue'***REMOVED******REMOVED***")
+
+    lines.append("")
+    lines.append("## Markdown link drift (broken relative links)")
+    if not report["markdown_links"***REMOVED***:
+        lines.append("_No discrepancies found._")
+    for item in report["markdown_links"***REMOVED***:
+        lines.append(
+            f"- `{item['file'***REMOVED******REMOVED***:{item['line'***REMOVED******REMOVED***` → `{item['target'***REMOVED******REMOVED***` "
+            f"(text: _{item['text'***REMOVED******REMOVED***_)"
+        )
 
     return "\n".join(lines)
 
