@@ -18,7 +18,7 @@ TIMEOUT="${3:-300***REMOVED***"
 WORK_DIR="${4:-***REMOVED***"
 
 FREEBUFF_ROOT="/storage/emulated/0/PROJECTS/workstation/freebuff"
-PLUGIN_DIR="$FREEBUFF_ROOT/freebuff_plugin"
+PLUGIN_DIR="$FREEBUFF_ROOT/freebuff_plugin_03"
 SESSION_DIR="${PREFIX:-/data/data/com.termux/files/usr***REMOVED***/tmp/.freebuff_plugin"
 TMUX_FILE="$SESSION_DIR/tmux_${SESSION_ID***REMOVED***"
 PID_FILE="$SESSION_DIR/pid_${SESSION_ID***REMOVED***"

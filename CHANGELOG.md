@@ -6,6 +6,31 @@
 
 ---
 
+## [5.36.0***REMOVED*** — 2026-08-01
+
+### Исправлено
+- **Repo-wide rename-risks sweep** — закрыл 5 предсуществующих stale-ссылок на старые имена каталогов в shell-скриптах (после массового rename `имя_NN` в [5.34.0***REMOVED***(CHANGELOG.md)):
+  - **[status_report.sh***REMOVED***(status_report.sh) §6** — for-loop doc-paths обновлены на `docs_10/vision/VISION_3.0.md`, `docs_10/core/ARCHITECTURE_MANIFEST.md`, `docs_10/core/GLOSSARY.md` + свап `docs_10/vision/UI_CONCEPTS.md`/`docs_10/vision/IMPLEMENTATION_STATUS.md` → `docs_10/core/LIFECYCLE.md` (архивные vision-доки заменены каноническим source-of-truth; устранён log-шум «NOT FOUND», который накапливался при каждом запуске скрипта)
+  - **[status_report.sh***REMOVED***(status_report.sh) §7** — `data/context.db` → `data_13/context.db` (3 occurrences: if-check + 2 sqlite3 вызова `.tables`/`.schema`)
+  - **[status_report.sh***REMOVED***(status_report.sh) §8** — `runtime/providers/` → `runtime_05/providers/`, `freebuff_plugin/` → `freebuff_plugin_03/` (2 блока по 4 строки каждый — check + ls)
+  - **[monitor.sh***REMOVED***(freebuff_plugin_03/monitor.sh) line 12** — `PLUGIN_DIR="$FREEBUFF_ROOT/freebuff_plugin"` → `PLUGIN_DIR="$FREEBUFF_ROOT/freebuff_plugin_03"` (2 downstream-ссылки через `$PLUGIN_DIR/bridge.py` на строках 84 и 121 резолвятся автоматически — никаких других правок не потребовалось)
+  - **[generate_project_dump.sh***REMOVED***(generate_project_dump.sh) line 108** — `freebuff_plugin_03/runtime/adapters/adapter.py` (несуществующий путь: подкаталог `runtime/adapters/` содержит `claude.py`/`freebuff.py`, а не `adapter.py`) → `freebuff_plugin_03/runtime/adapter.py` (правильное расположение; 2 occurrences через `allowMultiple`: if-check + `cat`)
+- **Broader repo-wide sweep** (по `.json`/`.yaml`/`.toml`/`.ini`/`.cfg` + `tests_09/` + `pompts_11/` + `.freebuff/`) — **других stale-ссылок не найдено** (3 скрипта были единственными источниками rename-fallout за пределами Python-кода). Подтверждает, что массовый rename в [5.34.0***REMOVED***(CHANGELOG.md) был полностью зачищен на уровне shell-инфраструктуры
+
+### Проверка
+- `bash -n status_report.sh` — OK (валидный bash syntax после 9 замен / 2 блоков)
+- `bash -n freebuff_plugin_03/monitor.sh` — OK
+- `bash -n generate_project_dump.sh` — OK
+- `grep -rnE '("docs/|data/context\.db|/runtime/providers\b|FREEBUFF_ROOT/freebuff_plugin[#"***REMOVED***|/runtime/adapters/adapter\.py)' --include='*.sh' --include='*.py' --include='*.md' .` (исключая `.git`/`projects_17`/`trash_21`/актуальные новые пути) — **0 совпадений** (workspace)
+- Тот же grep по `.json`/`.yaml`/`.toml`/`.ini`/`.cfg` + `tests_09/` + `pompts_11/` + `.freebuff/` — **0 совпадений** (broader)
+- `python scripts_01/consistency_check.py --report` — **Consistent** (exit 0)
+- `python scripts_01/drift_check.py --force --report` — **No drift detected** (exit 0)
+
+### Code review
+- `code_reviewer_minimax_m3` (1 раунд в parallel с `bash -n` + `consistency_check` + `drift_check`): одобрено; оба actionable item учтены (§6 LIFECYCLE-свап вместо архивных vision-док; broadened sweep по `.json`/`.yaml`/`.ini`)
+
+---
+
 ## [5.35.0***REMOVED*** — 2026-08-01
 
 ### Добавлено

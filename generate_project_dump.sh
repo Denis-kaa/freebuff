@@ -105,11 +105,11 @@ done
 echo "## 4. RUNTIME & ADAPTERS" >> "$DUMP_FILE"
 echo "" >> "$DUMP_FILE"
 
-if [ -f "freebuff_plugin_03/runtime/adapters/adapter.py" ***REMOVED***; then
+if [ -f "freebuff_plugin_03/runtime/adapter.py" ***REMOVED***; then
     echo "###  Runtime Adapter Base" >> "$DUMP_FILE"
     echo "" >> "$DUMP_FILE"
     echo '```python' >> "$DUMP_FILE"
-    cat "freebuff_plugin_03/runtime/adapters/adapter.py" >> "$DUMP_FILE" 2>/dev/null
+    cat "freebuff_plugin_03/runtime/adapter.py" >> "$DUMP_FILE" 2>/dev/null
     echo '```' >> "$DUMP_FILE"
     echo "" >> "$DUMP_FILE"
 fi

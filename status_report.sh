@@ -40,7 +40,7 @@ done
 
 # 6. Документация (первые 10 строк ключевых файлов)
 echo -e "\n### 6. KEY DOCUMENTS (first 10 lines) ###" >> "$REPORT_FILE"
-for doc in docs/vision/VISION_3.0.md docs/ARCHITECTURE_MANIFEST.md docs/GLOSSARY.md docs/vision/UI_CONCEPTS.md docs/vision/IMPLEMENTATION_STATUS.md; do
+for doc in docs_10/vision/VISION_3.0.md docs_10/core/ARCHITECTURE_MANIFEST.md docs_10/core/GLOSSARY.md docs_10/core/LIFECYCLE.md; do
     if [ -f "$doc" ***REMOVED***; then
         echo -e "\n  === $doc ===" >> "$REPORT_FILE"
         head -10 "$doc" >> "$REPORT_FILE" 2>&1
@@ -51,22 +51,22 @@ done
 
 # 7. База данных (если SQLite)
 echo -e "\n### 7. DATABASE SCHEMA ###" >> "$REPORT_FILE"
-if [ -f "data/context.db" ***REMOVED***; then
-    sqlite3 data/context.db ".tables" >> "$REPORT_FILE" 2>&1
-    sqlite3 data/context.db ".schema" >> "$REPORT_FILE" 2>&1
+if [ -f "data_13/context.db" ***REMOVED***; then
+    sqlite3 data_13/context.db ".tables" >> "$REPORT_FILE" 2>&1
+    sqlite3 data_13/context.db ".schema" >> "$REPORT_FILE" 2>&1
 else
     echo "  No SQLite database found" >> "$REPORT_FILE"
 fi
 
 # 8. Плагины и рантаймы
 echo -e "\n### 8. PLUGINS & RUNTIMES ###" >> "$REPORT_FILE"
-if [ -d "runtime/providers" ***REMOVED***; then
+if [ -d "runtime_05/providers" ***REMOVED***; then
     echo "  Providers:" >> "$REPORT_FILE"
-    ls runtime/providers/ >> "$REPORT_FILE" 2>&1
+    ls runtime_05/providers/ >> "$REPORT_FILE" 2>&1
 fi
-if [ -d "freebuff_plugin" ***REMOVED***; then
+if [ -d "freebuff_plugin_03" ***REMOVED***; then
     echo "  Plugins:" >> "$REPORT_FILE"
-    ls freebuff_plugin/ >> "$REPORT_FILE" 2>&1
+    ls freebuff_plugin_03/ >> "$REPORT_FILE" 2>&1
 fi
 
 # 9. Зависимости
