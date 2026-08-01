@@ -17,6 +17,14 @@ v1.0.0: 7 команд для работы с сессиями, контекст
     python freebuff_cli.py project-book
     python freebuff_cli.py project-book "Workspace OS"
     python freebuff_cli.py project-context "July 31 Crisis"
+    python freebuff_cli.py resource link "CRM" "Telegram"
+    python freebuff_cli.py resource projects "Telegram"   # Work Area as View
+    python freebuff_cli.py policy list                    # User Preferences (правило 11)
+    python freebuff_cli.py policy set coding "deepseek-v4-flash"
+    python freebuff_cli.py policy get coding
+    python freebuff_cli.py policy unset coding
+    python freebuff_cli.py policy resolve research         # какой Runtime выберет система
+    python freebuff_cli.py policy override "use deepseek instead of claude for coding"
 
 Архитектура по Kwork Arbitr v3:
     Explainer → LISA (TC=5 Medium) → Decomposer → Architect → Developer → Tester → Acceptance
@@ -30,14 +38,14 @@ from datetime import datetime, timezone
 WORKSPACE = os.environ.get("FREEBUFF_ROOT", os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, WORKSPACE)
 
-PROJECT_BOOK_PATH = Path(WORKSPACE) / "docs" / "engineering-memory" / "PROJECT_BOOK.md"
+PROJECT_BOOK_PATH = Path(WORKSPACE) / "docs_10" / "engineering-memory" / "PROJECT_BOOK.md"
 
-from scripts.context_manager import ContextManager, SessionStatus, CheckpointType
-from scripts.system_monitor import health_check
-from scripts.context_builder import ContextBuilder
-from scripts.event_bus import get_default_event_bus
-from scripts.seed_knowledge import seed as seed_knowledge
-from scripts.session_utils ***REMOVED***solve_session_id
+from scripts_01.context_manager import ContextManager, SessionStatus, CheckpointType
+from scripts_01.system_monitor import health_check
+from scripts_01.context_builder import ContextBuilder
+from scripts_01.event_bus import get_default_event_bus
+from scripts_01.seed_knowledge import seed as seed_knowledge
+from scripts_01.session_utils ***REMOVED***solve_session_id
 
 # MANDATORY RUNTIME CONTRACT (v5.24.0): системные уведомления о завершении CLI-задач.
 # Graceful degradation: если notification-модуль недоступен (FREEBUFF_NO_NOTIFY=1
@@ -45,7 +53,7 @@ from scripts.session_utils ***REMOVED***solve_session_id
 # Все вызовы ниже защищены флагом _HAS_NOTIFICATION, поэтому отдельные
 # no-op фолбэки не нужны (dead code исключён).
 try:
-    from scripts.notification import notify_error, notify_task_complete
+    from scripts_01.notification import notify_error, notify_task_complete
 
     _HAS_NOTIFICATION = True
 except ImportError:
@@ -61,7 +69,7 @@ def _task_path() -> Path:
 
 
 def _archive_task_path() -> Path:
-    archive_dir = Path(WORKSPACE) / "docs" / "task_archive"
+    archive_dir = Path(WORKSPACE) / "docs_10" / "task_archive"
     archive_dir.mkdir(parents=True, exist_ok=True)
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%S")
     return archive_dir / f"TASK_{ts***REMOVED***.md"
@@ -246,7 +254,7 @@ def cmd_status() -> dict:
         print(f"   Приостановлено: {len(paused)***REMOVED***")
 
     # Последний конспект
-    summaries_dir = os.path.join(WORKSPACE, "context", "summaries")
+    summaries_dir = os.path.join(WORKSPACE, "context_12", "summaries")
     if os.path.isdir(summaries_dir):
         files = sorted(
             [f for f in os.listdir(summaries_dir) if f.endswith(".md")***REMOVED***,
@@ -485,7 +493,7 @@ def cmd_buffy() -> None:
 """
 
     # Сохраняем Unified Context в файл
-    ctx_path = os.path.join(WORKSPACE, "context", "unified_context.md")
+    ctx_path = os.path.join(WORKSPACE, "context_12", "unified_context.md")
     if unified_ctx:
         os.makedirs(os.path.dirname(ctx_path), exist_ok=True)
         with open(ctx_path, "w", encoding="utf-8") as f:
@@ -523,6 +531,201 @@ def cmd_buffy() -> None:
         if project_book_summary:
             print()
             print(project_book_summary)
+
+
+# ── Policy Engine helpers (правило 11: User-Choice Override) ──
+
+def _get_policy_engine():
+    """Lazy-инстанцирует PolicyEngine с реальными Runtime-реестрами.
+
+    Правило 11 (User-Choice Override): пользователь назначает Runtime
+    (модель/агента) на capability; система рекомендует, но не навязывает.
+
+    Returns:
+        PolicyEngine или None при ошибке инициализации (graceful degradation).
+    """
+    try:
+        from freebuff_plugin_03.policy import PolicyEngine
+        from freebuff_plugin_03.runtime.registry import (
+            RuntimeCapabilityRegistry,
+            RuntimeRegistry,
+        )
+
+        storage = Path(WORKSPACE) / "data_13" / "runtime_registry.json"
+        registry = RuntimeRegistry(storage_path=storage)
+        registry.load()
+        cap_reg = RuntimeCapabilityRegistry(registry)
+        return PolicyEngine(registry, cap_reg)
+    except Exception as e:
+        print(f"❌ PolicyEngine недоступен: {e***REMOVED***")
+        return None
+
+
+def cmd_policy(action: str | None, arg1: str | None = None, arg2: str | None = None) -> None:
+    """User Preferences (правило 11, User-Choice Override): назначение Runtime на capabilities.
+
+    Пользователь выбирает исполнителя (модель/агента) для каждого вида задач;
+    система рекомендует автоматически, но пользователь может переопределить
+    (см. promt37, ADR-009). Предпочтения хранятся в runtime_05/policies.json.
+
+    Подкоманды:
+        policy list                          — все назначенные предпочтения
+        policy set <capability> <runtime>    — назначить Runtime на capability
+        policy get <capability>              — показать предпочтение для capability
+        policy unset <capability>            — сбросить предпочтение (вернуть авто-выбор)
+        policy resolve <capability>          — какой Runtime выберет система (с учётом override)
+        policy override <фраза>              — диалог: «use deepseek instead of claude for coding»
+    """
+    engine = _get_policy_engine()
+    if engine is None:
+        return
+
+    if action == "list":
+        policies = engine.list_policies()
+        print(f"🎯 User Preferences ({len(policies)***REMOVED***):")
+        if not policies:
+            print("   (нет назначенных предпочтений — система выбирает автоматически)")
+            return
+        for cap, p in sorted(policies.items()):
+            fb = ", ".join(p.fallback_chain) if p.fallback_chain else "—"
+            print(f"   • {cap***REMOVED***: preferred={p.preferred_runtime or '—'***REMOVED*** | fallback=[{fb***REMOVED******REMOVED***")
+
+    elif action == "set":
+        if not arg1 or not arg2:
+            print("❌ Укажи capability и runtime: python freebuff_cli.py policy set <capability> <runtime>")
+            return
+        engine.set_preference(arg1, arg2)
+        print(f"✅ Назначено: {arg1***REMOVED*** → {arg2***REMOVED*** (сохранено в runtime_05/policies.json)")
+
+    elif action == "get":
+        if not arg1:
+            print("❌ Укажи capability: python freebuff_cli.py policy get <capability>")
+            return
+        p = engine.get_policy(arg1)
+        if p is None:
+            print(f"ℹ️ Для '{arg1***REMOVED***' предпочтение не назначено (система выберет автоматически).")
+            return
+        fb = ", ".join(p.fallback_chain) if p.fallback_chain else "—"
+        print(f"🎯 Политика '{arg1***REMOVED***':")
+        print(f"   preferred = {p.preferred_runtime or '—'***REMOVED***")
+        print(f"   fallback  = [{fb***REMOVED******REMOVED***")
+        print(f"   constraints = {len(p.constraints)***REMOVED***")
+
+    elif action == "unset":
+        if not arg1:
+            print("❌ Укажи capability: python freebuff_cli.py policy unset <capability>")
+            return
+        cleared = engine.unset_preference(arg1)
+        if cleared:
+            print(f"🗑  Предпочтение сброшено: {arg1***REMOVED*** (вернётся авто-выбор системы)")
+        else:
+            print(f"ℹ️ Для '{arg1***REMOVED***' предпочтение не было назначено.")
+
+    elif action == "resolve":
+        if not arg1:
+            print("❌ Укажи capability: python freebuff_cli.py policy resolve <capability>")
+            return
+        runtime = engine.select_runtime(arg1)
+        if runtime:
+            print(f"🎯 Для '{arg1***REMOVED***' система выберет: {runtime***REMOVED***")
+        else:
+            print(f"⚠️ Для '{arg1***REMOVED***' подходящий Runtime не найден.")
+
+    elif action == "override":
+        # Conversational User-Choice Override (правило 11): «используй X вместо Y»
+        if not arg1:
+            print("❌ Укажи фразу: python freebuff_cli.py policy override \"use deepseek instead of claude for coding\"")
+            return
+        from freebuff_plugin_03.policy.conversational import apply_override
+        result = apply_override(arg1, engine)
+        if result and result.get("applied"):
+            prev = result.get("previous_runtime") or "авто-выбор системы"
+            print(f"✅ User-Choice Override: {result['capability'***REMOVED******REMOVED*** → {result['runtime'***REMOVED******REMOVED*** "
+                  f"(было: {prev***REMOVED***, сохранено в runtime_05/policies.json)")
+        else:
+            print(f"⚠️ Не удалось распознать переопределение в: \"{arg1***REMOVED***\"")
+            print("   Примеры: \"use deepseek instead of claude for coding\",")
+            print("            \"используй freebuff для research\", \"switch coding to claude-code\"")
+
+    else:
+        print("Использование:")
+        print("  python freebuff_cli.py policy list")
+        print("  python freebuff_cli.py policy set <capability> <runtime>")
+        print("  python freebuff_cli.py policy get <capability>")
+        print("  python freebuff_cli.py policy unset <capability>")
+        print("  python freebuff_cli.py policy resolve <capability>")
+        print('  python freebuff_cli.py policy override "use deepseek instead of claude for coding"')
+
+
+def cmd_resource(action: str | None, arg1: str | None = None, arg2: str | None = None) -> None:
+    """Work Area as View (канон promt36/37, правило 2): проекты, связанные с ресурсом.
+
+    Work Area — НЕ папка и НЕ сущность, а динамический список проектов,
+    связанных с конкретным Resource (таблица `project_resources` в data_13/context.db).
+
+    Подкоманды:
+        resource link <project> <resource>        — связать проект с ресурсом
+        resource unlink <project> <resource>      — удалить связь
+        resource projects <resource>              — список проектов для ресурса (View)
+        resource resources <project>              — список ресурсов для проекта
+        resource list                             — все связи
+    """
+    from scripts_01.work_area_view import (
+        link as wav_link,
+        unlink as wav_unlink,
+        print_projects,
+        resources_for_project,
+        list_links,
+    )
+
+    if action == "link":
+        if not arg1 or not arg2:
+            print("❌ Укажи проект и ресурс: python freebuff_cli.py resource link <project> <resource>")
+            return
+        created = wav_link(arg1, arg2)
+        print(f"🔗 {'Связь создана' if created else 'Связь уже существует'***REMOVED***: {arg1***REMOVED*** ↔ {arg2***REMOVED***")
+
+    elif action == "unlink":
+        if not arg1 or not arg2:
+            print("❌ Укажи проект и ресурс: python freebuff_cli.py resource unlink <project> <resource>")
+            return
+        removed = wav_unlink(arg1, arg2)
+        print(f"🗑 {'Связь удалена' if removed else 'Связь не найдена'***REMOVED***: {arg1***REMOVED*** ↔ {arg2***REMOVED***")
+
+    elif action == "projects":
+        if not arg1:
+            print("❌ Укажи ресурс: python freebuff_cli.py resource projects <resource_name>")
+            return
+        print_projects(arg1)
+
+    elif action == "resources":
+        if not arg1:
+            print("❌ Укажи проект: python freebuff_cli.py resource resources <project_name>")
+            return
+        resources = resources_for_project(arg1)
+        print(f"Ресурсы, связанные с {arg1***REMOVED***:")
+        if not resources:
+            print("  (нет связей)")
+            return
+        for r in resources:
+            print(f"  - {r['resource_id'***REMOVED******REMOVED***")
+
+    elif action == "list":
+        links = list_links()
+        print(f"Связи проект ↔ ресурс ({len(links)***REMOVED***):")
+        if not links:
+            print("  (нет связей)")
+            return
+        for l in links:
+            print(f"  - {l['project_id'***REMOVED******REMOVED*** ↔ {l['resource_id'***REMOVED******REMOVED***")
+
+    else:
+        print("Использование:")
+        print("  python freebuff_cli.py resource link <project> <resource>")
+        print("  python freebuff_cli.py resource unlink <project> <resource>")
+        print("  python freebuff_cli.py resource projects <resource_name>")
+        print("  python freebuff_cli.py resource resources <project_name>")
+        print("  python freebuff_cli.py resource list")
 
 
 def cmd_qwen_resume(session_id: str) -> None:
@@ -705,6 +908,18 @@ def main():
             query = " ".join(sys.argv[2:***REMOVED***) if len(sys.argv) > 2 else ""
             cmd_project_context(query)
 
+        elif cmd == "resource":
+            action = sys.argv[2***REMOVED*** if len(sys.argv) > 2 else None
+            arg1 = sys.argv[3***REMOVED*** if len(sys.argv) > 3 else None
+            arg2 = sys.argv[4***REMOVED*** if len(sys.argv) > 4 else None
+            cmd_resource(action, arg1, arg2)
+
+        elif cmd == "policy":
+            action = sys.argv[2***REMOVED*** if len(sys.argv) > 2 else None
+            arg1 = sys.argv[3***REMOVED*** if len(sys.argv) > 3 else None
+            arg2 = sys.argv[4***REMOVED*** if len(sys.argv) > 4 else None
+            cmd_policy(action, arg1, arg2)
+
         elif cmd == "buffy":
             # Запуск коммуникации с Buffy — собирает Unified Context.
             # Перед сборкой синхронизируем Knowledge Memory.
@@ -717,7 +932,7 @@ def main():
 
         else:
             print(f"❌ Неизвестная команда: {cmd***REMOVED***")
-            print("Доступные: start, status, resume, conspect, list, checkpoint, restore, qwen-resume, task, buffy, seed, project-book, project-context")
+            print("Доступные: start, status, resume, conspect, list, checkpoint, restore, qwen-resume, task, buffy, seed, project-book, project-context, resource, policy")
             sys.exit(1)
 
     except Exception as e:

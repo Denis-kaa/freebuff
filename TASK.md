@@ -1,12 +1,12 @@
 # TASK: LEVIATHAN Integration — все 5 фаз завершены
 
-**Статус:** ✅ Project Pulse завершён + ✅ Шаг 0+Шаг 1+Шаг 2 security audit `pompts/TASK_SECURE_MCP_ACCESS.md` (v5.25.1)
+**Статус:** ✅ Project Pulse завершён + ✅ Шаг 0+Шаг 1+Шаг 2 security audit `pompts_11/TASK_SECURE_MCP_ACCESS.md` (v5.25.1)
 **Создана:** 2026-07-30
 **Версия проекта:** v5.25.1
 **Обновлено:** 2026-07-31
 
 > Security audit checkpoint (2026-07-31):
-> - Шаг 0 (диагностика): 0 совпадений по `check_command` в MCP-маршрутах; ни один `cloudflared`/`mcp_fastapi`/`mcp_server` не запущен; `pkill` не требуется — `docs/audits/AUDIT_STEP0_2026-07-31.md`.
+> - Шаг 0 (диагностика): 0 совпадений по `check_command` в MCP-маршрутах; ни один `cloudflared`/`mcp_fastapi`/`mcp_server` не запущен; `pkill` не требуется — `docs_10/audits/AUDIT_STEP0_2026-07-31.md`.
 > - Шаг 1 (закрытие free shell): `_run_shell`, `_check_shell`, `_check_content_match` удалены; `_check_pytest` переписан на argv-list с `shell=False`; 75/75 тестов зелёные; code-reviewer approved — коммит c51ce49.
 > - Шаг 2 (Bearer auth): `verify_bearer_token` + `Depends` на `/mcp` (POST/GET/DELETE); `hmac.compare_digest`; Vault-first через hvac (KV v2, AppRole + root token), env fallback, TTL-кеш 300 s; тестовый bypass только при `FREEBUFF_ENV=test` AND `FREEBUFF_MCP_AUTH_DISABLED=1`; 401 + `WWW-Authenticate: Bearer realm="buffy-mcp"`. 57 passed in 7.19 s; code-reviewer shipped.
 
@@ -15,7 +15,7 @@
 ## 🎯 LEVIATHAN Context Integration — ИТОГИ
 
 ### Фаза A: Schema Extension (v5.8.0) ✅
-- `scripts/context_manager.py` — SCHEMA_VERSION 3→4
+- `scripts_01/context_manager.py` — SCHEMA_VERSION 3→4
 - Таблица `arch_decisions` — архитектурные решения (id, session_id, title, context, decision, alternatives, rationale, consequences, status)
 - Таблица `invariants` — инварианты (id, name, description, assertion_type, assertion_params, enabled, severity, last_checked, last_result)
 - 6 методов: `log_decision()`, `get_decisions()`, `set_invariant()`, `get_invariant()`, `check_invariant()`, `list_invariants()`
@@ -23,7 +23,7 @@
 - **20 тестов** — 0 failures
 
 ### Фаза B: Verification Framework (v5.7.0 — v5.10.0) ✅
-- `scripts/verifier.py` — 7 чекеров (file_exists, file_contains, content_match, pytest, shell, sqlite, http)
+- `scripts_01/verifier.py` — 7 чекеров (file_exists, file_contains, content_match, pytest, shell, sqlite, http)
 - SQLite storage (verification_rules + verification_results), EventBus, CLI
 - `action_verifications` таблица в `context_manager.py` (SCHEMA_VERSION 4→5)
 - 4 метода: `set_claimed_status()`, `set_verified_status()`, `get_verification()`, `list_verifications()`
@@ -32,7 +32,7 @@
 - **73 теста** (56 verifier + 12 action_verifications + 5 orchestrator) — 0 failures
 
 ### Фаза C: Metrics Engine (v5.11.0) ✅
-- `scripts/metrics.py` — 5 метрик: VCR, SRG, CpVO, RRR, TTD-false
+- `scripts_01/metrics.py` — 5 метрик: VCR, SRG, CpVO, RRR, TTD-false
 - `MetricsReport`, `MetricResult`, `MetricsEngine` классы
 - Health Score (0-10)
 - CLI: report, vcr, srg, cpvo, rrr, ttd, trend, status
@@ -43,7 +43,7 @@
 - `MemoryLevel.VECTOR = "vector"` — 6-й уровень памяти
 - `VectorBackend` — опциональный Chromadb (graceful degradation)
 - `vector_search()` — семантический поиск с обогащением MemoryEntry
-- CLI: `python scripts/memory_engine.py vector_search "query" --top-k 5`
+- CLI: `python scripts_01/memory_engine.py vector_search "query" --top-k 5`
 - Исправлен баг: чтение entry_id до unlink файла в `delete()`
 - **28 тестов** — 0 failures
 
@@ -58,10 +58,10 @@
 | Фаза | Компонент | Тесты | v |
 |------|-----------|:-----:|:-:|
 | **A** | arch_decisions + invariants | 20 | 5.8.0 |
-| **B.1** | scripts/verifier.py | 56 | 5.7.0 |
+| **B.1** | scripts_01/verifier.py | 56 | 5.7.0 |
 | **B.2** | action_verifications | 12 | 5.9.0 |
 | **B.3** | Orchestrator интеграция | 5 | 5.10.0 |
-| **C** | scripts/metrics.py | 37 | 5.11.0 |
+| **C** | scripts_01/metrics.py | 37 | 5.11.0 |
 | **D** | Vector Memory (Chromadb) | 28 | 5.12.0 |
 | **E** | buffy-ctx CLI | 17 | 5.13.0 |
 | **DA** | Distributed Agents | 55 | 5.14.0 |
@@ -86,26 +86,26 @@
 - [ ***REMOVED*** Flutter-приложение
 - [ ***REMOVED*** Foreground Service (Phantom Process Killer fix)
 - [ ***REMOVED*** Remote Sync
-- [x***REMOVED*** **MANDATORY RUNTIME CONTRACT** — scripts/notification.py + RUNTIME_CONTRACT.md + freebuff_cli wrapper (v5.24.0)
+- [x***REMOVED*** **MANDATORY RUNTIME CONTRACT** — scripts_01/notification.py + RUNTIME_CONTRACT.md + freebuff_cli wrapper (v5.24.0)
 - [x***REMOVED*** 25 тестов, 0 failures
 
 ### Phase 5.1 — MANDATORY RUNTIME CONTRACT (Android notifications)
-- [x***REMOVED*** **scripts/notification.py** — модуль системных уведомлений (v5.24.0)
-- [x***REMOVED*** **docs/ops/RUNTIME_CONTRACT.md** — контракт Runtime Lifecycle
+- [x***REMOVED*** **scripts_01/notification.py** — модуль системных уведомлений (v5.24.0)
+- [x***REMOVED*** **docs_10/ops/RUNTIME_CONTRACT.md** — контракт Runtime Lifecycle
 - [x***REMOVED*** **freebuff_cli.py _main_with_notification()** — wrapper для CLI
 - [x***REMOVED*** **FREEBUFF_NO_NOTIFY=1** — bypass для тестов/CI
 - [x***REMOVED*** 25 тестов, 0 failures
 
 ### Phase 6 — Context Verification & QA
 - [x***REMOVED*** **HTTP `/metrics/*`** — 8 endpoints в mcp_fastapi.py (v5.16.0)
-- [x***REMOVED*** **Metrics Dashboard** — HTML-дашборд с Chart.js в buffy-playground/public/ (v5.19.0)
+- [x***REMOVED*** **Metrics Dashboard** — HTML-дашборд с Chart.js в buffy-playground_19/public/ (v5.19.0)
 
 ### Phase 7 — CoWork / Companion Platform
-- [x***REMOVED*** **Agent Presence** — scripts/presence.py + MCP инструменты + CLI (v5.17.0)
-- [x***REMOVED*** **Live Collaboration** — scripts/collaboration.py + 8 MCP инструментов + CLI (v5.18.0)
-- [x***REMOVED*** **Project Pulse** — scripts/project_pulse.py + 3 MCP инструмента + CLI (v5.21.0)
-- [x***REMOVED*** **Collaboration Roles** — scripts/roles.py + 7 MCP инструментов + CLI + Presence/Collab интеграция (v5.22.0)
-- [x***REMOVED*** **RAG 2.0 Engine** — scripts/rag_engine.py + RRF fusion + feature-based re-ranking + query expansion + 3 MCP инструмента (v5.23.0)
+- [x***REMOVED*** **Agent Presence** — scripts_01/presence.py + MCP инструменты + CLI (v5.17.0)
+- [x***REMOVED*** **Live Collaboration** — scripts_01/collaboration.py + 8 MCP инструментов + CLI (v5.18.0)
+- [x***REMOVED*** **Project Pulse** — scripts_01/project_pulse.py + 3 MCP инструмента + CLI (v5.21.0)
+- [x***REMOVED*** **Collaboration Roles** — scripts_01/roles.py + 7 MCP инструментов + CLI + Presence/Collab интеграция (v5.22.0)
+- [x***REMOVED*** **RAG 2.0 Engine** — scripts_01/rag_engine.py + RRF fusion + feature-based re-ranking + query expansion + 3 MCP инструмента (v5.23.0)
 
 ---
 

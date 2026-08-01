@@ -1,18 +1,18 @@
 # Freebuff — Session Checkpoint
 
-**Дата:** 2026-07-29
-**Версия проекта:** v4.9.0
-**Тесты:** 1123 passed, 1 skipped, 0 failures
+**Дата:** 2026-08-01
+**Версия проекта:** v5.25.1
+**Тесты:** см. TASK.md / CHANGELOG.md (актуальный прогон)
 
-> **Единый Core Prompt:** [`docs/core/CORE_PROMPT.md`***REMOVED***(docs/core/CORE_PROMPT.md) — личность, обязанности, ограничения, поведение.  
-> **Стандарт качества:** [`docs/core/CODE_QUALITY_STANDARD.md`***REMOVED***(docs/core/CODE_QUALITY_STANDARD.md).  
+> **Единый Core Prompt:** [`docs_10/core/CORE_PROMPT.md`***REMOVED***(docs_10/core/CORE_PROMPT.md) — личность, обязанности, ограничения, поведение.  
+> **Стандарт качества:** [`docs_10/core/CODE_QUALITY_STANDARD.md`***REMOVED***(docs_10/core/CODE_QUALITY_STANDARD.md).  
 > Этот файл — сессионный чекпоинт, он **расширяет** Core Prompt.
 
 ---
 
 ## Книга проекта (Project Book)
 
-**Файл:** `docs/engineering-memory/PROJECT_BOOK.md`
+**Файл:** `docs_10/engineering-memory/PROJECT_BOOK.md`
 
 Это нарративная память проекта: почему принимались решения, что ломалось, какие кризисы заставляли менять курс и какие уроки остались. При старте каждой сессии агент ДОЛЖЕН ознакомиться с ключевыми главами и использовать Project Book как первичный источник контекста проекта.
 
@@ -21,7 +21,7 @@
 - **Глава 1. Genesis: FreeBuff 2.0 (2026-07-28)** — исходная архитектура и первые 500+ тестов.
 - **Глава 2. Эра протоколов: MCP, HTTP, FastAPI, туннели** — наружние интерфейсы и транспорты.
 - **Глава 3. Первый security-кризис: убиваем `exec` и `shell=True`** — почему безопасность стала архитектурой.
-- **Глава 4. Реструктуризация v5.0.0** — переход к `docs/core/`, `pompts/` как контракты.
+- **Глава 4. Реструктуризация v5.0.0** — переход к `docs_10/core/`, `pompts_11/` как контракты.
 - **Глава 5. Лавинное наращивание** — метрики, presence, RAG, плагины и дублирование.
 - **Глава 6. The July 31 Crisis** — потеря и восстановление `metrics.py` из байткода.
 - **Глава 7. Второй security-кризис** — закрытие shell-exec и Bearer auth.
@@ -69,16 +69,13 @@ python freebuff_cli.py project-context "July 31 Crisis"
 
 ---
 
-## 📋 Следующий шаг: MCP + RAL интеграция
+## 📋 Следующий шаг: Этап 5 консолидации (promt32) — в работе
 
-Добавить в `scripts/mcp_server.py` 5 инструментов для Runtime Abstraction Layer:
-- `runtime_list` — список Runtime
-- `runtime_connect` — подключить Runtime
-- `runtime_disconnect` — отключить Runtime
-- `runtime_select` — выбрать активный Runtime
-- `runtime_generate` — генерация через Runtime
-
-**Паттерн:** как сделано для `bootstrap_check/run/status` — см. `_get_bootstrap_engine()`.
+Промты 32–36 прочитаны. Статус:
+- **Этапы 1–4 промта 32** — ✅ завершены (реестр статусов: `docs_10/DOCUMENT_REGISTRY.md`)
+- **Этап 5 (консолидация промтов)** — ✅ завершён: дубль promt34/35 устранён, правила promt36/37 встроены в GLOSSARY/MANIFEST (ADR-008/009), 5 файлов инструкций сверены с Core Prompt
+- **Промт 36/37 (Work Area as View)** — ✅ реализован 2026-08-01: `scripts_01/work_area_view.py` (таблица `project_resources`), CLI `freebuff resource projects`, 29 тестов
+- **Mission Lock** — 🔓 снят 2026-08-01 (все этапы promt32 1–10 завершены); начаты пост-консолидационные долги: DEBT-001 ✅ Resolved (AGENTS/CLAUDE/CODY в KnowledgeEngine), остались DEBT-002…007
 
 ---
 
@@ -86,10 +83,11 @@ python freebuff_cli.py project-context "July 31 Crisis"
 
 - `TASK.md` — полный план и статус
 - `CHANGELOG.md` — история версий
-- `freebuff_plugin/runtime/` — Runtime Abstraction Layer (новый модуль)
-- `freebuff_plugin/runtime/adapter.py` — StdioMCPAdapter, HTTPMCPAdapter
-- `freebuff_plugin/runtime/registry.py` — RuntimeRegistry + RuntimeCapabilityRegistry
-- `scripts/mcp_server.py` — MCP Server (с bootstrap инструментами)
+- `docs_10/DOCUMENT_REGISTRY.md` — статусы документации (Этап 4)
+- `docs_10/core/CORE_PROMPT.md` — единый Core Prompt (источник истины)
+- `docs_10/vision/ROADMAP_PROMT32_CONSOLIDATION.md` — roadmap консолидации
+- `freebuff_plugin_03/runtime/` — Runtime Abstraction Layer
+- `scripts_01/mcp_server.py` — MCP Server (RAL-инструменты уже добавлены: runtime_list/connect/disconnect/select/generate)
 
 ---
 
@@ -97,13 +95,13 @@ python freebuff_cli.py project-context "July 31 Crisis"
 
 ```bash
 # Запуск тестов
-python -m pytest tests/ -q
+python -m pytest tests_09/ -q
 
 # Тесты Runtime Abstraction Layer
-python -m pytest tests/test_runtime_abstraction.py -v
+python -m pytest tests_09/test_runtime_abstraction.py -v
 
 # Тесты MCP Server (включая bootstrap)
-python -m pytest tests/test_mcp_server.py -v
+python -m pytest tests_09/test_mcp_server.py -v
 
 # Проверка импорта
 python -c "from freebuff_plugin.runtime import RuntimeRegistry; print('OK')"
@@ -113,7 +111,7 @@ python -c "from freebuff_plugin.runtime import RuntimeRegistry; print('OK')"
 
 ## 🛡️ CODE QUALITY STANDARD — базовый регламент (обязательно всегда)
 
-> **Источник:** [`docs/core/CODE_QUALITY_STANDARD.md`***REMOVED***(docs/core/CODE_QUALITY_STANDARD.md)  
+> **Источник:** [`docs_10/core/CODE_QUALITY_STANDARD.md`***REMOVED***(docs_10/core/CODE_QUALITY_STANDARD.md)  
 > **Статус:** неприкосновенные правила. Перед любым изменением или созданием кода агент ДОЛЖЕН перечитывать стандарт.  
 > **Золотое правило:** если есть выбор между коротким и надёжным решением — всегда выбирать надёжное. Любой созданный код считается **production-ready**.
 
@@ -127,4 +125,4 @@ python -c "from freebuff_plugin.runtime import RuntimeRegistry; print('OK')"
 - **UX:** DEBUG/QUIET, понятный прогресс, `--help`/`--version`, корректные exit-коды.
 - **Принципы:** KISS, DRY, SOLID, код, понятный через год.
 
-Полный регламент — в [CODE_QUALITY_STANDARD.md***REMOVED***(docs/core/CODE_QUALITY_STANDARD.md).
+Полный регламент — в [040_13_code_quality_standard.md***REMOVED***(docs_10/core/CODE_QUALITY_STANDARD.md).

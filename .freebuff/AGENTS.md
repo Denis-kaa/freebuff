@@ -25,17 +25,17 @@ This is **Freebuff AI Engineering Workspace** — a Python-based agentic platfor
 | `TASK.md` | Current task |
 | `CHANGELOG.md` | History of changes |
 | `freebuff_cli.py` | Local CLI for sessions, status, conspect |
-| `scripts/bootstrap.py` | Startup self-check and context recovery |
-| `scripts/drift_check.py` | Daily documentation/code drift audit |
+| `scripts_01/bootstrap.py` | Startup self-check and context recovery |
+| `scripts_01/drift_check.py` | Daily documentation/code drift audit |
 
 ## Commands to verify work
 
 ```bash
 # Tests
-python -m pytest tests/ -v
+python -m pytest tests_09/ -v
 
 # Type check (key files)
-python -m mypy scripts/ core/ --ignore-missing-imports
+python -m mypy scripts_01/ core_02/ --ignore-missing-imports
 
 # Local status
 python freebuff_cli.py status
@@ -52,10 +52,10 @@ python freebuff_cli.py status
 
 ### CODE QUALITY STANDARD — base, immutable rules (always apply)
 
-> **Canonical source:** `pompts/CODE_QUALITY_STANDART.md`  
+> **Canonical source:** `pompts_11/040_13_code_quality_standard.md`  
 > **Rule:** Before writing or modifying any code, re-read the standard. If a choice exists between a quick fix and a reliable fix, always choose the reliable one. Every delivered script is considered **production-ready**.
 
-All code must follow the standard defined in `pompts/CODE_QUALITY_STANDART.md`. Summarized, every script must be:
+All code must follow the standard defined in `pompts_11/040_13_code_quality_standard.md`. Summarized, every script must be:
 
 - **Modular & single-purpose** with low coupling, no duplication, no magic numbers/strings.
 - **Readable** with clear names, comments, README, and consistent style.

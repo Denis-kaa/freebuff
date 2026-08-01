@@ -1,0 +1,56 @@
+# Claude Code — Provider Manifest
+# Версия формата: 1.0.0
+
+name: claude-code
+display_name: Claude Code
+description: >
+  Claude Code CLI от Anthropic — один из сильнейших coding агентов.
+  Требует подписки или API-ключа Anthropic.
+  Идеален для code review, архитектуры и сложного рефакторинга.
+
+# ── Adapter ──────────────────────────────────────────────────
+adapter_type: stdio_mcp
+bin_names:
+  - claude
+args:
+  - mcp
+
+# ── Capabilities (confidence 0.0–1.0) ───────────────────────
+capabilities:
+  coding: 0.95
+  review: 0.95
+  architecture: 0.85
+  documentation: 0.90
+  planning: 0.80
+  refactoring: 0.80
+
+# ── Platforms ────────────────────────────────────────────────
+platforms:
+  - linux
+  - macos
+
+# ── Installation ─────────────────────────────────────────────
+install:
+  type: npm
+  command: "npm install -g @anthropic/claude-code"
+  check: "claude --version"
+  android_note: >
+    Claude Code не поддерживает Android нативно.
+    Требуется proot-distro (Debian) для установки npm.
+    См. runtime_05/recipes/claude_code/RECIPE.md для инструкций.
+
+# ── API Key ──────────────────────────────────────────────────
+requires_api_key: true
+api_key_env: ANTHROPIC_API_KEY
+
+# ── Requirements ─────────────────────────────────────────────
+requirements:
+  node: ">=18"
+  memory_mb: 512
+  android: "proot-distro Debian"
+
+# ── Metadata ─────────────────────────────────────────────────
+version: auto
+maintainer: Anthropic (антропный)
+docs_url: https://docs.anthropic.com/en/docs_10/claude-code
+recipe: recipes/claude_code/RECIPE.md

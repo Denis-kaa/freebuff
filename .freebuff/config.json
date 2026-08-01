@@ -28,10 +28,10 @@
     "agentProtocol": ".freebuff/AGENTS.md"
   ***REMOVED***,
   "preferredCommands": {
-    "test": "python -m pytest tests/ -v",
-    "typecheck": "python -m mypy scripts/ --ignore-missing-imports",
+    "test": "python -m pytest tests_09/ -v",
+    "typecheck": "python -m mypy scripts_01/ --ignore-missing-imports",
     "status": "python freebuff_cli.py status",
-    "seed": "python scripts/seed_knowledge.py"
+    "seed": "python scripts_01/seed_knowledge.py"
   ***REMOVED***,
   "models": {
     "default": "DeepSeek V4 Flash",
@@ -39,7 +39,7 @@
   ***REMOVED***,
   "rules": [
     "Always read BUFFY.md before making changes.",
-    "Respect existing conventions in scripts/ and core/.",
+    "Respect existing conventions in scripts_01/ and core_02/.",
     "Run tests and mypy after non-trivial edits.",
     "Update CHANGELOG.md and relevant docs when architecture changes.",
     "Never commit secrets; use .env and .keys/.",

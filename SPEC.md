@@ -30,7 +30,7 @@
 7. 🔲 Автоматическое восстановление после OOM-kill
 
 ### Не в MVP
-- ❌ Flutter-приложение (TERMINAL_AI_STUDIO_MOBILE.md — отдельный проект)
+- ❌ Flutter-приложение (039_12_terminal_ai_studio_mobile.md — отдельный проект)
 - ❌ Web-интерфейс
 - ❌ Мульти-пользовательская поддержка
 
@@ -69,7 +69,7 @@
 │  │            Persistence Layer                      │  │
 │  │  ┌──────────────┐  ┌──────────────┐              │  │
 │  │  │ Context DB   │  │  File System │              │  │
-│  │  │ (SQLite)     │  │  (docs/logs) │              │  │
+│  │  │ (SQLite)     │  │  (docs_10/logs) │              │  │
 │  │  └──────────────┘  └──────────────┘              │  │
 │  └──────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────┘
@@ -78,7 +78,7 @@
 ### База данных (SQLite)
 
 ```sql
--- Основная БД: data/context.db
+-- Основная БД: data_13/context.db
 -- Уже создана ContextManager'ом
 
 -- Сессии
@@ -126,12 +126,12 @@ CREATE INDEX idx_checkpoints_session ON checkpoints(session_id, created_at);
 ## 📦 Компоненты для реализации
 
 ### 1. ContextManager (✅ реализован)
-- **Файл:** `scripts/context_manager.py`
+- **Файл:** `scripts_01/context_manager.py`
 - **Назначение:** Управление сессиями, сообщениями, чекпоинтами
 - **API:** `start_session()`, `add_message()`, `save_checkpoint()`, `get_session()`, `list_sessions()`, `complete_session()`, `export_markdown()`, `export_checkpoint_summary()`
 
 ### 2. Auto-Conspect (✅ реализован)
-- **Файл:** `scripts/auto_conspect.py`
+- **Файл:** `scripts_01/auto_conspect.py`
 - **Назначение:** Автосуммаризация при завершении сессии, создание конспекта для следующей
 - **API:** `auto_conspect(session_id)`
 
@@ -148,7 +148,7 @@ CREATE INDEX idx_checkpoints_session ON checkpoints(session_id, created_at);
   - `def cmd_restore(session_id: str) -> str` — вернуть конспект для инжекта в контекст
 
 ### 4. Системный монитор (🔲 требуется)
-- **Файл:** `scripts/system_monitor.py`
+- **Файл:** `scripts_01/system_monitor.py`
 - **Назначение:** Мониторинг RAM, CPU, батареи, температуры
 - **API:**
   - `def get_memory() -> dict` — `{"available_mb": int, "total_mb": int, "percent": float***REMOVED***`
@@ -159,20 +159,20 @@ CREATE INDEX idx_checkpoints_session ON checkpoints(session_id, created_at);
 - **Интеграция:** переиспользовать `llm_gateway/watchdog.py:check_available_memory()`
 
 ### 5. Интеграция с termux-ai-agent (✅ реализовано v4.0)
-- **Файл:** `scripts/agent_context_bridge.py` + `termux-ai-agent/main.py`
+- **Файл:** `scripts_01/agent_context_bridge.py` + `termux-ai-agent/main.py`
 - **Назначение:** Подключить ContextManager к основному пайплайну
 - **Изменения:**
-  - `AgentContextBridge` сохраняет user/assistant/system сообщения в `freebuff/data/context.db`
+  - `AgentContextBridge` сохраняет user/assistant/system сообщения в `freebuff/data_13/context.db`
   - При старте: восстановление активной сессии проекта `termux-ai-agent`
   - При каждом запросе: `add_message()` + авточекпоинт каждые 10 сообщений
   - CLI `--freebuff-conspect` для ручного конспекта
-  - Unit-тесты: `tests/test_agent_context_bridge.py`
+  - Unit-тесты: `tests_09/test_agent_context_bridge.py`
 
 ### 6. Миграция существующих сессий (🔲 требуется)
-- **Файл:** `scripts/import_sessions.py`
+- **Файл:** `scripts_01/import_sessions.py`
 - **Назначение:** Импорт истории из OpenClaw, Aider, termux-ai-agent
 - **Источники:**
-  - `~/.openclaw/logs/` → sessions
+  - `~/.openclaw/logs_14/` → sessions
   - `~/.aider.chat.history.md` → messages
   - `last_context.txt` → чекпоинт
 
@@ -235,8 +235,8 @@ CREATE INDEX idx_checkpoints_session ON checkpoints(session_id, created_at);
 ## 📚 Референсы
 
 - **Kwork Arbitr v3:** `/storage/emulated/0/PROJECTS/workstation/blueprints_v3/`
-- **termux-ai-agent (v4.0):** `.../ai-engineering-pipeline/projects/termux-ai-agent/`
-- **TERMINAL_AI_STUDIO_MOBILE.md:** `freebuff/pompts/TERMINAL_AI_STUDIO_MOBILE.md`
+- **termux-ai-agent (v4.0):** `.../ai-engineering-pipeline/projects_17/termux-ai-agent/`
+- **039_12_terminal_ai_studio_mobile.md:** `freebuff/pompts_11/039_12_terminal_ai_studio_mobile.md`
 - **BUFFY.md:** `freebuff/BUFFY.md`
 
 ---

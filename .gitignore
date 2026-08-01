@@ -76,11 +76,11 @@ Thumbs.db
 *.session-journal
 
 # Project runtime data
-context/
-data/
-logs/
+context_12/
+data_13/
+logs_14/
 # Keep the sessions/ directory itself (referenced in BUFFY.md tree)
-sessions/*
+sessions_15/*
 !sessions/.gitkeep
 
 # Node (playground)
@@ -103,4 +103,4 @@ buffy-playground/dist/
 *.pulse_snapshot.json
 
 # Generated drift report (drift_check writes it on every run)
-docs/DRIFT_REPORT.md
+docs_10/DRIFT_REPORT.md

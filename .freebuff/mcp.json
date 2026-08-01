@@ -4,7 +4,7 @@
       "type": "stdio",
       "command": "python3",
       "args": [
-        "/storage/emulated/0/PROJECTS/workstation/freebuff/freebuff_plugin/mcp_server.py"
+        "/storage/emulated/0/PROJECTS/workstation/freebuff/freebuff_plugin_03/mcp_server.py"
       ***REMOVED***,
       "description": "Freebuff Plugin: context memory, session logging, intent routing"
     ***REMOVED***

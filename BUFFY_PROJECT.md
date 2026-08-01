@@ -29,7 +29,7 @@
 │                       1. BUFFY CORE                              │
 │  ┌────────────┐  ┌────────────┐  ┌──────────┐  ┌─────────────┐  │
 │  │  Context   │  │  Task Mgr  │  │  Memory  │  │  Document   │  │
-│  │  Manager   │  │ (TASK.md)  │  │  Engine  │  │  (docs/)    │  │
+│  │  Manager   │  │ (TASK.md)  │  │  Engine  │  │  (docs_10/)    │  │
 │  └─────┬──────┘  └─────┬──────┘  └────┬─────┘  └──────┬──────┘  │
 │        │               │              │               │          │
 │  ┌─────▼───────────────▼──────────────▼───────────────▼──────┐  │
@@ -88,8 +88,8 @@
 **Model Agnostic + Project State First + Task System**
 - LLM — сменный исполнитель. Ядро не зависит от модели.
 - Главная сущность — состояние проекта, не чат.
-- Каждый проект: TASK.md, ROADMAP.md, CHANGELOG.md, MEMORY.db, docs/
-- ContextManager (SQLite), Memory Engine, Task Mgr (TASK.md), Document (docs/)
+- Каждый проект: TASK.md, ROADMAP.md, CHANGELOG.md, MEMORY.db, docs_10/
+- ContextManager (SQLite), Memory Engine, Task Mgr (TASK.md), Document (docs_10/)
 
 ### 🟦 Слой 2 — Context Builder 🟡
 Контекст собирается динамически перед каждым запросом:
@@ -175,12 +175,12 @@ LLM — сменный исполнитель. Система не зависи�
 |------|--------|-----------|
 | Streaming Context | ✅ Production | ContextManager, stream_session, Context FULL rollup |
 | Task System | ✅ Production | TASK.md, CHANGELOG.md, TASK_TEMPLATE.md |
-| Capability Router | ✅ Production | core/router.py — data-driven scoring |
-| Memory Engine | ✅ Production | scripts/memory_engine.py — 5 уровней |
+| Capability Router | ✅ Production | core_02/router.py — data-driven scoring |
+| Memory Engine | ✅ Production | scripts_01/memory_engine.py — 5 уровней |
 | Context Builder | 🟡 Каркас | MemoryEngine.build_context(), StreamBridge |
 | Tool Runtime | 🟡 Каркас | overlay_server, auto_save, SDK bridge |
-| Knowledge Engine | 🟡 MVP | TF-IDF + SVD индекс, поиск в scripts/knowledge_engine.py |
-| Event Bus | 🟡 Каркас | scripts/event_bus.py + event_subscribers.py |
+| Knowledge Engine | 🟡 MVP | TF-IDF + SVD индекс, поиск в scripts_01/knowledge_engine.py |
+| Event Bus | 🟡 Каркас | scripts_01/event_bus.py + event_subscribers.py |
 | Orchestrator | 🟡 Каркас | FSM/DAG, шаги, валидаторы, parallel execution |
 | Plugin System | 🔴 Не начат | В Phase 4 |
 | Flutter UI | 🔴 Не начат | В Phase 5 |
@@ -196,11 +196,11 @@ Buffy Project/
 ├── TASK.md                ← текущая задача
 ├── CHANGELOG.md           ← журнал изменений
 │
-├── core/                  ← ядро (interfaces, router)
-├── scripts/               ← инструменты (context_manager, memory_engine, stream_session, ...)
-├── tests/                 ← 94 теста
+├── core_02/                  ← ядро (interfaces, router)
+├── scripts_01/               ← инструменты (context_manager, memory_engine, stream_session, ...)
+├── tests_09/                 ← 94 теста
 │
-├── context/               ← состояние
+├── context_12/               ← состояние
 │   ├── memory/working/    ← Working Memory (Memory Engine)
 │   ├── memory/project/    ← Project Memory
 │   ├── memory/knowledge/  ← Knowledge Memory
@@ -210,8 +210,8 @@ Buffy Project/
 │   ├── checkpoints/       ← чекпоинты
 │   └── summaries/         ← конспекты
 │
-├── docs/                  ← документация
-└── projects/              ← проекты под управлением
+├── docs_10/                  ← документация
+└── projects_17/              ← проекты под управлением
 ```
 
 ---
