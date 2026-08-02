@@ -6,6 +6,38 @@
 
 ---
 
+## [5.39.2***REMOVED*** — 2026-08-02
+
+### Исправлено
+- **AST-vs-pytest gap closure в `consistency_check.count_test_functions` (reviewer [5.38.0***REMOVED*** finding закрыт наконец)**: tight-фильтр через новый `_PytestCollectionVisitor` (ast.NodeVisitor с class-stack tracking) + добавлен публичный diagnostic `diagnose_test_count_gap(workspace)` для ground-truth Set-A vs Set-B validation. **Gap 30 → 0** после:
+  - **Class-chain signature fix** — Set-A ключ теперь `(file, class_chain, function)` вместо `(file, line, function)`. Без этого одинаковые `test_register_and_get` в разных классах одного файла (TestAgentRegistry vs TestMCPRegistry) схлопывались в один set entry на pytest-стороне → 30 phantom ast_only
+  - **Subprocess hardening** в `diagnose_test_count_gap`: `subprocess.run(...)` теперь имеет explicit `shell=False` (regression-guard против CQS §3.1); TimeoutExpired → `pytest_count=-1` sentinel + empty `ast_only` (не misleading full-set как раньше); parametrize count выводится для visibility
+  - **Duplicate class rename** в `tests_09/test_consistency_check.py`: `TestRealProject` (на строке 616; конфликт с тем же именем на строке 381) → **`TestRealWorkspaceConsistent`**. pytest collects only last class with same name per module, поэтому первая группа из 12 test_* методов была phantom в ast_only даже после фильтра; rename делает обе группы collectible
+  - **3-tuple unpack fix** в `count_test_functions`: предыдущая версия распаковывала `(total, _excluded)` пока `diagnose_test_collection` возвращает `(total, exclusions, counted)` → 20 падений `ValueError: too many values to unpack (expected 2, got 3)` в `test_consistency_check.py::TestCountTestFunctions` / `TestCheckTestCounter` / `TestReport`. Теперь: `total, _excluded, _counted = diagnose_test_collection(workspace)`
+
+### Добавлено
+- **6 regression tests** в `tests_09/test_consistency_check.py::TestPytestCollectionVisitor` (+ новая секция в TestCountCountSectionGrouping):
+  - `test_visitor_counts_module_level_function` — `def test_x()` на module level → counted
+  - `test_visitor_counts_test_prefixed_class_method` — method класса с именем `TestXxx` → counted
+  - `test_visitor_skips_helper_class_method` — method `IntegrationHelper.test_y` → excluded с reason
+  - `test_visitor_skips_pytest_fixture_decorated` — `@pytest.fixture` над `test_z` → excluded
+  - `test_visitor_counts_unittest_testcase_subclass` — `class LegacyTC(unittest.TestCase)` → counted через TestCase inheritance rule
+  - `test_visitor_counts_async_module_level` — `async def test_async()` → counted (асинхронные тесты тоже собираются)
+  - **e2e regression**: `test_count_test_functions_matches_pytest_collect_only_on_real_project` — инвариант: для PROJECT_ROOT `count_test_functions == pytest --collect-only count` (клозюр gap<=1). Если кто-то завтра снова введёт duplicate class names ИЛИ сломает visitor contract, это ловится на pre-commit / CI, не на проде
+
+### Проверка
+- `python -m pytest tests_09/test_consistency_check.py -q` — **47 passed** (39 было + 6 новых TestPytestCollectionVisitor)
+- `python -m pytest tests_09/ -q` — **1891 passed, 1 skipped, 0 failures** (exit 0; 1891 collected) — counter reconciles AST ↔ pytest на реальном проекте (gap = 0)
+- `python -c 'from scripts_01.consistency_check import diagnose_test_count_gap; ...'` — `ast_count=1883, pytest_count=1883, ast_only=[***REMOVED***, pytest_only=[***REMOVED***, parametrize_doubled=2` (ground-truth подтвержжёт)
+- `python scripts_01/consistency_check.py --report` — **Consistent** (exit 0; test_counter, naming_convention и 7 других проверок согласованы)
+- `python scripts_01/drift_check.py --force --report` — **No drift detected** (exit 0)
+- `python -m py_compile scripts_01/consistency_check.py tests_09/test_consistency_check.py` — 0 errors
+
+### Code review
+- `code-reviewer-minimax-m3` (final round, parallel с validation): **approved** (0 blocking). 3 non-blocking observations зафиксированы как follow-ups: (а) `class_chain` хранится как `list` (mutable) в `counted` dict — безопасно сегодня через `_chain_key()=str`, но downstream callers могут нарваться на unhashable list; (б) 1 sla line потенциально содержит stale comment-version ref в `count_test_functions` docstring (`round-1 5.38.0 reviewer consistency math finding` — это conversation-context noise); (в) `pytest_count=-1` sentinel для TimeoutExpired задокументирован inline, но неконтрактно исключит скусчные intermediate uses
+
+---
+
 ## [5.39.1***REMOVED*** — 2026-08-02
 
 ### Добавлено

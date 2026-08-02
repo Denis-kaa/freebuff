@@ -456,32 +456,295 @@ _VERSION_HEADER_RE = re.compile(r"^## \[(\d+)\.(\d+)\.(\d+)\***REMOVED***", re.M
 
 
 def count_test_functions(workspace: Path) -> int:
-    """Число test-функций в tests_09/ (AST, рекурсивно по подкаталогам).
+    """Число pytest-collectible test-функций в tests_09/ (ast.NodeVisitor).
 
-    Реальность для сверки счётчика: каждый `def test_*` / `async def test_*`
-    в `tests_09/**/*.py` — один тест. Ограничение (осознанное): параметризованные
-    тесты считаются как одна функция, а пропущенные (`skip`) — как обычные
-    (AST-счётчик может отличаться от задокументированного "N passed" на
-    ±число параметризаций/skip). Проверка ловит главный сценарий дрейфа:
-    добавление/удаление тест-файлов и функций без обновления
-    CHANGELOG/CODE_QUALITY_STANDARD.
+    Зеркалит pytest collection rules БЕЗ runtime-зависимости на pytest:
+      - module-level `def test_*()` или `async def test_*()` → counted
+      - method `test_*(self)` inside class where class.name matches `^Test`
+        или класса наследует `unittest.TestCase` / `TestCase` → counted
+      - `@pytest.fixture` decorator → excluded (fixtures, not tests)
+      - method inside helper class (e.g., `class IntegrationHelper`) with name
+        starting `test_` → excluded
+      - methods starting `_test_*` → excluded (private, name won't match)
+
+    Closes the AST-vs-pytest gap that pure `ast.walk` had (helper methods
+    incorrectly counted). Tightened in [5.39.2***REMOVED*** (round-1 5.38.0 reviewer
+    consistency math finding).
+    """
+    total, _excluded, _counted = diagnose_test_collection(workspace)
+    return total
+
+
+def diagnose_test_collection(workspace: Path) -> tuple[int, list[dict[str, Any***REMOVED******REMOVED***, list[dict[str, Any***REMOVED******REMOVED******REMOVED***:
+    """Число pytest-collectible tests + exclusion-context'ы + counted-test'ы.
+
+    Returns:
+        (count, exclusions, counted)
+        count = pytest-collectible test count (AST-based)
+        exclusions = list of dict(file, function, line, reason) — функции,
+            которые НЕ считаются (helper-class, fixture, private)
+        counted = list of dict(file, function, line) — функции, которые
+            считаются (для Set-A vs Set-B diff с pytest --collect-only)
     """
     tests_dir = workspace / "tests_09"
     if not tests_dir.is_dir():
-        return 0
+        return 0, [***REMOVED***, [***REMOVED***
     total = 0
+    exclusions: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    counted: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
     for py in sorted(tests_dir.rglob("*.py")):
         try:
-            tree = ast.parse(py.read_text(encoding="utf-8"))
-        except (OSError, SyntaxError):
+            source = py.read_text(encoding="utf-8")
+        except OSError:
             continue
-        for node in ast.walk(tree):
-            if (
-                isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
-                and node.name.startswith("test_")
-            ):
-                total += 1
-    return total
+        try:
+            tree = ast.parse(source)
+        except SyntaxError:
+            continue
+        visitor = _PytestCollectionVisitor(py.name)
+        visitor.visit(tree)
+        total += visitor.count
+        exclusions.extend(visitor.exclusions)
+        counted.extend(visitor.counted)
+    return total, exclusions, counted
+
+
+def _chain_key(parts: list[str***REMOVED***) -> str:
+    """Normalise a class-chain (list of class names) to a stable string key.
+
+    '' для module-level test_* (chain пустая).
+    'TestA' для метода inner-TestA class.
+    'TestA::TestNested' для вложенного класса внутри TestA.
+    """
+    return "::".join(parts) if parts else ""
+
+
+def diagnose_test_count_gap(workspace: Path) -> dict[str, Any***REMOVED***:
+    """[5.39.2***REMOVED*** Ground-truth diagnostic: AST-set vs pytest-set разница.
+
+    Реальные pytest collectible tests отличаются от AST-выводимого count
+    по причинам, которые не видны в AST:
+      - `pytest_collection_modifyitems` filter (плагины)
+      - string-based type hint evaluation failures
+      - classes с metaclass=ABC или другие хитрые паттерны
+      - параметризация (parametrize maps 1 AST → N pytest items, обратная сторона gap)
+
+    Этот diagnostic возвращает Set-A (AST) и Set-B (pytest --collect-only)
+    с разницей — `ast_only` показывает функции, которые AST считает тестами,
+    но pytest игнорирует; `pytest_only` показывает функции, которые pytest
+    считает тестами, но AST пропустил (например, обернутые в метаклассы).
+
+    [5.39.2 round-2***REMOVED*** Сигнатура элемента — (file, class_chain, function),
+    где class_chain = 'TestA::TestNested' для method-of-class (или '' для
+    module-level). Без class_chain одинаковые 'test_register_and_get' в
+    разных классах одного файла (TestAgentRegistry и TestMCPRegistry)
+    нормализуются в ОДИН tuple, и pytest_set теряет детализацию → ложный
+    gap в десятки entries.
+
+    Запускает `pytest --collect-only -q --no-header` (subprocess, stdlib).
+    Args:
+        workspace: корень workspace.
+    Returns:
+        dict с keys `ast_count`, `pytest_count`, `ast_only` (list),
+        `pytest_only` (list), `parametrize_doubled` (int).
+    """
+    import subprocess
+
+    _, _excluded, counted = diagnose_test_collection(workspace)
+    ast_set: set[tuple[str, str, str***REMOVED******REMOVED*** = {
+        (c["file"***REMOVED***, _chain_key(c["class_chain"***REMOVED***), c["function"***REMOVED***) for c in counted
+    ***REMOVED***
+
+    # Запустить pytest --collect-only, парсить output.
+    try:
+        proc = subprocess.run(
+            [sys.executable, "-m", "pytest", "tests_09/", "--collect-only", "-q", "--no-header"***REMOVED***,
+            cwd=str(workspace),
+            capture_output=True,
+            text=True,
+            timeout=300,
+            check=False,
+            shell=False,  # explicit: regression-guard (CQS §3.1 argv-list)
+        )
+    except subprocess.TimeoutExpired:
+        # Sentinel: pytest_count=-1 означает «неизвестно» (не путать с 0 = «точно пусто»).
+        return {
+            "ast_count": len(ast_set),
+            "pytest_count": -1,
+            "ast_only": [***REMOVED***,
+            "pytest_only": [***REMOVED***,
+            "parametrize_doubled": 0,
+            "error": "pytest --collect-only timed out",
+        ***REMOVED***
+
+    pytest_set: set[tuple[str, str, str***REMOVED******REMOVED*** = set()
+    parametrize_count = 0
+    for line in proc.stdout.splitlines():
+        line = line.strip()
+        if "::" not in line:
+            continue
+        # Format: tests_09/test_file.py::TestClass::test_method[param_value***REMOVED***
+        # or tests_09/test_file.py::test_module_func
+        parts = line.split("::")
+        if len(parts) < 2:
+            continue
+        file_part = parts[0***REMOVED***
+        test_parts = parts[1:***REMOVED***
+        # Identity-level chain = test_parts без последнего элемента (= function name).
+        # Last element может иметь parametrize brackets '[a,b***REMOVED***' — strip them.
+        func_with_params = test_parts[-1***REMOVED***
+        func_name = func_with_params.split("[", 1)[0***REMOVED*** if "[" in func_with_params else func_with_params
+        chain = test_parts[:-1***REMOVED***  # class chain (может быть пусто для module-level)
+        file_basename = Path(file_part).name
+        pytest_set.add((file_basename, _chain_key(chain), func_name))
+        # Count parametrize expansions.
+        if "[" in func_with_params:
+            parametrize_count += 1
+
+    # Compute diff.
+    ast_only = sorted(ast_set - pytest_set)
+    pytest_only = sorted(pytest_set - ast_set)
+
+    return {
+        "ast_count": len(ast_set),
+        "pytest_count": len(pytest_set),
+        "ast_only": ast_only,
+        "pytest_only": pytest_only,
+        "parametrize_doubled": parametrize_count,
+    ***REMOVED***
+
+
+
+
+class _PytestCollectionVisitor(ast.NodeVisitor):
+    """AST-visitor для pytest-collectible test-функций.
+
+    Args:
+        filename: имя .py файла (для diagnostics).
+
+    Attributes:
+        count: pytest-collectible test count для этого файла.
+        exclusions: list of dict(file, function, line, reason) для каждой
+            функции, имя которой начинается с `test_`, но которая не является
+            pytest-collectible (helper-class, fixture, private).
+        counted: list of dict(file, function, line) для каждого посчитанного
+            теста (для Set-A vs Set-B diff с pytest --collect-only).
+    """
+
+    def __init__(self, filename: str) -> None:
+        self.filename = filename
+        self.count = 0
+        self.exclusions: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+        # [5.39.2***REMOVED*** Set-A diff tracking: каждый посчитанный test_ сохраняем
+        # с (file, line, function) для сверки с pytest --collect-only output.
+        self.counted: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+        # Stack текущих class-ов (для nested classes); верх — immediate parent.
+        self._class_stack: list[ast.ClassDef***REMOVED*** = [***REMOVED***
+
+
+
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:  # type: ignore[override***REMOVED***
+        self._class_stack.append(node)
+        self.generic_visit(node)
+        self._class_stack.pop()
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:  # type: ignore[override***REMOVED***
+        self._evaluate(node)
+        self.generic_visit(node)
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:  # type: ignore[override***REMOVED***
+        self._evaluate(node)
+        self.generic_visit(node)
+
+    # ── helpers ────────────────────────────────────────────────────
+    def _evaluate(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+        if not node.name.startswith("test_"):
+            return
+        # _test_* — private, не считаем (имя начинается с `_` после `test`).
+        # Covered by name.startswidth('test_') check above + the next check:
+        if node.name.startswith("_test"):
+            self._exclude(node, "private method (name starts with _test)")
+            return
+        # Check decorator list на pytest.fixture / @fixture.
+        for dec in node.decorator_list:
+            if self._decorator_is(dec, "fixture") or self._decorator_is(dec, "pytest.fixture"):
+                self._exclude(node, "decorated with @fixture")
+                return
+        # Class context.
+        if not self._class_stack:
+            # module-level test_* — collectible.
+            self._record_counted(node)
+            return
+        # Method of a class — count only if class is named Test* or inherits TestCase.
+        parent = self._class_stack[-1***REMOVED***
+        if parent.name.startswith("Test") or self._is_testcase_subclass(parent):
+            self._record_counted(node)
+        else:
+            self._exclude(node, f"inside non-collectible class '{parent.name***REMOVED***'")
+
+    def _record_counted(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
+        """Increment counter + запомнить для Set-A diff с pytest.
+
+        [5.39.2***REMOVED*** class_chain хранит стек class-имён, в котором метод
+        находится (e.g., ['TestAgentRegistry'***REMOVED***, ['TestBridge', 'TestNested'***REMOVED***).
+        Нужен для однозначного diff с pytest --collect-only output, который
+        выдаёт идентификаторы как 'tests_09/test_bridge_layer.py::TestA::test_x'
+        — без class_chain парсер нормализует разные классы в один tuple
+        и теряет детализацию.
+        """
+        self.count += 1
+        self.counted.append({
+            "file": self.filename,
+            "function": node.name,
+            "class_chain": [c.name for c in self._class_stack***REMOVED***,  # mutable list
+            "line": node.lineno,
+        ***REMOVED***)
+
+    def _is_testcase_subclass(self, cls: ast.ClassDef) -> bool:
+        """Return True если cls явно наследует TestCase (unittest.TestCase)."""
+        for base in cls.bases:
+            if isinstance(base, ast.Name) and base.id == "TestCase":
+                return True
+            # `unittest.TestCase` или `unitest_test_case.X.TestCase` (последний сегмент)
+            if isinstance(base, ast.Attribute):
+                attr_name = ".".join(self._attr_dotted(base))
+                if attr_name.endswith(".TestCase") or attr_name == "TestCase":
+                    return True
+        return False
+
+    @staticmethod
+    def _attr_dotted(node: ast.Attribute) -> list[str***REMOVED***:
+        """Восстановить dotted path у ast.Attribute (e.g., unittest.TestCase)."""
+        parts: list[str***REMOVED*** = [***REMOVED***
+        cur: ast.AST = node
+        while isinstance(cur, ast.Attribute):
+            parts.append(cur.attr)
+            cur = cur.value
+        if isinstance(cur, ast.Name):
+            parts.append(cur.id)
+        return list(reversed(parts))
+
+    @staticmethod
+    def _decorator_is(dec: ast.AST, target: str) -> bool:
+        """dec — это `target` decorator? Поддерживает bare name и `decorator(...)` call."""
+        # decorator(...): .func это сам decorator
+        func = dec.func if isinstance(dec, ast.Call) else dec
+        if isinstance(func, ast.Name) and func.id == target.split(".")[-1***REMOVED***:
+            return target in (func.id, target)
+        if isinstance(func, ast.Attribute):
+            # dotted: pytest.fixture → ('pytest', 'fixture')
+            dotted = ".".join(_PytestCollectionVisitor._attr_dotted(func))
+            return dotted == target
+        return False
+
+    def _exclude(self, node: ast.FunctionDef | ast.AsyncFunctionDef, reason: str) -> None:
+        self.exclusions.append({
+            "file": self.filename,
+            "function": node.name,
+            "line": node.lineno,
+            "reason": reason,
+        ***REMOVED***)
 
 
 def _full_suite_count(text: str) -> int | None:
@@ -645,10 +908,19 @@ def main() -> int:
     parser.add_argument("--workspace", default=str(PROJECT_ROOT), help="Path to freebuff workspace")
     parser.add_argument("--report", action="store_true", help="Print report to stdout")
     parser.add_argument("--json", action="store_true", help="JSON output")
+    parser.add_argument(
+        "--diagnose-test-count", action="store_true",
+        help="Run ground-truth AST vs pytest --collect-only diff diagnostic ([5.39.2***REMOVED***)",
+    )
     args = parser.parse_args()
 
     workspace = Path(args.workspace)
     report = run_consistency_check(workspace)
+
+    if args.diagnose_test_count:
+        gap = diagnose_test_count_gap(workspace)
+        print(json.dumps(gap, ensure_ascii=False, indent=2))
+        return 0
 
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))

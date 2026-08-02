@@ -17,6 +17,7 @@ Tests:
 
 from __future__ import annotations
 
+import ast
 import sys
 ***REMOVED***
 
@@ -498,6 +499,160 @@ class TestCountTestFunctions:
         assert count_test_functions(tmp_path) == 0
 
 
+class TestPytestCollectionVisitor:
+    """[5.39.2***REMOVED*** Regression-gate для `_PytestCollectionVisitor` (consistency_check).
+
+    Защищает от регрессии в фильтре AST test-functions
+    (helper-class / fixture / private / TestCase subclass / async edges),
+    плюс e2e invariant на реальном PROJECT_ROOT, чтобы gap не вернулся.
+
+    Если кто-то завтра снова введёт `class TestX` дубликат в одном модуле или
+    сломает `_decorator_is` для `@pytest.fixture`, e2e ловит на pre-commit / CI,
+    а не на проде.
+    """
+
+    def test_visitor_counts_module_level_function(self) -> None:
+        from scripts_01.consistency_check import _PytestCollectionVisitor as V
+        v = V("synthetic.py")
+        v.visit(ast.parse("def test_one(): pass\ndef test_two():\n    pass\n"))
+        assert v.count == 2
+        assert v.exclusions == [***REMOVED***
+
+    def test_visitor_counts_test_prefixed_class_method(self) -> None:
+        from scripts_01.consistency_check import _PytestCollectionVisitor as V
+        v = V("synthetic.py")
+        v.visit(ast.parse(
+            "class TestHealth:\n"
+            "    def test_endpoint_returns_200(self):\n        pass\n"
+            "    def test_endpoint_returns_500(self):\n        pass\n"
+        ))
+        assert v.count == 2
+        assert v.exclusions == [***REMOVED***
+
+    def test_visitor_skips_helper_class_method(self) -> None:
+        from scripts_01.consistency_check import _PytestCollectionVisitor as V
+        v = V("synthetic.py")
+        v.visit(ast.parse(
+            "class IntegrationHelper:\n"
+            "    def test_internal_logic(self):\n        pass\n"
+        ))
+        assert v.count == 0
+        assert len(v.exclusions) == 1
+        assert "IntegrationHelper" in v.exclusions[0***REMOVED***["reason"***REMOVED***
+
+    def test_visitor_skips_pytest_fixture_decorated(self) -> None:
+        from scripts_01.consistency_check import _PytestCollectionVisitor as V
+        v = V("synthetic.py")
+        v.visit(ast.parse(
+            "import pytest\n"
+            "@pytest.fixture\n"
+            "def test_fixture_helper():\n    yield None\n"
+        ))
+        assert v.count == 0
+        assert len(v.exclusions) == 1
+        assert "fixture" in v.exclusions[0***REMOVED***["reason"***REMOVED***.lower()
+
+    def test_visitor_counts_unittest_testcase_subclass(self) -> None:
+        from scripts_01.consistency_check import _PytestCollectionVisitor as V
+        v = V("synthetic.py")
+        v.visit(ast.parse(
+            "import unittest\n"
+            "class LegacyTC(unittest.TestCase):\n"
+            "    def test_legacy_method(self):\n        pass\n"
+        ))
+        assert v.count == 1
+        assert v.exclusions == [***REMOVED***
+
+    def test_visitor_counts_async_module_level(self) -> None:
+        from scripts_01.consistency_check import _PytestCollectionVisitor as V
+        v = V("synthetic.py")
+        v.visit(ast.parse("async def test_async_one(): pass\n"))
+        assert v.count == 1
+        assert v.exclusions == [***REMOVED***
+
+    def test_visitor_silently_skips_non_test_prefixed_methods(self) -> None:
+        """Методы без префикса `test_` молча игнорируются (ни counted, ни excluded).
+
+        Visitor занимается только pytest-collectible, не всеми `def`-ами. Имена
+        `_test_*` тоже silent skip, потому что не начинаются с `test_`
+        (начинаются с `_test`). Это OK — visitor не пишет шум про intent-not-test
+        методы. Dead branch `_test` exclusion в `_evaluate` оставлен как
+        стражение причинения (появится кто-то вытрет — этот тест докажет, что
+        удаление безопасное).
+        """
+        from scripts_01.consistency_check import _PytestCollectionVisitor as V
+        v = V("synthetic.py")
+        v.visit(ast.parse(
+            "class TestOuter:\n"
+            "    def test_collectible(self):\n        pass\n"
+            "    def helper_method(self):\n        pass\n"
+            "    def _test_private_helper(self):\n        pass\n"
+        ))
+        assert v.count == 1, f"only test_collectible должен считаться, got {v.count***REMOVED***"
+        assert v.exclusions == [***REMOVED***, (
+            f"non-test_-prefixed не должны попадать в exclusions, got {v.exclusions***REMOVED***"
+        )
+
+    def test_count_test_functions_matches_pytest_collect_only_on_real_project(self) -> None:
+        """e2e invariant: для PROJECT_ROOT AST count == pytest --collect-only count (deduped).
+
+        Парсит pytest output ТАК ЖЕ как `diagnose_test_count_gap` (strip `[...***REMOVED***` brackets,
+        dedup by `(file_basename, class_chain, func_name)`). Это настоящий gap-closure
+        contract: parametrize-экспансия не раздувает счётчик, потому что все
+        расширения одного `test_x` dedup'ятся в одну set-entry. Это и есть
+        то, что `[5.39.2***REMOVED***` закрыл.
+        """
+        import subprocess
+        from scripts_01.consistency_check import _chain_key
+
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "pytest",
+                "tests_09/",
+                "--collect-only",
+                "-q",
+                "--no-header",
+            ***REMOVED***,
+            cwd=str(PROJECT_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+            shell=False,  # CQS §3.1 regression-guard (explicit even though default)
+        )
+
+        # Reproduce Set-A vs Set-B matching from diagnose_test_count_gap.
+        pytest_set: set[tuple[str, str, str***REMOVED******REMOVED*** = set()
+        for line in result.stdout.splitlines():
+            line = line.strip()
+            if "::" not in line:
+                continue
+            parts = line.split("::")
+            if len(parts) < 2:
+                continue
+            file_basename = Path(parts[0***REMOVED***).name
+            test_parts = parts[1:***REMOVED***
+            func_with_params = test_parts[-1***REMOVED***
+            func_name = (
+                func_with_params.split("[", 1)[0***REMOVED***
+                if "[" in func_with_params else func_with_params
+            )
+            chain = test_parts[:-1***REMOVED***
+            pytest_set.add((file_basename, _chain_key(chain), func_name))
+
+        ast_count = count_test_functions(PROJECT_ROOT)
+        pytest_count = len(pytest_set)
+        assert ast_count == pytest_count, (
+            f"AST/pytest (deduped) gap в PROJECT_ROOT: AST={ast_count***REMOVED*** vs "
+            f"pytest={pytest_count***REMOVED***. Типичные причины: (1) дубль class TestX в "
+            f"одном модуле (pytest collects only last), (2) visitor regex bug, "
+            f"(3) class_chain/string desync в _chain_key. Если это parametrize "
+            f"inflation — вычисли AST/pytest по set, а не по raster lines."
+        )
+
+
 class TestCheckTestCounter:
     def _seed_consistent(self, ws: Path, n: int = 3) -> None:
         """tests_09 с n тестами + CHANGELOG/CQS с совпадающим счётчиком n."""
@@ -613,7 +768,13 @@ class TestReport:
 # ═══════════════════════════════════════════════════════════════
 
 
-class TestRealProject:
+class TestRealWorkspaceConsistent:
+    """[5.39.2 rename***REMOVED*** вторая группа с именем TestRealProject теневая первой
+    (TestRealProject на строке 381 несёт 12 test_* методов). pytest собирает
+    только последний класс с уникальным именем в модуле → первая группа
+    становилась ast_only phantom в [5.39.0***REMOVED*** consistency_check. Теперь обе
+    группы под уникальными именами, pytest собирает все 13, gap == 0."""
+
     def test_real_project_consistent(self):
         """Фактический проект должен проходить проверку (все реестры согласованы)."""
         report = build_report(PROJECT_ROOT)
