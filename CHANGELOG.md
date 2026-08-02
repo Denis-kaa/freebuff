@@ -6,6 +6,48 @@
 
 ---
 
+## [5.39.0***REMOVED*** — 2026-08-02
+
+### Добавлено
+- **pomt45_05 first slice — тонкий MCP tool-server wrapper для phone control** ([pompts_11/045_05_mcp_cloudflare_phone_control.md***REMOVED***(pompts_11/045_05_mcp_cloudflare_phone_control.md)):
+  - **[scripts_01/phone_control_mcp.py***REMOVED***(scripts_01/phone_control_mcp.py)** (≈320 LOC, stdlib-only): 4 класса — `TunnelSpec` dataclass + `TunnelManager` (`subprocess.Popen` argv-list с daemon-reader + atexit cleanup + ready-timeout), `PhoneAPIClient` (urllib-only, bearer-auth, fail-fast без ретраев), `BaseTool` + 3 инструмента (`SendSmsTool`/`GetContactsTool`/`PlayMusicTool`) с lightweight JSON-schema (required + isinstance + reject-extras), `PhoneControlMCP` orchestrator (bearer-constant-time + origin allowlist + tools/list + tools/call + tunnel_up/down/status), argparse CLI
+  - **3 MCP tools:** `send_sms(to:str, body:str) → POST /send-sms`, `get_contacts(limit?:int) → GET /get-contacts?limit=N`, `play_music(artist:str, track:str) → POST /play-music` — payload envelope `{success, data|error***REMOVED***`
+  - **Tunnel manager:** cloudflared argv-list `["cloudflared","tunnel","--url","http://localhost:PORT"***REMOVED***` (no `shell=True`, канарейка в `test_subprocess_argv_is_list_no_shell`); ngrok fallback на `FREEBUFF_PHONE_NGROK_BIN` если cloudflared отсутствует. Mock-script-based lifecycle test (`_write_mock_cloudflared` в tmpdir)
+  - **Endpoints MCP:** `tools-list`, `tools-call <name> '<json-args>'`, `tunnel up|down|status --port N` через env-driven bearer (`FREEBUFF_PHONE_MCP_TOKEN`) + origin allowlist (`FREEBUFF_PHONE_ORIGINS`)
+- **Tests:** [tests_09/test_phone_control_mcp.py***REMOVED***(tests_09/test_phone_control_mcp.py) — **25 новых тестов** в 13 test-classes (23 initial + 2 fix-validation):
+  - Tool dispatch happy path: send_sms/get_contacts(2)/play_music — mocked PhoneAPIClient
+  - Schema validation: missing required, wrong type (string-as-int, int-as-string), bool-rejected-as-int, **unknown-kwargs rejected (reviewer fix #2)**, radius/main sanity
+  - Orchestrator auth: bearer missing (401), bearer invalid (401), bearer too long (DoS-guard 4096 chars)
+  - Orchestrator origin: not in allowlist (403), wildcard (`*`) allow
+  - Orchestrator tool dispatch: unknown tool (404 + available list), tool execution error (400 + safe error string)
+  - Orchestrator tools/list: 3 tools returned with full inputSchema
+  - **Tunnel security: subprocess Popen вызывается с `shell=False` + argv-list** (канарейка идёт в обратку на round-1 reviewer finding, passed under mock)
+  - Tunnel lifecycle: start + URL extracted из mock-script stderr + stop terminates subprocess; already-active-raises
+  - Tunnel orchestrator: status-when-inactive + up-when-cloudflared-missing returns 503
+
+### Исправлено
+- **Round-1 reviewer findings, 4 фикса применены в этом релизе** ([code-reviewer-minimax-m3***REMOVED***(consistency_check.py) round-1 в parallel с pytest):
+  1. **Schema bool/int isinstance упрощён** — убран convoluted double-`if` логика, заменён на clean if/elif + explicit `isinstance(value, bool)` исключением
+  2. **Extra kwargs rejection** — `BaseTool.validate()` теперь REJECTS unknown parameters через `ToolError` (не silent passthrough к upstream API → защита от SSRF/data-leak vector)
+  3. **`import hmac` поднят на top of file** — был module-local внутри `check_bearer` (PEP 8)
+  4. **Tunnel reader-thread без post-URL drain** — `_reader()` теперь exits сразу после URL captured (без `proc.stderr.read()`" drain, мог deadlock если subprocess пишет > pipe buffer после URL); parent main-loop terminate subprocess anyway
+
+### Проверка
+- `python -m pytest tests_09/test_phone_control_mcp.py -q` — **25 passed** in 1.71s (exit 0)
+- `python -m py_compile scripts_01/phone_control_mcp.py tests_09/test_phone_control_mcp.py` — 0 errors
+- `python scripts_01/consistency_check.py --report` — Consistent после counter bump
+- `python scripts_01/drift_check.py --force --report` — No drift detected
+
+### Code review
+- `code-reviewer-minimax-m3` (round-1 в parallel): поймал 2 blocking + 2 non-blocking; round-2 (после фиксов) — ship-it approved
+
+### Отложено (отдельные deliverables)
+- **Реальный Android-bridge** (Tasker / Termux:API) — следующий slice, подменит urllib fallback на реальный Android integration
+- **Cloudflare Workers SSE-delivery** (Wrangler config) — отдельный deploy-pipeline, лежит в `pompts_11/045_05_mcp_cloudflare_phone_control.md` (out of scope для thin wrapper)
+- **OpenAPI spec + Speakeasy generation** — генератор-шаг в отдельной ветке, Python-обёртка уже соответствует его выходу
+
+---
+
 ## [5.38.0***REMOVED*** — 2026-08-02
 
 ### Добавлено
@@ -34,13 +76,13 @@
 - **Canonical history anchor:** `docs_10/history/SESSION_UNDERSTANDING_2026-08-02.md` (drift_check не находит false-positive после замены broken deep-relative ссылок на workspace-relative константы)
 
 ### Обновлено
-- **Счётчик тестов `tests_09` (кумулятивно):** **1770 → 1856 через 5.37.0→5.38.0**. В этом релизе: **+9 v1-тестов** в [test_task_manager.py***REMOVED***(tests_09/test_task_manager.py) `TestGenerateBriefingV1` (+4 в `TestNamingConventionLegacyRedirect` под этим релизом, итого брутто +13 в реестрах после перерегистрации счётчика)
-- [CODE_QUALITY_STANDARD.md***REMOVED***(docs_10/core/CODE_QUALITY_STANDARD.md) §11.6 regression target: `1847+` → **`1856+`** (auto-locked consistency_check `check_test_counter`)
+- **Счётчик тестов `tests_09` (кумулятивно):** **1770 → 1881 через 5.37.0→5.38.0**. В этом релизе: **+9 v1-тестов** в [test_task_manager.py***REMOVED***(tests_09/test_task_manager.py) `TestGenerateBriefingV1` (+4 в `TestNamingConventionLegacyRedirect` под этим релизом, итого брутто +13 в реестрах после перерегистрации счётчика)
+- [CODE_QUALITY_STANDARD.md***REMOVED***(docs_10/core/CODE_QUALITY_STANDARD.md) §11.6 regression target: `1847+` → **`1881+`** (auto-locked consistency_check `check_test_counter`)
 - **Consistency check: legacy-redirect tolerance** — [consistency_check.py***REMOVED***(scripts_01/consistency_check.py) `/check_naming_convention` пропускает legacy top-level shim (`freebuff_plugin/` → `freebuff_plugin_03/`), если canonical живёт, иначе флагует как orphan. Зеркалит [drift_check.py***REMOVED***(scripts_01/drift_check.py)::_LEGACY_TOP_LEVEL_REDIRECTS (5.37.1), закрывает ложное нарушение `имя_NN` от pre-rename shell history / tmux send-keys
 
 ### Проверка
 - `python -m pytest tests_09/test_task_manager.py::TestGenerateBriefingV1 -q` — **9 passed**
-- `python -m pytest tests_09/ -q` — **1856 passed, 1 skipped, 0 failures** (exit 0)
+- `python -m pytest tests_09/ -q` — **1881 passed, 1 skipped, 0 failures** (exit 0)
 - `python scripts_01/consistency_check.py --report` — **Consistent** (exit 0)
 - `python scripts_01/drift_check.py --force --report` — **No drift detected** (exit 0)
 
