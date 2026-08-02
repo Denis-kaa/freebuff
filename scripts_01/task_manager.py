@@ -436,64 +436,363 @@ def delete_task(task_id: str, db_path: Path | str | None = None) -> bool:
 
 
 # ═══════════════════════════════════════════════════════════════
-# AI Briefing (заглушка v0; правило 8 + 9, promt42)
+# AI Briefing (v1; правило 8 + 9, promt42 — Knowledge + Work Area + model_gateway)
 # ═══════════════════════════════════════════════════════════════
+#
+# Pipeline (graceful degradation на каждом шаге):
+#   1. Fetch task + проверить task_type='meeting'             → иначе None
+#   2. Собрать evidence (4 независимых шага, каждый защищён try/except):
+#        - project_meta         (projects table)
+#        - linked_resources     (work_area_view.resources_for_project)
+#        - recent_tasks         (get_tasks по тому же проекту)
+#        - knowledge_hits       (KnowledgeEngine.search query={project_id***REMOVED***+title)
+#   3. Опциональная LLM-синтез (ModelGateway.generate_by_capabilities
+#      с capability='meeting_brief'). При любой ошибке / бypass env
+#      FREEBUFF_NO_LLM=1 — deterministic fallback.
+#   4. Compose markdown + briefing_generated=1 + updated_at.
+#
+# Все обёртки в try/except — одна просадка не блокирует, а даёт short-circuit
+# к [***REMOVED*** или {***REMOVED*** (graceful degradation, по [Knowledge as a Byproduct***REMOVED***, promt36
+# правило 10).
+
+
+# Лимиты v1: защита prompt-overflow при крупных проектах.
+_BRIEF_MAX_RESOURCES = 10        # top-N ресурсов
+_BRIEF_MAX_RECENT_TASKS = 5     # соседних задач
+_BRIEF_MAX_KNOWLEDGE_HITS = 3   # сниппетов из Knowledge
+_BRIEF_SNIPPET_CHARS = 500      # truncate each snippet
+_BRIEF_LLM_BUDGET = 800         # max_tokens для синтеза
+_BRIEF_LLM_TIMEOUT = 10         # секунд (защита от зависания API)
+
+
+def _gather_project_meta(
+    project_id: str, conn: sqlite3.Connection
+) -> dict[str, str***REMOVED***:
+    """projects table → {name, description, status, last_scanned***REMOVED***.
+
+    Graceful fallback к {***REMOVED*** если таблицы projects нет или запрос упал
+    — нормально в чистой БД до scan_projects или при unit-тестах.
+    """
+    try:
+        has = conn.execute(
+            "SELECT 1 FROM sqlite_master "
+            "WHERE type='table' AND name='projects'"
+        ).fetchone() is not None
+        if not has:
+            return {***REMOVED***
+        row = conn.execute(
+            "SELECT name, description, status, last_scanned "
+            "FROM projects WHERE name = ?",
+            (project_id,),
+        ).fetchone()
+    except sqlite3.OperationalError:
+        return {***REMOVED***
+    if row is None:
+        return {***REMOVED***
+    return {
+        "name": row[0***REMOVED*** or project_id,
+        "description": row[1***REMOVED*** or "",
+        "status": row[2***REMOVED*** or "",
+        "last_scanned": row[3***REMOVED*** or "",
+    ***REMOVED***
+
+
+def _gather_linked_resources(
+    project_id: str, db_path: Path | str | None
+) -> list[dict[str, str***REMOVED******REMOVED***:
+    """Work Area as View: ресурсы проекта из project_resources.
+
+    Top-N по created_at DESC. Использует существующий модуль — reuse first.
+    """
+    try:
+        from scripts_01.work_area_view import (
+            resources_for_project as _wav_resources,
+        )
+        rows = _wav_resources(project_id, db_path=db_path)
+    except Exception:
+        return [***REMOVED***
+    rows_sorted = sorted(
+        rows, key=lambda r: r.get("created_at", ""), reverse=True,
+    )[:_BRIEF_MAX_RESOURCES***REMOVED***
+    return rows_sorted
+
+
+def _gather_recent_tasks(
+    project_id: str, exclude_task_id: str, db_path: Path | str | None,
+) -> list[dict[str, Any***REMOVED******REMOVED***:
+    """Top-N последних задач проекта (без текущей) — соседний activity."""
+    try:
+        rows = get_tasks(project_id, db_path=db_path)
+    except Exception:
+        return [***REMOVED***
+    return [
+        r for r in rows
+        if r["id"***REMOVED*** != exclude_task_id
+    ***REMOVED***[:_BRIEF_MAX_RECENT_TASKS***REMOVED***
+
+
+def _gather_knowledge_hits(query: str) -> list[dict[str, Any***REMOVED******REMOVED***:
+    """KnowledgeEngine.search(query, top_k=3, mode='hybrid').
+
+    Lazy import + проверка наличия индекса. Любые ошибки → [***REMOVED*** (нельзя
+    брифинг сломать отсутствием knowledge).
+    """
+    try:
+        from scripts_01.knowledge_engine import KnowledgeEngine
+        # Индекс в context_12/knowledge/index.db (отдельный от tasks DB).
+        from scripts_01.knowledge_engine import DEFAULT_DB_PATH
+        index_db = Path(DEFAULT_DB_PATH)
+        if not index_db.is_absolute():
+            index_db = WORKSPACE / DEFAULT_DB_PATH
+        if not index_db.exists():
+            return [***REMOVED***
+        ke = KnowledgeEngine(workspace_root=str(WORKSPACE))
+        results = ke.search(
+            query, top_k=_BRIEF_MAX_KNOWLEDGE_HITS, mode="hybrid",
+        )
+    except Exception:
+        return [***REMOVED***
+    out: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    for r in results or [***REMOVED***:
+        out.append({
+            "doc_id": r.doc_id,
+            "score": round(float(r.score or 0.0), 4),
+            "snippet": (r.snippet or "")[:_BRIEF_SNIPPET_CHARS***REMOVED***,
+            "title": (r.metadata or {***REMOVED***).get("title", ""),
+            "source": (r.metadata or {***REMOVED***).get("source", ""),
+            "matched_terms": list(r.matched_terms or [***REMOVED***)[:6***REMOVED***,
+        ***REMOVED***)
+    return out
+
+
+def _generate_llm_synthesis(
+    task: dict[str, Any***REMOVED***,
+    proj_meta: dict[str, str***REMOVED***,
+    resources: list[dict[str, str***REMOVED******REMOVED***,
+    recent_tasks: list[dict[str, Any***REMOVED******REMOVED***,
+    knowledge: list[dict[str, Any***REMOVED******REMOVED***,
+) -> str | None:
+    """Опциональная LLM-синтез брифинга через ModelGateway.
+
+    Возвращает текст или None при любой ошибке / bypass env. Ошибка
+    НЕ блокирует — вызывающий код получит deterministic fallback.
+    """
+    if os.getenv("FREEBUFF_NO_LLM") == "1":
+        return None
+    try:
+        from scripts_01.model_gateway import ModelGateway
+        prompt = _compose_llm_prompt(
+            task, proj_meta, resources, recent_tasks, knowledge,
+        )
+        gw = ModelGateway()
+        resp = gw.generate_by_capabilities(
+            capabilities=["meeting_brief"***REMOVED***,
+            messages=[{"role": "user", "content": prompt***REMOVED******REMOVED***,
+            temperature=0.3,
+            max_tokens=_BRIEF_LLM_BUDGET,
+            timeout=_BRIEF_LLM_TIMEOUT,
+        )
+        content = getattr(resp, "content", None)
+        if not isinstance(content, str) or not content.strip():
+            return None
+        return content.strip()
+    except Exception:
+        return None
+
+
+def _compose_llm_prompt(
+    task: dict[str, Any***REMOVED***,
+    proj_meta: dict[str, str***REMOVED***,
+    resources: list[dict[str, str***REMOVED******REMOVED***,
+    recent_tasks: list[dict[str, Any***REMOVED******REMOVED***,
+    knowledge: list[dict[str, Any***REMOVED******REMOVED***,
+) -> str:
+    """Собирает контекст для LLM-промпта (markdown)."""
+    parts: list[str***REMOVED*** = [***REMOVED***
+    parts.append(f"# Задача: {task.get('title', '')***REMOVED***")
+    project_name = proj_meta.get("name") or task.get("project_id", "")
+    parts.append(f"**Проект:** {project_name***REMOVED***")
+    if proj_meta.get("description"):
+        parts.append(f"**Описание проекта:** {proj_meta['description'***REMOVED******REMOVED***")
+    parts.append(f"**Время:** {task.get('meeting_time') or '(не указано)'***REMOVED***")
+    parts.append(f"**Место:** {task.get('location') or '(не указано)'***REMOVED***")
+    participants = task.get("participants") or [***REMOVED***
+    parts.append(
+        f"**Участники:** "
+        f"{', '.join(participants) if participants else '(не указаны)'***REMOVED***"
+    )
+
+    if resources:
+        parts.append("\n## Связанные ресурсы проекта (Work Area as View)")
+        for r in resources:
+            parts.append(f"- {r['resource_id'***REMOVED******REMOVED***")
+
+    if recent_tasks:
+        parts.append("\n## Последние задачи проекта")
+        for r in recent_tasks:
+            parts.append(
+                f"- [{r['task_type'***REMOVED******REMOVED***/{r['status'***REMOVED******REMOVED***/{r['priority'***REMOVED******REMOVED******REMOVED*** "
+                f"{r['title'***REMOVED******REMOVED***"
+            )
+
+    if knowledge:
+        parts.append("\n## Связанные документы (Knowledge Engine)")
+        for h in knowledge:
+            title = h.get("title") or h["doc_id"***REMOVED***
+            parts.append(f"- [{title***REMOVED******REMOVED*** (score={h['score'***REMOVED******REMOVED***): {h['snippet'***REMOVED******REMOVED***")
+
+    parts.append(
+        "\n## Задание\n"
+        "Составь markdown-брифинг для встречи: ключевые риски, "
+        "открытые блокеры, что подготовить каждому участнику, "
+        "предложения по повестке. Опирайся на приведённый "
+        "контекст (проект, ресурсы, соседние задачи, документы). "
+        "Локанично, не повторяй контекст целиком — синтезируй."
+    )
+    return "\n".join(parts)
+
+
+def _compose_briefing_markdown(
+    task: dict[str, Any***REMOVED***,
+    proj_meta: dict[str, str***REMOVED***,
+    resources: list[dict[str, str***REMOVED******REMOVED***,
+    recent_tasks: list[dict[str, Any***REMOVED******REMOVED***,
+    knowledge: list[dict[str, Any***REMOVED******REMOVED***,
+    llm_synthesis: str | None,
+) -> str:
+    """Compose финального markdown-брифинга.
+
+    Sections:
+      Title → Meta → Project → Linked resources → Recent tasks →
+      Knowledge hits → LLM synthesis (или fallback note) → Footer.
+    """
+    lines: list[str***REMOVED*** = [***REMOVED***
+    project_name = proj_meta.get("name") or task.get("project_id", "")
+    lines.append(f"# Брифинг встречи: {task['title'***REMOVED******REMOVED***")
+    lines.append("")
+    lines.append("## Мета")
+    lines.append(f"- **Проект:** {project_name***REMOVED***")
+    lines.append(f"- **Задача:** {task['id'***REMOVED******REMOVED***")
+    lines.append(f"- **Время:** {task.get('meeting_time') or '(не указано)'***REMOVED***")
+    lines.append(f"- **Место:** {task.get('location') or '(не указано)'***REMOVED***")
+    participants = task.get("participants") or [***REMOVED***
+    lines.append(
+        f"- **Участники:** "
+        f"{', '.join(participants) if participants else '(не указаны)'***REMOVED***"
+    )
+
+    if proj_meta.get("description") or proj_meta.get("status"):
+        lines.append("")
+        lines.append("## Проект")
+        if proj_meta.get("description"):
+            lines.append(f"- Описание: {proj_meta['description'***REMOVED******REMOVED***")
+        if proj_meta.get("status"):
+            lines.append(f"- Статус: `{proj_meta['status'***REMOVED******REMOVED***`")
+
+    if resources:
+        lines.append("")
+        lines.append(f"## Связанные ресурсы ({len(resources)***REMOVED***)")
+        for r in resources:
+            lines.append(f"- {r['resource_id'***REMOVED******REMOVED***")
+
+    if recent_tasks:
+        lines.append("")
+        lines.append(f"## Контекст задач проекта ({len(recent_tasks)***REMOVED***)")
+        for r in recent_tasks:
+            lines.append(
+                f"- [{r['task_type'***REMOVED******REMOVED***/{r['status'***REMOVED******REMOVED***/{r['priority'***REMOVED******REMOVED******REMOVED*** "
+                f"{r['title'***REMOVED******REMOVED***"
+            )
+
+    if knowledge:
+        lines.append("")
+        lines.append(f"## Заметки из Knowledge Engine ({len(knowledge)***REMOVED***)")
+        for h in knowledge:
+            title = h.get("title") or h["doc_id"***REMOVED***
+            lines.append(
+                f"- **{title***REMOVED***** (score={h['score'***REMOVED******REMOVED***): {h['snippet'***REMOVED******REMOVED***"
+            )
+
+    lines.append("")
+    lines.append("## Синтез")
+    if llm_synthesis:
+        lines.append(llm_synthesis)
+    else:
+        lines.append(
+            "- _Детерминированный режим (LLM недоступен, отключён "
+            "`FREEBUFF_NO_LLM=1`, или упал с ошибкой)._\n"
+            "- Текущий прогресс по проекту см. в Контексте задач выше.\n"
+            "- Открытые блокеры — задачи со статусом `pending`/`in_progress`.\n"
+            "- Следующие шаги — распределение зон ответственности."
+        )
+
+    lines.append("")
+    lines.append(f"_Сгенерировано: {_now()***REMOVED***_")
+    return "\n".join(lines)
 
 
 def generate_meeting_briefing(
     task_id: str, db_path: Path | str | None = None
 ) -> str | None:
-    """Генерирует брифинг для встречи. Заглушка v0 (правило 8/9, pomt42).
+    """v1: брифинг встречи с реальным контекстом проекта + опциональным LLM.
 
-    Возвращает текст брифинга или None, если задача не найдена / не
-    meeting. Side-effect: выставляет `briefing_generated=1` для встречи.
+    Pipeline (graceful degradation на каждом шаге):
+      1. Fetch task + проверить task_type='meeting' → иначе None
+      2. Собрать evidence: project_meta + linked_resources +
+         recent_tasks + knowledge_hits (каждый шаг защищён try/except)
+      3. Опциональная LLM-синтез через `ModelGateway.generate_by_capabilities`
+         ([meeting_brief***REMOVED***). При ошибке — deterministic fallback.
+      4. Compose markdown + briefing_generated=1 + updated_at.
 
-    В v1.0 сюда подключится KnowledgeEngine + GraphIndex (прошлые
-    задачи, документы проекта, инварианты), а через `model_gateway` —
-    LLM-генерация черновика. Сейчас — детерминированный шаблон,
-    гарантирующий стабильный shape output для фронтенда и интеграций.
+    Возвращает текст или None (задача не найдена / не meeting).
+    Side-effect: `briefing_generated=1` для встречи.
     """
     conn = init_db(db_path)
     try:
-        row = conn.execute(
-            "SELECT id, project_id, title, task_type, meeting_time, location, "
-            "participants, briefing_generated "
-            "FROM tasks WHERE id = ?",
-            (task_id.strip(),),
-        ).fetchone()
-        if row is None:
-            return None
-        if row[3***REMOVED*** != "meeting":
-            return None  # briefing только для встреч
-        participants_raw = row[6***REMOVED*** or "[***REMOVED***"
         try:
-            participants_list = json.loads(participants_raw)
+            row = conn.execute(
+                "SELECT id, project_id, title, description, task_type, "
+                "meeting_time, location, participants "
+                "FROM tasks WHERE id = ?",
+                (task_id.strip(),),
+            ).fetchone()
+        except sqlite3.OperationalError:
+            return None
+        if row is None or row[4***REMOVED*** != "meeting":
+            return None
+        participants_raw = row[7***REMOVED*** or "[***REMOVED***"
+        try:
+            participants = json.loads(participants_raw)
         except (ValueError, TypeError):
-            participants_list = [***REMOVED***
-        participants_str = (
-            ", ".join(participants_list) if participants_list else "(не указаны)"
+            participants = [***REMOVED***
+        task: dict[str, Any***REMOVED*** = {
+            "id": row[0***REMOVED***,
+            "project_id": row[1***REMOVED***,
+            "title": row[2***REMOVED***,
+            "description": row[3***REMOVED*** or "",
+            "task_type": row[4***REMOVED***,
+            "meeting_time": row[5***REMOVED***,
+            "location": row[6***REMOVED***,
+            "participants": participants,
+        ***REMOVED***
+        proj_meta = _gather_project_meta(task["project_id"***REMOVED***, conn)
+        resources = _gather_linked_resources(task["project_id"***REMOVED***, db_path)
+        recent_tasks = _gather_recent_tasks(
+            task["project_id"***REMOVED***, task["id"***REMOVED***, db_path,
         )
-
-        briefing = (
-            f"# Брифинг встречи: {row[2***REMOVED******REMOVED***\n\n"
-            f"**Проект:** {row[1***REMOVED******REMOVED***\n"
-            f"**Задача:** {row[0***REMOVED******REMOVED***\n"
-            f"**Время:** {row[4***REMOVED*** or '(не указано)'***REMOVED***\n"
-            f"**Место:** {row[5***REMOVED*** or '(не указано)'***REMOVED***\n"
-            f"**Участники:** {participants_str***REMOVED***\n\n"
-            f"## Точки для обсуждения\n"
-            f"- Текущий прогресс по проекту {row[1***REMOVED******REMOVED***.\n"
-            f"- Открытые блокеры и риски (см. связанные задачи в `get_tasks`).\n"
-            f"- Следующие шаги и распределение зон ответственности.\n\n"
-            f"## Контекст\n"
-            f"_AI-брифинг — заглушка v0. В v1.0 будет использован "
-            f"KnowledgeEngine + GraphIndex проекта {row[1***REMOVED******REMOVED*** и `model_gateway` "
-            f"для генерации черновика._\n\n"
-            f"_Сгенерировано: {_now()***REMOVED***_"
+        knowledge = _gather_knowledge_hits(
+            f"{task['project_id'***REMOVED******REMOVED*** {task['title'***REMOVED******REMOVED***"
         )
-
+        llm_synthesis = _generate_llm_synthesis(
+            task, proj_meta, resources, recent_tasks, knowledge,
+        )
+        briefing = _compose_briefing_markdown(
+            task, proj_meta, resources, recent_tasks,
+            knowledge, llm_synthesis,
+        )
         conn.execute(
-            "UPDATE tasks SET briefing_generated = 1, updated_at = ? WHERE id = ?",
+            "UPDATE tasks SET briefing_generated = 1, updated_at = ? "
+            "WHERE id = ?",
             (_now(), task_id.strip()),
         )
         conn.commit()

@@ -1,0 +1,358 @@
+=========================================
+WORKSPACE OS - STATUS REPORT
+Generated: Sat Aug  1 20:51:22 +05 2026
+=========================================
+
+### 1. RECENT COMMITS (last 15) ###
+fatal: detected dubious ownership in repository at '/storage/emulated/0/PROJECTS/workstation/freebuff'
+To add an exception for this directory, call:
+
+	git config --global --add safe.directory /storage/emulated/0/PROJECTS/workstation/freebuff
+
+### 2. GIT STATUS (current changes) ###
+fatal: detected dubious ownership in repository at '/storage/emulated/0/PROJECTS/workstation/freebuff'
+To add an exception for this directory, call:
+
+	git config --global --add safe.directory /storage/emulated/0/PROJECTS/workstation/freebuff
+
+### 3. TOP-LEVEL DIRECTORY STRUCTURE ###
+total 487
+-rw-rw----.  1 u0_a198 media_rw   1267 Aug  1 03:05 .cursorrules
+-rw-rw----.  1 u0_a198 media_rw    246 Jul 29 04:50 .env
+drwxrws---.  2 u0_a198 media_rw   3452 Jul 31 15:47 .freebuff
+-rw-rw----.  1 u0_a198 media_rw  53248 Jul 29 06:20 .freebuff_output_118fc1b7.log
+-rw-rw----.  1 u0_a198 media_rw   5497 Jul 29 06:13 .freebuff_output_6ae43298.log
+-rw-rw----.  1 u0_a198 media_rw   8192 Jul 29 06:21 .freebuff_output_a71d67ce.log
+-rw-rw----.  1 u0_a198 media_rw   8192 Jul 29 06:00 .freebuff_output_c1fb9fdb.log
+-rw-rw----.  1 u0_a198 media_rw  11233 Jul 29 06:21 .freebuff_output_fac238b1.log
+-rw-rw----.  1 u0_a198 media_rw    144 Jul 29 15:44 .freebuff_result
+drwxrws---.  8 u0_a198 media_rw   3452 Aug  1 20:21 .git
+drwxrws---.  3 u0_a198 media_rw   3452 Jul 28 22:15 .github
+-rw-rw----.  1 u0_a198 media_rw   1272 Aug  1 04:45 .gitignore
+drwxrws---.  3 u0_a198 media_rw   3452 Aug  1 10:28 .keys
+drwxrws---.  4 u0_a198 media_rw   3452 Jul 28 01:45 .mypy_cache
+drwxrws---.  3 u0_a198 media_rw   3452 Jul 27 23:41 .pytest_cache
+-rw-rw----.  1 u0_a198 media_rw   7961 Aug  1 10:55 AGENTS.md
+-rw-rw----.  1 u0_a198 media_rw  22928 Aug  1 20:50 BUFFY.md
+-rw-rw----.  1 u0_a198 media_rw  15601 Aug  1 10:29 BUFFY_PROJECT.md
+-rw-rw----.  1 u0_a198 media_rw 134611 Aug  1 20:40 CHANGELOG.md
+-rw-rw----.  1 u0_a198 media_rw    710 Aug  1 10:29 CLAUDE.md
+-rw-rw----.  1 u0_a198 media_rw    708 Aug  1 10:29 CODY.md
+-rw-rw----.  1 u0_a198 media_rw   6469 Aug  1 12:36 README.md
+-rw-rw----.  1 u0_a198 media_rw  14022 Aug  1 10:41 SPEC.md
+-rw-rw----.  1 u0_a198 media_rw   7105 Aug  1 10:29 TASK.md
+-rw-rw----.  1 u0_a198 media_rw      1 Jul 28 00:45 __init__.py
+drwxrws---.  2 u0_a198 media_rw   3452 Aug  1 16:04 __pycache__
+drwxrws---.  4 u0_a198 media_rw   3452 Jul 28 09:42 buffy-playground_19
+drwxrws---.  3 u0_a198 media_rw   3452 Aug  1 10:28 cli_07
+drwxrws---.  8 u0_a198 media_rw   3452 Aug  1 20:07 context_12
+drwxrws---.  3 u0_a198 media_rw   3452 Aug  1 10:59 core_02
+drwxrws---.  2 u0_a198 media_rw   3452 Aug  1 20:41 data_13
+drwxrws---. 12 u0_a198 media_rw   3452 Aug  1 10:56 docs_10
+-rw-rw----.  1 u0_a198 media_rw  38480 Aug  1 16:02 freebuff_cli.py
+drwxrws---.  9 u0_a198 media_rw   3452 Aug  1 10:43 freebuff_plugin_03
+drwxrws---.  2 u0_a198 media_rw   3452 Jul 28 09:00 frontend_18
+drwxrws---.  2 u0_a198 media_rw   3452 Jul 31 15:47 infa_20
+drwxrws---.  2 u0_a198 media_rw   3452 Jul 27 23:58 logs_14
+-rw-rw----.  1 u0_a198 media_rw    139 Jul 28 01:47 mypy.ini
+drwxrws---.  7 u0_a198 media_rw   3452 Aug  1 10:28 plugins_04
+drwxrws---.  2 u0_a198 media_rw   4096 Aug  1 20:22 pompts_11
+drwxrws---.  6 u0_a198 media_rw   3452 Jul 29 18:54 projects_17
+drwxrws---.  2 u0_a198 media_rw   3452 Aug  1 09:16 prototype_22
+-rw-rw----.  1 u0_a198 media_rw    574 Jul 31 15:49 requirements.txt
+drwxrws---.  5 u0_a198 media_rw   3452 Aug  1 10:38 runtime_05
+drwxrws---.  2 u0_a198 media_rw   3452 Jul 28 06:35 screenshots_16
+drwxrws---.  5 u0_a198 media_rw   3452 Aug  1 20:31 scripts_01
+drwxrws---.  4 u0_a198 media_rw   3452 Aug  1 10:28 services_08
+drwxrws---.  2 u0_a198 media_rw   3452 Aug  1 12:39 sessions_15
+drwxrws---.  4 u0_a198 media_rw   3452 Aug  1 10:28 src_06
+-rw-rw----.  1 u0_a198 media_rw   3594 Aug  1 20:50 status_report.sh
+-rw-rw----.  1 u0_a198 media_rw    757 Aug  1 20:51 status_report_20260801_205122.txt
+drwxrws---.  4 u0_a198 media_rw   4096 Aug  1 20:34 tests_09
+drwxrws---.  2 u0_a198 media_rw   3452 Aug  1 20:48 trash_21
+
+### 4. PYTHON PACKAGES (with __init__.py) ###
+  ./core_02/
+  ./
+  ./plugins_04/
+  ./plugins_04/hello_world/
+  ./plugins_04/tg_messenger/
+  ./plugins_04/system_monitor/
+  ./plugins_04/knowledge_sync/
+  ./projects_17/tg_terminal_messenger/src/telegram/
+  ./projects_17/diet_platform/bot_handlers/
+  ./projects_17/diet_platform/building_blocks/
+  ./projects_17/diet_platform/modules/fitness/
+  ./projects_17/diet_platform/modules/notifier/
+  ./projects_17/diet_platform/modules/puhlyash/
+  ./projects_17/diet_platform/modules/reactions/
+  ./projects_17/diet_platform/modules/recipes/
+  ./projects_17/diet_platform/modules/scheduler/
+  ./projects_17/diet_platform/modules/
+  ./projects_17/diet_platform/start_here/
+  ./projects_17/diet_platform/tests/
+  ./projects_17/realtor_automation/src/realtor_automation/
+  ./projects_17/realtor_automation/tests/
+  ./projects_17/realtor_os/src/realtor_os/
+  ./projects_17/realtor_os/src/realtor_os/core/
+  ./projects_17/realtor_os/src/realtor_os/rag/
+  ./projects_17/realtor_os/src/realtor_os/ocr/
+  ./projects_17/realtor_os/src/realtor_os/llm/
+  ./projects_17/realtor_os/src/realtor_os/integrations/
+  ./projects_17/realtor_os/src/realtor_os/curator/
+  ./projects_17/realtor_os/src/realtor_os/companion/
+  ./projects_17/realtor_os/tests/
+  ./cli_07/
+  ./src_06/
+  ./src_06/workers/
+  ./tests_09/
+  ./tests_09/core/
+  ./services_08/
+  ./scripts_01/
+  ./freebuff_plugin_03/
+  ./freebuff_plugin_03/scenarios/
+  ./freebuff_plugin_03/event/
+  ./freebuff_plugin_03/bootstrap/
+  ./freebuff_plugin_03/runtime/adapters/
+  ./freebuff_plugin_03/runtime/
+  ./freebuff_plugin_03/mesh/core/
+  ./freebuff_plugin_03/mesh/node/
+  ./freebuff_plugin_03/mesh/session/
+  ./freebuff_plugin_03/mesh/agent/
+  ./freebuff_plugin_03/mesh/transport/
+  ./freebuff_plugin_03/mesh/storage/
+  ./freebuff_plugin_03/mesh/
+  ./freebuff_plugin_03/policy/
+
+### 5. KEY DIRECTORIES ###
+
+  --- scripts_01/ ---
+__init__.py
+__pycache__
+agent_context_bridge.py
+archive
+auto_conspect.py
+auto_save.py
+bootstrap.py
+buffy_autodoc.py
+buffy_stream_logger.py
+collaboration.py
+consistency_check.py
+context_builder.py
+context_manager.py
+cron_conspect.sh
+data
+demo_auto_conspect.py
+distributed_agents.py
+doc_reminder.sh
+doctor.py
+drift_check.py
+engineering_memory.py
+event_bus.py
+event_subscribers.py
+graph_index.py
+install_hooks.sh
+install_lightpanda.sh
+integrate_agent.py
+knowledge_engine.py
+mcp_fastapi.py
+mcp_server.py
+memory_engine.py
+metrics.py
+model_gateway.py
+notification.py
+oom_protect.sh
+orchestrator.py
+overlay_client.py
+overlay_float.sh
+overlay_server.py
+plugin_api.py
+plugin_contract.py
+pre-commit
+presence.py
+project_pulse.py
+rag_engine.py
+roles.py
+scan_projects.py
+scanner.py
+screenshot_tools.sh
+sdk_bridge.py
+seed_knowledge.py
+session_utils.py
+start_telegram_bot.sh
+start_tgbot.sh
+stream_bridge.py
+stream_session.py
+system_monitor.py
+telegram_bot.py
+tg_popup.sh
+tgbot_base.py
+tool_runtime.py
+verifier.py
+work_area_view.py
+
+  --- core_02/ ---
+__init__.py
+__pycache__
+interfaces.py
+router.py
+
+  --- freebuff_plugin_03/ ---
+INTEGRATION_CONTRACT.md
+README.md
+__init__.py
+__pycache__
+acp_protocol.py
+api.py
+bootstrap
+bridge.py
+bridge_layer.py
+config.py
+event
+mcp_client.py
+mcp_server.py
+mesh
+monitor.sh
+policy
+router.py
+runtime
+scenario_engine.py
+scenarios
+tgbot.py
+wrapper.py
+
+  --- runtime_05/ ---
+MARKETPLACE.md
+README.md
+plugins
+policies.json
+providers
+recipes
+
+  --- docs_10/ ---
+DOCUMENT_REGISTRY.md
+DRIFT_REPORT.md
+INDEX.md
+audits
+core
+decisions
+engineering-memory
+ops
+plugin
+projects_meta
+session_dumps
+task_archive
+vision
+
+  --- tests_09/ ---
+__init__.py
+__pycache__
+conftest.py
+core
+test_agent_context_bridge.py
+test_auto_conspect.py
+test_bootstrap.py
+test_bootstrap_engine.py
+test_bridge_layer.py
+test_collaboration.py
+test_consistency_check.py
+test_context_builder.py
+test_context_manager.py
+test_cron_conspect.py
+test_drift_check.py
+test_engineering_memory.py
+test_event_bus.py
+test_event_store.py
+test_event_subscribers.py
+test_freebuff.py
+test_graph_index.py
+test_knowledge_engine.py
+test_lightpanda_worker.py
+test_mcp_event_tools.py
+test_mcp_fastapi.py
+test_mcp_server.py
+test_memory_engine.py
+test_metrics.py
+test_model_gateway.py
+test_notification.py
+test_orchestrator.py
+test_plugin_api.py
+test_plugin_contract.py
+test_policy_conversational.py
+test_policy_engine.py
+test_presence.py
+test_project_pulse.py
+test_rag_engine.py
+test_roles.py
+test_runtime_abstraction.py
+test_scenario_engine.py
+test_seed_knowledge.py
+test_semantic_index.py
+test_session_utils.py
+test_stream_bridge.py
+test_stream_session.py
+test_telegram_bot.py
+test_tgbot.py
+test_tgbot_base.py
+test_tool_runtime.py
+test_verifier.py
+test_work_area_view.py
+
+  --- frontend_18/ ---
+BuffyDashboard.tsx
+
+  --- plugins_04/ ---
+__init__.py
+__pycache__
+hello_world
+knowledge_sync
+system_monitor
+tg_messenger
+
+### 6. KEY DOCUMENTS (first 10 lines) ###
+
+  === docs/vision/VISION_3.0.md === NOT FOUND
+
+  === docs/ARCHITECTURE_MANIFEST.md === NOT FOUND
+
+  === docs/GLOSSARY.md === NOT FOUND
+
+  === docs/vision/UI_CONCEPTS.md === NOT FOUND
+
+  === docs/vision/IMPLEMENTATION_STATUS.md === NOT FOUND
+
+### 7. DATABASE SCHEMA ###
+  No SQLite database found
+
+### 8. PLUGINS & RUNTIMES ###
+
+### 9. DEPENDENCIES ###
+# Core dependencies for Buffy Project CI/test runtime
+pytest>=8.0
+pytest-asyncio>=0.24
+numpy>=1.24.0
+httpx>=0.25.0
+fastapi>=0.99.0
+uvicorn>=0.24.0
+requests>=2.28.0
+beautifulsoup4>=4.12.0
+python-telegram-bot>=20.0,<21.0
+# CPU-only torch to avoid huge CUDA wheels in CI
+torch --index-url https://download.pytorch.org/whl/cpu
+# Mesh v2.0 (Session Mesh)
+ulid-py>=1.0.0
+websocket-client>=1.5.0
+# asyncpg>=0.28.0  # optional: Postgres backend
+# kafka-python>=2.0.0  # optional: Kafka backend
+diff-match-patch>=2023.0.0
+# prometheus-client>=0.17.0  # optional: metrics
+hvac>=2.0.0
+
+### 10. PROJECT SIZE ###
+  Total files: 1418
+  Python files: 263
+  Total size: 163M
+
+=========================================
+END OF REPORT
+=========================================

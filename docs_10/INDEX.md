@@ -1,67 +1,38 @@
-# INDEX — Buffy Documentation
+# Индекс документации Workspace OS
 
-> **Дата:** 2026-07-29
-> **Версия:** 1.0.0
-> **Стартовая точка:** [VISION_3.0.md***REMOVED***(vision/VISION_3.0.md) → раздел «Три режима работы»
+**Обновлено:** 2026-08-02
 
 ---
 
-## Быстрая навигация
+## Структура документации
 
-| Категория | Где искать | Что там |
-|-----------|-----------|---------|
-| **Куда движется система** | [`vision/`***REMOVED***(vision/) | VISION_3.0, ROADMAP, PRODUCT_MANIFESTO |
-| **Архитектурные принципы** | [`core/`***REMOVED***(core/) | ARCHITECTURE_PRINCIPLES, CODE_QUALITY_STANDARD, RULES, спецификации |
-| **Архитектурные решения** | [`decisions/`***REMOVED***(decisions/) | DECISIONS, ADR |
-| **Аудиты системы** | [`audits/`***REMOVED***(audits/) | Хронологические аудиты, DRIFT_REPORT |
-| **Engineering Memory** | [`engineering-memory/`***REMOVED***(engineering-memory/) | Архитектура, Книга проекта, шаблоны |
-| **Плагин freebuff_plugin** | [`plugin/`***REMOVED***(plugin/) | API, архитектура, Quickstart, Bridge |
-| **Интеграции и проекты** | [`projects_meta/`***REMOVED***(projects_meta/) | Lightpanda, Overlay, Workers |
-| **Операционная документация** | [`ops/`***REMOVED***(ops/) | Гайды, troubleshooting, шаблоны |
+### canonical/ — Текущее состояние системы (канон)
+- [INDEX.md***REMOVED***(canonical/INDEX.md) — индекс канонических документов
+- [architecture.md***REMOVED***(canonical/architecture.md) — иерархия, контракты, позиционирование
 
----
+### history/ — История решений (ADR)
+- [ADR-001_positioning.md***REMOVED***(history/ADR-001_positioning.md) — почему агрегатор, не конкурент
+- [ADR-002_contracts.md***REMOVED***(history/ADR-002_contracts.md) — почему JSON-контракты
+- [SESSION_UNDERSTANDING_2026-08-02.md***REMOVED***(history/SESSION_UNDERSTANDING_2026-08-02.md) — полная фиксация сессии
 
-## Три режима работы (отправная точка)
+### vision/ — Стратегическое видение
+- [VISION_3.0.md***REMOVED***(vision/VISION_3.0.md) — стратегия и цели
+- [ROADMAP.md***REMOVED***(vision/ROADMAP.md) — дорожная карта
 
-См. [`vision/VISION_3.0.md`***REMOVED***(vision/VISION_3.0.md), раздел 2:
+### core/ — Архитектурные манифесты
+- [ARCHITECTURE_MANIFEST.md***REMOVED***(core/ARCHITECTURE_MANIFEST.md) — главный архитектурный закон
+- [GLOSSARY.md***REMOVED***(core/GLOSSARY.md) — единый глоссарий терминов
+- [ARCHITECTURE_PRINCIPLES.md***REMOVED***(core/ARCHITECTURE_PRINCIPLES.md) — принципы
 
-| Режим | Суть | Статус |
-|-------|------|--------|
-| **Single** | Один пользователь, один воркспейс | ✅ Готово |
-| **Cowork** | Один пользователь, несколько Runtime | 🟡 Connectivity готов, orchestration — нет |
-| **Teamwork** | Несколько пользователей + агентов | 🟡 ACP/Bridge готовы, task assignment — план |
-
----
-
-## Ключевые документы
-
-| Документ | Путь |
-|----------|------|
-| **Статусы документации** 🆕 | [`DOCUMENT_REGISTRY.md`***REMOVED***(DOCUMENT_REGISTRY.md) |
-| **Vision 3.0** | [`vision/VISION_3.0.md`***REMOVED***(vision/VISION_3.0.md) |
-| **Карта компонентов** | [`vision/VISION_3.0_MAP.md`***REMOVED***(vision/VISION_3.0_MAP.md) |
-| **Roadmap** | [`vision/ROADMAP.md`***REMOVED***(vision/ROADMAP.md) |
-| **Product Manifesto** | [`vision/PRODUCT_MANIFESTO.md`***REMOVED***(vision/PRODUCT_MANIFESTO.md) |
-| **Архитектурные принципы** | [`core/ARCHITECTURE_PRINCIPLES.md`***REMOVED***(core/ARCHITECTURE_PRINCIPLES.md) |
-| **Runtime Validation** | [`core/RUNTIME_VALIDATION_FRAMEWORK.md`***REMOVED***(core/RUNTIME_VALIDATION_FRAMEWORK.md) |
-| **Compatibility Matrix** | [`core/COMPATIBILITY_MATRIX.md`***REMOVED***(core/COMPATIBILITY_MATRIX.md) |
-| **Bootstrap Spec** | [`core/BOOTSTRAP_SPECIFICATION.md`***REMOVED***(core/BOOTSTRAP_SPECIFICATION.md) |
-| **Event Platform Spec** | [`core/EVENT_PLATFORM_SPECIFICATION.md`***REMOVED***(core/EVENT_PLATFORM_SPECIFICATION.md) |
-| **Policy Engine Spec** | [`core/POLICY_ENGINE_SPECIFICATION.md`***REMOVED***(core/POLICY_ENGINE_SPECIFICATION.md) |
-| **Session Mesh v2.0 Spec** 🆕 | [`core/DISTRIBUTED_SESSION_SPECIFICATION_v2.0.md`***REMOVED***(core/DISTRIBUTED_SESSION_SPECIFICATION_v2.0.md) |
-| **Session Mesh Implementation** 🆕 | [`../pompts_11/017_02_struktura_requirements_testy.md`***REMOVED***(../pompts_11/017_02_struktura_requirements_testy.md) |
-| **Code Quality Standard** | [`core/CODE_QUALITY_STANDARD.md`***REMOVED***(core/CODE_QUALITY_STANDARD.md) |
-| **Plugin Architecture** | [`plugin/FREEBUFF_PLUGIN_ARCHITECTURE.md`***REMOVED***(plugin/FREEBUFF_PLUGIN_ARCHITECTURE.md) |
-| **IDEAS Registry** | [`decisions/IDEAS.md`***REMOVED***(decisions/IDEAS.md) |
-| **File Registry** | [`projects_meta/FILE_REGISTRY.md`***REMOVED***(projects_meta/FILE_REGISTRY.md) |
-| **Agent Instructions** | [`../AGENTS.md`***REMOVED***(../AGENTS.md) (корневой чекпоинт; ops-дубль → trash_21) |
+### decisions/ — Реестр решений
+- [DECISIONS.md***REMOVED***(decisions/DECISIONS.md) — индекс ADR
+- [IDEAS.md***REMOVED***(decisions/IDEAS.md) — реестр идей
 
 ---
 
-## Для нового участника / агента
+## Правила ведения документации
 
-1. Начни с [`vision/VISION_3.0.md`***REMOVED***(vision/VISION_3.0.md) — раздел «Три режима работы»
-2. Прочитай [`core/ARCHITECTURE_PRINCIPLES.md`***REMOVED***(core/ARCHITECTURE_PRINCIPLES.md)
-3. Изучи [`core/CODE_QUALITY_STANDARD.md`***REMOVED***(core/CODE_QUALITY_STANDARD.md) — обязательный стандарт
-4. Ознакомься с [`vision/ROADMAP.md`***REMOVED***(vision/ROADMAP.md)
-5. Для работы с кодом — см. [`../BUFFY.md`***REMOVED***(../BUFFY.md) и [`../AGENTS.md`***REMOVED***(../AGENTS.md)
+1. **Canonical** — только факты, без истории споров
+2. **History** — почему так получилось (ADR)
+3. При изменении канона — обновить canonical/, создать ADR в history/
+4. Не дублировать информацию между документами
