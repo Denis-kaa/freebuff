@@ -235,6 +235,31 @@ _ADR_REDIRECTS: dict[str, tuple[str, ...***REMOVED******REMOVED*** = {
     "docs_10/decisions": (str(_ADR_CANONICAL_DIR), str(_ADR_INDEX)),
 ***REMOVED***
 
+
+def _is_legacy_redirect_satisfied(workspace: Path, top_dir: str) -> bool:
+    """Return True if a top-level dir is a legacy compat shim pointing at a
+    known canonical location.
+
+    Used by ``check_directory_structure`` to silence "exists but not described"
+    drift findings for backward-compat shells (e.g. ``freebuff_plugin/`` →
+    ``freebuff_plugin_03/`` after the NN-name scheme rename).
+    """
+    targets = _LEGACY_TOP_LEVEL_REDIRECTS.get(top_dir, ())
+    if not targets:
+        return False
+    return any((workspace / target).is_dir() for target in targets)
+
+
+# Top-level dirs that exist only as backward-compat forwarders to a canonical
+# location and MUST NOT be flagged as undeclared architecture components.
+# Add an entry here whenever a rename leaves a thin compat shim behind.
+# Values mirror `_ADR_REDIRECTS` style: each target is rendered via
+# ``str(Path(...))`` so callers can append nested paths without re-stringifying.
+_LEGACY_TOP_LEVEL_REDIRECTS: dict[str, tuple[str, ...***REMOVED******REMOVED*** = {
+    # freebuff_plugin/ → freebuff_plugin_03/ (NN-name scheme, v5.25.x)
+    "freebuff_plugin": (str(Path("freebuff_plugin_03")),),
+***REMOVED***
+
 # Markdown link patterns: [text***REMOVED***(target) and ![alt***REMOVED***(target)
 _MARKDOWN_LINK_RE = re.compile(r"!?\[([^\***REMOVED******REMOVED****)\***REMOVED***\(([^)***REMOVED***+)\)")
 # External URLs, anchors and other non-file targets we cannot/should not resolve.
@@ -516,6 +541,10 @@ def check_directory_structure(workspace: Path) -> list[dict[str, Any***REMOVED**
         if d.is_dir() and not d.name.startswith(".") and d.name not in ("__pycache__",)
     ***REMOVED***
     for d in sorted(real_dirs - described_paths):
+        # Legacy compat shims (e.g. `freebuff_plugin/` → `freebuff_plugin_03/`)
+        # forward to a canonical location and are not architectural components.
+        if _is_legacy_redirect_satisfied(workspace, d):
+            continue
         issues.append({"dir": d, "issue": "exists but not described in BUFFY.md/RULES.md"***REMOVED***)
 
     return issues

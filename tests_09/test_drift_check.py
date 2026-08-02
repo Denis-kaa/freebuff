@@ -336,3 +336,61 @@ def test_check_markdown_links_reports_absolute_broken_link(tmp_path) -> None:
     issues = dc.check_markdown_links(tmp_path)
     assert len(issues) == 1
     assert issues[0***REMOVED***["target"***REMOVED*** == "/docs_10/MISSING.md"
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Legacy top-level redirect (compat-shim) handling — `_LEGACY_TOP_LEVEL_REDIRECTS`
+# + `_is_legacy_redirect_satisfied`. The skipped branch ONLY protects against
+# "exists but not described" drift; an empty shim dir is still flagged because
+# that usually means the canonical location itself was moved or removed.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_legacy_redirect_satisfied_when_canonical_exists(tmp_path) -> None:
+    """Legacy shim dir + real canonical target → NOT flagged as undeclared."""
+    (tmp_path / "freebuff_plugin").mkdir()
+    (tmp_path / "freebuff_plugin_03").mkdir()
+    # Empty BUFFY.md → describes nothing; every real top-level dir is "undeclared"
+    (tmp_path / "BUFFY.md").write_text("", encoding="utf-8")
+    issues = dc.check_directory_structure(tmp_path)
+    dirs = {i["dir"***REMOVED*** for i in issues***REMOVED***
+    assert "freebuff_plugin" not in dirs
+
+
+def test_legacy_redirect_flagged_when_canonical_missing(tmp_path) -> None:
+    """Legacy shim whose canonical target no longer exists → must be flagged.
+
+    Without this guard the silent-skip would mask a real architectural drift:
+    if the canonical location disappeared, the shim itself is no longer a shim
+    and should surface in the report for human triage.
+    """
+    (tmp_path / "freebuff_plugin").mkdir()
+    # freebuff_plugin_03 intentionally missing
+    (tmp_path / "BUFFY.md").write_text("", encoding="utf-8")
+    issues = dc.check_directory_structure(tmp_path)
+    dirs = {i["dir"***REMOVED*** for i in issues***REMOVED***
+    assert "freebuff_plugin" in dirs
+    assert any(
+        i["dir"***REMOVED*** == "freebuff_plugin"
+        and i["issue"***REMOVED*** == "exists but not described in BUFFY.md/RULES.md"
+        for i in issues
+    )
+
+
+def test_non_legacy_undeclared_dir_still_flagged(tmp_path) -> None:
+    """A regular undeclared top-level directory is still flagged (no false skips)."""
+    (tmp_path / "totally_random_dir").mkdir()
+    (tmp_path / "BUFFY.md").write_text("", encoding="utf-8")
+    issues = dc.check_directory_structure(tmp_path)
+    dirs = {i["dir"***REMOVED*** for i in issues***REMOVED***
+    assert "totally_random_dir" in dirs
+
+
+def test_legacy_redirect_helper_unit(tmp_path) -> None:
+    """In isolation: helper returns True/False exactly per redirect resolution."""
+    # Empty workspace (no canonical present anywhere)
+    assert dc._is_legacy_redirect_satisfied(tmp_path, "freebuff_plugin") is False
+    # Canonical present → True for the listed shim, False for unrelated dirs
+    (tmp_path / "freebuff_plugin_03").mkdir()
+    assert dc._is_legacy_redirect_satisfied(tmp_path, "freebuff_plugin") is True
+    assert dc._is_legacy_redirect_satisfied(tmp_path, "totally_not_a_real_dir") is False

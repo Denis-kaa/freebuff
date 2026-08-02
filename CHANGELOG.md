@@ -6,6 +6,27 @@
 
 ---
 
+## [5.37.1***REMOVED*** — 2026-08-02
+
+### Исправлено
+- **Stale `bash freebuff_plugin/monitor.sh` после NN-name rename** — пользователи (и stale shell history / tmux send-keys, зафиксированные до ренейма директорий) получали `No such file or directory` на устаревшем пути. Создан тонкий **compat-shim** [freebuff_plugin/monitor.sh***REMOVED***(freebuff_plugin/monitor.sh) (≈20 строк), который warning'ит в stderr и делегирует в канонический [freebuff_plugin_03/monitor.sh***REMOVED***(freebuff_plugin_03/monitor.sh) через `exec`. Не маскирует баги: если canonical отсутствует — `exit 127`. Новые вызовы должны всегда использовать канонический путь.
+- **[drift_check.py***REMOVED***(scripts_01/drift_check.py)** — новая константа `_LEGACY_TOP_LEVEL_REDIRECTS` (зеркалит существующий паттерн `_ADR_REDIRECTS`) и хелпер `_is_legacy_redirect_satisfied(workspace, top_dir)`. `check_directory_structure` теперь пропускает top-level директории, которые сушествуют только как backward-compat forwarder и указывают на реальное каноническое расположение — закрыло будущий false-positive «exists but not described in BUFFY.md/RULES.md» для `freebuff_plugin/` (и любых будущих аналогичных shim'ов). Дефолтный список: `freebuff_plugin` → `freebuff_plugin_03`.
+
+### Проверка
+- `bash -n freebuff_plugin/monitor.sh` — OK (валидный bash syntax)
+- `bash freebuff_plugin/monitor.sh` (без аргументов) — warning в stderr + exec → canonical → `exit 1` (canonical [ -n "$SESSION_ID" ***REMOVED*** || exit 1); НЕ молчит и НЕ маскирует ошибки
+- `python -m pytest tests_09/test_drift_check.py -q` — **33 passed** (29 старых + 4 регрессионных на `_is_legacy_redirect_satisfied` / `_LEGACY_TOP_LEVEL_REDIRECTS`)
+- `python scripts_01/drift_check.py --force --report` — `Directory structure drift: No discrepancies found.` (новый shim не триггерит structural-drift; оставшиеся report-points — broken links в `docs_10/INDEX.md` + unindexed `SESSION_UNDERSTANDING_2026-08-02.md` — pre-existing, не связаны с этим фиксом)
+- Канонический путь `freebuff_plugin_03/monitor.sh` и все вызывающие (`wrapper.py:254`, `monitor.sh:21`) **не тронуты**
+
+### Code review
+- `code-reviewer-minimax-m3` (parallel с `bash -n` + `drift_check` + `pytest`): пропустил **2 critical** + 1 minor итерации 1 → оба исправлены в этом релизе:
+  - ✔ добавлены 4 регрессионных теста в [test_drift_check.py***REMOVED***(tests_09/test_drift_check.py) (`test_legacy_redirect_satisfied_when_canonical_exists` / `_flagged_when_canonical_missing` / `_non_legacy_undeclared_dir_still_flagged` / `_legacy_redirect_helper_unit`) — закрывает silent-skip новый code-path
+  - ✔ `_LEGACY_TOP_LEVEL_REDIRECTS` values унифицированы в `str(Path(...))` (стилистически консистентно с `_ADR_REDIRECTS`)
+  - ✔ shim upgraded: `#!/usr/bin/env bash` + dynamic `FREEBUFF_ROOT` через `BASH_SOURCE` (Termux + Linux CI + macOS), `exec bash "$CANONICAL"` без зависимости от Termux-shebang canonical
+
+---
+
 ## [5.37.0***REMOVED*** — 2026-08-02
 
 ### Добавлено
