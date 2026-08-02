@@ -89,6 +89,14 @@ _PROMPT_FILE_RE = re.compile(r"^(\d{3***REMOVED***)_(\d{2***REMOVED***)_[a-z0-9_
 _VALID_THEME_CODES = {f"{i:02d***REMOVED***" for i in range(1, 15)***REMOVED***
 # Системные/скрытые каталоги, не подпадающие под схему именования.
 _SKIP_DIR_PREFIXES = (".", "__")
+# Legacy top-level redirect-shim'ы (Этап 4 консолидации, промт 32): существуют только
+# как backward-compat forwarder'ы на канонические каталоги с NN-suffix'ом.
+# Проверка naming_convention пропускает их, если указанный canonical_dir существует
+# — закрывает ложное нарушение `имя_NN` от pre-rename shell history / tmux send-keys.
+# Паттерн зеркалит scripts_01/drift_check.py::_LEGACY_TOP_LEVEL_REDIRECTS.
+_LEGACY_TOP_LEVEL_REDIRECTS: dict[str, tuple[str, ...***REMOVED******REMOVED*** = {
+    "freebuff_plugin": ("freebuff_plugin_03",),
+***REMOVED***
 
 
 # 10 областей консолидации (Этап 6).
@@ -327,6 +335,23 @@ def _top_level_dir_names(workspace: Path) -> list[str***REMOVED***:
     return sorted(names)
 
 
+def _is_legacy_redirect_satisfied(workspace: Path, top_dir: str) -> bool:
+    """Top-level dir — backward-compat shim, если указан canonical существует.
+
+    Паттерн зеркалит scripts_01/drift_check.py::_is_legacy_redirect_satisfied (5.37.1).
+    Возвращает True, если `top_dir` в `_LEGACY_TOP_LEVEL_REDIRECTS` И хотя бы один
+    из `canonical_targets` существует в workspace. Иначе — False (shim не
+    функционален без canonical → должен быть заменён или удалён).
+    """
+    canonical_targets = _LEGACY_TOP_LEVEL_REDIRECTS.get(top_dir)
+    if not canonical_targets:
+        return False
+    for target in canonical_targets:
+        if (workspace / target).is_dir():
+            return True
+    return False
+
+
 def check_naming_convention(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
     """Схема именования (FINAL_STRUCTURE §2.1): каталоги `имя_NN`, промты `NNN_TT_имя`.
 
@@ -344,6 +369,10 @@ def check_naming_convention(workspace: Path) -> list[dict[str, Any***REMOVED****
     # 1. Top-level каталоги: имя_NN + уникальность суффикса-ID
     seen_dir_suffixes: set[str***REMOVED*** = set()
     for name in _top_level_dir_names(workspace):
+        # 1.0 Legacy top-level redirect-shim (Этап 4) — пропускаем, если canonical существует.
+        #     Иначе (shim сирота) — флагуем как обычное нарушение `имя_NN`.
+        if _is_legacy_redirect_satisfied(workspace, name):
+            continue
         if not _TOP_LEVEL_DIR_RE.match(name):
             issues.append({
                 "check": "naming_convention",

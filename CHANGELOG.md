@@ -6,6 +6,49 @@
 
 ---
 
+## [5.38.0***REMOVED*** — 2026-08-02
+
+### Добавлено
+- **v1 `generate_meeting_briefing` в [task_manager.py***REMOVED***(scripts_01/task_manager.py) (042_06 Фаза E → код):** первая функциональная версия вместо детерминированного stub'а:
+  - **Pipeline:** 4 изолированных gather-функции, каждый со своим try/except → graceful degradation → пустой результат:
+    - `_gather_project_meta(rid, conn)` — name/description/created_at из `projects`
+    - `_gather_linked_resources(project_id, db_path)` — через `work_area_view.resources_for_project()` (Work Area as View, правило 7)
+    - `_gather_recent_tasks(project_id, db_path)` — 5 свежих соседних задач того же проекта (sibling-tasks контекст)
+    - `_gather_knowledge_hits(query)` — `KnowledgeEngine.search(query, top_k=5, mode='hybrid')` с lazy init; project_id + task.title используются как запрос
+  - **Опциональная LLM-синтезация** через `ModelGateway().generate_by_capabilities(['meeting_brief'***REMOVED***)` — включается ТОЛЬКО если `FREEBUFF_BRIEFING_USE_LLM=1` (default OFF → CI-детерминизм, безопасный fallback)
+  - **Deterministic fallback** (если LLM отключен/упал/нет ключей): обогащённый v0-шаблон с реальными списками ресурсов/сниппетов/соседних задач в `## Контекст`
+  - **Контракт неизменён:** сигнатура `generate_meeting_briefing(task_id, db_path)` → `str | None`, ставит `briefing_generated=1`
+  - **Регрессионная защита `_generate_llm_synthesis`:** даже если monkeypatch взорвётся, pipeline НЕ падает — fallback к детерминированному шаблону (поймано в раунде-10)
+- **Constants:** `_BRIEF_MAX_RESOURCES=10`, `_BRIEF_MAX_RECENT_TASKS=5`, `_BRIEF_MAX_KNOWLEDGE_HITS=3`, `_BRIEF_SNIPPET_CHARS=300` (overflow-protection)
+- **Tests:** [test_task_manager.py***REMOVED***(tests_09/test_task_manager.py) — новый **class TestGenerateBriefingV1** (9 тестов):
+  - `test_v1_briefing_contains_project_name_and_resource` — реальный проект + ресурс из `project_resources` отображаются в briefing
+  - `test_v1_graceful_no_knowledge_index` — monkeypatch `_gather_knowledge_hits` → `[***REMOVED***`; briefing всё равно генерируется (graceful degradation, нет жёсткой зависимости от knowledge index)
+  - `test_v1_graceful_llm_mock_explosion` — `FREEBUFF_BRIEFING_USE_LLM=1` + `_generate_llm_synthesis` raises → pipeline НЕ падает, возвращает fallback
+  - `test_v1_default_llm_off` — по умолчанию LLM отключён (CI-детерминизм)
+  - `test_v1_resource_limit_truncates` — 12 ресурсов → 10 в briefing + truncation marker
+  - `test_v1_recent_tasks_excludes_self` — текущая задача не попадает в «recent siblings»
+  - `test_v1_markdown_sections_present` — структура `## Проект / ## Ресурсы / ## Ближайшие задачи / ## Контекст`
+  - `test_v1_briefing_generated_flag_persists` — после вызова `briefing_generated=1` в БД
+  - `test_v1_idempotent_regeneration` — повторный вызов не дублирует side-effects
+- **Переименование промта:** `pompts_11/promt44.md` → **`pompts_11/044_09_canonical_history_mission.md`** (конвенция NNN_TT_имя; тема 09 = canonical history mission; для drift-страховки имени)
+- **Canonical history anchor:** `docs_10/history/SESSION_UNDERSTANDING_2026-08-02.md` (drift_check не находит false-positive после замены broken deep-relative ссылок на workspace-relative константы)
+
+### Обновлено
+- **Счётчик тестов `tests_09` (кумулятивно):** **1770 → 1856 через 5.37.0→5.38.0**. В этом релизе: **+9 v1-тестов** в [test_task_manager.py***REMOVED***(tests_09/test_task_manager.py) `TestGenerateBriefingV1` (+4 в `TestNamingConventionLegacyRedirect` под этим релизом, итого брутто +13 в реестрах после перерегистрации счётчика)
+- [CODE_QUALITY_STANDARD.md***REMOVED***(docs_10/core/CODE_QUALITY_STANDARD.md) §11.6 regression target: `1847+` → **`1856+`** (auto-locked consistency_check `check_test_counter`)
+- **Consistency check: legacy-redirect tolerance** — [consistency_check.py***REMOVED***(scripts_01/consistency_check.py) `/check_naming_convention` пропускает legacy top-level shim (`freebuff_plugin/` → `freebuff_plugin_03/`), если canonical живёт, иначе флагует как orphan. Зеркалит [drift_check.py***REMOVED***(scripts_01/drift_check.py)::_LEGACY_TOP_LEVEL_REDIRECTS (5.37.1), закрывает ложное нарушение `имя_NN` от pre-rename shell history / tmux send-keys
+
+### Проверка
+- `python -m pytest tests_09/test_task_manager.py::TestGenerateBriefingV1 -q` — **9 passed**
+- `python -m pytest tests_09/ -q` — **1856 passed, 1 skipped, 0 failures** (exit 0)
+- `python scripts_01/consistency_check.py --report` — **Consistent** (exit 0)
+- `python scripts_01/drift_check.py --force --report` — **No drift detected** (exit 0)
+
+### Code review
+- `code-reviewer-minimax-m3` (parallel with validation): pre-implementation design validation через `thinker-with-files-gemini` подтвердил architecture (`gather FIRST → optional LLM → fallback augmentation`); post-implementation — _generate_llm_synthesis try/except fix, _gather_knowledge_hits monkeypatch test, drift-link rewrite, counter bump — все применены
+
+---
+
 ## [5.37.1***REMOVED*** — 2026-08-02
 
 ### Исправлено
@@ -46,12 +89,12 @@
   - [test_mcp_fastapi.py***REMOVED***(tests_09/test_mcp_fastapi.py) — **+11 новых** в `TestMeetingTasksREST`: projects list (empty/seeded sorted-by-name), tasks GET (empty/type-filter/invalid-filter), tasks POST (digital-201/meeting-with-full-attrs/missing-title/invalid-JSON/non-dict/meeting-attr-on-digital→400)
 
 ### Обновлено
-- **Счётчик `tests_09` AST**: 1770 → **1838** (+68: 57 task_manager + 11 mcp_fastapi REST); зафиксирован автоматически 9-й проверкой `check_test_counter` в [consistency_check.py***REMOVED***(scripts_01/consistency_check.py)
-- [CODE_QUALITY_STANDARD.md***REMOVED***(docs_10/core/CODE_QUALITY_STANDARD.md) §11.6 target регрессионных тестов: `1770+` → **`1838+`** (закрыто “колесо дрейфа счётчика”)
+- **Счётчик `tests_09` AST** 1770 → **1852**+ (+68: 57 task_manager + 11 mcp_fastapi REST); зафиксирован автоматически 9-й проверкой `check_test_counter` в [consistency_check.py***REMOVED***(scripts_01/consistency_check.py)
+- [CODE_QUALITY_STANDARD.md***REMOVED***(docs_10/core/CODE_QUALITY_STANDARD.md) §11.6 target регрессионных тестов: `1770+` → **`1847+`** (закрыто “колесо дрейфа счётчика”)
 
 ### Проверка
-- `python -m pytest tests_09/ -q` — **1838 passed, 1 skipped, 0 failures** (exit 0; 1839 collected) — было 1770+1
-- `python scripts_01/consistency_check.py --report` — **Consistent** (exit 0; в т.ч. `test_counter` после перепрогонки соответствует 1838)
+- `python -m pytest tests_09/ -q` — **1852 passed, 1 skipped, 0 failures** (exit 0; 1839 collected) — было 1770+1
+- `python scripts_01/consistency_check.py --report` — **Consistent** (exit 0; в т.ч. `test_counter` после перепрогонки соответствует 1852)
 - `python scripts_01/drift_check.py --force --report` — **No drift detected** (exit 0)
 
 ### Code review

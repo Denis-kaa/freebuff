@@ -166,7 +166,7 @@
 | 11.3 | Примеры входных данных | `tmp_path` фикстуры, `conftest.py` с shared fixtures |
 | 11.4 | Ожидаемый результат | `assert result["success"***REMOVED*** is True`, `assert count > 0` |
 | 11.5 | Boundary Testing | Тесты для всех интерфейсов (Core↔Plugin, MCP, REST) |
-| 11.6 | Регрессионные тесты | Полный прогон перед каждым merge (цель: 1838+ passed, 0 failures) |
+| 11.6 | Регрессионные тесты | Полный прогон перед каждым merge (цель: 1856+ passed, 0 failures) |
 
 ---
 

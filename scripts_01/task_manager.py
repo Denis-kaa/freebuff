@@ -783,9 +783,15 @@ def generate_meeting_briefing(
         knowledge = _gather_knowledge_hits(
             f"{task['project_id'***REMOVED******REMOVED*** {task['title'***REMOVED******REMOVED***"
         )
-        llm_synthesis = _generate_llm_synthesis(
-            task, proj_meta, resources, recent_tasks, knowledge,
-        )
+        try:
+            llm_synthesis = _generate_llm_synthesis(
+                task, proj_meta, resources, recent_tasks, knowledge,
+            )
+        except Exception:
+            # Defensive guard: даже если сам _generate_llm_synthesis (или
+            # его monkeypatch в тестах) пропускает исключения наружу,
+            # нельзя уронить весь pipeline — deterministic fallback.
+            llm_synthesis = None
         briefing = _compose_briefing_markdown(
             task, proj_meta, resources, recent_tasks,
             knowledge, llm_synthesis,

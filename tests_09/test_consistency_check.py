@@ -280,7 +280,105 @@ class TestCheckProjectBook:
         assert any("ROADMAP_PROMT32" in i["issue"***REMOVED*** for i in issues)
 
 
-class TestCheckNamingConvention:
+class TestNamingConventionLegacyRedirect:
+    """Зеркалит scripts_01/drift_check.py::_is_legacy_redirect_satisfied (5.37.1).
+
+    Legacy top-level redirect-shim (Этап 4 консолидации) пропускается
+    проверкой naming_convention, если соответствующий канонический
+    каталог с NN-suffix'ом существует. Не маскирует настоящие нарушения:
+    если canonical отсутствует — shim считается "сиротой" и флагуется.
+    """
+
+    def test_legacy_redirect_satisfied_when_canonical_exists(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Workspace: legacy shim + canonical существует → пропускаем.
+        (tmp_path / "freebuff_plugin").mkdir()
+        (tmp_path / "freebuff_plugin_03").mkdir()
+        # pompts_11 + final_structure + glossary обязательны для двух оставшихся якорей;
+        # создаём минимальный «approve-окружение» чтобы фокус был именно на legacy-redirect.
+        (tmp_path / "pompts_11").mkdir()
+        (tmp_path / "pompts_11" / "001_01_dummy.md").write_text("# dummy\n")
+        (tmp_path / "docs_10").mkdir()
+        (tmp_path / "docs_10" / "core").mkdir()
+        (tmp_path / "docs_10" / "core" / "FINAL_STRUCTURE.md").write_text(
+            "## §2.1 Схема именования\n"
+        )
+        (tmp_path / "docs_10" / "core" / "GLOSSARY.md").write_text(
+            "## **Naming Convention**\n"
+        )
+        from scripts_01.consistency_check import check_naming_convention
+        issues = check_naming_convention(tmp_path)
+        legacy = [i for i in issues if i.get("kind") == "dir" and i.get("name") == "freebuff_plugin"***REMOVED***
+        assert legacy == [***REMOVED***, f"legacy shim должен пропускаться когда canonical существует, issues={issues***REMOVED***"
+
+    def test_legacy_redirect_flagged_when_canonical_missing(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        # Workspace: legacy shim без canonical → нарушение (orphan shim).
+        (tmp_path / "freebuff_plugin").mkdir()
+        (tmp_path / "pompts_11").mkdir()
+        (tmp_path / "pompts_11" / "001_01_dummy.md").write_text("# dummy\n")
+        (tmp_path / "docs_10").mkdir()
+        (tmp_path / "docs_10" / "core").mkdir()
+        (tmp_path / "docs_10" / "core" / "FINAL_STRUCTURE.md").write_text(
+            "## §2.1 Схема именования\n"
+        )
+        (tmp_path / "docs_10" / "core" / "GLOSSARY.md").write_text(
+            "## **Naming Convention**\n"
+        )
+        from scripts_01.consistency_check import check_naming_convention
+        issues = check_naming_convention(tmp_path)
+        legacy = [
+            i for i in issues
+            if i.get("kind") == "dir" and i.get("name") == "freebuff_plugin"
+        ***REMOVED***
+        assert len(legacy) == 1, (
+            f"orphan shim должен флагуться как нарушение, issues={issues***REMOVED***"
+        )
+        assert legacy[0***REMOVED***["issue"***REMOVED***.startswith("top-level dir violates")
+
+    def test_non_legacy_undeclared_dir_still_flagged(
+        self, tmp_path: Path
+    ) -> None:
+        # Workspace: произвольный top-level dir без NN-suffix → флагуется как обычно.
+        (tmp_path / "garbage_dir").mkdir()
+        (tmp_path / "pompts_11").mkdir()
+        (tmp_path / "pompts_11" / "001_01_dummy.md").write_text("# dummy\n")
+        (tmp_path / "docs_10").mkdir()
+        (tmp_path / "docs_10" / "core").mkdir()
+        (tmp_path / "docs_10" / "core" / "FINAL_STRUCTURE.md").write_text(
+            "## §2.1 Схема именования\n"
+        )
+        (tmp_path / "docs_10" / "core" / "GLOSSARY.md").write_text(
+            "## **Naming Convention**\n"
+        )
+        from scripts_01.consistency_check import check_naming_convention
+        issues = check_naming_convention(tmp_path)
+        garbage = [
+            i for i in issues
+            if i.get("kind") == "dir" and i.get("name") == "garbage_dir"
+        ***REMOVED***
+        assert len(garbage) == 1
+        assert garbage[0***REMOVED***["issue"***REMOVED***.startswith("top-level dir violates")
+
+    def test_legacy_redirect_helper_unit(self) -> None:
+        # Unit-тест для _is_legacy_redirect_satisfied.
+        from scripts_01.consistency_check import _is_legacy_redirect_satisfied
+        import tempfile
+        with tempfile.TemporaryDirectory() as td:
+            ws = Path(td)
+            # unknown name → False
+            assert _is_legacy_redirect_satisfied(ws, "no_such_legacy") is False
+            # legacy name + missing canonical → False (orphan)
+            (ws / "freebuff_plugin").mkdir()
+            assert _is_legacy_redirect_satisfied(ws, "freebuff_plugin") is False
+            # legacy name + present canonical → True (shim functional)
+            (ws / "freebuff_plugin_03").mkdir()
+            assert _is_legacy_redirect_satisfied(ws, "freebuff_plugin") is True
+
+
+class TestRealProject:
     def test_conforming_workspace(self, workspace: Path):
         """Фикстура: каталоги имя_NN, FINAL_STRUCTURE с секцией → чисто."""
         assert check_naming_convention(workspace) == [***REMOVED***

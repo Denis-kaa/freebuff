@@ -474,9 +474,255 @@ class TestGenerateBriefing:
         assert "(не указаны)" in briefing
 
 
-# ═══════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════
+# generate_meeting_briefing v1 — конвейерный пайплайн
+# (Knowledge + Work Area + project_meta + model_gateway, graceful
+# degradation на каждом шаге)
+# ══════════════════════════════════════════════════════════════════════════════
+
+
+class TestGenerateBriefingV1:
+    """v1: gathering project evidence + optional LLM synthesis.
+
+    Pipeline: gather_project_meta (projects table) +
+    gather_linked_resources (work_area_view.resources_for_project)
+    + gather_recent_tasks (get_tasks) + gather_knowledge_hits
+    (KnowledgeEngine.search) + optional _generate_llm_synthesis
+    через ModelGateway.generate_by_capabilities([meeting_brief***REMOVED***).
+
+    Все шаги защищены try/except — brief отдаётся даже при полном
+    фейле зависимостей (deterministic fallback).
+    """
+
+    def test_v1_real_project_evidence_appears_in_brief(
+        self, db: Path, monkeypatch
+    ):
+        """Главный регрессионный тест по pompt: project name + linked
+        resource из project_resources появляются в брифинге, плюс
+        snippets из Knowledge."""
+        _seed_project(db)
+        from scripts_01.work_area_view import link as wav_link
+        assert wav_link("CRM", "Telegram", db_path=db) is True
+        wav_link("CRM", "Git", db_path=db)
+
+        from scripts_01 import task_manager as tm
+        knowledge_fixture = [
+            {
+                "doc_id": "doc_arch", "score": 0.876,
+                "snippet": (
+                    "Freebuff CRM handles client relationships "
+                    "and invoicing flows"
+                ),
+                "title": "Architecture",
+                "source": "docs_10/architecture",
+                "matched_terms": ["crm", "client"***REMOVED***,
+            ***REMOVED***,
+        ***REMOVED***
+        monkeypatch.setattr(
+            tm, "_gather_knowledge_hits",
+            lambda query: knowledge_fixture,
+        )
+        monkeypatch.setattr(
+            tm, "_generate_llm_synthesis", lambda *a, **kw: None,
+        )
+
+        t = create_task(
+            "CRM", "Синхронизация roadmap", task_type="meeting",
+            meeting_time="2026-08-10T11:00", location="Zoom",
+            participants=["Алексей", "Иван"***REMOVED***, db_path=db,
+        )
+        briefing = generate_meeting_briefing(t["id"***REMOVED***, db_path=db)
+        assert briefing is not None
+
+        # ⭐ Основные якоря по требованию промта: project name +
+        # linked resource из project_resources + knowledge snippet.
+        assert "CRM" in briefing
+        assert "Telegram" in briefing
+        assert "Architecture" in briefing
+        assert "client relationships" in briefing
+
+        # Структурные секции присутствуют.
+        assert "## Проект" in briefing
+        assert "Связанные ресурсы" in briefing
+        assert "Заметки из Knowledge Engine" in briefing
+
+        # Метаданные задачи проходят.
+        assert "Алексей" in briefing and "Иван" in briefing
+        assert "2026-08-10T11:00" in briefing
+
+        # Без LLM → deterministic fallback (assert no sync).
+        assert "Детерминированный режим" in briefing
+
+        # Side-effect: briefing_generated=1.
+        loaded = show_task(t["id"***REMOVED***, db_path=db)
+        assert loaded["briefing_generated"***REMOVED*** is True
+
+    def test_v1_llm_synthesis_used_when_provided(
+        self, db: Path, monkeypatch
+    ):
+        """_generate_llm_synthesis возвращает текст → брифинг
+        использует его, fallback note НЕ добавляется."""
+        _seed_project(db)
+        from scripts_01 import task_manager as tm
+        monkeypatch.setattr(
+            tm, "_generate_llm_synthesis",
+            lambda *a, **kw: (
+                "## Ключевые риски\n"
+                "- Потеря pipeline в QA\n"
+                "- Несогласованный resource scope"
+            ),
+        )
+
+        t = create_task(
+            "CRM", "Sync", task_type="meeting",
+            participants=["Алексей"***REMOVED***, db_path=db,
+        )
+        briefing = generate_meeting_briefing(t["id"***REMOVED***, db_path=db)
+        assert briefing is not None
+        # LLM-вывод подхвачен.
+        assert "Потеря pipeline в QA" in briefing
+        assert "Несогласованный resource scope" in briefing
+        # Fallback-блок НЕ добавляется.
+        assert "Детерминированный режим" not in briefing
+
+    def test_v1_frebuff_no_llm_env_short_circuits(
+        self, db: Path, monkeypatch
+    ):
+        """FREEBUFF_NO_LLM=1 → _generate_llm_synthesis не вызывается."""
+        _seed_project(db)
+        monkeypatch.setenv("FREEBUFF_NO_LLM", "1")
+
+        from scripts_01 import task_manager as tm
+        def _explode(*a, **kw):
+            raise AssertionError(
+                "_generate_llm_synthesis must NOT be called "
+                "when FREEBUFF_NO_LLM=1"
+            )
+        monkeypatch.setattr(tm, "_generate_llm_synthesis", _explode)
+
+        t = create_task(
+            "CRM", "X", task_type="meeting",
+            participants=["A"***REMOVED***, db_path=db,
+        )
+        briefing = generate_meeting_briefing(t["id"***REMOVED***, db_path=db)
+        assert briefing is not None
+        # Fallback активен (LLM был short-circuit по env, ни fake-blocking).
+        assert "Детерминированный режим" in briefing
+
+    def test_v1_graceful_no_knowledge_index(self, db: Path, monkeypatch):
+        """Без context_12/knowledge/index.db → brief генерируется без секции Knowledge.
+        В воркспейсе knowledge-index существует (наследие прошлых сессий),
+        поэтому моделируем его отсутствие через monkeypatch helper'а —
+        детерминистично вне зависимости от состояния workspace.
+        """
+        from scripts_01 import task_manager as tm
+        monkeypatch.setattr(tm, "_gather_knowledge_hits", lambda q: [***REMOVED***)
+        _seed_project(db)
+        t = create_task(
+            "CRM", "Solo", task_type="meeting",
+            participants=["A"***REMOVED***, db_path=db,
+        )
+        briefing = generate_meeting_briefing(t["id"***REMOVED***, db_path=db)
+        assert briefing is not None
+        # Нет Knowledge Engine → секция отсутствует.
+        assert "Заметки из Knowledge Engine" not in briefing
+        # Детерминированный режим (нет LLM в тестах).
+        assert "Детерминированный режим" in briefing
+
+    def test_v1_graceful_llm_failure(
+        self, db: Path, monkeypatch
+    ):
+        """_generate_llm_synthesis raises → без propagate, deterministic fallback."""
+        _seed_project(db)
+        from scripts_01 import task_manager as tm
+        def _bad(*a, **kw):
+            raise RuntimeError("LLM offline")
+        monkeypatch.setattr(tm, "_generate_llm_synthesis", _bad)
+
+        t = create_task(
+            "CRM", "X", task_type="meeting",
+            participants=["A"***REMOVED***, db_path=db,
+        )
+        briefing = generate_meeting_briefing(t["id"***REMOVED***, db_path=db)
+        assert briefing is not None
+        assert "Детерминированный режим" in briefing
+
+    def test_v1_caps_resources_to_max(
+        self, db: Path, monkeypatch
+    ):
+        """Если ресурсов > _BRIEF_MAX_RESOURCES, brief показывает
+        ровно top-N по created_at DESC."""
+        _seed_project(db)
+        from scripts_01.work_area_view import link as wav_link
+        for i in range(20):
+            wav_link("CRM", f"Res-{i:02d***REMOVED***", db_path=db)
+        from scripts_01 import task_manager as tm
+        monkeypatch.setattr(
+            tm, "_generate_llm_synthesis", lambda *a, **kw: None,
+        )
+        monkeypatch.setattr(tm, "_gather_knowledge_hits", lambda q: [***REMOVED***)
+
+        t = create_task(
+            "CRM", "X", task_type="meeting",
+            participants=["A"***REMOVED***, db_path=db,
+        )
+        briefing = generate_meeting_briefing(t["id"***REMOVED***, db_path=db)
+        assert briefing is not None
+        # Шапка содержит ровно 10 (top by created_at DESC).
+        assert f"## Связанные ресурсы (10)" in briefing
+        # В top-10 попадают первые 10 по моменту создания (Res-19..Res-10).
+        for i in range(10, 20):
+            assert f"Res-{i:02d***REMOVED***" in briefing
+        # За пределами CAP (Res-00..Res-09) НЕ появляются.
+        for i in range(10):
+            assert f"Res-{i:02d***REMOVED***" not in briefing
+
+    def test_v1_persists_briefing_generated_and_updated(
+        self, db: Path
+    ):
+        """Side-effect: briefing_generated=1, updated_at растёт."""
+        _seed_project(db)
+        t = create_task(
+            "CRM", "X", task_type="meeting",
+            participants=["A"***REMOVED***, db_path=db,
+        )
+        original_updated = t["updated_at"***REMOVED***
+        briefing = generate_meeting_briefing(t["id"***REMOVED***, db_path=db)
+        assert briefing is not None
+        loaded = show_task(t["id"***REMOVED***, db_path=db)
+        assert loaded["briefing_generated"***REMOVED*** is True
+        assert loaded["updated_at"***REMOVED*** >= original_updated
+
+    def test_v1_handles_missing_projects_table(self, db: Path):
+        """Без таблицы projects → brief без секции «Описание» (graceful)."""
+        # Не сидируем projects, но сидируем задачу (FK-онли).
+        t = create_task(
+            "CRM", "Z", task_type="meeting",
+            participants=["A"***REMOVED***, db_path=db,
+        )
+        briefing = generate_meeting_briefing(t["id"***REMOVED***, db_path=db)
+        assert briefing is not None
+        # Нет описания проекта → нет строки "Описание:".
+        assert "Описание:" not in briefing
+
+    def test_v1_constants_reasonable(self):
+        """Защита от дрейфа лимитов: рабочие диапазоны."""
+        from scripts_01.task_manager import (
+            _BRIEF_MAX_RESOURCES, _BRIEF_MAX_RECENT_TASKS,
+            _BRIEF_MAX_KNOWLEDGE_HITS, _BRIEF_SNIPPET_CHARS,
+            _BRIEF_LLM_BUDGET, _BRIEF_LLM_TIMEOUT,
+        )
+        assert 5 <= _BRIEF_MAX_RESOURCES <= 20
+        assert 3 <= _BRIEF_MAX_RECENT_TASKS <= 20
+        assert 1 <= _BRIEF_MAX_KNOWLEDGE_HITS <= 10
+        assert 200 <= _BRIEF_SNIPPET_CHARS <= 2000
+        assert 200 <= _BRIEF_LLM_BUDGET <= 4000
+        assert 5 <= _BRIEF_LLM_TIMEOUT <= 60
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # CLI (argparse)
-# ═══════════════════════════════════════════════════════════════
+# ══════════════════════════════════════════════════════════════════════════════
 
 class TestCLI:
     def test_create_digital(self, db: Path, monkeypatch, capsys):
