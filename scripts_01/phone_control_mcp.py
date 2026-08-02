@@ -110,6 +110,9 @@ class TunnelManager:
         self._ready_timeout = ready_timeout if ready_timeout is not None else PHONE_TUNNEL_READY_S
         self._spec: Optional[TunnelSpec***REMOVED*** = None
         self._reader_thread: Optional[threading.Thread***REMOVED*** = None
+        # threading.Lock сериализует start()/stop() — закрывает race между
+        # concurrent tunnel_up callers (reviewer hardening #1).
+        self._lock = threading.Lock()
 
     @property
     def spec(self) -> Optional[TunnelSpec***REMOVED***:
@@ -120,30 +123,43 @@ class TunnelManager:
         return self._spec is not None and self._spec.process.poll() is None
 
     def start(self, port: int) -> TunnelSpec:
-        """Запустить cloudflared; ngrok fallback если cloudflared отсутствует."""
-        if self.is_active:
-            raise RuntimeError("tunnel already active — call stop() first")
-        # Пробуем cloudflared argv-list.
-        try:
-            spec = self._spawn(self._bin, ["tunnel", "--url", f"http://localhost:{port***REMOVED***"***REMOVED***, port, "cloudflared")
-            return spec
-        except FileNotFoundError:
-            # Fallback на ngrok (только если явно указан PHONE_NGROK_BIN).
-            ngrok_bin = _env("FREEBUFF_PHONE_NGROK_BIN", "")
-            if not ngrok_bin:
-                raise
-            return self._spawn(ngrok_bin, ["http", str(port)***REMOVED***, port, "ngrok")
+        """Запустить cloudflared; ngrok fallback если cloudflared отсутствует.
+
+        Защищён self._lock: между check (is_active) и _spawn() — атомарный блок.
+        Concurrent tunnel_up callers сериализуются; второй получает README-processed
+        либо RuntimeError("already active") если первый уже дошёл до _spec.
+        """
+        with self._lock:
+            if self.is_active:
+                raise RuntimeError("tunnel already active — call stop() first")
+            # Пробуем cloudflared argv-list.
+            try:
+                return self._spawn(self._bin, ["tunnel", "--url", f"http://localhost:{port***REMOVED***"***REMOVED***, port, "cloudflared")
+            except FileNotFoundError:
+                # Fallback на ngrok (только если явно указан PHONE_NGROK_BIN).
+                ngrok_bin = _env("FREEBUFF_PHONE_NGROK_BIN", "")
+                if not ngrok_bin:
+                    raise
+                return self._spawn(ngrok_bin, ["http", str(port)***REMOVED***, port, "ngrok")
 
     def _spawn(self, binary: str, argv: list[str***REMOVED***, port: int, kind: str) -> TunnelSpec:
-        """Безопасный subprocess-старт (argv-list, NO shell=True)."""
+        """Безопасный subprocess-старт (argv-list, NO shell=True).
+
+        Также `start_new_session=True` (Linux: создаёт новый session via os.setsid)
+        → cloudflared НЕ принадлежит process group родителя. Если родитель убит
+        SIGKILL — subprocess переживёт (нужен отдельный cleanup-hook на уровне
+        обёртки, например через mcp_fastapi lifecycle). hardening #2.
+        """
         full_argv = [binary***REMOVED*** + argv
         # Subprocess с stdout=None / stderr=PIPE → читатель stderr в daemon-thread.
         # NB: shell=False — единственный безопасный путь; см. test_subprocess_argv_no_shell.
+        # NB: start_new_session=True → см. test_popen_uses_start_new_session (regression).
         proc = subprocess.Popen(
             full_argv,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.PIPE,
             shell=False,                # КРИТИЧНО: без shell-injection
+            start_new_session=True,     # hardening #2: detach от process group родителя
             text=True,
             bufsize=1,
         )
@@ -194,19 +210,24 @@ class TunnelManager:
         return spec
 
     def stop(self, timeout: float = 3.0) -> None:
-        """Terminate subprocess + дренаж потоков."""
-        if self._spec is None:
-            return
-        proc = self._spec.process
-        try:
-            proc.terminate()
-            proc.wait(timeout=timeout)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            proc.wait(timeout=timeout)
-        finally:
-            self._spec = None
-            self._reader_thread = None
+        """Terminate subprocess + дренаж потоков.
+
+        Защищён self._lock: если кто-то в середине start(), stop ждёт
+        (lock held). Двойная защита от доступа к мёртвому self._spec.
+        """
+        with self._lock:
+            if self._spec is None:
+                return
+            proc = self._spec.process
+            try:
+                proc.terminate()
+                proc.wait(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+                proc.wait(timeout=timeout)
+            finally:
+                self._spec = None
+                self._reader_thread = None
 
     def _atexit_cleanup(self) -> None:
         """Гарантированная очистка при exit interpreter."""

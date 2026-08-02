@@ -6,6 +6,39 @@
 
 ---
 
+## [5.39.1***REMOVED*** — 2026-08-02
+
+### Добавлено
+- **Hardening reviewer notes #1 + #2 для [5.39.0***REMOVED***** ([phone_control_mcp.py***REMOVED***(scripts_01/phone_control_mcp.py)):
+  - **#1: `threading.Lock()` в `TunnelManager`** (защита от race между concurrent `tunnel_up` callers). Инициализируется в `__init__`, оборачивает тела `start()` и `stop()` в `with self._lock:`. Атомарный critical section «check `is_active` → `_spawn()` → assign `_spec`» — второй concurrent caller сразу получает `RuntimeError("already active")` вместо двойного создания Popen
+  - **#2: `start_new_session=True` в `subprocess.Popen()`** (для SIGKILL-detach). На POSIX вызывает `os.setsid()` в child → cloudflared становится лидером новой session. Если родитель убит `kill -9` (OOM/crash-loop) — subprocess переживёт вместо orphan-leak. Без флага: cascade kill по process group + orphan subprocess. Doc-anchor: см. [mcp_fastapi.py***REMOVED***(scripts_01/mcp_fastapi.py) для полного lifecycle (там cleanup на уровне FastAPI process)
+- **2 regression-теста** в [tests_09/test_phone_control_mcp.py***REMOVED***(tests_09/test_phone_control_mcp.py):
+  - `test_popen_uses_start_new_session` — monkeypatch `subprocess.Popen`, verify `start_new_session=True` в kwargs (канарейка против accidental flag-removal)
+  - `test_concurrent_start_serializes_via_lock` — два `threading.Thread`'а входят в `start()` одновременно, один успевает + получает `TunnelSpec`, другой получает `RuntimeError("already active")`. Verify: `mgr._spec` хранит ровно ОДИН spec (не два leaked Popen), `t1/alive=False AND t2/alive=False` (lock не deadlock'ит)
+- **Registry sweep** (round-4 reviewer footgun check): [promts_11/promt46.md***REMOVED***(pompts_11/promt46.md) → **`pompts_11/046_09_tripwire_v1.md`** (NNN_TT_name convention, topic 09 = canonical/test). Содержимое файла = заглушка от тебя («вот и проверим, скажи прочитал или нет?») — ZERO autofill, tripwire сохранён
+
+### Исправлено
+- **CHANGELOG [5.39.0***REMOVED*** broken link** (`consistency_check.py` без `scripts_01/` prefix в строке 29 → drift_check false-positive). Теперь: `[code-reviewer-minimax-m3***REMOVED***(scripts_01/consistency_check.py)` (canonical path)
+
+### Обновлено
+- **Counter bump 1881 → 1883** (+2 hardening regression-теста). Все 3 анкора согласованы: AST=1883 (consistency_check `count_test_functions`), CHANGELOG=1883, CQS §11.6 target=`1883+ passed`
+- [docs_10/core/CODE_QUALITY_STANDARD.md***REMOVED***(docs_10/core/CODE_QUALITY_STANDARD.md) §11.6 regression target: `1881+` → **`1883+`** (auto-locked `check_test_counter`)
+
+### Проверка
+- `python -m pytest tests_09/test_phone_control_mcp.py -q` — **27 passed** in 1.71s (exit 0)
+- Нвые тесты isolated: `test_popen_uses_start_new_session` + `test_concurrent_start_serializes_via_lock` both PASS
+- `python scripts_01/consistency_check.py --report` — **Consistent** (exit 0) после counter bump + promt46 rename
+- `python scripts_01/drift_check.py --force --report` — **No drift detected** (exit 0) после CHANGELOG link-fix
+- `python -m py_compile scripts_01/phone_control_mcp.py tests_09/test_phone_control_mcp.py` — 0 errors
+
+### Code review
+- `code-reviewer-minimax-m3` round-4 в parallel с pytest: **approved** (0 blocking). 3 non-blocking observations зафиксированы как follow-ups:
+  - `test_popen_uses_start_new_session` — kwarg-capture regression, не functional POSIX-тест (acceptable pattern; functional требует real-subprocess + signal — тяжёлый + fragile)
+  - `atexit.register(self._atexit_cleanup)` accumulates on each `_spawn()` success (idempotent — multiple invocations safe, но overhead линеен reuses. Сейчас `atexit.unregister` в `stop()` НЕ зовётся — был pre-existing pattern, не от hardening)
+  - Concurrent test ordering — `results["first_spec"***REMOVED***` может быть из любого thread'а (race на разные dict-keys, CPython-GIL-atomic, для portable-Python надо `queue.Queue` — minor)
+
+---
+
 ## [5.39.0***REMOVED*** — 2026-08-02
 
 ### Добавлено

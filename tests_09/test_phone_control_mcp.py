@@ -318,6 +318,42 @@ class TestTunnelSecurity(unittest.TestCase):
         self.assertEqual(argv[0***REMOVED***, "cloudflared")
         self.assertEqual(argv[1:***REMOVED***, ["tunnel", "--url", "http://localhost:8765"***REMOVED***)
 
+    def test_popen_uses_start_new_session(self) -> None:
+        """Hardening #2: Popen получает start_new_session=True → detach от process group родителя.
+
+        Если parent убит SIGKILL → subprocess переживёт в своей сессии (нет
+        cascading kill). Канарейка против regression: при удалении флага в Popen
+        тест падает.
+        """
+        captured_kwargs: dict = {***REMOVED***
+
+        class FakeProc:
+            stderr = None
+            def poll(self) -> int | None: return None
+            def terminate(self) -> None: pass
+            def wait(self, timeout: float = 3.0) -> int: return 0
+            def kill(self) -> None: pass
+
+        def fake_popen(argv, **kwargs):
+            captured_kwargs["argv"***REMOVED*** = argv
+            captured_kwargs.update(kwargs)
+            return FakeProc()
+
+        with patch("phone_control_mcp.subprocess.Popen", side_effect=fake_popen) as mock_popen:
+            with patch("phone_control_mcp.time.sleep"):
+                with patch("phone_control_mcp.threading.Thread"):
+                    mgr = TunnelManager(tunnel_bin="cloudflared", ready_timeout=0.05)
+                    with patch.object(mgr, "_reader_thread", create=True):
+                        with self.assertRaises((RuntimeError, TimeoutError)):
+                            mgr.start(8765)
+
+        # Главная assertion: start_new_session=True был передан в Popen.
+        mock_popen.assert_called_once()
+        self.assertTrue(
+            captured_kwargs.get("start_new_session", False),
+            "Popen должен получить start_new_session=True для SIGKILL-detach (reviewer hardening #2)",
+        )
+
 
 class TestTunnelLifecycle(unittest.TestCase):
     """Tunnel lifecycle с mock-скриптом (НЕ реальным cloudflared)."""
@@ -367,6 +403,53 @@ class TestTunnelLifecycle(unittest.TestCase):
                 self.assertIn("already active", str(ctx.exception))
             finally:
                 mgr.stop()
+
+    def test_concurrent_start_serializes_via_lock(self) -> None:
+        """Hardening #1: threading.Lock в start() закрывает race между concurrent tunnel_up.
+
+        СЦЕНАРИЙ: два потока входят в start() «одновременно». Без lock оба
+        увидят is_active=False → создаются 2 Popen-процесса, второй leaked.
+        С lock: один успевает, второй сразу видит is_active=True → RuntimeError.
+
+        Mock-скрипт эмулирует cloudflared (URL в stderr, потом sleep 60s);
+        тест terminate'ит активные процессы в finally.
+        """
+        import threading as _threading
+
+        with tempfile.TemporaryDirectory() as tmpdir_s:
+            tmpdir = Path(tmpdir_s)
+            # Один и тот же mock-bin обслуживает оба thread'a (быстрый URL-print, slow sleep).
+            mock_bin = self._write_mock_cloudflared(tmpdir, "https://race-condition.trycloudflare.com")
+            mgr = TunnelManager(tunnel_bin=str(mock_bin), ready_timeout=5.0)
+
+            results: dict[str, object***REMOVED*** = {"first_spec": None, "second_error": None, "started_at": [***REMOVED******REMOVED***
+
+            def attempt_start(port: int) -> None:
+                try:
+                    spec = mgr.start(port)
+                    results["first_spec"***REMOVED*** = spec  # один из потоков заполнит
+                except RuntimeError as e:
+                    results["second_error"***REMOVED*** = str(e)
+
+            # Запускаем 2 потока одновременно.
+            t1 = _threading.Thread(target=attempt_start, args=(9001,))
+            t2 = _threading.Thread(target=attempt_start, args=(9002,))
+            t1.start(); t2.start()
+            t1.join(timeout=10.0); t2.join(timeout=10.0)
+
+            try:
+                # ASSERT: один из потоков успешно создал spec, другой получил RuntimeError("already active").
+                spec = results["first_spec"***REMOVED***
+                self.assertIsInstance(spec, TunnelSpec)
+                self.assertIn("already active", str(results["second_error"***REMOVED***))
+                # ASSERT: только ОДИН процесс создан (а не два leaked Popen).
+                # TunnelManager._spec хранит ровно один spec.
+                self.assertIs(mgr.spec, spec)
+                # ASSERT: оба потока завершились, а не deadlocked.
+                self.assertFalse(t1.is_alive())
+                self.assertFalse(t2.is_alive())
+            finally:
+                mgr.stop(timeout=2.0)
 
 
 # ═══════════════════════════════════════════════════════════════
