@@ -30,10 +30,32 @@ This document tracks **architectural debt** identified by the daily self-audit i
 
 ## 3. Current Debt Register
 
+> **Schema:** §3 entries use the same `| Field | Value |` table convention as §5 Resolved Debt, with three additions for **OPEN** items: `**Status**` (always `🔴 OPEN`), `**Owner**`, and `**Remediation ETA**`. Older §5.x resolved entries were filed before this schema was introduced, so they omit `Owner` / `Remediation ETA` by historical convention — only **new** OPEN entries require all three. When an OPEN item is closed, it migrates to §5 with a `**Resolved**` date field instead.
+
 ### 3.1 Duplicate Telegram Bots — RESOLVED ✅
 
 > **2026-08-01:** Закрыт через `scripts_01/tgbot_base.py` (`BaseTGBot`).
 > Полная запись — в §5.8 Resolved Debt ниже.
+
+### 3.2 Canonical Hardcodes `FREEBUFF_ROOT` — Compat-Shim Silent-Misroute — 🔴 OPEN
+
+| Field | Value |
+|-------|-------|
+| **ID** | `DEBT-2026-08-02-001` |
+| **Status** | 🔴 OPEN — proposed remediation not yet scheduled (committed as known limitation in v5.37.1, commit `19b4356`) |
+| **Discovered** | 2026-08-02 (v5.37.1 compat-shim release — caught by `code-reviewer-minimax-m3` final iteration) |
+| **Component** | `freebuff_plugin_03/monitor.sh:20` (canonical hardcode) ↔ `freebuff_plugin/monitor.sh` (compat-shim, `BASH_SOURCE`-derived root) |
+| **Severity** | 🟡 Medium — affects only the **non-canonical installs** use-case; canonical Termux install (current user) works correctly |
+| **Type** | Architectural / portability — hardcoded path bypasses environment override |
+| **Description** | `freebuff_plugin_03/monitor.sh:20` hardcodes `FREEBUFF_ROOT="/storage/emulated/0/PROJECTS/workstation/freebuff"` and **never reads the env var**. The compat-shim `freebuff_plugin/monitor.sh` (v5.37.1) was added to gracefully handle stale callers after the NN-name rename; it dynamically resolves its own location via `BASH_SOURCE[0***REMOVED***:-$0` and calls canonical with `exec bash "$CANONICAL"`. **On the user's canonical Termux install** both paths resolve identically → smoke test passes. **On non-canonical installs** (dev boxes, CI runners, alternate Termux paths, containerized deployments like `/opt/freebuff`): the shim correctly computes `<shim_root>/freebuff_plugin_03/monitor.sh` from its own location, but the canonical continues to expect `<hardcoded_root>/freebuff_plugin_03/monitor.sh`. If both files exist (unlikely but possible), the wrong one runs. If only one exists, the call silently fails with no signal to the user. |
+| **Evidence** | 1) `freebuff_plugin_03/monitor.sh:20` → literal `FREEBUFF_ROOT="/storage/.../freebuff"` (no `${FREEBUFF_ROOT:-<hardcode>***REMOVED***` fallthrough). <br> 2) Compat-shim v5.37.1 (`freebuff_plugin/monitor.sh`) uses `BASH_SOURCE` discovery — works on canonical, diverges from canonical on dev/CI/containers. <br> 3) Caught by `code-reviewer-minimax-m3` in v5.37.1 final review pass; deferred to dedicated follow-up per scope discipline (referenced in `CHANGELOG.md` v5.37.1 → **«Out-of-scope follow-ups (deferred)»**). |
+| **Proposed remediation** | 1) **Canonical one-line fix:** change `FREEBUFF_ROOT="/storage/.../freebuff"` → `FREEBUFF_ROOT="${FREEBUFF_ROOT:-/storage/.../freebuff***REMOVED***"` (honor env override, hardcode as fallback — same pattern as `PREFIX` and `TMUX_FILE` variables already in the same script). <br> 2) **Doc note:** add one-sentence comment in compat-shim explaining the env-override contract: «requires canonical to honor `FREEBUFF_ROOT` env». <br> 3) **Optional integration test:** add a `tests_09/test_compat_shim_portability.py` that copies `freebuff_plugin/{monitor.sh, README.md***REMOVED***` + `freebuff_plugin_03/monitor.sh` to `tmp_path`, monkeypatches the canonical hardcode via `sed` to a non-Termux path, and asserts shim resolves to the symlinked canonical. Cheap insurance for any future rename. |
+| **User-impact today** | 🟢 **None for current user** (canonical Termux install path). Future users on `/home/user/freebuff`, `/opt/freebuff`, Docker volumes, or other locations face silent misroute → hard-to-debug session failures. The bug surface is small (only matters when the install root != the literal hardcoded path) but the failure mode is opaque (no error, just wrong behavior). |
+| **Suggested fix-priority** | 🟡 Medium — already encoded in `Severity`; this field is kept verbatim for back-link compatibility with §5.x entries but contributes no new signal. Rationale is in `Severity` + `User-impact today` above. |
+| **Owner** | `project-lead` — generic placeholder. Проект не имеет established `@username` convention pre-v5.37.1 (нет ни одного §5.x entry с Owner), поэтому hardcode guess вроде `@DenissStepanov` рискован. Когда claim будет принят — заменить placeholder на concrete handle (см. `AGENTS.md` для current session-lead). Action required: trigger canonical-edit release cycle (or explicitly defer forever). |
+| **Remediation ETA** | No fixed date — generic dependency on the next release that touches `freebuff_plugin_03/monitor.sh` for any reason (security/hardening, proot-distro cleanup, shell-exec refactor). When such release is scheduled, this debt should close in the same PR (1-line canonical edit + CHANGELOG back-pointer to §3.2). |
+| **Blocked by** | None functional — single-line canonical edit possible in any future `monitor.sh`-related release. Waiting on owner decision (do it / defer forever). |
+| **Related** | ADR (suggested: file **ADR-010** «Canonical scripts honor env-overridable `FREEBUFF_ROOT`» alongside the fix). v5.25.x rename notes (`CHANGELOG.md` → `feat: workspace OS batch — NN-dir rename scheme`). |
 
 ---
 
@@ -159,6 +181,7 @@ This document tracks **architectural debt** identified by the daily self-audit i
 4. ~~**Document or ignore top-level directories** (DEBT-2026-07-31-004)~~ → **✅ Resolved** (см. §5.7: все 22 каталога задокументированы, судьбы зафиксированы).
 5. ~~**`sessions_15/` пуст** (DEBT-2026-07-31-003)~~ → **✅ Resolved** (см. §5.6: runtime-каталог, README добавлен).
 6. ~~**Дубль Telegram-ботов** (DEBT-2026-07-31-007)~~ → **✅ Resolved** (см. §5.8: общий предок `BaseTGBot`).
+7. **Canonical hardcodes `FREEBUFF_ROOT`** (DEBT-2026-08-02-001) — 🟡 Medium, **OPEN**, см. §3.2 (silent-misroute на non-canonical installs; одной строки правки в `freebuff_plugin_03/monitor.sh:20`).
 
 ---
 
