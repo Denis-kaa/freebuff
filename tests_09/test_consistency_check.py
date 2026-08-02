@@ -40,6 +40,8 @@ from scripts_01.consistency_check import (
     count_test_functions,
     extract_engine_rows,
     run_consistency_check,
+    _PytestCollectionVisitor as V,  # [5.39.3***REMOVED*** top-level: synthetic visitor regression-gate
+    _chain_key,  # [5.39.3***REMOVED*** top-level: e2e Set-A vs Set-B parity helper
 )
 
 # ── Импорт должен работать и с фактическим проектом.
@@ -512,14 +514,12 @@ class TestPytestCollectionVisitor:
     """
 
     def test_visitor_counts_module_level_function(self) -> None:
-        from scripts_01.consistency_check import _PytestCollectionVisitor as V
         v = V("synthetic.py")
         v.visit(ast.parse("def test_one(): pass\ndef test_two():\n    pass\n"))
         assert v.count == 2
         assert v.exclusions == [***REMOVED***
 
     def test_visitor_counts_test_prefixed_class_method(self) -> None:
-        from scripts_01.consistency_check import _PytestCollectionVisitor as V
         v = V("synthetic.py")
         v.visit(ast.parse(
             "class TestHealth:\n"
@@ -530,7 +530,6 @@ class TestPytestCollectionVisitor:
         assert v.exclusions == [***REMOVED***
 
     def test_visitor_skips_helper_class_method(self) -> None:
-        from scripts_01.consistency_check import _PytestCollectionVisitor as V
         v = V("synthetic.py")
         v.visit(ast.parse(
             "class IntegrationHelper:\n"
@@ -541,7 +540,6 @@ class TestPytestCollectionVisitor:
         assert "IntegrationHelper" in v.exclusions[0***REMOVED***["reason"***REMOVED***
 
     def test_visitor_skips_pytest_fixture_decorated(self) -> None:
-        from scripts_01.consistency_check import _PytestCollectionVisitor as V
         v = V("synthetic.py")
         v.visit(ast.parse(
             "import pytest\n"
@@ -553,7 +551,6 @@ class TestPytestCollectionVisitor:
         assert "fixture" in v.exclusions[0***REMOVED***["reason"***REMOVED***.lower()
 
     def test_visitor_counts_unittest_testcase_subclass(self) -> None:
-        from scripts_01.consistency_check import _PytestCollectionVisitor as V
         v = V("synthetic.py")
         v.visit(ast.parse(
             "import unittest\n"
@@ -564,7 +561,6 @@ class TestPytestCollectionVisitor:
         assert v.exclusions == [***REMOVED***
 
     def test_visitor_counts_async_module_level(self) -> None:
-        from scripts_01.consistency_check import _PytestCollectionVisitor as V
         v = V("synthetic.py")
         v.visit(ast.parse("async def test_async_one(): pass\n"))
         assert v.count == 1
@@ -580,7 +576,6 @@ class TestPytestCollectionVisitor:
         стражение причинения (появится кто-то вытрет — этот тест докажет, что
         удаление безопасное).
         """
-        from scripts_01.consistency_check import _PytestCollectionVisitor as V
         v = V("synthetic.py")
         v.visit(ast.parse(
             "class TestOuter:\n"
@@ -603,7 +598,6 @@ class TestPytestCollectionVisitor:
         то, что `[5.39.2***REMOVED***` закрыл.
         """
         import subprocess
-        from scripts_01.consistency_check import _chain_key
 
         result = subprocess.run(
             [

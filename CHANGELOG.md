@@ -6,6 +6,27 @@
 
 ---
 
+## [5.39.3***REMOVED*** — 2026-08-02
+
+### Исправлено
+- **Round-final2 4 non-blocking observations закрыты одним tightening pass (reviewer cleanup, без behavior changes):**
+  - **(1) `class_chain` immutable (tuple, не list)** в [consistency_check.py***REMOVED***(scripts_01/consistency_check.py): `_record_counted` теперь `tuple(c.name for c in self._class_stack)` (vs предыдущий list). Внутренняя data structure больше не мутабельна — downstream callers могут безопасно hash/set/dict-key её; pre-existing downstream use уже hash через `_chain_key()` → str, так что behavior identical, но контракт строже
+  - **(2) Чистый cross-reference в [count_test_functions***REMOVED***(scripts_01/consistency_check.py) docstring**: удалена conversation-history ref `(round-1 5.38.0 reviewer consistency math finding). Closes the AST-vs-pytest gap that pure ast.walk had`. Заменено на `Tightened in [5.39.2***REMOVED***. Gap diagnostic: see diagnose_test_count_gap.` — self-contained указатель на диагностическую функцию, без internal-chat noise
+  - **(3) SENTINEL contract documentation** в [diagnose_test_count_gap***REMOVED***(scripts_01/consistency_check.py) docstring: добавлен paragraph, разделяющий `pytest_count = -1` (subprocess `pytest --collect-only` TimedOut) vs `pytest_count = 0 + error` (обещано отдельным follow-up) vs implicit prototype (non-zero exit silently swallowed через `subprocess.run(check=False)` — `proc.returncode` не проверяется). Изначальный draft документации обманывал consumer'a (утверждал exception propagate'ит вверх на non-zero exit — это неверно); два раунда trim (round-final3 + round-final3.7) оставили truthful картину поведения
+  - **(4) Top-level import consolidation** в [tests_09/test_consistency_check.py***REMOVED***(tests_09/test_consistency_check.py): `_PytestCollectionVisitor as V` и `_chain_key` подняты в основной `from scripts_01.consistency_check import (...)` block (вместе с 14 другими символами); 7 inline `from scripts_01.consistency_check import _PytestCollectionVisitor as V` (по одному на каждый synthetic visitor test method) + 1 inline `from scripts_01.consistency_check import _chain_key` (в e2e test) удалены через `sed /d`. Resync'd alias `V = _PytestCollectionVisitor` уже не нужен — `as V` в самой import-строке
+
+### Проверка
+- `python -m pytest tests_09/test_consistency_check.py -q` — **64 passed** (без изменений от [5.39.2***REMOVED***)
+- `python -m pytest tests_09/ -q` — **1891 passed, 1 skipped, 0 failures** (exit 0; 1891 collected) — counter ANCHOR неизменен, tightening pass не добавлял тестов
+- `python scripts_01/consistency_check.py --report` — **Consistent** (exit 0; все анкоры согласованы)
+- `python scripts_01/drift_check.py --force --report` — **No structural drift** (exit 0)
+- `python -m py_compile scripts_01/consistency_check.py tests_09/test_consistency_check.py` — 0 errors
+
+### Code review
+- `code-reviewer-minimax-m3` round-final3 + round-final3.5 + round-final3.7 (3 раунда in parallel): **ship-it approved**. Изначальный SENTINEL paragraph содержал 2 неточных claim "При parse error elifs на stderr → pytest_count=0" и "non-zero exit → exception propagate'ит вверх" (subprocess.run(check=False) молча проглатывает non-zero exit) — оба check_round'a trim оставил truthful картину. 0 blocking
+
+---
+
 ## [5.39.2***REMOVED*** — 2026-08-02
 
 ### Исправлено

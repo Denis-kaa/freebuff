@@ -467,9 +467,7 @@ def count_test_functions(workspace: Path) -> int:
         starting `test_` → excluded
       - methods starting `_test_*` → excluded (private, name won't match)
 
-    Closes the AST-vs-pytest gap that pure `ast.walk` had (helper methods
-    incorrectly counted). Tightened in [5.39.2***REMOVED*** (round-1 5.38.0 reviewer
-    consistency math finding).
+    Tightened in [5.39.2***REMOVED***. Gap diagnostic: see `diagnose_test_count_gap`.
     """
     total, _excluded, _counted = diagnose_test_collection(workspace)
     return total
@@ -544,6 +542,13 @@ def diagnose_test_count_gap(workspace: Path) -> dict[str, Any***REMOVED***:
     Запускает `pytest --collect-only -q --no-header` (subprocess, stdlib).
     Args:
         workspace: корень workspace.
+    SENTINEL contract: `pytest_count = -1` означает "неизвестно" — subprocess
+    `pytest --collect-only` завершился по `subprocess.TimeoutExpired`. В этом
+    случае `ast_only`/`pytest_only` = `[***REMOVED***` (а не полные непросмотренные set'ы —
+    misleading разница с "точно пусто"). Отличает "I don't know" от
+    "I think pytest collected 0 tests". Pre-Popen exception (OSError, FileNotFoundError) propagate.ят вверх. Non-zero exit silently swallowed (subprocess.run(check=False) — proc.returncode остаётся not-checked, consumer получает partial output). Расширенный contract (returncode check + pytest_count=-2 + error=stderr-excerpt) запланирован отдельным follow-up.
+    `pytest_count = 0`, остальные поля попусту, `error: "..."` со stdout/stderr.
+
     Returns:
         dict с keys `ast_count`, `pytest_count`, `ast_only` (list),
         `pytest_only` (list), `parametrize_doubled` (int).
@@ -697,7 +702,7 @@ class _PytestCollectionVisitor(ast.NodeVisitor):
         self.counted.append({
             "file": self.filename,
             "function": node.name,
-            "class_chain": [c.name for c in self._class_stack***REMOVED***,  # mutable list
+            "class_chain": tuple(c.name for c in self._class_stack),
             "line": node.lineno,
         ***REMOVED***)
 
