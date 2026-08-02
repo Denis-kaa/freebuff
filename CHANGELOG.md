@@ -6,6 +6,38 @@
 
 ---
 
+## [5.37.0***REMOVED*** — 2026-08-02
+
+### Добавлено
+- **Meeting Tasks backend (042_06 Фаза E — код, долгожданно вместо дoк-цикла):** [task_manager.py***REMOVED***(scripts_01/task_manager.py):
+  - Schema `tasks` в `data_13/context.db`: id, project_id (FK→projects.name, declaration-only — runtime enforcement пропущен по согласованности с `work_area_view.py`), title, description, task_type ∈ {digital, meeting, document***REMOVED***, status ∈ {pending, in_progress, done, cancelled***REMOVED***, priority ∈ {low, normal, high, critical***REMOVED***, meeting_time, location, participants (JSON-list), briefing_generated (0/1), created_at, updated_at; индексы `idx_tasks_project/type/status`
+  - CRUD: `create_task`, `show_task`, `get_tasks` (фильтры type/status, `ORDER BY datetime(created_at) DESC, id DESC` — детерминизм при одинаковом created_at), `update_task` (частичное, иммутабельные `id`/`created_at`/`briefing_generated`), `delete_task` (идемпотентно — False на повторе)
+  - `generate_meeting_briefing(task_id)` — заглушка v0: markdown (проект/время/место/участники/точки/контекст), ставит `briefing_generated=1`; resilient к мусорному JSON в participants (выдаёт `”(не указаны)”`)
+  - **Strict-mode (правило 8, Context-Aware Routing)**: meeting_time/location/participants валидны ТОЛЬКО с task_type='meeting' — иначе `ValueError` (без тихого coerce — предыдущий вариант терял данные без предупреждения, пойман в батче-ревью)
+  - Argparse CLI: subcommands `create / list / show / update / delete / briefing` через `python scripts_01/task_manager.py --type meeting --time "..." --location "..." --participants '["a","b"***REMOVED***'`
+- **3 REST endpoints для 043 frontend dashboard** в [mcp_fastapi.py***REMOVED***(scripts_01/mcp_fastapi.py) (восполняет `api.ts: getProjects/getTasks/createTask`):
+  - `GET /api/v1/projects` — список проектов (мягкий fallback на пустой успех, если таблицы `projects` нет — фронт может монтироваться до `scan_projects`)
+  - `GET /api/v1/tasks?project_id=X&type=Y&status=Z` — задачи проекта через `task_manager.get_tasks` (400 на невалидный фильтр через ValueError-проброс)
+  - `POST /api/v1/tasks` — создать задачу через `task_manager.create_task` (201 на успех, 400 на bad payload, единый REST-контракт `{success, data***REMOVED***` / `{success: false, error***REMOVED***` через shared `_policy_error`)
+  - Bearer-auth (`Depends(verify_bearer_token)`, consistent с `/mcp` и `/policy/*`); origin-check через `_validate_origin`
+- **Tests:**
+  - [test_task_manager.py***REMOVED***(tests_09/test_task_manager.py) — **57 новых тестов**: TestInitDB (6), TestCreateTask (10: digital/meeting/document flows + strict-mode), TestGetTasks (6), TestShowTask (2), TestUpdateTask (7), TestDeleteTask (2), TestGenerateBriefing (4: meeting / non-meeting / missing / corrupted-JSON), TestCLI (11), TestCanonicalInvariants (3: фиксирует VALID_TASK_TYPES/STATUSES/PRIORITIES как канониеские константы, чтобы доступ не сиротant)
+  - [test_mcp_fastapi.py***REMOVED***(tests_09/test_mcp_fastapi.py) — **+11 новых** в `TestMeetingTasksREST`: projects list (empty/seeded sorted-by-name), tasks GET (empty/type-filter/invalid-filter), tasks POST (digital-201/meeting-with-full-attrs/missing-title/invalid-JSON/non-dict/meeting-attr-on-digital→400)
+
+### Обновлено
+- **Счётчик `tests_09` AST**: 1770 → **1838** (+68: 57 task_manager + 11 mcp_fastapi REST); зафиксирован автоматически 9-й проверкой `check_test_counter` в [consistency_check.py***REMOVED***(scripts_01/consistency_check.py)
+- [CODE_QUALITY_STANDARD.md***REMOVED***(docs_10/core/CODE_QUALITY_STANDARD.md) §11.6 target регрессионных тестов: `1770+` → **`1838+`** (закрыто “колесо дрейфа счётчика”)
+
+### Проверка
+- `python -m pytest tests_09/ -q` — **1838 passed, 1 skipped, 0 failures** (exit 0; 1839 collected) — было 1770+1
+- `python scripts_01/consistency_check.py --report` — **Consistent** (exit 0; в т.ч. `test_counter` после перепрогонки соответствует 1838)
+- `python scripts_01/drift_check.py --force --report` — **No drift detected** (exit 0)
+
+### Code review
+- `code-reviewer-minimax-m3` (5 раундов in parallel с pytest): ship-it approved; критичные баги пойманы во 2-5 раунде: silent coerce в `create_task` (meeting-атрибуты у non-meeting тихо обнулялись) → strict ValueError; `PRAGMA foreign_keys=ON` обда UK-крешu DELETE FROM tasks; `clean_fields[key***REMOVED*** = value` пропущен в `update_task` — молчаливый no-op вместо UPDATE; ORDER BY sort-fragility при tie в created_at; `time.sleep(0.01)` в тесте.
+
+---
+
 ## [5.36.0***REMOVED*** — 2026-08-01
 
 ### Исправлено

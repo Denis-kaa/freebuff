@@ -63,6 +63,7 @@ from scripts_01.mcp_server import (
     INVALID_REQUEST,
     rpc_error,
 )
+from scripts_01 import task_manager  # Meeting Tasks REST (042_06 Phase E)
 
 try:
     from fastapi import Depends, FastAPI, HTTPException, Request, Response
@@ -717,6 +718,118 @@ if HAS_FASTAPI:
                 "policies": serialized,
             ***REMOVED***,
         ***REMOVED***)
+
+    # ── /api/v1/* — Meeting Tasks REST (для 043 frontend dashboard) ──
+    #
+    # Канон: pompts_11/042_06_dokumentaciya_meeting_tasks.md, Фаза E + 043 §5
+    # (api.ts: getProjects/getTasks/createTask). Запросы по /api/v1/* идут
+    # через тот же bearer-auth, что и /mcp и /policy/* (REST-bypass политика
+    # применяется). Soft-fallback на отсутствующую таблицу projects:
+    # возвращаем пустой список с success=true, чтобы frontend мог
+    # монтироваться до scan_projects.
+
+    @app.get("/api/v1/projects")
+    async def list_projects(
+        _auth: None = Depends(verify_bearer_token),
+    ) -> JSONResponse:
+        """Список проектов из таблицы projects (для 043 frontend)."""
+        try:
+            db_path = task_manager.DB_PATH
+            conn = task_manager.init_db(db_path)
+            try:
+                has = conn.execute(
+                    "SELECT 1 FROM sqlite_master "
+                    "WHERE type='table' AND name='projects'"
+                ).fetchone() is not None
+                projects: list[dict[str, str***REMOVED******REMOVED*** = [***REMOVED***
+                if has:
+                    rows = conn.execute(
+                        "SELECT name, description, status, last_scanned "
+                        "FROM projects ORDER BY name"
+                    ).fetchall()
+                    projects = [
+                        {
+                            "name": r[0***REMOVED***,
+                            "description": r[1***REMOVED*** or "",
+                            "status": r[2***REMOVED*** or "active",
+                            "last_scanned": r[3***REMOVED***,
+                        ***REMOVED***
+                        for r in rows
+                    ***REMOVED***
+            finally:
+                conn.close()
+            return JSONResponse(content={
+                "success": True,
+                "data": {"projects": projects, "count": len(projects)***REMOVED***,
+            ***REMOVED***)
+        except Exception as e:
+            return _policy_error(500, f"projects list failed: {e***REMOVED***")
+
+    @app.get("/api/v1/tasks")
+    async def list_tasks_api(
+        project_id: str,
+        type: str | None = None,
+        status: str | None = None,
+        _auth: None = Depends(verify_bearer_token),
+    ) -> JSONResponse:
+        """Задачи проекта через task_manager.get_tasks (опц. фильтры)."""
+        try:
+            tasks = task_manager.get_tasks(
+                project_id, task_type=type, status=status,
+                db_path=task_manager.DB_PATH,
+            )
+            return JSONResponse(content={
+                "success": True,
+                "data": {"tasks": tasks, "count": len(tasks)***REMOVED***,
+            ***REMOVED***)
+        except ValueError as e:
+            return _policy_error(400, str(e))
+        except Exception as e:
+            return _policy_error(500, f"tasks list failed: {e***REMOVED***")
+
+    @app.post("/api/v1/tasks")
+    async def create_task_api(
+        request: Request,
+        _auth: None = Depends(verify_bearer_token),
+    ) -> JSONResponse:
+        """Создать задачу через task_manager.create_task.
+
+        Body: {"project_id": "...", "title": "...", "task_type": "...",
+               "description": "...", "priority": "...", "meeting_time": "...",
+               "location": "...", "participants": ["..."***REMOVED******REMOVED***
+        """
+        try:
+            body = await request.json()
+        except Exception:
+            return _policy_error(400, "Invalid JSON")
+        if not isinstance(body, dict):
+            return _policy_error(400, "Body must be JSON object")
+        project_id = body.get("project_id")
+        title = body.get("title")
+        if not project_id or not isinstance(project_id, str):
+            return _policy_error(400, "project_id (non-empty string) required")
+        if not title or not isinstance(title, str):
+            return _policy_error(400, "title (non-empty string) required")
+        try:
+            task = task_manager.create_task(
+                project_id,
+                title,
+                task_type=str(body.get("task_type", "digital")),
+                description=str(body.get("description", "")),
+                priority=str(body.get("priority", "normal")),
+                meeting_time=body.get("meeting_time"),
+                location=body.get("location"),
+                participants=body.get("participants"),
+                db_path=task_manager.DB_PATH,
+            )
+            return JSONResponse(
+                status_code=201,
+                content={"success": True, "data": {"task": task***REMOVED******REMOVED***,
+            )
+        except ValueError as e:
+            return _policy_error(400, str(e))
+        except Exception as e:
+            return _policy_error(500, f"task create failed: {e***REMOVED***")
 
 
 # ═══════════════════════════════════════════════════════════════

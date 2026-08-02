@@ -1271,3 +1271,235 @@ class TestAuthorization:
         assert bad is None, (
             "Found '== provided/expected' — must use hmac.compare_digest"
         )
+
+
+# ═══════════════════════════════════════════════════════════════
+# /api/v1/* Meeting Tasks REST (042_06 Фаза E, фронтенд-контракт 043)
+# ═══════════════════════════════════════════════════════════════
+
+
+@pytest.fixture
+def tmp_tasks_db(tmp_path, monkeypatch):
+    """Временная БД для тестов Meeting Tasks REST.
+
+    Monkey-patch task_manager.DB_PATH → указывает на tmp_path. Эндпоинты
+    в скриптах читают DB_PATH динамически (через task_manager.DB_PATH),
+    поэтому patch применяется на лету.
+    """
+    db_path = tmp_path / "data_13" / "context.db"
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(_mcp_fastapi.task_manager, "DB_PATH", db_path)
+    return db_path
+
+
+class TestMeetingTasksREST:
+    """REST-эндпоинты для 043 frontend dashboard
+    (api.ts: getProjects/getTasks/createTask). Реальный TaskManager +
+    uvicorn server + DB isolation через tmp_tasks_db.
+
+    Auth bypass: FREEBUFF_ENV=test + FREEBUFF_MCP_AUTH_DISABLED=1 (setdefault).
+    """
+
+    @staticmethod
+    def _seed_projects(db, names=("CRM",)):
+        """Сидирует projects table (FK для create_task)."""
+        conn = _mcp_fastapi.task_manager.init_db(db)
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS projects (
+                name TEXT PRIMARY KEY, path TEXT NOT NULL,
+                description TEXT DEFAULT '', last_scanned TEXT NOT NULL,
+                status TEXT DEFAULT 'active'
+            )
+            """
+        )
+        for n in names:
+            conn.execute(
+                "INSERT OR REPLACE INTO projects "
+                "(name, path, description, status, last_scanned) "
+                "VALUES (?, ?, ?, 'active', '2026-08-01T00:00:00+00:00')",
+                (n, f"/tmp/{n***REMOVED***", f"project {n***REMOVED***"),
+            )
+        conn.commit()
+        conn.close()
+
+    # ── /api/v1/projects ──
+
+    def test_list_projects_empty_returns_count_zero(
+        self, addr, tmp_tasks_db
+    ):
+        """Без таблицы projects — пустой список (soft fallback)."""
+        host, port = addr
+        status, _, body = _http(host, port, "GET", "/api/v1/projects")
+        assert status == 200
+        data = json.loads(body)
+        assert data["success"***REMOVED*** is True
+        assert data["data"***REMOVED***["count"***REMOVED*** == 0
+        assert data["data"***REMOVED***["projects"***REMOVED*** == [***REMOVED***
+
+    def test_list_projects_seeded_sorted_by_name(
+        self, addr, tmp_tasks_db
+    ):
+        host, port = addr
+        self._seed_projects(tmp_tasks_db, names=("CRM", "diet_platform"))
+        status, _, body = _http(host, port, "GET", "/api/v1/projects")
+        assert status == 200
+        data = json.loads(body)
+        assert data["data"***REMOVED***["count"***REMOVED*** == 2
+        assert [p["name"***REMOVED*** for p in data["data"***REMOVED***["projects"***REMOVED******REMOVED*** == [
+            "CRM", "diet_platform"
+        ***REMOVED***
+        assert data["data"***REMOVED***["projects"***REMOVED***[0***REMOVED***["status"***REMOVED*** == "active"
+        assert data["data"***REMOVED***["projects"***REMOVED***[0***REMOVED***["last_scanned"***REMOVED***
+
+    # ── /api/v1/tasks GET ──
+
+    def test_get_tasks_empty_project_returns_count_zero(
+        self, addr, tmp_tasks_db
+    ):
+        host, port = addr
+        status, _, body = _http(
+            host, port, "GET", "/api/v1/tasks?project_id=ghost"
+        )
+        assert status == 200
+        data = json.loads(body)
+        assert data["data"***REMOVED***["count"***REMOVED*** == 0
+        assert data["data"***REMOVED***["tasks"***REMOVED*** == [***REMOVED***
+
+    def test_get_tasks_with_type_filter(self, addr, tmp_tasks_db):
+        host, port = addr
+        self._seed_projects(tmp_tasks_db)
+        _mcp_fastapi.task_manager.create_task(
+            "CRM", "Code", task_type="digital", db_path=tmp_tasks_db
+        )
+        _mcp_fastapi.task_manager.create_task(
+            "CRM", "Встреча",
+            task_type="meeting",
+            meeting_time="2026-08-02T14:00",
+            location="Офис",
+            participants=["Алексей"***REMOVED***,
+            db_path=tmp_tasks_db,
+        )
+        status, _, body = _http(
+            host, port, "GET", "/api/v1/tasks?project_id=CRM&type=meeting"
+        )
+        assert status == 200
+        data = json.loads(body)
+        assert data["data"***REMOVED***["count"***REMOVED*** == 1
+        t = data["data"***REMOVED***["tasks"***REMOVED***[0***REMOVED***
+        assert t["task_type"***REMOVED*** == "meeting"
+        assert t["meeting_time"***REMOVED*** == "2026-08-02T14:00"
+        assert t["participants"***REMOVED*** == ["Алексей"***REMOVED***
+
+    def test_get_tasks_invalid_filter_returns_400(
+        self, addr, tmp_tasks_db
+    ):
+        host, port = addr
+        status, _, body = _http(
+            host, port, "GET", "/api/v1/tasks?project_id=CRM&type=bogus"
+        )
+        assert status == 400
+        assert json.loads(body)["success"***REMOVED*** is False
+
+    # ── /api/v1/tasks POST ──
+
+    def test_post_task_digital_returns_201(
+        self, addr, tmp_tasks_db
+    ):
+        host, port = addr
+        self._seed_projects(tmp_tasks_db)
+        status, _, body = _http(
+            host, port, "POST", "/api/v1/tasks",
+            body=json.dumps({
+                "project_id": "CRM", "title": "API endpoint",
+                "task_type": "digital",
+            ***REMOVED***),
+        )
+        assert status == 201
+        data = json.loads(body)
+        assert data["success"***REMOVED*** is True
+        task = data["data"***REMOVED***["task"***REMOVED***
+        assert task["title"***REMOVED*** == "API endpoint"
+        assert task["task_type"***REMOVED*** == "digital"
+        assert task["id"***REMOVED***.startswith("tm-")
+        assert task["status"***REMOVED*** == "pending"
+        assert task["created_at"***REMOVED***
+
+    def test_post_task_meeting_with_full_attrs(
+        self, addr, tmp_tasks_db
+    ):
+        host, port = addr
+        self._seed_projects(tmp_tasks_db)
+        status, _, body = _http(
+            host, port, "POST", "/api/v1/tasks",
+            body=json.dumps({
+                "project_id": "CRM", "title": "Sync",
+                "task_type": "meeting",
+                "meeting_time": "2026-08-02T14:00",
+                "location": "Офис",
+                "participants": ["Алексей", "Иван"***REMOVED***,
+                "priority": "high",
+                "description": "Согласование roadmap",
+            ***REMOVED***),
+        )
+        assert status == 201
+        data = json.loads(body)
+        task = data["data"***REMOVED***["task"***REMOVED***
+        assert task["task_type"***REMOVED*** == "meeting"
+        assert task["meeting_time"***REMOVED*** == "2026-08-02T14:00"
+        assert task["location"***REMOVED*** == "Офис"
+        assert task["participants"***REMOVED*** == ["Алексей", "Иван"***REMOVED***
+        assert task["priority"***REMOVED*** == "high"
+        assert task["description"***REMOVED*** == "Согласование roadmap"
+
+    def test_post_task_missing_title_returns_400(
+        self, addr, tmp_tasks_db
+    ):
+        host, port = addr
+        self._seed_projects(tmp_tasks_db)
+        status, _, body = _http(
+            host, port, "POST", "/api/v1/tasks",
+            body=json.dumps({
+                "project_id": "CRM", "title": "", "task_type": "digital",
+            ***REMOVED***),
+        )
+        assert status == 400
+        assert json.loads(body)["success"***REMOVED*** is False
+
+    def test_post_task_meeting_attr_for_digital_returns_400(
+        self, addr, tmp_tasks_db
+    ):
+        """meeting_time + task_type=digital → 400 (правило 8)."""
+        host, port = addr
+        self._seed_projects(tmp_tasks_db)
+        status, _, body = _http(
+            host, port, "POST", "/api/v1/tasks",
+            body=json.dumps({
+                "project_id": "CRM", "title": "x", "task_type": "digital",
+                "meeting_time": "2026-08-02T14:00",
+            ***REMOVED***),
+        )
+        assert status == 400
+        assert "meeting_time" in json.loads(body)["error"***REMOVED***
+        assert "Context-Aware" in json.loads(body)["error"***REMOVED***
+
+    def test_post_task_invalid_json_returns_400(
+        self, addr, tmp_tasks_db
+    ):
+        host, port = addr
+        status, _, body = _http(
+            host, port, "POST", "/api/v1/tasks", body="{invalid"
+        )
+        assert status == 400
+        assert json.loads(body)["success"***REMOVED*** is False
+
+    def test_post_task_non_dict_body_returns_400(
+        self, addr, tmp_tasks_db
+    ):
+        host, port = addr
+        status, _, body = _http(
+            host, port, "POST", "/api/v1/tasks",
+            body=json.dumps(["not", "a", "dict"***REMOVED***),
+        )
+        assert status == 400
+        assert json.loads(body)["success"***REMOVED*** is False
