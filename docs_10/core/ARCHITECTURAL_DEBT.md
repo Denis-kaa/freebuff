@@ -62,6 +62,12 @@ This document tracks **architectural debt** identified by the daily self-audit i
 ## 4. False Positives and Tooling Debt
 
 > **2026-08-01:** Единственный оставшийся false positive (`docs_10/core_02` — артефакт массового переименования каталогов в дереве `BUFFY.md`/`RULES.md`) устранён, см. Resolved DEBT-002/DEBT-005 ниже.
+>
+> **Prevention update [5.39.4***REMOVED***:** цикл закрыт (loop closure). Защита от структурных false positives теперь эшелонирована — **layered guards**:
+> - **Синтаксис деревьев:** [drift_check.py***REMOVED***(../../scripts_01/drift_check.py) корректно парсит вложенные поддеревья (`docs_10/`-rooted), ловит tree-vs-actual-files рассинхроны.
+> - **Инварианты имён:** [consistency_check.py***REMOVED***(../../scripts_01/consistency_check.py) (правило `check_naming_convention`, добавлено в v5.39.0) — аппаратно блокирует появление top-level катологов вне схемы `имя_NN` и промтов вне `NNN_TT_name.md` на уровне registries (еще до появления вияких ложных positives в drift_check).
+>
+> Это разделение обязанностей: `drift_check` ловит рассинхрон документации с реальностью; `consistency_check` жёстко защищает саму файловую систему от структурных аномалий. Разные klassы false positives, разные инструменты, разные эшелоны.
 
 ## 5. Resolved Debt
 
@@ -78,10 +84,10 @@ This document tracks **architectural debt** identified by the daily self-audit i
 | **Fate: `docs_10/02-specs`** | **Не создавать.** Это призрак отвергнутой номерной схемы `01-architecture/02-specs/03-audits/...` (встречается только в исторических аудитах `AUDIT_FULL_2026-07-29.md`, `pompts_11/038_03_audit_prompt.md`). Канон — `docs_10/core/`, `docs_10/vision/`, `docs_10/decisions/`, `docs_10/audits/`, `docs_10/plugin/`, `docs_10/projects_meta/`, `docs_10/ops/`. В канонических деревьях отсутствует — фантом из деревьев аудитов не порождает drift. |
 | **Fate: `scripts_01/monitor.sh`** | **Не восстанавливать.** В `scripts_01/` этого файла никогда не было (git history пуст). Каноническое расположение — `freebuff_plugin_03/monitor.sh` (документировано в `docs_10/plugin/FREEBUFF_PLUGIN_ARCHITECTURE.md` §3.5). В канонических деревьях `monitor.sh` не значится — false positive снят. |
 | **Resolved** | 2026-08-01 |
+| **Prevention / Forward-looking guard (layered)** | `drift_check.py` теперь корректно сопоставляет tree-диаграммы из [BUFFY.md***REMOVED***(../../BUFFY.md) / [RULES.md***REMOVED***(../../docs_10/core/RULES.md) с файловой системой (исключая tree-vs-actual-files FPs class). **Independent structure layer:** [consistency_check.py***REMOVED***(../../scripts_01/consistency_check.py) (8th check: `check_naming_convention`, введено в v5.39.0 Stage 9) ловит корневую причину подобных структурных сдвигов — любые top-level каталоги вне схемы `имя_NN` блокируются до попадания в канонические деревья. Drift + consistency = двухступенчатый контроль с независимыми уровнями доверия. |
 
 ---
-
-### 5.4 `drift_check.py` Path Resolution — RESOLVED
+ — RESOLVED
 
 | Field | Value |
 |-------|-------|
@@ -93,10 +99,10 @@ This document tracks **architectural debt** identified by the daily self-audit i
 | **Remediation done** | 1) `_extract_tree_paths()` теперь детектирует bare root-узел и возвращает `(path, root)`; дети резолвятся относительно корня. <br> 2) `check_directory_structure()` резолвит детей относительно root, если root — реальный подкаталог. <br> 3) Попутно: `_is_knowledge_doc()` переведён с `docs` на `docs_10`, `_KNOWLEDGE_IGNORE_DIRS` — с `context/data/logs/sessions` на `context_12/data_13/logs_14/sessions_15`, `_extract_impl_refs()`/`_guess_block_paths()` — на новые имена каталогов. <br> 4) Добавлены юнит-тесты парсинга дерева: `test_extract_tree_paths_detects_bare_root_node`, `test_extract_tree_paths_no_root_block`, `test_extract_tree_paths_deep_nesting`, `test_check_directory_structure_resolves_docs_subtree_root`. |
 | **Evidence** | 1) `drift_check.py --force --report` → **No discrepancies found** во всех секциях. 2) `python -m pytest tests_09/test_drift_check.py -q` → 30 passed. |
 | **Resolved** | 2026-08-01 |
+| **Prevention / Forward-looking guard (layered)** | Путь-парсер защищён 4 юнит-тестами (`tests_09/test_drift_check.py::TestExtractTreePaths`, `tests_09/test_drift_check.py::TestCheckDirectoryStructure`). **Independent structure layer:** `consistency_check.py:check_naming_convention` (8й check, [v5.39.0***REMOVED***(../../CHANGELOG.md)). Инструменты зонированы по ответственности: drift_check проверяет корректность путей в tree-диаграммах; consistency_check не позволяет создать сам каталог/файл с ошибочным паттерном (например, prompt вне `NNN_TT_name.md` в `pompts_11/`). FP class зафиксирован test-suite guard, повторение блокируется на pre-commit / CI. |
 
 ---
-
-### 5.5 Knowledge Index Drift — RESOLVED
+ — RESOLVED
 
 | Field | Value |
 |-------|-------|

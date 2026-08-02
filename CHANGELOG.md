@@ -6,6 +6,24 @@
 
 ---
 
+## [5.39.4***REMOVED*** — 2026-08-02
+
+### Документация
+- **Closed-loop на DEBT-2026-07-31-002 и DEBT-2026-07-31-005 в [ARCHITECTURAL_DEBT.md***REMOVED***(docs_10/core/ARCHITECTURAL_DEBT.md)** — debt entries уже помечены `✅ Resolved 2026-08-01`, но без forward-looking guard-аргументации. Этот release добавляет §4 *layered guards* абзац + строки `Prevention / Forward-looking guard` в §5.3 и §5.4 закрывающие цикл честным разделением ответственности:
+  - **drift_check.py** — tree-vs-actual-files (path resolution inside tree diagrams → 4 unit-теста `tests_09/test_drift_check.py::TestExtractTreePaths` / `TestCheckDirectoryStructure` фиксируют pre-existing closures)
+  - **consistency_check.py `check_naming_convention`** (8th check, v5.39.0) — top-level dirs `имя_NN` + prompts `NNN_TT_name.md` (структурные инварианты фиксируются до попадания в канонические деревья)
+  - **Layered guards:** две стадии с независимыми underwriting-уровнями. drift ловит рассинхрон документации; consistency защищает саму reality файловую систему от структурных аномалий. Никаких кросс-overlaps в покрытии; чёткое разделение классов false-positives между инструментами.
+
+### Проверка
+- `python scripts_01/consistency_check.py --report` — **Consistent** (exit 0; все 9 проверок зелёные, включая `naming_convention`)
+- `python scripts_01/drift_check.py --force --report` — **No structural drift** (exit 0)
+- `python -m pytest tests_09/test_consistency_check.py tests_09/test_drift_check.py -q` — **105 passed** (33 drift + 64 consistency check + несколько regression в общей массе, exit 0)
+
+### Code review
+- `code-reviewer-minimax-m3` (parallel с validation): проверил три str+python injection edits в [ARCHITECTURAL_DEBT.md***REMOVED***(docs_10/core/ARCHITECTURAL_DEBT.md) на vocabulary/consistency с ARCHITECTURE_MANIFEST / CORE_PROMPT — ship-it approve
+
+---
+
 ## [5.39.3***REMOVED*** — 2026-08-02
 
 ### Исправлено
