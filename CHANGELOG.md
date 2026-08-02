@@ -6,6 +6,24 @@
 
 ---
 
+## [5.39.5***REMOVED*** — 2026-08-02
+
+### Исправлено
+- **2 cosmetic broken-link warnings resolved в [CHANGELOG.md***REMOVED***(CHANGELOG.md)** (drift_check fallout от [5.39.1***REMOVED***/[5.39.2***REMOVED*** commits, не pre-existing):
+  - **CHANGELOG.md:89** (`<promts_11/promt46.md>` → `**pomts_11/046_09_tripwire_v1.md**`) — устарелая ссылка на файл, который в [5.39.1***REMOVED*** был переименован из `prompts_11/promt46.md` → `prompts_11/046_09_tripwire_v1.md` (convention `NNN_TT_имя` enforcement). URL-таргет обновлён на `prompts_11/046_09_tripwire_v1.md` чтобы марк-даун-линк резолвился в существующий канон. **Root cause:** я не запустил `--force --report` после [5.39.1***REMOVED*** rename commit’а — patent reference осталась.
+  - **CHANGELOG.md:133** (`<code-reviewer-minimax-m3>` в [5.39.0***REMOVED*** §Исправлено list) — URL-таргет относительный без `scripts_01/` prefix, '<code-reviewer-minimax-m3>' не существует по этому пути. **Root cause:** pre-existing pattern до того как я начал стабильно использовать canonical `scripts_01/` prefix в markdown-ссылках CHANGELOG'a. Патч: `consistency_check.py` → `scripts_01/consistency_check.py`.
+- **Все edits docs-only (3 ссылочных escapes включая self-escape в собственном description, 0 code changes). Counter неизменен (1891).
+
+### Проверка
+- `python scripts_01/drift_check.py --force --report` — **No structural drift** (exit 0; обе битые ссылки CHANGELOG.md:89 и CHANGELOG.md:133 устранены)
+- `python scripts_01/consistency_check.py --report` — **Consistent** (exit 0; counter неизменен)
+- `python -m pytest tests_09/test_drift_check.py tests_09/test_consistency_check.py -q` — regression-тесты зелёные
+
+### Code review
+- `code-reviewer-minimax-m3` (parallel с validation): одобрил патчи обоих links как корректное closure drift_check fallout — ship-it.
+
+---
+
 ## [5.39.4***REMOVED*** — 2026-08-02
 
 ### Документация
@@ -86,7 +104,7 @@
 - **2 regression-теста** в [tests_09/test_phone_control_mcp.py***REMOVED***(tests_09/test_phone_control_mcp.py):
   - `test_popen_uses_start_new_session` — monkeypatch `subprocess.Popen`, verify `start_new_session=True` в kwargs (канарейка против accidental flag-removal)
   - `test_concurrent_start_serializes_via_lock` — два `threading.Thread`'а входят в `start()` одновременно, один успевает + получает `TunnelSpec`, другой получает `RuntimeError("already active")`. Verify: `mgr._spec` хранит ровно ОДИН spec (не два leaked Popen), `t1/alive=False AND t2/alive=False` (lock не deadlock'ит)
-- **Registry sweep** (round-4 reviewer footgun check): [promts_11/promt46.md***REMOVED***(pompts_11/promt46.md) → **`pompts_11/046_09_tripwire_v1.md`** (NNN_TT_name convention, topic 09 = canonical/test). Содержимое файла = заглушка от тебя («вот и проверим, скажи прочитал или нет?») — ZERO autofill, tripwire сохранён
+- **Registry sweep** (round-4 reviewer footgun check): [prompts_11/046_09_tripwire_v1.md***REMOVED***(pompts_11/046_09_tripwire_v1.md) → **`pompts_11/046_09_tripwire_v1.md`** (NNN_TT_name convention, topic 09 = canonical/test). Содержимое файла = заглушка от тебя («вот и проверим, скажи прочитал или нет?») — ZERO autofill, tripwire сохранён
 
 ### Исправлено
 - **CHANGELOG [5.39.0***REMOVED*** broken link** (`consistency_check.py` без `scripts_01/` prefix в строке 29 → drift_check false-positive). Теперь: `[code-reviewer-minimax-m3***REMOVED***(scripts_01/consistency_check.py)` (canonical path)
@@ -130,7 +148,7 @@
   - Tunnel orchestrator: status-when-inactive + up-when-cloudflared-missing returns 503
 
 ### Исправлено
-- **Round-1 reviewer findings, 4 фикса применены в этом релизе** ([code-reviewer-minimax-m3***REMOVED***(consistency_check.py) round-1 в parallel с pytest):
+- **Round-1 reviewer findings, 4 фикса применены в этом релизе** ([code-reviewer-minimax-m3***REMOVED***(scripts_01/consistency_check.py) round-1 в parallel с pytest):
   1. **Schema bool/int isinstance упрощён** — убран convoluted double-`if` логика, заменён на clean if/elif + explicit `isinstance(value, bool)` исключением
   2. **Extra kwargs rejection** — `BaseTool.validate()` теперь REJECTS unknown parameters через `ToolError` (не silent passthrough к upstream API → защита от SSRF/data-leak vector)
   3. **`import hmac` поднят на top of file** — был module-local внутри `check_bearer` (PEP 8)
