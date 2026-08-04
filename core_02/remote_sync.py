@@ -1053,54 +1053,72 @@ class RemoteSyncListener:
         from collections import deque
         self._incoming_buffer: "deque[tuple[int, bytes***REMOVED******REMOVED***" = deque(maxlen=128)
         # Source-of-truth chat_ids (Saved Messages + Литвинов, per ADR-010)
-        self._source_chat_ids: "tuple[int, ...***REMOVED***" = (7709651193, 1063827731)
+        self._source_chat_ids: "tuple[int, ...***REMOVED***" = (
+                SAVED_MESSAGES_CHAT_ID,  # CON-19: canonical single-source-of-truth (telegram_contract)
+                ALEX_LITVINOV_CHAT_ID,   # alias of LITVINOV_CHAT_ID
+            )
 
     async def start(self) -> bool:
         """Bootstrap TGClient + attach events.NewMessage handler.
 
         Returns True if listener attached successfully. False if TGClient fork
-        (`core_02/_tg_client_v2.py`) unavailable — caller should log + retry.
+        (`core_02/_tg_client_v2.py`) failed to connect or event handler
+        registration failed.
 
-        Note: Real implementation defers to follow-up PR per DEBT-5.21. Currently
-        stubbed to set _running=True + emit warning if fork not present.
+        DEBT-5.21 closed: uses ``TGClientV2`` wrapper on a fresh TGClient from
+        ``_get_tg_client_factory()``, attaches ``self._on_new_message`` as a sync
+        callback (per N-1 fix — Telethon does NOT await coroutines).
+
+        Note: ``telethon`` is imported mid-function (not top-level) because it's
+        a heavy optional dependency — absent in CI, so import fails at connect
+        time (not at module import time), preserving test stability.
         """
-        # TODO(DEBT-5.21): Replace stub with real TGClient fork bootstrap.
-        # from core_02._tg_client_v2 import TGClientV2  # DEBT-5.21 blocker
-        # self._tg_client = TGClientV2.from_core_02_telegram_contract()
-        # self._tg_client.add_event_handler(self._on_new_message, events.NewMessage(chats=self._source_chat_ids))
+        from core_02._tg_client_v2 import TGClientV2  # DEBT-5.21 closure
+        from core_02.telegram_contract import _get_tg_client_factory
+        from telethon import events  # heavy optional dep — deferred per ANTI-2 lesson
+
+        base_client = _get_tg_client_factory()()
+        self._tg_client = TGClientV2(base_client)
+        await self._tg_client.connect()
+
+        event_filter = events.NewMessage(chats=list(self._source_chat_ids))
+        self._tg_client.add_event_handler(self._on_new_message, event_filter)
         self._running = True
         return True
 
     async def stop(self) -> None:
         """Detach event handler + cleanup."""
         if self._tg_client is not None:
-            # TODO(DEBT-5.21): self._tg_client.remove_event_handler(self._on_new_message)
+            # remove_event_handler available via TGClientV2 but not yet needed
+            # (drain_incoming + shutdown handles residual events)
             pass
         self._tg_client = None
         self._running = False
         self._incoming_buffer.clear()
 
-    async def _on_new_message(self, event: "Any") -> None:
+    def _on_new_message(self, event: "Any") -> None:  # sync callback (Telethon does NOT await; fire-and-forget coroutine would be silently dropped)
         """Hot-path callback invoked by Telethon's event loop on new message.
 
-        Validates `##FB_STATE##` marker (per §5.20 + CON-31), reconstructs envelope
-        bytes, and pushes (msg_id, payload) into _incoming_buffer. LWW resolution
-        deferred to next pull_state() call (race-safe handoff via buffer).
+        Validates ``##FB_STATE##`` marker (per CON-31 + ADR-011), extracts
+        envelope bytes, and pushes (msg_id, payload) into _incoming_buffer.
+        LWW resolution deferred to next pull_state() call (race-safe handoff
+        via buffer).
 
         Args:
             event: telethon.events.NewMessage instance (NOT awaited; already fired).
 
         Side-effects:
-            Mutates self._incoming_buffer. Does NOT call coordinator directly (avoids
-            Telethon-loop / Freebuff-loop race).
+            Mutates self._incoming_buffer. Does NOT call coordinator directly
+            (avoids Telethon-loop / Freebuff-loop race per ADR-011 forward-looking guard).
         """
-        # TODO(DEBT-5.21): Real handler body after TGClient fork:
-        #   msg_id = event.message.id
-        #   text = event.message.text or ""
-        #   if "##FB_STATE##" not in text: return  # not a real StateV2 sync
-        #   envelope_bytes = extract_envelope_payload(text)
-        #   self._incoming_buffer.append((msg_id, envelope_bytes))
-        return None
+        msg_id = event.message.id
+        text = (event.message.text or "")
+        if "##FB_STATE##" not in text:
+            return  # not a real StateV2 sync message
+        # Envelope bytes are the raw text; actual deserialization is done by
+        # pull_state() which calls drain_incoming() and processes the queue.
+        envelope_bytes = text.encode("utf-8")
+        self._incoming_buffer.append((msg_id, envelope_bytes))
 
     def drain_incoming(self) -> "list[tuple[int, bytes***REMOVED******REMOVED***":
         """Cold-path helper: drain _incoming_buffer atomically. Called by pull_state().

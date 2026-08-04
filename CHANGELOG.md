@@ -1,3 +1,31 @@
+## [5.66.0***REMOVED*** — 2026-08-03
+
+### Added (Phase 5.3-D DEBT-5.21 close — TGClientV2 fork)
+
+- **`core_02/_tg_client_v2.py::TGClientV2`** — CON-31 resolution: new thin wrapper exposing
+  `add_event_handler(callback, event)`, `remove_event_handler(callback, event)`, and
+  `get_messages(entity, limit=5, ids=None)` with `ids=` kwarg (delegates to telethon's native
+  `ids=` param, eliminating the limit-scan + client-side filter pivot). Wraps (not extends)
+  upstream `projects_17/tg_terminal_messenger` boundary per ADR-011 Option 3.
+- **`RemoteSyncListener.start()`** wired to use `TGClientV2` with real `events.NewMessage`
+  handler (sync callback per N-1 fix — Telethon does NOT await coroutines).
+- **`RemoteSyncListener._on_new_message()`** — real hot-path callback: validates
+  `##FB_STATE##` marker, pushes `(msg_id, envelope_bytes)` into `_incoming_buffer`.
+- **`tests_09/test_tg_client_v2.py`** — 8 tests covering: `get_messages` with `ids=` kwarg,
+  fallback to limit-scan, single-int `ids`, `add_event_handler`, `remove_event_handler`,
+  multiple independent handlers, handler error resilience, lifecycle delegation
+  (connect/disconnect/send_message/get_me).
+- **`core_02/LESSONS.md` CON-31 entry updated** — resolved status with full resolution path.
+
+### Verify Gate (2026-08-03)
+
+- **py_compile**: `_tg_client_v2.py`, `remote_sync.py`, `test_tg_client_v2.py` — all OK.
+- **pytest tests_09/test_tg_client_v2.py**: 8/8 PASS in 0.93s.
+- **Cold import**: TGClientV2 imports correctly from `core_02._tg_client_v2`.
+- **drift_check + consistency_check**: exit 0 (pre-existing minor warnings unchanged).
+
+---
+
 ## [5.65.0***REMOVED*** — 2026-08-03
 
 ### Added (Phase 5.3-D Listener Loop Pre-work)

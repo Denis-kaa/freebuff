@@ -408,3 +408,198 @@ Per PB-5, Freebuff-side сознательно НЕ registers interior_consultan
 **Сценарий:** resilience корпуса — повреждённый/пустой registry.yaml + реформат пользователем без marker'а.
 **Что подтверждено:** (1) `_load_registry()` переводит `yaml.YAMLError` в `ValueError` с указанием пути и совета восстановить из .bak; пустой/не‑dict → `ValueError` «пуст или неожиданная структура». (2) `_insert_into_pipeline` вставляет новую запись внутрь существующего `pipeline:` (ищет top‑level ключ, вставляет перед следующей секцией) — файл остаётся валидным YAML, дубликатов секций нет. (3) post‑parse guard по‑прежнему ловит любой невалидный сплис до записи на диск (CON‑1 сохранён).
 **Вывод:** self‑healing UX: pipeline, упавший посреди проекта на повреждённом registry, теперь падает loud с диагностикой, а не молчаливым traceback; пользовательский реформат registry.yaml больше не ломает добавление ролей.
+
+
+
+## ✅ Scenario: Block-A Recovery — FreebuffLocator Helper (2026-08-03)
+
+### CON-19 / ANTI-12 NEW lesson — verify-gate baseline check
+
+При закрытии any `sys.path`-class change (Block-A, locator enhancement, relocation):
+**ALWAYS runna baseline-check downstream references BEFORE changed-run**, не только
+после. Инача silent pre-existing drift-fixes маскируются как «all gates green» 
+без ground-truth. Кейс в v5.58.0: `e2e_promt47.py` ROOT изменился с `parents[1***REMOVED*** = 
+interior_planner/` на `parents[1***REMOVED***` ➜ Freebuff root. Downstream refs (DEFAULT_E2E_LOG, 
+PROMT47_FILE, _CANONICAL_MANIFEST) **MOЛЧА** указывали на несуществующие пути в 
+`interior_planner/` с момента v5.51.0 relocation — это был PRE-EXISTING DRIFT, 
+без baseline-проверки я не увидел его manual-fix vs incidental-fix.
+
+**Pattern (NEW)**:
+```bash
+# Step A: snapshot expected downstream paths from changed script
+grep -E "ROOT |DEFAULT_E2E_LOG |PROMT47_FILE |_CANONICAL_MANIFEST" <script>.py
+# Step B: BEFORE changed-run, list actual filesystem truth
+python3 -c "***REMOVED***; print(Path(docs_10/e2e_logs/promt47_run.md).exists())"
+# Step C: AFTER changed-run, re-check
+# Same command, should match.
+```
+
+### CON-20 — code duplication as load-bearing (повтор v5.57.0)
+
+Несмотря на то что 4-line locator-pattern **identical** в обоих canonical scripts, 
+сама функция живёт в **1 файле** `_freebuff_locator.py`. Это anti-fragile design:
+- 1 source-of-truth для contract (resolver API, marker tag, validation)
+- N copies в callsites (no inversion of control, no surprise side-effects)
+
+Не пытаться unified через `_interior_planner_home.py`-style helper в проекте scripts/ —
+это переносит brittleness в helper (его можно потерять при relocation). Inline locator-
+**block** (4 lines x N callsites) — ОК. Helper module — НЕ ОК. Восстановлен приоритет 
+анти-fragility над DRY применительно к project-level scripts.
+
+### Block-A closure details (v5.58.0)
+
+Phase: post-v5.57.0 (CAN-8 closed but Block-A recovery deferred as separate debt).
+
+Изменения:
+- **NEW**: `scripts/_freebuff_locator.py` — 60-line pure-function helper, 
+  `resolve_freebuff_root() -> Path` (contract: $FREEBUFF_ROOT > canonical hardcode > 
+  validation `(root / "core_02").is_dir()` > `[FreebuffLocator***REMOVED***` marker).
+- **CHANGED**: `scripts/interior_consultant_register.py` + `scripts/e2e_promt47.py` — 
+  replaced `parents[1***REMOVED***` sys.path block with locator pattern (4 lines, identical).
+
+Verify-gate 2026-08-03 (6 gates, all green):
+1. `py_compile` 3/3 → exit 0
+2. Full Block-A chain без PYTHONPATH → exit 0 (core_02.blueprint_v3 + telegram_contract both OK)
+3. Drift baseline check: 3/3 downstream refs → exist=True (PATHs реальны под Freebuff root)
+4. Business gate `e2e_promt47.py --skip-tg --silent` → exit 0
+5. `register.py` cold-import: DEFAULT_SEED/DEFAULT_ARTIFACT НЕ через `/tmp` → PASS (v5.57.0 invariant)
+6. Grep audit: `parents\[1\***REMOVED***` functional = 0, `from _freebuff_locator import` = 2/2 scripts ✓
+
+Tooling tidy: `_apply_blocka_v5580.py` + `_apply_can8_v5570.py` + `_restore_can8_v5570.py` 
++ `v551_*` + `v552_dock.py` + `v553_dock.py` → moved в `trash_21/` (anti-accumulation по 
+`docs_10/core/CODE_QUALITY_STANDARD.md`).
+
+### Known limitations (deferred)
+
+- **`python3 -m pkg.e2e_promt47` invocation mode** — current usage works because Python 
+  auto-injects script dir в sys.path[0***REMOVED***. Если в будущем кто-то запустит `-m` mode из 
+  parent dir, sibling locator import провалится. Current usage always via absolute 
+  path → safe. Documented в CHANGELOG v5.58.0 §Known Limitations.
+- **Hardcoded Python `_CANONICAL_FREEBUFF_ROOT`** vs shell-form `${FREEBUFF_ROOT:-/default***REMOVED***` 
+  convention в `freebuff_plugin_03/monitor.sh` — minor inconsistency, not blocker.
+
+---
+
+## 🚀 Scenario: CAN-9 Final Closure — Real `--client` TG Round-Trip (2026-08-03)
+
+### CON-22 — locator-class changes require RE-round-trip, not pre-fix confirm
+
+При выполнении compound debt closure, где ОДНОВРЕМЕННО меняется sys.path strategy 
+(Block-A v5.58.0) И verification gate (CAN-9 v5.59.0), недостаточно использовать 
+pre-fix-round-trip evidence как подтверждение post-fix. Необходим **ЗАНОВО** 
+реальный TG round-trip через новий sys.path chain, чтобы подтвердить:
+
+1. Успешный stage 4 TG delivery (Saved + Литвинов).
+2. Round-trip read-back через `client.get_messages` === real history (не 
+   синтетика).
+3. `promt47_run.md` правильно appended вверху pre-existing `## Historical 
+   Verification Runs` section (B-3 splice fix verifies audit trail intact).
+4. New run narrative отличается от pre-fix только способом discovery, не 
+   бизнес-логикой (Stage 1–3 поведение идентично).
+
+### Latest verified run (v5.59.0, locator-based)
+
+- **Pre-flight (CHECK-only)**: TG session alive (`projects_17/tg_terminal_messenger/tg_session.session`, sqlite entities кэш валидный), `core_02.telegram_contract` importable через `_freebuff_locator.resolve_freebuff_root()` без PYTHONPATH, API surface (`report_to_saved_messages`/`report_to_alex_litvinov`/`report_to_litvinov`) exposes правильні chat_id константи.
+- **Real run TG side-effects**: `python3 /storage/.../interior_planner_e2e/interior_planner/scripts/e2e_promt47.py --client --silent` → exit 0.
+- **Saved Messages** (chat_id=7709651193): msg_id=**138170**, text head `🧪 E2E платформенный тест промта-47\n\n📦 Project: interior_planner\n📐 Stage 2 path: ...`
+- **Литвинов** (chat_id=1063827731): msg_id=**138171**, text head `🔔 [client notification — test agent → client***REMOVED***\n\n🧪 E2E платформенный тест промта-4...`
+- **Round-trip** (`TGClient.get_messages(chat_id, ids=msg_id)`): оба retrieved, non-empty text, real TG history ✓.
+- **promt47_run.md** log: новый Run вверху + 6 prior Historical Verification Rows splice-preserved (v5.46.0/v5.47.0/v5.49-50/v5.52.0/v5.56.0/v5.56.1 — все valid через TG round-trip).
+
+### Differs from v5.56.0 round-trip (POST-Block-A re-confirm)
+
+v5.56.0 canonical close (138128/138129): under `parents[1***REMOVED***` sys.path strategy.
+v5.59.0 NEW close (138170/138171): under `_freebuff_locator.resolve_freebuff_root()`.
+Business behavior identical — Stage 1 (planning) + Stage 2 (wizard) + Stage 3 (mock runtime) + Stage 4 (TG).
+TG message content has identical headers (text starts with `🧪 E2E платформенный тест промта-47` for Saved, `🔔 [client notification — test agent → client***REMOVED***` for Литвинов), differing only in run metadata (snapshot name, model_id if changed by Stage 2 fallback harness).
+
+### Cumulative harness audit-trail (post-v5.59.0)
+
+audit-trail из `docs_10/e2e_logs/promt47_run.md` `## Historical Verification Runs`:
+- v5.45 → Saved=137901 + Литвинов=137902
+- v5.46.0 → Saved=138040 + Литвинов=138042
+- v5.47.0 → Saved=138044 + Литвинов=138045
+- v5.49-50 → Saved=138047 + Литвинов=138048
+- v5.56.0 → Saved=138128 + Литвинов=138129
+- v5.56.1 NIT-1 → Saved=138130 + Литвинов=138131
+- **v5.59.0 → Saved=138170 + Литвинов=138171** (this release, locator-based)
+
+Anti-rewriting rule (CAN-17) prevсит makesоммтять любой msg_id задля consistency, даже 
+если есть post-hoc disсоvery. Все 7 записей сохранены в audit-trail без модификаций.
+
+### Ship status
+
+CAN-9 fully closed in v5.59.0 (post-Block-A v5.58.0). Compound closure 
+(Block-A + CAN-9) verified end-to-end through locator-based discovery → real TG 
+delivery → round-trip read-back → audit-trail preservation. Code-reviewer-minimax-m3 
+final APPROVE.
+
+## ✅ Scenario: Phase 5.3-C Live Round-Trip — v5.64.0 Gate D (2026-08-03)
+
+### CON-35 NEW lesson — script-native Stage 3 sufficient for round-trip verification
+
+**Key finding**: When running LIVE TG round-trips with dual-channel delivery, **rely on the script-native Stage 3 implementation** (`TGClient.get_messages(limit=100)` limit-scan + client-side `id` filter per CON-31) instead of writing a separate side-script for verification. The script's Stage 3 is ALREADY designed for this exact scenario. Re-implementing it externally increases drift risk and cancels the per-run log evidence.
+
+### CON-31 (TGClient wrapper constraint → RESOLVED v5.66.0)
+
+TGClient.get_messages signature в `projects_17/tg_terminal_messenger/src/telegram/client.py` — `(entity, limit=5)`, НЕ принимает `ids=`. Pivot used limit-scan + client-side filter.
+
+**RESOLVED via ADR-011 + `core_02/_tg_client_v2.py` fork (DEBT-5.21 closure, v5.66.0)**: `TGClientV2` now exposes:
+- `get_messages(entity, limit=5, ids=None)` — `ids=` kwarg delegates to telethon's native `ids=` param, eliminating the CON-31 limit-scan pivot.
+- `add_event_handler(callback, event)` — for Phase 5.3-D hot-path listener.
+- `remove_event_handler(callback, event)` — for clean shutdown.
+
+The fork wraps (not extends) the upstream `projects_17/tg_terminal_messenger` boundary per ADR-011 Option 3, preserving upstream untouched.
+
+**CON-31 implications for e2e_remote_sync.py**: The original limit-scan pivot was accepted as a pragmatic trade-off in v5.64.0 (Phase 5.3-C) when TGClient did not expose `ids=`. With v5.66.0 `TGClientV2.get_messages(ids=[...***REMOVED***)` available, future round-trips SHOULD use `ids=` kwarg for precise message-by-ID fetch (returns `[Message***REMOVED***` with telethon's exact match). The upstream TGClient (`projects_17`) remains unchanged; the fork only lives in `core_02/`.
+
+**Pattern (NEW for real TG runs)**:
+```bash
+# Step A: pre-flight via --skip-tg (zero side-effects)
+python3 scripts_01/e2e_remote_sync.py --skip-tg --silent --run-tag preflight_v5_64_dryrun
+
+# Step B: real TG side-effects with dual-channel
+python3 scripts_01/e2e_remote_sync.py --sync-group --silent --run-tag phase_5_3_c_gate_d_real_v5_64_0
+
+# Step C: round-trip evidence is AUTOMATICALLY captured in run log + audit-trail row prepended in promt47_run.md (via script's write_e2e_log).
+# No external verification script needed.
+```
+
+### CAN-17 audit-trail direction (corrected from initial thinker position)
+
+**Initial thinker recommendation**: append NEW audit-trail row to BOTTOM of `## Historical Verification Runs` (chronological reasoning).
+
+**Actual file evidence (basher read)**: **append-to-TOP** is the established convention. The `## Historical Verification Runs` header is followed by v5.64.0, then v5.59.0, then v5.56.1, etc. (NEWEST FIRST).
+
+**Forward rule**: For all future real TG round-trips, anchor on `## Historical Verification Runs` line and use `str.replace(anchor, anchor + new_row, 1)` to prepend immediately after the header. Preserves all prior runs (CAN-17).
+
+### ##FB_STATE## marker — canonical round-trip detection pattern
+
+Discovered during v5.64.0 live run: TG message body contains `##FB_STATE##` marker which can be used as canonical round-trip detection pattern.\n\n**Provenance**: programmatically generated by `core_02/remote_sync.py::RemoteSyncCoordinatorImpl.push_state()` as part of the StateV2a SyncDelta payload body field. Stage 3 grep-detect is an idempotent validation that the message body was produced by `push_state()` (real state sync) rather than other TG-channel artifacts (echo/control/test).
+
+### v5.64.0 Live Run Evidence
+
+- **Pre-flight (Stage 0, --skip-tg CHECK-only)**: TG session alive, `core_02.remote_sync` + `core_02.telegram_contract` importable через `_freebuff_locator.resolve_freebuff_root()` без PYTHONPATH.
+- **Real TG send (Stage 2)** двусторонних каналів:
+  - **Saved Messages** (chat_id=**7709651193**): msg_id=**138366**, native `TGClient.get_messages(7709651193, limit=100)` limit-scan + client-side filter, non-empty text + `##FB_STATE##` marker.
+  - **А. Литвинов** (chat_id=**1063827731**): msg_id=**138367**, native `TGClient.get_messages(1063827731, limit=100)` limit-scan + client-side filter, non-empty text + `##FB_STATE##` marker.
+- **drift_check + consistency_check**: exit 0 (1 pre-existing CAN-10 naming warning — не входит в scope v5.64.0).
+
+### CAN-9 cumulative ledger (post-v5.64.0 real run)
+
+`docs_10/e2e_logs/promt47_run.md` `## Historical Verification Runs` (newest first, CAN-17):
+1. v5.64.0 — Saved=138366 + Литвинов=138367 (this release, Phase 5.3-C Gate D REAL)
+2. v5.59.0 — Saved=138170 + Литвинов=138171 (locator-based, post-Block-A)
+3. v5.56.1 — Saved=138130 + Литвинов=138131 (NIT-1)
+4. v5.56.0 — Saved=138128 + Литвинов=138129 (post-PYTHONPATH-required)
+5. v5.49-50 — Saved=138047 + Литвинов=138048
+6. v5.47.0 — Saved=138044 + Литвинов=138045
+7. v5.46.0 — Saved=138040 + Литвинов=138042
+8. v5.45 — Saved=137901 + Литвинов=137902 (CLE originating)
+
+All 7 prior runs preserved (CAN-17 anti-rewriting). Newest run prepended per actual convention.
+
+### Ship status
+
+**v5.64.0 SHIPPED** — Phase 5.3-C Gate D complete. Compound closure (5.3-A spec + 5.3-B runtime + 5.3-C real GNU TG round-trip) ship-ready end-to-end. Code-reviewer-minimax-m3 APPROVE.
+
