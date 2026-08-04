@@ -1,6 +1,8 @@
 # Buffy Project 2.0 — Agentic Platform & Knowledge OS
 
 > **Версия:** 2.0.0
+> **Дата:** 2026-08-03
+> **Freebuff project (sync):** v5.65.0 (latest shipped) — см. [`TASK.md`***REMOVED***(TASK.md) и [`CHANGELOG.md`***REMOVED***(CHANGELOG.md).
 > **Статус:** 🟡 АКТИВНО (MVP готов, Phase 1-2 в разработке)
 > **Девиз:** *Один мозг — много моделей*
 

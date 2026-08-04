@@ -1,7 +1,9 @@
 # Freebuff — Session Checkpoint
 
-**Дата:** 2026-08-01
-**Версия проекта:** v5.25.1
+**Дата:** 2026-08-03
+**Версия проекта:** v5.65.0
+
+> См. [`TASK.md`***REMOVED***(TASK.md) для актуального состояния проекта (v5.65.0). CHANGELOG.md содержит полную историю 41 релиза (v5.21.0 → v5.65.0).
 **Тесты:** см. TASK.md / CHANGELOG.md (актуальный прогон)
 
 > **Единый Core Prompt:** [`docs_10/core/CORE_PROMPT.md`***REMOVED***(docs_10/core/CORE_PROMPT.md) — личность, обязанности, ограничения, поведение.  
@@ -47,35 +49,43 @@ python freebuff_cli.py project-context "July 31 Crisis"
 
 Я продолжу с ТОЧКИ останова. Вот что нужно сделать:
 
-1. Прочитать `TASK.md` — там полный статус и следующие шаги.
-2. Прочитать `CHANGELOG.md` — последние изменения (v4.8.0, v4.9.0).
-3. Продолжить Phase 1.
+1. Прочитать [`TASK.md`***REMOVED***(TASK.md) — полный статус и список open tasks (Phase 5 Flutter UI, см. §5.1/§5.2/§5.3).
+2. Прочитать [`CHANGELOG.md`***REMOVED***(CHANGELOG.md) — последние релизы (v5.58.0 Block-A recovery, v5.59.0 CAN-9 final closure).
+3. Продолжить работу по [`TASK.md`***REMOVED***(TASK.md) §5.1 (Flutter UI) ИЛИ закрыть долги §5.13–§5.16 ([`docs_10/core/ARCHITECTURAL_DEBT.md`***REMOVED***(docs_10/core/ARCHITECTURAL_DEBT.md)).
 
 ---
 
-## ✅ Что уже сделано в этой сессии
+## ✅ Ключевые вехи к v5.59.0 (current state at session-start)
 
-| Компонент | Статус | Тесты |
-|-----------|--------|-------|
-| **AGENTS.md задача** (TMUX_OK) | Выполнена | — |
-| **Bootstrap Engine** (6 модулей) | ✅ Реализован, v4.7.0 | 61 тест |
-| **Bootstrap MCP интеграция** | ✅ v4.8.0 | 12 тестов |
-| **Runtime Abstraction Layer** | ✅ v4.9.0 | 60 тестов |
-| **Event Platform** | ✅ v4.7.0 | 61 тест |
-| **Bridge Layer** (MCP ↔ ACP) | ✅ v4.6.0 | 60 тестов |
-| **Scenario Engine** | ✅ v4.5.0 | 83 теста |
-| **Telegram Bot** | ✅ v4.5.0 | 44 теста |
-| **MCP Server** | ✅ | 101 тест |
+> **Полная история:** см. [`CHANGELOG.md`***REMOVED***(CHANGELOG.md) (38 релизов v5.0.0 → v5.59.0). **Подробный план:** [`TASK.md`***REMOVED***(TASK.md). **Открытые долги:** [`docs_10/core/ARCHITECTURAL_DEBT.md`***REMOVED***(docs_10/core/ARCHITECTURAL_DEBT.md) §5.13–§5.16.
+
+| Веха | Версия | Тесты |
+|------|:------:|------:|
+| **LEVIATHAN integration** (Phase A–E + Distributed Agents) | v5.7.0–v5.14.0 | 230 |
+| **Phase 0 Close Context Loop + StreamBridge** | v5.15.0 | — |
+| **HTTP `/metrics/*` endpoints + Metrics Dashboard** | v5.16.0 / v5.19.0 | — |
+| **Phase 7 CoWork Platform** (Presence + Collab + Roles + Project Pulse + RAG 2.0) | v5.17.0–v5.23.0 | — |
+| **Phase 4 Plugins** (tg_messenger + system_monitor + knowledge_sync) | v5.20.0 | — |
+| **Phase 5.1 MANDATORY RUNTIME CONTRACT + notification.py** | v5.24.0 | 25 |
+| **Security audit Шаги 0/1/2** (kill exec/shell + Bearer auth) | v5.25.1 | 132 (75 + 57) |
+| **Workspace OS consolidation** (promt32 1–10 + ADR-001…009 + promt36/37 canonical steps) | v5.39.x–v5.42.1 | tests green |
+| **TG integration contract + chat_id resolution** | v5.40.0 / v5.42.0 | 26 (13 + 5 + 8) |
+| **CAN-8/9/16 closure** (body-level /tmp + e2e locator + counter milestone) | v5.55–v5.59.0 | tests green |
+| **Block-A recovery** (`_freebuff_locator.py`) | v5.58.0 | 0 regressions |
+
+> 📜 **Pre-LEVIATHAN history (v3.x–v4.x):** MCP Server (101), Telegram Bot (44), Scenario Engine (83), Bridge Layer (60), Event Platform (61), Bootstrap Engine (61), Bootstrap MCP (12) — captured в `CHANGELOG.md` pre-v5.0 history per **CAN-17 anti-rewriting rule** (audit-trail не переписываем).
 
 ---
 
-## 📋 Следующий шаг: Этап 5 консолидации (promt32) — в работе
+## 📋 Следующий шаг: Phase 5 Flutter UI (см. [`TASK.md`***REMOVED***(TASK.md))
 
-Промты 32–36 прочитаны. Статус:
-- **Этапы 1–4 промта 32** — ✅ завершены (реестр статусов: `docs_10/DOCUMENT_REGISTRY.md`)
-- **Этап 5 (консолидация промтов)** — ✅ завершён: дубль promt34/35 устранён, правила promt36/37 встроены в GLOSSARY/MANIFEST (ADR-008/009), 5 файлов инструкций сверены с Core Prompt
-- **Промт 36/37 (Work Area as View)** — ✅ реализован 2026-08-01: `scripts_01/work_area_view.py` (таблица `project_resources`), CLI `freebuff resource projects`, 29 тестов
-- **Mission Lock** — 🔓 снят 2026-08-01 (все этапы promt32 1–10 завершены); начаты пост-консолидационные долги: DEBT-001 ✅ Resolved (AGENTS/CLAUDE/CODY в KnowledgeEngine), остались DEBT-002…007
+Консолидация промт32 полностью закрыта (все этапы 1–10 + DEBT-001…007 ✅ Resolved per [`docs_10/core/ARCHITECTURAL_DEBT.md`***REMOVED***(docs_10/core/ARCHITECTURAL_DEBT.md) §3.1–§3.3). Mission Lock 🔓 снят 2026-08-01. Сейчас в фокусе — единственный user-facing open task:
+
+- **[§5.1 Flutter-приложение***REMOVED***(TASK.md)** — мобильное приложение Freebuff на Flutter (Android).
+  - Спецификация: [`pompts_11/039_12_terminal_ai_studio_mobile.md`***REMOVED***(pompts_11/039_12_terminal_ai_studio_mobile.md).
+  - Зависимости: §5.2 Foreground Service + §5.3 Remote Sync.
+- Альтернативный путь: закрыть долги §5.13–§5.16 ([`docs_10/core/ARCHITECTURAL_DEBT.md`***REMOVED***(docs_10/core/ARCHITECTURAL_DEBT.md)) — НЕ блокируют Flutter, повышают docs/tests harmony.
+- Пост-консолидационные миссии (отдельный трек): promt42 / promt43 — [`docs_10/vision/ROADMAP_PROMT32_CONSOLIDATION.md`***REMOVED***(docs_10/vision/ROADMAP_PROMT32_CONSOLIDATION.md) §9.
 
 ---
 

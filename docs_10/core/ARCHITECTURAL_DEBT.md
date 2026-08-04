@@ -359,3 +359,23 @@ This document tracks **architectural debt** identified by the daily self-audit i
 - `docs_10/core/SYSTEM_INVENTORY.md` — component inventory
 - `docs_10/vision/ROADMAP_PROMT31_WORKSPACE_OS.md` — roadmap addressing related architectural gaps
 
+
+
+---
+
+### 5.21 Phase 5.3-D Realtime Listener (TGClient Fork) - OPEN (Phase 5.3-D Pre-work)
+
+| Field | Value |
+|-------|-------|
+| **ID** | DEBT-5.21 (Phase 5.3-D Pre-work) |
+| **Component** | `core_02/remote_sync.py` (RemoteSyncListener scaffold - DONE) + `core_02/_tg_client_v2.py` (NEEDED) + `projects_17/tg_terminal_messenger/src/telegram/client.py` (READ-ONLY upstream) |
+| **Severity** | [MEDIUM***REMOVED*** Blocks Phase 5.3-D realtime conflict detection. Currently stub-only via `RemoteSyncListener` class (no real TGClient.on() hot-path). |
+| **Type** | Cross-Project Dependency Fork (in-core subset) |
+| **Description** | Phase 5.3-D requires persistent `TGClient.on(events.NewMessage)` event listener for realtime conflict detection (per section 5.20 forward-looking guard). Existing `TGClient` does NOT expose `add_event_handler` API and `get_messages(self, entity, limit=5)` does NOT accept `ids=` kwarg (CON-31 documented). Required surface (per ADR-011 Option 3): `core_02/_tg_client_v2.py` - minimal fork exposing `add_event_handler` / `remove_event_handler` + `ids` kwarg on `get_messages`. |
+| **Resolution scope** | 1) Create `core_02/_tg_client_v2.py` with minimal TGClient extensions (3 methods). 2) Wire `RemoteSyncListener.start()` + `_on_new_message()` real bodies. 3) Write 4-6 mock tests covering hot-path buffer handoff + reconnect pull_state recovery. 4) Update CON-31 lesson to reflect evolution. 5) Validate via pseudo-TG round-trip + ensure no real TG pollution. |
+| **Owner** | parent (next session Phase 5.3-D) |
+| **Discovered** | 2026-08-03 (v5.64.0 Phase 5.3-D pre-work) |
+| **ADR** | YES [docs_10/engineering-memory/decisions/ADR_011_Phase_5_3_D_Listener_Loop.md***REMOVED***(engineering-memory/decisions/ADR_011_Phase_5_3_D_Listener_Loop.md) - Option 3 (Core Fork) selected. |
+| **Related** | CON-31 (TGClient wrapper constraint), section 5.20 (Remote Sync Runtime - RESOLVED), section 5.3-A spec (Protocol-only). |
+| **Prevention / Forward-looking guard (layered)** | (1) _tg_client_v2 fork scoped at Freebuff core (avoids projects_17 upstream taint per ADR-011 D-1). (2) Memory leak guard: collections.deque(maxlen=128) for _incoming_buffer (no unbounded growth). (3) Reconnect guard: TGClient.on_disconnected trigger pull_state history fetch. (4) Asyncio boundary: handler writes to buffer (no coroutine), pull_state reads atomically via drain_incoming(). |
+
