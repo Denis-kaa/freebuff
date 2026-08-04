@@ -42,7 +42,18 @@ class TGClientV2:
         Args:
             base_client: An instance of ``projects_17.tg_terminal_messenger.src.telegram.client.TGClient``
                 (or any object with a ``_client`` attribute that is a telethon ``TelegramClient``).
+
+        Raises:
+            TypeError: If ``base_client`` does not have a ``_client`` attribute
+                (expected from TGClient's private telethon reference).
         """
+        if not hasattr(base_client, "_client"):
+            raise TypeError(
+                f"TGClientV2 requires a base_client with a '_client' attribute "
+                f"(telethon TelegramClient). Got {type(base_client).__name__!r***REMOVED***: "
+                f"{base_client!r***REMOVED***. Pass a valid TGClient instance from "
+                f"projects_17.tg_terminal_messenger.src.telegram.client.TGClient."
+            )
         self._base = base_client
         # Telethon TelegramClient instance (private attribute of TGClient)
         self._telethon: Any = base_client._client

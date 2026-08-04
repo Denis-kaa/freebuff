@@ -1,3 +1,32 @@
+## [5.67.0***REMOVED*** — 2026-08-03
+
+### Added (Phase 5.3-E Persistent Realtime Listener Loop — RemoteSyncListener)
+
+- **`core_02/remote_sync.py::RemoteSyncListener._listener_loop()`** — persistent
+  asyncio.Task-based LWW resolve cycle: sleep 1s → drain_incoming() → for each
+  envelope: decode JSON → `_apply_remote_envelope()` to coordinator → if buffer
+  non-empty: `pull_state()` (reconnect guard).
+- **Lifecycle wiring**: `start()` spawns `_listener_loop` as `asyncio.ensure_future`;
+  `stop()` cancels with 5s timeout + drains buffer + removes event handler.
+- **Resilience**: malformed envelopes (JSON decode error) logged and skipped;
+  `CancelledError` propagated; generic exceptions logged, loop continues.
+- **pull_state gating**: only called when buffer was non-empty (avoids expensive
+  TG API calls on idle cycles).
+- **`tests_09/test_remote_sync_listener.py`** — 13 tests: lifecycle (start/stop
+  task, stop idempotent), event dispatch (push, ignore non-marker, drain),
+  listener loop (drain→apply, pull_state on non-empty, skip on empty),
+  buffer overflow (maxlen=128), malformed envelope resilience, LWW resolve.
+
+### Verify Gate (2026-08-03)
+
+- **py_compile**: `remote_sync.py`, `test_remote_sync_listener.py` — all OK.
+- **pytest** (13 tests): 13/13 PASS.
+- **Regression**: `test_remote_sync.py` (26/26), `test_tg_client_v2.py` (8/8) — all green.
+- **Cold import**: RemoteSyncListener import OK.
+- **drift_check + consistency_check**: pre-existing minor warnings (unchanged).
+
+---
+
 ## [5.66.0***REMOVED*** — 2026-08-03
 
 ### Added (Phase 5.3-D DEBT-5.21 close — TGClientV2 fork)

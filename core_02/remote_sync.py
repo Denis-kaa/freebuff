@@ -404,6 +404,9 @@ class RemoteSyncCoordinatorImpl:
         # asyncio task (listener loop) — placeholder for Phase 5.3-C
         self._listener_task: Optional[asyncio.Task***REMOVED*** = None  # type: ignore[type-arg***REMOVED***
 
+        # Phase 5.3-F: attached RemoteSyncListener (coordinated lifecycle)
+        self._listener: "Optional[RemoteSyncListener***REMOVED***" = None
+
         # Live TG cache (cached pushes from pull_state)
         self._incoming_buffer: Deque[SyncEnvelope***REMOVED*** = deque(maxlen=500)
 
@@ -838,13 +841,24 @@ class RemoteSyncCoordinatorImpl:
         return device
 
     async def shutdown(self) -> Dict[str, Any***REMOVED***:
-        """Orderly shutdown: drain queue → cancel listener → no TG forced-disconnect.
+        """Orderly shutdown: drain queue → stop listener → cancel listener task.
 
         Idempotent: post-shutdown calls return `error`.
+
+        Phase 5.3-F: if a RemoteSyncListener is attached (via attach_listener),
+        its stop() is called first to drain the event handler + cancel the
+        listener loop. Then the coordinator's own listener task is cancelled.
         """
         if self._shutdown_called:
             return {"ok": False, "error": "shutdown already called"***REMOVED***
         self._shutdown_called = True
+
+        # Phase 5.3-F: stop attached listener first (coordinated lifecycle)
+        if self._listener is not None:
+            try:
+                await self._listener.stop()
+            except Exception as e:
+                logger.warning("shutdown: listener.stop() failed: %s", e)
 
         drained = 0
         try:
@@ -869,6 +883,24 @@ class RemoteSyncCoordinatorImpl:
         """Return last cached event for UI polling. None if no events yet."""
         with self._lock:
             return self._last_event
+
+    # ── Phase 5.3-F: coordinated listener lifecycle ──────────────────────
+
+    def attach_listener(self, listener: "RemoteSyncListener") -> None:
+        """Attach a RemoteSyncListener for coordinated lifecycle shutdown.
+
+        Once attached, the coordinator's ``shutdown()`` will call
+        ``listener.stop()`` before draining the push queue, ensuring
+        the event handler is detached and the listener loop is cancelled
+        in the correct order.
+
+        Idempotent: subsequent calls are ignored (no-op).
+        """
+        if self._listener is not None:
+            logger.warning("attach_listener: listener already attached, ignoring")
+            return
+        self._listener = listener
+        logger.info("attach_listener: listener attached (coordinated shutdown)")
 
     # ── Internal helpers ────────────────────────────────────────────────
 
@@ -1021,34 +1053,48 @@ def _reconstruct_envelope_from_parsed(
 # ─── Phase 5.3-D listener loop pre-work (scaffold, ADR-011) ───
 
 class RemoteSyncListener:
-    """Phase 5.3-D Realtime TG Event Listener (not yet wired to TGClient.on() hot-path).
+    """Phase 5.3-E Realtime TG Event Listener — persistent listener loop.
 
-    Status: SCAFFOLD ONLY — interface + lifecycle + docstrings per ADR-011. Real callback
-    wiring deferred to follow-up PR after `core_02/_tg_client_v2.py` TGClient fork (DEBT-5.21)
-    exposes `add_event_handler` + `ids=` kwarg.
+    Lifecycle (asyncio.Task-based):
+        start() -> bootstrap TGClientV2 + attach events.NewMessage handler + spawn
+                   _listener_loop() as asyncio.Task.
+        stop()  -> cancel listener task + drain incoming buffer + remove event handler.
 
-    Lifecycle:
-        start() -> bootstrap TGClient (via deferred _tg_client_v2 fork) + attach
-                    events.NewMessage handler to specified chat_ids (Saved + Литвинов).
-        stop() -> detach event handler + cleanup queue/buffer references.
+    Hot-path semantics (ADR-011 forward-looking guards):
+        _on_new_message runs in Telethon's background event loop (sync callback —
+        Telethon does NOT await coroutines). We CANNOT await coordinator methods
+        directly (race risk), so we push validated envelopes into _incoming_buffer
+        (deque(maxlen=128)) and let the listener loop resolve LWW on each cycle.
 
-    Hot-path semantics:
-        _on_new_message runs in Telethon's background event loop. We CANNOT await
-        coordinator methods directly (race risk), so we push validated envelopes into
-        _incoming_buffer (collections.deque(maxlen=128)) and let pull_state() resolve
-        LWW on next call (per CON-31 listener-loop defer-resolution discipline).
+    Listener loop (_listener_loop):
+        Polls every 1.0s (configurable via _POLL_INTERVAL_SECONDS):
+          1. drain_incoming() — atomically read buffered envelopes
+          2. for each envelope, _apply_remote_envelope() to update coordinator local mirror
+          3. pull_state() — catch any missed history (reconnect guard from ADR-011)
+          4. resolve_conflict() if any conflicts detected
+        This loop is NOT a busy-wait — Telethon's event handler already fires sync.
+        The loop is the LWW resolve cycle, not the event detection cycle.
 
     Forward-looking guards (per ADR-011 risk assessment):
       • Memory leak: _incoming_buffer uses collections.deque(maxlen=N) (no unbounded growth)
       • Reconnect logic: on TGClient.on_disconnected, trigger pull_state() history fetch
         to recover from missed events during downtime
       • Asyncio loop: handler payload handoff via _incoming_buffer (not direct coroutine)
+      • CANCELLED_ERROR propagation: _listener_loop catches asyncio.CancelledError and
+        exits cleanly (does NOT swallow unrelated exceptions).
     """
+
+    # Poll interval for the LWW resolve cycle (seconds).
+    # Not a busy-wait — Telethon sync callback fires independently.
+    _POLL_INTERVAL_SECONDS: float = 1.0
+    # pull_state() is gated on non-empty buffer (real events detected),
+    # not on a fixed interval — avoids expensive TG API calls on idle cycles.
 
     def __init__(self, coordinator: "RemoteSyncCoordinatorImpl") -> None:
         self._coordinator = coordinator
-        self._tg_client = None  # set in start() after _tg_client_v2 fork available
+        self._tg_client = None  # set in start()
         self._running = False
+        self._listener_task: "Optional[asyncio.Task[None***REMOVED******REMOVED***" = None
         # Incoming message buffer (hot-path writes, cold-path reads via pull_state)
         from collections import deque
         self._incoming_buffer: "deque[tuple[int, bytes***REMOVED******REMOVED***" = deque(maxlen=128)
@@ -1059,11 +1105,10 @@ class RemoteSyncListener:
             )
 
     async def start(self) -> bool:
-        """Bootstrap TGClient + attach events.NewMessage handler.
+        """Bootstrap TGClient + attach events.NewMessage handler + spawn listener loop.
 
         Returns True if listener attached successfully. False if TGClient fork
-        (`core_02/_tg_client_v2.py`) failed to connect or event handler
-        registration failed.
+        failed to connect or event handler registration failed.
 
         DEBT-5.21 closed: uses ``TGClientV2`` wrapper on a fresh TGClient from
         ``_get_tg_client_factory()``, attaches ``self._on_new_message`` as a sync
@@ -1083,26 +1128,114 @@ class RemoteSyncListener:
 
         event_filter = events.NewMessage(chats=list(self._source_chat_ids))
         self._tg_client.add_event_handler(self._on_new_message, event_filter)
+
+        # Spawn the persistent listener loop
         self._running = True
+        self._listener_task = asyncio.ensure_future(self._listener_loop())
         return True
 
     async def stop(self) -> None:
-        """Detach event handler + cleanup."""
-        if self._tg_client is not None:
-            # remove_event_handler available via TGClientV2 but not yet needed
-            # (drain_incoming + shutdown handles residual events)
-            pass
-        self._tg_client = None
+        """Cancel listener task + drain incoming buffer + remove event handler.
+
+        Cancel semantics: cancels _listener_loop with a 5s timeout. If the loop
+        doesn't exit within budget, it's cancelled forcefully (CancelledError).
+        Incoming buffer is drained as residual events (caller can process
+        post-stop if needed).
+        """
         self._running = False
+
+        # Cancel the listener task
+        if self._listener_task is not None and not self._listener_task.done():
+            self._listener_task.cancel()
+            # Let the event loop process CancelledError before wait_for/shield
+            # (avoids RuntimeWarning: coroutine '...' was never awaited)
+            await asyncio.sleep(0)
+            try:
+                await asyncio.wait_for(
+                    asyncio.shield(self._listener_task),
+                    timeout=_LISTENER_DRAIN_TIMEOUT_SECONDS,
+                )
+            except (asyncio.CancelledError, asyncio.TimeoutError):
+                pass  # expected on cancel
+
+        self._listener_task = None
         self._incoming_buffer.clear()
+
+        # Remove event handler if TGClient is still alive
+        if self._tg_client is not None:
+            try:
+                self._tg_client.remove_event_handler(
+                    self._on_new_message, None
+                )
+            except Exception:
+                pass  # best-effort; handler may already be detached
+        self._tg_client = None
+
+    async def _listener_loop(self) -> None:
+        """Persistent LWW resolve cycle — runs as asyncio.Task.
+
+        Cycle (repeats until self._running is False or cancelled):
+          1. Sleep _POLL_INTERVAL_SECONDS (1.0s)
+          2. drain_incoming() — atomically read buffered envelopes
+          3. For each envelope: _apply_remote_envelope() to coordinator local mirror
+          4. pull_state() when buffer was non-empty (reconnect guard)
+
+        CancelledError is caught and re-raised to propagate cancellation.
+        Other exceptions are logged but do NOT crash the loop (ADR-011 resilience).
+        """
+        while self._running:
+            try:
+                await asyncio.sleep(self._POLL_INTERVAL_SECONDS)
+
+                if not self._running:
+                    break
+
+                # Step 1: drain buffered events from Telethon hot-path
+                drained = self.drain_incoming()
+
+                # Step 2: apply each envelope to coordinator local mirror
+                for msg_id, envelope_bytes in drained:
+                    try:
+                        text = envelope_bytes.decode("utf-8")
+                        # Extract JSON body from marker header
+                        if "\n" in text:
+                            body = text.split("\n", 1)[1***REMOVED***
+                            parsed = json.loads(body)
+                            env = _reconstruct_envelope_from_parsed(parsed)
+                            if env is not None:
+                                self._coordinator._apply_remote_envelope(env)
+                    except (json.JSONDecodeError, UnicodeDecodeError, IndexError):
+                        logger.warning(
+                            "listener_loop: malformed envelope from msg_id=%s",
+                            msg_id,
+                        )
+                        continue
+
+                # Step 3: pull_state() only when buffer was non-empty (reconnect guard)
+                # Expensive TG API call — only when real events were detected
+                if self._running and drained:
+                    try:
+                        await self._coordinator.pull_state()
+                    except Exception as e:
+                        logger.warning(
+                            "listener_loop: pull_state failed: %s", e
+                        )
+
+            except asyncio.CancelledError:
+                # Re-raise to propagate cancellation to the task runner
+                raise
+            except Exception as e:
+                # Log but do NOT crash the loop (ADR-011 resilience)
+                logger.exception(
+                    "listener_loop: unhandled error (continuing): %s", e
+                )
 
     def _on_new_message(self, event: "Any") -> None:  # sync callback (Telethon does NOT await; fire-and-forget coroutine would be silently dropped)
         """Hot-path callback invoked by Telethon's event loop on new message.
 
         Validates ``##FB_STATE##`` marker (per CON-31 + ADR-011), extracts
         envelope bytes, and pushes (msg_id, payload) into _incoming_buffer.
-        LWW resolution deferred to next pull_state() call (race-safe handoff
-        via buffer).
+        LWW resolution deferred to the listener loop (race-safe handoff via buffer).
 
         Args:
             event: telethon.events.NewMessage instance (NOT awaited; already fired).
@@ -1116,12 +1249,12 @@ class RemoteSyncListener:
         if "##FB_STATE##" not in text:
             return  # not a real StateV2 sync message
         # Envelope bytes are the raw text; actual deserialization is done by
-        # pull_state() which calls drain_incoming() and processes the queue.
+        # the listener loop which calls drain_incoming() and processes the queue.
         envelope_bytes = text.encode("utf-8")
         self._incoming_buffer.append((msg_id, envelope_bytes))
 
     def drain_incoming(self) -> "list[tuple[int, bytes***REMOVED******REMOVED***":
-        """Cold-path helper: drain _incoming_buffer atomically. Called by pull_state().
+        """Cold-path helper: drain _incoming_buffer atomically. Called by listener loop.
 
         Returns list of (msg_id, envelope_bytes) tuples accumulated since last drain.
         Returns empty list if listener not running or buffer is empty.
