@@ -29,6 +29,7 @@ from app.domain import (
     SourcePolicyStatus,
 )
 from app.delivery import TelegramDelivery
+from app.ops import ScheduleConfig, run_schedule
 from app.pipeline import format_report, run_offline_slice
 from app.rss_atom import FixtureFeedAdapter
 from app.storage import SqliteCheckpointStore, SqliteStorage
@@ -95,14 +96,16 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--required", default="python")
     parser.add_argument("--optional", default="backend")
     parser.add_argument("--intent", default="need,looking")
+    parser.add_argument("--schedule", action="store_true", help="run scheduler loop (P11)")
+    parser.add_argument("--interval", type=float, default=60.0, help="poll interval seconds (P11)")
     parser.add_argument("--limit", type=int, default=50)
     return parser
 
 
 def run() -> int:
     args = _build_parser().parse_args()
-    if not args.once and not args.canary and not args.maintenance:
-        print("use --once / --canary / --maintenance", file=sys.stderr)
+    if not args.once and not args.canary and not args.maintenance and not args.schedule:
+        print("use --once / --canary / --schedule / --maintenance", file=sys.stderr)
         return 2
 
     storage = SqliteStorage(args.db)
@@ -113,17 +116,18 @@ def run() -> int:
             print(json.dumps({"expired_text_rows": expired, "backup": backup***REMOVED***))
             return 0
 
-        if args.canary:
+        if args.canary or args.schedule:
             if args.source not in ("trudvsem", "headhunter"):
-                print("--canary supports only trudvsem/headhunter", file=sys.stderr)
+                print("--canary/--schedule support only trudvsem/headhunter", file=sys.stderr)
                 return 2
             profile = _profile_from_args(args)
             checkpoint = SqliteCheckpointStore(storage)
             delivery = TelegramDelivery(storage=storage, dry_run=True)
             policy = _policy_for_source(args.source)
             token = os.getenv("PRP_HH_APP_TOKEN") if args.source == "headhunter" else None
-            report = asyncio.run(
-                run_canary(
+
+            async def canary_once() -> str:
+                report = await run_canary(
                     source_id=args.source,
                     policy=policy,
                     profile=profile,
@@ -134,8 +138,23 @@ def run() -> int:
                     limit=min(args.limit, 20),
                     token=token,
                 )
+                return report.summary()
+
+            if args.canary:
+                print(asyncio.run(canary_once()))
+                return 0
+
+            # --schedule: бесконечный цикл с backoff (P11)
+            import logging
+
+            logging.basicConfig(level=logging.INFO, format="%(message)s")
+            logging.getLogger("httpcore").setLevel(logging.WARNING)
+            logging.getLogger("httpx").setLevel(logging.WARNING)
+            config = ScheduleConfig(
+                source_id=args.source,
+                interval_total=max(args.interval, 5.0),
             )
-            print(report.summary())
+            asyncio.run(run_schedule(config=config, run_once=canary_once))
             return 0
 
         # offline fixture slice

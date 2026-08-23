@@ -469,6 +469,9 @@ Bump: ACTIVE 97 → 102 (5 новых артефактов промта 4 — G/
 | `projects_17/public_request_parser/fixtures/hh/` | Fixtures | ACTIVE | Anonymized HH API response (2 vacancies); real credentials NOT committed (hh/ ignored) |
 | `projects_17/public_request_parser/app/canary.py` | Implementation | ACTIVE | P10 canary runner: single controlled live slice, error-capturing report, token only via env |
 | `projects_17/public_request_parser/tests/test_canary.py` | Tests | ACTIVE | 5 hermetic canary tests; passed 2026-08-23 |
+| `projects_17/public_request_parser/app/ops.py` | Implementation | ACTIVE | P11 scheduler: cycle+backoff, stats, stderr alert hook; no credentials |
+| `projects_17/public_request_parser/tests/test_ops.py` | Tests | ACTIVE | 6 hermetic ops tests; passed 2026-08-23 |
+| `projects_17/public_request_parser/OPERATIONS_RUNBOOK.md` | Operations | ACTIVE | P11 runbook: modes, monitoring, failure/security/backup procedures |
 
 ### ACTIVE entries added 2026-08-10 (v5.147.0)
 

@@ -78,7 +78,7 @@
 | P8 | Single-tenant bot MVP | ✅ Done (offline slice) | Pipeline + CLI: fixture→match→SQLite→dry-run | 76+ проектных тестов; G5 зависит от live source |
 | P9 | Telegram technical adapter | ✅ Done (fixture-only) | `tgpreview` adapter; live allowed запрещён | No live access without gate |
 | P10 | MVP pilot | 🟡 Canary пройден | SRC-012 trudvsem + SRC-011 HH: адаптеры, `app/canary.py`, CLI `--canary`; **live canary 2026-08-23: оба источника fetched=5, resume идемпотентен** (125 тестов) | Pilot metrics (разметка, precision/recall baseline, TTL-наблюдение) |
-| P11 | MVP hardening | 🟡 Partial | backup/maintenance; scheduler/runbook после pilot | Operational readiness |
+| P11 | MVP hardening | 🟡 Mostly (G7 pending) | `app/ops.py` scheduler+backoff+alert-hook, CLI `--schedule`; runbook; backup/maintenance (ранее); 6 hermetic tests | Unattended pilot window + live alerting (G7) |
 | P12 | Source expansion | 🟡 Partial | HttpFeedAdapter (двойной гейт allowed+can_poll) | Each source independently gated |
 | P13 | Multi-tenant foundation | 🟡 Partial | Schema v2 owner-isolated profiles; auth/quotas pending | Isolation tests green |
 | P14 | Quality feedback loop | ✅ Made-ready | Feedback store + stats + детерминированный calibrator (accuracy); apply вручную через новую версию профиля | Калибровка на pilot-данных (G10) |

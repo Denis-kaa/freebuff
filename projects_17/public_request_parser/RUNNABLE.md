@@ -45,7 +45,7 @@ python -m app.cli --canary --source trudvsem --db parser.db --required "python" 
 PRP_HH_APP_TOKEN=... python -m app.cli --canary --source headhunter --db parser.db --required "python" --intent "нужен,ищу" --limit 5
 ```
 
-Canary = один маленький срез с отчётом; постоянный polling — только после P11 scheduler (G7).
+Canary = один маленький срез с отчётом; постоянный polling — `--schedule` (P11), подробности: `OPERATIONS_RUNBOOK.md`.
 
 ## Переменные окружения (план)
 

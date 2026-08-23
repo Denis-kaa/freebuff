@@ -358,3 +358,24 @@
 - 125 проектных тестов; mypy --strict clean (35 файлов).
 - P10 canary-гейт G6-часть пройдена: источники живые, транспорт gated, идемпотентность подтверждена.
 - Следующее: pilot metrics (разметка выборки, качество, TTL-наблюдение) и P11 hardening (scheduler, runbook, alerting) — G7.
+
+## Step 18: P11 hardening — scheduler, backoff, runbook (2026-08-23)
+
+**Что сделано:**
+
+- Создан `app/ops.py`: `ScheduleConfig`, `IterationStats`, `run_schedule` (цикл с паузой, экспоненциальным backoff и stderr alert-хуком), `run_backoff`.
+- CLI: добавлен `--schedule --source <id> --interval <sec>` (logging INFO, нижняя граница 5 сек; graceful stop по Ctrl+C через stop_event не требуется — процесс завершается сигналом).
+- `OPERATIONS_RUNBOOK.md`: режимы, ежедневный мониторинг, сбой источника, секьюрити-инцидент, backup.
+- 6 hermetic тестов `tests/test_ops.py`: backoff (экспон. + cap), stats-line, max_iterations, alert на сбой, stop_event, сброс streak после восстановления.
+- Smoke `--schedule` на живом trudvsem: iter1 fetched=2, iter2 fetched=0 (resume) — цикл работает.
+
+**Почему:**
+
+- P11 требует unattended-устойчивости: сбой источника не должен ронять процесс, polling не должен бить по лимитам (interval-гранулярность + backoff).
+- Alert-хук по умолчанию пишет в stderr — честный dry-run до G7 (без фейковых Telegram-уведомлений).
+
+**Результат:**
+
+- **131 проектный тест** (125 + 6 ops); mypy --strict clean (37 файлов).
+- P11 = mostly: scheduler/backoff/runbook/backup есть; остаётся live-alerting канал и unattended observation window (G7).
+- Следующее: P10 pilot metrics (labelled sample, precision/recall, TTL) и решение по alerting-каналу.
