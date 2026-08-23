@@ -454,6 +454,10 @@ Bump: ACTIVE 97 → 102 (5 новых артефактов промта 4 — G/
 | `projects_17/public_request_parser/tests/test_multi_tenant.py` | Tests | ACTIVE | P13/P14 owner isolation + feedback + v1→v2 migration tests |
 | `projects_17/public_request_parser/decisions/ADR-008_lead_aggregator_review_remain_separate.md` | ADR | ACTIVE | P15: remain separate (evidence-based field comparison) |
 | `projects_17/public_request_parser/decisions/ADR-009_platformization_boundary_deferred.md` | ADR | ACTIVE | P16: platformization deferred until live-use evidence; candidates recorded |
+| `projects_17/public_request_parser/CALIBRATION.md` | Implementation | ACTIVE | P14 feedback→threshold calibration: deterministic, no auto-apply |
+| `projects_17/public_request_parser/app/calibration/engine.py` | Implementation | ACTIVE | P14 ThresholdCalibrator + optimal_accept_threshold (accuracy over observed scores) |
+| `projects_17/public_request_parser/tests/test_calibration.py` | Tests | ACTIVE | 5 hermetic calibration tests; passed on 2026-08-23 |
+| `projects_17/public_request_parser/decisions/ADR-010_feedback_calibration_determinism.md` | ADR | ACTIVE | Calibration determinism, no auto-apply; apply via new profile version |
 
 ### ACTIVE entries added 2026-08-10 (v5.147.0)
 

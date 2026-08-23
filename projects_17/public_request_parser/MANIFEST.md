@@ -68,6 +68,7 @@ Telegram web-preview описан и тестируется только на fi
 | `STORAGE.md` | P6 SQLite/WAL storage: schema, idempotency, TTL cleanup, checkpoints |
 | `DELIVERY.md` | P7 delivery contract: HTML cards, dry-run, idempotency, retry |
 | `POST_MVP_GATES.md` | P10–P19 статусы: done/partial/blocked + evidence |
+| `CALIBRATION.md` | P14 feedback→threshold calibration: детерминизм, без авто-apply |
 | `decisions/` | Project-local ADR |
 
 ## Текущий статус
@@ -82,7 +83,7 @@ Telegram web-preview описан и тестируется только на fi
 - [x***REMOVED*** P5 deterministic matcher: rules, synonyms, exclusions, intent gate, thresholds, explainable decisions; 14 tests green.
 - [x***REMOVED*** P6 SQLite/WAL storage: schema v1, UNIQUE dedup, идемпотентный TTL cleanup; 14 tests green.
 - [x***REMOVED*** P7 delivery contract: HTML renderer, dry-run, idempotent key, retry; 11 tests green (live transport не включён).
-- [x***REMOVED*** P8 offline pipeline + CLI; P9 TG fixture adapter; P11 backup; P12 gated HTTP; P13/P14 schema v2; P15/P16 ADR-008/009.
+- [x***REMOVED*** P8 offline pipeline + CLI; P9 TG fixture adapter; P11 backup; P12 gated HTTP; P13/P14 schema v2; P14 calibration; P15/P16 ADR-008/009; P14 ADR-010.
 - [ ***REMOVED*** G2: первый production `allowed` source (блокер pilot/P17/P18).
 - [ ***REMOVED*** Telegram Bot delivery implementation.
 - [ ***REMOVED*** Live source approval.

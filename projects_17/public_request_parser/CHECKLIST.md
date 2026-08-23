@@ -93,4 +93,5 @@
 - [x***REMOVED*** `HttpFeedAdapter` (P12): live только для `allowed` + `can_poll`.
 - [x***REMOVED*** Schema v2: owner-isolated `profiles`, `feedback` + stats, миграция v1→v2 (P13/P14).
 - [x***REMOVED*** ADR-008 (P15 remain separate) и ADR-009 (P16 deferred) зафиксированы.
+- [x***REMOVED*** P14-инструмент: feedback→score выборка, детерминированная рекомендация порогов (без авто-apply); 5 tests (ADR-010).
 - [ ***REMOVED*** G2: первый production `allowed` source (P10/P17/P18).

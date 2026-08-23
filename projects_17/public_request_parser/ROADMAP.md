@@ -81,7 +81,7 @@
 | P11 | MVP hardening | 🟡 Partial | backup/maintenance; scheduler/runbook после pilot | Operational readiness |
 | P12 | Source expansion | 🟡 Partial | HttpFeedAdapter (двойной гейт allowed+can_poll) | Each source independently gated |
 | P13 | Multi-tenant foundation | 🟡 Partial | Schema v2 owner-isolated profiles; auth/quotas pending | Isolation tests green |
-| P14 | Quality feedback loop | 🟡 Partial | Feedback store + stats; calibration на pilot-данных | Quality targets met |
+| P14 | Quality feedback loop | ✅ Made-ready | Feedback store + stats + детерминированный calibrator (accuracy); apply вручную через новую версию профиля | Калибровка на pilot-данных (G10) |
 | P15 | Lead Aggregator integration review | ✅ Done | ADR-008: remain separate (evidence-based) | ADR accepted |
 | P16 | Platformization | 🔷 Recorded | ADR-009: deferred до live-use evidence; кандидаты зафиксированы | — |
 | P17 | Public beta | 🔴 Blocked (G2/G9) | Требует approved sources и multi-user auth | Beta exit metrics met |

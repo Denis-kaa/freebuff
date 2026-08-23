@@ -32,6 +32,7 @@ contracts:
   - owner_gate
   - profiles_store
   - feedback_store
+  - threshold_calibrator
 description: >
   Универсальный read-only парсер открытых публикаций с поиском заявок на услуги
   по персональным профилям, дедупликацией, TTL-текстом и Telegram-доставкой.

@@ -610,6 +610,22 @@ class SqliteStorage:
         ).fetchall()
         return {str(row["action"***REMOVED***): int(row["c"***REMOVED***) for row in rows***REMOVED***
 
+    def list_feedback(self, owner_scope: str, *, limit: int = 100) -> list[dict[str, object***REMOVED******REMOVED***:
+        """Итерация по feedback владельца для калибровки (P14)."""
+        if limit < 1:
+            raise ValueError("limit must be >= 1")
+        rows = self._conn.execute(
+            """
+            SELECT delivery_key, publication_key, action, created_at
+              FROM feedback
+             WHERE owner_scope = ?
+             ORDER BY created_at DESC
+             LIMIT ?
+            """,
+            (owner_scope, limit),
+        ).fetchall()
+        return [dict(row) for row in rows***REMOVED***
+
     def close(self) -> None:
         """Закрыть соединение."""
         self._conn.close()
