@@ -58,6 +58,6 @@ python -m app.cli --once --profile <profile-id>
 
 ## Известные блокеры
 
-- **G2**: первый live RSS/Atom URL ещё не выбран и не прошёл policy matrix (это единственный блокер live-участков; transport готов и gated).
+- **G2-активация**: источник выбран и `allowed` (HeadHunter API, SRC-011/ADR-011), но live polling выключен до регистрации приложения на dev.hh.ru, API-ключа (secret storage) и canary-прогона — это единственный блокер live-участков; transport готов и gated (`allowed` + `can_poll`).
 - Telegram web-preview отключён до отдельного разрешения (fixture-only).
 - Живой Telegram delivery transport и общий runtime entrypoint — после policy approval.

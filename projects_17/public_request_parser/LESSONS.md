@@ -31,10 +31,11 @@
 - **PRP-25** (Step 11, calibration): оптимальный порог ищется по наблюдаемым score, а не по сетке — иначе «KEEP»-кейс (текущий порог 0.8) давал бы ложный CHANGE при отсутствии сэмпла ровно 0.8.
 - **PRP-26** (Step 11, calibration): feedback без сохранённого decision обязан исключаться из выборки; иначе «ghost»-записи раздувают выборку и ломают min_samples.
 - **PRP-27** (Step 11, calibration): рекомендации порогов не применяются автоматически — apply всегда через новую версию профиля (откат без изменений старых decisions).
+- **PRP-28** (Step 13, G2): «allowed» — это статус с evidence и условиями, а не выключатель трафика: HeadHunter API получил `allowed` (developer agreement + OpenAPI), но live polling остаётся `can_poll=False` до регистрации приложения/ключа и canary-прогона; двойной гейт закрывает разрыв между policy-решением и runtime-активацией.
 
 ## Open questions
 
-- **OQ-PRP-1** (Task 1): какой первый RSS/Atom feed использовать для live feasibility check? Technical fixture candidate = Stack Overflow Atom; user-facing source не утверждён.
+- **OQ-PRP-1** (Task 1): ~~какой первый source для live feasibility check?~~ → **решён (ADR-011): HeadHunter API (SRC-011)**; Stack Overflow Atom остаётся fixture/parser canary.
 - **OQ-PRP-2** (Task 1): какой default/max TTL утвердить?
 - **OQ-PRP-3** (Task 2): как вычислять thresholds accept/pending/reject? P5 fixировал формулу mean-ratio × 0.9 + intent 0.1; калибровка на реальных данных — P10/P14.
 - **OQ-PRP-4** (Task 6): есть ли допустимое основание для Telegram web-preview в целевом публичном продукте?

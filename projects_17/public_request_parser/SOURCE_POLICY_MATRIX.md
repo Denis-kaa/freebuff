@@ -2,7 +2,7 @@
 
 > **Версия:** 0.1.0
 > **Дата исследования:** 2026-08-23
-> **Статус:** P2 partial — технические кандидаты найдены, live product source не утверждён
+> **Статус:** P2 partial → G2 closed (conditional) — первый live product source: **HeadHunter API** (SRC-011), evidence и условия ниже
 > **Правило:** техническая доступность URL не равна разрешению на публичную коммерческую агрегацию.
 > **Проект:** `projects_17/public_request_parser`
 > **Canonical spec:** [`../../public-request-parser-spec.md`***REMOVED***(../../public-request-parser-spec.md)
@@ -26,9 +26,9 @@
 - Stack Exchange API выбран как **conditional live candidate**, поскольку официальный API имеет отдельные Terms of Use и attribution requirements.
 - DEV RSS подтверждён технически, но user-content license/purpose boundary требует manual review.
 - Telegram web-preview остаётся `blocked` для live aggregation до отдельного policy/legal approval.
-- Первый production `allowed` source пока не утверждён.
+- **G2 закрыт условно (2026-08-23):** первым production `allowed` source выбран **HeadHunter API — поиск вакансий** (SRC-011). Официальный механизм, developer agreement изучен; активация требует регистрации приложения на `dev.hh.ru` и API-ключа (secret storage), соблюдения тематики (поиск работы/сотрудников) и запрета изменений материалов (§3.11). Pilot возможен после указанной активации.
 
-**Следствие:** P2 research выполнен частично; G2 для live product source остаётся открытым. P3 domain contracts завершены, а P4 fixture-based engine можно продолжать без live polling.
+**Следствие:** Г2 formal closed (conditional): HeadHunter API подтверждён как первый source с `allowed` режимом при соблюдении developer agreement; live polling включается только после регистрации приложения и получения API-ключа.
 
 ---
 
@@ -60,6 +60,8 @@
 | SRC-008 | Пользовательский RSS/Atom URL | Publisher-provided feed | Формат можно валидировать автоматически; URL и owner задаёт пользователь | Нужны feed owner, terms/license, retention, polling floor и policy acceptance; пользовательский ввод не считается разрешением сам по себе | Высокая гибкость, но нужен catalog/policy workflow | `conditional` |
 | SRC-009 | Официальные государственные/организационные RSS feeds | Publisher-provided feed | RSS feeds обычно явно публикуются как syndication mechanism; конкретный URL не выбран | Terms конкретного издателя, copyright, attribution и intended use проверяются per feed | Технически безопасный parser canary, но обычно не содержит заявок на услуги | `technical_candidate` |
 | SRC-010 | Фриланс-биржи и сайты объявлений без documented feed/API | HTML/SPA/private API unknown | Возможна нестабильная верстка, SPA или недокументированный endpoint; precedent: Kwork SPA | Нельзя использовать hidden/private API, обходить access control или строить scraping без разрешённого режима | Продуктово релевантны, но не подходят до отдельного research и policy decision | `policy_blocked` |
+| SRC-011 | **HeadHunter API — публичный поиск вакансий**: `https://api.hh.ru/vacancies` | Официальный HTTPS API, регистрация приложения на `dev.hh.ru` → API-ключ (секрет) | Документированный OpenAPI (`api.hh.ru/openapi/redoc`); поля: id, name, description, alternate_url, published_at, employment, experience, salary, area | **Evidence:
+1.1** — регистрация Приложения на dev.hh.ru обязательна → уникальный API-ключ; **1.5/1.6** — использование сервиса допустимо для целей привлечения работников и трудоустройства; **3.3** — использование материалов допустимо только в целях, соответствующих тематике Сайта (поиск работы/сотрудников/рынок труда); **3.4** — запрет на использование товарных знаков HeadHunter; **3.6** — запрет сбора логинов/паролей; **3.7** — нельзя предоставлять доступ к резюме; **3.11** — запрещено вносить изменения в материалы | Высокая: вакансии = «работодатель ищет исполнителя» (спрос на услуги/работу), фильтры по ключевым словам, `employment_type=project/part_time`; резюме/контакты соискателей не используются | `allowed` (с условиями активации: приложение + ключ; соблюдение §1.5/1.6/3.3/3.11; TTL текста ограничен; никогда не включать резюме/соискателей и не изменять текст) |
 
 ---
 
@@ -95,7 +97,20 @@
 - rate limit and cache policy;
 - legal owner approval if product deployment requires it.
 
-### 4.3. Не выбирать сейчас как MVP source
+### 4.3. Первый product source — HeadHunter API (SRC-011)
+
+**Режим:** `allowed` при выполнении следующих условий активации:
+
+1. Регистрация Приложения на `dev.hh.ru` и получение API-ключа (хранить в env/secret storage, не в репозитории).
+2. Использование **только** публичного поиска вакансий; поля: id/name/description/alternate_url/published_at/employment/experience/salary/area. Резюме, соискатели, контакты и учётные записи не читаются.
+3. Соблюдать developer agreement: тематика Сайта (§1.5/1.6/3.3), запрет изменений материалов (§3.11 — title/описание отображать как есть), запрет товарных знаков (§3.4).
+4. Poll floor и лимиты — по документации API; TTL полного текста (default 7 дней) уже задан нашим storage.
+5. Атрибуция: сохранять `alternate_url` (canonical link) в карточках (уже реализовано в `render_card`).
+6. Enable/disable — через конфиг/env без изменения кода; reversible (у нас — гейт `allowed+can_poll` в `HttpFeedAdapter`).
+
+Отличие от SRC-001/SRC-002: это не Q&A — это реальный спрос «работодатель ищет исполнителя»; продуктовая пригодность выше, механизм официальный.
+
+### 4.4. Не выбирать сейчас как MVP source
 
 - Telegram web-preview — policy blocked для текущего режима.
 - VK API — conditional, требует credentials и отдельного use-case review.
@@ -213,6 +228,8 @@ live_enablement:
 | Можно ли использовать VK? | Только после official API/credentials/policy review; `conditional` |
 | Можно ли считать любой пользовательский URL разрешённым? | Нет; URL проходит source policy workflow |
 | Можно ли строить MVP без approved live commercial source? | Да, как fixture/technical MVP; коммерческая ценность проверяется отдельным pilot gate |
+| Первый product source со статусом allowed? | **Да — HeadHunter API (SRC-011), условно**: регистрация приложения + ключ, тематика Сайта, запрет изменения материалов; включение live после активации |
+| Можно ли считать HeadHunter API разрешённым для использования резюме/соискателей? | Нет — только публичный поиск вакансий; резюме/соискатели/контактные данные исключены |
 
 ---
 
@@ -229,6 +246,12 @@ live_enablement:
 ---
 
 ## 9. Evidence reviewed
+
+### HeadHunter (SRC-011 — первый allowed)
+
+- [Условия использования сервиса API (developer agreement)***REMOVED***(https://dev.hh.ru/admin/developer_agreement) — изучено 2026-08-23: §1.1 регистрация Приложения/ключ; §1.5/1.6 цели трудоустройства; §3.3 тематика Сайта; §3.4 запрет товарных знаков; §3.6 запрет учётных данных; §3.7 резюме только по договору; §3.11 запрет изменения материалов.
+- [Документация api.hh.ru (OpenAPI)***REMOVED***(https://api.hh.ru/openapi/redoc) — публичный поиск вакансий; поля и параметры.
+- [HeadHunter API landing***REMOVED***(https://api.hh.ru/) — официальный портал интеграций.
 
 ### Stack Overflow / Stack Exchange
 
@@ -260,4 +283,4 @@ Stack Overflow Atom fixture
   → no live user-facing aggregation yet
 ```
 
-P2 is **partially complete** because a first source suitable for public product aggregation has not been approved. P3 domain contracts are complete; the next engineering stage is the P4 fixture-based engine. Live polling and public pilot remain blocked until an explicit source scope decision closes G2.
+P2 evolved: a first source suitable for public product aggregation **has been selected — HeadHunter API (SRC-011) as `allowed` (conditional activation)**. G2 is formally closed with evidence (developer agreement + OpenAPI) and explicit conditions (app registration + API key, job-search purpose only, no resume data, no material modification). Live polling stays disabled until activation; public pilot must pass the same source gates (G-SOURCE-1..6) and source record workflow.

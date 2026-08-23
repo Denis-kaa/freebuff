@@ -414,7 +414,7 @@ Bump: ACTIVE 97 → 102 (5 новых артефактов промта 4 — G/
 | `projects_17/public_request_parser/README.md` | README | DRAFT | Project navigation and scope |
 | `projects_17/public_request_parser/SPEC.md` | Specification pointer | DRAFT | Project-local entry point to canonical root specification |
 | `projects_17/public_request_parser/ROADMAP.md` | Roadmap | DRAFT | Full lifecycle P0–P19: source matrix → MVP → pilot → hardening → multi-tenant → beta → production v1.0 → evolution |
-| `projects_17/public_request_parser/SOURCE_POLICY_MATRIX.md` | Research/Policy | ACTIVE | P2 source matrix: technical candidates, conditional/manual-review/blocked statuses, evidence and G2 gates |
+| `projects_17/public_request_parser/SOURCE_POLICY_MATRIX.md` | Research/Policy | ACTIVE | P2 source matrix: technical candidates, conditional/manual-review/blocked statuses, evidence; G2 closed conditional — SRC-011 HeadHunter API allowed (ADR-011) |
 | `projects_17/public_request_parser/STEPS.md` | Steps | ACTIVE | Actual scaffold creation log |
 | `projects_17/public_request_parser/LESSONS.md` | Lessons | ACTIVE | Project-local boundary, policy and retention findings |
 | `projects_17/public_request_parser/RUNNABLE.md` | Runnable | DRAFT | Documentation-only current launch status and planned CLI contract |
@@ -443,7 +443,7 @@ Bump: ACTIVE 97 → 102 (5 новых артефактов промта 4 — G/
 | `projects_17/public_request_parser/app/delivery/__init__.py` | Implementation | ACTIVE | P7 render_card, MessageTransport protocol, TelegramDelivery; no network, no credentials |
 | `projects_17/public_request_parser/tests/test_delivery.py` | Tests | ACTIVE | 11 hermetic delivery tests; passed on 2026-08-23 |
 | `projects_17/public_request_parser/decisions/ADR-007_delivery_contract_and_idempotency.md` | ADR | ACTIVE | Delivery contract: escape renderer, dry-run, idempotent key, retry only failed, owner gate |
-| `projects_17/public_request_parser/POST_MVP_GATES.md` | Roadmap | ACTIVE | P10–P19 honest statuses: done/partial/blocked with evidence; main blocker G2 |
+| `projects_17/public_request_parser/POST_MVP_GATES.md` | Roadmap | ACTIVE | P10–P19 honest statuses: done/partial/blocked with evidence; G2 closed conditional (HH API), P10 Ready — activation pending |
 | `projects_17/public_request_parser/app/pipeline/__init__.py` | Implementation | ACTIVE | P8 offline pipeline: adapter → normalize → store → match → deliver, checkpoint resume |
 | `projects_17/public_request_parser/app/cli.py` | Implementation | ACTIVE | P8 CLI: `--once` (fixture run) and `--maintenance` (TTL+backup) |
 | `projects_17/public_request_parser/app/tgpreview/__init__.py` | Implementation | ACTIVE | P9 Telegram web-preview fixture adapter; ALLOWED policy forbidden |
@@ -459,6 +459,7 @@ Bump: ACTIVE 97 → 102 (5 новых артефактов промта 4 — G/
 | `projects_17/public_request_parser/tests/test_calibration.py` | Tests | ACTIVE | 5 hermetic calibration tests; passed on 2026-08-23 |
 | `projects_17/public_request_parser/decisions/ADR-010_feedback_calibration_determinism.md` | ADR | ACTIVE | Calibration determinism, no auto-apply; apply via new profile version |
 | `projects_17/public_request_parser/tests/test_e2e_tg_pipeline.py` | Tests | ACTIVE | E2E full pipeline with TG fixture: accept/reject, idempotency, offer gate, card без author; 5 tests |
+| `projects_17/public_request_parser/decisions/ADR-011_g2_first_allowed_source_headhunter_api.md` | ADR | ACTIVE | G2 closed conditional: HeadHunter API = first allowed source (developer agreement + OpenAPI evidence); activation = app+key+canary; Telegram stays blocked |
 
 ### ACTIVE entries added 2026-08-10 (v5.147.0)
 

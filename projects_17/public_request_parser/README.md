@@ -2,7 +2,7 @@
 
 Универсальный парсер открытых публикаций, где пользователи ищут услуги.
 
-> **Состояние:** P3–P9 реализованы (offline/fixture, 81 тест); P10+ гated — см. `POST_MVP_GATES.md`; главный блокер — G2 (approved live source).
+> **Состояние:** P3–P9 реализованы (offline/fixture, 91 тест); P10+ гated — см. `POST_MVP_GATES.md`; G2 закрыт условно (HeadHunter API, ADR-011) — осталась активация ключа + canary.
 > **Canonical specification:** [`../../public-request-parser-spec.md`***REMOVED***(../../public-request-parser-spec.md)
 
 ## Что решает проект

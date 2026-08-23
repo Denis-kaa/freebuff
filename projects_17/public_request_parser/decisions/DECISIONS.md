@@ -15,6 +15,7 @@
 | ADR-008 | Lead Aggregator review: Publication vs Request/Lead семантика различна; остаёмся отдельными (remain separate) | ✅ Accepted | 2026-08-23 | `ROADMAP.md`, P15 |
 | ADR-009 | Platformization deferred до live-use evidence; кандидаты (SourceAdapter/SourcePolicy/catalog) зафиксированы, MissingRegistry не трогается | ✅ Accepted | 2026-08-23 | `ROADMAP.md`, P16, `POST_MVP_GATES.md` |
 | ADR-010 | Feedback calibration: детерминированная рекомендация порогов (accuracy), без авто-apply; apply через новую версию профиля | ✅ Accepted | 2026-08-23 | `CALIBRATION.md`, `ROADMAP.md`, P14 |
+| ADR-011 | G2: первый `allowed` source = HeadHunter API (SRC-011), официальный механизм, условная активация (приложение+ключ, тематика, без резюме, без изменения материалов); Telegram остаётся blocked | ✅ Accepted (conditional) | 2026-08-23 | `SOURCE_POLICY_MATRIX.md` SRC-011, `ROADMAP.md` G2, `POST_MVP_GATES.md` |
 
 ## Правила ADR
 

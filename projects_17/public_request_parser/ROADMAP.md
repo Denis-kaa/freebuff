@@ -69,7 +69,7 @@
 |---|---|---|---|---|
 | P0 | Interview + canonical spec | ✅ Done | Зафиксированы цель, ограничения и открытые вопросы | Пользовательские решения записаны |
 | P1 | Project scaffold | ✅ Done | Каркас sibling-проекта и ADR | Документы и границы существуют |
-| P2 | Source/policy research | 🟡 Partial | Матрица создана; technical candidates найдены, production `allowed` source не утверждён | G2 остаётся открытым |
+| P2 | Source/policy research | ✅ Done (conditional) | Матрица создана; первый production `allowed` source выбран — HeadHunter API (SRC-011, ADR-011), evidence: developer agreement + OpenAPI | G2 закрыт условно (активация: приложение + API-ключ + canary) |
 | P3 | Domain contracts | ✅ Done | Typed Publication/Profile/Decision/Policy/Retention + adapter/storage/delivery ports | Contract tests green; G3 closed |
 | P4 | RSS/Atom engine | ✅ Done (offline fixture) | Парсинг, нормализация, dedup, checkpoint на fixtures | Fixture suite green; live transport отдельно |
 | P5 | Matching and explainability | ✅ Done | Правила, синонимы, exclusions, thresholds, intent gate, pending | Decision contract green; 14 tests |
@@ -77,7 +77,7 @@
 | P7 | Telegram delivery | ✅ Done (contract-only) | HTML-карточки, dry-run, идемпотентная доставка, retry после failed | Delivery contract green; 11 tests |
 | P8 | Single-tenant bot MVP | ✅ Done (offline slice) | Pipeline + CLI: fixture→match→SQLite→dry-run | 76+ проектных тестов; G5 зависит от live source |
 | P9 | Telegram technical adapter | ✅ Done (fixture-only) | `tgpreview` adapter; live allowed запрещён | No live access without gate |
-| P10 | MVP pilot | 🔴 Blocked (G2) | Необходим approved live source | Pilot metrics collected |
+| P10 | MVP pilot | 🟡 Ready (активация) | Первый allowed source выбран (HH API); нужен API-ключ + canary | Pilot metrics collected |
 | P11 | MVP hardening | 🟡 Partial | backup/maintenance; scheduler/runbook после pilot | Operational readiness |
 | P12 | Source expansion | 🟡 Partial | HttpFeedAdapter (двойной гейт allowed+can_poll) | Each source independently gated |
 | P13 | Multi-tenant foundation | 🟡 Partial | Schema v2 owner-isolated profiles; auth/quotas pending | Isolation tests green |
@@ -153,7 +153,7 @@ P0 spec
 P1 scaffold
   → G1: project container, ADR, runnable/checklist exist
 P2 source/policy research
-  → G2: at least one RSS/Atom source = allowed (open; technical candidate available)
+  → G2: at least one source = allowed → ✅ closed conditional 2026-08-23 (HH API, ADR-011); live polling disabled until key + canary
 P3 domain contracts
   → G3: Publication/Profile/Decision/Retention ownership defined
 P4-P7 engine slices
@@ -186,7 +186,7 @@ P19 evolution
 
 ## 6. Этапы до MVP
 
-> P3–P9 завершены (offline/fixture). P10–P19 детализированы в `POST_MVP_GATES.md`; G2 (approved live source) остаётся главным блокером.
+> P3–P9 завершены (offline/fixture). P10–P19 детализированы в `POST_MVP_GATES.md`; G2 (approved live source) закрыт условно (HeadHunter API, ADR-011) — осталась активация ключа и canary.
 
 ### P2 — Source/policy research
 
@@ -910,7 +910,7 @@ Production v1.0 is complete only when:
 - [x***REMOVED*** DEV RSS и Reddit Atom зафиксированы как manual-review candidates.
 - [x***REMOVED*** Stack Exchange API зафиксирован как conditional candidate с attribution gate.
 - [x***REMOVED*** Telegram web-preview оставлен `policy_blocked`.
-- [ ***REMOVED*** Production/user-facing `allowed` source не утверждён.
+- [x***REMOVED*** **Production/user-facing `allowed` source утверждён условно: HeadHunter API (SRC-011) — ADR-011, evidence = developer agreement (dev.hh.ru) + OpenAPI**; live polling выключен до регистрации приложения + API-ключа + canary.
 - [ ***REMOVED*** Default/max TTL не закрыты.
 - [x***REMOVED*** P3 contracts review-ready; G3 закрыт.
 - [x***REMOVED*** P4 RSS/Atom fixture engine реализован; 8 tests green; live polling отсутствует.
@@ -923,15 +923,13 @@ Production v1.0 is complete only when:
 
 ### Next action
 
-**Закрыть G2** (первый production `allowed` источник) → P10 pilot. До этого все реализуемые офлайн-части готовы (см. `POST_MVP_GATES.md`).
-
-Параллельно остаётся открытым decision G2: approval первого user-facing source. До закрытия G2 запрещены live user-facing polling и public pilot; технические fixtures разрешены.
+**G2 закрыт условно (2026-08-23, ADR-011):** первый production `allowed` источник — HeadHunter API (поиск вакансий, SRC-011). Активация: регистрация приложения на `dev.hh.ru`, API-ключ в secret storage, canary-прогон `HttpFeedAdapter`, затем P10 pilot. Live polling остаётся выключен до активации (двойной гейт `allowed` + `can_poll`).
 
 ---
 
 ## 22. Open decisions
 
-1. Первый live/user-facing RSS/Atom URL и его владелец.
+1. ~~Первый live/user-facing источник~~ → **решён (ADR-011): HeadHunter API (SRC-011)**, условная активация; Telegram web-preview по-прежнему `policy_blocked`.
 2. Default/max TTL.
 3. Формула thresholds.
 4. Транспорт Telegram delivery.
