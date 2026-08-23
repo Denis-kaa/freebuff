@@ -458,6 +458,7 @@ Bump: ACTIVE 97 → 102 (5 новых артефактов промта 4 — G/
 | `projects_17/public_request_parser/app/calibration/engine.py` | Implementation | ACTIVE | P14 ThresholdCalibrator + optimal_accept_threshold (accuracy over observed scores) |
 | `projects_17/public_request_parser/tests/test_calibration.py` | Tests | ACTIVE | 5 hermetic calibration tests; passed on 2026-08-23 |
 | `projects_17/public_request_parser/decisions/ADR-010_feedback_calibration_determinism.md` | ADR | ACTIVE | Calibration determinism, no auto-apply; apply via new profile version |
+| `projects_17/public_request_parser/tests/test_e2e_tg_pipeline.py` | Tests | ACTIVE | E2E full pipeline with TG fixture: accept/reject, idempotency, offer gate, card без author; 5 tests |
 
 ### ACTIVE entries added 2026-08-10 (v5.147.0)
 
