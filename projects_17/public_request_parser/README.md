@@ -1,0 +1,46 @@
+# Public Request Parser Bot
+
+Универсальный парсер открытых публикаций, где пользователи ищут услуги.
+
+> **Состояние:** P3 domain layer + P4 RSS/Atom fixture engine + P5 deterministic matcher реализованы и протестированы; storage и delivery ещё не начаты.
+> **Canonical specification:** [`../../public-request-parser-spec.md`***REMOVED***(../../public-request-parser-spec.md)
+
+## Что решает проект
+
+Пользователь задаёт профиль услуги: ключевые слова, фразы, синонимы, исключения, intent-правила и пороги. Система читает только разрешённые открытые источники, находит подходящие публикации, сохраняет ссылку и технические метаданные, временно хранит текст по TTL и отправляет карточку через Telegram-бота.
+
+## Первый источник
+
+RSS/Atom — первый operational candidate. Он должен пройти source/policy matrix и быть подключённым только после проверки URL, условий публикации, частоты запросов и формата данных.
+
+Telegram web-preview имеет технический adapter contract и fixtures, но **не live-режим**. Его включение требует отдельного policy/legal decision. Публичная доступность страницы сама по себе не считается разрешением на агрегацию.
+
+## Быстрый маршрут по документам
+
+1. [`MANIFEST.md`***REMOVED***(MANIFEST.md) — паспорт и инварианты.
+2. [`SPEC.md`***REMOVED***(SPEC.md) — указатель на полную спецификацию.
+3. [`ROADMAP.md`***REMOVED***(ROADMAP.md) — последовательность этапов и gates.
+4. [`STEPS.md`***REMOVED***(STEPS.md) — фактический журнал работы.
+5. [`decisions/DECISIONS.md`***REMOVED***(decisions/DECISIONS.md) — индекс решений.
+6. [`DOMAIN_CONTRACTS.md`***REMOVED***(DOMAIN_CONTRACTS.md) — P3 API и инварианты.
+7. [`RSS_ATOM_ENGINE.md`***REMOVED***(RSS_ATOM_ENGINE.md) — P4 parser/normalization/dedup/checkpoint API.
+8. [`MATCHING_ENGINE.md`***REMOVED***(MATCHING_ENGINE.md) — P5 matcher API: rules, intent gate, score formula.
+9. [`RUNNABLE.md`***REMOVED***(RUNNABLE.md) и [`CHECKLIST.md`***REMOVED***(CHECKLIST.md) — запуск и acceptance gates.
+
+## Граница с `lead_aggregator`
+
+Этот проект не является переименованием или переписыванием `projects_17/lead_aggregator`.
+
+- Parser: универсальные публикации, профили пользователей, policy, TTL и доставка.
+- Lead Aggregator: доменный сценарий исполнителя, competence matching и коммерческий lead scoring.
+
+Будущая интеграция возможна через формальные контракты, но только после сравнения семантики `Publication`, `Request` и `Lead`.
+
+## Запрещено
+
+- автоотклики, рассылки и комментарии авторам;
+- сбор отдельной базы пользователей/авторов;
+- обход капч, блокировок, paywall и лимитов;
+- приватные источники без отдельного разрешённого контракта;
+- отправка собранного Telegram-контента в LLM/ML pipeline без отдельного допустимого основания;
+- хранение секретов в коде, YAML, карточках и логах.

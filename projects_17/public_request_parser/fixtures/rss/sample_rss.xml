@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Example Requests</title>
+    <link>https://example.test/requests</link>
+    <description>Synthetic fixture feed</description>
+    <item>
+      <guid isPermaLink="false">request-1</guid>
+      <link>https://example.test/requests/1</link>
+      <title>Need a Python backend service</title>
+      <description><![CDATA[Looking for help with a small backend task.***REMOVED******REMOVED***></description>
+      <pubDate>Sat, 23 Aug 2026 10:00:00 GMT</pubDate>
+      <category>python</category>
+    </item>
+    <item>
+      <guid>https://example.test/requests/2</guid>
+      <link>https://example.test/requests/2</link>
+      <title>Need a designer</title>
+      <description>Looking for a landing page design.</description>
+      <pubDate>2026-08-23T11:00:00+03:00</pubDate>
+    </item>
+  </channel>
+</rss>

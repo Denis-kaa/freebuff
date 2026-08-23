@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Example Atom Requests</title>
+  <id>https://example.test/atom</id>
+  <updated>2026-08-23T12:00:00Z</updated>
+  <entry>
+    <id>tag:example.test,2026:request-3</id>
+    <link rel="alternate" href="https://example.test/requests/3" />
+    <title>Need a copywriter</title>
+    <summary>Looking for copywriting support.</summary>
+    <content type="html"><![CDATA[Need a short product description.***REMOVED******REMOVED***></content>
+    <published>2026-08-23T09:30:00Z</published>
+    <category term="copywriting" />
+  </entry>
+  <entry>
+    <id>tag:example.test,2026:request-4</id>
+    <link href="https://example.test/requests/4" />
+    <title>Untimed request</title>
+    <updated>not-a-date</updated>
+  </entry>
+</feed>

@@ -1,0 +1,29 @@
+name: public_request_parser
+type: service
+version: 0.1.0
+status: draft
+stack:
+  - python>=3.11
+  - sqlite3 (stdlib, planned for P6)
+  - rss-atom-parser (stdlib xml.etree, implemented P4)
+  - rule-matcher (deterministic, implemented P5)
+  - telegram-bot-delivery (planned)
+roles:
+  - operator
+  - user (future multi-tenant)
+contracts:
+  - source_item
+  - source_adapter
+  - publication
+  - search_profile
+  - match_decision
+  - checkpoint_store
+  - delivery
+  - policy_gate
+  - retention_policy
+  - delivery_attempt
+description: >
+  Универсальный read-only парсер открытых публикаций с поиском заявок на услуги
+  по персональным профилям, дедупликацией, TTL-текстом и Telegram-доставкой.
+  RSS/Atom — первый operational source; Telegram web-preview — fixture-only
+  до отдельного policy/legal approval.
