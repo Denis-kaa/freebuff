@@ -464,6 +464,9 @@ Bump: ACTIVE 97 → 102 (5 новых артефактов промта 4 — G/
 | `projects_17/public_request_parser/app/adapters/trudvsem.py` | Implementation | ACTIVE | SRC-012 adapter: JSON→SourceItem, ALLOWED+can_poll gate, modifiedFrom delta, no contact/private fields |
 | `projects_17/public_request_parser/tests/test_trudvsem.py` | Tests | ACTIVE | 15 hermetic trudvsem tests; passed 2026-08-23 |
 | `projects_17/public_request_parser/fixtures/trudvsem/` | Fixtures | ACTIVE | Anonymized API responses (2 pages, copywriter, error 500) |
+| `projects_17/public_request_parser/app/adapters/headhunter.py` | Implementation | ACTIVE | SRC-011 adapter: JSON→SourceItem, fields per ADR-011, ALLOWED+can_poll gate, no contacts/address |
+| `projects_17/public_request_parser/tests/test_headhunter.py` | Tests | ACTIVE | 14 hermetic headhunter tests; passed 2026-08-23 |
+| `projects_17/public_request_parser/fixtures/hh/` | Fixtures | ACTIVE | Anonymized HH API response (2 vacancies); real credentials NOT committed (hh/ ignored) |
 
 ### ACTIVE entries added 2026-08-10 (v5.147.0)
 

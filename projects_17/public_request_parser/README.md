@@ -16,7 +16,7 @@ RSS/Atom — первый operational candidate. Он должен пройти 
 **G2 закрыт (2026-08-23):**
 
 - **SRC-012 — Open Data API «Работа в России» (trudvsem)** — официальные открытые данные («использование без ограничений»), без ключей, live-проверен (HTTP 200, ~514k вакансий) — **безусловный `allowed`** (ADR-012); адаптер `app/adapters/trudvsem.py` реализован (JSON → `SourceItem`, без контактных полей).
-- **SRC-011 — HeadHunter API** — официальный developer agreement + OpenAPI — `allowed` при условной активации (приложение + ключ) (ADR-011).
+- **SRC-011 — HeadHunter API** — официальный developer agreement + OpenAPI; приложение **#22931 одобрено**, live-проверка OK (HTTP 200, 6629 вакансий по «python»); адаптер `app/adapters/headhunter.py` (ADR-011).
 
 Telegram web-preview имеет технический adapter contract и fixtures, но **не live-режим**. Его включение требует отдельного policy/legal decision. Публичная доступность страницы сама по себе не считается разрешением на агрегацию.
 

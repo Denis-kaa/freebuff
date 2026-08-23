@@ -77,7 +77,7 @@
 | P7 | Telegram delivery | ✅ Done (contract-only) | HTML-карточки, dry-run, идемпотентная доставка, retry после failed | Delivery contract green; 11 tests |
 | P8 | Single-tenant bot MVP | ✅ Done (offline slice) | Pipeline + CLI: fixture→match→SQLite→dry-run | 76+ проектных тестов; G5 зависит от live source |
 | P9 | Telegram technical adapter | ✅ Done (fixture-only) | `tgpreview` adapter; live allowed запрещён | No live access without gate |
-| P10 | MVP pilot | 🟡 Ready (адаптер готов) | Безусловный allowed source: trudvsem (SRC-012); адаптер `app/adapters/trudvsem.py` + 15 hermetic тестов; осталась интеграция в pipeline + canary | Pilot metrics collected |
+| P10 | MVP pilot | 🟡 Ready (адаптеры готовы) | SRC-012 trudvsem (безусловный) + SRC-011 HH API (одобрено #22931, live-проверка OK); адаптеры `trudvsem.py`+`headhunter.py` (29 hermetic тестов); осталась интеграция в pipeline + canary | Pilot metrics collected |
 | P11 | MVP hardening | 🟡 Partial | backup/maintenance; scheduler/runbook после pilot | Operational readiness |
 | P12 | Source expansion | 🟡 Partial | HttpFeedAdapter (двойной гейт allowed+can_poll) | Each source independently gated |
 | P13 | Multi-tenant foundation | 🟡 Partial | Schema v2 owner-isolated profiles; auth/quotas pending | Isolation tests green |
@@ -924,7 +924,7 @@ Production v1.0 is complete only when:
 
 ### Next action
 
-**G2 закрыт (2026-08-23):** безусловный `allowed` источник — **Open Data API «Работа в России»** (SRC-012, ADR-012: открытая лицензия «без ограничений», без ключей, live-проверка). Дополнительный условный — HeadHunter API (SRC-011, ADR-011). Адаптер trudvsem реализован (`app/adapters/trudvsem.py`, 15 hermetic тестов). Следующий шаг: интеграция адаптера в `app/pipeline` + CLI и canary-прогон, затем P10 pilot. Live polling включится только через гейт (`allowed` + `can_poll`).
+**G2 закрыт и активирован (2026-08-23):** безусловный `allowed` источник — **Open Data «Работа в России»** (SRC-012, ADR-012); HeadHunter API (SRC-011, ADR-011) — приложение одобрено **#22931**, live-проверка токена успешна (HTTP 200, 6629 вакансий по «python»). Адаптеры `trudvsem.py` + `headhunter.py` реализованы (29 hermetic тестов). Следующий шаг: интеграция адаптеров в `app/pipeline` + CLI и canary-прогон, затем P10 pilot. Live polling включится только через гейт (`allowed` + `can_poll`).
 
 ---
 

@@ -1,8 +1,8 @@
 # ADR-011 — G2: first `allowed` source = HeadHunter API (SRC-011)
 
-> **Статус:** Accepted (conditional activation)
+> **Статус:** ✅ Accepted (activated — app #22931 approved, live-verified 2026-08-23)
 > **Дата:** 2026-08-23
-> **Связано:** `SOURCE_POLICY_MATRIX.md` SRC-011, `ROADMAP.md` G2, `POST_MVP_GATES.md`
+> **Связано:** `SOURCE_POLICY_MATRIX.md` SRC-011, `ROADMAP.md` G2, `POST_MVP_GATES.md`, `app/adapters/headhunter.py`
 
 ## Контекст
 
@@ -27,12 +27,15 @@ live product. Исследование at найти источник, где п
 - запрещено использовать товарные знаки (§3.4) и собирать учётные данные (§3.6);
 - TTL текста ограничен (default 7 дней) — согласуется с нашим storage/retention.
 
-**Условия активации** (не выполнены в этом документе, отдельный шаг):
-1. регистрация приложения + API-ключ (secret storage);
-2. конфиг-включение источника с `policy=allowed+can_poll` (это должен
-   использовать `HttpFeedAdapter`/новый HH-adapter);
-3. canary-запуск с малым polling и проверкой полей;
-4. занесение в `data`/env без коммита секретов.
+**Условия активации** (выполнены 2026-08-23):
+1. 🔑 приложение зарегистрировано и одобрено (#22931); Client ID/Secret и
+   Токен приложения — в `hh/info.md` (файл в `.gitignore`, никогда не коммитится);
+2. ✅ live-проверка токена: `GET https://api.hh.ru/vacancies?text=python&per_page=2`
+   → HTTP 200, `found=6629` (2026-08-23);
+3. ✅ адаптер `app/adapters/headhunter.py` реализован (JSON→SourceItem,
+   двойной гейт ALLOWED+can_poll, без контактов/адресов); 14 hermetic-тестов;
+4. ⏳ остаётся: подключение адаптера в `app/pipeline`/CLI и canary-прогон
+   (токен — через env/secret storage, не в коде).
 
 ## Альтернативы (отклонены/отложены)
 

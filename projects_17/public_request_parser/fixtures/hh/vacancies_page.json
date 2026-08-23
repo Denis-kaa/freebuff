@@ -1,0 +1,43 @@
+{
+  "items": [
+    {
+      "id": "136323698",
+      "name": "Python-разработчик",
+      "created_at": "2026-08-23T11:02:15+0300",
+      "published_at": "2026-08-23T11:02:15+0300",
+      "employer": {"id": "1789341", "name": "Компания-пример"***REMOVED***,
+      "snippet": {
+        "requirement": "Уверенный опыт backend-разработки на Python. Хорошее знание SQL, REST API.",
+        "responsibility": "Разработка и развитие backend-сервисов на Python, участие в миграции на новую архитектуру."
+      ***REMOVED***,
+      "salary": null,
+      "area": {"id": "1", "name": "Москва"***REMOVED***,
+      "employment": {"id": "FULL", "name": "Полная занятость"***REMOVED***,
+      "experience": {"id": "moreThan6", "name": "Более 6 лет"***REMOVED***,
+      "schedule": {"id": "fullDay", "name": "Полный день"***REMOVED***,
+      "alternate_url": "https://hh.ru/vacancy/136323698"
+    ***REMOVED***,
+    {
+      "id": "136455374",
+      "name": "Python-разработчик (Django)",
+      "alternate_url": "https://hh.ru/vacancy/136455374",
+      "created_at": "2026-08-23T10:30:00+0300",
+      "published_at": "2026-08-23T10:30:00+0300",
+      "employer": {"id": "9999999", "name": "Компания-пример"***REMOVED***,
+      "snippet": {
+        "requirement": "Python 3.10+, Django 4+, опыт с PostgreSQL.",
+        "responsibility": "Разработка веб-приложений на Django, интеграция с внешними API."
+      ***REMOVED***,
+      "salary": {"from": 250000, "to": 300000, "currency": "RUR"***REMOVED***,
+      "area": {"id": "2", "name": "Санкт-Петербург"***REMOVED***,
+      "employment": {"id": "FULL", "name": "Полная занятость"***REMOVED***,
+      "experience": {"id": "between3And6", "name": "От 3 до 6 лет"***REMOVED***,
+      "schedule": {"id": "fullDay", "name": "Полный день"***REMOVED***,
+      "alternate_url": "https://hh.ru/vacancy/136455374"
+    ***REMOVED***
+  ***REMOVED***,
+  "found": 6629,
+  "pages": 1000,
+  "page": 0,
+  "per_page": 2
+***REMOVED***

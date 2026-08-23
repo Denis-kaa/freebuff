@@ -10,7 +10,7 @@
 |---|---|---|---|
 | P8 single-tenant MVP slice | ✅ Done (offline) | `app/pipeline` + CLI `--once/--maintenance`; сквозной offline путь на fixtures, checkpoint-resume, идемпотентность | — |
 | P9 Telegram technical adapter | ✅ Done (fixture) | `app/tgpreview` fixture-адаптер; live `allowed` запрещён | Live Telegram approval (policy) |
-| P10 pilot | 🟡 Ready (адаптер готов) | **Безусловный** `allowed` источник: Open Data API «Работа в России» (SRC-012, ADR-012); адаптер `app/adapters/trudvsem.py` + 15 hermetic тестов; условный: HH API (SRC-011, ADR-011) | Интеграция адаптера в pipeline + canary-прогон (HH — опционально после регистрации приложения + ключа) |
+| P10 pilot | 🟡 Ready (адаптеры готовы) | **Безусловный** SRC-012 trudvsem (адаптер + 15 тестов); условный SRC-011 HH API — **приложение одобрено #22931, live-проверка OK, адаптер + 14 тестов** | Интеграция адаптеров в pipeline/CLI + canary-прогон |
 | P11 hardening | 🟡 Partial | `backup_to()` + CLI `--maintenance` (TTL+backup); идемпотентность/восстановление на уровне storage | scheduler, runbook, alerting — после pilot |
 | P12 source expansion | 🟡 Partial | `HttpFeedAdapter` (live только для `allowed`, двойной гейт), fixture-адаптеры | Конкретные source approvals (G8) |
 
@@ -34,7 +34,7 @@
 
 ## Главные открытые gates
 
-1. **G2-активация** — `allowed` источники выбраны: безусловный SRC-012 (trudvsem Open Data, ADR-012, адаптер готов) и условный SRC-011 (HH API, ADR-011); live polling остаётся выключен до интеграции в pipeline + canary;
+1. **G2-активация** — `allowed` источники выбраны и активированы: SRC-012 (trudvsem, ADR-012, без ключей) и SRC-011 (HH API, ADR-011, приложение #22931 одобрено, live-проверка OK); адаптеры готовы; live polling остаётся выключен до интеграции в pipeline + canary;
 2. **G5** — e2e user journey (требует approved source или live-рунбук);
 3. **G7** — unattended-эксплуатация (scheduler, runbook, alerting);
 4. **G9** — полноценная multi-tenant auth/quotas;

@@ -51,6 +51,7 @@ python -m app.cli --once --profile <profile-id>
 
 | Переменная | Назначение | Секрет |
 |---|---|---:|
+| `PRP_HH_APP_TOKEN` | Токен приложения HH.ru (#22931) для `HeadhunterAdapter` | **Да** |
 | `PRP_DB_PATH` | SQLite database path | Нет |
 | `PRP_CONFIG_PATH` | Profile/source config path | Нет |
 | `PRP_TG_BOT_TOKEN` | Telegram delivery token | Да |

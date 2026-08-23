@@ -314,3 +314,24 @@
 - 106 проектных тестов проходят (91 + 15 trudvsem); mypy --strict без замечаний (31 файл).
 - Остаётся: подключение адаптера в `app/pipeline` и CLI-режим `--source`, затем canary (P10).
 - Live polling по-прежнему выключен до canary (гейт `allowed` + `can_poll`).
+
+## Step 16: HH API активация (SRC-011, приложение #22931) + адаптер (2026-08-23)
+
+**Что сделано:**
+
+- Пользователь передал данные одобренного приложения HH.ru (#22931): Client ID/Secret, Redirect URI, Токен приложения (`hh/info.md`).
+- Добавлен `.gitignore` entry для `projects_17/public_request_parser/hh/` — секреты никогда не коммитятся.
+- Живая проверка токена (без вывода секрета): `GET https://api.hh.ru/vacancies?text=python&per_page=2` → **HTTP 200, `found=6629`** (2026-08-23).
+- Реализован `app/adapters/headhunter.py`: `HeadhunterAdapter` (JSON→SourceItem, двойной гейт ALLOWED+can_poll, поля ADR-011, без contacts/address, `per_page<=100`, checkpoint, `text`/`date_from`).
+- Добавлен анонімный fixture `fixtures/hh/vacancies_page.json` (2 вакансии) и 14 hermetic тестов `tests/test_headhunter.py`.
+
+**Почему:**
+
+- G2SRC-011 был «условно allowed»; одобрение приложения + live-проверка токена превращают его в **activated** — второй источник для P10 pilot (первый — SRC-012 trudvsem).
+- Секреты не в коде: токен читается из env/secret management; `hh/info.md` — ignored.
+
+**Результат:**
+
+- 120 проектных тестов проходят (106 + 14 HH); mypy --strict без замечаний (33 файла).
+- Осталось: интеграция адаптеров (trudvsem + HH) в `app/pipeline`/CLI и canary-прогон (P10).
+- Live polling выключен до canary (гейт `allowed` + `can_poll`).

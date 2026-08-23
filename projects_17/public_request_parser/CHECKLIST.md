@@ -96,4 +96,5 @@
 - [x***REMOVED*** P14-инструмент: feedback→score выборка, детерминированная рекомендация порогов (без авто-apply); 5 tests (ADR-010).
 - [x***REMOVED*** G2: production `allowed` source выбран: SRC-012 trudvsem Open Data (безусловно, ADR-012) + SRC-011 HH API (условно, ADR-011).
 - [x***REMOVED*** Адаптер trudvsem (JSON→SourceItem, двойной гейт, без контактов) + 15 hermetic тестов.
-- [ ***REMOVED*** Интеграция trudvsem в pipeline/CLI и canary-прогон → P10.
+- [x***REMOVED*** HH API активирован (приложение #22931, live-проверка OK) + `headhunter.py` + 14 тестов; секреты не коммитятся (`hh/` в .gitignore).
+- [ ***REMOVED*** Интеграция адаптеров (trudvsem + HH) в pipeline/CLI и canary-прогон → P10.

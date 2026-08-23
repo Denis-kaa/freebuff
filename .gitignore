@@ -96,8 +96,30 @@ buffy-playground/dist/
 *.pyo
 *.log
 
+# Freebuff plugin session overlay (transient backup of canonical AGENTS.md)
+.freebuff_original_agents
+
+# Freebuff update script artifacts (update_freebuff_safe.sh)
+.smoke_*
+*.bak-*
+
+# Audit batch hygiene (R22): archived artifacts, generated reports, snapshots
+*.bak
+*.bak.md
+*.sha256
+verify_archive_marker.txt
+books_out/
+qwen-table-*.csv
+status_report_*.txt
+promts_*_complete_work_*.sha256
+
 # API keys — NEVER commit
 .keys/
+
+# HH.ru app credentials (SRC-011) — never commit
+projects_17/public_request_parser/hh/
+projects_17/public_request_parser/hh/*.md
+
 
 # Project Pulse runtime snapshot (workspace root for MCP server)
 *.pulse_snapshot.json
