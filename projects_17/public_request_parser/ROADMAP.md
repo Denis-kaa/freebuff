@@ -1,7 +1,7 @@
 # ROADMAP-PRP-001 — Public Request Parser Bot
 
 > **Версия roadmap:** 0.2.1
-> **Статус:** DRAFT — P3 contracts + P4 RSS/Atom engine + P5 matcher реализованы; P6 storage следующий
+> **Статус:** DRAFT — P3–P9 реализованы (offline/fixture); P10–P19: gates в `POST_MVP_GATES.md`
 > **Canonical spec:** [`../../public-request-parser-spec.md`***REMOVED***(../../public-request-parser-spec.md)
 > **Шаблон:** [`../../docs_10/templates/PIPELINE_TEMPLATE.md`***REMOVED***(../../docs_10/templates/PIPELINE_TEMPLATE.md)
 > **Дата обновления:** 2026-08-23
@@ -73,19 +73,19 @@
 | P3 | Domain contracts | ✅ Done | Typed Publication/Profile/Decision/Policy/Retention + adapter/storage/delivery ports | Contract tests green; G3 closed |
 | P4 | RSS/Atom engine | ✅ Done (offline fixture) | Парсинг, нормализация, dedup, checkpoint на fixtures | Fixture suite green; live transport отдельно |
 | P5 | Matching and explainability | ✅ Done | Правила, синонимы, exclusions, thresholds, intent gate, pending | Decision contract green; 14 tests |
-| P6 | Storage and retention | 🔲 Planned | SQLite/WAL, snapshots, TTL cleanup, idempotency | Retention tests green |
-| P7 | Telegram delivery | 🔲 Planned | Карточки, delivery retry, dry-run, status buttons | Delivery contract green |
-| P8 | Single-tenant bot MVP | 🔲 Planned | Профиль → поиск → карточка → статус | MVP acceptance green |
-| P9 | Telegram technical adapter | 🔲 Conditional | Fixtures и policy-blocked live path | No live access without gate |
-| P10 | MVP pilot | 🔲 Post-MVP-1 | Реальная ограниченная эксплуатация и quality sample | Pilot metrics collected |
-| P11 | MVP hardening | 🔲 Post-MVP-2 | Надёжность, observability, security, recovery | Operational readiness |
-| P12 | Source expansion | 🔲 Post-MVP-3 | Official API/RSS, forums/Q&A, public listings by evidence | Each source independently gated |
-| P13 | Multi-tenant foundation | 🔲 Post-MVP-4 | User isolation, auth, quotas, per-user profiles | Isolation tests green |
-| P14 | Quality feedback loop | 🔲 Post-MVP-5 | Feedback-based calibration and ranking | Quality targets met |
-| P15 | Lead Aggregator integration review | 🔲 Post-MVP-6 | Evidence-based consumer/shared contracts decision | ADR accepted or deferred |
-| P16 | Platformization | 🔲 Post-MVP-7 | Adapter/catalog/policy contracts reusable by Workspace OS | Plugin/bridge contract green |
-| P17 | Public beta | 🔲 Post-MVP-8 | Invite-only multi-user beta | Beta exit metrics met |
-| P18 | Production v1.0 | 🔲 Final | Public stable release and operating model | Production DoD complete |
+| P6 | Storage and retention | ✅ Done | SQLite/WAL, schema v1, TTL cleanup, idempotency | Retention tests green; 14 tests |
+| P7 | Telegram delivery | ✅ Done (contract-only) | HTML-карточки, dry-run, идемпотентная доставка, retry после failed | Delivery contract green; 11 tests |
+| P8 | Single-tenant bot MVP | ✅ Done (offline slice) | Pipeline + CLI: fixture→match→SQLite→dry-run | 76+ проектных тестов; G5 зависит от live source |
+| P9 | Telegram technical adapter | ✅ Done (fixture-only) | `tgpreview` adapter; live allowed запрещён | No live access without gate |
+| P10 | MVP pilot | 🔴 Blocked (G2) | Необходим approved live source | Pilot metrics collected |
+| P11 | MVP hardening | 🟡 Partial | backup/maintenance; scheduler/runbook после pilot | Operational readiness |
+| P12 | Source expansion | 🟡 Partial | HttpFeedAdapter (двойной гейт allowed+can_poll) | Each source independently gated |
+| P13 | Multi-tenant foundation | 🟡 Partial | Schema v2 owner-isolated profiles; auth/quotas pending | Isolation tests green |
+| P14 | Quality feedback loop | 🟡 Partial | Feedback store + stats; calibration на pilot-данных | Quality targets met |
+| P15 | Lead Aggregator integration review | ✅ Done | ADR-008: remain separate (evidence-based) | ADR accepted |
+| P16 | Platformization | 🔷 Recorded | ADR-009: deferred до live-use evidence; кандидаты зафиксированы | — |
+| P17 | Public beta | 🔴 Blocked (G2/G9) | Требует approved sources и multi-user auth | Beta exit metrics met |
+| P18 | Production v1.0 | 🔴 Blocked | Все закрытые gates G2/G6/G7/G9/G13/G14 | Production DoD complete |
 | P19 | Continuous evolution | 🔲 Ongoing | New sources, policy updates, quality releases | Every change gated and reversible |
 
 ---
@@ -186,7 +186,7 @@ P19 evolution
 
 ## 6. Этапы до MVP
 
-> P3, P4 и P5 завершены. Ниже P6–P9 остаются планом реализации; HTTP transport и G2/live source approval по-прежнему открыты.
+> P3–P9 завершены (offline/fixture). P10–P19 детализированы в `POST_MVP_GATES.md`; G2 (approved live source) остаётся главным блокером.
 
 ### P2 — Source/policy research
 
@@ -317,6 +317,21 @@ P19 evolution
 
 **Acceptance:** текст удаляется после TTL, metadata/decision остаются только в разрешённом объёме; cleanup идемпотентен.
 
+### P6 completion — SQLite/WAL storage
+
+**Что сделано:**
+
+- Реализован `app/storage/sqlite.py`: `SqliteStorage` (WAL, FK, busy_timeout) + `SqliteCheckpointStore` (async порт P3).
+- Схема v1 через `PRAGMA user_version`: `publications` (UNIQUE item_key + canonical_url, `text_expires_at`), `checkpoints`, `decisions` (UNIQUE pk+profile+version), `delivery_attempts` (FK, каскад).
+- Атомарные идемпотентные writes: `INSERT OR IGNORE` для publications/decisions/delivery, checkpoint upsert.
+- `expire_full_text()` обнуляет только истёкший `content`; строка/metadata/decisions остаются; повторный вызов возвращает 0.
+- Cap текста и запрет текста (`allow_full_text=False`) применяются на уровне хранилища.
+- Добавлены 14 hermetic tests: WAL/user_version, dedup по ключу и URL, roundtrip, TTL (истёк/не истёк/без TTL/запрет текста/cap), checkpoint upsert, decision idempotency и каскад, delivery idempotency, async-контракт, persistence между соединениями.
+
+**Артефакты:** `STORAGE.md`, `decisions/ADR-006_sqlite_wal_storage_and_retention.md`, `tests/test_storage_sqlite.py`.
+
+**Acceptance:** `pytest` 50 passed (10 contracts + 8 RSS/Atom + 14 matcher + 4 integration + 14 storage); `mypy --strict` без замечаний; G2 остаётся открытым; multi-tenant isolation и backup/restore остаются P13/P11.
+
 ### P7 — Telegram delivery
 
 **Работы:**
@@ -330,6 +345,21 @@ P19 evolution
 - delivery failure state.
 
 **Acceptance:** ошибка доставки не теряет publication/decision; повтор доставки не создаёт лишние карточки.
+
+### P7 completion — Delivery contract
+
+**Что сделано:**
+
+- Реализован `app/delivery/`: `render_card()` (HTML-escape, без Markdown, без полей автора), `MessageTransport` Protocol, `TelegramDelivery`.
+- Идемпотентный ключ `owner:item_key:p{version***REMOVED***`; повторная доставка возвращает сохранённый SENT и не вызывает transport.
+- Dry-run по умолчанию; `SKIPPED` без сети.
+- Retry после `FAILED` через `save_delivery_attempt(... replace_failed=True)` (перезапись только failed); `get_delivery_attempt` добавлен.
+- Owner-гейт: scope обязан совпадать с владельцем decision; пустой scope запрещён.
+- Добавлены 11 hermetic tests и ADR-007.
+
+**Артефакты:** `DELIVERY.md`, `decisions/ADR-007_delivery_contract_and_idempotency.md`, `tests/test_delivery.py`.
+
+**Acceptance:** `pytest` 61 passed (50 + 11 delivery); `mypy --strict` без замечаний; live Telegram transport и кнопки остаются вне P7 (policy/UX gates); G2 остаётся открытым.
 
 ### P8 — Single-tenant bot MVP
 
@@ -885,10 +915,15 @@ Production v1.0 is complete only when:
 - [x***REMOVED*** P3 contracts review-ready; G3 закрыт.
 - [x***REMOVED*** P4 RSS/Atom fixture engine реализован; 8 tests green; live polling отсутствует.
 - [x***REMOVED*** P5 deterministic matcher реализован; 14 tests green; live polling отсутствует.
+- [x***REMOVED*** P6 SQLite/WAL storage реализован; 14 tests green; TTL cleanup идемпотентен; live polling отсутствует.
+- [x***REMOVED*** P7 delivery contract реализован; 11 tests green; live transport отсутствует.
+- [x***REMOVED*** P8 offline pipeline + CLI (`--once`/`--maintenance`) реализован; идемпотентен, checkpoint-resume.
+- [x***REMOVED*** P9 TG web-preview fixture adapter реализован; live allowed запрещён.
+- [x***REMOVED*** P11 backup/maintenance; P12 gated HttpFeedAdapter; P13/P14 schema v2 (profiles/feedback); P15 ADR-008; P16 ADR-009.
 
 ### Next action
 
-**P6 — Storage and retention:** реализовать SQLite/WAL storage layer (schema, publications, profiles, decisions, delivery attempts, checkpoints), atomic writes, dedup indexes, migration/version table и идемпотентный TTL cleanup полного текста, оставляя metadata/decision snapshot по политике.
+**Закрыть G2** (первый production `allowed` источник) → P10 pilot. До этого все реализуемые офлайн-части готовы (см. `POST_MVP_GATES.md`).
 
 Параллельно остаётся открытым decision G2: approval первого user-facing source. До закрытия G2 запрещены live user-facing polling и public pilot; технические fixtures разрешены.
 

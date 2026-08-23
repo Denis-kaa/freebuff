@@ -10,6 +10,10 @@
 | ADR-003 | Typed project-local domain contracts; отдельные policy, adapter, match и delivery error boundaries | ✅ Accepted | 2026-08-23 | `DOMAIN_CONTRACTS.md`, `ROADMAP.md`, P3/G3 |
 | ADR-004 | RSS/Atom fixture engine boundary: stdlib parser, offline normalization/dedup/checkpoint; transport и polling отдельными gates | ✅ Accepted | 2026-08-23 | `RSS_ATOM_ENGINE.md`, `ROADMAP.md`, P4 |
 | ADR-005 | Детерминированный rule-based matcher: hard rejects, intent gate спрос/предложение, mean-ratio score, explainability; LLM отложен до P14 | ✅ Accepted | 2026-08-23 | `MATCHING_ENGINE.md`, `ROADMAP.md`, P5 |
+| ADR-006 | SQLite/WAL storage: user_version миграции, UNIQUE dedup, TTL cleanup только content (metadata/decision остаются), async CheckpointStore adapter | ✅ Accepted | 2026-08-23 | `STORAGE.md`, `ROADMAP.md`, P6 |
+| ADR-007 | Delivery contract: HTML-escape renderer, MessageTransport protocol, dry-run, idempotent key, retry только failed, owner-гейт; live transport policy-gated | ✅ Accepted | 2026-08-23 | `DELIVERY.md`, `ROADMAP.md`, P7 |
+| ADR-008 | Lead Aggregator review: Publication vs Request/Lead семантика различна; остаёмся отдельными (remain separate) | ✅ Accepted | 2026-08-23 | `ROADMAP.md`, P15 |
+| ADR-009 | Platformization deferred до live-use evidence; кандидаты (SourceAdapter/SourcePolicy/catalog) зафиксированы, MissingRegistry не трогается | ✅ Accepted | 2026-08-23 | `ROADMAP.md`, P16, `POST_MVP_GATES.md` |
 
 ## Правила ADR
 

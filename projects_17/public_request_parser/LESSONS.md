@@ -18,6 +18,16 @@
 - **PRP-12** (Step 6, scoring): стоп-слова в `optional_terms` должны исключаться из НОЗНАМЕНАТЕЛЯ ratio, иначе пустой профиль с одним стоп-словом «и» получает ложный 0.0 и никогда не принимается.
 - **PRP-13** (Step 6, synonyms): совпадение алиаса синонима должно удовлетворять required canonical вручную (matched_required += canonical), иначе синоним повышает score, но профиль с required остаётся отклонённым — семантическая ловушка.
 - **PRP-14** (Step 6, intent gate): маркеры предложения («предлагаю», «оказываю») консервативны и срабатывают только при отсутствии demand-сигнала; выдача явного `OFFER_MARKERS` упрощает policy review.
+- **PRP-15** (Step 8, storage): `PRAGMA user_version` не принимает bind-параметры — версия схемы подставляется константой; иначе OperationalError даже при кажущемся корректном SQL.
+- **PRP-16** (Step 8, storage): TTL cleanup должен делать UPDATE только `content`/`text_expires_at`, а не DELETE строки — иначе после истечения TTL пропадают title/URL/metadata, необходимые для карточки и dedup.
+- **PRP-17** (Step 8, storage): хранилище повторно применяет `max_text_chars`/`allow_full_text` на записи, а не полагается на normalization P4 — контрактная защита от будущих вызовов с разными policy.
+- **PRP-18** (Step 9, delivery): HTML-escape — обязательный атрибут карточки из пользовательского контента; Markdown не используется, чтобы канал остался единым форматом.
+- **PRP-19** (Step 9, delivery): FK `delivery_attempts → publications` законно блокирует сохранение попытки для несуществующей публикации — порядок вызова (сначала save_publication) зафиксирован тестом.
+- **PRP-20** (Step 9, delivery): retry после сбоя должен перезаписывать только `FAILED`-строки; `INSERT OR IGNORE` не даёт этого сам по себе — нужен явный `replace_failed=True`.
+- **PRP-21** (Step 10, pipeline): `FixtureFeedAdapter.fetch` — async-генератор: вызывается БЕЗ `await`; Protocol должен описывать `def fetch -> AsyncIterator`, иначе mypy считает тип несовместимым с `Coroutine`.
+- **PRP-22** (Step 10, transport): live-адаптер обязан иметь двойной гейт — статус `allowed` И `can_poll=True`; порт `SourcePolicy` уже запрещает can_poll для не-allowed (contract-level).
+- **PRP-23** (Step 10, schema v2): миграция v1→v2 аддитивная (только новые таблицы) — это позволяет открывать старые БД без потери данных; ALTER-миграции потребуют отдельную процедуру P11.
+- **PRP-24** (Step 10, gates): этапы, требующие внешних допусков (live source, pilot-пользователи, beta), фиксируются как `Blocked (Gx)` с evidence, а не «планируются» — честность статусов обязательна.
 
 ## Open questions
 

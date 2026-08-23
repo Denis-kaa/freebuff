@@ -4,10 +4,13 @@ version: 0.1.0
 status: draft
 stack:
   - python>=3.11
-  - sqlite3 (stdlib, planned for P6)
+  - sqlite3 (stdlib, WAL; implemented P6)
   - rss-atom-parser (stdlib xml.etree, implemented P4)
   - rule-matcher (deterministic, implemented P5)
-  - telegram-bot-delivery (planned)
+  - telegram-delivery-contract (implemented P7; live transport policy-gated)
+  - offline-pipeline-cli (implemented P8)
+  - telegram-web-preview-fixture-adapter (implemented P9)
+  - gated-http-feed-transport (implemented P12)
 roles:
   - operator
   - user (future multi-tenant)
@@ -22,6 +25,13 @@ contracts:
   - policy_gate
   - retention_policy
   - delivery_attempt
+  - sqlite_storage
+  - sqlite_checkpoint_store
+  - html_card_renderer
+  - idempotent_delivery
+  - owner_gate
+  - profiles_store
+  - feedback_store
 description: >
   Универсальный read-only парсер открытых публикаций с поиском заявок на услуги
   по персональным профилям, дедупликацией, TTL-текстом и Telegram-доставкой.

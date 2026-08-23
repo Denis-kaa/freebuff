@@ -129,3 +129,86 @@
 - 32 проектных теста проходят (10 contracts + 8 RSS/Atom + 14 matcher); `mypy --strict` без замечаний.
 - G2 остаётся открытым; live polling, credentials и статус источников не изменялись.
 - Следующий этап — P6 Storage and retention (SQLite/WAL).
+
+## Step 7: P4→P5 integration slice (2026-08-23)
+
+**Что сделано:**
+
+- Добавлен `tests/test_integration_pipeline.py` (4 hermetic tests): RSS/Atom fixture → `SourceItem` → `Publication` → dedup → `RuleMatcher` → `MatchDecision`.
+- Проверено: только релевантный item принимается (python+backend против designer); Atom entry без даты остаётся в pipeline (дата необязательна) и корректно отклоняется по required; async `FixtureFeedAdapter`-прогон идемпотентен; excluded-термин фильтрует шум даже при required-совпадении.
+
+**Почему:**
+
+- Подтверждён offline vertical slice P4→P5 до P6/P7: parser и matcher склеиваются без storage и delivery.
+- Ошибочно выбранные английские intent-термины против русскоязычного профиля и умолчание `decided_at` в async-прогоне пойманы тестами и исправлены до фиксации.
+
+**Результат:**
+
+- 36 проектных тестов проходят (10 contracts + 8 RSS/Atom + 14 matcher + 4 integration); `mypy --strict` без замечаний (11 файлов).
+- G2 остаётся открытым; следующий этап — P6 Storage and retention.
+
+## Step 8: SQLite/WAL storage (2026-08-23)
+
+**Что сделано:**
+
+- Реализован `app/storage/sqlite.py`: `SqliteStorage` (WAL, FK, busy_timeout, миграции через `PRAGMA user_version`) и `SqliteCheckpointStore` (async-порт P3).
+- Схема v1: `publications` (UNIQUE item_key + canonical_url, `text_expires_at`), `checkpoints`, `decisions` (UNIQUE pk+profile+version), `delivery_attempts` (FK каскад).
+- Идемпотентные атомарные writes: INSERT OR IGNORE, checkpoint upsert.
+- `expire_full_text()` обнуляет только истёкший content; строка/metadata/decisions остаются; идемпотентен.
+- Cap текста и запрет текста применяются на уровне хранилища.
+- Добавлены 14 hermetic tests и ADR-006.
+
+**Почему:**
+
+- SQLite/WAL даёт атомарность, индексы и идемпотентность без внешнего сервиса (MVP single-tenant).
+- TTL должен удалять только временный текст, а не потерю metadata/decisions — иначе после cleanup нельзя отобразить карточку.
+- `PRAGMA user_version` — единственная точка правды версии схемы; миграции forward-only.
+
+**Результат:**
+
+- P6 = done; часть G4 (storage) закрыта; 50 проектных тестов проходят (10+8+14+4+14).
+- `mypy --strict` без замечаний (14 файлов); `git diff --check` чист.
+- G2 остаётся открытым; следующий этап — P7 Telegram delivery (contract-only, без live).
+
+## Step 9: Delivery contract (2026-08-23)
+
+**Что сделано:**
+
+- Реализован `app/delivery/`: `render_card()` (HTML-escape, без Markdown и полей автора), `MessageTransport` Protocol, `TelegramDelivery`.
+- Идемпотентный ключ `owner:item_key:p{version***REMOVED***`: повторная доставка возвращает SENT без вызова transport.
+- Dry-run по умолчанию; retry после FAILED через `replace_failed=True` в storage; `get_delivery_attempt` добавлен.
+- Owner-гейт: scope обязан совпадать с владельцем decision; пустой scope запрещён.
+- Добавлены 11 hermetic tests и ADR-007.
+
+**Почему:**
+
+- Live Telegram остаётся policy-gated (P9); доставка должна быть проверяемой без token и сети.
+- Идемпотентность на уровне ключа + storage защищает от дублей и потери evidence попытки.
+- HTML-escape — обязательный безопасный рендер для пользовательского контента.
+
+**Результат:**
+
+- P7 = done (contract-only); 61 проектный тест проходит (50 + 11 delivery).
+- `mypy --strict` без замечаний (16 файлов); `git diff --check` чист.
+- G2 остаётся открытым; следующий этап — P8 single-tenant MVP slice (offline pipeline glue).
+
+## Step 10: P8–P14 implementation sprint (2026-08-23)
+
+**Что сделано:**
+
+- P8: `app/pipeline` (adapter→normalize→SQLite→matcher→delivery) + `app/cli` `--once`/`--maintenance`; checkpoint-resume идемпотентен (CLI smoke: 2→0 fetched, maintenance backup OK).
+- P9: `app/tgpreview` — fixture web-preview адаптер; ALLOWED-policy жёстко запрещена.
+- P11: `storage.backup_to()` (sqlite backup API).
+- P12: `app/adapters/http_feed.py` — live только для `allowed` + `can_poll` (двойной гейт, hermetic-тесты с fake HTTP).
+- P13/P14: schema v2 (`profiles` owner-scoped CRUD, `feedback` идемпотентно + stats); миграция v1→v2 сохраняет данные.
+
+**Почему:**
+
+- Все реализуемые офлайн-части конвейера должны быть готовы до G2, чтобы после approval осталось только подключить источник.
+- Live-транспорт существует, но не может стрелять без `allowed` — инвариант проверяется тестами.
+
+**Результат:**
+
+- 81 проектных тестов проходят; `mypy --strict` без замечаний (25 файлов); CLI работает end-to-end.
+- Коммит `e1b5c32` (P7–P14 code slice).
+- P15/P16 и gates P10–P19 зафиксированы в ADR-008/009 и `POST_MVP_GATES.md`; главный блокер — G2.

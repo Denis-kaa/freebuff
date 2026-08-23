@@ -2,7 +2,7 @@
 
 Универсальный парсер открытых публикаций, где пользователи ищут услуги.
 
-> **Состояние:** P3 domain layer + P4 RSS/Atom fixture engine + P5 deterministic matcher реализованы и протестированы; storage и delivery ещё не начаты.
+> **Состояние:** P3–P9 реализованы (offline/fixture, 81 тест); P10+ гated — см. `POST_MVP_GATES.md`; главный блокер — G2 (approved live source).
 > **Canonical specification:** [`../../public-request-parser-spec.md`***REMOVED***(../../public-request-parser-spec.md)
 
 ## Что решает проект
@@ -25,7 +25,10 @@ Telegram web-preview имеет технический adapter contract и fixtu
 6. [`DOMAIN_CONTRACTS.md`***REMOVED***(DOMAIN_CONTRACTS.md) — P3 API и инварианты.
 7. [`RSS_ATOM_ENGINE.md`***REMOVED***(RSS_ATOM_ENGINE.md) — P4 parser/normalization/dedup/checkpoint API.
 8. [`MATCHING_ENGINE.md`***REMOVED***(MATCHING_ENGINE.md) — P5 matcher API: rules, intent gate, score formula.
-9. [`RUNNABLE.md`***REMOVED***(RUNNABLE.md) и [`CHECKLIST.md`***REMOVED***(CHECKLIST.md) — запуск и acceptance gates.
+9. [`STORAGE.md`***REMOVED***(STORAGE.md) — P6 SQLite/WAL storage: schema, idempotency, TTL cleanup.
+10. [`DELIVERY.md`***REMOVED***(DELIVERY.md) — P7 delivery contract: HTML cards, dry-run, idempotency.
+11. [`POST_MVP_GATES.md`***REMOVED***(POST_MVP_GATES.md) — статусы P10–P19 и блокеры.
+12. [`RUNNABLE.md`***REMOVED***(RUNNABLE.md) и [`CHECKLIST.md`***REMOVED***(CHECKLIST.md) — запуск и acceptance gates.
 
 ## Граница с `lead_aggregator`
 

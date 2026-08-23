@@ -2,7 +2,7 @@
 
 > **Slug:** `public_request_parser`
 > **Версия:** 0.1.0
-> **Статус:** 🟡 DRAFT — P3 domain layer + P4 RSS/Atom fixture engine + P5 matcher реализованы; P6 storage следующий
+> **Статус:** 🟡 DRAFT — P3–P9 реализованы (offline/fixture); P10+ гated в `POST_MVP_GATES.md`
 > **Дата:** 2026-08-22
 > **Стек:** Python 3.11+, SQLite/WAL, RSS/Atom; Telegram adapter fixture-only до policy approval
 > **Режим:** сначала single-tenant, архитектурно готов к multi-tenant
@@ -65,6 +65,9 @@ Telegram web-preview описан и тестируется только на fi
 | `DOMAIN_CONTRACTS.md` | P3 typed domain/API contracts and invariants |
 | `RSS_ATOM_ENGINE.md` | P4 parser/normalization/dedup/checkpoint API and boundaries |
 | `MATCHING_ENGINE.md` | P5 matcher API: rules, intent gate, score formula, explainability |
+| `STORAGE.md` | P6 SQLite/WAL storage: schema, idempotency, TTL cleanup, checkpoints |
+| `DELIVERY.md` | P7 delivery contract: HTML cards, dry-run, idempotency, retry |
+| `POST_MVP_GATES.md` | P10–P19 статусы: done/partial/blocked + evidence |
 | `decisions/` | Project-local ADR |
 
 ## Текущий статус
@@ -77,6 +80,9 @@ Telegram web-preview описан и тестируется только на fi
 - [x***REMOVED*** P3 domain contracts и error boundaries реализованы; G3 закрыт.
 - [x***REMOVED*** P4 RSS/Atom fixture engine: parser RSS 2.x/Atom 1.0, normalization, dedup, checkpoint; 8 tests green; live HTTP не включён.
 - [x***REMOVED*** P5 deterministic matcher: rules, synonyms, exclusions, intent gate, thresholds, explainable decisions; 14 tests green.
-- [ ***REMOVED*** P6 storage/retention.
+- [x***REMOVED*** P6 SQLite/WAL storage: schema v1, UNIQUE dedup, идемпотентный TTL cleanup; 14 tests green.
+- [x***REMOVED*** P7 delivery contract: HTML renderer, dry-run, idempotent key, retry; 11 tests green (live transport не включён).
+- [x***REMOVED*** P8 offline pipeline + CLI; P9 TG fixture adapter; P11 backup; P12 gated HTTP; P13/P14 schema v2; P15/P16 ADR-008/009.
+- [ ***REMOVED*** G2: первый production `allowed` source (блокер pilot/P17/P18).
 - [ ***REMOVED*** Telegram Bot delivery implementation.
 - [ ***REMOVED*** Live source approval.

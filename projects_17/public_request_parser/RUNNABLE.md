@@ -4,7 +4,7 @@
 
 - [x***REMOVED*** Termux / Android ARM64 — целевая среда
 - [x***REMOVED*** Linux / POSIX — ожидаемый dev fallback
-- [ ***REMOVED*** Live production — не заявлен; реализованы P3 domain layer + P4 RSS/Atom fixture engine + P5 matcher
+- [ ***REMOVED*** Live production — не заявлен; реализованы P3–P9 (offline/fixture): domain, RSS/Atom, matcher, SQLite/WAL v2, delivery contract, pipeline CLI, TG fixture adapter, gated HTTP
 
 ## Минимальные требования
 
@@ -15,7 +15,13 @@
 
 ## Текущий запуск
 
-Реализованы автономный P3 domain layer, P4 RSS/Atom fixture engine (offline) и P5 deterministic matcher. Рабочего HTTP/Telegram entrypoint ещё нет; live polling не включён.
+```bash
+cd projects_17/public_request_parser
+PYTHONPATH=. python -m app.cli --once --fixture fixtures/rss/sample_rss.xml --db parser.db
+PYTHONPATH=. python -m app.cli --maintenance --db parser.db
+```
+
+Первый прогон: 2 fetched / 2 new / 1 accepted / 1 delivered (dry-run). Второй прогон: fetched=0 (checkpoint-resume). Maintenance: TTL-expire + backup. Live polling не включён до G2.
 
 Проверка проекта:
 
@@ -32,14 +38,12 @@ cd projects_17/public_request_parser
 find . -maxdepth 2 -type f | sort
 ```
 
-## Планируемый запуск после этапа реализации
+## Будущие режимы после закрытия G2
 
 ```bash
-python -m public_request_parser.cli --dry-run --source <approved-rss-url>
-python -m public_request_parser.cli --once --profile <profile-id>
+python -m app.cli --once --source <approved-rss-url>   # HttpFeedAdapter (live)
+python -m app.cli --once --profile <profile-id>
 ```
-
-Команды являются целевым контрактом, а не утверждением существующего кода. До появления CLI они не должны выполняться как acceptance test.
 
 ## Переменные окружения (план)
 
@@ -54,6 +58,6 @@ python -m public_request_parser.cli --once --profile <profile-id>
 
 ## Известные блокеры
 
-- Первый live RSS/Atom URL ещё не выбран и не прошёл policy matrix.
-- Telegram web-preview отключён до отдельного разрешения.
-- RSS/Atom parser и matcher реализованы только в offline режиме на fixtures; HTTP transport, SQLite storage, delivery и runtime entrypoint ещё не созданы.
+- **G2**: первый live RSS/Atom URL ещё не выбран и не прошёл policy matrix (это единственный блокер live-участков; transport готов и gated).
+- Telegram web-preview отключён до отдельного разрешения (fixture-only).
+- Живой Telegram delivery transport и общий runtime entrypoint — после policy approval.
