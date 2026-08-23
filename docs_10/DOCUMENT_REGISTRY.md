@@ -414,7 +414,7 @@ Bump: ACTIVE 97 → 102 (5 новых артефактов промта 4 — G/
 | `projects_17/public_request_parser/README.md` | README | DRAFT | Project navigation and scope |
 | `projects_17/public_request_parser/SPEC.md` | Specification pointer | DRAFT | Project-local entry point to canonical root specification |
 | `projects_17/public_request_parser/ROADMAP.md` | Roadmap | DRAFT | Full lifecycle P0–P19: source matrix → MVP → pilot → hardening → multi-tenant → beta → production v1.0 → evolution |
-| `projects_17/public_request_parser/SOURCE_POLICY_MATRIX.md` | Research/Policy | ACTIVE | P2 source matrix: technical candidates, conditional/manual-review/blocked statuses, evidence; G2 closed conditional — SRC-011 HeadHunter API allowed (ADR-011) |
+| `projects_17/public_request_parser/SOURCE_POLICY_MATRIX.md` | Research/Policy | ACTIVE | P2 source matrix: technical categories, conditional/manual-review/blocked statuses, evidence; G2 closed — SRC-012 trudvsem Open Data allowed unconditional + SRC-011 HH API conditional (ADR-011/012) |
 | `projects_17/public_request_parser/STEPS.md` | Steps | ACTIVE | Actual scaffold creation log |
 | `projects_17/public_request_parser/LESSONS.md` | Lessons | ACTIVE | Project-local boundary, policy and retention findings |
 | `projects_17/public_request_parser/RUNNABLE.md` | Runnable | DRAFT | Documentation-only current launch status and planned CLI contract |
@@ -459,7 +459,8 @@ Bump: ACTIVE 97 → 102 (5 новых артефактов промта 4 — G/
 | `projects_17/public_request_parser/tests/test_calibration.py` | Tests | ACTIVE | 5 hermetic calibration tests; passed on 2026-08-23 |
 | `projects_17/public_request_parser/decisions/ADR-010_feedback_calibration_determinism.md` | ADR | ACTIVE | Calibration determinism, no auto-apply; apply via new profile version |
 | `projects_17/public_request_parser/tests/test_e2e_tg_pipeline.py` | Tests | ACTIVE | E2E full pipeline with TG fixture: accept/reject, idempotency, offer gate, card без author; 5 tests |
-| `projects_17/public_request_parser/decisions/ADR-011_g2_first_allowed_source_headhunter_api.md` | ADR | ACTIVE | G2 closed conditional: HeadHunter API = first allowed source (developer agreement + OpenAPI evidence); activation = app+key+canary; Telegram stays blocked |
+| `projects_17/public_request_parser/decisions/ADR-011_g2_first_allowed_source_headhunter_api.md` | ADR | ACTIVE | G2 closed conditional: HeadHunter API = allowed source (developer agreement + OpenAPI evidence); activation = app+key+canary; Telegram stays blocked |
+| `projects_17/public_request_parser/decisions/ADR-012_trudvsem_open_data_first_unconditional_allowed.md` | ADR | ACTIVE | G2 closed unconditionally: Open Data API «Работа в России» (trudvsem) = first allowed source, open license «use without restrictions», no keys, live-verified 2026-08-23; Telegram stays blocked |
 
 ### ACTIVE entries added 2026-08-10 (v5.147.0)
 

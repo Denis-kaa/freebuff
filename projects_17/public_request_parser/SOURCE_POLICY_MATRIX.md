@@ -1,8 +1,8 @@
 # SOURCE_POLICY_MATRIX — Public Request Parser Bot
 
-> **Версия:** 0.1.0
+> **Версия:** 0.2.0
 > **Дата исследования:** 2026-08-23
-> **Статус:** P2 partial → G2 closed (conditional) — первый live product source: **HeadHunter API** (SRC-011), evidence и условия ниже
+> **Статус:** P2 partial → G2 closed — два `allowed` live source: **HeadHunter API** (SRC-011, conditional) и **trudvsem Open Data API** (SRC-012, безусловный) — evidence ниже
 > **Правило:** техническая доступность URL не равна разрешению на публичную коммерческую агрегацию.
 > **Проект:** `projects_17/public_request_parser`
 > **Canonical spec:** [`../../public-request-parser-spec.md`***REMOVED***(../../public-request-parser-spec.md)
@@ -27,6 +27,7 @@
 - DEV RSS подтверждён технически, но user-content license/purpose boundary требует manual review.
 - Telegram web-preview остаётся `blocked` для live aggregation до отдельного policy/legal approval.
 - **G2 закрыт условно (2026-08-23):** первым production `allowed` source выбран **HeadHunter API — поиск вакансий** (SRC-011). Официальный механизм, developer agreement изучен; активация требует регистрации приложения на `dev.hh.ru` и API-ключа (secret storage), соблюдения тематики (поиск работы/сотрудников) и запрета изменений материалов (§3.11). Pilot возможен после указанной активации.
+- **G2 дополнен (2026-08-23):** найден **безусловный `allowed` RSS/XML-источник — Open Data API портала «Работа в России»** (SRC-012, `opendata.trudvsem.ru`). Официально декларировано «использование без ограничений», API без ключей, live-проверка 2026-08-23: HTTP 200, ~514 000 вакансий, пагинация, поиск по тексту (`?text=`), дельта-обновление (`date_modify`/`modifiedFrom`) и постраничные лимиты (100/стр., max 10 000/ответ). Это **первый источник, который закрывает G2 с самого слова «RSS/Atom»**: официальный механизм, публично объявленная открытая лицензия данных, без credentials. Активация: HTTP-адаптер + transcription схемы WADL/JSON (формат — не RSS/Atom, а JSON API с открытой лицензией; parser P4 применяется к source item, адаптер преобразует JSON → `SourceItem`).
 
 **Следствие:** Г2 formal closed (conditional): HeadHunter API подтверждён как первый source с `allowed` режимом при соблюдении developer agreement; live polling включается только после регистрации приложения и получения API-ключа.
 
@@ -62,6 +63,7 @@
 | SRC-010 | Фриланс-биржи и сайты объявлений без documented feed/API | HTML/SPA/private API unknown | Возможна нестабильная верстка, SPA или недокументированный endpoint; precedent: Kwork SPA | Нельзя использовать hidden/private API, обходить access control или строить scraping без разрешённого режима | Продуктово релевантны, но не подходят до отдельного research и policy decision | `policy_blocked` |
 | SRC-011 | **HeadHunter API — публичный поиск вакансий**: `https://api.hh.ru/vacancies` | Официальный HTTPS API, регистрация приложения на `dev.hh.ru` → API-ключ (секрет) | Документированный OpenAPI (`api.hh.ru/openapi/redoc`); поля: id, name, description, alternate_url, published_at, employment, experience, salary, area | **Evidence:
 1.1** — регистрация Приложения на dev.hh.ru обязательна → уникальный API-ключ; **1.5/1.6** — использование сервиса допустимо для целей привлечения работников и трудоустройства; **3.3** — использование материалов допустимо только в целях, соответствующих тематике Сайта (поиск работы/сотрудников/рынок труда); **3.4** — запрет на использование товарных знаков HeadHunter; **3.6** — запрет сбора логинов/паролей; **3.7** — нельзя предоставлять доступ к резюме; **3.11** — запрещено вносить изменения в материалы | Высокая: вакансии = «работодатель ищет исполнителя» (спрос на услуги/работу), фильтры по ключевым словам, `employment_type=project/part_time`; резюме/контакты соискателей не используются | `allowed` (с условиями активации: приложение + ключ; соблюдение §1.5/1.6/3.3/3.11; TTL текста ограничен; никогда не включать резюме/соискателей и не изменять текст) |
+| SRC-012 | **Open Data API «Работа в России» (ЕЦП trudvsem)**: `https://opendata.trudvsem.ru/api/v1/vacancies` | Официальный публичный HTTP GET API, **без ключей/credentials**; JSON | Live-проверка 2026-08-23: HTTP 200, `meta.total=513907`; поля: id, source, region, company, creation-date, date_modify, salary, text и др.; пагинация `offset/limit` (max 100/стр., max 10 000/ответ); поиск `?text=python` (проверен: 414 результатов); дельта-обновление через `modifiedFrom/To`; версия `v1`, WADL-схема `application.wadl` | **Evidence:** 1. Открытые данные — «информация, которая находится в свободном доступе в сети Интернет для использования без ограничений» (`trudvsem.ru/opendata`); 2. Реализация по Методическим рекомендациям 3.0 публикации открытых данных госорганов; 3. Раздел API декларирует получение информации обо всех вакансиях, хранение и анализ; 4. 30+ кадровых сервисов уже используют наборы данных; 5. Официальные страницы: `/opendata`, `/opendata/api`, `/opendata/datasets`, `/opendata/media-partners` | **Высокая:** вакансии = открытые заявки работодателей (спрос на услуги/работу); `?text=` поиск по ключевым словам; без credentials; государственный портал (низкий риск policy-инцидента); атрибуция через исходный URL на trudvsem.ru | `allowed` (безусловный) — открытая лицензия данных; retain: только метаданные + TTL текста; `can_poll=True` после адаптера; атрибуция (исходный URL) в карточке |
 
 ---
 
@@ -97,7 +99,24 @@
 - rate limit and cache policy;
 - legal owner approval if product deployment requires it.
 
-### 4.3. Первый product source — HeadHunter API (SRC-011)
+### 4.3. Первый product source — HeadHunter API (SRC-011) и Open Data API trudvsem (SRC-012)
+
+**Первый безусловный `allowed` источник (RSS/XML family): SRC-012 — Open Data API «Работа в России» (trudvsem).**
+
+Режим SRC-012 (`allowed`, безусловный):
+
+1. API публичный, без ключей; GET по HTTPS; версия `v1`.
+2. Открытые данные — официально «для использования без ограничений» (страница `/opendata`); реализован по Методическим рекомендациям 3.0 публикации открытых данных госорганов.
+3. Живое подтверждение: `https://opendata.trudvsem.ru/api/v1/vacancies?limit=2` → HTTP 200, `meta.total=513907`; `?text=python` → 414 вакансий.
+4. Поля для извлечения: `id` (универсальный ключ), `canonical URL` (vacancy-URL), `title`, `creation-date`/`date_modify`, `text` (описание, с TTL), salary/region — минимальный набор, без резюме/соискателей (их в API нет).
+5. Пагинация `offset/limit` (≤100/стр., ≤10 000/ответ) и дельта-выборка `modifiedFrom` — идемпоентный checkpoint для pipeline.
+6. Атрибуция: карточка содержит исходный URL вакансии на trudvsem.ru.
+
+Отличие от SRC-011: не Q&A и не требует credentials — это открытый государственный источник, по определению разрешённый для использования; G2 закрывается им полноправно.
+
+---
+
+### 4.4. HeadHunter API (SRC-011) — условный второй источник
 
 **Режим:** `allowed` при выполнении следующих условий активации:
 
@@ -110,7 +129,7 @@
 
 Отличие от SRC-001/SRC-002: это не Q&A — это реальный спрос «работодатель ищет исполнителя»; продуктовая пригодность выше, механизм официальный.
 
-### 4.4. Не выбирать сейчас как MVP source
+### 4.5. Не выбирать сейчас как MVP source
 
 - Telegram web-preview — policy blocked для текущего режима.
 - VK API — conditional, требует credentials и отдельного use-case review.
@@ -228,7 +247,7 @@ live_enablement:
 | Можно ли использовать VK? | Только после official API/credentials/policy review; `conditional` |
 | Можно ли считать любой пользовательский URL разрешённым? | Нет; URL проходит source policy workflow |
 | Можно ли строить MVP без approved live commercial source? | Да, как fixture/technical MVP; коммерческая ценность проверяется отдельным pilot gate |
-| Первый product source со статусом allowed? | **Да — HeadHunter API (SRC-011), условно**: регистрация приложения + ключ, тематика Сайта, запрет изменения материалов; включение live после активации |
+| Первый product source со статусом allowed? | **Да — Open Data API trudvsem (SRC-012) безусловно** (открытая лицензия, без ключей; live проверен) и **HeadHunter API (SRC-011) условно** (приложение + ключ; включение live после активации) |
 | Можно ли считать HeadHunter API разрешённым для использования резюме/соискателей? | Нет — только публичный поиск вакансий; резюме/соискатели/контактные данные исключены |
 
 ---
@@ -246,6 +265,14 @@ live_enablement:
 ---
 
 ## 9. Evidence reviewed
+
+### Открытые данные «Работа в России» (SRC-012 — первый безусловный allowed)
+
+- [Open Data — общие положения***REMOVED***(https://trudvsem.ru/opendata) — «информация... для использования без ограничений»; пользователи: аналитики, разработчики, журналисты; приложения и платформы.
+- [API «Работа в России»***REMOVED***(https://trudvsem.ru/opendata/api) — GET, JSON, пагинация (≤100/стр., ≤10 000/ответ), поиск `?text=`, дельта `modifiedFrom`, версии `v1`, WADL.
+- [Наборы данных***REMOVED***(https://trudvsem.ru/opendata/datasets) — вакансии, резюме (деперсонализированные), отклики; актуальные данные из ЕЦП.
+- [Медиа-партнёры***REMOVED***(https://trudvsem.ru/opendata/media-partners) — 30+ сервисов уже используют открытые данные для поиска вакансий.
+- Live-проверка 2026-08-23: `GET https://opendata.trudvsem.ru/api/v1/vacancies?limit=2` → HTTP 200, `meta.total=513907`; `?text=python&limit=1` → HTTP 200, 414 результатов.
 
 ### HeadHunter (SRC-011 — первый allowed)
 
@@ -284,3 +311,9 @@ Stack Overflow Atom fixture
 ```
 
 P2 evolved: a first source suitable for public product aggregation **has been selected — HeadHunter API (SRC-011) as `allowed` (conditional activation)**. G2 is formally closed with evidence (developer agreement + OpenAPI) and explicit conditions (app registration + API key, job-search purpose only, no resume data, no material modification). Live polling stays disabled until activation; public pilot must pass the same source gates (G-SOURCE-1..6) and source record workflow.
+
+## 10b. P2 update — SRC-012 (Open Data API «Работа в России»)
+
+**Найден и подтверждён безусловный `allowed` источник: SRC-012 — `opendata.trudvsem.ru` (ЕЦП «Работа в России»).**
+
+Это государственный портал открытых данных: официальное положение — «использование без ограничений»; API без ключей; live-проверка 2026-08-23 показала HTTP 200 и ~514 000 вакансий. Формат — JSON (не RSS/Atom), но это официальный открытый механизм доступа, что закрывает G2 полноправно — без credentials и условных активаций.

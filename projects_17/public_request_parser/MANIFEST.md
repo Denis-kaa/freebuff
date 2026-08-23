@@ -77,13 +77,13 @@ Telegram web-preview описан и тестируется только на fi
 - [x***REMOVED*** Project-local каркас создан.
 - [x***REMOVED*** Граница с Lead Aggregator зафиксирована.
 - [x***REMOVED*** Telegram fixture-only policy зафиксирована.
-- [x***REMOVED*** Research matrix источников создана; production `allowed` source выбран условно: HeadHunter API (SRC-011, ADR-011) — evidence developer agreement + OpenAPI; live polling выключен до активации ключа и canary.
+- [x***REMOVED*** Research matrix источников создана; **два** production `allowed` source: безусловный — Open Data API «Работа в России» (SRC-012, ADR-012; без ключей, live-проверен) и условный — HeadHunter API (SRC-011, ADR-011); live polling выключен до адаптера + canary.
 - [x***REMOVED*** P3 domain contracts и error boundaries реализованы; G3 закрыт.
 - [x***REMOVED*** P4 RSS/Atom fixture engine: parser RSS 2.x/Atom 1.0, normalization, dedup, checkpoint; 8 tests green; live HTTP не включён.
 - [x***REMOVED*** P5 deterministic matcher: rules, synonyms, exclusions, intent gate, thresholds, explainable decisions; 14 tests green.
 - [x***REMOVED*** P6 SQLite/WAL storage: schema v1, UNIQUE dedup, идемпотентный TTL cleanup; 14 tests green.
 - [x***REMOVED*** P7 delivery contract: HTML renderer, dry-run, idempotent key, retry; 11 tests green (live transport не включён).
 - [x***REMOVED*** P8 offline pipeline + CLI; P9 TG fixture adapter; P11 backup; P12 gated HTTP; P13/P14 schema v2; P14 calibration; P15/P16 ADR-008/009; P14 ADR-010.
-- [x***REMOVED*** G2 закрыт условно: HH API (SRC-011) выбран и задокументирован (ADR-011); активация (приложение+ключ+canary) — отдельный шаг P10.
+- [x***REMOVED*** G2 закрыт: Open Data API «Работа в России» (SRC-012, ADR-012) — безусловный первый `allowed`; HH API (SRC-011, ADR-011) — условный второй; активация (адаптер+canary) — шаг P10.
 - [ ***REMOVED*** Telegram Bot delivery implementation.
-- [ ***REMOVED*** Live source approval (активация HH API ключа + canary).
+- [ ***REMOVED*** Live source approval (адаптер trudvsem + canary; HH API — опционально после регистрации приложения).

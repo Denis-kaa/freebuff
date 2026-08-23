@@ -32,10 +32,11 @@
 - **PRP-26** (Step 11, calibration): feedback без сохранённого decision обязан исключаться из выборки; иначе «ghost»-записи раздувают выборку и ломают min_samples.
 - **PRP-27** (Step 11, calibration): рекомендации порогов не применяются автоматически — apply всегда через новую версию профиля (откат без изменений старых decisions).
 - **PRP-28** (Step 13, G2): «allowed» — это статус с evidence и условиями, а не выключатель трафика: HeadHunter API получил `allowed` (developer agreement + OpenAPI), но live polling остаётся `can_poll=False` до регистрации приложения/ключа и canary-прогона; двойной гейт закрывает разрыв между policy-решением и runtime-активацией.
+- **PRP-29** (Step 14, G2): государственные open-data API (например, trudvsem «Работа в России») могут закрывать G2 **безусловно** — официальная формулировка «использование без ограничений» + живая проверка endpoint без ключей сильнее, чем developer agreement с активацией; такие источники проверяются первыми при том же поиске, но всё равно проходят G-SOURCE-1..6.
 
 ## Open questions
 
-- **OQ-PRP-1** (Task 1): ~~какой первый source для live feasibility check?~~ → **решён (ADR-011): HeadHunter API (SRC-011)**; Stack Overflow Atom остаётся fixture/parser canary.
+- **OQ-PRP-1** (Task 1): ~~какой первый source для live feasibility check?~~ → **решён (ADR-012): Open Data API «Работа в России» (SRC-012, безусловно) + ADR-011 (SRC-011, условно)**; Stack Overflow Atom остаётся fixture/parser canary.
 - **OQ-PRP-2** (Task 1): какой default/max TTL утвердить?
 - **OQ-PRP-3** (Task 2): как вычислять thresholds accept/pending/reject? P5 fixировал формулу mean-ratio × 0.9 + intent 0.1; калибровка на реальных данных — P10/P14.
 - **OQ-PRP-4** (Task 6): есть ли допустимое основание для Telegram web-preview в целевом публичном продукте?

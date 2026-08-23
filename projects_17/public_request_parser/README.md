@@ -2,7 +2,7 @@
 
 Универсальный парсер открытых публикаций, где пользователи ищут услуги.
 
-> **Состояние:** P3–P9 реализованы (offline/fixture, 91 тест); P10+ гated — см. `POST_MVP_GATES.md`; G2 закрыт условно (HeadHunter API, ADR-011) — осталась активация ключа + canary.
+> **Состояние:** P3–P9 реализованы (offline/fixture, 91 тест); P10+ гated — см. `POST_MVP_GATES.md`; G2 закрыт: безусловно — Open Data API «Работа в России» (SRC-012, ADR-012), условно — HeadHunter API (SRC-011, ADR-011); осталось: адаптер + canary.
 > **Canonical specification:** [`../../public-request-parser-spec.md`***REMOVED***(../../public-request-parser-spec.md)
 
 ## Что решает проект
@@ -12,6 +12,11 @@
 ## Первый источник
 
 RSS/Atom — первый operational candidate. Он должен пройти source/policy matrix и быть подключённым только после проверки URL, условий публикации, частоты запросов и формата данных.
+
+**G2 закрыт (2026-08-23):**
+
+- **SRC-012 — Open Data API «Работа в России» (trudvsem)** — официальные открытые данные («использование без ограничений»), без ключей, live-проверен (HTTP 200, ~514k вакансий) — **безусловный `allowed`** (ADR-012).
+- **SRC-011 — HeadHunter API** — официальный developer agreement + OpenAPI — `allowed` при условной активации (приложение + ключ) (ADR-011).
 
 Telegram web-preview имеет технический adapter contract и fixtures, но **не live-режим**. Его включение требует отдельного policy/legal decision. Публичная доступность страницы сама по себе не считается разрешением на агрегацию.
 

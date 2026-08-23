@@ -42,6 +42,7 @@ find . -maxdepth 2 -type f | sort
 
 ```bash
 python -m app.cli --once --source <approved-rss-url>   # HttpFeedAdapter (live)
+python -m app.cli --once --source opendata.trudvsem.ru/api/v1/vacancies   # SRC-012 (live, без ключей)
 python -m app.cli --once --profile <profile-id>
 ```
 
@@ -58,6 +59,6 @@ python -m app.cli --once --profile <profile-id>
 
 ## Известные блокеры
 
-- **G2-активация**: источник выбран и `allowed` (HeadHunter API, SRC-011/ADR-011), но live polling выключен до регистрации приложения на dev.hh.ru, API-ключа (secret storage) и canary-прогона — это единственный блокер live-участков; transport готов и gated (`allowed` + `can_poll`).
+- **G2-активация**: `allowed` источники выбраны — безусловный Open Data API «Работа в России» (SRC-012/ADR-012, без ключей) и условный HeadHunter API (SRC-011/ADR-011); live polling выключен до реализации адаптера + canary — это единственный блокер live-участков; transport готов и gated (`allowed` + `can_poll`).
 - Telegram web-preview отключён до отдельного разрешения (fixture-only).
 - Живой Telegram delivery transport и общий runtime entrypoint — после policy approval.

@@ -69,7 +69,7 @@
 |---|---|---|---|---|
 | P0 | Interview + canonical spec | ✅ Done | Зафиксированы цель, ограничения и открытые вопросы | Пользовательские решения записаны |
 | P1 | Project scaffold | ✅ Done | Каркас sibling-проекта и ADR | Документы и границы существуют |
-| P2 | Source/policy research | ✅ Done (conditional) | Матрица создана; первый production `allowed` source выбран — HeadHunter API (SRC-011, ADR-011), evidence: developer agreement + OpenAPI | G2 закрыт условно (активация: приложение + API-ключ + canary) |
+| P2 | Source/policy research | ✅ Done | Матрица создана; **два** production `allowed` источника: первый безусловный — Open Data API «Работа в России» (SRC-012, ADR-012, открытая лицензия, без ключей, live-проверка) и HeadHunter API (SRC-011, ADR-011, условная активация) | G2 закрыт полноправно (SRC-012) + conditional (SRC-011) |
 | P3 | Domain contracts | ✅ Done | Typed Publication/Profile/Decision/Policy/Retention + adapter/storage/delivery ports | Contract tests green; G3 closed |
 | P4 | RSS/Atom engine | ✅ Done (offline fixture) | Парсинг, нормализация, dedup, checkpoint на fixtures | Fixture suite green; live transport отдельно |
 | P5 | Matching and explainability | ✅ Done | Правила, синонимы, exclusions, thresholds, intent gate, pending | Decision contract green; 14 tests |
@@ -153,7 +153,7 @@ P0 spec
 P1 scaffold
   → G1: project container, ADR, runnable/checklist exist
 P2 source/policy research
-  → G2: at least one source = allowed → ✅ closed conditional 2026-08-23 (HH API, ADR-011); live polling disabled until key + canary
+  → G2: at least one source = allowed → ✅ closed 2026-08-23: безусловно SRC-012 trudvsem (ADR-012) + условно SRC-011 HH (ADR-011); live polling disabled until adapter+canary
 P3 domain contracts
   → G3: Publication/Profile/Decision/Retention ownership defined
 P4-P7 engine slices
@@ -186,7 +186,7 @@ P19 evolution
 
 ## 6. Этапы до MVP
 
-> P3–P9 завершены (offline/fixture). P10–P19 детализированы в `POST_MVP_GATES.md`; G2 (approved live source) закрыт условно (HeadHunter API, ADR-011) — осталась активация ключа и canary.
+> P3–P9 завершены (offline/fixture). P10–P19 детализированы в `POST_MVP_GATES.md`; G2 (approved live source) закрыт: безусловно — Open Data API «Работа в России» (SRC-012, ADR-012); условно — HeadHunter API (SRC-011, ADR-011). Осталась реализация адаптера + canary.
 
 ### P2 — Source/policy research
 
@@ -910,7 +910,7 @@ Production v1.0 is complete only when:
 - [x***REMOVED*** DEV RSS и Reddit Atom зафиксированы как manual-review candidates.
 - [x***REMOVED*** Stack Exchange API зафиксирован как conditional candidate с attribution gate.
 - [x***REMOVED*** Telegram web-preview оставлен `policy_blocked`.
-- [x***REMOVED*** **Production/user-facing `allowed` source утверждён условно: HeadHunter API (SRC-011) — ADR-011, evidence = developer agreement (dev.hh.ru) + OpenAPI**; live polling выключен до регистрации приложения + API-ключа + canary.
+- [x***REMOVED*** **Production/user-facing `allowed` источники утверждены**: безусловный — Open Data API «Работа в России» (SRC-012, ADR-012, открытая лицензия, live-проверен без ключей); условный — HeadHunter API (SRC-011, ADR-011). Live polling выключен до реализации адаптера + canary.
 - [ ***REMOVED*** Default/max TTL не закрыты.
 - [x***REMOVED*** P3 contracts review-ready; G3 закрыт.
 - [x***REMOVED*** P4 RSS/Atom fixture engine реализован; 8 tests green; live polling отсутствует.
@@ -923,13 +923,13 @@ Production v1.0 is complete only when:
 
 ### Next action
 
-**G2 закрыт условно (2026-08-23, ADR-011):** первый production `allowed` источник — HeadHunter API (поиск вакансий, SRC-011). Активация: регистрация приложения на `dev.hh.ru`, API-ключ в secret storage, canary-прогон `HttpFeedAdapter`, затем P10 pilot. Live polling остаётся выключен до активации (двойной гейт `allowed` + `can_poll`).
+**G2 закрыт (2026-08-23):** безусловный `allowed` источник — **Open Data API «Работа в России»** (SRC-012, ADR-012: открытая лицензия «без ограничений», без ключей, live-проверка). Дополнительный условный — HeadHunter API (SRC-011, ADR-011). Следующий шаг: реализация адаптера trudvsem + canary-прогон, затем P10 pilot. Live polling включится только через гейт (`allowed` + `can_poll`).
 
 ---
 
 ## 22. Open decisions
 
-1. ~~Первый live/user-facing источник~~ → **решён (ADR-011): HeadHunter API (SRC-011)**, условная активация; Telegram web-preview по-прежнему `policy_blocked`.
+1. ~~Первый live/user-facing источник~~ → **решён (ADR-012): Open Data API «Работа в России» (SRC-012, безусловно) + ADR-011: HeadHunter API (SRC-011, условно)**; Telegram web-preview по-прежнему `blocked`.
 2. Default/max TTL.
 3. Формула thresholds.
 4. Транспорт Telegram delivery.
