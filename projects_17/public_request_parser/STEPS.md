@@ -293,3 +293,24 @@
 - **G2 = closed (безусловно)** при наличии SRC-012 + условно при SRC-011;
 - следующий шаг P10: реализация адаптера (JSON → `SourceItem`) + canary-прогон;
 - live polling по-прежнему выключен до адаптера/canary (гейт `allowed` + `can_poll`).
+
+## Step 15: Адаптер trudvsem (SRC-012) + hermetic-тесты (2026-08-23)
+
+**Что сделано:**
+
+- Создан `app/adapters/trudvsem.py`: `TrudvsemAdapter` (JSON → `SourceItem`) с двойным гейтом `ALLOWED` + `can_poll`, пагинацией `limit <= 100`, checkpoint-пропуском и дельта-параметром `modifiedFrom` (ISO 8601 UTC).
+- Парсер `parse_vacancy_payload` не извлекает контактные/персональные поля (`contact_list`, `contact_person`, `addresses` и др.) — privacy-инвариант проекта.
+- Собраны анонимизированные fixtures: `fixtures/trudvsem/vacancies_page.json` (2 вакансии), `vacancies_copywriter.json`, `error_500.json`.
+- Добавлены 15 hermetic тестов `tests/test_trudvsem.py`: парсинг/поля, приватность, пропуск записей без id/url, ошибки 500/не-JSON, пустой ответ, policy-гейт, лимит+checkpoint, дельта-URL, health.
+
+**Почему:**
+
+- P10 требует рабочий источник; adapter — мост между официальным API и доменными контрактами P3.
+- Парсинг и политика проверяются оффлайн на fixtures, чтобы canary-прогон на живом API не стал первым тестом.
+- Приватный инвариант (никаких контактов/персональных данных) зафиксирован тестом на уровне metadata и content.
+
+**Результат:**
+
+- 106 проектных тестов проходят (91 + 15 trudvsem); mypy --strict без замечаний (31 файл).
+- Остаётся: подключение адаптера в `app/pipeline` и CLI-режим `--source`, затем canary (P10).
+- Live polling по-прежнему выключен до canary (гейт `allowed` + `can_poll`).

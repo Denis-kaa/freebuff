@@ -94,4 +94,6 @@
 - [x***REMOVED*** Schema v2: owner-isolated `profiles`, `feedback` + stats, миграция v1→v2 (P13/P14).
 - [x***REMOVED*** ADR-008 (P15 remain separate) и ADR-009 (P16 deferred) зафиксированы.
 - [x***REMOVED*** P14-инструмент: feedback→score выборка, детерминированная рекомендация порогов (без авто-apply); 5 tests (ADR-010).
-- [x***REMOVED*** G2: production `allowed` source выбран: SRC-012 trudvsem Open Data (безусловно, ADR-012) + SRC-011 HH API (условно, ADR-011); адаптер + canary → P10.
+- [x***REMOVED*** G2: production `allowed` source выбран: SRC-012 trudvsem Open Data (безусловно, ADR-012) + SRC-011 HH API (условно, ADR-011).
+- [x***REMOVED*** Адаптер trudvsem (JSON→SourceItem, двойной гейт, без контактов) + 15 hermetic тестов.
+- [ ***REMOVED*** Интеграция trudvsem в pipeline/CLI и canary-прогон → P10.

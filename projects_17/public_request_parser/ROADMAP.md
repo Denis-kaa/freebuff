@@ -77,7 +77,7 @@
 | P7 | Telegram delivery | ✅ Done (contract-only) | HTML-карточки, dry-run, идемпотентная доставка, retry после failed | Delivery contract green; 11 tests |
 | P8 | Single-tenant bot MVP | ✅ Done (offline slice) | Pipeline + CLI: fixture→match→SQLite→dry-run | 76+ проектных тестов; G5 зависит от live source |
 | P9 | Telegram technical adapter | ✅ Done (fixture-only) | `tgpreview` adapter; live allowed запрещён | No live access without gate |
-| P10 | MVP pilot | 🟡 Ready (активация) | Первый allowed source выбран (HH API); нужен API-ключ + canary | Pilot metrics collected |
+| P10 | MVP pilot | 🟡 Ready (адаптер готов) | Безусловный allowed source: trudvsem (SRC-012); адаптер `app/adapters/trudvsem.py` + 15 hermetic тестов; осталась интеграция в pipeline + canary | Pilot metrics collected |
 | P11 | MVP hardening | 🟡 Partial | backup/maintenance; scheduler/runbook после pilot | Operational readiness |
 | P12 | Source expansion | 🟡 Partial | HttpFeedAdapter (двойной гейт allowed+can_poll) | Each source independently gated |
 | P13 | Multi-tenant foundation | 🟡 Partial | Schema v2 owner-isolated profiles; auth/quotas pending | Isolation tests green |
@@ -919,11 +919,12 @@ Production v1.0 is complete only when:
 - [x***REMOVED*** P7 delivery contract реализован; 11 tests green; live transport отсутствует.
 - [x***REMOVED*** P8 offline pipeline + CLI (`--once`/`--maintenance`) реализован; идемпотентен, checkpoint-resume.
 - [x***REMOVED*** P9 TG web-preview fixture adapter реализован; live allowed запрещён.
+- [x***REMOVED*** P10-инструмент: адаптер trudvsem (SRC-012) — JSON→SourceItem, двойной гейт, дельта `modifiedFrom`; 15 hermetic тестов; осталась интеграция в pipeline + canary.
 - [x***REMOVED*** P11 backup/maintenance; P12 gated HttpFeedAdapter; P13/P14 schema v2 (profiles/feedback); P15 ADR-008; P16 ADR-009.
 
 ### Next action
 
-**G2 закрыт (2026-08-23):** безусловный `allowed` источник — **Open Data API «Работа в России»** (SRC-012, ADR-012: открытая лицензия «без ограничений», без ключей, live-проверка). Дополнительный условный — HeadHunter API (SRC-011, ADR-011). Следующий шаг: реализация адаптера trudvsem + canary-прогон, затем P10 pilot. Live polling включится только через гейт (`allowed` + `can_poll`).
+**G2 закрыт (2026-08-23):** безусловный `allowed` источник — **Open Data API «Работа в России»** (SRC-012, ADR-012: открытая лицензия «без ограничений», без ключей, live-проверка). Дополнительный условный — HeadHunter API (SRC-011, ADR-011). Адаптер trudvsem реализован (`app/adapters/trudvsem.py`, 15 hermetic тестов). Следующий шаг: интеграция адаптера в `app/pipeline` + CLI и canary-прогон, затем P10 pilot. Live polling включится только через гейт (`allowed` + `can_poll`).
 
 ---
 

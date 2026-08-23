@@ -1,0 +1,49 @@
+{
+  "status": "200",
+  "request": {"api": "v1"***REMOVED***,
+  "meta": {"total": 2, "limit": 2***REMOVED***,
+  "results": {
+    "vacancies": [
+      {
+        "vacancy": {
+          "id": "prp-fixture-0001",
+          "job-name": "Python-разработчик (backend)",
+          "vac_url": "https://trudvsem.ru/vacancy/card/1000000000000/prp-fixture-0001",
+          "creation-date": "2026-08-20",
+          "date_modify": "2026-08-20T18:00:15+0300",
+          "salary_min": 200000,
+          "salary_max": 250000,
+          "currency": "«руб.»",
+          "region": {"region_code": "7800000000000", "name": "Город Санкт-Петербург"***REMOVED***,
+          "duty": "Прикладная аналитическая платформа. Обязанности интеграции и бэкенд: разработка на Python, FastAPI, работа с данными.",
+          "requirement": {"education": "Общее образование", "experience": 5***REMOVED***,
+          "skills": ["Python", "FastAPI", "PostgreSQL"***REMOVED***,
+          "category": {"specialisation": "Информационные технологии, телекоммуникации, связь"***REMOVED***,
+          "schedule": "Полный рабочий день",
+          "source": "Вакансия интернет ресурса",
+          "work_places": "1",
+          "contact_person": ""
+        ***REMOVED***
+      ***REMOVED***,
+      {
+        "vacancy": {
+          "id": "prp-fixture-0002",
+          "job-name": "Дизайнер интерфейсов",
+          "vac_url": "https://trudvsem.ru/vacancy/card/5140000000000/prp-fixture-0002",
+          "creation-date": "2026-08-19",
+          "date_modify": "2026-08-19T12:00:00+0300",
+          "salary_min": 0,
+          "salary_max": 0,
+          "currency": "«руб.»",
+          "region": {"region_code": "7700000000000", "name": "Город Москва"***REMOVED***,
+          "duty": "Проектирование интерфейсов, Figma, дизайн-система.",
+          "requirement": {"education": "Высшее образование", "experience": 2***REMOVED***,
+          "skills": ["Figma", "UI/UX"***REMOVED***,
+          "category": {"specialisation": "Искусство, дизайн, медиа"***REMOVED***,
+          "schedule": "Удалённая работа",
+          "source": "Вакансия работодателя"
+        ***REMOVED***
+      ***REMOVED***
+    ***REMOVED***
+  ***REMOVED***
+***REMOVED***

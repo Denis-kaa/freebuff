@@ -461,6 +461,9 @@ Bump: ACTIVE 97 → 102 (5 новых артефактов промта 4 — G/
 | `projects_17/public_request_parser/tests/test_e2e_tg_pipeline.py` | Tests | ACTIVE | E2E full pipeline with TG fixture: accept/reject, idempotency, offer gate, card без author; 5 tests |
 | `projects_17/public_request_parser/decisions/ADR-011_g2_first_allowed_source_headhunter_api.md` | ADR | ACTIVE | G2 closed conditional: HeadHunter API = allowed source (developer agreement + OpenAPI evidence); activation = app+key+canary; Telegram stays blocked |
 | `projects_17/public_request_parser/decisions/ADR-012_trudvsem_open_data_first_unconditional_allowed.md` | ADR | ACTIVE | G2 closed unconditionally: Open Data API «Работа в России» (trudvsem) = first allowed source, open license «use without restrictions», no keys, live-verified 2026-08-23; Telegram stays blocked |
+| `projects_17/public_request_parser/app/adapters/trudvsem.py` | Implementation | ACTIVE | SRC-012 adapter: JSON→SourceItem, ALLOWED+can_poll gate, modifiedFrom delta, no contact/private fields |
+| `projects_17/public_request_parser/tests/test_trudvsem.py` | Tests | ACTIVE | 15 hermetic trudvsem tests; passed 2026-08-23 |
+| `projects_17/public_request_parser/fixtures/trudvsem/` | Fixtures | ACTIVE | Anonymized API responses (2 pages, copywriter, error 500) |
 
 ### ACTIVE entries added 2026-08-10 (v5.147.0)
 

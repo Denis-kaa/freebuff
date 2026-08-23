@@ -1,0 +1,28 @@
+{
+  "status": "200",
+  "request": {"api": "v1"***REMOVED***,
+  "meta": {"total": 1, "limit": 1***REMOVED***,
+  "results": {
+    "vacancies": [
+      {
+        "vacancy": {
+          "id": "prp-fixture-0101",
+          "job-name": "Копирайтер для маркетплейса",
+          "vac_url": "https://trudvsem.ru/vacancy/card/7770000000000/prp-fixture-0101",
+          "creation-date": "2026-08-21",
+          "date_modify": "2026-08-21T09:30:00+0300",
+          "salary_min": 60000,
+          "salary_max": 90000,
+          "currency": "«руб.»",
+          "region": {"region_code": "5200000000000", "name": "Нижегородская область"***REMOVED***,
+          "duty": "Написание текстов для карточек товаров, SEO-статьи, копирайтинг.",
+          "requirement": {"education": "Высшее образование", "experience": 1***REMOVED***,
+          "skills": ["копирайтинг", "SEO"***REMOVED***,
+          "category": {"specialisation": "Маркетинг, реклама, PR"***REMOVED***,
+          "schedule": "Полный рабочий день",
+          "source": "Вакансия работодателя"
+        ***REMOVED***
+      ***REMOVED***
+    ***REMOVED***
+  ***REMOVED***
+***REMOVED***

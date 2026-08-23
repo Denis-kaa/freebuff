@@ -84,6 +84,8 @@ Telegram web-preview описан и тестируется только на fi
 - [x***REMOVED*** P6 SQLite/WAL storage: schema v1, UNIQUE dedup, идемпотентный TTL cleanup; 14 tests green.
 - [x***REMOVED*** P7 delivery contract: HTML renderer, dry-run, idempotent key, retry; 11 tests green (live transport не включён).
 - [x***REMOVED*** P8 offline pipeline + CLI; P9 TG fixture adapter; P11 backup; P12 gated HTTP; P13/P14 schema v2; P14 calibration; P15/P16 ADR-008/009; P14 ADR-010.
-- [x***REMOVED*** G2 закрыт: Open Data API «Работа в России» (SRC-012, ADR-012) — безусловный первый `allowed`; HH API (SRC-011, ADR-011) — условный второй; активация (адаптер+canary) — шаг P10.
+- [x***REMOVED*** G2 закрыт: Open Data API «Работа в России» (SRC-012, ADR-012) — безусловный первый `allowed`; HH API (SRC-011, ADR-011) — условный второй.
+- [x***REMOVED*** Адаптер trudvsem реализован (`app/adapters/trudvsem.py`): JSON→SourceItem, двойной гейт, дельта `modifiedFrom`, без контактных полей; 15 hermetic тестов.
+- [ ***REMOVED*** Интеграция trudvsem-адаптера в `app/pipeline`/CLI + canary-прогон.
 - [ ***REMOVED*** Telegram Bot delivery implementation.
 - [ ***REMOVED*** Live source approval (адаптер trudvsem + canary; HH API — опционально после регистрации приложения).
