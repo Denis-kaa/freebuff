@@ -47,6 +47,27 @@ async def _default_http_get(url: str) -> bytes:
         return response.content
 
 
+def make_token_http_get(token: str) -> HttpGetter:
+    """Создать http_get с Authorization: Bearer <token> для HH API.
+
+    Токен не хранится в объекте адаптера/в коде — подставляется только в
+    заголовок запроса. Использовать с env/secret storage (PRP_HH_APP_TOKEN).
+    """
+    if not token or not token.strip():
+        raise AdapterError("HH app token must be non-empty")
+    safe_token = token.strip()
+
+    async def _get_with_token(url: str) -> bytes:
+        import httpx
+
+        async with httpx.AsyncClient(timeout=20.0, follow_redirects=True) as client:
+            response = await client.get(url, headers={"Authorization": f"Bearer {safe_token***REMOVED***"***REMOVED***)
+            response.raise_for_status()
+            return response.content
+
+    return _get_with_token
+
+
 def _parse_iso(value: str | None) -> datetime | None:
     """ISO 8601 (включая `+0300` без двоеточия) → timezone-aware UTC."""
     if not value or not value.strip():
@@ -282,5 +303,6 @@ __all__ = [
     "API_BASE",
     "DEFAULT_USER_AGENT",
     "HeadhunterAdapter",
+    "make_token_http_get",
     "parse_vacancies_payload",
 ***REMOVED***
