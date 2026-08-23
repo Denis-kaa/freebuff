@@ -2,7 +2,7 @@
 
 Универсальный парсер открытых публикаций, где пользователи ищут услуги.
 
-> **Состояние:** P3–P9 реализованы (offline/fixture, 106 тестов); P10+ гated — см. `POST_MVP_GATES.md`; G2 закрыт: безусловно — Open Data API «Работа в России» (SRC-012, ADR-012), условно — HeadHunter API (SRC-011, ADR-011); адаптер trudvsem готов; осталось: интеграция в pipeline + canary.
+> **Состояние:** P3–P9 реализованы (offline/fixture); P10 canary **пройден на живых источниках** (trudvsem + HH, 2026-08-23); 125 тестов; P10+ гated — см. `POST_MVP_GATES.md`. Live polling — только явный `--canary`; постоянный scheduler — P11/G7.
 > **Canonical specification:** [`../../public-request-parser-spec.md`***REMOVED***(../../public-request-parser-spec.md)
 
 ## Что решает проект

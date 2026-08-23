@@ -443,7 +443,7 @@ Bump: ACTIVE 97 → 102 (5 новых артефактов промта 4 — G/
 | `projects_17/public_request_parser/app/delivery/__init__.py` | Implementation | ACTIVE | P7 render_card, MessageTransport protocol, TelegramDelivery; no network, no credentials |
 | `projects_17/public_request_parser/tests/test_delivery.py` | Tests | ACTIVE | 11 hermetic delivery tests; passed on 2026-08-23 |
 | `projects_17/public_request_parser/decisions/ADR-007_delivery_contract_and_idempotency.md` | ADR | ACTIVE | Delivery contract: escape renderer, dry-run, idempotent key, retry only failed, owner gate |
-| `projects_17/public_request_parser/POST_MVP_GATES.md` | Roadmap | ACTIVE | P10–P19 honest statuses: done/partial/blocked with evidence; G2 closed conditional (HH API), P10 Ready — activation pending |
+| `projects_17/public_request_parser/POST_MVP_GATES.md` | Roadmap | ACTIVE | P10–P19 honest statuses: done/partial/blocked with evidence; G2 closed + activated (trudvsem+HH), P10 canary passed 2026-08-23 |
 | `projects_17/public_request_parser/app/pipeline/__init__.py` | Implementation | ACTIVE | P8 offline pipeline: adapter → normalize → store → match → deliver, checkpoint resume |
 | `projects_17/public_request_parser/app/cli.py` | Implementation | ACTIVE | P8 CLI: `--once` (fixture run) and `--maintenance` (TTL+backup) |
 | `projects_17/public_request_parser/app/tgpreview/__init__.py` | Implementation | ACTIVE | P9 Telegram web-preview fixture adapter; ALLOWED policy forbidden |
@@ -467,6 +467,8 @@ Bump: ACTIVE 97 → 102 (5 новых артефактов промта 4 — G/
 | `projects_17/public_request_parser/app/adapters/headhunter.py` | Implementation | ACTIVE | SRC-011 adapter: JSON→SourceItem, fields per ADR-011, ALLOWED+can_poll gate, no contacts/address |
 | `projects_17/public_request_parser/tests/test_headhunter.py` | Tests | ACTIVE | 14 hermetic headhunter tests; passed 2026-08-23 |
 | `projects_17/public_request_parser/fixtures/hh/` | Fixtures | ACTIVE | Anonymized HH API response (2 vacancies); real credentials NOT committed (hh/ ignored) |
+| `projects_17/public_request_parser/app/canary.py` | Implementation | ACTIVE | P10 canary runner: single controlled live slice, error-capturing report, token only via env |
+| `projects_17/public_request_parser/tests/test_canary.py` | Tests | ACTIVE | 5 hermetic canary tests; passed 2026-08-23 |
 
 ### ACTIVE entries added 2026-08-10 (v5.147.0)
 

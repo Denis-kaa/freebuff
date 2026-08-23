@@ -77,7 +77,7 @@
 | P7 | Telegram delivery | ✅ Done (contract-only) | HTML-карточки, dry-run, идемпотентная доставка, retry после failed | Delivery contract green; 11 tests |
 | P8 | Single-tenant bot MVP | ✅ Done (offline slice) | Pipeline + CLI: fixture→match→SQLite→dry-run | 76+ проектных тестов; G5 зависит от live source |
 | P9 | Telegram technical adapter | ✅ Done (fixture-only) | `tgpreview` adapter; live allowed запрещён | No live access without gate |
-| P10 | MVP pilot | 🟡 Ready (адаптеры готовы) | SRC-012 trudvsem (безусловный) + SRC-011 HH API (одобрено #22931, live-проверка OK); адаптеры `trudvsem.py`+`headhunter.py` (29 hermetic тестов); осталась интеграция в pipeline + canary | Pilot metrics collected |
+| P10 | MVP pilot | 🟡 Canary пройден | SRC-012 trudvsem + SRC-011 HH: адаптеры, `app/canary.py`, CLI `--canary`; **live canary 2026-08-23: оба источника fetched=5, resume идемпотентен** (125 тестов) | Pilot metrics (разметка, precision/recall baseline, TTL-наблюдение) |
 | P11 | MVP hardening | 🟡 Partial | backup/maintenance; scheduler/runbook после pilot | Operational readiness |
 | P12 | Source expansion | 🟡 Partial | HttpFeedAdapter (двойной гейт allowed+can_poll) | Each source independently gated |
 | P13 | Multi-tenant foundation | 🟡 Partial | Schema v2 owner-isolated profiles; auth/quotas pending | Isolation tests green |
@@ -924,7 +924,7 @@ Production v1.0 is complete only when:
 
 ### Next action
 
-**G2 закрыт и активирован (2026-08-23):** безусловный `allowed` источник — **Open Data «Работа в России»** (SRC-012, ADR-012); HeadHunter API (SRC-011, ADR-011) — приложение одобрено **#22931**, live-проверка токена успешна (HTTP 200, 6629 вакансий по «python»). Адаптеры `trudvsem.py` + `headhunter.py` реализованы (29 hermetic тестов). Следующий шаг: интеграция адаптеров в `app/pipeline` + CLI и canary-прогон, затем P10 pilot. Live polling включится только через гейт (`allowed` + `can_poll`).
+**G2 закрыт и активирован (2026-08-23):** безусловный `allowed` источник — **Open Data «Работа в России»** (SRC-012, ADR-012); HeadHunter API (SRC-011, ADR-011) — приложение #22931, live-проверка OK (6629 вакансий по «python»). Адаптеры + `canary.py` + CLI `--canary` реализованы; **live canary обоих источников пройден (fetched=5, idempotent resume)**. Следующий шаг: P10 pilot metrics (разметка выборки, precision/recall baseline) и P11 hardening (scheduler, runbook, alerting). Live polling — только явный `--canary`, постоянный scheduler — P11/G7.
 
 ---
 

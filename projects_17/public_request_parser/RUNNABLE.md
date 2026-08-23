@@ -38,14 +38,14 @@ cd projects_17/public_request_parser
 find . -maxdepth 2 -type f | sort
 ```
 
-## Будущие режимы после закрытия G2
+## Canary live-прогоны (P10)
 
 ```bash
-python -m app.cli --once --source <approved-rss-url>   # HttpFeedAdapter (live)
-# SRC-012 trudvsem (Live без ключей) — напрямую через адаптер:
-python -c "import asyncio; from app.adapters.trudvsem import TrudvsemAdapter; from app.domain import SourcePolicy, SourcePolicyStatus, RetentionPolicy; from datetime import datetime, timezone; p = SourcePolicy(source_id='trudvsem', status=SourcePolicyStatus.ALLOWED, access_mode='open_data_api', endpoint='https://opendata.trudvsem.ru/api/v1/vacancies', checked_at=datetime.now(timezone.utc), evidence_urls=('https://trudvsem.ru/opendata',), can_poll=True, retention=RetentionPolicy(text_ttl=None, allow_full_text=False)); async def main(): async for it in TrudvsemAdapter('trudvsem', policy=p).fetch(limit=5): print(it.title); asyncio.run(main())"
-python -m app.cli --once --profile <profile-id>
+python -m app.cli --canary --source trudvsem --db parser.db --required "python" --intent "нужен,ищу" --limit 5
+PRP_HH_APP_TOKEN=... python -m app.cli --canary --source headhunter --db parser.db --required "python" --intent "нужен,ищу" --limit 5
 ```
+
+Canary = один маленький срез с отчётом; постоянный polling — только после P11 scheduler (G7).
 
 ## Переменные окружения (план)
 

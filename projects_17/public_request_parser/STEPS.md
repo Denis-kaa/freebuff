@@ -335,3 +335,26 @@
 - 120 проектных тестов проходят (106 + 14 HH); mypy --strict без замечаний (33 файла).
 - Осталось: интеграция адаптеров (trudvsem + HH) в `app/pipeline`/CLI и canary-прогон (P10).
 - Live polling выключен до canary (гейт `allowed` + `can_poll`).
+
+## Step 17: Canary-прогон SRC-012 + SRC-011 (2026-08-23)
+
+**Что сделано:**
+
+- Создан `app/canary.py`: `CanaryReport` + `run_canary` (один контролируемый live-срез через pipeline; ошибки фиксируются в отчёте, не роняют процесс; token HH только через env).
+- CLI: добавлен режим `--canary --source trudvsem|headhunter` (source-политика ALLOWED+can_poll, limit<=20).
+- Hermetic-тесты `tests/test_canary.py` (5): оба адаптера через fake http, error-path, неизвестный source, summary.
+- **Live canary-прогон** (2026-08-23, оба источника, реальная сеть):
+  - trudvsem: `fetched=5 new=5 checkpoint=a4d86695-…`;
+  - headhunter (приложение #22931): `fetched=5 new=5 checkpoint=136520168`;
+  - повторный прогон обоих: `fetched=0` — идемпотентный resume по checkpoint на живых API.
+
+**Почему:**
+
+- Canary — безопасный способ проверить live transport/policy перед pilot: один маленький срез, без постоянного polling, с отчётом.
+- Все items первично REJECT (вакансии не содержат demand-маркеров «нужен/ищу» без профиля) — это ожидаемое поведение matcher, а не сбой источника.
+
+**Результат:**
+
+- 125 проектных тестов; mypy --strict clean (35 файлов).
+- P10 canary-гейт G6-часть пройдена: источники живые, транспорт gated, идемпотентность подтверждена.
+- Следующее: pilot metrics (разметка выборки, качество, TTL-наблюдение) и P11 hardening (scheduler, runbook, alerting) — G7.

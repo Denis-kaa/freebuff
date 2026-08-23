@@ -87,6 +87,6 @@ Telegram web-preview описан и тестируется только на fi
 - [x***REMOVED*** G2 закрыт: Open Data API «Работа в России» (SRC-012, ADR-012) — безусловный первый `allowed`; HH API (SRC-011, ADR-011) — условный второй.
 - [x***REMOVED*** Адаптер trudvsem реализован (`app/adapters/trudvsem.py`): JSON→SourceItem, двойной гейт, дельта `modifiedFrom`, без контактных полей; 15 hermetic тестов.
 - [x***REMOVED*** HH API активирован: приложение #22931 одобрено, live-проверка OK, `app/adapters/headhunter.py` + 14 тестов; секреты в `hh/info.md` (ignored).
-- [ ***REMOVED*** Интеграция адаптеров (trudvsem + HH) в `app/pipeline`/CLI + canary-прогон.
-- [ ***REMOVED*** Telegram Bot delivery implementation.
-- [ ***REMOVED*** Live source approval (адаптер trudvsem + canary; HH API — опционально после регистрации приложения).
+- [x***REMOVED*** Интеграция адаптеров в `app/pipeline`/CLI: `app/canary.py` + `--canary`; **live canary SRC-012+SRC-011 пройден** (fetched=5, idempotent resume).
+- [ ***REMOVED*** Telegram Bot delivery implementation (live transport — отдельный policy-гейт).
+- [ ***REMOVED*** P10 pilot metrics (разметка выборки, precision/recall baseline, TTL-наблюдение); P11 scheduler/runbook/alerting (G7).

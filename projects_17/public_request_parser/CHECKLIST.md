@@ -97,4 +97,6 @@
 - [x***REMOVED*** G2: production `allowed` source выбран: SRC-012 trudvsem Open Data (безусловно, ADR-012) + SRC-011 HH API (условно, ADR-011).
 - [x***REMOVED*** Адаптер trudvsem (JSON→SourceItem, двойной гейт, без контактов) + 15 hermetic тестов.
 - [x***REMOVED*** HH API активирован (приложение #22931, live-проверка OK) + `headhunter.py` + 14 тестов; секреты не коммитятся (`hh/` в .gitignore).
-- [ ***REMOVED*** Интеграция адаптеров (trudvsem + HH) в pipeline/CLI и canary-прогон → P10.
+- [x***REMOVED*** Интеграция в pipeline/CLI (`--canary --source trudvsem|headhunter`) + `app/canary.py` + 5 тестов.
+- [x***REMOVED*** **Live canary обоих источников пройден** (fetched=5, idempotent resume).
+- [ ***REMOVED*** Pilot metrics: разметка выборки, precision/recall baseline, TTL-наблюдение (G6).
