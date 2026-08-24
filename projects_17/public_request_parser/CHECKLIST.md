@@ -63,8 +63,9 @@
 - [x***REMOVED*** Decisions и delivery_attempts идемпотентны.
 - [x***REMOVED*** TTL cleanup обнуляет только content; metadata/decision остаются.
 - [x***REMOVED*** Cap текста и запрет текста на уровне хранилища.
-- [ ***REMOVED*** Scheduler регулярного TTL-прохода (P11).
-- [ ***REMOVED*** Backup/restore и crash recovery (P11).
+- [x***REMOVED*** Scheduler (`app/ops.py`): backoff, alert-hook, CLI `--schedule` (P11).
+- [x***REMOVED*** Backup/restore и crash recovery (P11).
+- [x***REMOVED*** OPERATIONS_RUNBOOK.md (P11).
 
 ## P7 Delivery contract
 
@@ -99,4 +100,5 @@
 - [x***REMOVED*** HH API активирован (приложение #22931, live-проверка OK) + `headhunter.py` + 14 тестов; секреты не коммитятся (`hh/` в .gitignore).
 - [x***REMOVED*** Интеграция в pipeline/CLI (`--canary --source trudvsem|headhunter`) + `app/canary.py` + 5 тестов.
 - [x***REMOVED*** **Live canary обоих источников пройден** (fetched=5, idempotent resume).
-- [ ***REMOVED*** Pilot metrics: разметка выборки, precision/recall baseline, TTL-наблюдение (G6).
+- [x***REMOVED*** Jobseek/outreach (ADR-013): `SearchMode.SUPPLY`, apply-ссылки HH, research SuperJob=conditional, Kwork/FL/Avito/YouDo/Профи/Работа=blocked (2026-08-23).
+- [ ***REMOVED*** SuperJob API adapter + canary (аналогично HH).

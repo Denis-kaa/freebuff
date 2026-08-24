@@ -108,6 +108,23 @@ def test_render_card_escapes_html_and_builds_link() -> None:
     assert "author" not in card.text.lower()
 
 
+def test_render_card_shows_apply_link_when_present() -> None:
+    """Apply-ссылка площадки (jobseek) рендерится как кнопка «Откликнуться»."""
+    publication = make_publication()
+    # подменим metadata: добавим официальный apply_url
+    from dataclasses ***REMOVED***place
+
+    publication = replace(
+        publication,
+        metadata={**publication.metadata, "apply_url": "https://hh.ru/applicant/vacancy_response/123"***REMOVED***,
+    )
+
+    card = render_card(publication, make_decision(), score_label="0.90")
+
+    assert "Откликнуться" in card.text
+    assert "https://hh.ru/applicant/vacancy_response/123" in card.text
+
+
 def test_delivery_key_is_owner_scoped_and_versioned() -> None:
     """Ключ уникален по owner, публикации и версии профиля."""
     publication = make_publication()

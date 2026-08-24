@@ -17,6 +17,7 @@
 | ADR-010 | Feedback calibration: детерминированная рекомендация порогов (accuracy), без авто-apply; apply через новую версию профиля | ✅ Accepted | 2026-08-23 | `CALIBRATION.md`, `ROADMAP.md`, P14 |
 | ADR-011 | G2: первый `allowed` source = HeadHunter API (SRC-011), официальный механизм; **приложение #22931 одобрено, live-проверка OK, адаптер реализован**; тематика, без резюме, без изменения материалов; Telegram остаётся blocked | ✅ Accepted (activated) | 2026-08-23 | `SOURCE_POLICY_MATRIX.md` SRC-011, `ROADMAP.md` G2, `POST_MVP_GATES.md`, `app/adapters/headhunter.py` |
 | ADR-012 | G2: первый `allowed` источник с **безусловной** активацией = Open Data API «Работа в России» (SRC-012, opendata.trudvsem.ru); открытая лицензия «без ограничений», без ключей, live-проверка 2026-08-23; полноправное закрытие G2 без условных активаций | ✅ Accepted | 2026-08-23 | `SOURCE_POLICY_MATRIX.md` SRC-012, `ROADMAP.md` G2, `POST_MVP_GATES.md` |
+| ADR-013 | Jobseek/outreach-модуль: `SearchMode.SUPPLY` (reverse-поиск работы/заказов), apply-ссылки через официальный механизм HH (`apply_alternate_url`), без авто-откликов; research Kwork/SuperJob/Avito/YouDo/FL.ru/Профи → SuperJob=conditional (api.superjob.ru + оферта), остальные blocked (нет API или скрейпинг запрещён) | ✅ Accepted (Implemented) | 2026-08-23 | `SOURCE_POLICY_MATRIX.md` SRC-013, `ROADMAP.md` P12, `POST_MVP_GATES.md` |
 
 ## Правила ADR
 

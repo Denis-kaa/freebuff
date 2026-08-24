@@ -2,7 +2,7 @@
 
 Универсальный парсер открытых публикаций, где пользователи ищут услуги.
 
-> **Состояние:** P3–P9 реализованы; P10 canary **пройден на живых источниках** (trudvsem + HH); P11 scheduler/backoff/runbook готов (131 тест). Live polling — только явный (`--canary`/`--schedule`); P10+ гated — `POST_MVP_GATES.md`.
+> **Состояние:** P3–P9 реализованы; P10 canary **пройден на живых источниках** (trudvsem + HH); P11 scheduler/backoff/runbook готов; P12 jobseek/outreach (ADR-013) — `SearchMode.SUPPLY`, apply-ссылки, research Kwork/SuperJob/Avito → **135 тестов**. Live polling — только явный (`--canary`/`--schedule`); P10+ гated — `POST_MVP_GATES.md`.
 > **Canonical specification:** [`../../public-request-parser-spec.md`***REMOVED***(../../public-request-parser-spec.md)
 
 ## Что решает проект

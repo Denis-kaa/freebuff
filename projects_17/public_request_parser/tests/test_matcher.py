@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from app.domain import MatchOutcome, Publication, SearchProfile
+from app.domain import MatchOutcome, Publication, SearchMode, SearchProfile
 from app.matcher import OFFER_MARKERS, RuleMatcher, is_stopword, normalize_text
 
 NOW = datetime(2026, 8, 23, 12, 0, tzinfo=timezone.utc)
@@ -222,3 +222,42 @@ def test_offer_markers_are_documented_and_non_empty() -> None:
     """Константа маркеров существует и доступна для policy-обсуждения."""
     assert OFFER_MARKERS
     assert any("предлага" in marker for marker in OFFER_MARKERS)
+
+
+# --- Jobseek-режим (SearchMode.SUPPLY) -------------------------------------
+
+
+def test_supply_mode_accepts_vacancy_without_demand_markers() -> None:
+    """В jobseek-режиме вакансия без «ищу/нужен» принимается (intent по offer)."""
+    profile = make_profile(mode=SearchMode.SUPPLY)
+    publication = make_publication(
+        title="Python backend разработчик",
+        summary="Компания ищет разработчика для проекта",
+    )
+
+    decision = RuleMatcher(profile).match(publication, decided_at=NOW)
+
+    # Accept: required=python matched, optional=backend matched, demand markers not needed.
+    assert decision.outcome is MatchOutcome.ACCEPT
+    assert decision.score >= 0.70
+
+
+def test_supply_mode_neutral_vacancy_accepted_with_optional() -> None:
+    """Нейтральная формулировка (без offer-маркеров) тоже проходит по required."""
+    profile = make_profile(mode=SearchMode.SUPPLY)
+    publication = make_publication(title="Python backend (Django)")
+
+    decision = RuleMatcher(profile).match(publication, decided_at=NOW)
+
+    assert decision.outcome in (MatchOutcome.ACCEPT, MatchOutcome.PENDING)
+
+
+def test_demand_mode_still_rejects_offer_without_intent() -> None:
+    """Классический режим не затронут: offer без спроса — reject."""
+    profile = make_profile(mode=SearchMode.DEMAND)  # default
+    publication = make_publication(title="Предлагаю услуги python-разработки")
+
+    decision = RuleMatcher(profile).match(publication, decided_at=NOW)
+
+    assert decision.outcome is MatchOutcome.REJECT
+    assert "offer wording detected without intent signal" in decision.reasons

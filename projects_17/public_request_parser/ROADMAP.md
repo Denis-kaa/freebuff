@@ -79,7 +79,7 @@
 | P9 | Telegram technical adapter | ✅ Done (fixture-only) | `tgpreview` adapter; live allowed запрещён | No live access without gate |
 | P10 | MVP pilot | 🟡 Canary пройден | SRC-012 trudvsem + SRC-011 HH: адаптеры, `app/canary.py`, CLI `--canary`; **live canary 2026-08-23: оба источника fetched=5, resume идемпотентен** (125 тестов) | Pilot metrics (разметка, precision/recall baseline, TTL-наблюдение) |
 | P11 | MVP hardening | 🟡 Mostly (G7 pending) | `app/ops.py` scheduler+backoff+alert-hook, CLI `--schedule`; runbook; backup/maintenance (ранее); 6 hermetic tests | Unattended pilot window + live alerting (G7) |
-| P12 | Source expansion | 🟡 Partial | HttpFeedAdapter (двойной гейт allowed+can_poll) | Each source independently gated |
+| P12 | Jobseek/outreach + source expansion | 🟡 Partial (SuperJob pending) | ADR-013: SearchMode.SUPPLY, apply-HH; research: SuperJob=conditional, Kwork/Avito/YouDo/FL/Профи/Работа=blocked. HttpFeedAdapter (двойной гейт). (135 tests) | SuperJob: app registration + adapter + canary (like HH) |
 | P13 | Multi-tenant foundation | 🟡 Partial | Schema v2 owner-isolated profiles; auth/quotas pending | Isolation tests green |
 | P14 | Quality feedback loop | ✅ Made-ready | Feedback store + stats + детерминированный calibrator (accuracy); apply вручную через новую версию профиля | Калибровка на pilot-данных (G10) |
 | P15 | Lead Aggregator integration review | ✅ Done | ADR-008: remain separate (evidence-based) | ADR accepted |

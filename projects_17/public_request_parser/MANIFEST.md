@@ -89,4 +89,6 @@ Telegram web-preview описан и тестируется только на fi
 - [x***REMOVED*** HH API активирован: приложение #22931 одобрено, live-проверка OK, `app/adapters/headhunter.py` + 14 тестов; секреты в `hh/info.md` (ignored).
 - [x***REMOVED*** Интеграция адаптеров в `app/pipeline`/CLI: `app/canary.py` + `--canary`; **live canary SRC-012+SRC-011 пройден** (fetched=5, idempotent resume).
 - [ ***REMOVED*** Telegram Bot delivery implementation (live transport — отдельный policy-гейт).
-- [ ***REMOVED*** P10 pilot metrics (разметка выборки, precision/recall baseline, TTL-наблюдение); P11 scheduler/runbook/alerting (G7).
+- [x***REMOVED*** Jobseek/outreach-модуль (ADR-013): `SearchMode.SUPPLY`, apply-ссылки HH, research Kwork/SuperJob/Avito/YouDo → SuperJob candidate; SuperJob API (`api.superjob.ru`) = `conditional` (новый `allowed`-кандидат), 4 новых теста (135 total).
+- [ ***REMOVED*** P10 pilot metrics (разметка выборки, precision/recall baseline, TTL-наблюдение).
+- [ ***REMOVED*** SuperJob API: регистрация приложения + адаптер + canary (аналогично HH).

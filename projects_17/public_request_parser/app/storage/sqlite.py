@@ -30,6 +30,7 @@ from app.domain import (
     MatchOutcome,
     Publication,
     PublicationStatus,
+    SearchMode,
     SearchProfile,
 )
 
@@ -203,6 +204,7 @@ def _row_to_profile(row: sqlite3.Row) -> SearchProfile | None:
         rules_snapshot={
             key: tuple(values) for key, values in body.get("rules_snapshot", {***REMOVED***).items()
         ***REMOVED***,
+        mode=SearchMode(body["mode"***REMOVED***) if body.get("mode") else SearchMode.DEMAND,
     )
 
 
@@ -526,6 +528,7 @@ class SqliteStorage:
             "rules_snapshot": {
                 key: list(values) for key, values in profile.rules_snapshot.items()
             ***REMOVED***,
+            "mode": profile.mode.value,
         ***REMOVED***
         now = _to_iso(datetime.now(timezone.utc))
         with self._conn:

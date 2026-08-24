@@ -15,7 +15,8 @@
       "employment": {"id": "FULL", "name": "Полная занятость"***REMOVED***,
       "experience": {"id": "moreThan6", "name": "Более 6 лет"***REMOVED***,
       "schedule": {"id": "fullDay", "name": "Полный день"***REMOVED***,
-      "alternate_url": "https://hh.ru/vacancy/136323698"
+      "alternate_url": "https://hh.ru/vacancy/136323698",
+      "apply_alternate_url": "https://hh.ru/applicant/vacancy_response/136323698"
     ***REMOVED***,
     {
       "id": "136455374",

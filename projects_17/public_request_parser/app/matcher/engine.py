@@ -27,6 +27,7 @@ from app.domain import (
     MatchDecision,
     MatchOutcome,
     Publication,
+    SearchMode,
     SearchProfile,
 )
 
@@ -227,11 +228,24 @@ class RuleMatcher:
 
         offer_hit = any(marker in text for marker in OFFER_MARKERS)
         intent_hit = bool(matched_intent)
-        if offer_hit and not intent_hit:
-            reasons.append("offer wording detected without intent signal")
-            return self._hard_reject(
-                publication, reasons, rejected_terms, decided_at
-            )
+
+        if profile.mode is SearchMode.DEMAND:
+            # Классический режим: «предлагает услугу» без спроса — reject.
+            if offer_hit and not intent_hit:
+                reasons.append("offer wording detected without intent signal")
+                return self._hard_reject(
+                    publication, reasons, rejected_terms, decided_at
+                )
+        else:
+            # Jobseek-режим (SUPPLY): мы ищем предложения работы/заказа;
+            # offer-формулировка — это НЕ повод отклонять (вакансии часто
+            # нейтральны). Маркер предложения даёт intent-бонус к score.
+            if offer_hit:
+                intent_hit = True
+                if not matched_intent:
+                    reasons.append("supply mode: offer wording counted as intent")
+            # demand-маркеры в jobseek не являются причиной reject (в тексте
+            # «ищем кандидата» может встретиться «нужен»).
 
         # 2. Score из доступных компонентов профиля.
         components: list[float***REMOVED*** = [***REMOVED***

@@ -143,6 +143,11 @@ def _metadata_from(item: Mapping[str, Any***REMOVED***) -> dict[str, str***REMOV
     published = item.get("published_at") or item.get("created_at")
     if published:
         meta["published_at"***REMOVED*** = str(published)
+    apply_url = item.get("apply_alternate_url")
+    if apply_url:
+        # Официальная ссылка отклика площадки (не контактные данные):
+        # jobseek-режим показывает её как кнопку «Откликнуться».
+        meta["apply_url"***REMOVED*** = str(apply_url)
     return meta
 
 

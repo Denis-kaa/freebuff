@@ -45,6 +45,14 @@ python -m app.cli --canary --source trudvsem --db parser.db --required "python" 
 PRP_HH_APP_TOKEN=... python -m app.cli --canary --source headhunter --db parser.db --required "python" --intent "нужен,ищу" --limit 5
 ```
 
+## Jobseek-режим (SUPPLY) — поиск работы через HH
+
+```bash
+PRP_HH_APP_TOKEN=... python -m app.cli --canary --source headhunter --db parser.db --required "python" --mode supply --limit 10
+```
+
+Apply-ссылки (официальный механизм HH) автоматически добавляются в карточки вакансий.
+
 Canary = один маленький срез с отчётом; постоянный polling — `--schedule` (P11), подробности: `OPERATIONS_RUNBOOK.md`.
 
 ## Переменные окружения (план)

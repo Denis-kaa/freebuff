@@ -56,6 +56,16 @@ class MatchOutcome(StrEnum):
     REJECT = "reject"
 
 
+class SearchMode(StrEnum):
+    """Направление поиска профиля: спрос или предложение."""
+
+    # Классический режим: ищем публикации, где ЛЮДИ ищут услугу/работу.
+    DEMAND = "demand"
+    # Jobseek-режим: ищем публикации, где РАБОТОДАТЕЛИ/заказчики предлагают
+    # работу/заказ (вакансии); intent-гейт инвертируется.
+    SUPPLY = "supply"
+
+
 class SourcePolicyStatus(StrEnum):
     """Статус разрешения конкретного режима доступа к источнику."""
 
@@ -180,6 +190,7 @@ class SearchProfile:
     pending_threshold: float = 0.5
     source_ids: tuple[str, ...***REMOVED*** = ()
     rules_snapshot: RuleSnapshot = field(default_factory=dict)
+    mode: SearchMode = SearchMode.DEMAND
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "profile_id", _require_non_empty(self.profile_id, "profile_id"))
@@ -193,6 +204,8 @@ class SearchProfile:
             )
         if any(not isinstance(term, str) or not term.strip() for term in self.all_terms):
             raise ContractValidationError("profile terms must be non-empty strings")
+        if not isinstance(self.mode, SearchMode):
+            raise ContractValidationError("mode must be SearchMode.demand or SearchMode.supply")
         if not self.rules_snapshot:
             snapshot = {
                 "required_terms": tuple(self.required_terms),
@@ -374,6 +387,7 @@ __all__ = [
     "PublicationStatus",
     "RetentionPolicy",
     "RuleSnapshot",
+    "SearchMode",
     "SearchProfile",
     "SourceAdapter",
     "SourceItem",

@@ -12,6 +12,7 @@
 | P9 Telegram technical adapter | ✅ Done (fixture) | `app/tgpreview` fixture-адаптер; live `allowed` запрещён | Live Telegram approval (policy) |
 | P10 pilot | 🟡 Canary-прогон пройден | **SRC-012 trudvsem + SRC-011 HH** — адаптеры, CLI `--canary`, hermetic тесты (125); **live canary 2026-08-23: оба источника fetched=5, idempotent resume (повтор → 0)** | Pilot metrics (разметка, качество, TTL-наблюдение) — следующий шаг |
 | P11 hardening | 🟡 Partial (G7 остаётся) | `backup_to()` + CLI `--maintenance`; **scheduler (`app/ops.py` + CLI `--schedule`, backoff, stderr-алерт)**, `OPERATIONS_RUNBOOK.md`; 6 hermetic-тестов | live alerting (Telegram), unattended observation window (G7) |
+| P12 jobseek/outreach | ✅ Done (ADR-013) | `SearchMode.SUPPLY`, apply-ссылки HH, research SuperJob=conditional (api.superjob.ru), Kwork/Avito/YouDo/FL/Профи/Работа=blocked; 4 теста (135 total) | SuperJob: app registration + adapter + canary |
 | P12 source expansion | 🟡 Partial | `HttpFeedAdapter` (live только для `allowed`, двойной гейт), fixture-адаптеры | Конкретные source approvals (G8) |
 
 | P13 multi-tenant | 🟡 Partial | Schema v2: owner-isolated `profiles`, row-gates в CRUD; миграция v1→v2 | Auth-поток (Telegram bot), quotas |

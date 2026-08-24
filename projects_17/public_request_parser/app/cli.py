@@ -24,6 +24,7 @@ from app.adapters.trudvsem import API_BASE as TRUDVSEM_BASE
 from app.canary import run_canary
 from app.domain import (
     RetentionPolicy,
+    SearchMode,
     SearchProfile,
     SourcePolicy,
     SourcePolicyStatus,
@@ -75,6 +76,7 @@ def _profile_from_args(args: argparse.Namespace) -> SearchProfile:
         required_terms=required,
         optional_terms=optional,
         intent_terms=intent,
+        mode=SearchMode(args.mode),
     )
 
 
@@ -96,7 +98,8 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--required", default="python")
     parser.add_argument("--optional", default="backend")
     parser.add_argument("--intent", default="need,looking")
-    parser.add_argument("--schedule", action="store_true", help="run scheduler loop (P11)")
+    parser.add_argument("--mode", default="demand", choices=["demand", "supply"***REMOVED***, help="search direction: demand (who needs service) or supply (jobseek)")
+    parser.add_argument("--schedule", action="store_true", help="schedule loop (P11)")
     parser.add_argument("--interval", type=float, default=60.0, help="poll interval seconds (P11)")
     parser.add_argument("--limit", type=int, default=50)
     return parser

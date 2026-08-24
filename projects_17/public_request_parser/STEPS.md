@@ -379,3 +379,26 @@
 - **131 проектный тест** (125 + 6 ops); mypy --strict clean (37 файлов).
 - P11 = mostly: scheduler/backoff/runbook/backup есть; остаётся live-alerting канал и unattended observation window (G7).
 - Следующее: P10 pilot metrics (labelled sample, precision/recall, TTL) и решение по alerting-каналу.
+
+## Step 19: Jobseek/outreach-модуль — SearchMode.SUPPLY + apply-ссылки + source research (2026-08-23)
+
+**Что сделано:**
+
+- `SearchMode` (DEMAND/SUPPLY) добавлен в P3-контракт (`app/domain/contracts.py`); профиль хранит режим.
+- Matcher: intent-гейт адаптирован под режим: DEMAND — offer без demand = reject; SUPPLY — offer = intent-бонус (+0.1 к score).
+- HH-адаптер: `apply_alternate_url` → `metadata["apply_url"***REMOVED***`; render_card: кнопка «Откликнуться» при наличии apply_url.
+- Research новых источников: Kwork (нет API → blocked), Avito (API для бизнеса → blocked), YouDo (нет API → blocked), FL.ru (скрейпинг запрещён → blocked), Профи.ру (закрытая экосистема → blocked), Работа.ру/Зарплата.ру (нет открытого API → blocked), **SuperJob (api.superjob.ru + оферта → conditional)**.
+- ADR-013: jobseek/outreach с ограничениями (никаких авто-откликов, только официальные API).
+- 4 новых теста (matcher supply-mode + delivery apply-кнопка) → **135 проектных тестов**.
+
+**Почему:**
+
+- Reverse-поиск (jobseek) — естественное расширение: те же источники, обратный intent.
+- Apply-ссылки — официальный механизм HH, не нарушает ToS площадок.
+- SuperJob — третий allowed-кандидат (после trudvsem и HH), с официальным API и офертой.
+
+**Результат:**
+
+- 135 проектных тестов; mypy --strict clean (39 файлов).
+- Jobseek-режим работает на HH (apply_url в карточке) и trudvsem (vac_url как «Открыть источник»).
+- Следующее: регистрация приложения SuperJob → адаптер → canary (по аналогии с HH).

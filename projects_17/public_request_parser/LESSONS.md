@@ -36,6 +36,7 @@
 - **PRP-30** (Step 15, adapter): у трудоустройственных API контактные поля (`contact_list`, `contact_person`, `addresses`) приходят прямо в JSON; адаптер обязан отфильтровывать их на уровне извлечения (а не полагаться на storage) — privacy-инвариант проверяется тестом с подменой полей в fixture.
 - **PRP-31** (Step 17, canary): live canary подтверждает не только транспорт, но и семантику: первичные items вакансий REJECT без профиля с demand-маркерами — это здоровое поведение matcher, а не сбой источника; canary-отчёт фиксирует это как evidence, а не как проблему.
 - **PRP-32** (Step 18, scheduler): экспоненциальный backoff и stderr-алерт — честный dry-run операционного слоя до G7; alert-хук должен быть инжектируемым (Protocol), чтобы live-канал (Telegram/email) добавить без изменения цикла.
+- **PRP-33** (Step 19, jobseek/outreach): reverse-поиск (supply mode) — это не новый pipeline, а тот же matcher с инвертированным intent gate; apply-ссылки — официальный механизм площадки (HH `apply_alternate_url`), а не обходное решение; Kwork/YouDo/FL.ru заблокированы честно (нет API = нельзя легально парсить), SuperJob — третий allowed-кандидат.
 
 ## Open questions
 

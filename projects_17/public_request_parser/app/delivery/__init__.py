@@ -96,11 +96,18 @@ def render_card(
     score_text = f" · score {score_label***REMOVED***" if score_label else ""
     categories_line = f"\nКатегории: {categories***REMOVED***" if categories else ""
 
+    source_link = (
+        f"🔗 <a href=\"{_escape(publication.canonical_url)***REMOVED***\">Открыть источник</a>"
+    )
+    apply_url = publication.metadata.get("apply_url", "").strip()
+    apply_link = (
+        f" · ✉️ <a href=\"{_escape(apply_url)***REMOVED***\">Откликнуться</a>" if apply_url else ""
+    )
+
     text = (
         f"<b>{title***REMOVED***</b>\n"
         f"{summary***REMOVED***\n"
-        f"🔗 <a href=\"{_escape(publication.canonical_url)***REMOVED***\">Открыть источник</a>"
-        f"{score_text***REMOVED***{categories_line***REMOVED***"
+        f"{source_link***REMOVED***{apply_link***REMOVED***{score_text***REMOVED***{categories_line***REMOVED***"
     )
     return DeliveryCard(text=text, parse_mode="HTML")
 
