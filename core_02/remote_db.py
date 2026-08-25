@@ -163,7 +163,7 @@ class RemoteDB:
         ***REMOVED***
         if self.remote_url:
             try:
-                req = urllib.request.Request(f"{self.remote_url***REMOVED***/ready")
+                req = urllib.request.Request(f"{self.remote_url***REMOVED***/status?pretty=false")
                 urllib.request.urlopen(req, timeout=self.timeout)
                 info["remote_ready"***REMOVED*** = True
             except Exception:
@@ -182,7 +182,7 @@ class RemoteDB:
         # Lazy test
         if self._remote_ok is None:
             try:
-                req = urllib.request.Request(f"{self.remote_url***REMOVED***/ready")
+                req = urllib.request.Request(f"{self.remote_url***REMOVED***/status?pretty=false")
                 urllib.request.urlopen(req, timeout=self.timeout)
                 self._remote_ok = True
                 logger.info("RemoteDB: connected to rqlite at %s", self.remote_url)
@@ -194,30 +194,35 @@ class RemoteDB:
     def _remote_execute(
         self, sql: str, params: Sequence[Any***REMOVED*** = ()
     ) -> list[_FakeRow***REMOVED***:
-        """Send SQL to rqlite via POST /db/execute or /db/query."""
-        is_select = sql.lstrip().upper().startswith("SELECT")
-        endpoint = "/db/query" if is_select else "/db/execute"
+        """Send SQL to rqlite via GET /db/query or POST /db/execute."""
+        import urllib.parse
 
-        # Build SQL with interpolated params (rqlite doesn't use ? placeholders in array format)
+        is_select = sql.lstrip().upper().startswith("SELECT")
         full_sql = self._interpolate(sql, params)
 
-        data = json.dumps([full_sql***REMOVED***).encode()
-        req = urllib.request.Request(
-            f"{self.remote_url***REMOVED***{endpoint***REMOVED***",
-            data=data,
-            headers={"Content-Type": "application/json"***REMOVED***,
-        )
-        resp = urllib.request.urlopen(req, timeout=self.timeout)
-        result = json.loads(resp.read())
-
         if is_select:
+            # rqlite v10: GET /db/query?q=SELECT...
+            qs = urllib.parse.urlencode({"q": full_sql***REMOVED***)
+            url = f"{self.remote_url***REMOVED***/db/query?{qs***REMOVED***"
+            req = urllib.request.Request(url, headers={"Content-Type": "application/json"***REMOVED***)
+            resp = urllib.request.urlopen(req, timeout=self.timeout)
+            result = json.loads(resp.read())
             res = result.get("results", [{***REMOVED******REMOVED***)
             if not res:
                 return [***REMOVED***
             columns = res[0***REMOVED***.get("columns", [***REMOVED***)
             values_list = res[0***REMOVED***.get("values", [***REMOVED***)
             return [_FakeRow(columns, list(v)) for v in values_list***REMOVED***
-        return [***REMOVED***
+        else:
+            # rqlite v10: POST /db/execute with JSON array
+            data = json.dumps([full_sql***REMOVED***).encode()
+            req = urllib.request.Request(
+                f"{self.remote_url***REMOVED***/db/execute",
+                data=data,
+                headers={"Content-Type": "application/json"***REMOVED***,
+            )
+            urllib.request.urlopen(req, timeout=self.timeout)
+            return [***REMOVED***
 
     def _remote_execute_batch(self, stmts: list[str***REMOVED***) -> None:
         """Send multiple statements as a batch."""
