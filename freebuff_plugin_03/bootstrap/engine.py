@@ -235,7 +235,13 @@ class BootstrapEngine:
         ***REMOVED***
 
     def _load_profile(self) -> Optional[BootstrapProfile***REMOVED***:
-        """Load profile from YAML. Falls back to hardcoded profiles if pyyaml missing."""
+        """Load profile from YAML, then fall back to hardcoded profiles.
+
+        Falls back to the hardcoded ``minimal`` profile when pyyaml is missing,
+        profiles.yaml is missing/unreadable, OR the requested profile name is not
+        found in profiles.yaml (graceful degrade — an unknown profile must not
+        hard-fail, per BOOTSTRAP_SPECIFICATION §3.1 profiles enum).
+        """
         if HAS_YAML and DEFAULT_PROFILES_PATH.exists():
             try:
                 with open(DEFAULT_PROFILES_PATH, "r", encoding="utf-8") as f:
@@ -260,7 +266,6 @@ class BootstrapEngine:
                             offline_mode=p.get("offline_mode", False),
                             auto_update=p.get("auto_update", True),
                         )
-                return None
             except Exception:
                 pass
 

@@ -1,11 +1,13 @@
 #!/data/data/com.termux/files/usr/bin/bash
-# monitor.sh v2 — ждёт Codebuff, отправляет промпт, завершает сессию
+# monitor.sh v3 — ждёт Codebuff, выбирает модель, отправляет промпт, завершает сессию
 #
-# Использование: monitor.sh <session_id> <prompt> [timeout***REMOVED*** [work_dir***REMOVED***
+# Использование: monitor.sh <session_id> <prompt> [timeout***REMOVED*** [work_dir***REMOVED*** [model***REMOVED***
 #
 # Фаза 2-3 phase-based подхода:
-#   - Ждёт приглашения Codebuff ("Enter a coding task") в tmux панели
-#   - Отправляет промпт через tmux send-keys
+#   - Ждёт стартового экрана freebuff ("Start coding"/"RECOMMENDED") ИЛИ поля ввода
+#   - На стартовом экране автоматически выбирает модель (model: "auto"/"0" = DeepSeek
+#     V4 Flash — рекомендованная, "1".."5" = позиция в списке, ArrowDown ×N + Enter)
+#   - Ждёт приглашения ("Enter a coding task") и отправляет промпт через tmux send-keys
 #   - Ждёт завершения задачи
 #   - По таймауту: убивает tmux сессию
 #   - Запускает python3 bridge.py end <sid>
@@ -16,8 +18,9 @@ SESSION_ID="${1:-***REMOVED***"
 PROMPT="${2:-***REMOVED***"
 TIMEOUT="${3:-300***REMOVED***"
 WORK_DIR="${4:-***REMOVED***"
+MODEL="${5:-auto***REMOVED***"
 
-FREEBUFF_ROOT="/storage/emulated/0/PROJECTS/workstation/freebuff"
+FREEBUFF_ROOT="${FREEBUFF_ROOT:-/storage/emulated/0/PROJECTS/workstation/freebuff***REMOVED***"
 PLUGIN_DIR="$FREEBUFF_ROOT/freebuff_plugin_03"
 SESSION_DIR="${PREFIX:-/data/data/com.termux/files/usr***REMOVED***/tmp/.freebuff_plugin"
 TMUX_FILE="$SESSION_DIR/tmux_${SESSION_ID***REMOVED***"
@@ -29,25 +32,63 @@ PID_FILE="$SESSION_DIR/pid_${SESSION_ID***REMOVED***"
 TMUX_SESSION=""
 [ -f "$TMUX_FILE" ***REMOVED*** && TMUX_SESSION=$(cat "$TMUX_FILE" 2>/dev/null || echo "")
 
+# ── Выбор модели на стартовом экране freebuff ──
+# Экран "Start coding for free" открывается при каждом запуске. Курсор стоит на
+# рекомендованной модели (DeepSeek V4 Flash · free, безлимит) — Enter выбирает её.
+# Модель "1".."5" → ArrowDown ×N перед Enter (позиция в списке выбора).
+# Навигация выполняется один раз; повторные Enter'ы (до 3) страхуют, если
+# первый клик TUI потерял (гонка старта).
+
 # ── Ждём приглашения Codebuff ──
 wait_for_prompt() {
     local deadline=$(( $(date +%s) + 45 ))  # макс 45с на подключение
+    local nav_done=0
+    local enters=0
     while [ $(date +%s) -lt $deadline ***REMOVED***; do
         if [ -n "$TMUX_SESSION" ***REMOVED***; then
             local text
             text=$(tmux capture-pane -t "$TMUX_SESSION" -p 2>/dev/null || echo "")
-            # Появилось приглашение?
+            # Появилось приглашение (поле ввода готово)?
             if echo "$text" | grep -q "Enter a coding task\|coding task"; then
                 return 0
             fi
-            # Экран выбора модели? Отправляем Enter
+            # Экран выбора модели — выбираем модель (навигация однократно, Enter retry ≤3)
             if echo "$text" | grep -q "RECOMMENDED\|Start coding"; then
-                tmux send-keys -t "$TMUX_SESSION" Enter 2>/dev/null || true
+                if [ "$enters" -lt 3 ***REMOVED***; then
+                    if [ "$nav_done" -eq 0 ***REMOVED***; then
+                        # Навигацию Down×N делаем только один раз (курсор уедет вниз)
+                        case "$MODEL" in
+                            [1-5***REMOVED***)
+                                local i
+                                for i in $(seq 1 "$MODEL"); do
+                                    tmux send-keys -t "$TMUX_SESSION" Down 2>/dev/null || true
+                                done
+                                ;;
+                        esac
+                        nav_done=1
+                    fi
+                    tmux send-keys -t "$TMUX_SESSION" Enter 2>/dev/null || true
+                    enters=$((enters + 1))
+                fi
             fi
         fi
         sleep 2
     done
     return 1
+***REMOVED***
+
+# ── Restore канонического AGENTS.md (W-13 fix) ──
+# Если при старте сессии был забэкаплен канонический AGENTS.md
+# (.freebuff_original_agents, создаётся wrapper._backup_agents_md) —
+# восстанавливаем его. Иначе (файла не было) — удаляем session-файл.
+restore_agents() {
+    if [ -n "$WORK_DIR" ***REMOVED*** && [ -d "$WORK_DIR" ***REMOVED***; then
+        if [ -f "$WORK_DIR/.freebuff_original_agents" ***REMOVED***; then
+            mv "$WORK_DIR/.freebuff_original_agents" "$WORK_DIR/AGENTS.md" 2>/dev/null || true
+        else
+            rm -f "$WORK_DIR/AGENTS.md" 2>/dev/null || true
+        fi
+    fi
 ***REMOVED***
 
 # ── Kill tmux ──
@@ -69,8 +110,9 @@ kill_tmux() {
 
 # ── 1. Ждём приглашения Codebuff ──
 if ! wait_for_prompt; then
-    # Таймаут ожидания — убиваем и выходим
+    # Таймаут ожидания — убиваем, восстанавливаем AGENTS.md и выходим
     kill_tmux
+    restore_agents
     python3 "$PLUGIN_DIR/bridge.py" end "$SESSION_ID" --summary "timeout waiting for Codebuff" 2>/dev/null || true
     rm -f "$PID_FILE" "$TMUX_FILE" 2>/dev/null || true
     exit 1
@@ -106,11 +148,8 @@ if [ -n "$TMUX_SESSION" ***REMOVED***; then
     tmux has-session -t "$TMUX_SESSION" 2>/dev/null && kill_tmux
 fi
 
-# ── 5. Очистка AGENTS.md ──
-if [ -n "$WORK_DIR" ***REMOVED*** && [ -d "$WORK_DIR" ***REMOVED***; then
-    [ -f "$WORK_DIR/.freebuff_original_agents" ***REMOVED*** && mv "$WORK_DIR/.freebuff_original_agents" "$WORK_DIR/AGENTS.md" 2>/dev/null || true
-    [ -f "$WORK_DIR/AGENTS.md" ***REMOVED*** && rm -f "$WORK_DIR/AGENTS.md" 2>/dev/null || true
-fi
+# ── 5. Restore канонического AGENTS.md (W-13 fix) ──
+restore_agents
 
 # ── 6. Завершаем сессию ──
 python3 "$PLUGIN_DIR/bridge.py" end "$SESSION_ID" --summary "freebuff task completed" 2>/dev/null || true

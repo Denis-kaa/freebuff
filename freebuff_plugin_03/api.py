@@ -10,7 +10,7 @@ Freebuff Plugin — FastAPI REST сервер.
   GET  /tasks         — список активных задач
 
 Использование:
-    uvicorn freebuff_plugin.api:app --host 127.0.0.1 --port 8410
+    uvicorn freebuff_plugin_03.api:app --host 127.0.0.1 --port 8410
 """
 
 from __future__ import annotations
@@ -29,8 +29,8 @@ sys.path.insert(0, str(FREEBUFF_ROOT))
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from freebuff_plugin import bridge as plugin_bridge
-from freebuff_plugin import wrapper as plugin_wrapper
+from freebuff_plugin_03 import bridge as plugin_bridge
+from freebuff_plugin_03 import wrapper as plugin_wrapper
 from freebuff_plugin_03.router import IntentRouter
 from freebuff_plugin_03.scenario_engine import ScenarioEngine
 

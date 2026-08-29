@@ -1,786 +1,120 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workspace OS — Project-Centric + Graph View</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; ***REMOVED***
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: #0a0a0f;
-            color: #fff;
-            overflow: hidden;
-            height: 100vh;
-        ***REMOVED***
-        
-        .app { display: flex; height: 100vh; ***REMOVED***
-        
-        /* Sidebar */
-        .sidebar {
-            width: 90px;
-            background: rgba(20, 20, 35, 0.4);
-            backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(100, 100, 255, 0.15);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 30px 0;
-            gap: 25px;
-        ***REMOVED***
-        
-        .nav-item {
-            width: 60px;
-            height: 60px;
-            border-radius: 16px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 10px;
-            gap: 6px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        ***REMOVED***
-        
-        .nav-item:hover, .nav-item.active {
-            background: rgba(100, 100, 255, 0.15);
-            border-color: rgba(100, 200, 255, 0.3);
-            transform: translateY(-2px);
-        ***REMOVED***
-        
-        .nav-item svg {
-            width: 24px;
-            height: 24px;
-            stroke: rgba(255, 255, 255, 0.7);
-            fill: none;
-            stroke-width: 1.5;
-        ***REMOVED***
-        
-        .main {
-            flex: 1;
-            padding: 40px;
-            overflow-y: auto;
-            position: relative;
-        ***REMOVED***
-        
-        .screen { display: none; animation: fadeIn 0.4s ease; ***REMOVED***
-        .screen.active { display: block; ***REMOVED***
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); ***REMOVED***
-            to { opacity: 1; transform: translateY(0); ***REMOVED***
-        ***REMOVED***
-        
-        /* Project Cards */
-        .projects-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 25px;
-            margin-top: 30px;
-        ***REMOVED***
-        
-        .project-card {
-            background: rgba(30, 30, 50, 0.25);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 30px;
-            border: 1px solid rgba(100, 100, 255, 0.15);
-            cursor: pointer;
-            transition: all 0.3s;
-            position: relative;
-            overflow: hidden;
-        ***REMOVED***
-        
-        .project-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #00ffff, #ff00ff);
-            opacity: 0;
-            transition: opacity 0.3s;
-        ***REMOVED***
-        
-        .project-card:hover {
-            transform: translateY(-8px);
-            border-color: rgba(100, 200, 255, 0.4);
-            box-shadow: 0 20px 60px rgba(100, 100, 255, 0.3);
-        ***REMOVED***
-        
-        .project-card:hover::before { opacity: 1; ***REMOVED***
-        
-        .project-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 20px;
-        ***REMOVED***
-        
-        .project-title {
-            font-size: 22px;
-            font-weight: 400;
-            margin-bottom: 8px;
-        ***REMOVED***
-        
-        .project-status {
-            font-size: 12px;
-            padding: 4px 12px;
-            border-radius: 12px;
-            background: rgba(0, 255, 100, 0.2);
-            color: #00ff88;
-        ***REMOVED***
-        
-        .project-resources {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        ***REMOVED***
-        
-        .resource-tag {
-            font-size: 12px;
-            padding: 4px 10px;
-            border-radius: 8px;
-            background: rgba(100, 100, 255, 0.2);
-            border: 1px solid rgba(100, 150, 255, 0.3);
-        ***REMOVED***
-        
-        /* Graph View (Obsidian-style) */
-        .graph-container {
-            width: 100%;
-            height: calc(100vh - 150px);
-            background: rgba(20, 20, 35, 0.3);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            border: 1px solid rgba(100, 100, 255, 0.15);
-            overflow: hidden;
-            position: relative;
-        ***REMOVED***
-        
-        #graphCanvas {
-            width: 100%;
-            height: 100%;
-        ***REMOVED***
-        
-        .graph-controls {
-            position: absolute;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            gap: 10px;
-        ***REMOVED***
-        
-        .graph-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            background: rgba(30, 30, 50, 0.8);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(100, 100, 255, 0.3);
-            color: #fff;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            transition: all 0.3s;
-        ***REMOVED***
-        
-        .graph-btn:hover {
-            background: rgba(100, 100, 255, 0.4);
-            transform: scale(1.1);
-        ***REMOVED***
-        
-        /* Project Chat Interface */
-        .chat-overlay {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 90px;
-            right: 0;
-            bottom: 0;
-            background: rgba(10, 10, 15, 0.98);
-            backdrop-filter: blur(30px);
-            z-index: 100;
-            flex-direction: column;
-            animation: slideIn 0.4s ease;
-        ***REMOVED***
-        
-        .chat-overlay.active { display: flex; ***REMOVED***
-        
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; ***REMOVED***
-            to { transform: translateX(0); opacity: 1; ***REMOVED***
-        ***REMOVED***
-        
-        .chat-header {
-            padding: 30px 40px;
-            background: rgba(30, 30, 50, 0.4);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(100, 100, 255, 0.15);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        ***REMOVED***
-        
-        .chat-project-info h2 {
-            font-size: 24px;
-            font-weight: 300;
-            margin-bottom: 5px;
-        ***REMOVED***
-        
-        .chat-project-info p {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.5);
-        ***REMOVED***
-        
-        .chat-close {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff;
-            font-size: 20px;
-            cursor: pointer;
-            transition: all 0.3s;
-        ***REMOVED***
-        
-        .chat-close:hover {
-            background: rgba(255, 100, 100, 0.3);
-            transform: rotate(90deg);
-        ***REMOVED***
-        
-        .chat-messages {
-            flex: 1;
-            padding: 40px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        ***REMOVED***
-        
-        .message {
-            display: flex;
-            gap: 15px;
-            max-width: 75%;
-            animation: messageIn 0.3s ease;
-        ***REMOVED***
-        
-        .message.user { align-self: flex-end; flex-direction: row-reverse; ***REMOVED***
-        
-        @keyframes messageIn {
-            from { opacity: 0; transform: translateY(20px); ***REMOVED***
-            to { opacity: 1; transform: translateY(0); ***REMOVED***
-        ***REMOVED***
-        
-        .message-avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #00ffff, #ff00ff);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            flex-shrink: 0;
-        ***REMOVED***
-        
-        .message.user .message-avatar {
-            background: linear-gradient(135deg, #ff80ff, #8080ff);
-        ***REMOVED***
-        
-        .message-content {
-            background: rgba(30, 30, 50, 0.4);
-            backdrop-filter: blur(20px);
-            padding: 18px 22px;
-            border-radius: 18px;
-            border: 1px solid rgba(100, 100, 255, 0.15);
-        ***REMOVED***
-        
-        .message.user .message-content {
-            background: rgba(100, 50, 200, 0.3);
-            border-color: rgba(150, 100, 255, 0.3);
-        ***REMOVED***
-        
-        .message-author {
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.6);
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        ***REMOVED***
-        
-        .chat-input-container {
-            padding: 30px 40px;
-            background: rgba(30, 30, 50, 0.4);
-            backdrop-filter: blur(20px);
-            border-top: 1px solid rgba(100, 100, 255, 0.15);
-        ***REMOVED***
-        
-        .chat-input-wrapper {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        ***REMOVED***
-        
-        .chat-input {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 16px 20px;
-            color: #fff;
-            font-size: 15px;
-            outline: none;
-            transition: all 0.3s;
-        ***REMOVED***
-        
-        .chat-input:focus {
-            border-color: rgba(100, 200, 255, 0.4);
-            background: rgba(255, 255, 255, 0.08);
-        ***REMOVED***
-        
-        .chat-send {
-            background: linear-gradient(135deg, rgba(100, 100, 255, 0.4), rgba(200, 100, 255, 0.4));
-            border: 1px solid rgba(150, 150, 255, 0.4);
-            border-radius: 15px;
-            padding: 16px 30px;
-            color: #fff;
-            font-size: 15px;
-            cursor: pointer;
-            transition: all 0.3s;
-        ***REMOVED***
-        
-        .chat-send:hover {
-            background: linear-gradient(135deg, rgba(100, 100, 255, 0.6), rgba(200, 100, 255, 0.6));
-            transform: translateY(-2px);
-        ***REMOVED***
-        
-        /* Team members in project chat */
-        .team-members {
-            display: flex;
-            gap: 12px;
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        ***REMOVED***
-        
-        .team-member {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #00ffff, #ff00ff);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            position: relative;
-            cursor: pointer;
-            transition: all 0.3s;
-        ***REMOVED***
-        
-        .team-member:hover {
-            transform: scale(1.15);
-        ***REMOVED***
-        
-        .team-member.ai {
-            background: linear-gradient(135deg, #ff80ff, #8080ff);
-        ***REMOVED***
-        
-        .team-member.online::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 10px;
-            height: 10px;
-            background: #00ff88;
-            border-radius: 50%;
-            border: 2px solid rgba(20, 20, 35, 0.8);
-        ***REMOVED***
-    </style>
+    <title>Freebuff Forge Dashboard · Lilac Dark</title>
+    <meta name="theme-color" content="#0a0912">
+    <meta name="color-scheme" content="dark">
+    <meta name="description" content="Freebuff platform control surface — dark lilac theme">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <div class="app">
-        <!-- Sidebar -->
-        <div class="sidebar">
-            <div class="nav-item active" onclick="showScreen('projects')">
-                <svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                <span>Projects</span>
-            </div>
-            <div class="nav-item" onclick="showScreen('graph')">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4m0 12v4m10-10h-4M6 12H2m15.364-6.364l-2.828 2.828M8.464 15.536l-2.828 2.828m12.728 0l-2.828-2.828M8.464 8.464L5.636 5.636"></path></svg>
-                <span>Graph</span>
-            </div>
-            <div class="nav-item" onclick="showScreen('workspaces')">
-                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                <span>Spaces</span>
-            </div>
-            <div class="nav-item" onclick="showScreen('notes')">
-                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path></svg>
-                <span>Notes</span>
-            </div>
-        </div>
-        
-        <!-- Main Content -->
-        <div class="main">
-            <!-- Projects Screen -->
-            <div class="screen active" id="projects">
-                <h1 style="font-size: 42px; font-weight: 200; margin-bottom: 10px;">Your Projects</h1>
-                <p style="color: rgba(255,255,255,0.5); margin-bottom: 30px;">Project-centric workspace. Click any project to open team chat.</p>
-                
-                <div class="projects-grid">
-                    <div class="project-card" onclick="openProjectChat('ТСЖ Солнечный')">
-                        <div class="project-header">
-                            <div>
-                                <div class="project-title"> ТСЖ Солнечный</div>
-                                <div style="font-size: 13px; color: rgba(255,255,255,0.6);">CRM, сайт, управление</div>
-                            </div>
-                            <div class="project-status">Active</div>
-                        </div>
-                        <div class="project-resources">
-                            <span class="resource-tag">📱 Telegram</span>
-                            <span class="resource-tag">💼 amoCRM</span>
-                            <span class="resource-tag">📊 Google Sheets</span>
-                        </div>
-                        <div class="team-members">
-                            <div class="team-member online" title="Denis (Owner)">👤</div>
-                            <div class="team-member ai online" title="Backend Agent">🤖</div>
-                            <div class="team-member" title="Reviewer">👁️</div>
-                            <div class="team-member ai" title="Architect">🏗️</div>
-                        </div>
-                    </div>
-                    
-                    <div class="project-card" onclick="openProjectChat('Контент-завод')">
-                        <div class="project-header">
-                            <div>
-                                <div class="project-title">📰 Контент-завод</div>
-                                <div style="font-size: 13px; color: rgba(255,255,255,0.6);">Блогинг, YouTube, статьи</div>
-                            </div>
-                            <div class="project-status">Active</div>
-                        </div>
-                        <div class="project-resources">
-                            <span class="resource-tag">📱 Telegram</span>
-                            <span class="resource-tag"> YouTube</span>
-                            <span class="resource-tag">📝 Хабр</span>
-                        </div>
-                        <div class="team-members">
-                            <div class="team-member online" title="Denis"></div>
-                            <div class="team-member ai online" title="Copywriter">✍️</div>
-                            <div class="team-member ai" title="Editor">📝</div>
-                        </div>
-                    </div>
-                    
-                    <div class="project-card" onclick="openProjectChat('FreeBuff')">
-                        <div class="project-header">
-                            <div>
-                                <div class="project-title"> FreeBuff</div>
-                                <div style="font-size: 13px; color: rgba(255,255,255,0.6);">Workspace OS, AI-agents</div>
-                            </div>
-                            <div class="project-status">Active</div>
-                        </div>
-                        <div class="project-resources">
-                            <span class="resource-tag">🐍 Python</span>
-                            <span class="resource-tag">🤖 MCP</span>
-                            <span class="resource-tag">📚 Knowledge</span>
-                        </div>
-                        <div class="team-members">
-                            <div class="team-member online" title="Denis"></div>
-                            <div class="team-member ai online" title="Architect">🏗️</div>
-                            <div class="team-member ai online" title="Developer">💻</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Graph Screen (Obsidian-style) -->
-            <div class="screen" id="graph">
-                <h1 style="font-size: 42px; font-weight: 200; margin-bottom: 10px;">Knowledge Graph</h1>
-                <p style="color: rgba(255,255,255,0.5); margin-bottom: 30px;">Visual connections between projects, resources, and tasks.</p>
-                
-                <div class="graph-container">
-                    <canvas id="graphCanvas"></canvas>
-                    <div class="graph-controls">
-                        <button class="graph-btn" onclick="resetGraphView()" title="Reset view"></button>
-                        <button class="graph-btn" onclick="toggleGraphLabels()" title="Toggle labels">Aa</button>
-                        <button class="graph-btn" onclick="regenerateGraph()" title="Regenerate"></button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Other screens -->
-            <div class="screen" id="workspaces">
-                <h1 style="font-size: 42px; font-weight: 200;">Workspaces</h1>
-                <p style="color: rgba(255,255,255,0.5); margin-top: 20px;">Coming soon...</p>
-            </div>
-            
-            <div class="screen" id="notes">
-                <h1 style="font-size: 42px; font-weight: 200;">Smart Notes</h1>
-                <p style="color: rgba(255,255,255,0.5); margin-top: 20px;">Voice notes auto-routed to projects.</p>
-            </div>
-        </div>
+    <!-- Decorative animated aurora background (pure CSS, pointer-events: none) -->
+    <div class="aurora" aria-hidden="true">
+        <div class="aurora-blob blob-1"></div>
+        <div class="aurora-blob blob-2"></div>
+        <div class="aurora-blob blob-3"></div>
+        <div class="aurora-noise"></div>
     </div>
-    
-    <!-- Project Chat Overlay -->
-    <div class="chat-overlay" id="chatOverlay">
-        <div class="chat-header">
-            <div class="chat-project-info">
-                <h2 id="chatProjectTitle">Project</h2>
-                <p id="chatProjectStatus">Team chat • 4 members online</p>
+
+    <div id="app-grid">
+
+        <!-- R1: Metrics Strip (60px) — 6 cells -->
+        <header id="metrics-strip" role="banner" aria-label="Platform metrics">
+            <div class="metric-cell" data-key="platform">
+                <span class="metric-label">PLATFORM</span>
+                <span class="metric-val" id="m-platform">—</span>
             </div>
-            <button class="chat-close" onclick="closeChat()">✕</button>
-        </div>
-        
-        <div class="chat-messages" id="chatMessages"></div>
-        
-        <div class="chat-input-container">
-            <div class="chat-input-wrapper">
-                <input type="text" class="chat-input" id="chatInput" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
-                <button class="chat-send" onclick="sendMessage()">Send</button>
+            <div class="metric-cell" data-key="registry">
+                <span class="metric-label">REGISTRY</span>
+                <span class="metric-val" id="m-registry">—</span>
             </div>
-        </div>
+            <div class="metric-cell" data-key="projects">
+                <span class="metric-label">PROJECTS</span>
+                <span class="metric-val" id="m-projects">—</span>
+            </div>
+            <div class="metric-cell" data-key="campaign">
+                <span class="metric-label">CAMPAIGN</span>
+                <span class="metric-val" id="m-campaign">—</span>
+            </div>
+            <div class="metric-cell" data-key="p95cost">
+                <span class="metric-label">P95 COST</span>
+                <span class="metric-val" id="m-p95">—</span>
+            </div>
+            <div class="metric-cell" data-key="sys">
+                <span class="metric-label">SYS</span>
+                <span class="metric-val" id="m-sys">
+                    <span id="m-clock">--:--:--</span>
+                    <button id="btn-pause" type="button" aria-label="Pause auto-refresh" title="Toggle auto-refresh">⏸</button>
+                </span>
+            </div>
+        </header>
+
+        <!-- R2 C1: Sidebar — Project List (250px) -->
+        <aside id="sidebar-projects" role="navigation" aria-label="Projects">
+            <h2 class="panel-title">PROJECTS</h2>
+            <ul id="project-list" role="listbox" tabindex="0" aria-label="Registered projects">
+                <li class="placeholder">loading…</li>
+            </ul>
+        </aside>
+
+        <!-- R2 C2: Center — Pipeline Visualization (1fr) -->
+        <main id="center-pipeline" role="main" aria-label="Pipeline details">
+            <header id="project-header" class="project-header-empty">
+                <h2 class="panel-title">SELECT A PROJECT</h2>
+                <p class="hint">pick from the sidebar to inspect registry + chain</p>
+            </header>
+            <section id="project-detail" class="hidden" aria-label="Project detail">
+                <div class="detail-row"><span class="detail-key">ID</span><span class="detail-val" id="d-id">—</span></div>
+                <div class="detail-row"><span class="detail-key">STATUS</span><span class="detail-val" id="d-status">—</span></div>
+                <div class="detail-row"><span class="detail-key">ROOT</span><span class="detail-val mono" id="d-root">—</span></div>
+                <div class="detail-row"><span class="detail-key">REGISTERED</span><span class="detail-val" id="d-registered">—</span></div>
+                <div class="detail-row"><span class="detail-key">LAST RUN</span><span class="detail-val" id="d-lastrun">—</span></div>
+                <div class="detail-row"><span class="detail-key">LAST OVERALL</span><span class="detail-val" id="d-overall">—</span></div>
+                <div class="detail-row"><span class="detail-key">LAST CHAIN</span><span class="detail-val" id="d-chainlen">—</span></div>
+            </section>
+            <section id="chain-track-wrap" class="hidden" aria-label="Pipeline chain">
+                <h3 class="panel-subtitle">PIPELINE CHAIN (14 stages)</h3>
+                <div id="chain-track" role="list" aria-label="14-stage chain"></div>
+                <p class="hint" id="chain-hint">scroll horizontally to see all stages</p>
+            </section>
+            <section id="chain-empty" class="chain-empty" aria-live="polite">
+                <pre aria-hidden="true">
+    ╔════════════════════════════════════════════╗
+    ║   FREE BUFF                                ║
+    ║   FORGE  DASHBOARD                         ║
+    ║                                            ║
+    ║   < select project on the left >           ║
+    ╚════════════════════════════════════════════╝
+                </pre>
+            </section>
+        </main>
+
+        <!-- R2 C3: Right Aside — Global Health (300px) -->
+        <aside id="right-health" role="complementary" aria-label="Platform health">
+            <h2 class="panel-title">GLOBAL HEALTH</h2>
+            <div class="health-row"><span class="health-key">API</span><span class="health-val" id="h-status">—</span></div>
+            <div class="health-row"><span class="health-key">VERSION</span><span class="health-val mono" id="h-version">—</span></div>
+            <div class="health-row"><span class="health-key">PYTHON</span><span class="health-val mono" id="h-python">—</span></div>
+            <div class="health-row"><span class="health-key">REG PATH</span><span class="health-val mono truncate" id="h-regpath" title="">—</span></div>
+            <div class="health-row"><span class="health-key">VIOLATIONS</span><span class="health-val" id="h-violations">—</span></div>
+            <div class="health-row"><span class="health-key">LOAD ERR</span><span class="health-val mono" id="h-loaderr">—</span></div>
+            <div class="health-row"><span class="health-key">COST JSON</span><span class="health-val" id="h-cost">—</span></div>
+            <div class="health-row"><span class="health-key">LAST FETCH</span><span class="health-val mono" id="h-lastfetch">—</span></div>
+        </aside>
+
+        <!-- R3: Bottom Console (200px) -->
+        <footer id="bottom-console" role="contentinfo" aria-label="Audit log">
+            <div class="console-toolbar">
+                <span class="console-title">CONSOLE</span>
+                <button id="btn-clear-log" type="button" aria-label="Clear console">clear</button>
+            </div>
+            <ul id="log-list" role="log" aria-live="polite" aria-relevant="additions"></ul>
+        </footer>
+
     </div>
-    
-    <script>
-        // Navigation
-        function showScreen(screenId) {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById(screenId).classList.add('active');
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-            
-            if (screenId === 'graph') {
-                setTimeout(initGraph, 100);
-            ***REMOVED***
-        ***REMOVED***
-        
-        // Project Chat Data
-        const projectChats = {
-            'ТСЖ Солнечный': [
-                { author: 'Denis', avatar: '👤', text: 'Need to add payment button to CRM', user: true, time: '10:30' ***REMOVED***,
-                { author: 'Buffy (AI)', avatar: '🤖', text: 'Checking project context... Function already exists in payments.py! I suggest adding installment support. Assign to Backend Agent?', user: false, time: '10:31' ***REMOVED***,
-                { author: 'Denis', avatar: '👤', text: 'Yes, assign it. High priority', user: true, time: '10:32' ***REMOVED***,
-                { author: 'Backend Agent', avatar: '💻', text: '✅ Task accepted. ETA: 2 hours. Will notify when complete.', user: false, time: '10:33' ***REMOVED***,
-            ***REMOVED***,
-            'Контент-завод': [
-                { author: 'Denis', avatar: '👤', text: 'Write a post about AI agents in Termux', user: true, time: '14:20' ***REMOVED***,
-                { author: 'Copywriter AI', avatar: '✍️', text: 'Got it! Analyzing previous posts style... I suggest starting with the context loss story. Write a draft?', user: false, time: '14:21' ***REMOVED***,
-            ***REMOVED***,
-            'FreeBuff': [
-                { author: 'Denis', avatar: '👤', text: 'Fix canonical model in documentation', user: true, time: '09:15' ***REMOVED***,
-                { author: 'Architect AI', avatar: '🏗️', text: 'Understood. Starting audit of existing documents. Found contradictions: Work Area described as entity in 3 places. Fix?', user: false, time: '09:16' ***REMOVED***,
-            ***REMOVED***
-        ***REMOVED***;
-        
-        function openProjectChat(projectName) {
-            const overlay = document.getElementById('chatOverlay');
-            const title = document.getElementById('chatProjectTitle');
-            const messages = document.getElementById('chatMessages');
-            
-            title.textContent = projectName;
-            messages.innerHTML = '';
-            
-            const chatData = projectChats[projectName***REMOVED*** || [
-                { author: 'Buffy (AI)', avatar: '🤖', text: `Project "${projectName***REMOVED***" is active. How can I help?`, user: false, time: new Date().toLocaleTimeString([***REMOVED***, {hour: '2-digit', minute:'2-digit'***REMOVED***) ***REMOVED***
-            ***REMOVED***;
-            
-            chatData.forEach((msg, index) => {
-                setTimeout(() => {
-                    const messageDiv = document.createElement('div');
-                    messageDiv.className = `message ${msg.user ? 'user' : ''***REMOVED***`;
-                    messageDiv.innerHTML = `
-                        <div class="message-avatar">${msg.avatar***REMOVED***</div>
-                        <div class="message-content">
-                            <div class="message-author">${msg.author***REMOVED*** • ${msg.time***REMOVED***</div>
-                            <div class="message-text">${msg.text***REMOVED***</div>
-                        </div>
-                    `;
-                    messages.appendChild(messageDiv);
-                    messages.scrollTop = messages.scrollHeight;
-                ***REMOVED***, index * 200);
-            ***REMOVED***);
-            
-            overlay.classList.add('active');
-        ***REMOVED***
-        
-        function closeChat() {
-            document.getElementById('chatOverlay').classList.remove('active');
-        ***REMOVED***
-        
-        function sendMessage() {
-            const input = document.getElementById('chatInput');
-            const text = input.value.trim();
-            if (!text) return;
-            
-            const messages = document.getElementById('chatMessages');
-            const now = new Date().toLocaleTimeString([***REMOVED***, {hour: '2-digit', minute:'2-digit'***REMOVED***);
-            
-            const messageDiv = document.createElement('div');
-            messageDiv.className = 'message user';
-            messageDiv.innerHTML = `
-                <div class="message-avatar">👤</div>
-                <div class="message-content">
-                    <div class="message-author">Denis • ${now***REMOVED***</div>
-                    <div class="message-text">${text***REMOVED***</div>
-                </div>
-            `;
-            messages.appendChild(messageDiv);
-            messages.scrollTop = messages.scrollHeight;
-            input.value = '';
-            
-            // Simulate AI response
-            setTimeout(() => {
-                const aiDiv = document.createElement('div');
-                aiDiv.className = 'message';
-                aiDiv.innerHTML = `
-                    <div class="message-avatar">🤖</div>
-                    <div class="message-content">
-                        <div class="message-author">Buffy (AI) • ${new Date().toLocaleTimeString([***REMOVED***, {hour: '2-digit', minute:'2-digit'***REMOVED***)***REMOVED***</div>
-                        <div class="message-text">Received! Analyzing request and project context...</div>
-                    </div>
-                `;
-                messages.appendChild(aiDiv);
-                messages.scrollTop = messages.scrollHeight;
-            ***REMOVED***, 1000);
-        ***REMOVED***
-        
-        function handleKeyPress(event) {
-            if (event.key === 'Enter') sendMessage();
-        ***REMOVED***
-        
-        // Graph Visualization (Obsidian-style)
-        let graphNodes = [***REMOVED***;
-        let graphLinks = [***REMOVED***;
-        let simulation = null;
-        let showLabels = true;
-        
-        function initGraph() {
-            const canvas = document.getElementById('graphCanvas');
-            const ctx = canvas.getContext('2d');
-            
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
-            
-            // Generate graph data
-            graphNodes = [
-                { id: 'ТСЖ', group: 'project', x: canvas.width/2, y: canvas.height/2, size: 30 ***REMOVED***,
-                { id: 'CRM', group: 'resource', x: canvas.width/2 - 150, y: canvas.height/2 - 100, size: 20 ***REMOVED***,
-                { id: 'Telegram', group: 'resource', x: canvas.width/2 + 150, y: canvas.height/2 - 100, size: 20 ***REMOVED***,
-                { id: 'Google Sheets', group: 'resource', x: canvas.width/2 - 150, y: canvas.height/2 + 100, size: 20 ***REMOVED***,
-                { id: 'Контент-завод', group: 'project', x: canvas.width/2 + 200, y: canvas.height/2, size: 30 ***REMOVED***,
-                { id: 'YouTube', group: 'resource', x: canvas.width/2 + 300, y: canvas.height/2 - 100, size: 20 ***REMOVED***,
-                { id: 'Хабр', group: 'resource', x: canvas.width/2 + 300, y: canvas.height/2 + 100, size: 20 ***REMOVED***,
-                { id: 'FreeBuff', group: 'project', x: canvas.width/2 - 200, y: canvas.height/2 + 150, size: 30 ***REMOVED***,
-                { id: 'Python', group: 'resource', x: canvas.width/2 - 300, y: canvas.height/2 + 50, size: 20 ***REMOVED***,
-                { id: 'MCP', group: 'resource', x: canvas.width/2 - 300, y: canvas.height/2 + 150, size: 20 ***REMOVED***,
-            ***REMOVED***;
-            
-            graphLinks = [
-                { source: 0, target: 1 ***REMOVED***, { source: 0, target: 2 ***REMOVED***, { source: 0, target: 3 ***REMOVED***,
-                { source: 4, target: 5 ***REMOVED***, { source: 4, target: 6 ***REMOVED***,
-                { source: 7, target: 8 ***REMOVED***, { source: 7, target: 9 ***REMOVED***,
-                { source: 0, target: 4 ***REMOVED***, { source: 0, target: 7 ***REMOVED***,
-            ***REMOVED***;
-            
-            // Simple force simulation
-            animateGraph(ctx, canvas);
-        ***REMOVED***
-        
-        function animateGraph(ctx, canvas) {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw links
-            ctx.strokeStyle = 'rgba(100, 100, 255, 0.3)';
-            ctx.lineWidth = 2;
-            graphLinks.forEach(link => {
-                const source = graphNodes[link.source***REMOVED***;
-                const target = graphNodes[link.target***REMOVED***;
-                ctx.beginPath();
-                ctx.moveTo(source.x, source.y);
-                ctx.lineTo(target.x, target.y);
-                ctx.stroke();
-            ***REMOVED***);
-            
-            // Draw nodes
-            graphNodes.forEach(node => {
-                const gradient = ctx.createRadialGradient(node.x, node.y, 0, node.x, node.y, node.size);
-                if (node.group === 'project') {
-                    gradient.addColorStop(0, 'rgba(0, 255, 255, 0.8)');
-                    gradient.addColorStop(1, 'rgba(255, 0, 255, 0.4)');
-                ***REMOVED*** else {
-                    gradient.addColorStop(0, 'rgba(100, 100, 255, 0.6)');
-                    gradient.addColorStop(1, 'rgba(100, 100, 255, 0.2)');
-                ***REMOVED***
-                
-                ctx.fillStyle = gradient;
-                ctx.beginPath();
-                ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Glow effect
-                ctx.shadowColor = node.group === 'project' ? '#00ffff' : '#6464ff';
-                ctx.shadowBlur = 20;
-                ctx.stroke();
-                ctx.shadowBlur = 0;
-                
-                // Labels
-                if (showLabels) {
-                    ctx.fillStyle = '#fff';
-                    ctx.font = '12px sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(node.id, node.x, node.y);
-                ***REMOVED***
-            ***REMOVED***);
-            
-            // Simple physics
-            graphNodes.forEach((node, i) => {
-                graphNodes.forEach((other, j) => {
-                    if (i === j) return;
-                    const dx = node.x - other.x;
-                    const dy = node.y - other.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 100) {
-                        node.x += dx * 0.01;
-                        node.y += dy * 0.01;
-                    ***REMOVED***
-                ***REMOVED***);
-            ***REMOVED***);
-            
-            requestAnimationFrame(() => animateGraph(ctx, canvas));
-        ***REMOVED***
-        
-        function resetGraphView() {
-            const canvas = document.getElementById('graphCanvas');
-            graphNodes.forEach(node => {
-                node.x = canvas.width / 2 + (Math.random() - 0.5) * 200;
-                node.y = canvas.height / 2 + (Math.random() - 0.5) * 200;
-            ***REMOVED***);
-        ***REMOVED***
-        
-        function toggleGraphLabels() {
-            showLabels = !showLabels;
-        ***REMOVED***
-        
-        function regenerateGraph() {
-            const canvas = document.getElementById('graphCanvas');
-            initGraph();
-        ***REMOVED***
-        
-        // Initialize
-        window.addEventListener('resize', () => {
-            if (document.getElementById('graph').classList.contains('active')) {
-                initGraph();
-            ***REMOVED***
-        ***REMOVED***);
-    </script>
+
+    <script src="/static/app.js" defer></script>
 </body>
 </html>

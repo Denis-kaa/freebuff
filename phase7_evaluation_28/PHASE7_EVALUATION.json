@@ -1,0 +1,140 @@
+{
+  "phase": "7",
+  "status": "COMPLETE",
+  "version": "5.189.24",
+  "date": "2026-08-17",
+  "prompt": "pompts_11/090_19_phase7_contract_reconciliation.md",
+  "baseline": {
+    "command": "python -m pytest tests_09/test_opportunity_engine.py tests_09/test_intelligence_loop_phase5.py tests_09/test_whim_capture.py tests_09/test_factory_registry.py -q --tb=short",
+    "collected": 111,
+    "passed": 111,
+    "failed": 0,
+    "skipped": 0
+  ***REMOVED***,
+  "repository_findings": [
+    {
+      "gap": "GAP A",
+      "title": "Opportunity -> ForgeFacade напрямую, минуя Factory selection",
+      "evidence": "execute() вызывал ForgeFacade.run_chain(opp.project_id, ...) строкой, без FactoryRegistry.select_forge",
+      "status": "CLOSED",
+      "closure_task": "Task B"
+    ***REMOVED***,
+    {
+      "gap": "GAP B",
+      "title": "Intelligence lifecycle не интегрирован с EventBus",
+      "evidence": "advance/execute/propose/whim_capture не публиковали события (planned, not emitted)",
+      "status": "CLOSED",
+      "closure_task": "Task C"
+    ***REMOVED***,
+    {
+      "gap": "GAP C",
+      "title": "Расхождение Opportunity contract/documentation/runtime schema",
+      "evidence": "INTELLIGENCE_FACTORY_CONTRACT_V1.md §E (15 полей) vs runtime dataclass (24 поля); CONTRACT_REGISTRY §C.6 drift #5",
+      "status": "CLOSED",
+      "closure_task": "Task A"
+    ***REMOVED***
+  ***REMOVED***,
+  "contracts": [
+    {
+      "contract_id": "opportunity.schema",
+      "name": "Opportunity Record Schema",
+      "canonical": "implementation (24 fields)",
+      "status": "CURRENT",
+      "documentation": "INTELLIGENCE_FACTORY_CONTRACT_V1.md §E + §E.1",
+      "drift": "CLOSED"
+    ***REMOVED***,
+    {
+      "contract_id": "opportunity.execute",
+      "name": "Opportunity Forge Invocation",
+      "events": ["execution.started", "execution.completed", "execution.failed", "opportunity.deferred", "opportunity.reactivated", "opportunity.completed", "opportunity.failed", "scenario.selected"***REMOVED***,
+      "status": "CURRENT"
+    ***REMOVED***,
+    {
+      "contract_id": "whim.promote",
+      "name": "Whim -> Opportunity Promotion",
+      "events": ["whim.captured", "whim.classified", "whim.promoted", "whim.deferred"***REMOVED***,
+      "status": "CURRENT"
+    ***REMOVED***
+  ***REMOVED***,
+  "factory_integration": {
+    "path": "Opportunity -> _derive_capability -> FactoryRegistry.select_forge -> ForgePassport -> ForgeFacade.run_chain",
+    "symbols": ["_derive_capability", "_select_factory_forge", "_resolve_project", "execute"***REMOVED***,
+    "provenance": "provenance['factory_selection'***REMOVED*** = {factory_id, forge_id, capability***REMOVED*** | {fallback: True***REMOVED***",
+    "execution_boundary": "ForgeFacade.run_chain (unchanged, sole bridge)",
+    "backward_compat": true
+  ***REMOVED***,
+  "event_integration": {
+    "events_emitted": [
+      "execution.started", "execution.completed", "execution.failed",
+      "opportunity.deferred", "opportunity.reactivated", "opportunity.completed", "opportunity.failed",
+      "scenario.selected",
+      "whim.captured", "whim.classified", "whim.promoted", "whim.deferred"
+    ***REMOVED***,
+    "bus": "scripts_01/event_bus.py (canonical, no second schema)",
+    "emitter": "_emit_event (best-effort, event_bus=None -> no-op)",
+    "consumers": ["_cli_run (get_default_event_bus)", "EventBus.get_events (SQLite storage)"***REMOVED***
+  ***REMOVED***,
+  "call_graph": [
+    {
+      "from": "Whim", "to": "Opportunity", "symbol": "whim_capture.promote",
+      "file": "scripts_01/whim_capture.py", "test": "test_whim_promote_emits_promoted"
+    ***REMOVED***,
+    {
+      "from": "Opportunity", "to": "Scenario", "symbol": "opportunity_engine.propose -> ScenarioRegistry.propose_roles",
+      "file": "scripts_01/opportunity_engine.py", "test": "test_propose_emits_scenario_selected"
+    ***REMOVED***,
+    {
+      "from": "Opportunity", "to": "Factory", "symbol": "_select_factory_forge -> FactoryRegistry.select_forge",
+      "file": "scripts_01/opportunity_engine.py", "test": "test_select_factory_forge_routes_by_capability"
+    ***REMOVED***,
+    {
+      "from": "Factory", "to": "ForgeFacade", "symbol": "execute -> ForgeFacade.run_chain",
+      "file": "scripts_01/opportunity_engine.py", "test": "test_execute_records_factory_selection_and_runs_chain"
+    ***REMOVED***,
+    {
+      "from": "Artifact", "to": "Memory", "symbol": "accumulate -> MemoryStore.store_knowledge",
+      "file": "scripts_01/opportunity_engine.py", "test": "test_persistence_roundtrip_with_factory_selection"
+    ***REMOVED***
+  ***REMOVED***,
+  "tests": {
+    "targeted_file": "tests_09/test_phase7_factory_event.py",
+    "targeted_collected": 26,
+    "targeted_passed": 26,
+    "targeted_failed": 0,
+    "regression_collected": 137,
+    "regression_passed": 137,
+    "regression_failed": 0,
+    "mypy": "0 new errors"
+  ***REMOVED***,
+  "traceability": {
+    "rows": 20,
+    "confirmed": 19,
+    "partial": 0,
+    "missing": 0,
+    "deferred": 1
+  ***REMOVED***,
+  "deferred": [
+    {"item": "Автономный feedback engine", "recommended_phase": "Phase 8"***REMOVED***,
+    {"item": "DOCUMENT_TAGGING foundation", "recommended_phase": "Phase 8/9"***REMOVED***,
+    {"item": "Scenario Intelligence", "recommended_phase": "Phase 8"***REMOVED***,
+    {"item": "Content Factory", "recommended_phase": "Phase 9"***REMOVED***,
+    {"item": "LLM-синтез hypothesis/rationale", "recommended_phase": "Phase 8+"***REMOVED***,
+    {"item": "Полная FactoryRegistry интеграция", "recommended_phase": "Phase 8"***REMOVED***,
+    {"item": "scenario.selection PARTIAL (find_role -> None)", "recommended_phase": "P1.4"***REMOVED***,
+    {"item": "opportunity.execute mypy gap (lazy import)", "recommended_phase": "v1.4"***REMOVED***
+  ***REMOVED***,
+  "changed_files": [
+    {"path": "scripts_01/opportunity_engine.py", "action": "MODIFIED", "purpose": "GAP A+B closure: factory selection, project resolution, event emission"***REMOVED***,
+    {"path": "scripts_01/whim_capture.py", "action": "MODIFIED", "purpose": "GAP B closure: whim.* event emission"***REMOVED***,
+    {"path": "tests_09/test_phase7_factory_event.py", "action": "ADDED", "purpose": "26 targeted integration tests"***REMOVED***,
+    {"path": "docs_10/engineering-memory/INTELLIGENCE_FACTORY_CONTRACT_V1.md", "action": "MODIFIED", "purpose": "§E reconciled to 24-field canonical schema + §E.1 mapping"***REMOVED***,
+    {"path": "docs_10/engineering-memory/CONTRACT_REGISTRY_V1.md", "action": "MODIFIED", "purpose": "drift #5 CLOSED; events-статусы; §C.5 (31 events)"***REMOVED***,
+    {"path": "docs_10/engineering-memory/FACTORY_FORGE_ARCHITECTURE_V1.md", "action": "MODIFIED", "purpose": "§20 #10: 16 -> 24 поля"***REMOVED***,
+    {"path": "phase7_evaluation_28/", "action": "ADDED", "purpose": "evaluation package (01-10 + json + manifest + next-phase)"***REMOVED***
+  ***REMOVED***,
+  "risks": [
+    {"risk": "promote() пишет в DEFAULT_DATA_PATH (data_13/opportunities.yaml)", "mitigation": "тесты герметизированы monkeypatch на tmp"***REMOVED***,
+    {"risk": "ScenarioRegistry() грузит реальные манифесты в тестах", "mitigation": "sys.modules подмена (паттерн _mock_forge_facade)"***REMOVED***,
+    {"risk": "degrade-путь execute() никогда не крашит", "mitigation": "last-resort прямое присвоение FAILED + execution.failed"***REMOVED***
+  ***REMOVED***
+***REMOVED***

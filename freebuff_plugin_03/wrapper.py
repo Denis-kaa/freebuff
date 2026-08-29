@@ -78,6 +78,116 @@ def clean_tui_output(text: str) -> str:
 
 # ── PID-файлы (сессия) ────────────────────────────────────────
 
+# ── Proot autodetection (CON-31 / Phase 5.3-D-2) ────────────────
+
+def _proot_distro_login_available() -> bool:
+    """True если мы можем вызвать `proot-distro login` (т.е. Termux, не proot).
+
+    Используется в паре с _is_inside_proot() для выбора пути запуска бинаря:
+    - Termux (outer): `proot-distro login ubuntu -- {bin***REMOVED***`
+    - inside-proot (Ubuntu / sandboxed env): direct exec `{bin***REMOVED***`
+    См. §подробнее v5.73.0 CHANGELOG.
+    """
+    try:
+        r = subprocess.run(
+            ["proot-distro", "list"***REMOVED***,
+            capture_output=True, text=True, timeout=2,
+        )
+        # "should not be executed under PRoot" → returncode != 0
+        return r.returncode == 0
+    except (FileNotFoundError, OSError, subprocess.TimeoutExpired):
+        return False
+
+
+def _is_inside_proot() -> bool:
+    """True если мы уже внутри proot-distro (Ubuntu) — бинарь можно exec'ить напрямую.
+
+    Логика: если proot-distro НЕ доступен (т.е. мы внутри), И бинарь доступен
+    и executable в нашей файловой системе → direct-exec путь безопасен.
+    Это калька с lightpanda_worker.py: «ныряем» в proot-aware resolution,
+    чтобы избежать вложенного `proot-distro login` из-под proot (запрещено).
+    """
+    if _proot_distro_login_available():
+        return False  # мы в native Termux — wrapper path корректен
+    # proot-distro недоступна → мы внутри. Проверяем, что бинарь доступен.
+    try:
+        return FREEBUFF_BINARY.exists() and os.access(FREEBUFF_BINARY, os.X_OK)
+    except OSError:
+        return False
+
+
+# Single-instance blocker markers (v5.88.0): freebuff допускает только один
+# живой инстанс. Когда он занят (живая интерактивная сессия), spawned-экземпляр
+# печатает 'Freebuff is already running. Only one freebuff instance is allowed
+# at a time.' и предлагает 'Take over'/'Exit' вместо старта TUI → monitor ждёт
+# → timeout. Диспетчер должен отложить (deferral) задачу, а не фейлить её.
+_SINGLE_INSTANCE_MARKERS = (
+    "freebuff is already running",
+    "only one freebuff instance is allowed",
+    "take over",
+)
+
+
+# Ubuntu rootfs кандидаты для inside-proot загрузчика (v5.88.0 fix).
+# Бинарь freebuff слинкован с glibc из Ubuntu rootfs; при direct-exec внутри
+# sandbox загрузчик не находит libc.so (exit 127). Запуск через явный
+# ld-linux-aarch64.so.1 --library-path решает проблему.
+_ROOTFS_CANDIDATES = [
+    Path("/data/data/com.termux/files/usr/var/lib/proot-distro/containers/ubuntu/rootfs"),
+    Path("/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/ubuntu"),
+***REMOVED***
+
+
+def _rootfs_loader_prefix() -> Optional[str***REMOVED***:
+    """Возвращает префикс запуска glibc-бинаря через загрузчик Ubuntu rootfs.
+
+    Inside-proot direct-exec падает с 'libc.so: cannot open shared object file'
+    (exit 127): sandbox не предоставляет glibc по стандартным путям. Явный вызов
+    загрузчика rootfs решает:
+        {ld-linux-aarch64.so.1***REMOVED*** --library-path {libdir***REMOVED*** {bin***REMOVED*** --cwd {cwd***REMOVED***
+
+    Returns:
+        Строку-префикс (loader + --library-path) если загрузчик найден,
+        иначе None (fallback на direct-exec, старое поведение).
+    """
+    for root in _ROOTFS_CANDIDATES:
+        for rel in ("usr/lib/aarch64-linux-gnu", "lib/aarch64-linux-gnu"):
+            loader = root / rel / "ld-linux-aarch64.so.1"
+            libdir = root / rel
+            if loader.exists() and libdir.is_dir():
+                return f"{loader***REMOVED*** --library-path {libdir***REMOVED***"
+    return None
+
+
+def _build_buffer_cmd(work_dir: Path) -> str:
+    """Конструирует shell-команду для запуска freebuff binary.
+
+    - В native Termux: `proot-distro login ubuntu -- {bin***REMOVED*** --cwd {cwd***REMOVED***`
+    - Внутри proot/Ubuntu: rootfs loader prefix (glibc) с fallback на direct exec:
+        `{ld-linux-aarch64.so.1***REMOVED*** --library-path {libdir***REMOVED*** {bin***REMOVED*** --cwd {cwd***REMOVED***`
+    Возвращает shlex-safe строку (используется внутри `script -q ... -c '{cmd***REMOVED***'`).
+    """
+    if _is_inside_proot():
+        loader_prefix = _rootfs_loader_prefix()
+        if loader_prefix:
+            print(
+                f"[FreebuffWrapper***REMOVED*** DETECTED inside-proot — rootfs loader: {loader_prefix***REMOVED***",
+                file=sys.stderr,
+            )
+            # Termux LD_PRELOAD (libtermux-exec-ld-preload.so, bionic exec-shim)
+            # ломает glibc-загрузчик: без снятия freebuff падает с
+            # 'libc.so: cannot open shared object file' (exit 127) — проверено
+            # в tmux (env -u LD_PRELOAD → TUI стартует, 'Connecting…').
+            return f"env -u LD_PRELOAD {loader_prefix***REMOVED*** {FREEBUFF_BINARY***REMOVED*** --cwd {work_dir***REMOVED***"
+        print(
+            f"[FreebuffWrapper***REMOVED*** DETECTED inside-proot — execing binary directly: {FREEBUFF_BINARY***REMOVED***",
+            file=sys.stderr,
+        )
+        # Тот же glibc-бинарь — LD_PRELOAD (Termux bionic exec-shim) ломает и direct exec.
+        return f"env -u LD_PRELOAD {FREEBUFF_BINARY***REMOVED*** --cwd {work_dir***REMOVED***"
+    return f"proot-distro login {PROOT_DISTRO***REMOVED*** -- {FREEBUFF_BINARY***REMOVED*** --cwd {work_dir***REMOVED***"
+
+
 _SESSION_DIR = Path(os.environ.get(
     "PREFIX", "/data/data/com.termux/files/usr"
 )) / "tmp" / ".freebuff_plugin"
@@ -141,8 +251,40 @@ def list_active_pids() -> list[dict***REMOVED***:
 
 # ── AGENTS.md ─────────────────────────────────────────────────
 
+def _backup_agents_md(cwd: Path) -> None:
+    """Бэкапит существующий канонический AGENTS.md в .freebuff_original_agents.
+
+    Восстанавливается monitor.sh после сессии (W-13 fix: канон не теряется).
+    Если бэкап уже есть — не перезаписываем (идемпотентность).
+    """
+    agents_path = cwd / "AGENTS.md"
+    backup_path = cwd / ".freebuff_original_agents"
+    if backup_path.exists():
+        return
+    if agents_path.exists():
+        backup_path.write_text(agents_path.read_text(encoding="utf-8"), encoding="utf-8")
+
+
 def _make_agents_md(cwd: Path, prompt: str, session_id: str) -> Path:
-    """Создаёт временный AGENTS.md с задачей."""
+    """Создаёт временный AGENTS.md: session-заголовок + задача + канонические правила.
+
+    Канонический AGENTS.md (правила платформы) сохраняется ниже заголовка сессии,
+    чтобы запущенный агент видел и задачу, и правила (промт 70: AGENTS.md читается
+    при старте любой сессии). Оригинал бэкапится в `.freebuff_original_agents`
+    (launch) и восстанавливается monitor.sh после сессии.
+    """
+    agents_path = cwd / "AGENTS.md"
+    backup_path = cwd / ".freebuff_original_agents"
+    canonical = ""
+    if backup_path.exists():
+        canonical = backup_path.read_text(encoding="utf-8")
+    elif agents_path.exists():
+        existing = agents_path.read_text(encoding="utf-8", errors="replace")
+        # Guard двойного назначения: (1) повторный launch не дублирует session-контент;
+        # (2) crash-tolerance — если AGENTS.md остался session-файлом после упавшей сессии,
+        # канон не встраивается (пустой), restore сделает monitor.sh на следующей сессии.
+        if "Freebuff Plugin Session" not in existing[:200***REMOVED***:
+            canonical = existing
     content = f"""# Freebuff Plugin Session
 
 Session ID: {session_id***REMOVED***
@@ -159,8 +301,13 @@ Created: {datetime.now(timezone.utc).isoformat()***REMOVED***
 3. Не спрашивай подтверждения — просто делай.
 4. Используй инструменты по необходимости.
 5. Когда закончишь — сохрани результат и завершись.
+
+---
+
+## Канонические правила платформы (AGENTS.md)
+
+{canonical***REMOVED***
 """
-    agents_path = cwd / "AGENTS.md"
     agents_path.write_text(content, encoding="utf-8")
     return agents_path
 
@@ -176,6 +323,37 @@ def _wait_for_result(cwd: Path, timeout: int = 300, poll_interval: float = 2.0) 
     return None
 
 
+def _wait_for_new_result(
+    cwd: Path,
+    baseline: int | None,
+    timeout: int = 300,
+    poll_interval: float = 2.0,
+) -> str | None:
+    """Ждёт НОВЫЙ .freebuff_result (mtime новее baseline).
+
+    Защита от стейл-файла: `.freebuff_result` может уже существовать
+    (в т.ч. git-tracked в корне проекта) — без сравнения mtime мы бы
+    мгновенно прочитали старый результат.
+    """
+    result_file = cwd / ".freebuff_result"
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        if result_file.exists():
+            try:
+                mtime = result_file.stat().st_mtime_ns
+            except OSError:
+                mtime = -1
+            if baseline is None or mtime > baseline:
+                try:
+                    return result_file.read_text(encoding="utf-8")
+                except OSError:
+                    # Читатель мог застать файл в процессе записи — ретрай на след. полле
+                    time.sleep(poll_interval)
+                    continue
+        time.sleep(poll_interval)
+    return None
+
+
 # ═══════════════════════════════════════════════════════════════
 # Phase-based launch (анти-OOM)
 # ═══════════════════════════════════════════════════════════════
@@ -185,6 +363,7 @@ def launch(
     cwd: str | Path | None = None,
     timeout: int = 300,
     session_id: str | None = None,
+    model: str = "auto",
 ) -> dict:
     """
     Phase-based запуск freebuff с передачей промпта через tmux.
@@ -198,6 +377,8 @@ def launch(
         cwd: Рабочая директория.
         timeout: Таймаут в секундах.
         session_id: ID сессии.
+        model: Модель для стартового экрана выбора freebuff ("auto"/"0" = DeepSeek V4 Flash,
+               "1".."5" = позиция в списке). Прокидывается в monitor.sh.
 
     Returns:
         dict: {success, session_id, pid, status***REMOVED***
@@ -218,18 +399,16 @@ def launch(
         return {"success": False, "session_id": "", "pid": None,
                 "status": f"session_start failed: {e***REMOVED***", "error": str(e)***REMOVED***
 
-    # AGENTS.md для контекста
+    # AGENTS.md для контекста: бэкап канона → session-файл (restore делает monitor.sh)
+    _backup_agents_md(work_dir)
     _make_agents_md(work_dir, prompt, sid)
 
     # Выходной файл для захвата вывода
     out_file = work_dir / f".freebuff_output_{sid***REMOVED***.log"
     tmux_session = f"fb_{sid***REMOVED***"
 
-    # Команда Codebuff внутри proot, с захватом через script
-    proot_cmd = (
-        f"proot-distro login {PROOT_DISTRO***REMOVED*** -- "
-        f"{FREEBUFF_BINARY***REMOVED*** --cwd {work_dir***REMOVED***"
-    )
+    # Команда Codebuff: внутри proot — direct exec, иначе proot-distro login (v5.73.0)
+    proot_cmd = _build_buffer_cmd(work_dir)
     tmux_cmd = f"script -q {out_file***REMOVED*** -c '{proot_cmd***REMOVED***'"
 
     # Создаём tmux сессию с Codebuff
@@ -253,7 +432,7 @@ def launch(
     # Monitor.sh — ждёт приглашения Codebuff, отправляет промпт,
     monitor_sh = FREEBUFF_ROOT / "freebuff_plugin_03" / "monitor.sh"
     subprocess.Popen(
-        ["bash", str(monitor_sh), sid, prompt, str(timeout), str(work_dir)***REMOVED***,
+        ["bash", str(monitor_sh), sid, prompt, str(timeout), str(work_dir), model***REMOVED***,
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
     )
 
@@ -261,6 +440,113 @@ def launch(
         "success": True, "session_id": sid, "pid": tmux_pid,
         "status": "launched", "cwd": str(work_dir),
         "message": "Codebuff запущен через tmux, промпт передан в monitor.sh.",
+    ***REMOVED***
+
+
+def launch_and_wait(
+    prompt: str,
+    cwd: str | Path | None = None,
+    timeout: int = 300,
+    session_id: str | None = None,
+    model: str = "auto",
+) -> dict:
+    """
+    Phase-based запуск + ожидание результата (анти-OOM, для cron/диспетчера).
+
+    В отличие от synchronous_oneshot (Python + Codebuff в памяти → OOM-риск),
+    здесь launch() возвращается сразу (Python завершается, память freed),
+    а результат забирается опросом `.freebuff_result` — тот же формат
+    результата, что у synchronous_oneshot (success/output/result/duration).
+
+    Args:
+        prompt: Текст задачи.
+        cwd: Рабочая директория.
+        timeout: Таймаут ожидания результата (с).
+        session_id: ID сессии.
+        model: Модель для стартового экрана выбора freebuff ("auto"/"0" = DeepSeek V4 Flash,
+               "1".."5" = позиция в списке). Прокидывается в launch() → monitor.sh.
+
+    Returns:
+        dict: {success, output, result, session_id, duration, error, returncode***REMOVED***
+    """
+    start = time.time()
+    work_dir = Path(cwd) if cwd else Path.cwd()
+    work_dir.mkdir(parents=True, exist_ok=True)
+
+    # Снапшот существующего .freebuff_result (защита от стейл-файла)
+    result_file = work_dir / ".freebuff_result"
+    baseline: int | None = None
+    if result_file.exists():
+        try:
+            baseline = result_file.stat().st_mtime_ns
+        except OSError:
+            baseline = None
+
+    launched = launch(
+        prompt=prompt,
+        cwd=str(work_dir),
+        timeout=timeout,
+        session_id=session_id,
+        model=model,
+    )
+    if not launched.get("success"):
+        return {
+            "success": False, "output": "", "result": "",
+            "session_id": launched.get("session_id", ""),
+            "duration": round(time.time() - start, 1),
+            "error": launched.get("status", "launch failed"),
+            "returncode": -1,
+        ***REMOVED***
+
+    sid = launched.get("session_id", "")
+    # Опрос нового результата (mtime > baseline)
+    result_text = _wait_for_new_result(work_dir, baseline, timeout=timeout)
+    duration = round(time.time() - start, 1)
+
+    raw_output = ""
+    out_file = work_dir / f".freebuff_output_{sid***REMOVED***.log"
+    if out_file.exists():
+        try:
+            raw_output = out_file.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            raw_output = ""
+        # Cleanup: не копим .freebuff_output_*.log в cwd при каждом cron-запуске
+        try:
+            out_file.unlink()
+        except OSError:
+            pass
+    cleaned = clean_tui_output(raw_output)
+
+    # Single-instance blocker (v5.88.0): если живая сессия уже занимает
+    # единственный инстанс freebuff, spawned-экземпляр печатает
+    # 'Freebuff is already running' + 'Take over'/'Exit' и НЕ стартует →
+    # monitor ждёт → timeout. Это НЕ провал задачи: диспетчер должен
+    # отложить её (deferral), а не фейлить как timeout.
+    # Gate на result_text is None: если .freebuff_result появился — инстанс
+    # реально выполнил задачу (не мог быть заблокирован), и маркер в выводе
+    # может быть просто процитирован в контексте задачи (false positive).
+    blocked_single_instance = result_text is None and any(
+        m in raw_output.lower() for m in _SINGLE_INSTANCE_MARKERS
+    )
+    if blocked_single_instance:
+        error = (
+            "single_instance_busy: freebuff уже запущен — Only one freebuff "
+            "instance is allowed. Задача должна быть отложена (deferral)."
+        )
+    elif result_text is None:
+        error = f"timeout after {timeout***REMOVED***s (phase-based)"
+    else:
+        error = None
+
+    return {
+        "success": result_text is not None and not blocked_single_instance,
+        "output": cleaned,
+        "result": result_text or "",
+        "session_id": sid,
+        "duration": duration,
+        "error": error,
+        "returncode": 0 if (result_text is not None and not blocked_single_instance) else -1,
+        "blocked_single_instance": blocked_single_instance,
     ***REMOVED***
 
 
@@ -331,10 +617,8 @@ def synchronous_oneshot(
         _make_agents_md(work_dir, prompt, sid)
 
         out_file = work_dir / f".freebuff_output_{sid***REMOVED***.log"
-        proot_cmd = (
-            f"proot-distro login {PROOT_DISTRO***REMOVED*** -- "
-            f"{FREEBUFF_BINARY***REMOVED*** --cwd {work_dir***REMOVED***"
-        )
+        # Команда Codebuff: внутри proot — direct exec, иначе proot-distro login (v5.73.0)
+        proot_cmd = _build_buffer_cmd(work_dir)
         cmd = ["script", "-q", str(out_file), "-c", proot_cmd***REMOVED***
 
         proc = subprocess.Popen(

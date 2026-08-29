@@ -1,0 +1,693 @@
+/* ─── Freebuff Forge Dashboard — Lilac Dark Theme (v5.187.1-redesign) ──────
+ * Design system:
+ *   - Deep near-black violet base (#0a0912) + animated aurora blobs (lilac/purple).
+ *   - Glassmorphism panels: rgba bg + backdrop-filter blur + gradient hairline.
+ *   - Card press: scale(.97) + shadow collapse on :active (tactile).
+ *   - Breathing: slow scale/shadow pulse loops on metric cells + chain stages.
+ *   - Responsive: 1400px / 1100px / 760px / 560px breakpoints.
+ *   - Accessibility: prefers-reduced-motion disables animation loops.
+ * All class/ID hooks consumed by app.js are preserved 1:1.
+ * ───────────────────────────────────────────────────────────────────────── */
+
+/* ─── Reset + tokens ───────────────────────────────────────────────────── */
+* { margin: 0; padding: 0; box-sizing: border-box; ***REMOVED***
+
+:root {
+    /* Palette — lilac/purple aurora on near-black violet */
+    --bg-0: #06050c;
+    --bg-1: #0a0912;
+    --bg-2: #110d1f;
+    --panel: rgba(22, 17, 40, 0.55);
+    --panel-solid: #15102a;
+    --panel-alt: rgba(30, 23, 54, 0.5);
+    --hairline: rgba(167, 139, 250, 0.16);
+    --hairline-strong: rgba(167, 139, 250, 0.38);
+
+    --text-primary: #e9e6f7;
+    --text-secondary: #b7aee0;
+    --text-muted: #7c74a3;
+
+    /* Lilac scale */
+    --lilac-50:  #f4f1ff;
+    --lilac-200: #d4c8ff;
+    --lilac-300: #c4b5fd;
+    --lilac-400: #a78bfa;
+    --lilac-500: #8b5cf6;
+    --lilac-600: #7c3aed;
+    --violet-700: #6d28d9;
+    --pink-400: #f0abfc;
+
+    --accent: var(--lilac-400);
+    --accent-dim: var(--lilac-600);
+    --accent-blue: #7dd3fc;
+    --warn: #fcd34d;
+    --error: #f87171;
+    --violet: var(--lilac-300);
+    --neutral: #8b82ad;
+
+    --grad-aurora: linear-gradient(120deg, #8b5cf6 0%, #c084fc 32%, #f0abfc 55%, #a78bfa 78%, #7c3aed 100%);
+    --grad-title: linear-gradient(90deg, #d4c8ff 0%, #a78bfa 45%, #f0abfc 100%);
+
+    --font-mono: "JetBrains Mono", "Fira Code", "Source Code Pro", "Menlo", "Consolas", monospace;
+
+    /* Mouse glow (set by app.js pointermove → --mx / --my) */
+    --mx: 50vw;
+    --my: 50vh;
+
+    --strip-h: 64px;
+    --console-h: 210px;
+    --sidebar-w: 264px;
+    --aside-w: 308px;
+
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --radius: 14px;
+    --radius-sm: 10px;
+***REMOVED***
+
+/* ─── Base ──────────────────────────────────────────────────────────────── */
+html, body {
+    height: 100%;
+    background: var(--bg-0);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.45;
+    overflow: hidden;
+***REMOVED***
+
+a { color: var(--lilac-400); text-decoration: none; ***REMOVED***
+a:hover { text-decoration: underline; color: var(--pink-400); ***REMOVED***
+
+button {
+    background: linear-gradient(180deg, rgba(167,139,250,0.10), rgba(124,58,237,0.05));
+    border: 1px solid var(--hairline);
+    color: var(--lilac-200);
+    padding: 5px 12px;
+    font-family: inherit;
+    font-size: 11px;
+    letter-spacing: 0.4px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: transform 120ms var(--ease-out), border-color 160ms ease, color 160ms ease,
+                box-shadow 200ms ease, background 200ms ease;
+    box-shadow: 0 0 0 rgba(139,92,246,0);
+***REMOVED***
+button:hover {
+    border-color: var(--lilac-400);
+    color: var(--lilac-50);
+    box-shadow: 0 0 14px rgba(139,92,246,0.35), inset 0 0 8px rgba(139,92,246,0.12);
+***REMOVED***
+button:active { transform: scale(0.94); ***REMOVED***
+button:focus-visible { outline: 2px solid var(--lilac-400); outline-offset: 2px; ***REMOVED***
+
+/* ─── Aurora background (pure CSS, pointer-events: none) ───────────────── */
+.aurora {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    overflow: hidden;
+    background:
+        radial-gradient(1200px 800px at 12% 8%, rgba(124,58,237,0.18), transparent 60%),
+        radial-gradient(1000px 700px at 88% 20%, rgba(192,132,252,0.14), transparent 60%),
+        radial-gradient(900px 900px at 60% 110%, rgba(167,139,250,0.12), transparent 60%);
+***REMOVED***
+.aurora-blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.5;
+    will-change: transform;
+    animation: aurora-drift 26s ease-in-out infinite alternate;
+***REMOVED***
+.blob-1 {
+    width: 46vw; height: 46vw;
+    left: -12vw; top: -16vw;
+    background: radial-gradient(circle, rgba(139,92,246,0.55), transparent 70%);
+    animation-duration: 30s;
+***REMOVED***
+.blob-2 {
+    width: 40vw; height: 40vw;
+    right: -10vw; top: 4vh;
+    background: radial-gradient(circle, rgba(240,171,252,0.38), transparent 70%);
+    animation-duration: 24s;
+    animation-delay: -8s;
+***REMOVED***
+.blob-3 {
+    width: 52vw; height: 52vw;
+    left: 28vw; bottom: -26vw;
+    background: radial-gradient(circle, rgba(124,58,237,0.45), transparent 72%);
+    animation-duration: 36s;
+    animation-delay: -14s;
+***REMOVED***
+.aurora-noise {
+    position: absolute; inset: 0;
+    opacity: 0.35;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/></filter><rect width='140' height='140' filter='url(%23n)' opacity='0.35'/></svg>");
+    mix-blend-mode: overlay;
+***REMOVED***
+@keyframes aurora-drift {
+    0%   { transform: translate3d(0, 0, 0) scale(1); ***REMOVED***
+    50%  { transform: translate3d(6vw, -3vh, 0) scale(1.12); ***REMOVED***
+    100% { transform: translate3d(-4vw, 4vh, 0) scale(0.94); ***REMOVED***
+***REMOVED***
+
+/* ─── Mouse glow (app.js sets --mx/--my on pointermove) ─────────────────── */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background: radial-gradient(520px 520px at var(--mx) var(--my),
+                rgba(167,139,250,0.10), transparent 65%);
+***REMOVED***
+
+/* ─── App grid (3 rows × 3 main columns) ───────────────────────────────── */
+#app-grid {
+    position: relative;
+    z-index: 1;
+    height: 100vh;
+    width: 100vw;
+    display: grid;
+    grid-template-rows: var(--strip-h) 1fr var(--console-h);
+    grid-template-columns: var(--sidebar-w) 1fr var(--aside-w);
+    grid-template-areas:
+        "metrics  metrics  metrics"
+        "sidebar  center   aside"
+        "console  console  console";
+    gap: 8px;
+    padding: 8px;
+***REMOVED***
+#app-grid > * {
+    background: var(--panel);
+    backdrop-filter: blur(18px) saturate(140%);
+    -webkit-backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius);
+    box-shadow: 0 10px 34px rgba(4, 2, 12, 0.55), inset 0 1px 0 rgba(255,255,255,0.04);
+***REMOVED***
+
+/* ─── Metrics strip ────────────────────────────────────────────────────── */
+#metrics-strip {
+    grid-area: metrics;
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    align-items: stretch;
+    padding: 8px 10px;
+    gap: 8px;
+    overflow: hidden;
+***REMOVED***
+.metric-cell {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(160deg, rgba(167,139,250,0.07), rgba(124,58,237,0.02));
+    border: 1px solid rgba(167,139,250,0.10);
+    transition: transform 200ms var(--ease-out), border-color 200ms ease,
+                box-shadow 260ms ease, background 260ms ease;
+    animation: breathe-cell 5.5s ease-in-out infinite;
+***REMOVED***
+.metric-cell:nth-child(2) { animation-delay: -1.2s; ***REMOVED***
+.metric-cell:nth-child(3) { animation-delay: -2.4s; ***REMOVED***
+.metric-cell:nth-child(4) { animation-delay: -3.6s; ***REMOVED***
+.metric-cell:nth-child(5) { animation-delay: -4.8s; ***REMOVED***
+.metric-cell:hover {
+    transform: translateY(-2px);
+    border-color: var(--hairline-strong);
+    box-shadow: 0 6px 22px rgba(124,58,237,0.22);
+    background: linear-gradient(160deg, rgba(167,139,250,0.14), rgba(124,58,237,0.05));
+***REMOVED***
+.metric-cell:active { transform: scale(0.96); ***REMOVED***
+.metric-label {
+    font-size: 9px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+***REMOVED***
+.metric-val {
+    font-size: 14px;
+    color: var(--lilac-300);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-shadow: 0 0 14px rgba(167,139,250,0.45);
+***REMOVED***
+.metric-val.offline { color: var(--error); text-shadow: 0 0 14px rgba(248,113,113,0.5); ***REMOVED***
+.metric-val.degraded { color: var(--warn); text-shadow: 0 0 14px rgba(252,211,77,0.45); ***REMOVED***
+.metric-val.muted { color: var(--text-muted); text-shadow: none; ***REMOVED***
+
+#m-clock { color: var(--text-primary); letter-spacing: 1px; ***REMOVED***
+#btn-pause { font-size: 12px; min-width: 30px; padding: 2px 7px; ***REMOVED***
+
+@keyframes breathe-cell {
+    0%, 100% { box-shadow: 0 0 0 rgba(139,92,246,0); ***REMOVED***
+    50%      { box-shadow: 0 0 18px rgba(139,92,246,0.16); ***REMOVED***
+***REMOVED***
+
+/* ─── Sidebar ──────────────────────────────────────────────────────────── */
+#sidebar-projects {
+    grid-area: sidebar;
+    overflow-y: auto;
+    padding: 12px 10px;
+***REMOVED***
+.panel-title {
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1.6px;
+    background: var(--grad-title);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    border-bottom: 1px solid var(--hairline);
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+***REMOVED***
+
+#project-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+***REMOVED***
+.project-item {
+    padding: 9px 12px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(165deg, rgba(167,139,250,0.06), rgba(30,23,54,0.35));
+    border: 1px solid rgba(167,139,250,0.08);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    transition: transform 160ms var(--ease-out), border-color 200ms ease,
+                box-shadow 240ms ease, background 240ms ease;
+    user-select: none;
+    animation: breathe-card 6s ease-in-out infinite;
+***REMOVED***
+.project-item:nth-child(odd) { animation-delay: -3s; ***REMOVED***
+.project-item:hover {
+    transform: translateY(-2px) scale(1.012);
+    border-color: var(--lilac-500);
+    background: linear-gradient(165deg, rgba(167,139,250,0.14), rgba(124,58,237,0.06));
+    box-shadow: 0 8px 26px rgba(124,58,237,0.28), 0 0 0 1px rgba(167,139,250,0.12);
+***REMOVED***
+.project-item:active { transform: scale(0.96); ***REMOVED***
+.project-item.active {
+    border-color: var(--lilac-400);
+    background: linear-gradient(165deg, rgba(167,139,250,0.20), rgba(124,58,237,0.10));
+    box-shadow: 0 0 22px rgba(139,92,246,0.30), inset 0 0 16px rgba(139,92,246,0.10);
+***REMOVED***
+.project-item:focus {
+    outline: none;
+    border-color: var(--lilac-400);
+***REMOVED***
+.project-item:focus.active { background: linear-gradient(165deg, rgba(167,139,250,0.24), rgba(124,58,237,0.12)); ***REMOVED***
+.project-item .pi-id {
+    font-size: 12px;
+    color: var(--text-primary);
+    font-weight: 700;
+    letter-spacing: 0.2px;
+***REMOVED***
+.project-item .pi-meta {
+    font-size: 10px;
+    color: var(--text-muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+***REMOVED***
+.placeholder { color: var(--text-muted); padding: 10px 12px; ***REMOVED***
+
+@keyframes breathe-card {
+    0%, 100% { box-shadow: 0 2px 8px rgba(4,2,12,0.3); ***REMOVED***
+    50%      { box-shadow: 0 4px 20px rgba(124,58,237,0.16); ***REMOVED***
+***REMOVED***
+
+/* ─── Center ───────────────────────────────────────────────────────────── */
+#center-pipeline {
+    grid-area: center;
+    overflow: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+***REMOVED***
+#center-pipeline.mock-data {
+    border: 1px solid var(--hairline-strong);
+    box-shadow: 0 0 26px rgba(252,211,77,0.12), inset 0 0 24px rgba(252,211,77,0.05);
+***REMOVED***
+
+.project-header-empty {
+    margin: auto 0;
+    text-align: center;
+    color: var(--text-muted);
+    padding: 24px;
+***REMOVED***
+.project-header-empty h2 { margin-bottom: 8px; ***REMOVED***
+.hint { color: var(--text-muted); font-size: 11px; ***REMOVED***
+
+#project-detail {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 6px 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--hairline);
+***REMOVED***
+.detail-row {
+    display: flex;
+    gap: 8px;
+    font-size: 12px;
+    padding: 5px 8px;
+    border-radius: 8px;
+    background: rgba(167,139,250,0.04);
+    border: 1px solid rgba(167,139,250,0.06);
+    transition: border-color 180ms ease, background 180ms ease;
+***REMOVED***
+.detail-row:hover { border-color: rgba(167,139,250,0.22); background: rgba(167,139,250,0.08); ***REMOVED***
+.detail-key {
+    color: var(--text-muted);
+    text-transform: uppercase;
+    min-width: 100px;
+    letter-spacing: 0.6px;
+***REMOVED***
+.detail-val { color: var(--lilac-300); text-shadow: 0 0 10px rgba(167,139,250,0.3); ***REMOVED***
+.detail-val.mono { font-size: 11px; ***REMOVED***
+.mono { font-family: var(--font-mono); ***REMOVED***
+.truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 220px;
+***REMOVED***
+
+#chain-track-wrap { margin-top: 14px; padding-top: 12px; ***REMOVED***
+.panel-subtitle {
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 10px;
+***REMOVED***
+#chain-track {
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 10px 4px 14px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--lilac-600) transparent;
+***REMOVED***
+#chain-track::-webkit-scrollbar { height: 8px; ***REMOVED***
+#chain-track::-webkit-scrollbar-track { background: rgba(167,139,250,0.05); border-radius: 8px; ***REMOVED***
+#chain-track::-webkit-scrollbar-thumb { background: var(--lilac-600); border-radius: 8px; ***REMOVED***
+
+.chain-stage {
+    flex-shrink: 0;
+    min-width: 118px;
+    padding: 12px 10px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(170deg, rgba(167,139,250,0.07), rgba(26,20,48,0.5));
+    border: 1px solid rgba(167,139,250,0.12);
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    transition: transform 180ms var(--ease-out), border-color 240ms ease,
+                box-shadow 280ms ease, background 240ms ease;
+    animation: breathe-stage 7s ease-in-out infinite;
+***REMOVED***
+.chain-stage:nth-child(even) { animation-delay: -3.5s; ***REMOVED***
+.chain-stage:hover {
+    transform: translateY(-3px) scale(1.03);
+    border-color: var(--lilac-400);
+    box-shadow: 0 10px 30px rgba(124,58,237,0.32), 0 0 0 1px rgba(167,139,250,0.15);
+    z-index: 2;
+***REMOVED***
+.chain-stage:active { transform: scale(0.95); ***REMOVED***
+.chain-stage .stage-role {
+    font-size: 11px;
+    color: var(--text-secondary);
+    text-transform: lowercase;
+    letter-spacing: 0.3px;
+***REMOVED***
+.chain-stage .stage-mode {
+    font-size: 9px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+***REMOVED***
+.chain-stage .stage-status {
+    font-size: 10px;
+    padding: 2px 6px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    border: 1px solid currentColor;
+    border-radius: 6px;
+    background: rgba(0,0,0,0.18);
+***REMOVED***
+.chain-stage .stage-duration {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-align: right;
+***REMOVED***
+
+@keyframes breathe-stage {
+    0%, 100% { box-shadow: 0 2px 8px rgba(4,2,12,0.3); ***REMOVED***
+    50%      { box-shadow: 0 4px 22px rgba(139,92,246,0.18); ***REMOVED***
+***REMOVED***
+
+/* ─── Mode styling ─────────────────────────────────────────────────────── */
+.chain-stage.mode-full_cycle {
+    border-width: 1.5px; border-style: solid;
+    border-color: rgba(139,92,246,0.55);
+***REMOVED***
+.chain-stage.mode-check_only {
+    border-width: 1px; border-style: dashed;
+    opacity: 0.85;
+***REMOVED***
+.chain-stage.mode-conditional_skip { border-width: 1px; border-style: dotted; ***REMOVED***
+.chain-stage.mode-unknown_mode { border-color: var(--error); ***REMOVED***
+
+/* ─── Status colors ────────────────────────────────────────────────────── */
+.status-ok           { color: var(--lilac-400); text-shadow: 0 0 8px rgba(167,139,250,0.5); ***REMOVED***
+.status-run_ok       { color: var(--accent-blue); text-shadow: 0 0 8px rgba(125,211,252,0.45); ***REMOVED***
+.status-partial      { color: var(--warn); text-shadow: 0 0 8px rgba(252,211,77,0.4); ***REMOVED***
+.status-degraded     { color: var(--warn); text-shadow: 0 0 8px rgba(252,211,77,0.4); ***REMOVED***
+.status-missing      { color: var(--neutral); ***REMOVED***
+.status-run_failed   { color: var(--error); text-shadow: 0 0 8px rgba(248,113,113,0.45); ***REMOVED***
+.status-init_error   {
+    color: var(--error);
+    font-weight: 700;
+    animation: pulse-error 1.3s ease-in-out infinite;
+***REMOVED***
+.status-skipped      { color: var(--violet); text-shadow: 0 0 8px rgba(196,181,253,0.4); ***REMOVED***
+.status-unknown_mode_role { color: var(--error); background: rgba(248,113,113,0.10); ***REMOVED***
+
+@keyframes pulse-error {
+    0%, 100% { border-color: var(--error); ***REMOVED***
+    50%      { border-color: var(--warn); ***REMOVED***
+***REMOVED***
+
+.chain-empty pre {
+    font-family: var(--font-mono);
+    color: var(--lilac-500);
+    font-size: 12px;
+    text-align: center;
+    margin: auto;
+    white-space: pre;
+    text-shadow: 0 0 18px rgba(139,92,246,0.5);
+    animation: glow-float 4s ease-in-out infinite;
+***REMOVED***
+@keyframes glow-float {
+    0%, 100% { text-shadow: 0 0 14px rgba(139,92,246,0.35); opacity: 0.85; ***REMOVED***
+    50%      { text-shadow: 0 0 26px rgba(192,132,252,0.6); opacity: 1; ***REMOVED***
+***REMOVED***
+
+/* ─── Right aside ──────────────────────────────────────────────────────── */
+#right-health {
+    grid-area: aside;
+    overflow-y: auto;
+    padding: 12px 12px;
+***REMOVED***
+.health-row {
+    display: flex;
+    flex-direction: column;
+    padding: 7px 9px;
+    margin-bottom: 6px;
+    border-radius: 9px;
+    background: rgba(167,139,250,0.04);
+    border: 1px solid rgba(167,139,250,0.06);
+    gap: 2px;
+    transition: border-color 180ms ease, transform 140ms var(--ease-out);
+***REMOVED***
+.health-row:hover { border-color: rgba(167,139,250,0.22); transform: translateX(2px); ***REMOVED***
+.health-row:active { transform: scale(0.98); ***REMOVED***
+.health-key {
+    font-size: 9px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.9px;
+***REMOVED***
+.health-val {
+    font-size: 12px;
+    color: var(--lilac-300);
+    word-break: break-word;
+***REMOVED***
+.health-val.offline { color: var(--error); ***REMOVED***
+.health-val.degraded { color: var(--warn); ***REMOVED***
+.health-val.ok { color: var(--lilac-400); text-shadow: 0 0 8px rgba(167,139,250,0.4); ***REMOVED***
+
+/* ─── Console ──────────────────────────────────────────────────────────── */
+#bottom-console {
+    grid-area: console;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+***REMOVED***
+.console-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 14px;
+    border-bottom: 1px solid var(--hairline);
+    background: rgba(15, 11, 30, 0.45);
+***REMOVED***
+.console-title {
+    font-size: 10px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    background: var(--grad-title);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+***REMOVED***
+#log-list {
+    list-style: none;
+    overflow-y: auto;
+    flex: 1;
+    padding: 6px 14px;
+    font-size: 11px;
+    display: flex;
+    flex-direction: column-reverse;
+***REMOVED***
+.log-line {
+    padding: 2px 0;
+    display: flex;
+    gap: 10px;
+    white-space: pre-wrap;
+    animation: log-in 240ms var(--ease-out);
+***REMOVED***
+@keyframes log-in {
+    from { opacity: 0; transform: translateY(4px); ***REMOVED***
+    to   { opacity: 1; transform: translateY(0); ***REMOVED***
+***REMOVED***
+.log-line.log-error { color: var(--error); ***REMOVED***
+.log-line.log-warn  { color: var(--warn); ***REMOVED***
+.log-line.log-info  { color: var(--text-secondary); ***REMOVED***
+.log-line.log-2xx   { color: var(--lilac-400); ***REMOVED***
+.log-line.log-4xx   { color: var(--warn); ***REMOVED***
+.log-line.log-5xx   { color: var(--error); ***REMOVED***
+.log-time { color: var(--text-muted); ***REMOVED***
+.log-code { font-weight: 700; color: var(--lilac-300); ***REMOVED***
+.log-msg { color: var(--text-primary); ***REMOVED***
+
+/* ─── Hide helper ──────────────────────────────────────────────────────── */
+.hidden { display: none !important; ***REMOVED***
+
+/* ─── Custom scrollbar (global) ────────────────────────────────────────── */
+::-webkit-scrollbar { width: 8px; height: 8px; ***REMOVED***
+::-webkit-scrollbar-track { background: rgba(167,139,250,0.04); ***REMOVED***
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--lilac-600), var(--violet-700));
+    border-radius: 8px;
+***REMOVED***
+::-webkit-scrollbar-thumb:hover { background: var(--lilac-500); ***REMOVED***
+* { scrollbar-width: thin; scrollbar-color: var(--lilac-600) transparent; ***REMOVED***
+
+/* ─── Responsive: 1400px ───────────────────────────────────────────────── */
+@media (max-width: 1400px) {
+    :root {
+        --sidebar-w: 230px;
+        --aside-w: 260px;
+    ***REMOVED***
+    .metric-val { font-size: 12.5px; ***REMOVED***
+***REMOVED***
+
+/* ─── Responsive: 1100px — stack right aside under center ───────────────── */
+@media (max-width: 1100px) {
+    #app-grid {
+        grid-template-columns: var(--sidebar-w) 1fr;
+        grid-template-rows: var(--strip-h) 1fr auto var(--console-h);
+        grid-template-areas:
+            "metrics  metrics"
+            "sidebar  center"
+            "health   health"
+            "console  console";
+    ***REMOVED***
+    #right-health {
+        display: block; /* CR v5.187.1 fix: tablet shows health as full-width row
+                           under center — NO data loss (was display:none before) */
+        max-height: 180px;
+        overflow-y: auto;
+    ***REMOVED***
+***REMOVED***
+
+/* ─── Responsive: 760px — stack sidebar above center ───────────────────── */
+@media (max-width: 760px) {
+    :root {
+        --strip-h: 58px;
+        --console-h: 180px;
+    ***REMOVED***
+    #app-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto 1fr var(--console-h);
+        grid-template-areas:
+            "metrics"
+            "sidebar"
+            "health"
+            "center"
+            "console";
+    ***REMOVED***
+    /* Android perf (CR v5.187.1 fix): drop backdrop-filter blur on mobile —
+       repaint-heavy on low-end WebViews. Aurora blobs reduced to 2. */
+    #app-grid > * { backdrop-filter: none; -webkit-backdrop-filter: none; ***REMOVED***
+    #sidebar-projects {
+        max-height: 190px;
+    ***REMOVED***
+    #right-health {
+        max-height: 150px;
+    ***REMOVED***
+    #metrics-strip {
+        grid-template-columns: repeat(3, 1fr);
+        grid-auto-rows: auto;
+        overflow-y: auto;
+    ***REMOVED***
+    .blob-3 { display: none; ***REMOVED***
+***REMOVED***
+
+/* ─── Responsive: 560px — phone ────────────────────────────────────────── */
+@media (max-width: 560px) {
+    body { font-size: 12px; ***REMOVED***
+    #app-grid { gap: 6px; padding: 6px; border-radius: 10px; ***REMOVED***
+    #metrics-strip { grid-template-columns: repeat(2, 1fr); ***REMOVED***
+    .project-item { padding: 8px 10px; ***REMOVED***
+    .detail-row { min-width: 100%; ***REMOVED***
+    .chain-stage { min-width: 104px; ***REMOVED***
+    #center-pipeline { padding: 10px; ***REMOVED***
+***REMOVED***
+
+/* ─── Reduced motion ───────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001s !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.001s !important;
+    ***REMOVED***
+    .aurora-blob { animation: none !important; ***REMOVED***
+***REMOVED***

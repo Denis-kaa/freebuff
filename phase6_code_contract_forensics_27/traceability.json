@@ -1,0 +1,22 @@
+{
+  "concept": "Opportunity Engine (Intelligence layer)",
+  "documentation": [
+    "docs_10/engineering-memory/INTELLIGENCE_FACTORY_CONTRACT_V1.md",
+    "docs_10/engineering-memory/CONTRACT_REGISTRY_V1.md",
+    "docs_10/engineering-memory/FACTORY_FORGE_ARCHITECTURE_V1.md"
+  ***REMOVED***,
+  "contracts": ["opportunity.schema", "opportunity.discover", "opportunity.execute", "whim.promote"***REMOVED***,
+  "modules": ["scripts_01/opportunity_engine.py", "scripts_01/whim_capture.py"***REMOVED***,
+  "symbols": [
+    "Opportunity", "OpportunityStore", "discover_candidates", "rank_candidates",
+    "propose", "execute", "accumulate", "Whim", "WhimStore", "advance"
+  ***REMOVED***,
+  "entrypoints": [
+    "opportunity_engine discover", "opportunity_engine run", "opportunity_engine propose",
+    "opportunity_engine rank", "whim_capture capture", "whim_capture promote"
+  ***REMOVED***,
+  "events": ["opportunity.discovered (planned)", "opportunity.executed (planned)", "whim.promoted (planned)"***REMOVED***,
+  "storage": ["data_13/opportunities.yaml", "data_13/whims.yaml", "data_13/context.db"***REMOVED***,
+  "tests": ["test_opportunity_engine.py", "test_opportunity_ranking.py", "test_whim_capture.py", "test_intelligence_loop_phase5.py"***REMOVED***,
+  "status": "CONFIRMED"
+***REMOVED***

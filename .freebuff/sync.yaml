@@ -1,0 +1,59 @@
+version: 1
+
+local:
+  workspace_root: ".."
+  branch: auto
+
+remote:
+  ssh_alias: wimp
+  workspace_root: null
+  bare_repo: null
+  worktree: null
+  branch: auto
+  lock_path: null
+  log_dir: null
+
+sync:
+  mode: git
+  lock_timeout_sec: 30
+  watch_interval_sec: 10
+  watch_debounce_sec: 3
+  delete_mode: mirror-after-merge
+  conflict_mode: stop-and-report
+  non_interactive: false
+  require_clean_success: true
+
+watch:
+  enabled: true
+  backend: hybrid
+  auto_commit: true
+  auto_push: true
+  check_command: null
+  commit_prefix: "chore(sync):"
+
+filters:
+  runtime_data: false
+  runtime_allowlist:
+    - data_13/forge_registry.yaml
+    - data_13/missing_registry.yaml
+    - data_13/opportunities.yaml
+    - data_13/whims.yaml
+    - data_13/scenario_decisions.yaml
+    - data_13/lisa_calibration.yaml
+    - data_13/hypothesis_ledger/**
+    - context_12/unified_context.md
+    - context_12/session_todos.md
+    - context_12/checkpoints/**
+    - context_12/summaries/**
+    - context_12/memory/**
+    - context_12/knowledge/**
+    - context_12/exports/**
+  sqlite_allowlist: [***REMOVED***
+  large_file_limit_mib: 25
+  large_file_allowlist: [***REMOVED***
+  unknown_policy: exclude-and-report
+
+logging:
+  external_log_dir: "~/.cache/freebuff-sync"
+  tracked_report_dir: .freebuff/sync-reports
+  include_diff: true

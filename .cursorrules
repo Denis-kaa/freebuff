@@ -6,7 +6,7 @@ You are working on the Freebuff AI Engineering Workspace at `/mnt/sdcard/PROJECT
 
 - `docs_10/core/CORE_PROMPT.md` — **single source of truth**: identity, duties, constraints, behavior (read first)
 - `BUFFY.md` — main agent manifest (workspace environment, tools, vision)
-- `AGENTS.md` — quick agent protocol / session checkpoint
+- `AGENTS.md` — канонические правила платформы (single source of truth)
 - `docs_10/core/CODE_QUALITY_STANDARD.md` — code quality standard (mandatory)
 - `BUFFY_PROJECT.md` — architecture and roadmap
 - `SPEC.md` — technical specification

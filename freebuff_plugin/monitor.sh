@@ -19,6 +19,9 @@ SHIM_DIR="$(cd "$(dirname "$SHIM_PATH")" && pwd)"
 FREEBUFF_ROOT_RESOLVED="$(cd "$SHIM_DIR/.." && pwd)"
 FREEBUFF_ROOT="${FREEBUFF_ROOT:-$FREEBUFF_ROOT_RESOLVED***REMOVED***"
 CANONICAL="$FREEBUFF_ROOT/freebuff_plugin_03/monitor.sh"
+# Env-override contract (DEBT-2026-08-02-001): канонический monitor.sh обязан
+# читать ${FREEBUFF_ROOT:-<hardcode>***REMOVED*** — иначе shim → canonical молча расходится
+# на non-canonical installs (dev/CI/container).
 
 echo "⚠️  DEPRECATED shim: используйте $CANONICAL" >&2
 

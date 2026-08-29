@@ -1,8 +1,9 @@
 # Buffy Project 2.0 — Agentic Platform & Knowledge OS
 
 > **Версия:** 2.0.0
-> **Дата:** 2026-08-03
-> **Freebuff project (sync):** v5.65.0 (latest shipped) — см. [`TASK.md`***REMOVED***(TASK.md) и [`CHANGELOG.md`***REMOVED***(CHANGELOG.md).
+> **Дата:** 2026-08-04
+> **Freebuff project (sync):** v5.189.67 (latest shipped, 2026-08-20 — TRACK-001 close: consistency_check exit 0 + idempotency invariant, 3342+ tests; previous v5.189.66) — см. [`TASK.md`***REMOVED***(TASK.md) и [`CHANGELOG.md`***REMOVED***(CHANGELOG.md).
+> **Каноническое позиционирование платформы:** [`PLATFORM.md`***REMOVED***(PLATFORM.md) (документ v0.6, sync v5.189.67; plain-language ~6 350 слов, реестровая запись в `docs_10/DOCUMENT_REGISTRY.md`). Этот файл (BUFFY_PROJECT.md) — agentic-layer manifest; PLATFORM.md — user-facing positioning. Оба источника правомочны для разной аудитории.
 > **Статус:** 🟡 АКТИВНО (MVP готов, Phase 1-2 в разработке)
 > **Девиз:** *Один мозг — много моделей*
 
@@ -230,3 +231,12 @@ Buffy Project/
 ---
 
 _Версия: 2.0.0 | 2026-07-28 | Buffy (DeepSeek v4 Flash) — мозг Buffy Project_
+
+
+## Workspace OS Research v3.5 close (2026-08-09)
+
+- **39/39 sections** of WORKSPACE_OS_ARCHITECTURE_RESEARCH_V1.md CLOSED
+- **Aggregate mission compliance 7.6/10** (above 6/10 target)
+- **Path Forward documented** in `docs_10/MISSION_CLOSE_20260809.md`
+- **Phase 5** = Implementation forwarding (~6-8 hours)
+

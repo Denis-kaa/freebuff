@@ -1,117 +1,81 @@
-# TASK: LEVIATHAN Integration — все 5 фаз завершены
+# TASK: Freebuff — открытые задачи и состояние проекта
 
-**Статус:** ✅ Project Pulse завершён + ✅ Шаг 0+Шаг 1+Шаг 2 security audit `pompts_11/TASK_SECURE_MCP_ACCESS.md` (v5.25.1)
-**Создана:** 2026-07-30
-**Версия проекта:** v5.25.1
-**Обновлено:** 2026-07-31
+**Версия проекта:** v5.189.67 (2026-08-20; предыдущая: v5.189.66)
+**Обновлено:** 2026-08-21 (R2 version-sync: headers → v5.189.67 + snapshot refresh — TRACK-001 close (consistency_check exit 0 + idempotency invariant); previous snapshot v5.189.36 dated 2026-08-18)
+**Предыдущее обновление:** 2026-08-16 (R1 version-sync: headers → v5.189.18 — Advanced Opportunity Ranking (промт 086): rank_candidates + discover --rank, register-first `opportunity_ranking` closed)
+**Предыдущий снапшот:** v5.74.0 (2026-08-04) — см. `CHANGELOG.md` для полной истории промежуточных релизов
 
-> Security audit checkpoint (2026-07-31):
-> - Шаг 0 (диагностика): 0 совпадений по `check_command` в MCP-маршрутах; ни один `cloudflared`/`mcp_fastapi`/`mcp_server` не запущен; `pkill` не требуется — `docs_10/audits/AUDIT_STEP0_2026-07-31.md`.
-> - Шаг 1 (закрытие free shell): `_run_shell`, `_check_shell`, `_check_content_match` удалены; `_check_pytest` переписан на argv-list с `shell=False`; 75/75 тестов зелёные; code-reviewer approved — коммит c51ce49.
-> - Шаг 2 (Bearer auth): `verify_bearer_token` + `Depends` на `/mcp` (POST/GET/DELETE); `hmac.compare_digest`; Vault-first через hvac (KV v2, AppRole + root token), env fallback, TTL-кеш 300 s; тестовый bypass только при `FREEBUFF_ENV=test` AND `FREEBUFF_MCP_AUTH_DISABLED=1`; 401 + `WWW-Authenticate: Bearer realm="buffy-mcp"`. 57 passed in 7.19 s; code-reviewer shipped.
-
----
-
-## 🎯 LEVIATHAN Context Integration — ИТОГИ
-
-### Фаза A: Schema Extension (v5.8.0) ✅
-- `scripts_01/context_manager.py` — SCHEMA_VERSION 3→4
-- Таблица `arch_decisions` — архитектурные решения (id, session_id, title, context, decision, alternatives, rationale, consequences, status)
-- Таблица `invariants` — инварианты (id, name, description, assertion_type, assertion_params, enabled, severity, last_checked, last_result)
-- 6 методов: `log_decision()`, `get_decisions()`, `set_invariant()`, `get_invariant()`, `check_invariant()`, `list_invariants()`
-- EventBus: `decision.logged`, `invariant.checked`
-- **20 тестов** — 0 failures
-
-### Фаза B: Verification Framework (v5.7.0 — v5.10.0) ✅
-- `scripts_01/verifier.py` — 7 чекеров (file_exists, file_contains, content_match, pytest, shell, sqlite, http)
-- SQLite storage (verification_rules + verification_results), EventBus, CLI
-- `action_verifications` таблица в `context_manager.py` (SCHEMA_VERSION 4→5)
-- 4 метода: `set_claimed_status()`, `set_verified_status()`, `get_verification()`, `list_verifications()`
-- `Orchestrator._verify_step()` — интеграция Verifier + ContextManager
-- step.verified событие
-- **73 теста** (56 verifier + 12 action_verifications + 5 orchestrator) — 0 failures
-
-### Фаза C: Metrics Engine (v5.11.0) ✅
-- `scripts_01/metrics.py` — 5 метрик: VCR, SRG, CpVO, RRR, TTD-false
-- `MetricsReport`, `MetricResult`, `MetricsEngine` классы
-- Health Score (0-10)
-- CLI: report, vcr, srg, cpvo, rrr, ttd, trend, status
-- MCP: metrics_report, metrics_vcr, metrics_srg (3 инструмента)
-- **37 тестов** — 0 failures
-
-### Фаза D: Vector Memory (v5.12.0) ✅
-- `MemoryLevel.VECTOR = "vector"` — 6-й уровень памяти
-- `VectorBackend` — опциональный Chromadb (graceful degradation)
-- `vector_search()` — семантический поиск с обогащением MemoryEntry
-- CLI: `python scripts_01/memory_engine.py vector_search "query" --top-k 5`
-- Исправлен баг: чтение entry_id до unlink файла в `delete()`
-- **28 тестов** — 0 failures
-
-### Фаза E: buffy-ctx CLI (v5.13.0) ✅
-- `freebuff ctx push [session_id***REMOVED***` — экспорт контекста в JSON
-- `freebuff ctx pull <file.json>` — импорт контекста с восстановлением
-- `freebuff ctx status [session_id***REMOVED***` — статус контекста
-- **17 тестов** — 0 failures
-
-### Сводка LEVIATHAN + Distributed Agents
-
-| Фаза | Компонент | Тесты | v |
-|------|-----------|:-----:|:-:|
-| **A** | arch_decisions + invariants | 20 | 5.8.0 |
-| **B.1** | scripts_01/verifier.py | 56 | 5.7.0 |
-| **B.2** | action_verifications | 12 | 5.9.0 |
-| **B.3** | Orchestrator интеграция | 5 | 5.10.0 |
-| **C** | scripts_01/metrics.py | 37 | 5.11.0 |
-| **D** | Vector Memory (Chromadb) | 28 | 5.12.0 |
-| **E** | buffy-ctx CLI | 17 | 5.13.0 |
-| **DA** | Distributed Agents | 55 | 5.14.0 |
-| **Итого** | **8 компонентов** | **230** | **5.7.0-5.14.0** |
+> **Иерархия источников правды (anti-duplication принцип CON-17):**
+>
+> - **Закрытые вехи v5.21.0 → v5.59.0** → [`CHANGELOG.md`***REMOVED***(CHANGELOG.md) (полная история, не дублируем здесь).
+> - **Архитектурные долги** → [`docs_10/core/ARCHITECTURAL_DEBT.md`***REMOVED***(docs_10/core/ARCHITECTURAL_DEBT.md) (реестр с §3 OPEN + §5 RESOLVED).
+> - **Пост-консолидационные миссии** → [`docs_10/vision/ROADMAP_PROMT32_CONSOLIDATION.md`***REMOVED***(docs_10/vision/ROADMAP_PROMT32_CONSOLIDATION.md) §9 (promt42/43).
+> - **Жизненный цикл / правила / манифест / глоссарий** → [`docs_10/core/`***REMOVED***(docs_10/core/) (CORE_PROMPT / ARCHITECTURE_MANIFEST / GLOSSARY / LIFECYCLE / FINAL_STRUCTURE / CODE_QUALITY_STANDARD).
 
 ---
 
-## 📋 Следующие шаги
+## 🎯 OPEN TASKS — User-Facing (Product/Phase 5)
 
-### Phase 4 — завершено ✅
-- [x***REMOVED*** **Distributed Agents** — мульти-агентная оркестрация через Bridge Layer + ACP (v5.14.0)
+Все три пункта НЕ начаты (нет исходного кода; только спецификации в промтах). Реализация — отдельный sibling-проект по конвенции `projects_17/<project_name>/` (как `interior_planner_app/`).
 
-### Phase 0 — Close Context Loop ✅
-- [x***REMOVED*** **cmd_buffy() + StreamBridge** — замкнут цикл контекста (v5.15.0)
-- [x***REMOVED*** **test_crash_recovery.sh** — тест смерти сессии с --no-kill режимом
-- [x***REMOVED*** **verification**: 6/6 проверок, контекст в БД, resume работает
+### 5.1 Flutter-приложение (idea · web-first)
+- [ ***REMOVED*** **💡 Идея на будущее** (не является sprint-ready). Мобильное приложение Freebuff на Flutter (Android).
+- **Strategy · web-first:** Flutter-mobile фаза **отложена**. Первый этап — web-приложение (см. [`buffy-playground_19/`***REMOVED***(buffy-playground_19/) — React + TypeScript + Vite scaffold) — работы уже ведутся. Web-UI даёт быструю итерацию (DevTools + hot reload + cross-platform без APK-build); Flutter-mobile подключается после того, как web-app достигнет нужного UX/feature-coverage.
+- **Не путать с:** `projects_17/interior_planner_app/` (React Native + Skia — sibling-проект interior_planner, не Freebuff).
+- **Спецификация (когда дойдёт):** [`pompts_11/039_12_terminal_ai_studio_mobile.md`***REMOVED***(pompts_11/039_12_terminal_ai_studio_mobile.md) — Flutter SDK Termux ARM64, APK-сборка, OpenAI-совместимый HTTP API порт 8080.
+- **Где ещё упоминается:** [`docs_10/audits/AUDIT_2026-07-29_v5.0.0.md`***REMOVED***(docs_10/audits/AUDIT_2026-07-29_v5.0.0.md) §622 (P3-2 XL-effort); [`pompts_11/003_01_buffy_2_agentic_platform.md`***REMOVED***(pompts_11/003_01_buffy_2_agentic_platform.md):493.
+- **Зависимости (когда фаза начнется):** §5.2 Foreground Service (обязательно для живучести процесса — Android 15+ Phantom Process Killer).
+- **Предлагаемый путь (когда фаза начнется):** `projects_17/freebuff_flutter_app/` (sibling-project, как `interior_planner_app/`).
 
-### Phase 4 — осталось
-- [x***REMOVED*** **Плагины** — tg_messenger, system_monitor, knowledge_sync (v5.20.0)
+### 5.2 Foreground Service (Phantom Process Killer fix)
+- [ ***REMOVED*** Android Foreground Service для Flutter-приложения, устойчивый к Phantom Process Killer.
+- **Статус:** deferred вместе с §5.1 до начала Flutter-mobile-фазы (см. §5.1 web-first strategy). Web-app-этап не требует Foreground Service.
+- **Спецификация:** [`pompts_11/039_12_terminal_ai_studio_mobile.md`***REMOVED***(pompts_11/039_12_terminal_ai_studio_mobile.md) — разделы "Flutter + Termux" (часть 6) и "Phantom Process Killer" (часть 8).
+- **Особенности Android 15+:** требуется foreground service type `connectedDevice` (НЕ `dataSync` — deprecated).
+- **Связь с core:** управляет Freebuff core процессом через `android.app.Notification` + wake lock.
+- **Зависимости:** §5.1 Flutter-приложение.
 
-### Phase 5 — Flutter UI
-- [ ***REMOVED*** Flutter-приложение
-- [ ***REMOVED*** Foreground Service (Phantom Process Killer fix)
-- [ ***REMOVED*** Remote Sync
-- [x***REMOVED*** **MANDATORY RUNTIME CONTRACT** — scripts_01/notification.py + RUNTIME_CONTRACT.md + freebuff_cli wrapper (v5.24.0)
-- [x***REMOVED*** 25 тестов, 0 failures
-
-### Phase 5.1 — MANDATORY RUNTIME CONTRACT (Android notifications)
-- [x***REMOVED*** **scripts_01/notification.py** — модуль системных уведомлений (v5.24.0)
-- [x***REMOVED*** **docs_10/ops/RUNTIME_CONTRACT.md** — контракт Runtime Lifecycle
-- [x***REMOVED*** **freebuff_cli.py _main_with_notification()** — wrapper для CLI
-- [x***REMOVED*** **FREEBUFF_NO_NOTIFY=1** — bypass для тестов/CI
-- [x***REMOVED*** 25 тестов, 0 failures
-
-### Phase 6 — Context Verification & QA
-- [x***REMOVED*** **HTTP `/metrics/*`** — 8 endpoints в mcp_fastapi.py (v5.16.0)
-- [x***REMOVED*** **Metrics Dashboard** — HTML-дашборд с Chart.js в buffy-playground_19/public/ (v5.19.0)
-
-### Phase 7 — CoWork / Companion Platform
-- [x***REMOVED*** **Agent Presence** — scripts_01/presence.py + MCP инструменты + CLI (v5.17.0)
-- [x***REMOVED*** **Live Collaboration** — scripts_01/collaboration.py + 8 MCP инструментов + CLI (v5.18.0)
-- [x***REMOVED*** **Project Pulse** — scripts_01/project_pulse.py + 3 MCP инструмента + CLI (v5.21.0)
-- [x***REMOVED*** **Collaboration Roles** — scripts_01/roles.py + 7 MCP инструментов + CLI + Presence/Collab интеграция (v5.22.0)
-- [x***REMOVED*** **RAG 2.0 Engine** — scripts_01/rag_engine.py + RRF fusion + feature-based re-ranking + query expansion + 3 MCP инструмента (v5.23.0)
+### 5.3 Remote Sync
+- [x***REMOVED*** **✅ architecturally decided (ADR-010)** — Option B (Telegram-stored Relay) primary architecture.
+  - **Phase 5.3-A spec-only** ✅ v5.62.0 — `runtime_05/scenarios/19_remote_sync/{scenario.yaml, README.md, interface.py***REMOVED***` (Protocol + dataclasses + manifest).
+  - **Phase 5.3-B runtime** ✅ v5.62.1 — `core_02/remote_sync.py::RemoteSyncCoordinatorImpl` (Telethon-based + per-key LWW + chunking + 24h quarantine; 26 mock tests pass in 1.55s).
+  - **Phase 5.3-C TG round-trip runner** ✅ v5.62.2 — `scripts_01/e2e_remote_sync.py` (4-stage pipeline: pre-flight → push → round-trip via `TGClient.get_messages`; 14 mock tests pass in 7.52s; awaiting operator real TG round-trip).
+  - **Спецификация:** [`pompts_11/003_01_buffy_2_agentic_platform.md`***REMOVED***(pompts_11/003_01_buffy_2_agentic_platform.md):497 (Phase 5 параллельно Flutter UI).
+- **Спецификация:** [`pompts_11/003_01_buffy_2_agentic_platform.md`***REMOVED***(pompts_11/003_01_buffy_2_agentic_platform.md):497 (Phase 5 параллельно Flutter UI).
+- **Зависимости:** нет строгой зависимости от §5.1/§5.2 (можно стартовать независимо как backend-фичу). Важно: sync-target определяет scope (peer-to-peer vs cloud — выбор за командой).
+- **Note:** существующая `interior_planner_app/src/store/roomStore.ts` использует локальный AsyncStorage без sync — Remote Sync **не закрывает** её.
+- **ADR (v5.62.0):** ✅ [`docs_10/engineering-memory/decisions/ADR_010_Remote_Sync_Telegram_Relay.md`***REMOVED***(docs_10/engineering-memory/decisions/ADR_010_Remote_Sync_Telegram_Relay.md) — Option B (Telegram-stored Relay) PRIMARY, Bluetooth companion DEFERRED to v6.x. Termux Android-Bluetooth hostile (RFCOMM requires root); TG-substrate free via AV-3 invariant; CAN-3 + CAN-9 verified chat_id + round-trip.
+- **SPEC contract (v5.62.0):** ✅ [`runtime_05/scenarios/19_remote_sync/`***REMOVED***(runtime_05/scenarios/19_remote_sync/) — `scenario.yaml` + `README.md` + `interface.py` (Protocol + 4 enums + 3 frozen dataclasses + helpers).
+- **Runtime (v5.62.1):** ✅ [`core_02/remote_sync.py::RemoteSyncCoordinatorImpl`***REMOVED***(core_02/remote_sync.py) — Telethon-based runtime re-using `core_02/telegram_contract.py::report_to_*` функции (function-based API, не class-based). SendFn / HistoryFn / MeFn injection hooks для mock-based tests. Per-key LWW + 24h quarantine + 3500-char chunking + gzip_base64 fallback. 26 mock tests в [`tests_09/test_remote_sync.py`***REMOVED***(tests_09/test_remote_sync.py) pass in 1.55s. Phase 5.3-B specs-closed; Phase 5.3-C persisted listener loop deferred (ровно як ADR-010 §Implementation Disclaimers describes).
+- **Real TG round-trip runner (v5.62.2, THIS RELEASE):** ✅ [`scripts_01/e2e_remote_sync.py`***REMOVED***(scripts_01/e2e_remote_sync.py) — e2e runner mirroring `e2e_promt47.py` discipline. 4-stage pipeline (pre-flight → planning → push → round-trip via `TGClient.get_messages`). Per-run log file `docs_10/e2e_logs/remote_sync_<UTC-TS>.md` honoring user directive `<timestamp>`. Dual-channel via `--sync-group` flag. TGClient.get_messages pivot к limit-scan (TGClient не expose `ids=` kwarg — matches Phase 5.3-B `_history_via_tgclient` pattern). 14 mock tests в [`tests_09/test_e2e_remote_sync.py`***REMOVED***(tests_09/test_e2e_remote_sync.py) pass in 7.52s. CLI flags: `--silent --skip-tg --sync-group --dry-run --e2e-log PATH --run-tag TEXT`.
+- **Что в работе в 5.3-C**: First real TG round-trip invocation awaiting operator (`python3 scripts_01/e2e_remote_sync.py --sync-group --silent`) з TG session alive; результати у `docs_10/e2e_logs/remote_sync_<TS>.md`. CAN-9 cumulative audit-trail: next entry msg_id_X = 138172 (post-v5.59.0 138170/138171).
 
 ---
 
-## 🔧 Текущее состояние
+## 📊 Состояние проекта (snapshot v5.189.67, 2026-08-20)
 
-- **Тесты:** 1671 passed, 2 skipped, 0 failures
-- **Версия:** v5.21.0
-- **Компонентов всего:** 13 ядро + 7 LEVIATHAN + 5 Phase 6-7 + 3 плагина + Project Pulse = 29+
-- **Docs:** INDEX.md, 13 спецификаций, AUDIT, ROADMAP, LEVIATHAN_INTEGRATION_PLAN
+- **Версия:** v5.189.67 ([`CHANGELOG.md`***REMOVED***(CHANGELOG.md) top)
+- **Тесты:** **3342+ passed, 0 failures** (AST-truth counter; цель в [`docs_10/core/CODE_QUALITY_STANDARD.md`***REMOVED***(docs_10/core/CODE_QUALITY_STANDARD.md) §11.6 — `3342+ passed`)
+- **Реестр возможностей (MissingRegistry):** 45 записей — 28 implemented · 16 registered · 1 design_ready; `missing_registry check` exit 0 (B10/R-127)
+- **Consistency:** `consistency_check` exit 0 на baseline v5.189.67 (TRACK-001 CLOSED — idempotency-инвариант восстановлен; counter 3104→3342)
+- **Новое наблюдение (2026-08-21):** `pompts_11/promt103.md` нарушал naming-конвенцию `NNN_TT_name.md` (CAN-10 класс) — **переименован** в `pompts_11/103_19_forensic_engineering_reporter.md` (см. ниже); `consistency_check` снова exit 0.
+- **Закрыто между v5.21.0 → v5.59.0:** 38 релизов (security audit Steps 0/1/2 `pompts_11/TASK_SECURE_MCP_ACCESS.md` / MANDATORY RUNTIME CONTRACT / TG chat_id resolution v5.40.0 / CAN-3/8/9/16 / Block-A recovery v5.58.0 / TG integration contract v5.42.0 / Distributed Agents v5.14.0 / Plugins v5.20.0 / Presence+Collab+Roles+Pulse+RAG v5.17–v5.23 / Metrics Dashboard v5.19 / Counter milestone table v5.55 / validations drift + consistency). Детали и verify gates — в `CHANGELOG.md` (НЕ дублируем здесь).
+- **Закрыто между v5.60.0 → v5.189.67:** ~30+ релизов — Forge/Factory vertical slices (Phases 4–13), Intelligence Loop (opportunity_engine, whim_capture, hypothesis_ledger, corpus_persistence/inspector, pricing_enumerator, taxonomy_gap_report, weighted_scoring_engine, devil_advocate_pass), Remote Sync (v5.62–v5.67), capability_gap_auditor + REGISTER-FIRST lifecycle. Полная история — в `CHANGELOG.md`.
+- **Mission Lock:** 🔓 снят 2026-08-01 после закрытия всех 10 этапов консолидации promt32 + ADR-001…009 + canonical steps promt36/37 (Work Area as View, User-Choice Override, Context-Aware Routing, Plugin Contract). См. [`docs_10/vision/ROADMAP_PROMT32_CONSOLIDATION.md`***REMOVED***(docs_10/vision/ROADMAP_PROMT32_CONSOLIDATION.md) §0.
+- **DEBT-001…007 (post-consolidation):** ✅ все Resolved. Источники: [ARCHITECTURAL_DEBT.md §3.1–§3.3***REMOVED***(docs_10/core/ARCHITECTURAL_DEBT.md) + §5.5–§5.12.
+- **TRACK-001 (§20 Missing-Capabilities Map Drift):** ✅ CLOSED (v5.189.67) — counter refresh 3104→3342 + idempotency test + §20 backfill; см. [`ARCHITECTURAL_DEBT.md`***REMOVED***(docs_10/core/ARCHITECTURAL_DEBT.md) §3.0/§5.23.
+- **Закрыто между v5.21.0 → v5.59.0:** 38 релизов (security audit Steps 0/1/2 `pompts_11/TASK_SECURE_MCP_ACCESS.md` / MANDATORY RUNTIME CONTRACT / TG chat_id resolution v5.40.0 / CAN-3/8/9/16 / Block-A recovery v5.58.0 / TG integration contract v5.42.0 / Distributed Agents v5.14.0 / Plugins v5.20.0 / Presence+Collab+Roles+Pulse+RAG v5.17–v5.23 / Metrics Dashboard v5.19 / Counter milestone table v5.55 / validations drift + consistency). Детали и verify gates — в `CHANGELOG.md` (НЕ дублируем здесь).
+- **Mission Lock:** 🔓 снят 2026-08-01 после закрытия всех 10 этапов консолидации promt32 + ADR-001…009 + canonical steps promt36/37 (Work Area as View, User-Choice Override, Context-Aware Routing, Plugin Contract). См. [`docs_10/vision/ROADMAP_PROMT32_CONSOLIDATION.md`***REMOVED***(docs_10/vision/ROADMAP_PROMT32_CONSOLIDATION.md) §0.
+- **DEBT-001…007 (post-consolidation):** ✅ все Resolved. Источники: [ARCHITECTURAL_DEBT.md §3.1–§3.3***REMOVED***(docs_10/core/ARCHITECTURAL_DEBT.md) + §5.5–§5.12.
+---
+
+
+
+
+## Phase 4 CLOSED 2026-08-09 (v3.5)
+
+- Workspace OS Research workflow completed: 39/39 sections = 100% CLOSED
+- Mission compliance: 7.6/10 weighted (above 6/10 target by 27%)
+- See: `docs_10/MISSION_CLOSE_20260809.md` for full summary
+- Phase 5 = §39.6 forward-action implementation (~6-8 hours)
+

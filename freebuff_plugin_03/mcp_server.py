@@ -274,7 +274,18 @@ class MCPServer:
         ***REMOVED***
         tools.extend(self._list_event_tools())
         tools.extend(self._list_scenario_tools())
+        tools.extend(self._list_sync_tools())
         return tools
+
+    def _list_sync_tools(self) -> list[dict***REMOVED***:
+        return [
+            {
+                "name": "sync_status",
+                "description": "Текущий статус remote-sync (idle/connected/conflict/quarantine) "
+                               "для UI-индикатора + последние события",
+                "inputSchema": {"type": "object", "properties": {***REMOVED******REMOVED***,
+            ***REMOVED***,
+        ***REMOVED***
 
     def _call_tool(self, name: str, arguments: dict) -> dict:
         try:
@@ -569,6 +580,39 @@ class MCPServer:
                             "timestamp": e.timestamp[:19***REMOVED***,
                             "severity": e.severity,
                         ***REMOVED*** for e in feed***REMOVED***, ensure_ascii=False),
+                    ***REMOVED******REMOVED***
+                ***REMOVED***
+
+            elif name == "sync_status":
+                # Phase 5.4 — status snapshot for the Flutter UI indicator
+                # (via MCP event stream). Reads the app-level active coordinator.
+                from core_02.remote_sync import (
+                    derive_sync_status,
+                    get_active_coordinator,
+                )
+                coord = get_active_coordinator()
+                if coord is None:
+                    snapshot = {"status": "idle", "registered": False***REMOVED***
+                else:
+                    snapshot = derive_sync_status(coord)
+                    snapshot["registered"***REMOVED*** = True
+                # Recent remote_sync.* events from EventStore (the stream)
+                try:
+                    store = self._get_event_store()
+                    from freebuff_plugin_03.event import EventQuery
+                    entries = store.query(EventQuery(event_type="remote_sync.*", limit=10))
+                    snapshot["recent_events"***REMOVED*** = [{
+                        "id": e.event_id,
+                        "type": e.event_type,
+                        "status": (e.data or {***REMOVED***).get("status"),
+                        "timestamp": e.timestamp[:19***REMOVED***,
+                    ***REMOVED*** for e in entries***REMOVED***
+                except Exception:
+                    snapshot["recent_events"***REMOVED*** = [***REMOVED***
+                return {
+                    "content": [{
+                        "type": "text",
+                        "text": json.dumps(snapshot, ensure_ascii=False, default=str),
                     ***REMOVED******REMOVED***
                 ***REMOVED***
 

@@ -93,6 +93,7 @@ python freebuff_cli.py list      # все сессии
 | `docs_10/decisions/DECISIONS.md` | Индекс архитектурных решений |
 | `docs_10/core/RULES.md` | Правила документирования |
 | `docs_10/ops/REFERENCES.md` | Ссылки на инструменты |
+| `docs_10/HOW_TO_LAUNCH_BUFFY.md` | Operator runbook — как найти и запустить Баффи (CLI/TG-бот/promt-конвейер) |
 | `BUFFY.md` | Главный файл агента |
 | `AGENTS.md` | Инструкции для Freebuff/Codebuff CLI |
 | `.freebuff/AGENTS.md` | Контекст специально для Freebuff CLI |

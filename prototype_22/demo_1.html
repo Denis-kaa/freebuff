@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ФК «Метеор» — клубный сайт</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans/500.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-sans/700.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono/400.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/ibm-plex-mono/600.css">
+<style>
+:root{
+  --paper:#f5f4ee;
+  --ink:#151a17;
+  --muted:#5c6159;
+  --line:#d9d6ca;
+  --green:#0c5c38;
+  --green-deep:#0a4a2e;
+  --grass:#177a4b;
+  --yellow:#f2c230;
+  --white:#ffffff;
+  --away:#b9b5aa;
+  --radius:2px;
+  --maxw:1160px;
+  --font-body:"IBM Plex Sans",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,monospace;
+***REMOVED***
+*{margin:0;padding:0;box-sizing:border-box***REMOVED***
+html{scroll-padding-top:84px***REMOVED***
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth***REMOVED******REMOVED***
+body{
+  font-family:var(--font-body);
+  background:var(--paper);
+  color:var(--ink);
+  line-height:1.55;
+  font-size:16px;
+***REMOVED***
+img{display:block;max-width:100%;height:auto***REMOVED***
+a{color:inherit***REMOVED***
+button{font-family:inherit;cursor:pointer***REMOVED***
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px***REMOVED***
+.mono{font-family:var(--font-mono)***REMOVED***
+.skip{position:absolute;left:-999px;top:0;background:var(--green);color:#fff;padding:10px 16px;z-index:99***REMOVED***
+.skip:focus{left:12px;top:12px***REMOVED***
+:focus-visible{outline:2px solid var(--green);outline-offset:2px***REMOVED***
+
+/* ---------- header ---------- */
+.site-head{
+  position:sticky;top:0;z-index:50;
+  background:var(--paper);
+  border-bottom:1px solid var(--line);
+***REMOVED***
+.head-row{display:flex;align-items:center;gap:24px;height:68px***REMOVED***
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;font-weight:700;letter-spacing:.02em***REMOVED***
+.logo svg{flex:none***REMOVED***
+.logo small{display:block;font-weight:400;font-size:11px;color:var(--muted);letter-spacing:.08em***REMOVED***
+.main-nav{margin-left:auto;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none***REMOVED***
+.main-nav::-webkit-scrollbar{display:none***REMOVED***
+.main-nav a{
+  text-decoration:none;font-size:14px;font-weight:500;
+  padding:8px 10px;border-radius:var(--radius);white-space:nowrap;
+***REMOVED***
+.main-nav a:hover{background:#e9e7dd***REMOVED***
+.btn{
+  display:inline-block;border:1px solid var(--ink);
+  background:transparent;color:var(--ink);
+  padding:10px 18px;font-size:14px;font-weight:500;
+  border-radius:var(--radius);text-decoration:none;
+  transition:background .15s,color .15s,border-color .15s;
+***REMOVED***
+.btn:hover{background:var(--ink);color:var(--paper)***REMOVED***
+.btn-primary{background:var(--green);border-color:var(--green);color:#fff***REMOVED***
+.btn-primary:hover{background:var(--green-deep);border-color:var(--green-deep);color:#fff***REMOVED***
+.head-cta{flex:none***REMOVED***
+.nav-toggle{display:none;margin-left:auto;border:1px solid var(--line);background:none;padding:8px 12px;border-radius:var(--radius);font-size:14px***REMOVED***
+@media(max-width:960px){
+  .main-nav{display:none;position:absolute;top:68px;left:0;right:0;background:var(--paper);border-bottom:1px solid var(--line);flex-direction:column;padding:12px 20px***REMOVED***
+  .main-nav.open{display:flex***REMOVED***
+  .nav-toggle{display:block***REMOVED***
+  .head-cta{display:none***REMOVED***
+***REMOVED***
+
+/* ---------- section header ---------- */
+.sec{padding:64px 0;border-top:1px solid var(--line)***REMOVED***
+.sec-head{display:flex;align-items:baseline;gap:16px;margin-bottom:28px;flex-wrap:wrap***REMOVED***
+.kicker{font-family:var(--font-mono);font-size:12px;letter-spacing:.14em;color:var(--green);text-transform:uppercase***REMOVED***
+.sec-head h2{font-size:clamp(22px,3vw,30px);font-weight:700;letter-spacing:-.01em***REMOVED***
+.sec-head .rule{flex:1;height:1px;background:var(--line);min-width:40px***REMOVED***
+.note{font-size:12px;color:var(--muted)***REMOVED***
+
+/* ---------- opening: matchday ---------- */
+.matchday{border-top:none;padding:48px 0 64px;position:relative;overflow:hidden***REMOVED***
+.pitch-lines{position:absolute;inset:0;pointer-events:none;opacity:.5***REMOVED***
+.md-grid{display:grid;grid-template-columns:7fr 5fr;gap:48px;position:relative***REMOVED***
+@media(max-width:900px){.md-grid{grid-template-columns:1fr***REMOVED******REMOVED***
+.md-meta{font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;display:flex;gap:14px;flex-wrap:wrap;margin-bottom:18px***REMOVED***
+.md-meta b{color:var(--green);font-weight:600***REMOVED***
+.md-title{font-size:clamp(34px,6vw,64px);line-height:1.02;font-weight:700;letter-spacing:-.02em;margin-bottom:14px***REMOVED***
+.md-title .vs{color:var(--muted);font-weight:400***REMOVED***
+.md-sub{font-size:17px;color:var(--muted);max-width:52ch;margin-bottom:26px***REMOVED***
+.md-sub strong{color:var(--ink)***REMOVED***
+.countdown{display:flex;gap:10px;margin-bottom:26px***REMOVED***
+.cd-cell{border:1px solid var(--line);background:var(--white);padding:10px 0;min-width:74px;text-align:center;border-radius:var(--radius)***REMOVED***
+.cd-num{font-family:var(--font-mono);font-size:28px;font-weight:600;display:block;line-height:1.1***REMOVED***
+.cd-lab{font-family:var(--font-mono);font-size:10px;letter-spacing:.16em;color:var(--muted)***REMOVED***
+.md-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:22px***REMOVED***
+.md-facts{display:flex;gap:26px;flex-wrap:wrap;font-size:13px;color:var(--muted)***REMOVED***
+.md-facts b{display:block;font-family:var(--font-mono);font-size:15px;color:var(--ink);font-weight:600***REMOVED***
+.md-figure{border:1px solid var(--line);background:var(--white);padding:10px;border-radius:var(--radius)***REMOVED***
+.md-figure figcaption{font-size:12px;color:var(--muted);padding:10px 4px 2px***REMOVED***
+
+/* ---------- protocol ---------- */
+.proto-grid{display:grid;grid-template-columns:6fr 6fr;gap:48px***REMOVED***
+@media(max-width:900px){.proto-grid{grid-template-columns:1fr***REMOVED******REMOVED***
+.score-line{font-family:var(--font-mono);font-size:20px;font-weight:600;margin-bottom:20px***REMOVED***
+.score-line .res{color:var(--green)***REMOVED***
+.timeline{list-style:none;border-left:2px solid var(--line);margin-left:6px***REMOVED***
+.timeline li{position:relative;padding:0 0 18px 26px***REMOVED***
+.timeline li::before{content:"";position:absolute;left:-7px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--line)***REMOVED***
+.timeline li.goal::before{background:var(--green)***REMOVED***
+.timeline li.card::before{background:var(--yellow);border-radius:2px***REMOVED***
+.timeline li.sub::before{background:var(--white);border:2px solid var(--muted)***REMOVED***
+.tl-min{font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-right:8px***REMOVED***
+.tl-type{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);display:block***REMOVED***
+.stat{margin-bottom:16px***REMOVED***
+.stat-top{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px***REMOVED***
+.stat-top .val{font-family:var(--font-mono);font-weight:600***REMOVED***
+.stat-bar{display:flex;height:10px;background:#e6e3d8;border-radius:var(--radius);overflow:hidden***REMOVED***
+.bar-home{background:var(--green);width:0;transition:width .8s ease***REMOVED***
+.bar-away{background:var(--away);width:0;transition:width .8s ease***REMOVED***
+.legend{display:flex;gap:18px;font-size:12px;color:var(--muted);margin-top:8px***REMOVED***
+.legend i{display:inline-block;width:10px;height:10px;margin-right:6px;border-radius:1px***REMOVED***
+
+/* ---------- filters ---------- */
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px***REMOVED***
+.fbtn{border:1px solid var(--line);background:var(--white);padding:7px 14px;font-size:13px;border-radius:var(--radius);color:var(--muted)***REMOVED***
+.fbtn[aria-pressed="true"***REMOVED***{background:var(--green);border-color:var(--green);color:#fff***REMOVED***
+
+/* ---------- calendar ---------- */
+.cal-list{list-style:none***REMOVED***
+.cal-row{display:grid;grid-template-columns:110px 1fr auto auto;gap:18px;align-items:center;padding:16px 10px;border-top:1px solid var(--line)***REMOVED***
+.cal-row:last-child{border-bottom:1px solid var(--line)***REMOVED***
+.cal-date{font-family:var(--font-mono);font-size:14px;font-weight:600***REMOVED***
+.cal-date small{display:block;font-weight:400;color:var(--muted);font-size:11px***REMOVED***
+.cal-opp{font-weight:500***REMOVED***
+.cal-opp small{display:block;color:var(--muted);font-size:12px;font-weight:400***REMOVED***
+.tag{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;padding:4px 8px;border:1px solid var(--line);border-radius:var(--radius);color:var(--muted)***REMOVED***
+.tag.home{border-color:var(--green);color:var(--green)***REMOVED***
+.cal-link{font-size:13px***REMOVED***
+@media(max-width:700px){.cal-row{grid-template-columns:90px 1fr;row-gap:6px***REMOVED***.cal-row .tag{justify-self:start***REMOVED******REMOVED***
+
+/* ---------- table ---------- */
+.table-scroll{overflow-x:auto***REMOVED***
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:560px***REMOVED***
+th{font-family:var(--font-mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);text-align:left;padding:10px 12px;border-bottom:2px solid var(--ink)***REMOVED***
+td{padding:11px 12px;border-bottom:1px solid var(--line)***REMOVED***
+td.num,th.num{text-align:right;font-family:var(--font-mono)***REMOVED***
+tr.club{background:rgba(242,194,48,.16)***REMOVED***
+tr.club td:first-child{box-shadow:inset 3px 0 0 var(--green)***REMOVED***
+.pos{font-family:var(--font-mono);font-weight:600***REMOVED***
+
+/* ---------- squad ---------- */
+.squad-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0 48px***REMOVED***
+@media(max-width:800px){.squad-grid{grid-template-columns:1fr***REMOVED******REMOVED***
+.player{display:grid;grid-template-columns:44px 1fr auto;gap:14px;align-items:baseline;padding:12px 6px;border-top:1px solid var(--line)***REMOVED***
+.p-num{font-family:var(--font-mono);font-size:18px;font-weight:600;color:var(--green)***REMOVED***
+.p-name{font-weight:500***REMOVED***
+.p-name small{display:block;color:var(--muted);font-size:12px;font-weight:400***REMOVED***
+.p-stats{font-family:var(--font-mono);font-size:12px;color:var(--muted);text-align:right***REMOVED***
+
+/* ---------- analysis / academy splits ---------- */
+.split{display:grid;grid-template-columns:5fr 7fr;gap:48px;align-items:start***REMOVED***
+.split.rev{grid-template-columns:7fr 5fr***REMOVED***
+@media(max-width:900px){.split,.split.rev{grid-template-columns:1fr***REMOVED******REMOVED***
+.split figure{border:1px solid var(--line);background:var(--white);padding:10px;border-radius:var(--radius)***REMOVED***
+.split figcaption{font-size:12px;color:var(--muted);padding:10px 4px 2px***REMOVED***
+.split h3{font-size:22px;margin-bottom:12px;letter-spacing:-.01em***REMOVED***
+.split p{color:var(--muted);margin-bottom:14px;max-width:60ch***REMOVED***
+.split p strong{color:var(--ink)***REMOVED***
+.data-strip{display:flex;gap:0;border:1px solid var(--line);border-radius:var(--radius);background:var(--white);margin:18px 0;flex-wrap:wrap***REMOVED***
+.data-strip div{flex:1;min-width:120px;padding:14px 16px;border-right:1px solid var(--line)***REMOVED***
+.data-strip div:last-child{border-right:none***REMOVED***
+.data-strip b{display:block;font-family:var(--font-mono);font-size:22px;font-weight:600;color:var(--green)***REMOVED***
+.data-strip span{font-size:12px;color:var(--muted)***REMOVED***
+
+/* ---------- news ---------- */
+.news-list{list-style:none***REMOVED***
+.news-item{display:grid;grid-template-columns:120px 110px 1fr;gap:20px;padding:18px 10px;border-top:1px solid var(--line);align-items:baseline***REMOVED***
+.news-item:last-child{border-bottom:1px solid var(--line)***REMOVED***
+.news-date{font-family:var(--font-mono);font-size:13px;color:var(--muted)***REMOVED***
+.news-cat{font-family:var(--font-mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--green)***REMOVED***
+.news-item h3{font-size:17px;margin-bottom:4px***REMOVED***
+.news-item p{font-size:14px;color:var(--muted);max-width:70ch***REMOVED***
+@media(max-width:700px){.news-item{grid-template-columns:1fr;gap:4px***REMOVED******REMOVED***
+
+/* ---------- tickets ---------- */
+.tick-grid{display:grid;grid-template-columns:7fr 5fr;gap:48px;align-items:start***REMOVED***
+@media(max-width:900px){.tick-grid{grid-template-columns:1fr***REMOVED******REMOVED***
+.field{margin-bottom:18px***REMOVED***
+.field label{display:block;font-size:13px;font-weight:500;margin-bottom:6px***REMOVED***
+.field select,.field input{
+  width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--white);font-family:inherit;font-size:15px;color:var(--ink);
+***REMOVED***
+.tick-total{font-family:var(--font-mono);font-size:15px;margin:6px 0 16px***REMOVED***
+.tick-total b{font-size:24px;color:var(--green)***REMOVED***
+.tick-msg{font-size:14px;border:1px solid var(--green);background:rgba(23,122,75,.08);padding:12px 14px;border-radius:var(--radius);margin-top:14px;display:none***REMOVED***
+.tick-msg.show{display:block***REMOVED***
+.kassa{border:1px solid var(--line);background:var(--white);border-radius:var(--radius);padding:20px***REMOVED***
+.kassa h3{font-size:16px;margin-bottom:10px***REMOVED***
+.kassa p{font-size:14px;color:var(--muted);margin-bottom:8px***REMOVED***
+.kassa .mono{color:var(--ink)***REMOVED***
+
+/* ---------- footer ---------- */
+footer{border-top:1px solid var(--line);padding:40px 0 28px;margin-top:64px***REMOVED***
+.foot-grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:40px;margin-bottom:28px***REMOVED***
+@media(max-width:800px){.foot-grid{grid-template-columns:1fr***REMOVED******REMOVED***
+.foot-grid h4{font-family:var(--font-mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:12px***REMOVED***
+.foot-grid p,.foot-grid a{font-size:14px;color:var(--muted);text-decoration:none***REMOVED***
+.foot-grid a{display:block;padding:3px 0***REMOVED***
+.foot-grid a:hover{color:var(--green)***REMOVED***
+.foot-bottom{border-top:1px solid var(--line);padding-top:16px;font-size:12px;color:var(--muted);display:flex;gap:20px;flex-wrap:wrap;justify-content:space-between***REMOVED***
+</style>
+</head>
+<body>
+<a class="skip" href="#main">К содержанию</a>
+
+<header class="site-head">
+  <div class="wrap head-row">
+    <a class="logo" href="#matchday" aria-label="ФК Метеор, на главную">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="15.5" fill="none" stroke="#0c5c38" stroke-width="2"/><line x1="17" y1="1.5" x2="17" y2="32.5" stroke="#0c5c38" stroke-width="2"/><circle cx="17" cy="17" r="5" fill="none" stroke="#0c5c38" stroke-width="2"/></svg>
+      <span>ФК «МЕТЕОР»<small>северск · осн. 1957</small></span>
+    </a>
+    <nav class="main-nav" id="mainNav" aria-label="Разделы сайта">
+      <a href="#protocol">Протокол</a>
+      <a href="#calendar">Календарь</a>
+      <a href="#table">Таблица</a>
+      <a href="#squad">Состав</a>
+      <a href="#analysis">Анализ</a>
+      <a href="#academy">Академия</a>
+      <a href="#news">Новости</a>
+    </nav>
+    <a class="btn btn-primary head-cta" href="#tickets">Билеты</a>
+    <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="mainNav">Меню</button>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ============ MATCHDAY ============ -->
+<section class="matchday" id="matchday" aria-labelledby="mdTitle">
+  <svg class="pitch-lines" viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <line x1="600" y1="0" x2="600" y2="600" stroke="#d9d6ca" stroke-width="2"/>
+    <circle cx="600" cy="300" r="120" fill="none" stroke="#d9d6ca" stroke-width="2"/>
+    <rect x="-80" y="150" width="180" height="300" fill="none" stroke="#d9d6ca" stroke-width="2"/>
+    <rect x="1100" y="150" width="180" height="300" fill="none" stroke="#d9d6ca" stroke-width="2"/>
+  </svg>
+  <div class="wrap md-grid">
+    <div>
+      <p class="md-meta"><b>Лига «Восток» · тур 14</b><span id="mdDate">—</span><span>стадион «Северный», 12 400 мест</span></p>
+      <h1 class="md-title" id="mdTitle">«Метеор» <span class="vs">—</span> «Заря»</h1>
+      <p class="md-sub">Центральный матч тура: первая и вторая команды таблицы. <strong>Победа выводит «Метеор» на первое место</strong> при любом результате параллельной встречи.</p>
+      <div class="countdown" role="timer" aria-label="До начала матча">
+        <div class="cd-cell"><span class="cd-num" id="cdD">0</span><span class="cd-lab">ДН</span></div>
+        <div class="cd-cell"><span class="cd-num" id="cdH">00</span><span class="cd-lab">ЧАС</span></div>
+        <div class="cd-cell"><span class="cd-num" id="cdM">00</span><span class="cd-lab">МИН</span></div>
+        <div class="cd-cell"><span class="cd-num" id="cdS">00</span><span class="cd-lab">СЕК</span></div>
+      </div>
+      <div class="md-actions">
+        <a class="btn btn-primary" href="#tickets">Купить билеты · от 700 ₽</a>
+        <a class="btn" href="#footer-contacts">Как добраться</a>
+      </div>
+      <div class="md-facts">
+        <div><b>2:1</b>последняя встреча, тур 12</div>
+        <div><b>9–3–1</b>домашняя серия без поражений</div>
+        <div><b>12 400</b>вместимость, продано 87%</div>
+      </div>
+    </div>
+    <figure class="md-figure">
+      <img src="https://image.qwenlm.ai/public_source/6972deae-6fdf-49a3-8570-4532c92b7fe9/1cd8f7ddf-47a6-4956-86ed-413ae0ba3dd1.png" alt="Игровой момент матча «Метеора»: двое футболистов в тёмной форме борются за мяч у штрафной при вечернем освещении" width="1024" height="1024">
+      <figcaption>Фото: пресс-служба клуба. Матч 12-го тура «Заря» — «Метеор», завершившийся победой 2:1.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ============ PROTOCOL ============ -->
+<section class="sec" id="protocol" aria-labelledby="protoTitle">
+  <div class="wrap">
+    <div class="sec-head"><span class="kicker">Тур 12 · 14 июня</span><h2 id="protoTitle">Протокол последнего матча</h2><span class="rule"></span><span class="note">«Заря» — «Метеор» 1:2</span></div>
+    <div class="proto-grid">
+      <div>
+        <p class="score-line">Заря 1 : <span class="res">2 Метеор</span></p>
+        <ul class="timeline">
+          <li class="goal"><span class="tl-min">12′</span><strong>Гол — В. Стрельцов</strong><span class="tl-type">передача Р. Осипова, удар из штрафной</span></li>
+          <li class="card"><span class="tl-min">34′</span><strong>Жёлтая — И. Гарт</strong><span class="tl-type">срыв атаки, фол в центре поля</span></li>
+          <li class="goal"><span class="tl-min">58′</span><strong>Гол — «Заря»</strong><span class="tl-type">контратака, удар с линии штрафной</span></li>
+          <li class="goal"><span class="tl-min">71′</span><strong>Гол — Т. Ахмедов (пен.)</strong><span class="tl-type">фол на Стрельцове в штрафной</span></li>
+          <li class="sub"><span class="tl-min">84′</span><strong>Замена — Н. Дроздов вместо А. Кима</strong><span class="tl-type">удержание счёта, свежий фланг</span></li>
+        </ul>
+      </div>
+      <div id="statBlock">
+        <div class="stat" data-home="54" data-away="46" data-suf="%"><div class="stat-top"><span>Владение мячом</span><span class="val">54% — 46%</span></div><div class="stat-bar"><span class="bar-home"></span><span class="bar-away"></span></div></div>
+        <div class="stat" data-home="13" data-away="9"><div class="stat-top"><span>Удары</span><span class="val">13 — 9</span></div><div class="stat-bar"><span class="bar-home"></span><span class="bar-away"></span></div></div>
+        <div class="stat" data-home="6" data-away="3"><div class="stat-top"><span>Удары в створ</span><span class="val">6 — 3</span></div><div class="stat-bar"><span class="bar-home"></span><span class="bar-away"></span></div></div>
+        <div class="stat" data-home="7" data-away="4"><div class="stat-top"><span>Угловые</span><span class="val">7 — 4</span></div><div class="stat-bar"><span class="bar-home"></span><span class="bar-away"></span></div></div>
+        <div class="stat" data-home="1.9" data-away="1.1"><div class="stat-top"><span>Ожидаемые голы (xG)</span><span class="val">1.9 — 1.1</span></div><div class="stat-bar"><span class="bar-home"></span><span class="bar-away"></span></div></div>
+        <div class="legend"><span><i style="background:var(--green)"></i>«Метеор»</span><span><i style="background:var(--away)"></i>«Заря»</span></span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CALENDAR ============ -->
+<section class="sec" id="calendar" aria-labelledby="calTitle">
+  <div class="wrap">
+    <div class="sec-head"><span class="kicker">Июнь — июль</span><h2 id="calTitle">Календарь матчей</h2><span class="rule"></span></div>
+    <div class="filters" role="group" aria-label="Фильтр календаря">
+      <button class="fbtn" data-cal="all" aria-pressed="true">Все</button>
+      <button class="fbtn" data-cal="home" aria-pressed="false">Дома</button>
+      <button class="fbtn" data-cal="away" aria-pressed="false">В гостях</button>
+    </div>
+    <ul class="cal-list" id="calList"></ul>
+  </div>
+</section>
+
+<!-- ============ TABLE ============ -->
+<section class="sec" id="table" aria-labelledby="tblTitle">
+  <div class="wrap">
+    <div class="sec-head"><span class="kicker">Лига «Восток»</span><h2 id="tblTitle">Турнирная таблица</h2><span class="rule"></span><span class="note">после 13 туров</span></div>
+    <div class="table-scroll">
+      <table>
+        <caption class="skip">Турнирная таблица лиги «Восток» после 13 туров</caption>
+        <thead><tr><th>#</th><th>Команда</th><th class="num">И</th><th class="num">В</th><th class="num">Н</th><th class="num">П</th><th class="num">Мячи</th><th class="num">О</th></tr></thead>
+        <tbody>
+          <tr class="club"><td class="pos">1</td><td>«Метеор»</td><td class="num">13</td><td class="num">9</td><td class="num">3</td><td class="num">1</td><td class="num">24–9</td><td class="num"><strong>30</strong></td></tr>
+          <tr><td class="pos">2</td><td>«Заря»</td><td class="num">13</td><td class="num">9</td><td class="num">2</td><td class="num">2</td><td class="num">21–10</td><td class="num">29</td></tr>
+          <tr><td class="pos">3</td><td>«Динамо-2»</td><td class="num">13</td><td class="num">8</td><td class="num">2</td><td class="num">3</td><td class="num">19–12</td><td class="num">26</td></tr>
+          <tr><td class="pos">4</td><td>«Торпедо-С»</td><td class="num">13</td><td class="num">7</td><td class="num">3</td><td class="num">3</td><td class="num">18–14</td><td class="num">24</td></tr>
+          <tr><td class="pos">5</td><td>«Вымпел»</td><td class="num">13</td><td class="num">6</td><td class="num">3</td><td class="num">4</td><td class="num">15–13</td><td class="num">21</td></tr>
+          <tr><td class="pos">6</td><td>«Крылья»</td><td class="num">13</td><td class="num">5</td><td class="num">3</td><td class="num">5</td><td class="num">14–15</td><td class="num">18</td></tr>
+          <tr><td class="pos">7</td><td>«Локомотив-Юг»</td><td class="num">13</td><td class="num">4</td><td class="num">2</td><td class="num">7</td><td class="num">12–17</td><td class="num">14</td></tr>
+          <tr><td class="pos">8</td><td>«Спартак-Северск»</td><td class="num">13</td><td class="num">2</td><td class="num">2</td><td class="num">9</td><td class="num">8–22</td><td class="num">8</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SQUAD ============ -->
+<section class="sec" id="squad" aria-labelledby="sqTitle">
+  <div class="wrap">
+    <div class="sec-head"><span class="kicker">Сезон 2026</span><h2 id="sqTitle">Состав и статистика</h2><span class="rule"></span><span class="note">матчи / голы в лиге</span></div>
+    <div class="filters" role="group" aria-label="Фильтр по амплуа">
+      <button class="fbtn" data-sq="all" aria-pressed="true">Все</button>
+      <button class="fbtn" data-sq="gk" aria-pressed="false">Вратари</button>
+      <button class="fbtn" data-sq="def" aria-pressed="false">Защитники</button>
+      <button class="fbtn" data-sq="mid" aria-pressed="false">Полузащитники</button>
+      <button class="fbtn" data-sq="att" aria-pressed="false">Нападающие</button>
+    </div>
+    <div class="squad-grid" id="squadGrid">
+      <div class="player" data-pos="gk"><span class="p-num">1</span><span class="p-name">Антон Крылов<small>вратарь · 29 лет</small></span><span class="p-stats">13 матчей · 11 проп.</span></div>
+      <div class="player" data-pos="gk"><span class="p-num">16</span><span class="p-name">Марк Ерёмин<small>вратарь · 21 год, воспитанник академии</small></span><span class="p-stats">0 матчей</span></div>
+      <div class="player" data-pos="def"><span class="p-num">4</span><span class="p-name">Иван Гарт<small>центр. защитник · 30 лет, капитан</small></span><span class="p-stats">13 / 0</span></div>
+      <div class="player" data-pos="def"><span class="p-num">3</span><span class="p-name">Денис Соколов<small>центр. защитник · 26 лет</small></span><span class="p-stats">12 / 1</span></div>
+      <div class="player" data-pos="def"><span class="p-num">23</span><span class="p-name">Камиль Латыпов<small>левый защитник · 22 года</small></span><span class="p-stats">11 / 2</span></div>
+      <div class="player" data-pos="def"><span class="p-num">5</span><span class="p-name">Павел Мельник<small>правый защитник · 24 года</small></span><span class="p-stats">9 / 0</span></div>
+      <div class="player" data-pos="mid"><span class="p-num">10</span><span class="p-name">Роман Осипов<small>атак. полузащитник · 27 лет</small></span><span class="p-stats">13 / 5 + 6 передач</span></div>
+      <div class="player" data-pos="mid"><span class="p-num">6</span><span class="p-name">Сергей Ветров<small>опорный полузащитник · 28 лет</small></span><span class="p-stats">13 / 1</span></div>
+      <div class="player" data-pos="mid"><span class="p-num">8</span><span class="p-name">Артём Ким<small>центр. полузащитник · 25 лет</small></span><span class="p-stats">12 / 3</span></div>
+      <div class="player" data-pos="mid"><span class="p-num">17</span><span class="p-name">Никита Дроздов<small>фланг. полузащитник · 20 лет</small></span><span class="p-stats">8 / 1</span></div>
+      <div class="player" data-pos="att"><span class="p-num">9</span><span class="p-name">Виктор Стрельцов<small>нападающий · 31 год, лучший бомбардир</small></span><span class="p-stats">12 / 7</span></div>
+      <div class="player" data-pos="att"><span class="p-num">7</span><span class="p-name">Тимур Ахмедов<small>нападающий · 23 года</small></span><span class="p-stats">13 / 6</span></div>
+      <div class="player" data-pos="att"><span class="p-num">11</span><span class="p-name">Егор Царёв<small>нападающий · 24 года</small></span><span class="p-stats">10 / 2</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ANALYSIS ============ -->
+<section class="sec" id="analysis" aria-labelledby="anTitle">
+  <div class="wrap">
+    <div class="sec-head"><span class="kicker">Тренерский штаб</span><h2 id="anTitle">Разбор: прессинг во второй трети</h2><span class="rule"></span></div>
+    <div class="split">
+      <figure>
+        <img src="https://image.qwenlm.ai/public_source/6972deae-6fdf-49a3-8570-4532c92b7fe9/16dde3615-c5a6-4450-b6b5-4cadd5b7c3d6.png" alt="Тренер с тактической доской у скамейки: на доске схема перемещений игроков, рядом раскрытый блокнот и свисток" width="1024" height="1024">
+        <figcaption>Главный тренер С. Рахимов корректирует схему прессинга перед матчем 14-го тура.</figcaption>
+      </figure>
+      <div>
+        <h3>Почему «Метеор» отбирает мяч выше, чем весной</h3>
+        <p>После паузы штаб перестроил первую волну давления: нападающий закрывает не центрального защитника, а линию паса на опорного. <strong>PPDA снизился с 11.2 до 8.4</strong> — соперник в среднем делает восемь передач до потери вместо одиннадцати.</p>
+        <p>Второе изменение — роль Кима: при потере он смещается в полуфланг и отсекает возврат мяча. Это дало <strong>47 подборов в средней трети за матч</strong> и половину голов команды в последних пяти турах.</p>
+        <div class="data-strip">
+          <div><b>8.4</b><span>PPDA (среднее по лиге — 11.2)</span></div>
+          <div><b>47</b><span>подборов в средней трети за матч</span></div>
+          <div><b>42%</b><span>атак через правый фланг</span></div>
+        </div>
+        <p>Слабое место схемы — зона за спиной Латыпова при длинных переводах. «Заря» в 12-м туре создала оба момента именно оттуда; в ответном матче штаб страхует её смещением Ветрова.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ACADEMY ============ -->
+<section class="sec" id="academy" aria-labelledby="acTitle">
+  <div class="wrap">
+    <div class="sec-head"><span class="kicker">Детско-юношеская школа</span><h2 id="acTitle">Академия</h2><span class="rule"></span><span class="note">набор 2012–2019 г.р.</span></div>
+    <div class="split rev">
+      <div>
+        <h3>Пять возрастных групп и тренировки на базе основного состава</h3>
+        <p>Академия работает на полях стадиона «Северный» и крытом манеже. Тренеры групп U-15 и U-17 проходят ежегодную стажировку в штабе первой команды; <strong>трое воспитанников</strong> уже в заявке основного состава, включая вратаря Ерёмина.</p>
+        <p>Просмотры проходят в первую субботу каждого месяца в 10:00. Нужны справка от врача и спортивная страховка; регистрация по телефону кассы.</p>
+        <div class="table-scroll">
+          <table>
+            <caption class="skip">Расписание групп академии</caption>
+            <thead><tr><th>Группа</th><th>Дни</th><th>Время</th><th>Тренер</th></tr></thead>
+            <tbody>
+              <tr><td>U-9 (2018 г.р.)</td><td>пн, ср</td><td class="num">17:00</td><td>А. Савин</td></tr>
+              <tr><td>U-11 (2016 г.р.)</td><td>вт, чт</td><td class="num">17:30</td><td>Д. Ковалёв</td></tr>
+              <tr><td>U-13 (2014 г.р.)</td><td>пн, ср, пт</td><td class="num">18:30</td><td>Д. Ковалёв</td></tr>
+              <tr><td>U-15 (2012 г.р.)</td><td>вт, чт, сб</td><td class="num">16:00</td><td>С. Рахимов-мл.</td></tr>
+              <tr><td>U-17 (2010 г.р.)</td><td>пн–пт</td><td class="num">15:00</td><td>С. Рахимов-мл.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <figure>
+        <img src="https://image.qwenlm.ai/public_source/6972deae-6fdf-49a3-8570-4532c92b7fe9/1f035deb6-d4c2-4ee2-b701-79d074fd0af9.png" alt="Тренировка академии: юные футболисты ведут мяч между оранжевыми конусами, тренер с свистком даёт указание" width="1024" height="1024">
+        <figcaption>Утреннее занятие группы U-11: упражнение на ведение и смену направления.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ NEWS ============ -->
+<section class="sec" id="news" aria-labelledby="nwTitle">
+  <div class="wrap">
+    <div class="sec-head"><span class="kicker">Пресс-служба</span><h2 id="nwTitle">Новости клуба</h2><span class="rule"></span></div>
+    <div class="filters" role="group" aria-label="Фильтр новостей">
+      <button class="fbtn" data-news="all" aria-pressed="true">Все</button>
+      <button class="fbtn" data-news="club" aria-pressed="false">Клуб</button>
+      <button class="fbtn" data-news="tactics" aria-pressed="false">Тактика</button>
+      <button class="fbtn" data-news="academy" aria-pressed="false">Академия</button>
+      <button class="fbtn" data-news="tickets" aria-pressed="false">Билеты</button>
+    </div>
+    <ul class="news-list" id="newsList">
+      <li class="news-item" data-cat="club"><span class="news-date">20.06.2026</span><span class="news-cat">Клуб</span><div><h3>Стрельцов продлил контракт до лета 2028 года</h3><p>Лучший бомбардир команды (7 голов в 12 матчах) подписал новое соглашение с пунктом о роли играющего тренера в сезоне-2028/29.</p></div></li>
+      <li class="news-item" data-cat="tactics"><span class="news-date">18.06.2026</span><span class="news-cat">Тактика</span><div><h3>Разбор: как изменился прессинг после паузы</h3><p>Аналитический блок клуба — о перестройке первой волны давления, роли Кима и уязвимой зоне за левым защитником.</p></div></li>
+      <li class="news-item" data-cat="academy"><span class="news-date">15.06.2026</span><span class="news-cat">Академия</span><div><h3>Команда U-13 вышла в финал городского кубка</h3><p>В полуфинале против «Вымпела-2014» — 3:1, дубль у полузащитника Глеба Зимина. Финал 28 июня на поле № 2 «Северного».</p></div></li>
+      <li class="news-item" data-cat="tickets"><span class="news-date">11.06.2026</span><span class="news-cat">Билеты</span><div><h3>Открыта продажа абонементов на сезон 2026/27</h3><p>Держателям абонементов 2025/26 до 1 июля сохранены места и скидка 15%. Семейный сектор расширен до 900 мест.</p></div></li>
+      <li class="news-item" data-cat="club"><span class="news-date">08.06.2026</span><span class="news-cat">Клуб</span><div><h3>К августу стадион получит новый газон</h3><p>Поле заменят на гибридное с подогревом; на время работ домашние матчи примет резервное поле манежа (6 000 мест).</p></div></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ TICKETS ============ -->
+<section class="sec" id="tickets" aria-labelledby="tkTitle">
+  <div class="wrap">
+    <div class="sec-head"><span class="kicker">Тур 14 · «Метеор» — «Заря»</span><h2 id="tkTitle">Билеты на матч</h2><span class="rule"></span></div>
+    <div class="tick-grid">
+      <form id="tickForm" novalidate>
+        <div class="field">
+          <label for="sectorSel">Сектор</label>
+          <select id="sectorSel">
+            <option value="700">Северная трибуна — 700 ₽</option>
+            <option value="900">Южная трибуна (за воротами) — 900 ₽</option>
+            <option value="1000">Семейный сектор — 1 000 ₽</option>
+            <option value="1400" selected>Западная трибуна (центр) — 1 400 ₽</option>
+            <option value="3500">Ложа прессы — 3 500 ₽</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="qtyInp">Количество билетов (макс. 8)</label>
+          <input id="qtyInp" type="number" min="1" max="8" value="2" inputmode="numeric">
+        </div>
+        <p class="tick-total">Итого: <b id="tickSum">2 800 ₽</b></p>
+        <button class="btn btn-primary" type="submit">Забронировать</button>
+        <p class="tick-msg" id="tickMsg" role="status"></p>
+      </form>
+      <aside class="kassa">
+        <h3>Касса стадиона «Северный»</h3>
+        <p>ул. Стадионная, 4 · ежедневно <span class="mono">10:00–19:00</span></p>
+        <p>Телефон: <span class="mono">+7 (3952) 555-214</span></p>
+        <p>Выкуп брони — в день матча до <span class="mono">18:30</span>. Студентам и держателям карты болельщика — скидка 10% в кассе.</p>
+        <p>Дети до 7 лет — бесплатно с взрослым (без отдельного места).</p>
+      </aside>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer id="footer-contacts">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div>
+        <h4>ФК «Метеор» Северск</h4>
+        <p>Народный клуб, основан в 1957 году рабочими северских заводов. Домашняя арена — стадион «Северный», 12 400 мест. Девиз клуба: «Вперёд и вверх».</p>
+      </div>
+      <div>
+        <h4>Контакты</h4>
+        <a href="tel:+73952555214">+7 (3952) 555-214</a>
+        <a href="mailto:press@fc-meteor.example">press@fc-meteor.example</a>
+        <p>ул. Стадионная, 4, Северск</p>
+      </div>
+      <div>
+        <h4>Разделы</h4>
+        <a href="#calendar">Календарь</a>
+        <a href="#table">Таблица</a>
+        <a href="#squad">Состав</a>
+        <a href="#academy">Академия</a>
+        <a href="#tickets">Билеты</a>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© <span id="yearNow">2026</span> ФК «Метеор». Демонстрационная страница: клуб, лига и статистика вымышлены.</span>
+      <span class="mono">сборка 2026-06 · пресс-служба</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- mobile nav ---------- */
+  var navBtn = document.getElementById('navToggle');
+  var navBox = document.getElementById('mainNav');
+  navBtn.addEventListener('click', function(){
+    var open = navBox.classList.toggle('open');
+    navBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  ***REMOVED***);
+  navBox.addEventListener('click', function(e){
+    if(e.target.tagName === 'A'){ navBox.classList.remove('open'); navBtn.setAttribute('aria-expanded','false'); ***REMOVED***
+  ***REMOVED***);
+
+  /* ---------- next saturday 19:30 ---------- */
+  function nextMatchDate(){
+    var now = new Date();
+    var diff = (6 - now.getDay() + 7) % 7;
+    if(diff === 0 && (now.getHours() > 19 || (now.getHours() === 19 && now.getMinutes() >= 30))) diff = 7;
+    var m = new Date(now);
+    m.setDate(now.getDate() + diff);
+    m.setHours(19,30,0,0);
+    return m;
+  ***REMOVED***
+  var matchDate = nextMatchDate();
+  document.getElementById('mdDate').textContent =
+    matchDate.toLocaleDateString('ru-RU',{weekday:'long', day:'numeric', month:'long'***REMOVED***) + ' · 19:30';
+
+  /* ---------- countdown ---------- */
+  var cdD=document.getElementById('cdD'), cdH=document.getElementById('cdH'),
+      cdM=document.getElementById('cdM'), cdS=document.getElementById('cdS');
+  function pad(n){ return n<10 ? '0'+n : ''+n; ***REMOVED***
+  function tick(){
+    var delta = matchDate - new Date();
+    if(delta < 0) delta = 0;
+    var s = Math.floor(delta/1000);
+    cdD.textContent = Math.floor(s/86400);
+    cdH.textContent = pad(Math.floor(s%86400/3600));
+    cdM.textContent = pad(Math.floor(s%3600/60));
+    cdS.textContent = pad(s%60);
+  ***REMOVED***
+  tick(); setInterval(tick,1000);
+
+  /* ---------- calendar render + filter ---------- */
+  var calData = [
+    {off:0,  opp:'«Заря»',        home:true,  comp:'Лига · тур 14', time:'19:30'***REMOVED***,
+    {off:7,  opp:'«Торпедо-С»',   home:false, comp:'Лига · тур 15', time:'17:00'***REMOVED***,
+    {off:10, opp:'«Вымпел»',      home:true,  comp:'Кубок · 1/8',   time:'20:00'***REMOVED***,
+    {off:14, opp:'«Динамо-2»',    home:false, comp:'Лига · тур 16', time:'18:30'***REMOVED***,
+    {off:21, opp:'«Крылья»',      home:true,  comp:'Лига · тур 17', time:'19:30'***REMOVED***
+  ***REMOVED***;
+  var calList = document.getElementById('calList');
+  function renderCalendar(mode){
+    calList.innerHTML = '';
+    calData.forEach(function(row){
+      if(mode !== 'all' && ((mode==='home') !== row.home)) return;
+      var d = new Date(matchDate); d.setDate(matchDate.getDate()+row.off); d.setHours(19,30,0,0);
+      var li = document.createElement('li');
+      li.className = 'cal-row';
+      var dateStr = d.toLocaleDateString('ru-RU',{weekday:'short', day:'numeric', month:'long'***REMOVED***);
+      li.innerHTML =
+        '<span class="cal-date">'+dateStr+'<small>'+row.time+' мск</small></span>'+
+        '<span class="cal-opp">'+(row.home ? '«Метеор» — '+row.opp : row.opp+' — «Метеор»')+'<small>'+row.comp+'</small></span>'+
+        '<span class="tag '+(row.home?'home':'')+'">'+(row.home?'ДОМА':'ВЫЕЗД')+'</span>'+
+        (row.home ? '<a class="btn cal-link" href="#tickets">Билеты</a>' : '<span class="note">трансляция — клубное ТВ</span>');
+      calList.appendChild(li);
+    ***REMOVED***);
+  ***REMOVED***
+  renderCalendar('all');
+  document.querySelectorAll('[data-cal***REMOVED***').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('[data-cal***REMOVED***').forEach(function(b){ b.setAttribute('aria-pressed','false'); ***REMOVED***);
+      btn.setAttribute('aria-pressed','true');
+      renderCalendar(btn.getAttribute('data-cal'));
+    ***REMOVED***);
+  ***REMOVED***);
+
+  /* ---------- squad filter ---------- */
+  document.querySelectorAll('[data-sq***REMOVED***').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('[data-sq***REMOVED***').forEach(function(b){ b.setAttribute('aria-pressed','false'); ***REMOVED***);
+      btn.setAttribute('aria-pressed','true');
+      var mode = btn.getAttribute('data-sq');
+      document.querySelectorAll('#squadGrid .player').forEach(function(p){
+        p.style.display = (mode==='all' || p.getAttribute('data-pos')===mode) ? '' : 'none';
+      ***REMOVED***);
+    ***REMOVED***);
+  ***REMOVED***);
+
+  /* ---------- news filter ---------- */
+  document.querySelectorAll('[data-news***REMOVED***').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('[data-news***REMOVED***').forEach(function(b){ b.setAttribute('aria-pressed','false'); ***REMOVED***);
+      btn.setAttribute('aria-pressed','true');
+      var mode = btn.getAttribute('data-news');
+      document.querySelectorAll('#newsList .news-item').forEach(function(item){
+        item.style.display = (mode==='all' || item.getAttribute('data-cat')===mode) ? '' : 'none';
+      ***REMOVED***);
+    ***REMOVED***);
+  ***REMOVED***);
+
+  /* ---------- stat bars ---------- */
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function fillBars(){
+    document.querySelectorAll('#statBlock .stat').forEach(function(st){
+      var h = parseFloat(st.getAttribute('data-home'));
+      var a = parseFloat(st.getAttribute('data-away'));
+      var total = h + a;
+      var homeBar = st.querySelector('.bar-home');
+      var awayBar = st.querySelector('.bar-away');
+      homeBar.style.width = (h/total*100).toFixed(1)+'%';
+      awayBar.style.width = (a/total*100).toFixed(1)+'%';
+    ***REMOVED***);
+  ***REMOVED***
+  if(reduceMotion){ fillBars(); ***REMOVED***
+  else{
+    var statObs = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(en.isIntersecting){ fillBars(); statObs.disconnect(); ***REMOVED***
+      ***REMOVED***);
+    ***REMOVED***,{threshold:.3***REMOVED***);
+    statObs.observe(document.getElementById('statBlock'));
+  ***REMOVED***
+
+  /* ---------- tickets ---------- */
+  var sectorSel = document.getElementById('sectorSel');
+  var qtyInp = document.getElementById('qtyInp');
+  var sumOut = document.getElementById('tickSum');
+  var tickMsg = document.getElementById('tickMsg');
+  function fmtRub(n){ return n.toLocaleString('ru-RU')+' ₽'; ***REMOVED***
+  function recalc(){
+    var q = parseInt(qtyInp.value,10);
+    if(isNaN(q) || q<1) q=1; if(q>8) q=8;
+    qtyInp.value = q;
+    sumOut.textContent = fmtRub(q * parseInt(sectorSel.value,10));
+  ***REMOVED***
+  sectorSel.addEventListener('change', recalc);
+  qtyInp.addEventListener('input', recalc);
+  recalc();
+  document.getElementById('tickForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    var q = parseInt(qtyInp.value,10);
+    var sectorText = sectorSel.options[sectorSel.selectedIndex***REMOVED***.text.split(' — ')[0***REMOVED***;
+    tickMsg.textContent = 'Бронь принята: '+sectorText+', билетов: '+q+', сумма '+fmtRub(q*parseInt(sectorSel.value,10))+
+      '. Выкуп в кассе до 18:30 в день матча. (Демо-режим: оплата не подключена.)';
+    tickMsg.classList.add('show');
+  ***REMOVED***);
+
+  document.getElementById('yearNow').textContent = new Date().getFullYear();
+***REMOVED***)();
+</script>
+</body>
+</html>

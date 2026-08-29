@@ -1,1 +1,34 @@
-{"status":"ok","message":"TMUX_OK записан в /tmp/tmux_final.txt","session_id":"a71d67ce","timestamp":"2026-07-29T01:21:41.473857+00:00"***REMOVED***
+{
+  "status": "ok",
+  "task": "v5.187.2 — UX fix: GET / serves Lilac Dark dashboard to browsers (content-negotiation)",
+  "deliverables": {
+    "forge_api.py": "root() content-negotiation: Accept:text/html -> FileResponse(prototype/index.html, Cache-Control:no-cache); Accept:*/* -> JSON (unchanged). Request import; -> Any. /prototype Cache-Control symmetry. APP_VERSION 5.181.0-proto -> 5.187.2-proto",
+    "test_forge_api.py": "+2 tests (browser-Accept->HTML+aurora; wildcard-Accept->JSON+version) — 22 passed",
+    "changelog": "CHANGELOG.md v5.187.2 entry prepended via str_replace"
+  ***REMOVED***,
+  "cr_loop": {
+    "r1": "CHISTO + 2 nits applied (Cache-Control both routes; APP_VERSION bump) + 1 accepted (Accept:text/* edge case)",
+    "r2": "CHISTO + 2 micro-nits applied (/prototype Cache-Control symmetry; comment style cleanup)",
+    "final": "CHISTO (pending final verification)"
+  ***REMOVED***,
+  "validation": {
+    "pytest": "22 passed, 65 warnings in ~15s",
+    "ast": "scripts_01/forge_api.py AST OK",
+    "live": "server in tmux session forge_api on :8765; curl -H 'Accept: text/html' -> 6x aurora in HTML; version 5.187.2-proto; /prototype /static/* /api/interactive/v1/health -> 200"
+  ***REMOVED***,
+  "launch_instructions": [
+    "Server is already running in tmux: tmux attach -t forge_api (Ctrl+B D to detach)",
+    "Browser: open http://127.0.0.1:8765/  -> now shows Lilac Dark dashboard (Accept:text/html)",
+    "API clients (curl/scripts): GET / still returns JSON (Accept:*/*) — backward compatible",
+    "Manual restart: tmux kill-session -t forge_api; tmux new-session -d -s forge_api 'cd /storage/emulated/0/PROJECTS/workstation/freebuff && PORT=8765 python3 scripts_01/forge_api.py'",
+    "Static-only fallback (no API): python3 -m http.server 8080 --directory prototype"
+  ***REMOVED***,
+  "ops_lessons": [
+    "pkill -f 'forge_api.py' self-matches own bash AND parallel pytest cmdlines -> use bracket-trick 'forge_ap[i***REMOVED***.py' AND sequential phases",
+    "background nohup from basher dies with parent shell -> use tmux new-session -d for persistent servers (platform convention)",
+    "state files (.freebuff_result) MUST be written via json.dumps, never hand-authored JSON (v5.187.0 JSONDecodeError lesson)",
+    "CHANGELOG prepend only via str_replace, never write_file (v5.184.0 wipe lesson)"
+  ***REMOVED***,
+  "session_id": "4b011978",
+  "timestamp": "2026-08-10T13:20:00+00:00"
+***REMOVED***

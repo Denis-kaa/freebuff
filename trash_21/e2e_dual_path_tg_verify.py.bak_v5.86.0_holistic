@@ -1,0 +1,383 @@
+"""Live e2e TG verify для v5.83.0 dual-path dispatch.
+
+Pipeline:
+  1. Pre-flight: TG session alive + queues ready + core_02 importable.
+  2. Bot lifecycle: invoke cmd_task via in-process mock Update/Context (Option C).
+  3. Real TG send: dispatcher calls send_to_chat via report_to_saved_messages.
+  4. Latency measurement: <5 sec target.
+  5. Round-trip verify: TGClient.get_messages(chat_id, limit-scan).
+  6. Log file check: logs_14/tg_spawn_<taskid>.log exists + has dispatcher output.
+  7. Audit-trail append: docs_10/e2e_logs/promt47_run.md prepend на TOP.
+
+Per CAN-9 + CAN-17 + CON-22 + CON-25:
+  - honest fail-loud (CAN-14)
+  - anti-rewriting historical rows (CAN-17)
+  - latency budget (target: <5 sec vs 0–5 min cron baseline)
+
+CLI flags:
+  --chat-id-saved 7709651193   (default)
+  --chat-id-litvinov 1063827731
+  --text "..."                 (default: auto-generated run tag)
+  --run-tag v5.85.0_e2e
+  --dry-run                    (skip real TG send — useful для pre-flight)
+"""
+from __future__ import annotations
+
+import asyncio
+import os
+import sys
+import time
+import uuid
+***REMOVED***
+
+WORKSPACE = Path(__file__).resolve().parent.parent
+
+SAVED_MESSAGES_CHAT_ID = 7709651193  # CAN-3 v5.40.0 anchor
+ALEX_LITVINOV_CHAT_ID = 1063827731  # CAN-9 v5.45.0 anchor
+TARGET_LATENCY_SECS = 5.0
+
+
+TG_TERMINAL_MESSENGER = WORKSPACE / "projects_17/tg_terminal_messenger"
+TG_SESSION_NAME = "tg_session"  # canonical (CON-31 wrap)
+TG_SESSION_PATH = TG_TERMINAL_MESSENGER / f"{TG_SESSION_NAME***REMOVED***.session"
+
+# v5.86.0 polish (round-4 code-reviewer): Telethon resolves session_name relative to cwd.
+# Force-chdir to session-dir on every TG-touching entry point. Restore via try/finally.
+_TG_CWD = TG_TERMINAL_MESSENGER  # project-local mirror of cwd during TG ops
+TG_REAUTH_HINT = (
+    f"To regenerate the TG session, run a Telethon interactive sign-in, e.g.\n"
+    f"   python3 -c 'from telethon.sync import TelegramClient; "
+    f"c = TelegramClient(\"{TG_SESSION_PATH***REMOVED***\", int(os.environ[\"TG_API_ID\"***REMOVED***), os.environ[\"TG_API_HASH\"***REMOVED***); '"
+    f"c.start()'\n"
+    f"Must populate TG_API_ID and TG_API_HASH from ~/.env or freebuff secrets.\n"
+    f"After sign-in, re-run this verifier."
+)
+
+
+def _preflight() -> None:
+    """0-side-effect checks. Exit 1 on any failure (no TG touch).
+
+    v5.86.0: NEW pre-flight `await connect() + get_me()` probe (CAN-14 fail-loud).
+    """
+    session = TG_SESSION_PATH
+    if not session.exists():
+        print("❌ Pre-flight FAILED: TG session file missing:", session)
+        sys.exit(1)
+    age_h = (time.time() - session.stat().st_mtime) / 3600.0
+    if age_h > 36:  # >36h considered stale
+        print(f"⚠ Pre-flight WARNING: TG session is {age_h:.1f***REMOVED***h old (may indicate expired auth).")
+        print(f"  session path: {session***REMOVED***")
+
+    for sub in ("user", "running", "done", "failed"):
+        d = WORKSPACE / "pompts_11" / sub
+        if not d.is_dir():
+            print(f"❌ Pre-flight FAILED: queue dir missing: {d***REMOVED***")
+            sys.exit(1)
+
+    logs_dir = WORKSPACE / "logs_14"
+    if not logs_dir.is_dir():
+        logs_dir.mkdir(exist_ok=True)
+
+
+async def _probe_tg_session() -> bool:
+    """v5.86.0 TG probe (round-4 polished):
+     - chdir to _TG_CWD so Telethon resolves session_name= correctly.
+     - retry-once for transient (ConnectionError/TimeoutError/OSError).
+     - fail-loud per CAN-14 for canonical crypto/banned/flood errors.
+     - returns True on success, False on soft-warn (CAN-14 partial).
+    """
+    import asyncio as _asyncio
+    from telethon.errors import (
+        AuthKeyUnregisteredError,
+        UserDeactivatedError,
+        UserBannedError,
+        FloodWaitError,
+        PhoneNumberBannedError,
+    )
+    orig_cwd = os.getcwd()
+    last_exc = None
+    try:
+        os.chdir(_TG_CWD)
+        for attempt in (1, 2):
+            client = None
+            try:
+                client = TGClient(session_name=TG_SESSION_NAME)
+                await client.connect()
+                try:
+                    await client.get_me()
+                finally:
+                    try:
+                        await client.disconnect()
+                    except Exception:
+                        pass
+                print(f"  \u2713 TG probe OK (attempt {attempt***REMOVED***/2)")
+                return True
+            except AuthKeyUnregisteredError as exc:
+                print(f"\u274c TG SESSION INVALID (key not registered): {exc***REMOVED***", flush=True)
+                print(f"    session path: {TG_SESSION_PATH***REMOVED***", flush=True)
+                print(f"    To regenerate (REQUIRES TG_API_ID/TG_API_HASH env + interactive phone+code):", flush=True)
+                print(f'      python3 -c 'from telethon.sync import TelegramClient;', flush=True)
+                print(f'        c = TelegramClient("tg_session", int(os.environ["TG_API_ID"***REMOVED***), os.environ["TG_API_HASH"***REMOVED***);', flush=True)
+                print(f'        c.start()'', flush=True)
+                print(f"    Note: replaces EXISTING session file 'tg_session.session'.", flush=True)
+                print(f"    Note: c.start() is interactive -- does NOT work in cron / non-TTY.", flush=True)
+                sys.exit(2)  # canonical crypto: fail-loud immediately, no retry
+            except (UserDeactivatedError, UserBannedError, PhoneNumberBannedError) as exc:
+                # Ban/deactivate errors: session is irrelevant -- account-level block
+                print(f"\u274c TG ACCOUNT BLOCKED: {type(exc).__name__***REMOVED***: {exc***REMOVED***", flush=True)
+                print(f"    This is an account-level block; reauth WON'T help.", flush=True)
+                print(f"    Resolve via https://my.telegram.org or Telegram support.", flush=True)
+                sys.exit(3)  # sibling auth: fail-loud per CAN-14
+            except FloodWaitError as exc:
+                # Rate-limit hit: report X seconds remaining; sytem shouldn't retry
+                seconds = getattr(exc, 'seconds', 60)
+                print(f"\u274c TG FLOOD-WAIT: must wait {seconds***REMOVED***s before retrying", flush=True)
+                sys.exit(4)
+            except (ConnectionError, TimeoutError, OSError) as exc:
+                # Transient -- retry once
+                last_exc = exc
+                print(f"  \u26a0 transient probe error (attempt {attempt***REMOVED***/2): {type(exc).__name__***REMOVED***: {exc***REMOVED***", flush=True)
+                if attempt == 1:
+                    await _asyncio.sleep(1)
+                    continue
+                # 2 strikes: fail-loud
+                print(f"\u274c TG probe failed after 2 attempts; last error: {last_exc***REMOVED***", flush=True)
+                sys.exit(5)
+            except Exception as exc:
+                # Unknown -- soft-warn, still retry-once
+                last_exc = exc
+                print(f"  \u26a0 unexpected probe error (attempt {attempt***REMOVED***/2): {type(exc).__name__***REMOVED***: {exc***REMOVED***", flush=True)
+                if attempt == 1:
+                    await _asyncio.sleep(1)
+                    continue
+                print(f"\u26a0 TG probe gave up after 2 attempts; round-trip verify will likely fail.", flush=True)
+                return False  # soft-warn (CAN-14 partial: unknown category, can't claim fail-loud)
+            finally:
+                if client is not None:
+                    try:
+                        await client.disconnect()
+                    except Exception:
+                        pass
+        return False
+    finally:
+        try:
+            os.chdir(orig_cwd)
+        except Exception:
+            pass
+
+
+async def _invoke_cmd_task(text: str, chat_id: int) -> tuple:
+    """Run cmd_task via in-process mock Update/Context (Option C)."""
+    sys.path.insert(0, str(WORKSPACE))
+    from scripts_01.telegram_bot import cmd_task  # NOQA: E402
+
+    update = _MockUpdate(text=f"/task {text***REMOVED***", chat_id=chat_id)
+    context = _MockContext(args=text.split(" "))
+
+    t0 = time.time()
+    await cmd_task(update, context)
+    latency = time.time() - t0
+
+    bot_replies = update.message.reply_text.calls
+    print(f"  cmd_task latency: {latency:.2f***REMOVED***s (target <{TARGET_LATENCY_SECS***REMOVED***s)")
+    for c in bot_replies:
+        text_short = (c["text"***REMOVED***[:120***REMOVED*** + "…") if len(c.get("text", "")) > 120 else c.get("text", "")
+        print(f"  bot reply: {text_short***REMOVED***")
+
+    return latency, text, bot_replies
+
+
+async def _wait_for_spawn_log(prefix: str, before: float, max_secs: int = 30) -> "Path | None":
+    """Wait for the per-task log файл; check it has the expected prefix."""
+    logs_dir = WORKSPACE / "logs_14"
+    deadline = time.time() + max_secs
+    while time.time() < deadline:
+        candidates = sorted(
+            [p for p in logs_dir.glob("tg_spawn_*.log") if p.stat().st_mtime >= before***REMOVED***,
+            key=lambda p: p.stat().st_mtime,
+        )
+        if candidates:
+            latest = candidates[-1***REMOVED***
+            content = latest.read_text(encoding="utf-8", errors="replace")
+            if prefix in content or "dispatch" in content.lower():
+                return latest
+        await asyncio.sleep(0.5)
+    return None
+
+
+async def _round_trip_chat_id(chat_id: int, search_text: str) -> "int | None":
+    """TG round-trip: TGClientV2-CLIENT-WRAP with correct constructor + AuthKey fail-loud.
+
+    v5.86.0 fix:
+      - TGClient constructor is `TGClient(session_name="tg_session")` (not `TGClient(str(WORKSPACE))`).
+        Use the canonical session_name path.
+      - TGClientV2 wraps a TGClient base; instantiate base first, then V2-wrapping.
+      - AuthKeyUnregisteredError is caught at probe time (pre-flight) — will sys.exit(2)
+        BEFORE round-trip is attempted. So this function can assume a live session.
+
+    Returns msg_id from limit-scan if found, else None.
+    """
+    try:
+        from projects_17.tg_terminal_messenger.src.telegram.client import TGClient  # NOQA: E402
+        base = TGClient(session_name=TG_SESSION_NAME)
+    except Exception as exc:
+        print(f"⚠ TGClient base instantiation failed: {exc***REMOVED***")
+        return None
+    try:
+        # Use TGClientV2 wrapper if available; otherwise direct TGClient.
+        try:
+            from core_02._tg_client_v2 import TGClientV2  # NOQA: E402
+            client = TGClientV2(base)
+        except Exception:
+            client = base
+        await client.connect()
+        msgs = await client.get_messages(chat_id, limit=20)
+        await client.disconnect()
+    except Exception as exc:
+        print(f"⚠ TG round-trip failed: {exc***REMOVED***")
+        try:
+            await client.disconnect()
+        except Exception:
+            pass
+        return None
+    for m in msgs:
+        text = (m.get("message") or "") if isinstance(m, dict) else getattr(m, "message", "") or ""
+        if search_text in str(text):
+            return int(m.get("id") if isinstance(m, dict) else getattr(m, "id", 0))
+    return None
+
+
+def _append_audit_trail(
+    task_id: str,
+    saved_msg_id: "int | None",
+    lit_msg_id: "int | None",
+    latency: float,
+    run_tag: str,
+) -> None:
+    """Prepend at TOP of `## Historical Verification Runs` section per CAN-17."""
+    md_path = WORKSPACE / "docs_10/e2e_logs" / "promt47_run.md"
+    if not md_path.exists():
+        print(f"⚠ audit trail file missing: {md_path***REMOVED***")
+        return
+    src = md_path.read_text(encoding="utf-8")
+    marker = "## Historical Verification Runs"
+    if marker not in src:
+        print("⚠ audit trail section not found — skipping")
+        return
+    head, sep, tail = src.partition(marker)
+    # Find the table header row (line right after `## Historical Verification Runs`).
+    after_marker = sep + marker
+    # Insert after the table header line "|---|---|..." (typically 2 lines after marker).
+    lines = tail.splitlines()
+    insert_at = 0
+    # Skip blank line and table header after the marker
+    for i, ln in enumerate(lines):
+        if ln.strip().startswith("|---") or ln.strip().startswith("| Date") or ln.strip().startswith("|"):
+            insert_at = i + 1
+            break
+    new_row = (
+        f"| {time.strftime('%Y-%m-%d %H:%M:%S')***REMOVED*** | `{task_id***REMOVED***` | "
+        f"{saved_msg_id or '∅'***REMOVED*** | {lit_msg_id or '∅'***REMOVED*** | "
+        f"{latency:.2f***REMOVED***s | {run_tag***REMOVED*** |"
+    )
+    lines.insert(insert_at, new_row)
+    new_tail = "\n".join(lines)
+    md_path.write_text(head + sep + new_tail + "\n", encoding="utf-8")
+    print(f"✅ prepended audit row → {md_path.name***REMOVED***")
+
+
+async def main_async(
+    chat_id_saved: int,
+    chat_id_litvinov: int,
+    text: str,
+    run_tag: str,
+    dry_run: bool,
+) -> None:
+    _preflight()
+
+    safe_text = text if text else f"v5.83.0 dual-path verify @ {time.strftime('%H:%M:%S')***REMOVED***"
+    print(f"\n═══ v5.83.0 dual-path LIVE e2e TAG={run_tag***REMOVED*** {'(dry-run)' if dry_run else '(real TG)'***REMOVED*** ═══")
+    print(f"  text: {safe_text!r***REMOVED***")
+    print(f"  saved_chat_id: {chat_id_saved***REMOVED*** | litvinov_chat_id: {chat_id_litvinov***REMOVED***")
+
+    before = time.time()
+    latency, task_text, bot_replies = await _invoke_cmd_task(safe_text, chat_id_saved)
+
+    print("\n⋯ waiting for spawn log file (≤30s)…")
+    spawn_log = await _wait_for_spawn_log(prefix=safe_text, before=before, max_secs=30)
+    if spawn_log:
+        log_head = "\n".join(spawn_log.read_text(encoding="utf-8", errors="replace").splitlines()[:25***REMOVED***)
+        print(f"✅ log файл OK: {spawn_log.name***REMOVED***")
+        print(f"  head:\n{log_head***REMOVED***")
+    else:
+        print("⚠ spawn log file not found within 30s (dispatch may have exited or stuck)")
+
+    saved_msg_id = None
+    lit_msg_id = None
+
+    # v5.86.0: pre-flight TG session probe (CAN-14 fail-loud).
+    # Runs ONLY if not dry_run — we still want a fast skip path.
+    if not dry_run and os.environ.get("NO_TG") != "1":
+        alive, info = await _probe_tg_session()
+        if not alive:
+            print(f"⚠ TG session probe reported issue: {info***REMOVED*** — round-trip may fail.")
+    # still spawns from cmd_task (fire-and-forget); to skip TG completely,
+    # set NO_TG=1 INSTEAD of --dry-run. (Code-reviewer round 1 polish.)
+    if not dry_run and os.environ.get("NO_TG") != "1":
+        print("\n⋯ TG round-trip Saved…")
+        saved_msg_id = await _round_trip_chat_id(chat_id_saved, search_text=safe_text)
+        print(f"  saved: {saved_msg_id if saved_msg_id else 'NOT FOUND'***REMOVED***")
+        print("⋯ TG round-trip Литвинов…")
+        lit_msg_id = await _round_trip_chat_id(chat_id_litvinov, search_text=safe_text)
+        print(f"  litvinov: {lit_msg_id if lit_msg_id else 'NOT FOUND (optional channel)'***REMOVED***")
+    else:
+        print("\n⋯ skipping TG round-trip (dry-run / NO_TG=1). Dispatcher may STILL send TG messages.")
+
+    # Extract a synthesized task_id from bot reply if available.
+    task_id = f"task_{run_tag[:18***REMOVED******REMOVED***"
+    for c in bot_replies:
+        m = c["text"***REMOVED***
+        if "Task ID:" in m and "`" in m:
+            try:
+                task_id = m.split("Task ID: ")[1***REMOVED***.strip("` ").splitlines()[0***REMOVED***.strip()
+            except Exception:
+                pass
+
+    _append_audit_trail(
+        task_id=task_id,
+        saved_msg_id=saved_msg_id,
+        lit_msg_id=lit_msg_id,
+        latency=latency,
+        run_tag=run_tag,
+    )
+
+    # Final verdict.
+    if latency >= TARGET_LATENCY_SECS:
+        print(f"\n⚠ LATENCY WARNING: {latency:.2f***REMOVED***s >= target {TARGET_LATENCY_SECS***REMOVED***s")
+    if not dry_run and not saved_msg_id:
+        print("⚠ ROUND-TRIP WARNING: real TG round-trip did not find msg in history")
+
+
+def main() -> int:
+    import argparse
+    p = argparse.ArgumentParser(description="v5.83.0 dual-path TG e2e verify")
+    p.add_argument("--chat-id-saved", type=int, default=SAVED_MESSAGES_CHAT_ID)
+    p.add_argument("--chat-id-litvinov", type=int, default=ALEX_LITVINOV_CHAT_ID)
+    p.add_argument("--text", type=str, default="")
+    p.add_argument("--run-tag", type=str, default=f"v5.83.0_e2e_{uuid.uuid4().hex[:6***REMOVED******REMOVED***")
+    p.add_argument("--dry-run", action="store_true", help="skip real TG round-trip")
+    args = p.parse_args()
+    asyncio.run(
+        main_async(
+            chat_id_saved=args.chat_id_saved,
+            chat_id_litvinov=args.chat_id_litvinov,
+            text=args.text,
+            run_tag=args.run_tag,
+            dry_run=args.dry_run,
+        )
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

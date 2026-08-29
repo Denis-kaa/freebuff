@@ -49,6 +49,12 @@ sys.path.insert(0, str(FREEBUFF_ROOT))
 
 from freebuff_plugin_03.scenario_engine import ScenarioEngine
 from scripts_01.tgbot_base import BaseTGBot, load_dotenv
+from core_02.telegram_contract import (
+    SAVED_MESSAGES_CHAT_ID,
+    LITVINOV_CHAT_ID,
+    report_to_saved_messages,
+    report_to_alex_litvinov,
+)
 
 # ── Логирование ──────────────────────────────────────────────
 
@@ -523,6 +529,45 @@ class ScenarioTGBot(BaseTGBot):
             f"🔄 Сценарии перезагружены. Загружено: {count***REMOVED***",
         )
 
+    # ── /escalate ──
+
+    async def cmd_escalate(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        """Эскалировать текущий сценарий клиенту (Александр Литвинов). /escalate [note***REMOVED***
+
+        Wire‑in point: report_to_alex_litvinov из core_02/telegram_contract.jl
+        — закрывает CAN‑3 contract per LESSONS §10 — реальный Telegram‑ack
+        клиенту вместо Telegram‑only admin‑loop.
+        """
+        chat_id = update.effective_chat.id if update.effective_chat else None
+        note = " ".join(context.args or [***REMOVED***).strip()
+
+        scenarios = self.engine.list_scenarios()
+        ts = _time.strftime("%Y-%m-%d %H:%M:%S", _time.gmtime())
+        escalation_text = (
+            "🚨 [Freebuff escalation***REMOVED*** (TEST CYCLE)\n\n"
+            f"🕐 Time (UTC): {ts***REMOVED***\n"
+            f"📨 Source chat_id: {chat_id***REMOVED***\n"
+            f"📚 Loaded scenarios: {len(scenarios)***REMOVED***\n"
+            f"💬 Note: {note or '(none)'***REMOVED***\n\n"
+            "Это тестовое сообщение от ScenarioTGBot /escalate — закрывает "
+            "LESSONS §10 TG‑contract (post CAN‑3 closure v5.40.0+E2E v5.41.0)."
+        )
+
+        try:
+            msg_id = await report_to_alex_litvinov(escalation_text)
+            if msg_id is None:
+                await update.effective_message.reply_text(
+                    "⚠️ Escalation не доставлена — TGClient недоступен или сессия "
+                    "не авторизована. Проверь `python scripts_01/tg_smoke.py` для diagnostics."
+                )
+                return
+            await update.effective_message.reply_text(
+                f"🚨 Escalation доставлена клиенту. msg_id={msg_id***REMOVED***"
+            )
+        except Exception as exc:
+            logger.exception("escalate failed")
+            await update.effective_message.reply_text(f"❌ Escalation error: {exc***REMOVED***")
+
     # ── Текст без команды ──
 
     async def handle_text(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -764,6 +809,9 @@ async def _scenarios(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 async def _reload(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await bot_instance.cmd_reload(update, context)
 
+async def _escalate(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await bot_instance.cmd_escalate(update, context)
+
 async def _callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await bot_instance.handle_callback(update, context)
 
@@ -788,6 +836,7 @@ def main() -> int:
     app.add_handler(CommandHandler("status", _status))
     app.add_handler(CommandHandler("scenarios", _scenarios))
     app.add_handler(CommandHandler("reload", _reload))
+    app.add_handler(CommandHandler("escalate", _escalate))
 
     # Inline callback
     app.add_handler(CallbackQueryHandler(_callback))

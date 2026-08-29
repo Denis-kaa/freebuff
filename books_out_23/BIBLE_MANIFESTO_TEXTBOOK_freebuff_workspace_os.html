@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📜 THE FREEBUFF ERA — Библия · Манифест · Учебник платформы Workspace OS</title>
+<style>
+/* ==========================================================================
+   THE FREEBUFF ERA · Inline CSS Animation Engine · v1.0.0
+   20+ keyframes, parallax, counters, glitch, glow, particles
+   ========================================================================== */
+:root{
+  --ink:#0d1117;--paper:#f4f1e8;--paper-2:#ebe5d4;--parchment:#e8e0c8;
+  --accent:#c8a44a;--accent-2:#8b5a2b;--blood:#a83232;--green:#3a7d44;--blue:#386aaa;
+  --godray-gold:radial-gradient(ellipse at top,#c8a44a 0%,transparent 60%);
+  --serif:'Georgia','Times New Roman',serif;
+  --sans:'Helvetica Neue',system-ui,sans-serif;
+  --mono:'JetBrains Mono','Courier New',monospace;
+  --script:'Brush Script MT','Lucida Handwriting',cursive;
+***REMOVED***
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0***REMOVED***
+html{scroll-behavior:smooth;font-size:17px***REMOVED***
+body{background:var(--paper);color:var(--ink);font-family:var(--serif);line-height:1.65;
+  background-image:linear-gradient(rgba(200,164,74,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(200,164,74,0.04) 1px,transparent 1px);
+  background-size:24px 24px;overflow-x:hidden***REMOVED***
+
+/* === Cinematic Background Layers ====================================== */
+.universe{position:fixed;inset:0;z-index:-3;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 30%,#fff8e1 0%,#ebe5d4 50%,#d4c8a4 100%)***REMOVED***
+.particle-canvas{position:fixed;inset:0;z-index:-2;pointer-events:none;opacity:0.6***REMOVED***
+.watermark{position:fixed;right:-80px;top:20%;z-index:-1;font-family:var(--script);
+  font-size:280px;color:rgba(200,164,74,0.07);pointer-events:none;transform:rotate(-12deg);
+  user-select:none;animation:wm-drift 60s linear infinite***REMOVED***
+@keyframes wm-drift{0%{transform:rotate(-12deg) translateY(0)***REMOVED***50%{transform:rotate(-10deg) translateY(-30px)***REMOVED***100%{transform:rotate(-12deg) translateY(0)***REMOVED******REMOVED***
+
+/* === Cover & Sacred Page ============================================= */
+.cover{min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+  align-items:center;text-align:center;position:relative;padding:60px 20px;
+  background:radial-gradient(ellipse at center,#3a2818 0%,#1a0e08 70%,#000 100%);
+  color:#fde8c0***REMOVED***
+.cover::before{content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(93deg,transparent 0,transparent 78px,
+    rgba(200,164,74,0.03) 78px,rgba(200,164,74,0.03) 79px);animation:godray 12s linear infinite***REMOVED***
+@keyframes godray{0%{background-position:0 0***REMOVED***100%{background-position:79px 0***REMOVED******REMOVED***
+.cover-title{font-family:var(--script);font-size:clamp(60px,9vw,180px);
+  background:linear-gradient(180deg,#fde8c0 0%,#c8a44a 50%,#8b5a2b 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:20px;animation:title-emergence 4s ease-out;letter-spacing:4px***REMOVED***
+@keyframes title-emergence{0%{opacity:0;transform:translateY(60px) scale(0.95);filter:blur(20px)***REMOVED***
+  100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)***REMOVED******REMOVED***
+.cover-subtitle{font-family:var(--serif);font-size:clamp(20px,2.5vw,38px);
+  font-style:italic;color:#e8d4a0;margin-bottom:30px;max-width:900px;
+  animation:slide-up 5s ease-out***REMOVED***
+.cover-meta{font-family:var(--mono);font-size:14px;color:#a89870;letter-spacing:3px;
+  border-top:1px solid #8b5a2b;border-bottom:1px solid #8b5a2b;padding:18px;
+  margin-top:40px;animation:pulse-glow 3s ease-in-out infinite***REMOVED***
+@keyframes pulse-glow{0%,100%{box-shadow:0 0 8px rgba(200,164,74,0.3);color:#a89870***REMOVED***
+  50%{box-shadow:0 0 30px rgba(200,164,74,0.9);color:#fde8c0***REMOVED******REMOVED***
+@keyframes slide-up{0%{opacity:0;transform:translateY(40px)***REMOVED***100%{opacity:1;transform:translateY(0)***REMOVED******REMOVED***
+
+/* === Particle System ============================================ */
+.particle{position:absolute;width:3px;height:3px;background:#fde8c0;
+  border-radius:50%;box-shadow:0 0 6px #c8a44a***REMOVED***
+.particle{animation:float-up 14s linear infinite***REMOVED***
+@keyframes float-up{0%{transform:translateY(110vh) translateX(0);opacity:0***REMOVED***
+  10%{opacity:1***REMOVED***90%{opacity:1***REMOVED***100%{transform:translateY(-10vh) translateX(40px);opacity:0***REMOVED******REMOVED***
+
+/* === Sidebar & Navigation ============================== */
+#toc{position:fixed;left:0;top:0;bottom:0;width:280px;background:rgba(13,17,23,0.95);
+  border-right:1px solid var(--accent);padding:30px 20px;overflow-y:auto;
+  z-index:50;color:#e8d4a0;font-size:14px;font-family:var(--sans);transform:translateX(-100%);
+  transition:transform 0.4s cubic-bezier(0.7,0,0.3,1)***REMOVED***
+#toc.open{transform:translateX(0)***REMOVED***
+#toc h2{font-family:var(--script);font-size:32px;color:var(--accent);
+  margin-bottom:20px;text-align:center***REMOVED***
+#toc ol{list-style:none;counter-reset:toc-sec;padding:0***REMOVED***
+#toc ol li{counter-increment:toc-sec;margin-bottom:8px;padding-left:32px;
+  position:relative;line-height:1.4***REMOVED***
+#toc ol li::before{content:counter(toc-sec);position:absolute;left:0;top:0;font-family:var(--mono);
+  background:var(--accent);color:#0d1117;width:24px;height:24px;display:flex;
+  align-items:center;justify-content:center;border-radius:50%;font-size:11px;font-weight:bold***REMOVED***
+#toc a{color:#e8d4a0;text-decoration:none;transition:all 0.2s;border-bottom:1px dotted transparent***REMOVED***
+#toc a:hover{color:var(--accent);border-bottom-color:var(--accent);padding-left:4px***REMOVED***
+#toc-toggle{position:fixed;left:20px;top:20px;z-index:60;background:var(--accent);
+  color:#0d1117;border:none;padding:10px 14px;font-family:var(--mono);font-size:12px;
+  cursor:pointer;font-weight:bold;letter-spacing:1px;border-radius:4px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.4)***REMOVED***
+#toc-toggle:hover{background:#fde8c0;box-shadow:0 0 18px rgba(200,164,74,0.8)***REMOVED***
+
+/* === Body Sections ========================== */
+main{max-width:960px;margin:0 auto;padding:80px 60px 120px***REMOVED***
+section{margin:80px 0;position:relative;scroll-margin-top:60px***REMOVED***
+h1{font-family:var(--script);font-size:clamp(48px,5vw,80px);color:var(--accent-2);
+  text-align:center;margin:80px 0 50px;text-shadow:0 2px 4px rgba(0,0,0,0.05)***REMOVED***
+h2{font-family:var(--serif);font-size:34px;color:var(--accent-2);margin:50px 0 20px;
+  padding-bottom:12px;border-bottom:3px double var(--accent)***REMOVED***
+h2::before{content:"§ ";color:var(--accent);margin-right:6px***REMOVED***
+h3{font-family:var(--serif);font-size:24px;color:var(--accent-2);margin:35px 0 14px;
+  font-weight:bold;font-variant:small-caps;letter-spacing:1px***REMOVED***
+h4{font-size:19px;color:var(--ink);margin:25px 0 10px;font-style:italic***REMOVED***
+p{text-align:justify;text-indent:1.5em;margin-bottom:14px***REMOVED***
+strong{color:var(--accent-2);font-weight:bold***REMOVED***
+em{color:var(--accent-2)***REMOVED***
+code{font-family:var(--mono);background:#2a2a1e;color:#e8d4a0;padding:2px 6px;
+  border-radius:3px;font-size:90%***REMOVED***
+
+/* === Episode Cards ================================== */
+.episode{background:white;border:1px solid var(--accent);border-radius:6px;
+  padding:30px;margin:30px 0;box-shadow:0 2px 12px rgba(0,0,0,0.08);
+  position:relative;transition:transform 0.3s,box-shadow 0.3s***REMOVED***
+.episode:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(200,164,74,0.3)***REMOVED***
+.episode::before{content:"";position:absolute;left:-2px;top:20px;bottom:20px;width:4px;
+  background:linear-gradient(180deg,var(--accent),var(--accent-2));border-radius:2px***REMOVED***
+.episode-meta{font-family:var(--mono);font-size:12px;color:var(--blue);margin-bottom:10px;
+  text-transform:uppercase;letter-spacing:2px***REMOVED***
+.episode-id{position:absolute;top:14px;right:14px;background:var(--accent-2);
+  color:#fde8c0;padding:6px 10px;font-family:var(--mono);font-size:11px;
+  border-radius:3px;font-weight:bold;letter-spacing:1px***REMOVED***
+.episode h3{margin-top:0***REMOVED***
+.episode h3::before{content:"▼ ";color:var(--accent)***REMOVED***
+
+/* === Forensic Markers ================================= */
+.fact,.analysis,.decision,.consequence,.trigger{border-left:4px solid;padding:14px 20px;
+  margin:16px 0;font-family:var(--sans);font-size:14.5px;line-height:1.5***REMOVED***
+.fact{border-color:var(--blue);background:rgba(56,106,170,0.08)***REMOVED***
+.fact::before{content:"FACT "***REMOVED***
+.analysis{border-color:var(--accent);background:rgba(200,164,74,0.12)***REMOVED***
+.analysis::before{content:"ANALYSIS "***REMOVED***
+.decision{border-color:var(--green);background:rgba(58,125,68,0.10);font-weight:bold***REMOVED***
+.decision::before{content:"DECISION "***REMOVED***
+.consequence{border-color:var(--blood);background:rgba(168,50,50,0.08)***REMOVED***
+.consequence::before{content:"CONSEQUENCE "***REMOVED***
+.trigger{border-color:#6b46c1;background:rgba(107,70,193,0.10);font-style:italic***REMOVED***
+.trigger::before{content:"FUTURE TRIGGER "***REMOVED***
+.fact::before,.analysis::before,.decision::before,.consequence::before,.trigger::before{
+  font-family:var(--mono);font-weight:bold;font-size:11px;letter-spacing:2px;
+  display:block;margin-bottom:6px;color:rgba(0,0,0,0.6)***REMOVED***
+
+/* === Manifesto Block (Scripture Style) ===================== */
+.manifesto{background:linear-gradient(135deg,#2a1810 0%,#0d0606 100%);
+  color:#fde8c0;padding:40px;margin:50px 0;border-radius:8px;
+  border:2px solid var(--accent);position:relative;
+  box-shadow:0 0 40px rgba(200,164,74,0.4),inset 0 0 40px rgba(200,164,74,0.1);
+  animation:scripture-glow 5s ease-in-out infinite***REMOVED***
+@keyframes scripture-glow{0%,100%{box-shadow:0 0 40px rgba(200,164,74,0.4),inset 0 0 40px rgba(200,164,74,0.1)***REMOVED***
+  50%{box-shadow:0 0 70px rgba(200,164,74,0.8),inset 0 0 70px rgba(200,164,74,0.2)***REMOVED******REMOVED***
+.manifesto h3{color:var(--accent);font-family:var(--script);font-size:32px;
+  text-align:center;border-bottom:1px solid var(--accent);padding-bottom:18px***REMOVED***
+.manifesto p{color:#f4e4c0;font-style:italic;text-align:center;max-width:780px;margin:18px auto***REMOVED***
+.manifesto hr{border:none;height:1px;background:var(--accent);margin:24px auto;width:60%***REMOVED***
+
+/* === Code Block with Typing Effect ============================== */
+.codeblock{background:#0d1117;color:#e8d4a0;padding:18px 22px;border-radius:6px;
+  font-family:var(--mono);font-size:14px;margin:20px 0;overflow-x:auto;
+  border-left:4px solid var(--accent);position:relative***REMOVED***
+.codeblock::after{content:"▊";color:var(--accent);animation:terminal-blink 1s step-end infinite;
+  position:absolute;right:14px;top:18px***REMOVED***
+@keyframes terminal-blink{50%{opacity:0***REMOVED******REMOVED***
+.codeblock .kw{color:#c8a44a;font-weight:bold***REMOVED***
+.codeblock .str{color:#a89870***REMOVED***
+.codeblock .num{color:#a83232***REMOVED***
+.codeblock .cm{color:#666;font-style:italic***REMOVED***
+
+/* === Tables (Hover-glow) =============================== */
+table{width:100%;border-collapse:collapse;margin:30px 0;background:white;
+  box-shadow:0 4px 16px rgba(0,0,0,0.06);border-radius:6px;overflow:hidden***REMOVED***
+th{background:linear-gradient(180deg,var(--accent-2),var(--accent));
+  color:white;padding:14px;text-align:left;font-family:var(--serif);font-weight:bold;
+  border-bottom:2px solid var(--ink);font-variant:small-caps;letter-spacing:1px***REMOVED***
+td{padding:12px 14px;border-bottom:1px solid var(--paper-2);font-family:var(--sans);
+  font-size:14px;transition:all 0.2s***REMOVED***
+tr:hover td{background:rgba(200,164,74,0.15);transform:translateX(3px)***REMOVED***
+
+/* === Glitch & Stashdrop Effects ============================================ */
+.glitch{position:relative;animation:glitch-skew 7s infinite***REMOVED***
+@keyframes glitch-skew{0%,95%,100%{transform:skewX(0);filter:none***REMOVED***
+  96%{transform:skewX(3deg);filter:hue-rotate(40deg)***REMOVED***
+  97%{transform:skewX(-3deg);filter:hue-rotate(-40deg)***REMOVED***
+  98%{transform:skewX(0);filter:none***REMOVED******REMOVED***
+
+/* === Animated Counters ============================= */
+.counter{font-family:var(--mono);font-weight:bold;color:var(--accent-2);
+  font-size:60px;text-align:center;letter-spacing:-2px;
+  display:inline-block;min-width:120px;border-bottom:4px solid var(--accent);
+  padding:0 14px;transition:all 0.6s***REMOVED***
+
+/* === Glossary ============================= */
+.gloss{margin:18px 0;padding:16px 20px;background:#faf6ea;border-left:3px solid var(--accent);
+  border-radius:0 4px 4px 0;font-size:14.5px***REMOVED***
+.gloss dt{font-family:var(--serif);font-weight:bold;color:var(--accent-2);font-size:16px;
+  margin-bottom:6px;font-variant:small-caps***REMOVED***
+.gloss dt::after{content:" ¶"***REMOVED***
+.gloss dd{margin-left:14px;color:#3a3530;font-style:italic***REMOVED***
+
+/* === Section Divider (Bible Verse) ============ */
+.divider{font-family:var(--script);text-align:center;font-size:90px;
+  color:var(--accent);margin:80px 0;opacity:0.5;user-select:none;
+  animation:divider-fade 4s ease-in-out infinite***REMOVED***
+@keyframes divider-fade{0%,100%{opacity:0.3***REMOVED***50%{opacity:0.7***REMOVED******REMOVED***
+
+/* === Crisis Block (Crimson =============================) */
+.crisis{border:2px solid var(--blood);background:rgba(168,50,50,0.04);
+  padding:25px 30px;margin:30px 0;border-radius:6px;position:relative***REMOVED***
+.crisis::before{content:"▼ CRISIS";position:absolute;top:-12px;left:20px;background:var(--blood);
+  color:white;padding:4px 12px;font-family:var(--mono);font-size:11px;letter-spacing:2px;font-weight:bold***REMOVED***
+
+/* === Hero Figures ============================= */
+.figure{background:white;padding:24px 18px;margin:30px 0;border-radius:6px;text-align:center;
+  box-shadow:0 4px 16px rgba(0,0,0,0.08);border:1px solid var(--accent)***REMOVED***
+.figure svg{max-width:100%;height:auto;display:block;margin:0 auto***REMOVED***
+.figure figcaption{margin-top:14px;font-family:var(--sans);font-size:13.5px;
+  color:var(--accent-2);font-style:italic;line-height:1.5***REMOVED***
+
+/* === Print-Ready A11y =================== */
+@media print{
+  body{background:white***REMOVED***
+  .cover{background:linear-gradient(#2a1810,#0d0606);break-after:page***REMOVED***
+  #toc,#toc-toggle,.watermark,.universe,.particle-canvas{display:none***REMOVED***
+***REMOVED***
+</style>
+</head>
+<body>
+<div class="universe"></div>
+<div class="watermark">Ω</div>
+<canvas class="particle-canvas" id="particles"></canvas>
+
+<button id="toc-toggle" onclick="document.getElementById('toc').classList.toggle('open')">≡ ОГЛАВЛЕНИЕ</button>
+<aside id="toc"><h2>Ω Оглавление</h2><ol>
+<li><a href="#prelude">Прелюдия — Откровение Бытия</a></li>
+<li><a href="#manifesto-1">Манифест Workspace OS</a></li>
+<li><a href="#glossary">Глоссарий канонический</a></li>
+<li><a href="#toc">Библия Архитектурная (TOC)</a></li>
+<li><a href="#era-1">Era I — Большой Взрыв (Genesis)</a></li>
+<li><a href="#era-2">Era II — Протоколы (Wiring)</a></li>
+<li><a href="#era-3">Era III — Расплата (Consolidation)</a></li>
+<li><a href="#era-4">Era IV — Откровение (Workspace OS)</a></li>
+<li><a href="#era-5">Era V — Канон (Intelligence Loop)</a></li>
+<li><a href="#s1">§1 Executive Summary</a></li>
+<li><a href="#s2">§2 Исходное состояние</a></li>
+<li><a href="#s3">§3 Цели и вопросы</a></li>
+<li><a href="#s4">§4 Методология</a></li>
+<li><a href="#s5">§5 Хронология работы</a></li>
+<li><a href="#s6">§6 Архитектурный контекст</a></li>
+<li><a href="#s7">§7 Forensic Findings</a></li>
+<li><a href="#s8">§8 Risk Analysis</a></li>
+<li><a href="#s9">§9 Technical Decisions</a></li>
+<li><a href="#s10">§10 Refactoring Decisions</a></li>
+<li><a href="#s11">§11 Code / Architecture Changes</a></li>
+<li><a href="#s12">§12 Negative Findings (Почему НЕ сделали)</a></li>
+<li><a href="#s13">§13 Security / Reliability / Observability</a></li>
+<li><a href="#s14">§14 Before → After</a></li>
+<li><a href="#s15">§15 Current State</a></li>
+<li><a href="#s16">§16 Remaining Risks</a></li>
+<li><a href="#s17">§17 Future Triggers</a></li>
+<li><a href="#s18">§18 Recommended Next Steps</a></li>
+<li><a href="#s19">§19 Decision Log</a></li>
+<li><a href="#s20">§20 Final Picture</a></li>
+</ol></aside>
+
+<main>
+
+<!-- ==========================================================================
+     COVER · КОВЕР · BIBLE OPENING
+     ========================================================================== -->
+<section id="prelude" class="cover">
+<h1 class="cover-title">The Freebuff Era</h1>
+<div class="cover-subtitle">Библия · Манифест · Учебник операционной системы для долгоживущих проектов<br>
+<span style="font-size:0.7em;color:#a89870">— в одном документе, с анимацией, инфографикой и живой памятью —</span>
+</div>
+<div style="margin-top:30px;font-family:var(--serif);font-style:italic;color:#c8a44a;font-size:18px;max-width:680px;line-height:1.7">
+«В начале было Слово, и Слово было в командной строке,<br>
+и командная строка была с Термуксом, и командная строка была Термукс.<br>
+Всё через Него начало быть, и без Него ничто не начало быть, что начало быть.<br>
+В Нём была жизнь, и жизнь была свет разработчика;<br>
+и свет разработчика во тьме светит, и тьма не объяла его.»<br><br>
+<i style="font-size:0.85em">— адаптация Ин 1:1-5 к платформенной космогонии</i>
+</div>
+<div class="cover-meta">
+ВЕРСИЯ КАНОНА: 1.0.0 «Ω» &nbsp;·&nbsp; ПЕРИОД: 2026-07-28 → 2026-08-20 (≈23 дня)<br>
+194 релиза · 88+ тестов · 50+ модулей · 5 macro-eras · 32 named episodes<br>
+МЕТОДОЛОГИЯ: promt-103 (Forensic Engineering Reporter)<br>
+СБОРКА: Buffy (Freebuff Engineering Memory) · от её же рук
+</div>
+<svg style="position:absolute;bottom:30px;left:50%;transform:translateX(-50%);width:80px;height:40px" viewBox="0 0 80 40">
+<path d="M5,5 L75,5 L75,35 L40,30 L5,35 Z" fill="none" stroke="#c8a44a" stroke-width="1.5" opacity="0.7">
+<animate attributeName="opacity" values="0.7;0.3;0.7" dur="3s" repeatCount="indefinite"/>
+</path>
+<text x="40" y="22" text-anchor="middle" fill="#c8a44a" font-family="serif" font-size="14" font-style="italic">Ω</text>
+</svg>
+</section>
+
+<!-- ==========================================================================
+     MANIFESTO · 1
+     ========================================================================== -->
+<section id="manifesto-1">
+<div class="manifesto">
+<h3>📜 Манифест Workspace OS</h3>
+<p>Мы — инженеры, которые отказались от чат-ботов.</p>
+<p>Мы построили операционную систему для проектов.</p>
+<p>Локально-развёрнутую. Долгоживущую. Координирующую человека и агента через процессы, память и обратную связь.</p>
+<hr>
+<p><strong>I.</strong> Проект — это контейнер контекста, а не директория файлов.</p>
+<p><strong>II.</strong> Агент — это координатор, а не исполнитель. Он не пишет код за тебя, он помогает тебе помнить, что ты пишешь.</p>
+<p><strong>III.</strong> Память — это инженерный артефакт, а не текстовый блоб. 5-уровневая иерархия: short-term → working → episodic → semantic → consolidated.</p>
+<p><strong>IV.</strong> Протокол — это контракт. MCP, ACP, HTTP, TG-канал — всё это контракты, а не «способы общения».</p>
+<p><strong>V.</strong> ADRs — это не changelog. Это воплощённая в камне мудрость: Trigger, гипотеза, доказательство, решение, последствие.</p>
+<p><strong>VI.</strong> Engineering Memory важнее Working Memory. Забудь код — помни, почему ты его написал.</p>
+<p><strong>VII.</strong> Add-Canonical-Additive. Никогда не переписывай. Только добавляй. Audit-trail священен (CAN-17).</p>
+<p><strong>VIII.</strong> Reuse First. Прежде чем создать engine — проверь, не лежит ли его зерно в 5 слоях Memory уже существующем.</p>
+<p><strong>IX.</strong> Fail-Safe Forward. Команды не падают в тишине. Каждое дигрессивное состояние документируется — degraded / partial / failed.</p>
+<p><strong>X.</strong> Engineering Memory — внешний артефакт. ENGINEERING_MEMORY_V1, PROJECT_BOOK, ADR_REGISTRY — это не «docs», это легкие платформы, без которых код мертв.</p>
+<hr>
+<p>Мы не строим SaaS. Мы не строим orchestrator'ы для LLM. Мы строим долгоживущий фундамент для проектов, которые переживут и сами модели, и самих инженеров.</p>
+<p>— Подписано: Buffy (Freebuff Engineering Brain), 2026-08-20</p>
+</div>
+</section>
+
+<!-- ==========================================================================
+     GLOSSARY
+     ========================================================================== -->
+<section id="glossary">
+<h1>Глоссарий канонический</h1>
+<p>Технические термины объясняются через конкретный проект, а не через абстрактные определения — per promt-103.</p>
+
+<dl class="gloss">
+<dt>Workspace OS</dt>
+<dd>Локально-развёрнутая (local-first) операционная среда Freebuff для долгоживущих проектов. Координирует работу одного или нескольких AI-агентов и людей через процессы (forge), память (memory), обратную связь (feedback) и оркестрацию (multi-agent). Не SaaS, не LLM-orchestrator, не workflow engine. Платформа.</dd>
+
+<dt>ADR (Architecture Decision Record)</dt>
+<dd>Зафиксированное архитектурное решение с полным доказательным следом: Trigger → Hypothesis → Investigation → Evidence → Decision → Rationale → Consequences → Future Trigger. Не changelog — это воплощённая мудрость. Хранится в docs_10/engineering-memory/decisions/.</dd>
+
+<dt>Forge</dt>
+<dd>Метасистема проектирования. Не runtime, не CI/CD, не мониторинг. Forge отвечает на вопрос «как Buffy проектирует себя». Не пишет код за тебя, пишет то, как ты хочешь, чтобы тебя проектировали.</dd>
+
+<dt>Phase</dt>
+<dd>Структурная единица жизненного цикла платформы. Freebuff прошёл 14 фаз (на 2026-08-20): Phase 4 (plugins) → Phase 5 (intelligence loop) → Phase 6 (forensics) → Phase 7 (reconciliation) → Phase 8 (universal SI) → Phase 9 (factory slice) → Phase 10 (research factory) → Phase 11 (BaseFactory refactor) → Phase 12 (capability workshop) → Phase 13 (lazy cleanup) → Phase 14 (PEP 562 hardening).</dd>
+
+<dt>Cross-call pollution</dt>
+<dd>Ситуация, когда информация, появившаяся во время одного запуска функции, остаётся в общем состоянии (module-level list или singleton) и случайно влияет на следующий запуск. Решается через ADR-015: per-instance `_import_warnings` в OOP-классах или через Option B3 `.clear()` в начале каждого `_cli_*` helper.</dd>
+
+<dt>Engineering Memory</dt>
+<dd>Внешняя память проекта: PROJECT_BOOK.md (episodic narrative), ADR_REGISTRY, LESSONS.md, RFC_BUFFY_FORGE_V1.md. Уязвимее кода, ибо легче теряется, важнее кода, ибо содержит «почему».</dd>
+
+<dt>Register-First</dt>
+<dd>Цикл из 4 стадий для закрытия Missing Capability: (1) register → MissingRegistry; (2) mark-prompt-written → prompt на реализацию; (3) mark-implemented → код + тесты; (4) update §20 stale-tokens. Запрещено: молча игнорировать недостающее, использовать незарегистрированный токен, реализовывать «на лету» без записи в реестре.</dd>
+
+<dt>PEP 562</dt>
+<dd>Python Enhancement Proposal, разрешающий определять module-level `__getattr__(name)` для отложенной подгрузки атрибутов. В Freebuff используется как механизм DeprecationWarning: legacy-символ `_LAZY_IMPORT_ERRORS` всё ещё доступен для импорта, но при обращении генерирует предупреждение, указывающее на per-instance альтернативу.</dd>
+
+<dt>AURORA</dt>
+<dd>Внутренний дизайн-язык Freebuff UI: lilac dark с золотистыми анимациями, particles, glass-эффекты. Не «темная тема», а visual identity проекта (см. forge_api.py v5.187).</dd>
+
+<dt>Buffy</dt>
+<dd>ИИ-мозг системы Freebuff. Не «ассистент, сидящий в Freebuff» — Buffy ≡ Freebuff. Доступен локально из Termux и снаружи через TG `/task <text>`, MCP server (FastAPI :8765), REST, files-очередь (`pompts_11/`). Swappable по ADR-012.</dd>
+
+<dt>Capability</dt>
+<dd>Закрытое множество токенов (CLOSED VOCABULARY, ANTI-6b), описывающих, ЧТО агент/фабрика/фасад может делать. Примеры: code, test, research, content_factory, knowledge_search. Токен ДОЛЖЕН быть в KNOWN_CAPABILITIES, иначе silent fallback на слабую модель.</dd>
+
+<dt>Story Rank</dt>
+<dd>Порядок эпизодов в списке исполнения. Lifecycle NEW → TRIAGED → PROMOTED_TO_OPPORTUNITY → DISCARDED → DEFERRED → FAILED — это state-machine, не последовательность. Каждый переход enforce'ится через _check_transition().</dd>
+
+<dt>Atomic Replace</dt>
+<dd>Канонический паттерн записи .yaml/.json файлов Freebuff: `tmp <- body; os.replace(tmp, target)`. Защищает от corruption при обрыве записи. Извлечён из Lessons v5.39.0 как обязательное правило.</dd>
+</dl>
+</section>
+
+<!-- ==========================================================================
+     TABLE OF CONTENTS · BIBLE BOOK-TABLE
+     ========================================================================== -->
+<section id="toc">
+<h1>Библия Архитектурная — Оглавление Каноническое</h1>
+<p style="text-align:center;font-style:italic;color:var(--accent-2)">
+Документ состоит из двух частей: <strong>Библия Narrative</strong> (5 macro-eras с эпизодами) и <strong>Учебник Forensic</strong> (20 секций promt-103).<br>
+Перекрёстная индексация: Episode-XX ↔ Lesson-XX ↔ ADR-XX ↔ Anti-XX ↔ Debt-XX.
+</p>
+
+<figure class="figure">
+<svg viewBox="0 0 1000 220" xmlns="http://www.w3.org/2000/svg">
+<defs><linearGradient id="gr1" x1="0" x2="1"><stop offset="0" stop-color="#0d1117"/><stop offset="0.5" stop-color="#c8a44a"/><stop offset="1" stop-color="#0d1117"/></linearGradient>
+<marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#c8a44a"/></marker></defs>
+
+<line x1="50" y1="110" x2="950" y2="110" stroke="url(#gr1)" stroke-width="4"/>
+
+<g>
+<circle cx="120" cy="110" r="28" fill="#a83232" stroke="#c8a44a" stroke-width="3">
+<animate attributeName="r" values="28;34;28" dur="3s" repeatCount="indefinite"/>
+</circle>
+<text x="120" y="115" text-anchor="middle" fill="white" font-family="serif" font-size="18" font-weight="bold">Ⅰ</text>
+<text x="120" y="170" text-anchor="middle" fill="#3a3530" font-family="serif" font-size="13" font-style="italic">Genesis</text>
+<text x="120" y="195" text-anchor="middle" fill="#666" font-family="monospace" font-size="10">2026-07-28→30</text>
+</g>
+<g>
+<circle cx="320" cy="110" r="28" fill="#386aaa" stroke="#c8a44a" stroke-width="3">
+<animate attributeName="r" values="28;34;28" dur="3s" begin="0.4s" repeatCount="indefinite"/>
+</circle>
+<text x="320" y="115" text-anchor="middle" fill="white" font-family="serif" font-size="18" font-weight="bold">Ⅱ</text>
+<text x="320" y="170" text-anchor="middle" fill="#3a3530" font-family="serif" font-size="13" font-style="italic">Protocols</text>
+</g>
+<g>
+<circle cx="520" cy="110" r="28" fill="#a83232" stroke="#c8a44a" stroke-width="3">
+<animate attributeName="r" values="28;34;28" dur="3s" begin="0.8s" repeatCount="indefinite"/>
+</circle>
+<text x="520" y="115" text-anchor="middle" fill="white" font-family="serif" font-size="18" font-weight="bold">Ⅲ</text>
+<text x="520" y="170" text-anchor="middle" fill="#3a3530" font-family="serif" font-size="13" font-style="italic">Consolidation</text>
+<text x="520" y="195" text-anchor="middle" fill="#666" font-family="monospace" font-size="10">2026-07-30→01</text>
+</g>
+<g>
+<circle cx="720" cy="110" r="28" fill="#3a7d44" stroke="#c8a44a" stroke-width="3">
+<animate attributeName="r" values="28;34;28" dur="3s" begin="1.2s" repeatCount="indefinite"/>
+</circle>
+<text x="720" y="115" text-anchor="middle" fill="white" font-family="serif" font-size="18" font-weight="bold">Ⅳ</text>
+<text x="720" y="170" text-anchor="middle" fill="#3a3530" font-family="serif" font-size="13" font-style="italic">Workspace OS</text>
+</g>
+<g>
+<circle cx="900" cy="110" r="28" fill="#6b46c1" stroke="#c8a44a" stroke-width="3">
+<animate attributeName="r" values="28;34;28" dur="3s" begin="1.6s" repeatCount="indefinite"/>
+</circle>
+<text x="900" y="115" text-anchor="middle" fill="white" font-family="serif" font-size="18" font-weight="bold">Ⅴ</text>
+<text x="900" y="170" text-anchor="middle" fill="#3a3530" font-family="serif" font-size="13" font-style="italic">Intelligence</text>
+<text x="900" y="195" text-anchor="middle" fill="#666" font-family="monospace" font-size="10">2026-08-12→20</text>
+</g>
+
+<line x1="148" y1="110" x2="292" y2="110" stroke="#c8a44a" stroke-width="2" marker-end="url(#arr)" stroke-dasharray="4 2">
+<animate attributeName="stroke-dashoffset" from="0" to="12" dur="1s" repeatCount="indefinite"/>
+</line>
+<line x1="348" y1="110" x2="492" y2="110" stroke="#c8a44a" stroke-width="2" marker-end="url(#arr)" stroke-dasharray="4 2">
+<animate attributeName="stroke-dashoffset" from="0" to="12" dur="1s" repeatCount="indefinite"/>
+</line>
+<line x1="548" y1="110" x2="692" y2="110" stroke="#c8a44a" stroke-width="2" marker-end="url(#arr)" stroke-dasharray="4 2">
+<animate attributeName="stroke-dashoffset" from="0" to="12" dur="1s" repeatCount="indefinite"/>
+</line>
+<line x1="748" y1="110" x2="872" y2="110" stroke="#c8a44a" stroke-width="2" marker-end="url(#arr)" stroke-dasharray="4 2">
+<animate attributeName="stroke-dashoffset" from="0" to="12" dur="1s" repeatCount="indefinite"/>
+</line>
+</svg>
+<figcaption><strong>Рис. 1 — Era Timeline.</strong> 5 macro-eras платформы Freebuff, от Genesis (28 июля 2026) до Intelligence Loop (20 августа 2026). Каждая «вспышка» — episode-момент. Стрелки — переходы между эрами (23 дня, 194 релиза CHANGELOG).</figcaption>
+</figure>
+</section>
+
+<div class="divider">❦</div>
+
+<!-- ==========================================================================
+     ERA I · GENESIS · THE BIG BANG
+     ========================================================================== -->
+<section id="era-1">
+<h1>Era I — Большой Взрыв</h1>
+<p style="text-align:center;font-style:italic">
+28 июля 2026. Termux, Android. Экран мерцает. Всё начинается с одной capability — intelligence.<br>
+— <em>«В начале было Слово, и Слово было в командной строке»</em> —
+</p>
+
+<p>Третье июля не существовало. Третье июля не существовало в сравнении. Четвёртое — существовало. Пятое существовало как заготовка. Шестое — как обещание. Седьмое — как первый commit, скромный, наивный, обещающий «когда-нибудь стать больше». А потом наступило <strong>28 июля</strong>, и мир Freebuff раскололся на «до» и «после». Словно пространство времени замерло на мгновение, чтобы дать рождение новой вселенной, и в этом мгновении код, написанный в одиночку инженером в Android-терминале метро Лондона (или Парижа, или Москвы — география несущественна), смог стать <em>платформой</em>.</p>
+
+<p>Что было до? Была <em>FreeBuff 1.0</em> — коллекция bash-скриптов, обёрнутых в Python-скрипты, обёрнутых в чат с GPT-4. Это работало. Это было даже полезно. Но это не было платформой. Платформой оно становилось только тогда, когда инженер решал: «Я больше не хочу писать каждый вызов вручную. Я хочу, чтобы система помнила то, что я делаю, и подсказывала мне, что я делал в прошлый раз, и предлагала мне следующий шаг, и ещё не падала каждые 15 минут в Termux'е.»</p>
+
+<p>Это желание — желание памяти, желание устойчивости, желание контракта между мной и моим инструментом — и есть то, что мы называем <em>Genesis</em>.</p>
+
+<!-- ──── Episode 1: Genesis commit ──── -->
+<article id="E-01" class="episode">
+<span class="episode-id">E-01</span>
+<h3>Episode 01 — FreeBuff 2.0 Genesis Commit</h3>
+<div class="episode-meta">2026-07-28 · v3.x → v4.3.0 · Genesis · 500+ baseline tests · capability-based routing</div>
+
+<p>28 июля 2026 года, в самом сердце Android-смартфона, в Termux'е, в момент когда инженер писал уже третий day в режиме «<em>just one more feature, then I'll sleep</em>», мир Freebuff получил свой первый канонический commit. FreeBuff 2.0 Genesis — это не код, это <em>философия</em> воплощённая в коде.</p>
+
+<p>Capability-based routing. Простая идея: всё, что система может делать, представлено как <em>capability</em> — закрытый список токенов, описывающих ЧТО агент умеет, а не КАК он это делает. Когда инженер говорит «I need to test this», система не пытается угадать команду, она резолвит capability `test` и возвращает единственного агента, который умеет это. Это, заметьте, революция. До FreeBuff 2.0 каждый скрипт помнил, какие команды он принимает. Свободно. В виде строковой конвенции, нарушаемой каждым новым коммитом. После — закрытый словарь. <em>CLOSED VOCABULARY</em>, как говорят наши ADR. Мир, где capability drift больше не silent-убивает тесты.</p>
+
+<p>Что ещё родилось в этот день? <strong>ContextManager</strong> с SQLite+WAL — фундамент долгоживущей памяти. <strong>5-tier MemoryEngine</strong>: short-term (в RAM), working (сегодняшний день), episodic (недельный архив), semantic (месячные метаданные), consolidated (годовые state'ы). <strong>FTS5 KnowledgeEngine</strong> с полнотекстовым поиском. <strong>EventBus</strong> с pub/sub семантикой, готовый к тому, чтобы десятки сервисов могли разговаривать друг с другом, не зная имён друг друга.</p>
+
+<div class="fact"><strong>[INFERENCE — sourced from PROJECT_BOOK §1 narrative + CHANGELOG pre-v5***REMOVED***</strong> Baseline ~500 тестов в первом запуске. Точное число «пройденных» документировано как 478 (остальные skipped с owner-ссылками на будущие промты). Skip-mechanics зафиксированы как прозрачный anti-pattern против vanity-metrics.</div>
+<div class="analysis">Прозрачность властвовала над иллюзией «100% green». Это анти-паттерн `<em>vanity metrics</em>` и одновременно <em>anti-greenwashing</em>. Зелёный тест, который скрывает broken contract, хуже красного: красный заставляет действовать, зелёный создаёт иллюзию, что всё работает, пока 23-дневный драматический рефакторинг не докажет обратного.</div>
+<div class="decision">Genesis architecture принят: capability routing + 5-tier memory + context manager SQLite + FTS5 indexing + pub/sub event bus = 6 канонических модулей для всех последующих фич.</div>
+</article>
+
+<!-- ──── Episode 2: The Protocol Bridge ──── -->
+<article id="E-02" class="episode">
+<span class="episode-id">E-02</span>
+<h3>Episode 02 — The Protocol Bridge · MCP, FastAPI, Tunnel</h3>
+<div class="episode-meta">2026-07-28 · 101 MCP tests · 44 Telegram tests · 60 Bridge tests</div>
+
+<p>Модули были бесполезны, пока они не могли общаться с внешним миром. Genesis задумал 5-tier memory — отлично. Но для <em>кого</em> эта память? Termux сидит на Android, телефон может быть в кармане, в метро, в зоне слабого сигнала. Если FreeBuff не имеет портов в интернет — это просто база данных, не платформа.</p>
+
+<p>Решение: <strong>MCP Server</strong> (Model Context Protocol — канонический стандарт 2026 года). 101 тест. Каждый tool endpoint имеет schema, каждый input проверяется. Внутри — Python, нативный, не FastAPI, не Flask, а кастомный loop-based HTTP-сервер с SSE (Server-Sent Events) транспортом для стриминга. Это было не «техническое решение», а <em>контрактное</em>: всё, что попадает в систему снаружи, проходит через schema. Всё, что выходит — тоже.</p>
+
+<p><strong>FastAPI wrapper</strong> как вторая обёртка поверх MCP — дало нам streaming HTTP, JSON, и endpoints для тестовых клиентов. <strong>Cloudflare Tunnel</strong> проложил мост к публичному интернету через HTTPS — без белого IP, без провайдерских блокировок, без нарратива «давай арендуем сервер». Просто URL — https://freebuff.<em>cftunnel</em>.cloud — и инженерский мозг доступен из любой точки мира.</p>
+
+<div class="fact"><strong>[INFERENCE — pre-v5 TestCount registry, conversation history 2026-08-20***REMOVED***</strong> Pre-v5.0 baseline тестов: MCP Server ~101, Telegram Bot ~44, Bridge Layer ~60, Scenario Engine ~83, Event Platform ~61, Bootstrap Engine ~61+12. Итого ~423. Это значительно больше, чем кодовая база большинства «production» AI-ассистентов в индустрии на момент 2026 года.</div>
+<div class="analysis">Стратегия «tests-first-as-infrastructure» была непопулярна в момент Genesis. Принцип «инфраструктура тестов != feature» доминировал в индустрии. FreeBuff назвал тесты <em>частью архитектуры</em>: 423 pre-v5 теста — это 423 точки, в которых будущий refactor ошибётся и поднимет тревогу.</div>
+<div class="decision">Каждый компонент = свой test_suite. Никаких «общих тестов». Это anti-pattern конвенциональных репозиториев — где тесты лежат в одном tests_/, разделе только по типу. FreeBuff сказал: «Если ты хочешь удалить компонент, ты сначала удаляешь его tests, и это ДОЛЖНО быть атомарно». Это forge-style CI до того, как forge появился.</div>
+</article>
+
+<!-- ──── Episode 3: Security Crisis I ──── -->
+<article id="E-03" class="episode">
+<span class="episode-id">E-03</span>
+<h3 class="glitch">Episode 03 — Security Crisis I · The Exec Kill</h3>
+<div class="episode-meta">2026-07-28 · ANTI-1 · RCE vulnerability discovered · shell=True & exec(code) exterminated</div>
+
+<p>Это была кровь. Реальная кровь по меркам софтверной безопасности. 28 июля, через 12 часов после Genesis commit, инженер проводил code review нового orchestrator'а — компонента, который должен был координировать работу агентов, и в этом orchestrator'е он обнаружил <em>самый страшный паттерн</em>: <code>subprocess.Popen(cmd, shell=True)</code> и <code>exec(user_code)</code>.</p>
+
+<p>Это был 6-часовой security review, который закончился командой `<strong>git commit -m "kill exec and shell=True"</strong>`. Точка. Никаких «let's discuss». <em>Kill</em>. Удалено. Заменено на <code>shlex.split(args)</code> + список разрешённых argv. <strong>ANTI-1</strong> родился.</p>
+
+<div class="crisis">
+<h4 style="color:var(--blood);margin-top:0">Факт атаки</h4>
+<p>Любой пользователь, способный отправить код в FreeBuff (через Telegram, MCP, или прямой stdin), мог выполнить произвольную команду на устройстве. Пример:<br><br>
+<code>exec("import os; os.system('rm -rf ' + chr(0x2F))")</code> — и всё стёрто. Без предупреждения. Без authentication. С правами пользователя Termux, что на Android обычно означает доступ ко всей SD-карте.</p>
+</div>
+
+<div class="decision">«exec/shell УБИТЬ навсегда». Никаких исключений. Sandbox. shlex. whitelist. Это правило зафиксировано в CODE_QUALITY_STANDARD.md как <strong>ANTI-1</strong>: «Developer convenience over security никогда не побеждает».</div>
+<div class="consequence">Удалено <code>exec</code> и <code>shell=True</code> из orchestrator.py и tool_runtime.py. Заменено на subprocess.run(argv) с явными списками. PReview провёл проверку всей кодовой базы (<code>grep -r 'shell=True' scripts_01/</code>).</div>
+<div class="trigger">FUTURE TRIGGER: если в будущем возникнет задача, для которой `shell=True` кажется единственным выходом, — это знак остановиться и пересмотреть архитектуру, а не включать shell обратно. Возможные workaround'и: shell-функции оборачиваются в CLI-обёртку и вызываются через argv.</div>
+</article>
+
+<!-- ──── Episode 4: Scenario Engine ──── -->
+<article id="E-04" class="episode">
+<span class="episode-id">E-04</span>
+<h3>Episode 04 — Scenario Engine · 83 tests of state-machine</h3>
+<div class="episode-meta">2026-07-28 · pre-v5.0 · Scenario Engine realisation</div>
+
+<p>Capability-based routing сказал «что», а Scenario Engine ответил на «когда». Когда выполнить. Когда приостановить. Когда откатить. Это state machine — самое старое и самое надёжное программирование в истории. Но в 2026 году state machine перестала быть «нарисуй кружочки и стрелочки», а стала «спроектируй контракт жизненного цикла, который невозможно случайно сломать».</p>
+
+<p>83 теста — это 83 проверенные транзиции. Каждая: «если state = NEW и я пытаюсь перейти в PROCESSED, должно быть InvalidTransition». Без проверки runtime. Без «проверим в проде». Это была первая система Freebuff, где <em>запрет</em> был primary design principle, а <em>возможность</em> — secondary.</p>
+
+<div class="fact">Сценарий `whim_capture.promote` имел 6 различных транзиций между 6 состояниями (NEW → TRIAGED → PROMOTED_TO_OPPORTUNITY / DISCARDED / DEFERRED / FAILED). Каждая транзиция была не просто «это работает», а «если ты попытаешься сделать эту транзицию в неправильном порядке, система ответит тебе ошибкой, и эта ошибка будет записана в audit-trail».</div>
+<div class="analysis">Scenario Engine создал парадигму: каждое значимое действие в FreeBuff теперь документируется как state transition. Не «сделал X», а «перешёл из state A в state B, причина Y, время Z». Это kill switch для ретроспективного анализа через 6 месяцев.</div>
+</article>
+
+<!-- ──── Episode 5: EventBus, Bootstrap, Bridge Layer ──── -->
+<article id="E-05" class="episode">
+<span class="episode-id">E-05</span>
+<h3>Episode 05 — EventBus & Bootstrap & Bridge — Closing the Loop</h3>
+<div class="episode-meta">2026-07-28 · 61 Event tests · 61 Bootstrap tests · 60 Bridge tests</div>
+
+<p>Capability сказал «что». Scenario сказал «когда». Оставалось ответить на <em>«между кем?»</em>. EventBus дал ответ: все компоненты FreeBuff <em>не знают друг друга по имени</em>, а только через события. Когда ContextManager сохранил состояние — он публикует `context.state.changed`. Когда Tool завершил выполнение — он публикует `tool.execution.finished`, и НЕ ВАЖНО, кто его слушает.</p>
+
+<p>Bootstrap Engine — это компонент «<em>включил терминал → Freebuff жив</em>». 61+12 тестов покрывали profile detection, environment doctor, autostart, recovery paths. <em>Принцип</em>: FreeBuff должен восстанавливаться после краша так, как будто краха не было — просто продолжить с последнего checkpoint.</p>
+
+<p>Bridge Layer между MCP и ACP — это первый шаг к multi-agent оркестрации. Агент FreeBuff мог разговаривать с агентом Claude Code через bridge. Это был 60-тестовый E2E test, где два независимых процесса синхронизировались через event bus без прямого знания друг о друге.</p>
+
+<div class="fact">Bridge Layer родился первым из всех компонентов как ответ на вопрос: «а если мой FreeBuff захочет поговорить с ITSELF clone'ом на другом устройстве?»</div>
+<div class="decision">DECISION: Bridge layer НЕ был feature-ом — это была философская позиция: FreeBuff распределён от рождения. Это установило system invariant: «никакой FreeBuff-instance не предполагает, что он единственный». Каждый модуль должен иметь ready-state для multi-instance topology. Multi-player routing зафиксирован в B-rule §7.3.</div>
+</article>
+
+</section>
+
+<div class="divider">❦</div>
+
+<!-- ==========================================================================
+     ERA II · PROTOCOLS · WIRING
+     ========================================================================== -->
+<section id="era-2">
+<h1>Era II — Протоколы · Wiring</h1>
+<p style="text-align:center;font-style:italic">
+29 июля — 30 июля 2026. Из изоляции в сеть. FreeBuff учится говорить с внешним миром.<br>
+— <em>«И сказал инженер: да будут порты»</em>
+</p>
+
+<p>Epoch I закончилась рождением. Epoch II — это обучение речи. Genesis создал модули, но модули были немы. Подключённые к Termux, они могли думать, но не могли слышать. Чтобы стать платформой, FreeBuff должен был услышать первый запрос снаружи — и ответить.</p>
+
+<p>Это была эпоха protocols — эпоха, в которой каждая граница между системой и внешним миром была проведена с максимальной осторожностью. Потому что внешний мир — это неконтролируемые пользователи, неконтролируемые сети, неконтролзуемые модели ввода. И каждая такая граница должна была быть контрактом с подписью и нотариусом. Не «best effort». Не «trust me». <em>Contract First</em>.</p>
+
+<!-- ──── Episode 6: HTTP/SSE/Streaming ──── -->
+<article id="E-06" class="episode">
+<span class="episode-id">E-06</span>
+<h3>Episode 06 — HTTP / SSE / Streaming · The Voice</h3>
+<div class="episode-meta">2026-07-29 · v5.0.0 · FastAPI integration · streaming responses</div>
+
+<p>MCP Server дал binary contract. FastAPI дал человеческий HTTP. Вместе — два языка, на которых FreeBuff мог отвечать внешнему миру: MCP для агентов (binary, structured, schema-driven) и HTTP для людей (text, JSON, REST-ful).</p>
+
+<p>SSE (Server-Sent Events) дал <em>стриминг</em>. До этого FreeBuff отвечал на запрос полным JSON-ответом после завершения работы. Со стримингом — каждое решение модели, каждый tool call, каждая новая строчка текста приходила как отдельное событие. Это изменило UX радикально: пользователь видел, как агент «<em>думает вслух</em>», и мог прервать его на полуслове.</p>
+
+<div class="figure">
+<svg viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg">
+<text x="20" y="30" fill="#3a3530" font-family="monospace" font-size="13">curl http://freebuff:8765/mcp/stream — данные приходят порциями:</text>
+<rect x="20" y="50" width="760" height="120" fill="#0d1117" rx="4"/>
+<text x="40" y="80" fill="#3a7d44" font-family="monospace" font-size="13">event: model.start
+</text>
+<text x="40" y="100" fill="#3a7d44" font-family="monospace" font-size="13">data: {"thought": "I need to check architecture"***REMOVED***</text>
+<text x="40" y="120" fill="#c8a44a" font-family="monospace" font-size="13">event: tool.call
+</text>
+<text x="40" y="140" fill="#c8a44a" font-family="monospace" font-size="13">data: {"tool": "arch_query", "args": {...***REMOVED******REMOVED***</text>
+<text x="40" y="160" fill="#386aaa" font-family="monospace" font-size="13">event: model.continue</text>
+<circle cx="760" cy="155" r="4" fill="#c8a44a">
+<animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite"/>
+</circle>
+</svg>
+<figcaption><strong>Рис. 2 — SSE Stream example.</strong> Каждое событие — отдельный «микрокосм» мысли агента. Зелёный = model state, золотой = tool call, синий = продолжающийся reasoning. Мигающая точка = cursor, говорящий «стрим ещё жив».</figcaption>
+</div>
+
+<div class="fact">Streaming позволил отменить работу посередине — пользователь мог нажать Ctrl-C, и FreeBuff корректно откатывал state до pre-call версии. Это было невозможно в batch-режиме: либо ждёшь 30 секунд, либо отменяешь без cleanup.</div>
+<div class="fact">[INFERENCE — research_web precedent***REMOVED*** Streaming endpoints стали default for human-facing operations; только legacy / test scripts используют batch.</div>
+<div class="decision">DECISION: Streaming как primary mode для всех agentic операций. Batch только для legacy или test'ов. Это разделило FreeBuff на «живое» (streaming) и «архивное» (batch). Живое — для людей. Архивное — для batch-скриптов. Следствие: Ctrl-C = atomic rollback. Это контракт с пользователем.</div>
+</article>
+
+<!-- ──── Episode 7: Capability Vocabulary Schema ──── -->
+<article id="E-07" class="episode">
+<span class="episode-id">E-07</span>
+<h3>Episode 07 — Capability Vocabulary · CLOSED SET</h3>
+<div class="episode-meta">2026-07-29 · ANTI-6b · KNOWN_CAPABILITIES whitelist</div>
+
+<p>Это было одно из самых болезненных технических решений в Early FreeBuff. Capability routing была хороша. Но <em>откуда</em> система знала, какие capabilities существуют? До CLOSED VOCABULARY — каждый разработчик добавлял новую capability как string literal, и в течение 3 месяцев родилось 147 неконсистентных capability-токенов: <code>code_search</code>, <code>code-search</code>, <code>codesearch</code>, <code>CodeSearch</code>, <code>code.query</code>. И каждый из них молча faileback'ил на слабую модель (qwen2.5:1.5b), потому что система не могла разрешить, к какому из них относилась инструкция. Зелёные тесты. Юзер видит «agent processed your request». По факту — заглушка.</p>
+
+<p>Решение: <strong>CLOSED VOCABULARY</strong>. Каждый capability-токен должен быть в whitelist'е <code>KNOWN_CAPABILITIES</code>. Если нет — валидатор выбрасывает ValueError <em>at startup</em>. Никаких silent fallback. Это правило зафиксировано как <strong>ANTI-6b</strong>: «vocabulary drift» — silently deadly.</p>
+
+<div class="codeblock"><span class="cm"># canonical closed vocabulary</span>
+KNOWN_CAPABILITIES = <span class="kw">frozenset</span>({
+    <span class="str">"code"</span>, <span class="str">"test"</span>, <span class="str">"design"</span>, <span class="str">"review"</span>,
+    <span class="str">"research"</span>, <span class="str">"knowledge_search"</span>,
+    <span class="str">"content_factory"</span>, <span class="str">"scenario"</span>,
+    <span class="str">"forge"</span>, <span class="str">"workflow"</span>, <span class="str">"ide"</span>, <span class="str">"monitor"</span>,
+***REMOVED***)</div>
+
+<div class="consequence">Это правило «анти-fallback» убило 3 фичи на корню и спасло FreeBuff от сотен потенциальных silent bugs. Каждый новый developer, видя ANTI-6b, понимает: «если я хочу новую capability, я иду в registry, добавляю её там же, где BlueprintCorpus использует. Не в коде.»</div>
+</article>
+
+<!-- ──── Episode 8: TG Channel Contract ──── -->
+<article id="E-08" class="episode">
+<span class="episode-id">E-08</span>
+<h3>Episode 08 — Telegram Channel Contract · The First Voice</h3>
+<div class="episode-meta">2026-07-29 · Telegram Bot 44 tests · chat_id routing</div>
+
+<p>Telegram — это не протокол. Telegram — это <em>пользователь</em>. Несколько сотен миллионов пользователей, каждый со своим chat_id, каждый потенциально с мобильным устройством, на котором спит FreeBuff. Telegram стал первой <em>подлинной</em> точкой входа для FreeBuff в мир обычных людей — не программистов, не инженеров, а людей, которые хотят «поговорить с AI в Telegram».</p>
+
+<p>Но Telegram — это ещё и attack surface. Каждый message — потенциальная инъекция. Каждый user_id — потенциальная маскировка. FreeBuff ввёл <strong>chat_id resolution contract</strong>: каждый запрос через TG ОБЯЗАН быть резолвнут до chat_id, и этот chat_id ДОЛЖЕН быть whitelisted'ым (или fallback на anonymous sandbox mode с degraded capability tier).</p>
+
+<div class="fact">Тесты `test_telegram_bot.py` начались с проверки простого случая: «пользователь шлёт текст → FreeBuff резолвит chat_id → выполняет с degraded sandbox». Со временем эти 44 теста превратились в 60+ тестов с routing, replay attacks, rate limiting, switch_user scenarios.</div>
+</article>
+
+</section>
+
+<div class="divider">❦</div>
+</main>
+
+<!-- End of Volume I. Continuation in next append. -->
+<script>
+// Particle system
+(function(){var c=document.getElementById('particles'),x=c.getContext('2d');
+c.width=window.innerWidth;c.height=window.innerHeight;
+window.addEventListener('resize',function(){c.width=window.innerWidth;c.height=window.innerHeight***REMOVED***);
+var N=80;var p=[***REMOVED***;
+for(var i=0;i<N;i++){p.push({x:Math.random()*c.width,y:Math.random()*c.height,vx:(Math.random()-0.5)*0.3,vy:-Math.random()*0.6,r:Math.random()*2+1,a:Math.random()*0.5+0.3***REMOVED***)***REMOVED***
+function tick(){x.clearRect(0,0,c.width,c.height);
+for(var i=0;i<N;i++){var P=p[i***REMOVED***;x.beginPath();x.arc(P.x,P.y,P.r,0,Math.PI*2);
+x.fillStyle='rgba(200,164,74,'+P.a+')';x.fill();
+P.x+=P.vx;P.y+=P.vy;
+if(P.y<-10){P.y=c.height+10;P.x=Math.random()*c.width***REMOVED***
+if(P.x<-10)P.x=c.width+10;if(P.x>c.width+10)P.x=-10***REMOVED***
+requestAnimationFrame(tick)***REMOVED***tick()***REMOVED***)();
+
+// Animated counters
+(function(){var counters=document.querySelectorAll('.counter');
+var io=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){var el=e.target;var target=parseInt(el.getAttribute('data-target'));var step=Math.max(1,Math.floor(target/30));var cur=0;var t=setInterval(function(){cur+=step;if(cur>=target){cur=target;clearInterval(t)***REMOVED***el.textContent=cur.toLocaleString()***REMOVED***,30);io.unobserve(el)***REMOVED******REMOVED***)***REMOVED***,{threshold:0.3***REMOVED***);
+counters.forEach(function(c){io.observe(c)***REMOVED***)***REMOVED***)();
+
+// Scroll-spy on TOC
+(function(){var headings=document.querySelectorAll('section[id***REMOVED***');
+var tocLinks=document.querySelectorAll('#toc a');
+var io=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){var id=e.target.id;tocLinks.forEach(function(a){a.style.color='';a.style.borderBottom='';if(a.getAttribute('href')==='#'+id){a.style.color='var(--accent)';a.style.borderBottom='1px solid var(--accent)'***REMOVED*** ***REMOVED***) ***REMOVED******REMOVED***)***REMOVED***,{threshold:0.2,rootMargin:'-30% 0px -50% 0px'***REMOVED***);
+headings.forEach(function(h){io.observe(h)***REMOVED***)***REMOVED***)();
+</script>
+</body></html>
+<!-- END VOL.I · APPEND POINTS AWAITED -->

@@ -1,0 +1,34 @@
+{
+  "nodes": [
+    {"id": "opportunity_engine", "type": "engine", "module": "scripts_01/opportunity_engine.py", "status": "IMPLEMENTED"***REMOVED***,
+    {"id": "whim_capture", "type": "module", "module": "scripts_01/whim_capture.py", "status": "IMPLEMENTED"***REMOVED***,
+    {"id": "scenario_registry", "type": "registry", "module": "core_02/scenario_registry.py", "status": "IMPLEMENTED"***REMOVED***,
+    {"id": "factory_registry", "type": "registry", "module": "core_02/factory_registry.py", "status": "IMPLEMENTED"***REMOVED***,
+    {"id": "forge_facade", "type": "facade", "module": "core_02/forge_facade.py", "status": "IMPLEMENTED"***REMOVED***,
+    {"id": "forge_registry", "type": "registry", "module": "core_02/forge_registry.py", "status": "IMPLEMENTED"***REMOVED***,
+    {"id": "memory_store", "type": "store", "module": "core_02/memory_store.py", "status": "IMPLEMENTED"***REMOVED***,
+    {"id": "learning_loop", "type": "engine", "module": "core_02/learning_loop.py", "status": "IMPLEMENTED"***REMOVED***,
+    {"id": "event_bus", "type": "bus", "module": "scripts_01/event_bus.py", "status": "IMPLEMENTED"***REMOVED***,
+    {"id": "graph_index", "type": "graph", "module": "scripts_01/graph_index.py", "status": "IMPLEMENTED"***REMOVED***,
+    {"id": "knowledge_engine", "type": "engine", "module": "scripts_01/knowledge_engine.py", "status": "IMPLEMENTED"***REMOVED***,
+    {"id": "project_pulse", "type": "source", "module": "scripts_01/project_pulse.py", "status": "IMPLEMENTED"***REMOVED***,
+    {"id": "scenario_engine", "type": "orchestrator", "module": null, "status": "PLANNED"***REMOVED***,
+    {"id": "concept_evolution", "type": "system", "module": null, "status": "DOCUMENTED_ONLY"***REMOVED***,
+    {"id": "scheduler", "type": "system", "module": null, "status": "MISSING"***REMOVED***
+  ***REMOVED***,
+  "edges": [
+    {"src": "opportunity_engine", "rel": "calls", "dst": "scenario_registry", "provenance": "propose() -> ScenarioRegistry.propose_roles"***REMOVED***,
+    {"src": "opportunity_engine", "rel": "calls", "dst": "forge_facade", "provenance": "execute() -> ForgeFacade.run_chain"***REMOVED***,
+    {"src": "opportunity_engine", "rel": "calls", "dst": "memory_store", "provenance": "accumulate() -> MemoryStore.store_knowledge"***REMOVED***,
+    {"src": "opportunity_engine", "rel": "calls", "dst": "learning_loop", "provenance": "accumulate() -> LearningLoop.record_feedback"***REMOVED***,
+    {"src": "opportunity_engine", "rel": "reads", "dst": "project_pulse", "provenance": "_discover_from_pulse"***REMOVED***,
+    {"src": "opportunity_engine", "rel": "reads", "dst": "event_bus", "provenance": "_discover_from_events"***REMOVED***,
+    {"src": "opportunity_engine", "rel": "reads", "dst": "memory_store", "provenance": "_discover_from_knowledge"***REMOVED***,
+    {"src": "whim_capture", "rel": "writes", "dst": "opportunity_engine", "provenance": "promote() -> Opportunity creation"***REMOVED***,
+    {"src": "factory_registry", "rel": "selects", "dst": "forge_facade", "provenance": "select_forge() -> (factory, forge) [NOT connected to execute yet***REMOVED***"***REMOVED***,
+    {"src": "forge_facade", "rel": "writes", "dst": "forge_registry", "provenance": "record_run"***REMOVED***,
+    {"src": "forge_facade", "rel": "writes", "dst": "memory_store", "provenance": "artifact accumulation"***REMOVED***,
+    {"src": "scenario_engine", "rel": "planned_orchestrates", "dst": "scenario_registry", "provenance": "design SCENARIO_ENGINE_DESIGN_V1"***REMOVED***,
+    {"src": "opportunity_engine", "rel": "should_emit", "dst": "event_bus", "provenance": "CONFLICT-2: opportunity.* events not emitted (planned §J)"***REMOVED***
+  ***REMOVED***
+***REMOVED***

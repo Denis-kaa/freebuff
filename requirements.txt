@@ -2,8 +2,21 @@
 pytest>=8.0
 pytest-asyncio>=0.24
 numpy>=1.24.0
-httpx>=0.25.0
-fastapi>=0.99.0
+# v5.186.0: pinned httpx==0.27.2 + starlette==0.27.0 + fastapi==0.100.1 —
+# these specific versions are mutually compatible with
+# fastapi.testclient.TestClient(app) (the correct sync→async bridge
+# is anyio-based inside starlette 0.27). Do NOT bump httpx to 0.28+
+# without ALSO upgrading starlette to ≥0.36 (TestClient was rewritten
+# for httpx 0.28 compatibility in that range). fastapi is pinned too
+# to prevent its transitive starlette pin from silently upgrading
+# starlette past 0.27 on `pip install --upgrade fastapi`.
+# v5.189.69: fastapi 0.99.1 → 0.100.1 (pydantic v2 compat fix —
+# 0.99.x imports `Undefined` from pydantic.fields which was removed in
+# pydantic v2; 0.100.0+ is the first line with pydantic v2 support AND
+# starlette>=0.27.0,<0.28.0, so the starlette/httpx pins are preserved).
+httpx==0.27.2
+starlette==0.27.0
+fastapi==0.100.1
 uvicorn>=0.24.0
 requests>=2.28.0
 beautifulsoup4>=4.12.0
@@ -18,3 +31,7 @@ websocket-client>=1.5.0
 diff-match-patch>=2023.0.0
 # prometheus-client>=0.17.0  # optional: metrics
 hvac>=2.0.0
+
+# ─── Scenario: Blueprint v3 role‑corpus (core_02/blueprint_v3.py + LESSONS.md) ───
+pyyaml>=6.0.1
+openpyxl>=3.1.0  # xlsx-skill (Task 0, ROADMAP-VV-001, v5.105.0) — minimal Excel writer API
