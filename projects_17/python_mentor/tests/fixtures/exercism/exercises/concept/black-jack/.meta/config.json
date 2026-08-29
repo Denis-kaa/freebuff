@@ -1,0 +1,27 @@
+{
+  "authors": [
+    "Ticktakto",
+    "Yabby1997",
+    "limm-jk",
+    "OMEGA-Y",
+    "wnstj2007",
+    "pranasziaukas",
+    "bethanyG"
+  ***REMOVED***,
+  "contributors": [
+    "PaulT89"
+  ***REMOVED***,
+  "files": {
+    "solution": [
+      "black_jack.py"
+    ***REMOVED***,
+    "test": [
+      "black_jack_test.py"
+    ***REMOVED***,
+    "exemplar": [
+      ".meta/exemplar.py"
+    ***REMOVED***
+  ***REMOVED***,
+  "icon": "poker",
+  "blurb": "Learn about comparisons by implementing some Black Jack judging rules."
+***REMOVED***

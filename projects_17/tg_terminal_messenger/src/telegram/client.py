@@ -9,13 +9,13 @@ Telegram-клиент для tg-terminal-toolkit.
     внутри event loop Textual.
 
 Использование:
-    from src_06.telegram.client import TGClient
+    from src.telegram.client import TGClient
     client = TGClient()
     await client.connect()
     dialogs = await client.get_dialogs(limit=10)
 
     # Для TUI:
-    from src_06.telegram.client import ThreadedTGClient
+    from src.telegram.client import ThreadedTGClient
     tg = ThreadedTGClient()
     future = tg.connect_async()
     result = await asyncio.wrap_future(future)
@@ -40,6 +40,22 @@ API_HASH = "383bbe0942526db1133edc23d8ba8023"
 PHONE = "+79223919054"
 
 SESSION_DIR = Path(__file__).resolve().parent.parent.parent
+
+
+def _is_animated(path) -> bool:
+    """Реально ли анимированный GIF/WebP (PIL, >1 кадра).
+
+    DocumentAttributeAnimated нельзя вешать на статичный файл — Telegram
+    отклоняет такой запрос. Если PIL недоступен — доверяем расширению.
+    """
+    try:
+        from PIL import Image, ImageSequence
+        img = Image.open(path)
+        return sum(1 for _ in ImageSequence.Iterator(img)) > 1
+    except ImportError:
+        return True
+    except Exception:
+        return False
 
 
 class TGClient:
@@ -115,13 +131,39 @@ class TGClient:
         dialogs = await self._client.get_dialogs(limit=limit)
         return list(dialogs)  # type: ignore[no-any-return***REMOVED***  # Telethon без stubs
 
-    async def get_messages(self, entity, limit: int = 5) -> List[Message***REMOVED***:
-        """Сообщения из диалога."""
-        return await self._client.get_messages(entity, limit=limit)  # type: ignore[no-any-return***REMOVED***  # Telethon без stubs
+    async def get_messages(self, entity, limit: int = 5, offset_id: int = 0) -> List[Message***REMOVED***:
+        """Сообщения из диалога. offset_id — подгрузить более старые (строго раньше этого id)."""
+        return await self._client.get_messages(entity, limit=limit, offset_id=offset_id)  # type: ignore[no-any-return***REMOVED***  # Telethon без stubs
 
     async def send_message(self, entity, text: str) -> Message:
         """Отправить сообщение."""
         return await self._client.send_message(entity, text)
+
+    async def send_file(self, entity, path: str, caption: str = "", progress_callback=None) -> Message:
+        """Отправить файл как медиа. Тип определяется по расширению:
+        .jpg/.png → фото, .mp4 → видео, .gif/.webp → анимированная гифка,
+        .mp3 → музыка. progress_callback(done, total) вызывается из TG-потока."""
+        from telethon.tl.types import DocumentAttributeAnimated, DocumentAttributeFilename
+
+        kwargs: dict = {***REMOVED***
+        if str(path).lower().endswith((".gif", ".webp")) and _is_animated(path):
+            # Явно помечаем файл как анимированную гифку (DocumentAttributeAnimated),
+            # иначе Telegram может показать его простым документом. WebP тоже
+            # поддерживается: Telegram транскодирует анимированный webp в гифку.
+            # Проверка анимации через PIL: статичный файл не помечаем, иначе
+            # Telegram отклонит запрос (атрибут только для анимированных).
+            kwargs["attributes"***REMOVED*** = [
+                DocumentAttributeAnimated(),
+                DocumentAttributeFilename(Path(str(path)).name),
+            ***REMOVED***
+        return await self._client.send_file(
+            entity, path, caption=caption or None, progress_callback=progress_callback, **kwargs
+        )
+
+    async def download_media(self, message, dest: str, progress_callback=None) -> Optional[str***REMOVED***:
+        """Скачать медиа из сообщения в dest. Возвращает путь или None.
+        progress_callback(done, total) вызывается из TG-потока."""
+        return await self._client.download_media(message, file=dest, progress_callback=progress_callback)
 
     async def disconnect(self) -> None:
         await self._client.disconnect()
@@ -206,12 +248,12 @@ class ThreadedTGClient:
             return await self._client.get_dialogs(limit)
         return self._submit(_get_dialogs())
 
-    def get_messages_async(self, entity, limit: int = 5):
+    def get_messages_async(self, entity, limit: int = 5, offset_id: int = 0):
         """Сообщения из диалога. Возвращает Future[List[Message***REMOVED******REMOVED***."""
         async def _get_messages():
             if self._client is None:
                 return [***REMOVED***
-            return await self._client.get_messages(entity, limit)
+            return await self._client.get_messages(entity, limit, offset_id=offset_id)
         return self._submit(_get_messages())
 
     def send_message_async(self, entity, text: str):
@@ -221,6 +263,32 @@ class ThreadedTGClient:
                 raise RuntimeError("Not connected")
             return await self._client.send_message(entity, text)
         return self._submit(_send())
+
+    def send_file_async(self, entity, path: str, caption: str = "", progress_callback=None, voice_note: bool = False):
+        """Отправить файл как медиа. Возвращает Future[Message***REMOVED***.
+
+        voice_note=True — отправить как голосовое сообщение (Telethon сам
+        добавит DocumentAttributeAudio(voice=True); поддерживается для
+        записей termux-microphone-recorder: .m4a/.ogg/.opus).
+        """
+        async def _send():
+            if self._client is None:
+                raise RuntimeError("Not connected")
+            kwargs = {"caption": caption, "progress_callback": progress_callback***REMOVED***
+            if voice_note:
+                kwargs["voice_note"***REMOVED*** = True
+            return await self._client.send_file(entity, path, **kwargs)
+        return self._submit(_send())
+
+    def download_media_async(self, message, dest: str, progress_callback=None):
+        """Скачать медиа из сообщения. Возвращает Future[str | None***REMOVED***."""
+        async def _download():
+            if self._client is None:
+                return None
+            return await self._client.download_media(
+                message, dest, progress_callback=progress_callback
+            )
+        return self._submit(_download())
 
     @property
     def telethon_client(self) -> Optional[TelethonClient***REMOVED***:

@@ -1,0 +1,12 @@
+name: vkusvill_demo
+type: python
+stack:
+  - python>=3.10
+  - openpyxl
+  - xlcalculator (parity-check)
+requirements:
+  steps: required
+description: >
+  Демо «ВкусВилл × AI-автоматизация» (ROADMAP-VV-001/002): модель прогноза
+  спроса (model_forecast.xlsx) + parity-проверка Python ↔ Excel.
+  STEPS.md обязателен (L2 strict validation, промт 68 Phase 4.4).

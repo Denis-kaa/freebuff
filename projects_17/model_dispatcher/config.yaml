@@ -1,0 +1,81 @@
+# config.yaml — Диспетчер моделей (Model Dispatcher)
+# Драйвер freebuff TUI: имитация действий человека (081_19_model_dispatcher).
+
+# ── Сессия: таймер и устойчивость ────────────────────────────────
+session:
+  # Лимит на одну сессию freebuff (минуты). По умолчанию 1 час.
+  # По истечении задача НЕ теряется: сессия сохраняется и может быть
+  # возобновлена через `freebuff --continue` (даже через 3 часа).
+  timeout_minutes: 60
+
+  # Сколько раз перезапускать freebuff при вылете TUI (0 = не перезапускать)
+  max_restarts: 2
+
+  # Пауза между перезапусками, сек
+  restart_delay_seconds: 10
+
+  # Ждать приглашения ввода ("Enter a coding task") до N секунд
+  startup_wait_seconds: 120
+
+  # Поллинг мониторинга, сек
+  poll_seconds: 3
+
+  # Ожидание результата (.freebuff_result) на всю задачу, сек
+  # (0 = не ограничивать; иначе жёсткий дедлайн всей задачи)
+  task_result_timeout_seconds: 0
+
+# ── Модели: приоритет выбора «по убыванию мощности» ─────────────
+# Скрипт читает стартовый экран freebuff (tmux capture-pane), находит
+# строки моделей по keywords и выбирает ПЕРВУЮ доступную из списка.
+# keywords — подстроки для детекта строки модели на экране (нижний регистр).
+models:
+  priority:
+    - name: "glm-5.2"
+      keywords: ["glm", "5.2"***REMOVED***
+    - name: "mimo-2.5-pro"
+      keywords: ["mimo", "2.5"***REMOVED***
+    - name: "minimax-m3"
+      keywords: ["minimax", "m3"***REMOVED***
+    - name: "deepseek-v4-flash"
+      keywords: ["deepseek"***REMOVED***
+      free_fallback: true   # последний резерв — бесплатная модель
+
+  # Маркеры недоступности модели на экране (квота израсходована).
+  # Если строка модели содержит любой из них — считаем недоступной.
+  unavailable_markers:
+    - "out of"
+    - "sold out"
+    - "exhausted"
+    - "no sessions"
+    - "0 available"
+    - "unavailable"
+
+  # Маркеры «доступна» (усиливают уверенность)
+  available_markers:
+    - "free"
+    - "unlimited"
+    - "available"
+
+# ── Очередь промтов (структура уже заложена в pompts_11/) ────────
+# Промты собираются в <root>/pompts_11/user/ → обрабатываются →
+# перемещаются в done/ (✅) или failed/ (❌).
+queue:
+  # Входная папка относительно корня воркспейса (корень — где лежит AGENTS.md)
+  user_dir: "pompts_11/user"
+  running_dir: "pompts_11/running"
+  done_dir: "pompts_11/done"
+  failed_dir: "pompts_11/failed"
+
+# ── Логирование ──────────────────────────────────────────────────
+logging:
+  level: "INFO"        # DEBUG | INFO | WARNING | ERROR
+  log_dir: "projects_17/model_dispatcher/logs"
+
+# ── Freebuff ─────────────────────────────────────────────────────
+freebuff:
+  # Пустой = автоопределение:
+  #   1) freebuff_plugin_03.wrapper._build_buffer_cmd (proot/loader-aware)
+  #   2) иначе `freebuff --cwd <dir>` из PATH
+  binary_cmd: ""
+  # Резюмировать прерванные сессии через `freebuff --continue`
+  continue_resume: true

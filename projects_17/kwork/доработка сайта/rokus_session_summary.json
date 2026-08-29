@@ -1,0 +1,136 @@
+{
+  "project": "Rokus-Sport — доработка сайта",
+  "scope_path": "projects_17/kwork/доработка сайта/",
+  "date": "2026-08-11",
+  "methodology": "promt1.md (Tilda Project Roadmap Architect)",
+  "task": "Master Roadmap v0 + Site Audit v1 + Quality-QA v1 (21 финальных секций + checklists)",
+  "deliverables": {
+    "tz_dorabotka.md": {
+      "source": "ТЗ на доработку сайта.docx",
+      "method": "pandoc 3.9 (.docx → markdown)",
+      "lines": 309,
+      "status": "ok"
+    ***REMOVED***,
+    "prototypes/": {
+      "extracted_images": 14,
+      "image1.png": "Hero (1.2 MB) — главная + 4 sport-страниц (через TASK-095 компонент)",
+      "image2.png": "О нас + 5 буллетов доверия",
+      "image3.png": "Виды спорта — сетка карточек (через TASK-097 Card-Grid)",
+      "image4.png": "Скачать каталог и Партнёры общая (через TASK-096 Catalog-Landing, 3 места)",
+      "image5.png": "Для кого экипировка",
+      "image6.jpeg": "Виды материалов smartdry™ — ⚠️ FAIL Quality-QA (0.27 B/px), см. image6_QA.md + Q-B9. Временный вариант image6_q95_temp.jpg (Pillow q=95 + 4:4:4 + ICC sRGB, +12.1% размер) — для production до получения оригинала от клиента",
+    "image6_q95_temp.jpg": "Временный TEMP-вариант для image6.jpeg: 241 722 B (+26 KB), B/px 0.27 → 0.31, 4:4:4 subsampling, ICC sRGB. НЕ использовать в финале — только до получения origin (Q-B9)",
+      "image7.png": "Собственное производство (фото)",
+      "image8.png": "Собственное производство (пояснение)",
+      "image9.png": "Форма «Оставить заявку»",
+      "image10.png": "Примеры наших работ",
+      "image11-14.png": "Референсы страницы партнёра",
+      "readme": "prototypes/README.md — карта image ↔ блок ТЗ + Quality-QA summary",
+      "image6_QA": "prototypes/image6_QA.md — полный QA-отчёт по единственному JPEG"
+    ***REMOVED***,
+    "rokus_master_roadmap_v0.md": {
+      "sections": 21,
+      "rules_applied": [
+        "RULE 1 (не галлюцинировать)",
+        "RULE 2 (FACT/ASSUMPTION/NEEDS VERIFICATION)",
+        "RULE 3 (не переписывать ТЗ)",
+        "RULE 4 (Tilda First)",
+        "RULE 5 (Mobile First Quality)",
+        "RULE 6 (без скрытых работ)",
+        "RULE 7 (глубокий анализ)"
+      ***REMOVED***,
+      "master_tasks_count": 41,
+      "phases": 11,
+      "estimated_effort_hours": "76-128 ч (один разработчик, с TASK-095/096/097/098)",
+      "scenarios": {
+        "min_weeks": 2,
+        "realistic_weeks": 4,
+        "pessimistic_weeks": "6-8"
+      ***REMOVED***,
+      "readiness": {"fact_pct": 35, "assumption_pct": 15, "needs_verification_pct": 50***REMOVED***,
+      "new_tasks_v0_1": [
+        "TASK-095 Hero-компонент (image1.png, P0)",
+        "TASK-096 Catalog-Landing-Pattern (image4.png, P1)",
+        "TASK-097 Card-Grid Component (image3.png, P1)",
+        "TASK-098 Каталог-карточка для /shop (P0)"
+      ***REMOVED***,
+      "qa_checklist_added": "Section 14.6 — Image Quality QA (PIL-автоматизация)"
+    ***REMOVED***,
+    "site_audit_best_effort": {
+      "method": "curl + sitemap.xml + robots.txt + favicon + DNS + 10 full-page fetches",
+      "chrome_used": false,
+      "render_with_js": false,
+      "tilda_classes_seen": ["t-menu", "t-menusub", "t-slds", "t-store", "t706", "t-popup", "t-btn"***REMOVED***,
+      "sitemap_urls": 10,
+      "fetched_pages_size": {
+        "root.html": "604 KB",
+        "_costumes.html": "512 KB",
+        "_newfootball.html": "557 KB",
+        "_newvolleyball.html": "586 KB",
+        "_tkani.html": "542 KB",
+        "_policy.html": "332 KB",
+        "_requisites.html": "391 KB",
+        "_newbasketball.html_newhockey.html_infoblok.html": "373 B (DDoS-Guard soft-403)"
+      ***REMOVED***,
+      "title": "Rokus | Производство спортивной одежды на заказ с дизайном в подарок.",
+      "findings_important": [
+        "image6.jpeg FAIL Quality-QA: 0.27 B/px (нужно ≥0.50 для hero или ≥0.70 для texture); 1187×667 px; 210 KB; нет EXIF/ICC; см. prototypes/image6_QA.md",
+        "DDoS-Guard блокирует /newbasketball, /newhockey, /infoblok — soft-403 (373 B) при нормальном HTTP/2 200",
+        "Description дублирован на 4 публичных страницах (одинаковое «Изготавливаем спортивную одежду…»)",
+        "H1/H2/H3 в HTML отсутствуют — контент в изображениях или Zero Block без семантики",
+        "`<form>` нет в HTML — формы только через JS-popup (Tilda)",
+        "Хоккей /newhockey есть на сайте, но НЕ в ТЗ — новый GAP",
+        "WhatsApp в соцсетях — ТЗ требует удалить",
+        "Tilda Store (корзина t706) уже активна, 32 кнопки форм",
+        "/tkani и /infoblok есть — могут быть донорами для «Виды материалов» и «О нас»",
+        "В ТЗ нет меню с dropdown «Виды спорта» — полная переделка шапки"
+      ***REMOVED***,
+      "dedup_findings": [
+        "0 content-дублей по sha256 (все 14 файлов уникальны)",
+        "image1.png упоминается в 2 местах (Hero главная + 4 sport hero = 5 применений)",
+        "image4.png упоминается в 3 местах (Скачать каталог блок + страница + Партнёры)",
+        "image10.png упоминается в 2 местах (Примеры работ + референс партнёра)",
+        "13 PNG + 1 JPEG (image6 — единственный JPEG)"
+      ***REMOVED***
+    ***REMOVED***
+  ***REMOVED***,
+  "open_blocking_questions_for_client": [
+    "Q-B1 /newhockey — включать в редизайн или нет? (в ТЗ нет, но страница уже на сайте)",
+    "Q-B2 Контент-пак (фото 3 слайдера, фото чемпионов, лого партнёров, 10 тканей, фото производства) — сроки и источник от заказчика?",
+    "Q-B3 Куда летят лиды из форм? (CRM? Telegram Bot? e-mail?)",
+    "Q-B4 Онлайн-оплата: ЮKassa / Robokassa / Tilda Payments?",
+    "Q-B5 Яндекс-карта: координаты или активная ссылка?",
+    "Q-B6 Адрес / телефон / график работы — финальные значения?",
+    "Q-B7 Почему DDoS-Guard блокирует /newbasketball, /newhockey, /infoblok? (см. rokus_site_audit.md §0)",
+    "Q-B8 image1.png — единое Hero для всех 5 страниц или разные sport-фото? (см. prototypes/DEDUP_AUDIT.md §6.5)",
+    "Q-B9 image6.jpeg (smartdry™) — пришлите оригинал q≥90 / PNG / TIFF (≥1920×1080), текущая = 0.27 B/px — артефакты (см. prototypes/image6_QA.md). Временное решение image6_q95_temp.jpg развёрнуто как TEMP на сайте",
+    "Q-B10 image1.png + image7.png — пришлите оригиналы с ICC sRGB + DPI ≥ 96 (≥1920×1080). Текущие: B/px=0.55 ✅, но DPI<96 и no ICC → цветовой drift в Safari/iOS (см. prototypes/qa_report_pngs.md §2.1)"
+  ***REMOVED***,
+  "open_followup_after_client_response": [
+    "Phase 0: запросить доступ в редактор Tilda, верифицировать Zero Block и формы (нет Chrome render)",
+    "Phase 1: отправить client_questions_v1.md (Q-B1..B10, ready-to-send письмо) + показать prototypes/VISUAL_DIFF.md на созвоне (Owner-таблица)",
+    "Phase 2: контент-сбор (TASK-060) после ответов Q-B2/Q-B8/Q-B9/Q-B10",
+    "Follow-up conveyor (Day 0/3/7): см. client_followups/followup_strategy.md",
+    "Day 7 trigger: python3 /tmp/make_roadmap_v01.py → rokus_master_roadmap_v01.md (готов, 79 KB)",
+    "После Phase 2: v1 roadmap (с конкретными файлами вместо NEEDS VERIFICATION)"
+  ***REMOVED***,
+  "deliverable_files": [
+    "promt1.md (исходно)",
+    "tz_dorabotka.md (pandoc из ТЗ)",
+    "rokus_master_roadmap_v0.md (21 секция + 11.A общие компоненты + 14.6 Image QA)",
+    "rokus_site_audit.md (10 страниц deep audit)",
+    "prototypes/README.md (карта image↔блок ТЗ + Quality-QA)",
+    "prototypes/DEDUP_AUDIT.md (вайб-проверка + кандидат-компоненты)",
+    "prototypes/image6_QA.md (Quality-QA отчёт по единственному JPEG + Variant Б q=95 TEMP)",
+    "prototypes/qa_report_pngs.md (Quality-QA отчёт по 13 PNG: 7 PASS, 6 FAIL)",
+    "prototypes/VISUAL_DIFF.md (ASCII-схема «кто-что-на-себя-берёт» + сценарий созвона на 20 мин)",
+    "client_questions_v1.md (формальное письмо Q-B1..B10 + важные Q-I1..I6)",
+    "commercial_proposal_v1.md (КП — 3 пакета: Минимум 76ч / Стандарт 100ч / Премиум 128ч; Q-B8=A обоснование; CRM/оплата вынесены в опции)",
+    "client_followups/followup_strategy.md (conveyor: Day 0→3→7 с дефолтами и v0.1)",
+    "client_followups/email_day3_reminder.md (мягкое напоминание, ≤ 480 символов TG)",
+    "client_followups/email_day7_contact_lost.md (формальное + приложения v0.1 + defaults)",
+    "client_followups/defaults_q_b.md (таблица 10 дефолтов с обоснованием + rollback cost)",
+    "rokus_master_roadmap_v01.md (auto-generated v0.1 после Day 7, 79 KB, defaults applied)",
+    "rokus_session_summary.json (машинно-читаемое summary всей сессии)"
+  ***REMOVED***
+***REMOVED***

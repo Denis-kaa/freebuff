@@ -1,0 +1,58 @@
+{
+  "furniture": [
+    { "id": "ikea-kivik",    "name": "Диван ИКЕА Кивик",        "size_m": [2.20, 0.90***REMOVED***, "type": "sofa",      "color": "#D2B48C" ***REMOVED***,
+    { "id": "ikea-friheten", "name": "Диван ИКЕА Фрихетен",     "size_m": [2.30, 0.90***REMOVED***, "type": "sofa",      "color": "#4A4A4A" ***REMOVED***,
+    { "id": "ikea-corner",   "name": "Угловой диван (L-форма)",  "size_m": [3.00, 2.00***REMOVED***, "type": "sofa",      "color": "#8B7355" ***REMOVED***,
+    { "id": "table-dining",  "name": "Обеденный стол",           "size_m": [1.40, 0.80***REMOVED***, "type": "table",     "color": "#DEB887" ***REMOVED***,
+    { "id": "table-coffee",  "name": "Журнальный столик",        "size_m": [1.00, 0.60***REMOVED***, "type": "table",     "color": "#D2B48C" ***REMOVED***,
+    { "id": "table-desk",    "name": "Письменный стол",          "size_m": [1.20, 0.60***REMOVED***, "type": "table",     "color": "#F5DEB3" ***REMOVED***,
+    { "id": "wardrobe",      "name": "Шкаф-купе",                "size_m": [1.50, 0.60***REMOVED***, "type": "storage",   "color": "#8B6914" ***REMOVED***,
+    { "id": "bookshelf",     "name": "Книжный стеллаж",          "size_m": [0.80, 0.30***REMOVED***, "type": "storage",   "color": "#A0522D" ***REMOVED***,
+    { "id": "fridge-std",    "name": "Холодильник стандартный",  "size_m": [0.60, 0.60***REMOVED***, "type": "appliance", "color": "#C0C0C0" ***REMOVED***,
+    { "id": "fridge-sbs",    "name": "Холодильник Side-by-Side", "size_m": [0.90, 0.70***REMOVED***, "type": "appliance", "color": "#D3D3D3" ***REMOVED***,
+    { "id": "tv-43",         "name": "Телевизор 43\"",           "size_m": [0.90, 0.50***REMOVED***, "type": "appliance", "color": "#2F2F2F" ***REMOVED***,
+    { "id": "tv-55",         "name": "Телевизор 55\"",           "size_m": [1.20, 0.70***REMOVED***, "type": "appliance", "color": "#1A1A1A" ***REMOVED***,
+    { "id": "tv-65",         "name": "Телевизор 65\"",           "size_m": [1.40, 0.80***REMOVED***, "type": "appliance", "color": "#0D0D0D" ***REMOVED***,
+    { "id": "bed-queen",     "name": "Кровать Queen Size",        "size_m": [2.00, 1.60***REMOVED***, "type": "bed",       "color": "#E8D5C4" ***REMOVED***,
+    { "id": "bed-single",    "name": "Кровать односпальная",      "size_m": [2.00, 0.90***REMOVED***, "type": "bed",       "color": "#D4C4B0" ***REMOVED***,
+    { "id": "chair-dining",  "name": "Обеденный стул",            "size_m": [0.45, 0.45***REMOVED***, "type": "chair",     "color": "#A0522D" ***REMOVED***,
+    { "id": "chair-office",  "name": "Офисное кресло",            "size_m": [0.60, 0.60***REMOVED***, "type": "chair",     "color": "#2F2F2F" ***REMOVED***,
+    { "id": "sink-kitchen",  "name": "Кухонная мойка",            "size_m": [0.60, 0.50***REMOVED***, "type": "fixture",   "color": "#D3D3D3" ***REMOVED***,
+    { "id": "stove-gas",     "name": "Газовая плита 4-конф.",     "size_m": [0.60, 0.60***REMOVED***, "type": "fixture",   "color": "#1A1A1A" ***REMOVED***,
+    { "id": "bathtub",       "name": "Ванна",                      "size_m": [1.70, 0.75***REMOVED***, "type": "fixture",   "color": "#FEFEFE" ***REMOVED***,
+    { "id": "toilet",        "name": "Унитаз",                     "size_m": [0.40, 0.65***REMOVED***, "type": "fixture",   "color": "#F5F5F5" ***REMOVED***,
+    { "id": "rug-large",     "name": "Ковёр большой",              "size_m": [2.00, 1.50***REMOVED***, "type": "decor",     "color": "#C4A882" ***REMOVED***,
+    { "id": "plant-indoor",  "name": "Комнатное растение",         "size_m": [0.30, 0.30***REMOVED***, "type": "decor",     "color": "#4CAF50" ***REMOVED***
+  ***REMOVED***,
+  "materials": {
+    "walls": [
+      { "id": "wallpaper-brick",  "label": "Кирпичная стена",        "mood": "Лофт",          "color": "#C1786D" ***REMOVED***,
+      { "id": "wallpaper-floral", "label": "Цветочные обои",         "mood": "Классика",      "color": "#F5E6D3" ***REMOVED***,
+      { "id": "paint-white",      "label": "Белая краска",           "mood": "Скандинавский", "color": "#FEFEFE" ***REMOVED***,
+      { "id": "wood-panel-oak",   "label": "Дубовые панели",         "mood": "Джапанди",      "color": "#C4A882" ***REMOVED***
+    ***REMOVED***,
+    "floors": [
+      { "id": "laminate-oak",       "label": "Дубовый ламинат",      "mood": "Скандинавский", "color": "#D4A574" ***REMOVED***,
+      { "id": "tile-white",         "label": "Белая керамика",       "mood": "Современный",   "color": "#F0F0F0" ***REMOVED***,
+      { "id": "linoleum-grey",      "label": "Серый линолеум",       "mood": "Лофт",          "color": "#9E9E9E" ***REMOVED***,
+      { "id": "parquet-herringbone","label": "Паркет ёлочкой",       "mood": "Классика",      "color": "#C49A6C" ***REMOVED***
+    ***REMOVED***,
+    "ceilings": [
+      { "id": "ceiling-white",     "label": "Белый потолок",         "mood": "Скандинавский", "color": "#FEFEFE" ***REMOVED***,
+      { "id": "ceiling-suspended", "label": "Подвесной потолок",     "mood": "Современный",   "color": "#E8E8E8" ***REMOVED***,
+      { "id": "ceiling-gypsum",    "label": "Гипсокартон",           "mood": "Джапанди",      "color": "#FAFAFA" ***REMOVED***
+    ***REMOVED***
+  ***REMOVED***,
+  "lighting": [
+    { "id": "lighting-warm", "label": "Тёплый свет",          "modifier": "тёплое естественное освещение, золотой час" ***REMOVED***,
+    { "id": "lighting-cool", "label": "Холодный LED",          "modifier": "холодное LED-освещение, современный минимализм" ***REMOVED***,
+    { "id": "lighting-cine", "label": "Кинематографичный",     "modifier": "приглушённый кинематографичный свет, атмосферно" ***REMOVED***
+  ***REMOVED***,
+  "styles": [
+    { "id": "scandi",     "label": "Скандинавский",       "prefix": "скандинавский стиль, мягкий дневной свет" ***REMOVED***,
+    { "id": "japandi",    "label": "Джапанди",            "prefix": "японско-скандинавский, дзен-минимализм" ***REMOVED***,
+    { "id": "industrial", "label": "Индустриальный лофт", "prefix": "индустриальный лофт, открытый кирпич" ***REMOVED***,
+    { "id": "midcentury", "label": "Мид-сенчури",         "prefix": "mid-century modern, тёплое дерево" ***REMOVED***,
+    { "id": "modern",     "label": "Современный",         "prefix": "современный минимализм, чистые линии" ***REMOVED***
+  ***REMOVED***
+***REMOVED***

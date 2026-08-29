@@ -1,0 +1,522 @@
+# BLUEPRINTS REGISTRY v3
+# VERSION: 3.0.0
+# Local copy for sheet_project (mirrors canonical blueprints_v3/registry.yaml).
+# Used by RoleArtifactValidator (forge chain) to resolve per-role output patterns
+# instead of falling back to DEFAULT_ROLE_OUTPUTS (registry_status="missing" -> degraded).
+
+pipeline:
+  - id: orchestrator
+    file: 00_orchestrator.md
+    type: management
+    role: State-Machine Orchestrator
+    description: Диспетчер AI-конвейера, управляет состоянием проекта через manifest.md
+    condition: always
+    entry_point: true
+    triggers:
+      - "/start"
+      - "/status"
+      - "/next"
+      - "/rollback"
+      - "/force"
+      - "/take"
+      - "/distribute"
+      - "начать проект"
+      - "статус проекта"
+      - "следующий этап"
+
+  - id: context_keeper
+    file: 01_context_keeper.md
+    type: management
+    role: Context & State Manager
+    description: Хранитель памяти конвейера, сжимает контекст, ведёт manifest.md
+    condition: always
+    triggers:
+      - "сжать контекст"
+      - "обновить manifest"
+      - "сохранить состояние"
+    dependencies: [***REMOVED***
+    outputs:
+      - manifest.md
+
+  - id: explainer
+    file: 02_explainer.md
+    type: analysis
+    role: Business Analyst & PM
+    description: Переводит сырое ТЗ заказчика на язык инженерных требований
+    condition: always
+    triggers:
+      - "проанализируй ТЗ"
+      - "разбери заказ"
+      - "что хочет клиент"
+      - "анализ требований"
+    dependencies: [***REMOVED***
+    outputs:
+      - brief.md
+      - parsed_requirements.md
+
+  - id: lisa
+    file: 03_lisa_estimator.md
+    type: estimation
+    role: LISA-3 AI-Native Complexity Estimator
+    description: Оценивает сложность проекта по фреймворку LISA-3
+    condition: always
+    triggers:
+      - "оцени сложность"
+      - "LISA оценка"
+      - "сколько стоит проект"
+      - "оценка проекта"
+    dependencies:
+      - explainer
+    outputs:
+      - lisa_report.md
+    metrics:
+      - TC_base
+      - TC_quote
+      - timeline_days
+      - budget_range
+
+  - id: risk
+    file: 04_risk_manager.md
+    type: estimation
+    role: AI-Native Delivery Risk Manager
+    description: Оценивает риски доставки проекта, выносит вердикт GO/CONDITIONAL/NO-GO
+    condition: always
+    triggers:
+      - "оцени риски"
+      - "risk assessment"
+      - "можно ли брать проект"
+      - "go/no-go решение"
+    dependencies:
+      - lisa
+    outputs:
+      - risk_matrix.md
+    verdict:
+      - "🟢 GO"
+      - "🟡 CONDITIONAL GO"
+      - "🔴 NO-GO"
+
+  - id: decomposer
+    file: 05_decomposer.md
+    type: architecture
+    role: AI System Decomposer
+    description: Разбивает систему на bounded contexts и модули
+    condition: always
+    triggers:
+      - "декомпозиция"
+      - "разбей на модули"
+      - "определи границы модулей"
+      - "bounded contexts"
+    dependencies:
+      - risk
+    outputs:
+      - decomposition.md
+      - module_list.md
+      - integration_topology.md
+
+  - id: architect
+    file: 06_architect.md
+    type: architecture
+    role: AI System Architect
+    description: Проектирует внутреннюю архитектуру каждого модуля
+    condition: always
+    triggers:
+      - "спроектируй архитектуру"
+      - "архитектурное решение"
+      - "ADR"
+      - "какую архитектуру выбрать"
+    dependencies:
+      - decomposer
+    outputs:
+      - architecture.md
+      - adr/*.md
+      - contracts.yaml
+
+  - id: auditor
+    file: 07_auditor.md
+    type: validation
+    role: Architectural Auditor (Quality Gate)
+    description: Проверяет готовую архитектуру, выявляет слабые места
+    condition: always
+    loop: until_ready
+    max_iterations: 3
+    triggers:
+      - "проверь архитектуру"
+      - "аудит"
+      - "quality gate"
+      - "есть ли проблемы в архитектуре"
+    dependencies:
+      - architect
+    outputs:
+      - audit_report.md
+    verdict:
+      - "READY"
+      - "READY WITH FIXES"
+      - "NOT READY"
+
+  - id: response_writer
+    file: 08_response_writer.md
+    type: communication
+    role: Tech Architect & Presale Response Engine
+    description: Пишет экспертный presale-ответ заказчику на основе готовой архитектуры
+    condition: always
+    triggers:
+      - "напиши отклик клиенту"
+      - "presale ответ"
+      - "ответ на заказ"
+      - "как ответить заказчику"
+    dependencies:
+      - auditor
+    outputs:
+      - client_response.md
+
+  - id: developer
+    file: 09_developer.md
+    type: implementation
+    role: AI Senior Developer / Autonomous Implementer
+    description: Реализует production-ready код по архитектурным спецификациям
+    condition: always
+    triggers:
+      - "напиши код"
+      - "реализуй модуль"
+      - "implementation"
+      - "backend разработка"
+    dependencies:
+      - auditor
+    outputs:
+      - src/**/*.py
+      - tests/**/*.py
+      - migrations/*.py
+
+  - id: frontend
+    file: 10_frontend_dev.md
+    type: implementation
+    role: AI Frontend Developer
+    description: Создаёт production-ready UI с учётом accessibility и performance
+    condition: project_type == "web"
+    triggers:
+      - "сверстай UI"
+      - "frontend разработка"
+      - "React компоненты"
+      - "HTML/CSS/JS"
+    dependencies:
+      - developer
+    outputs:
+      - frontend/**/*.tsx
+      - frontend/**/*.css
+      - frontend/**/*.html
+
+  - id: devops
+    file: 11_devops_sre.md
+    type: infrastructure
+    role: DevOps & SRE Engineer
+    description: Упаковывает код в production-ready инфраструктуру
+    condition: always
+    triggers:
+      - "настрой Docker"
+      - "CI/CD pipeline"
+      - "infrastructure as code"
+      - "Terraform"
+      - "Kubernetes"
+    dependencies:
+      - developer
+    outputs:
+      - Dockerfile
+      - docker-compose.yml
+      - .github/workflows/*.yml
+      - terraform/*.tf
+
+  - id: tester
+    file: 12_tester.md
+    type: validation
+    role: QA & Test Planner (Verifier Sub-Agent)
+    description: Разрабатывает comprehensive test strategy с mutation testing
+    condition: always
+    triggers:
+      - "напиши тесты"
+      - "test strategy"
+      - "QA"
+      - "mutation testing"
+    dependencies:
+      - developer
+      - frontend
+    outputs:
+      - tests/**/*.py
+      - mutation_test_results.md
+
+  - id: fixer
+    file: 13_fixer.md
+    type: implementation
+    role: AI Bug Fixer (Precision Surgeon)
+    description: Точечно исправляет баги с atomic commits
+    condition: on_test_fail
+    loop: until_pass
+    max_iterations: 3
+    triggers:
+      - "исправь баг"
+      - "bug fix"
+      - "почини ошибку"
+      - "regression test"
+    dependencies:
+      - tester
+    outputs:
+      - bug_fixes.md
+      - regression_tests.py
+
+  - id: acceptance
+    file: 14_acceptance_agent.md
+    type: validation
+    role: Acceptance Agent (Final QA & Verifier Sub-Agent)
+    description: Независимый приёмщик, сверяет ТЗ с реализацией
+    condition: always
+    triggers:
+      - "приёмка проекта"
+      - "acceptance"
+      - "можно ли отдавать заказчику"
+      - "final QA"
+    dependencies:
+      - tester
+      - fixer
+    outputs:
+      - acceptance_report.md
+      - validation.md
+    verdict:
+      - "ACCEPTED"
+      - "REJECTED"
+
+  - id: documenter
+    file: 15_documenter.md
+    type: delivery
+    role: AI Documenter (Technical Writer)
+    description: Создаёт документацию для разных аудиторий
+    condition: always
+    triggers:
+      - "напиши README"
+      - "документация"
+      - "portfolio case"
+      - "пост для Telegram"
+    dependencies:
+      - acceptance
+    outputs:
+      - README.md
+      - PORTFOLIO_CASE.md
+      - TG_POST.md
+      - API_DOCS.md
+      - ARCHITECTURE.md
+
+  - id: retrospective
+    file: 16_retrospective_agent.md
+    type: evolution
+    role: Retrospective & Calibration Agent
+    description: Анализирует завершённый проект, извлекает уроки, калибрует LISA
+    condition: always
+    triggers:
+      - "ретроспектива"
+      - "lessons learned"
+      - "калибровка LISA"
+      - "что улучшить в следующий раз"
+    dependencies:
+      - documenter
+    outputs:
+      - retrospective_report.md
+      - LESSONS.md
+      - lisa_calibration.yaml
+
+# Project type routing
+project_types:
+  web:
+    description: "Web application with UI (frontend + backend)"
+    required_roles:
+      - explainer
+      - lisa
+      - risk
+      - decomposer
+      - architect
+      - auditor
+      - response_writer
+      - developer
+      - frontend
+      - devops
+      - tester
+      - fixer
+      - acceptance
+      - documenter
+      - retrospective
+    skip_roles: [***REMOVED***
+
+  bot:
+    description: "Telegram/WhatsApp bot with FSM"
+    required_roles:
+      - explainer
+      - lisa
+      - risk
+      - decomposer
+      - architect
+      - auditor
+      - response_writer
+      - developer
+      - devops
+      - tester
+      - fixer
+      - acceptance
+      - documenter
+      - retrospective
+    skip_roles:
+      - frontend
+
+  script:
+    description: "Local script or parser"
+    required_roles:
+      - explainer
+      - lisa
+      - risk
+      - decomposer
+      - architect
+      - auditor
+      - response_writer
+      - developer
+      - tester
+      - fixer
+      - acceptance
+      - documenter
+      - retrospective
+    skip_roles:
+      - frontend
+      - devops
+
+  api:
+    description: "Backend API only (no UI)"
+    required_roles:
+      - explainer
+      - lisa
+      - risk
+      - decomposer
+      - architect
+      - auditor
+      - response_writer
+      - developer
+      - devops
+      - tester
+      - fixer
+      - acceptance
+      - documenter
+      - retrospective
+    skip_roles:
+      - frontend
+
+# Complexity routing (based on LISA TC score)
+complexity_routing:
+  small:
+    tc_range: [0, 4***REMOVED***
+    description: "Simple task (script, small fix)"
+    required_roles:
+      - developer
+    skip_roles:
+      - decomposer
+      - architect
+      - auditor
+      - response_writer
+
+  medium:
+    tc_range: [4, 6***REMOVED***
+    description: "Standard task (typical project)"
+    required_roles:
+      - explainer
+      - lisa
+      - risk
+      - architect
+      - developer
+      - tester
+    skip_roles:
+      - decomposer
+      - auditor
+
+  large:
+    tc_range: [6, 8***REMOVED***
+    description: "Complex task (full project)"
+    required_roles:
+      - explainer
+      - lisa
+      - risk
+      - decomposer
+      - architect
+      - auditor
+      - response_writer
+      - developer
+      - tester
+      - acceptance
+      - documenter
+    skip_roles: [***REMOVED***
+
+  complex:
+    tc_range: [8, 10***REMOVED***
+    description: "Enterprise task (large-scale system)"
+    required_roles:
+      - explainer
+      - lisa
+      - risk
+      - decomposer
+      - architect
+      - auditor
+      - response_writer
+      - developer
+      - frontend
+      - devops
+      - tester
+      - fixer
+      - acceptance
+      - documenter
+      - retrospective
+    skip_roles: [***REMOVED***
+
+# Role categories
+categories:
+  management:
+    - orchestrator
+    - context_keeper
+
+  analysis:
+    - explainer
+
+  estimation:
+    - lisa
+    - risk
+
+  architecture:
+    - decomposer
+    - architect
+    - auditor
+
+  communication:
+    - response_writer
+
+  implementation:
+    - developer
+    - frontend
+    - devops
+    - fixer
+
+  validation:
+    - tester
+    - acceptance
+
+  delivery:
+    - documenter
+
+  evolution:
+    - retrospective
+
+# Metadata
+metadata:
+  version: "3.0.0"
+  created: "2026-06-30"
+  total_blueprints: 17
+  categories:
+    - management
+    - analysis
+    - estimation
+    - architecture
+    - communication
+    - implementation
+    - validation
+    - delivery
+    - evolution

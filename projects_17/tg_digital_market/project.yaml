@@ -1,0 +1,19 @@
+name: tg_digital_market
+type: service
+stack:
+  - python>=3.10
+  - aiogram>=3.10,<4
+  - sqlite3 (stdlib)
+roles:
+  - user
+  - seller
+  - admin
+contracts:
+  - payment_provider
+  - delivery_backend
+  - notification_channel
+description: >
+  Telegram-маркетплейс цифровых товаров (подарочные карты, Roblox, Steam и т.д.)
+  на aiogram 3.x. Каталог, FSM-заказ, оплата через подключаемый платёжный
+  провайдер (Telegram Stars / Mock), атомарная автовыдача цифрового товара,
+  личный кабинет, кабинет продавца, админ-панель.

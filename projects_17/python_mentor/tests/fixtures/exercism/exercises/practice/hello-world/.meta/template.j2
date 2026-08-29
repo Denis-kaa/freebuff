@@ -1,0 +1,29 @@
+{%- import "generator_macros.j2" as macros with context -%***REMOVED***
+{{ macros.canonical_ref() ***REMOVED******REMOVED***
+
+import unittest
+
+try:
+    from hello_world import (
+    hello,
+    )
+
+except ImportError as import_fail:
+    message = import_fail.args[0***REMOVED***.split('(', maxsplit=1)
+    item_name = import_fail.args[0***REMOVED***.split()[3***REMOVED***
+
+    item_name = item_name[:-1***REMOVED*** + "()'"
+
+    # pylint: disable=raise-missing-from
+    raise ImportError("\n\nMISSING FUNCTION --> In your 'hello_world.py' file, we can not find or import the"
+    f' function named {item_name***REMOVED***. \nThe tests for this first exercise expect a function that'
+    f' returns the string "Hello, World!"'
+    f'\n\nDid you use print("Hello, World!") instead?') from None
+
+
+class {{ exercise | camel_case ***REMOVED******REMOVED***Test(unittest.TestCase):
+    {% for case in cases -%***REMOVED***
+    def test_{{ case["description"***REMOVED*** | to_snake ***REMOVED******REMOVED***(self):
+        msg = "\n\nThis test expects a return of the string 'Hello, World!' \nDid you use print('Hello, World!') by mistake?"
+        self.assertEqual({{ case["property"***REMOVED*** ***REMOVED******REMOVED***(), "{{ case["expected"***REMOVED*** ***REMOVED******REMOVED***", msg=msg)
+    {% endfor %***REMOVED***

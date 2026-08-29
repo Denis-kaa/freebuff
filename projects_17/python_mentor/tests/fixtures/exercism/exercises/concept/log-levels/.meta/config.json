@@ -1,0 +1,24 @@
+{
+  "authors": [
+    "mohanrajanr"
+  ***REMOVED***,
+  "contributors": [
+    "valentin-p"
+  ***REMOVED***,
+  "files": {
+    "solution": [
+      "enums.py"
+    ***REMOVED***,
+    "test": [
+      "enums_test.py"
+    ***REMOVED***,
+    "exemplar": [
+      ".meta/exemplar.py"
+    ***REMOVED***
+  ***REMOVED***,
+  "forked_from": [
+    "csharp/logs-logs-logs"
+  ***REMOVED***,
+  "icon": "log-levels",
+  "blurb": "Learn about enums by automating your tedious logging-level tasks."
+***REMOVED***

@@ -1,0 +1,48 @@
+{
+  "furniture": [
+    { "id": "ikea-kivik",    "name": "IKEA Kivik Sofa",       "size_m": [2.20, 0.90***REMOVED***, "type": "sofa"      ***REMOVED***,
+    { "id": "ikea-friheten", "name": "IKEA Friheten",          "size_m": [2.30, 0.90***REMOVED***, "type": "sofa"      ***REMOVED***,
+    { "id": "ikea-corner",   "name": "Corner Sofa (L-shape)",  "size_m": [3.00, 2.00***REMOVED***, "type": "sofa"      ***REMOVED***,
+    { "id": "table-dining",  "name": "Dining Table",           "size_m": [1.40, 0.80***REMOVED***, "type": "table"     ***REMOVED***,
+    { "id": "table-coffee",  "name": "Coffee Table",           "size_m": [1.00, 0.60***REMOVED***, "type": "table"     ***REMOVED***,
+    { "id": "table-desk",    "name": "Desk",                   "size_m": [1.20, 0.60***REMOVED***, "type": "table"     ***REMOVED***,
+    { "id": "wardrobe",      "name": "Wardrobe",               "size_m": [1.50, 0.60***REMOVED***, "type": "storage"   ***REMOVED***,
+    { "id": "bookshelf",     "name": "Bookshelf",              "size_m": [0.80, 0.30***REMOVED***, "type": "storage"   ***REMOVED***,
+    { "id": "fridge-std",    "name": "Standard Refrigerator",  "size_m": [0.60, 0.60***REMOVED***, "type": "appliance" ***REMOVED***,
+    { "id": "fridge-sbs",    "name": "Side-by-side Fridge",    "size_m": [0.90, 0.70***REMOVED***, "type": "appliance" ***REMOVED***,
+    { "id": "tv-43",         "name": "TV 43\"",                "size_m": [0.90, 0.50***REMOVED***, "type": "appliance" ***REMOVED***,
+    { "id": "tv-55",         "name": "TV 55\"",                "size_m": [1.20, 0.70***REMOVED***, "type": "appliance" ***REMOVED***,
+    { "id": "tv-65",         "name": "TV 65\"",                "size_m": [1.40, 0.80***REMOVED***, "type": "appliance" ***REMOVED***
+  ***REMOVED***,
+  "materials": {
+    "walls": [
+      { "id": "wallpaper-brick",    "label": "Brick Pattern Wallpaper", "mood": "industrial" ***REMOVED***,
+      { "id": "wallpaper-floral",   "label": "Floral Wallpaper",        "mood": "classic" ***REMOVED***,
+      { "id": "paint-white",        "label": "White Paint",             "mood": "scandinavian" ***REMOVED***,
+      { "id": "wood-panel-oak",     "label": "Oak Wood Panels",         "mood": "japandi" ***REMOVED***
+    ***REMOVED***,
+    "floors": [
+      { "id": "laminate-oak",       "label": "Oak Laminate",            "mood": "scandinavian" ***REMOVED***,
+      { "id": "tile-white",         "label": "White Ceramic Tile",      "mood": "modern" ***REMOVED***,
+      { "id": "linoleum-grey",      "label": "Grey Linoleum",           "mood": "industrial" ***REMOVED***,
+      { "id": "parquet-herringbone","label": "Herringbone Parquet",     "mood": "classic" ***REMOVED***
+    ***REMOVED***,
+    "ceilings": [
+      { "id": "ceiling-white",      "label": "Painted White",           "mood": "scandinavian" ***REMOVED***,
+      { "id": "ceiling-suspended",  "label": "Suspended Ceiling",       "mood": "modern" ***REMOVED***,
+      { "id": "ceiling-gypsum",     "label": "Gypsum Board",            "mood": "japandi" ***REMOVED***
+    ***REMOVED***
+  ***REMOVED***,
+  "lighting": [
+    { "id": "lighting-warm", "label": "Warm Natural",     "modifier": "warm natural lighting, golden hour" ***REMOVED***,
+    { "id": "lighting-cool", "label": "Cool LED",         "modifier": "cool led lighting, modern minimalist" ***REMOVED***,
+    { "id": "lighting-cine", "label": "Cinematic Dim",    "modifier": "cinematic dim lighting, low-key, moody" ***REMOVED***
+  ***REMOVED***,
+  "styles": [
+    { "id": "scandi",     "label": "Scandinavian",       "prefix": "scandinavian, soft daylight" ***REMOVED***,
+    { "id": "japandi",    "label": "Japandi",            "prefix": "japanese scandinavian, zen minimalism" ***REMOVED***,
+    { "id": "industrial", "label": "Industrial Loft",    "prefix": "industrial loft, exposed brick" ***REMOVED***,
+    { "id": "midcentury", "label": "Mid-Century Modern", "prefix": "mid-century modern, warm wood" ***REMOVED***,
+    { "id": "modern",     "label": "Modern Minimalist",  "prefix": "modern minimalist, clean lines" ***REMOVED***
+  ***REMOVED***
+***REMOVED***

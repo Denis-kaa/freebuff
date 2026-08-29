@@ -1,0 +1,36 @@
+name: freebuff_flutter_app
+description: Mobile companion for Freebuff Manager (Android scaffold, Phase 5.1 A).
+  Foreground-service-based lifecycle to bypass Phantom Process Killer while
+  keeping the Freebuff core process alive on Termux ARM64.
+version: 0.1.0+1
+publish_to: 'none'
+
+environment:
+  sdk: ">=3.2.0 <4.0.0"
+  flutter: ">=3.16.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.6
+
+  # Freebuff core bridge (chat_id + reports via core_02/telegram_contract)
+  http: ^1.2.0
+
+  # Foreground service lifecycle (kill-proof on Android 14/15+).
+  # Note: at flutter_background_service >= 5.0.0 the Android implementation
+  # ships transitively, no separate _android submodule dependency needed.
+  flutter_background_service: ^5.0.0
+
+  # Wake lock primitives (used by Android-side service for doze-mode defense).
+  wakelock_plus: ^1.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/manifest.json

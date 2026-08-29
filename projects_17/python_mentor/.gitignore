@@ -1,0 +1,11 @@
+# Локальная копия корпуса Exercism (клон upstream; воспроизводится git clone --depth 1)
+data/exercism_src/
+# Выходные артефакты ingestion (мутируются при каждом прогоне)
+data/corpus/
+# Source manifest is generated from the pinned clone; reviewed locale projections are tracked
+data/localization/source_manifest.json
+data/localization/drafts/
+data/localization/*.tmp
+# Кэши Python
+__pycache__/
+*.pyc

@@ -1,0 +1,104 @@
+{
+ "language": "python",
+ "slug": "python",
+ "exercises": {
+  "concept": [
+   {
+    "slug": "guidos-gorgeous-lasagna",
+    "name": "Guido's Gorgeous Lasagna",
+    "uuid": "dfd7dc01-3544-4f61-a063-af8530d6e601",
+    "concepts": [
+     "basics"
+    ***REMOVED***,
+    "prerequisites": [***REMOVED***,
+    "status": "beta"
+   ***REMOVED***,
+   {
+    "slug": "black-jack",
+    "name": "Black Jack",
+    "uuid": "e1a6075e-0c5e-48cd-8c50-69140961a06a",
+    "concepts": [
+     "comparisons"
+    ***REMOVED***,
+    "prerequisites": [
+     "basics",
+     "bools",
+     "conditionals"
+    ***REMOVED***,
+    "status": "beta"
+   ***REMOVED***,
+   {
+    "slug": "log-levels",
+    "name": "Log Levels",
+    "uuid": "083f29eb-734f-4d4a-9f27-3e8ceedc29b1",
+    "concepts": [
+     "enums"
+    ***REMOVED***,
+    "prerequisites": [
+     "classes",
+     "conditionals",
+     "comprehensions",
+     "loops",
+     "sequences",
+     "string-methods",
+     "tuples"
+    ***REMOVED***,
+    "status": "wip"
+   ***REMOVED***
+  ***REMOVED***,
+  "practice": [
+   {
+    "slug": "hello-world",
+    "name": "Hello World",
+    "uuid": "f458c48a-4a05-4809-9168-8edd55179349",
+    "practices": [***REMOVED***,
+    "prerequisites": [***REMOVED***,
+    "difficulty": 1
+   ***REMOVED***,
+   {
+    "slug": "bob",
+    "name": "Bob",
+    "uuid": "009a80e2-7901-4d3b-9af2-cdcbcc0b49ae",
+    "practices": [
+     "conditionals"
+    ***REMOVED***,
+    "prerequisites": [
+     "basics",
+     "conditionals"
+    ***REMOVED***,
+    "difficulty": 1
+   ***REMOVED***,
+   {
+    "slug": "two-fer",
+    "name": "Two Fer",
+    "uuid": "4177de10-f767-4306-b45d-5e9c08ef4753",
+    "practices": [
+     "function-arguments"
+    ***REMOVED***,
+    "prerequisites": [
+     "basics",
+     "sets"
+    ***REMOVED***,
+    "difficulty": 1
+   ***REMOVED***
+  ***REMOVED***
+ ***REMOVED***,
+ "concepts": [
+  {
+   "uuid": "d1aee0de-68ca-468b-a808-289bd905e837",
+   "slug": "basics",
+   "name": "Basics"
+  ***REMOVED***,
+  {
+   "uuid": "ae8ba59d-5be3-45cd-869d-1a654249c60a",
+   "slug": "bools",
+   "name": "Bools"
+  ***REMOVED***,
+  {
+   "uuid": "1eec0dde-4599-450f-909d-2b20ea40e73d",
+   "slug": "strings",
+   "name": "Strings"
+  ***REMOVED***
+ ***REMOVED***,
+ "version": "mini-fixture"
+***REMOVED***

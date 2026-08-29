@@ -1,0 +1,34 @@
+# Manual overrides для mapping (Phase B+C, Шаг 7; prompt1 §31–§32).
+#
+# Правила:
+#   - override имеет приоритет над rule-маппингом (детерминированно);
+#   - confidence: 'high' при ручном подтверждении; 'low' — ручной «предположительно»;
+#   - конфликт двух override на одно упражнение → ошибка валидации (детектируется).
+#
+# Формат: список записей {exercise_id: slug, competency_id, confidence***REMOVED***.
+
+overrides:
+  - exercise_id: hello-world
+    competency_id: functions
+    confidence: high
+  - exercise_id: two-fer
+    competency_id: function-parameters
+    confidence: high
+  - exercise_id: guidos-gorgeous-lasagna
+    competency_id: variables
+    confidence: high
+  - exercise_id: electric-bill
+    competency_id: primitive-types
+    confidence: high
+  - exercise_id: beer-song
+    competency_id: strings
+    confidence: low
+  - exercise_id: diffie-hellman
+    competency_id: expressions
+    confidence: low
+  - exercise_id: minesweeper
+    competency_id: lists
+    confidence: low
+  - exercise_id: point-mutations
+    competency_id: strings
+    confidence: low

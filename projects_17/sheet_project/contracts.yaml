@@ -1,0 +1,272 @@
+# CONTRACTS — sheet_project (D2 конфигурируемый генератор Excel-дашбордов)
+# Роль: architect (blueprint 06_architect.md). Формальный контракт на стыках bounded contexts.
+# Это ДАННЫЕ (спецификация для Developer), не исполняемый код.
+# Semantic version of the contract itself; Developer implements against this.
+
+version: "1.0.0"
+project: sheet_project
+architectural_style: modular_monolith
+
+# Глоссарий (D6): Reference — единая сущность связи/гиперссылки (kind: hyperlink|cross_sheet_ref);
+# отдельной сущности Relationship НЕТ (поглощена Reference). «связь»/«гиперссылка»/«reference» —
+# синонимы одной сущности Reference. Style/Theme живут в STYLES, CONFIG ссылается по ключу (D4).
+
+# ---------------------------------------------------------------------------
+# 1. CONFIG contract (config/schema.py -> config/project_dashboard.py)
+#    CONFIG — чистые данные (dict/dataclass), НЕ исполняемый код.
+# ---------------------------------------------------------------------------
+config:
+  schema_version: "1.0"
+  root: Workbook
+  rules:
+    - "CONFIG не исполняется (запрещены eval/exec/импорт произвольного кода)"
+    - "CONFIG сериализуем в YAML/JSON (для будущего web-редактора)"
+    - "L1-валидация CONFIG (audit G2): невалидный CONFIG -> fail-fast ошибка с именем поля ДО генерации; владелец — config/schema.py (Configuration-модуль), НЕ validator"
+
+  entities:
+    Workbook:
+      required: [name, sheets, template_id, template_version***REMOVED***
+      fields:
+        name: {type: string, desc: "имя файла/книги"***REMOVED***
+        template_id: {type: string, desc: "идентификатор шаблона (audit G3), напр. project_management"***REMOVED***
+        template_version: {type: string, desc: "версия шаблона (audit G3); повышается при изменении CONFIG"***REMOVED***
+        sheets: {type: "list[Sheet***REMOVED***", desc: "листы в порядке следования", min_items: 1***REMOVED***
+
+    Sheet:
+      required: [name, columns***REMOVED***
+      fields:
+        name: {type: string, unique: true***REMOVED***
+        columns: {type: "list[Field***REMOVED***", min_items: 1***REMOVED***
+        data_source: {type: DataSource, optional: true, desc: "привязка листа к коллекции данных (audit H2); summary-лист без данных — без data_source"***REMOVED***
+        formulas: {type: "list[Formula***REMOVED***", optional: true, desc: "формулы листа (структурно); контейнер сущности Formula — уточнено на этапе 1"***REMOVED***
+        blocks: {type: "list[DashboardBlock***REMOVED***", optional: true***REMOVED***
+        lookup_tables: {type: "list[LookupTable***REMOVED***", optional: true***REMOVED***
+        references: {type: "list[Reference***REMOVED***", optional: true***REMOVED***
+
+    Field:
+      required: [name, type***REMOVED***
+      fields:
+        name: {type: string, unique_in_sheet: true***REMOVED***
+        type: {type: enum, values: [text, number, date, boolean, formula, currency, percent***REMOVED******REMOVED***
+        required: {type: boolean, default: false***REMOVED***
+        format: {type: string, optional: true, desc: "числовой/дата-формат"***REMOVED***
+        validation: {type: "list[ValidationRule***REMOVED***", optional: true***REMOVED***
+
+    DataSource:
+      required: [source, field_map***REMOVED***
+      fields:
+        source: {type: string, desc: "имя коллекции в DATA (map[collection_name -> list[Record***REMOVED******REMOVED***); Sheet биндится к коллекции через это поле (audit H2)"***REMOVED***
+        field_map: {type: "map[column -> data_field***REMOVED***", desc: "колонка листа -> поле записи коллекции source"***REMOVED***
+
+    DashboardBlock:
+      required: [title***REMOVED***
+      fields:
+        title: {type: string***REMOVED***
+        kpis: {type: "list[KPI***REMOVED***", optional: true***REMOVED***
+        cards: {type: "list[Card***REMOVED***", optional: true***REMOVED***
+
+    KPI:
+      required: [label***REMOVED***
+      fields:
+        label: {type: string***REMOVED***
+        source: {type: string, desc: "поле данных или формула"***REMOVED***
+        format: {type: string, optional: true***REMOVED***
+
+    Card:
+      required: [template***REMOVED***
+      fields:
+        template: {type: string, desc: "вариант шаблона карточки (из закрытого набора)"***REMOVED***
+        fields: {type: "list[string***REMOVED***"***REMOVED***
+
+    LookupTable:
+      required: [name, values***REMOVED***
+      fields:
+        name: {type: string***REMOVED***
+        values: {type: "list[string***REMOVED***"***REMOVED***
+
+    ValidationRule:
+      required: [kind***REMOVED***
+      fields:
+        kind: {type: enum, values: [list, range, type, custom***REMOVED******REMOVED***
+        values: {type: "list[string***REMOVED***", optional: true***REMOVED***
+        min: {type: number, optional: true***REMOVED***
+        max: {type: number, optional: true***REMOVED***
+
+    # Anchor (audit H1): цель формулы/ссылки задаётся ЛОГИЧЕСКИ, не координатами.
+    #   row   — строка-якорь (точка размещения формулы/ссылки или старт диапазона).
+    #   range — протяжённость: cell = одна ячейка (row+offset); column = вся колонка данных
+    #           (first_data..last_data; row обязано быть first_data); data_range = весь
+    #           прямоугольник данных (row игнорируется).
+    #   Пустой датасет (нет строк данных) → first_data/last_data неразрешимы → fail-fast с именем якоря.
+    Anchor:
+      required: [column***REMOVED***
+      fields:
+        column: {type: string, desc: "логическое имя колонки данных (Field.name или ключ field_map), НЕ буква ячейки — разрешается ядром в момент генерации"***REMOVED***
+        row: {type: enum, values: [header, first_data, last_data***REMOVED***, default: first_data, desc: "строка-якорь: header — заголовки; first_data — первая строка данных; last_data — последняя строка данных"***REMOVED***
+        offset: {type: integer, default: 0, desc: "смещение строки от якоря (отрицательное — выше)"***REMOVED***
+        range: {type: enum, values: [cell, column, data_range***REMOVED***, default: cell, desc: "протяжённость: cell — одна ячейка; column — вся колонка данных (first_data..last_data); data_range — прямоугольник данных"***REMOVED***
+
+    Formula:
+      required: [expression, anchor***REMOVED***
+      fields:
+        expression: {type: string, desc: "Excel-формула, структурно (openpyxl НЕ вычисляет)"***REMOVED***
+        anchor: {type: Anchor, desc: "цель формулы — якорь (колонка+строка+смещение+протяжённость), НЕ статичная буква ячейки (audit H1)"***REMOVED***
+        note: {type: string, optional: true, desc: "расчёт выносится в LibreOffice-слой"***REMOVED***
+
+    Reference:
+      required: [target_sheet***REMOVED***
+      fields:
+        kind: {type: enum, values: [hyperlink, cross_sheet_ref***REMOVED***, default: hyperlink, desc: "hyperlink — кликабельная ссылка; cross_sheet_ref — структурная перекрёстная ссылка (Relationship поглощён Reference, D1)"***REMOVED***
+        target_sheet: {type: string, desc: "лист-цель; битая ссылка -> fail-fast"***REMOVED***
+        anchor: {type: Anchor, optional: true, desc: "цель ссылки — якорь (колонка+строка+смещение+протяжённость), НЕ статичная буква ячейки (audit H1); для kind=cross_sheet_ref — обязателен (цель); для kind=hyperlink — optional (крепится в позицию рендера строки)"***REMOVED***
+        display: {type: string, optional: true***REMOVED***
+
+    DisplayRule:
+      required: [kind***REMOVED***
+      fields:
+        kind: {type: enum, values: [conditional_format, hide_column, freeze***REMOVED******REMOVED***
+        condition: {type: string, optional: true***REMOVED***
+
+# ---------------------------------------------------------------------------
+# 2. DATA contract (data/models.py -> data/sample_data.py)
+#    DATA — нормализованные, source-agnostic. Источник — через адаптер (не ядро).
+# ---------------------------------------------------------------------------
+data:
+  model_version: "1.1"            # H2: shape сменился с list[Record***REMOVED*** на именованные коллекции
+  shape: "map[collection_name -> list[Record***REMOVED******REMOVED***"   # именованные коллекции; каждая биндится к Sheet через DataSource.source
+  rules:
+    - "DATA не знает источник (Python/CSV/JSON/Google Sheets/API/Bitrix24)"
+    - "значения, начинающиеся с = + - @, экранируются при записи (formula injection)"
+    - "DATA не знает, как записи лягут в лист (за это отвечает Sheet.data_source.field_map)"
+    - "коллекции именованы; Sheet ссылается на коллекцию через DataSource.source; неиспользуемая коллекция -> warning, не падать (audit H2)"
+    - "несколько Sheet могут ссылаться на одну коллекцию с разными field_map (разрешено, audit H2)"
+    - "пустая коллекция -> лист только с заголовками (не ошибка); формула/ссылка на first_data/last_data пустой коллекции -> fail-fast (см. H1)"
+    - "связь по именам (collection_name/source/field_map) — soft-coupling; целостность проверяет validator L3 (audit H2)"
+
+  record:
+    required: [id***REMOVED***
+    fields:
+      id: {type: string, unique: true***REMOVED***
+      # общее поле для всех коллекций; поля конкретной коллекции — в collections[***REMOVED***.fields (audit H2)
+
+  collections:                     # audit H2: именованные коллекции с явной схемой записи
+    - name: projects
+      desc: "одна запись = один проект (лист Projects)"
+      fields: [id, name, status, deadline, owner***REMOVED***
+    - name: tasks
+      desc: "одна запись = одна задача; project_id связывает с проектом (лист Tasks)"
+      fields: [id, project_id, title, status, due_date***REMOVED***
+
+  interface:
+    get_rows: {input: "string (source, = DataSource.source)", output: "list[Record***REMOVED***", desc: "source выбирает коллекцию; field_map применяется GENERATOR'ом, не здесь (DATA не зависит от config/*)"***REMOVED***
+
+# ---------------------------------------------------------------------------
+# 3. STYLES contract (styles/theme.py)
+#    STYLES — чистые данные (визуал), применяются декларативно в конце генерации.
+# ---------------------------------------------------------------------------
+styles:
+  theme_version: "1.0"
+  shape: Theme                      # словарь ключ -> Style
+  rules:
+    - "STYLES не знает openpyxl и конкретных листов"
+    - "неизвестный ключ стиля -> fallback на default + warning (не падать)"
+    - "Style/Theme живут ТОЛЬКО в STYLES (theme.py); CONFIG ссылается на стиль по ключу (D4)"
+  fields:
+    colors: {type: "map[string -> hex***REMOVED***", optional: true***REMOVED***
+    fonts: {type: "map[string -> font_spec***REMOVED***", optional: true***REMOVED***
+    borders: {type: "map[string -> border_spec***REMOVED***", optional: true***REMOVED***
+    alignment: {type: "map[string -> alignment_spec***REMOVED***", optional: true***REMOVED***
+    column_widths: {type: "map[column -> int***REMOVED***", optional: true***REMOVED***
+  interface:
+    load_theme: {input: null, output: Theme***REMOVED***
+
+# ---------------------------------------------------------------------------
+# 4. GENERATOR contract (ядро, generator/*.py)
+#    Неизменяемое ядро: НЕ знает конкретного шаблона.
+# ---------------------------------------------------------------------------
+generator:
+  public_api:
+    generate:
+      input: {workbook: Workbook, data: "map[collection_name -> list[Record***REMOVED******REMOVED***", theme: Theme, output_name: "string (optional, имя выходного файла)", options: "dict (optional, доп. параметры генерации)"***REMOVED***
+      output: "GenerationArtifact (метаданные; промежуточный openpyxl.Workbook не выходит наружу)"
+      writes: "output/*.xlsx — ТОЛЬКО atomic publish (temp -> rename); temp = output/*.xlsx.tmp (тот же каталог); финальный путь содержит только READY-артефакт (audit G4)"
+  snapshot:            # audit G5: вход фиксируется на старте генерации
+    - "CONFIG + DATA + STYLES + options снимаются в snapshot на входе generate()"
+    - "ядро НЕ читает mutable DATA посреди процесса (нельзя получить смесь состояний)"
+  lifecycle:           # audit G1 (ADR-006): статус артефакта
+    states: [CREATING, GENERATED, VALIDATING, READY***REMOVED***
+    failures: {CREATING: FAILED, GENERATED: INVALID, VALIDATING: INVALID***REMOVED***
+    rule: "на финальный путь output/*.xlsx попадает ТОЛЬКО READY; при FAILED/INVALID temp удаляется, финальный путь сохраняет предыдущий READY (если был)"
+  artifact:            # audit G3: метаданные GenerationArtifact
+    required: [path, generation_id, template_id, template_version, status***REMOVED***
+    fields:
+      path: {type: string, desc: "ФИНАЛЬНЫЙ путь файла; назначается только после rename (READY)"***REMOVED***
+      temp_path: {type: string, optional: true, desc: "путь временного файла (output/*.xlsx.tmp) на этапах CREATING/GENERATED/VALIDATING"***REMOVED***
+      generation_id: {type: string, desc: "уникальный id запуска генерации (audit G3)"***REMOVED***
+      template_id: {type: string, desc: "из Workbook.template_id"***REMOVED***
+      template_version: {type: string, desc: "из Workbook.template_version"***REMOVED***
+      status: {type: enum, values: [CREATING, GENERATED, VALIDATING, READY, INVALID, FAILED***REMOVED***, desc: "см. lifecycle"***REMOVED***
+      created_at: {type: timestamp, optional: true***REMOVED***
+      validated_at: {type: timestamp, optional: true***REMOVED***
+  invariants:
+    - "generator/* НЕ импортирует config/project_dashboard.py"
+    - "generator/* НЕ содержит зашитых названий листов"
+    - "openpyxl вызывается только внутри generator/* (и чтение в validator)"
+    - "формулы пишутся структурно, НЕ вычисляются"
+    - "якоря (Anchor) разрешаются в координаты ТОЛЬКО ядром в момент генерации (column -> буква, row/offset -> номер строки); CONFIG не содержит букв ячеек (audit H1)"
+  internal_components:
+    - {module: workbook.py, role: "фасад/оркестратор генерации (единый вход)"***REMOVED***
+    - {module: sheets.py, role: "заполнение листов данными"***REMOVED***
+    - {module: dashboard.py, role: "блоки/KPI/карточки"***REMOVED***
+    - {module: formulas.py, role: "формулы (структурно)"***REMOVED***
+    - {module: validation.py, role: "data validation + выпадающие списки"***REMOVED***
+    - {module: references.py, role: "связи/гиперссылки"***REMOVED***
+
+# ---------------------------------------------------------------------------
+# 5. VALIDATOR contract (validator/validator.py)
+#    Structural check ТОЛЬКО. Расчёт формул — отдельный слой (LibreOffice), НЕ здесь.
+# ---------------------------------------------------------------------------
+validator:
+  public_api:
+    validate:
+      input: {xlsx_path: string, workbook: Workbook***REMOVED***
+      note: "xlsx_path = путь ВРЕМЕННОГО артефакта (output/*.xlsx.tmp) до rename; validator читает temp, не финальный файл (audit G4)"
+      output: ValidationReport
+      exit_code: {0: "ok", 1: "структурные/семантические расхождения"***REMOVED***
+  levels:             # audit G2: L1–L4, ownership разграничен
+    L1_CONFIG: {owner: "config/schema.py (Configuration-модуль)", phase: "pre-generation fail-fast", scope: "структура CONFIG (required/типы/битые ссылки лист-поле) — ДО генерации, НЕ здесь"***REMOVED***
+    L2_STRUCTURAL: {owner: "validator/validator.py", phase: "post-check", scope: "XLSX соответствует CONFIG: листы/колонки/типы/validation/формулы/ссылки присутствуют как объявлено"***REMOVED***
+    L3_SEMANTIC: {owner: "validator/validator.py", phase: "post-check", scope: "CONFIG↔DATA (DataSource.source→коллекция, field_map→поля коллекции) + якоря (Anchor) + Dashboard-блоки/карточки"***REMOVED***
+    L4_CALCULATION: {owner: "отдельный слой (LibreOffice headless)", phase: "post-check, вне D2", scope: "вычисление формул — extension boundary, НЕ здесь"***REMOVED***
+  scope:              # = L2 + L3 (детали)
+    - "L2 листы: набор и порядок соответствуют Workbook.sheets"
+    - "L2 колонки: набор/типы/обязательность соответствуют Field"
+    - "L2 validation/списки/формулы/ссылки: присутствуют как объявлено"
+    - "L3 CONFIG↔DATA: каждый DataSource.source ссылается на существующую коллекцию DATA; каждый data_field из field_map существует в записи этой коллекции; типы/обязательность совпадают (audit H2)"
+    - "L3 DATA↔DATA: внешние ключи между коллекциями (напр. task.project_id → project.id) ссылаются на существующие записи (audit H2)"
+    - "L3 якоря (Anchor): column существует в Field/field_map; row-якорь разрешается в валидную строку; offset не выводит за границы данных; range согласован с row; пустой датасет (first_data/last_data неразрешимы) → finding (exit 1) с именем якоря"
+    - "L3 Dashboard-блоки/карточки: наличие и соответствие CONFIG (KPI/карточки)"
+  out_of_scope:
+    - "L1 CONFIG — выполняется в Configuration-модуле ДО генерации (не здесь)"
+    - "L4 вычисление формул (LibreOffice headless, отдельный слой)"
+    - "исправление результата (validator только сообщает)"
+  report:
+    fields: [checks_total, passed, failed, findings***REMOVED***
+    findings: "list[{sheet, field, expected, actual, message***REMOVED******REMOVED***"
+
+# ---------------------------------------------------------------------------
+# 6. Cross-boundary direction (dependency rule)
+#    Зависимости только внутрь: domain не знает infrastructure; ядро не знает шаблона.
+# ---------------------------------------------------------------------------
+dependency_direction:
+  allowed:
+    - "config/project_dashboard.py -> config/schema.py"
+    - "data/sample_data.py -> data/models.py"
+    - "generator/* -> config/schema.py, data/models.py, styles/theme.py (только чтение)"
+    - "validator/* -> config/schema.py"
+    - "main.py -> все контексты (оркестратор)"
+  forbidden:
+    - "generator/* -> config/project_dashboard.py"
+    - "config/*, data/*, styles/* -> openpyxl"
+    - "validator/* -> generator/*"
+    - "validator/* -> LibreOffice/Excel (расчёт формул)"

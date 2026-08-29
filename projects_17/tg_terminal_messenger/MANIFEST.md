@@ -12,9 +12,9 @@
 project: tg-terminal-toolkit
 version: 1.0.0
 status: in_progress
-current_stage: decomposer
+current_stage: developer
 total_stages: 10
-completed_stages: 4
+completed_stages: 5
 ```
 
 ## Stages
@@ -45,8 +45,8 @@ stages:
 
   - id: decomposer
     role: 05_decomposer.md
-    status: pending
-    output: bounded_contexts.md
+    status: done
+    output: docs/original/bounded_contexts.md
 
   - id: developer
     role: 07_developer.md
@@ -78,6 +78,6 @@ stages:
 
 ```yaml
 context:
-  last_checkpoint: null
+  last_checkpoint: "2026-08-02: decomposer done (bounded_contexts.md)"
   compression_count: 0
 ```

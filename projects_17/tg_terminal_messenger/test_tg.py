@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from telethon.errors.rpcerrorlist import AuthKeyUnregisteredError
 
-from src_06.telegram.client import TGClient
+from src.telegram.client import TGClient
 
 
 async def _show_profile_and_dialogs(client: TGClient) -> bool:

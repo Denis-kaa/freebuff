@@ -1,0 +1,47 @@
+name: python_mentor
+type: learning-platform
+version: 0.1.0
+status: active
+stack:
+  - python>=3.11
+  - sqlite3 (stdlib; B+C)
+  - pytest (все фазы)
+  - ast (stdlib, phase F)
+  - pylint/radon/flake8/bandit (phase F, installed in environment)
+  - fsrs (phase I, installed and API-verified)
+  - fastapi (phase L)
+  - static html/css/js (phase M)
+  - localization extractor + reviewed locale projections (current)
+roles:
+  - learner (future)
+  - curator-deterministic (automated, phase H+J)
+  - mentor-deterministic (automated, phase F+G)
+  - client-simulator (automated, phase K)
+contracts:
+  - competency
+  - exercise
+  - exercise_source
+  - grading_result
+  - execution_result
+  - diagnostic
+  - error_pattern
+  - hint
+  - evidence_event
+  - competency_state
+  - review_state
+  - activity_candidate
+  - project_spec
+  - learner_profile
+  - source_document
+  - translation_draft
+  - localization_manifest
+description: >
+  Детерминированная (без LLM в базовом контуре) платформа обучения Python:
+  competency map, лицензионно-чистый corpus упражнений (Exercism), автогрейдер,
+  execution runtime MVP-tier, AST/статический анализ, hint-engine L0-L6,
+  evidence-first state machine (S0-S5), FSRS-планирование на уровне компетенций,
+  activity selector, проектный движок «Заказчик», thin FastAPI и минимальный UI.
+  Learner-facing content локализуется через versioned locale projections;
+  LLM-assisted translation/update — внешний draft-only provider с review gate,
+  без прямой записи в deterministic core. LLM-слой — опциональный внешний слой после валидации ядра (фаза O).
+  Развёртывание: локальный Termux, localhost, zero-cost.

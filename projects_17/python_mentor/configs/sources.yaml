@@ -1,0 +1,29 @@
+# Реестр источников упражнений (Phase B+C, Шаг 5).
+#
+# Правило (blueprint §2, ADR-004): approved — ТОЛЬКО с непустым license_evidence
+# и результатом ручного license audit. pending/rejected никогда не попадают
+# в live corpus. Запись добавляется после research (docs/exercism_research.md).
+#
+# Поля:
+#   id, source_name, repository, source_url,
+#   license, license_evidence (путь/коммит/строка), 
+#   redistribution_allowed, modification_allowed, attribution_required,
+#   status (pending|approved|rejected)
+
+sources:
+  - id: exercism-python
+    source_name: Exercism Python Track
+    repository: https://github.com/exercism/python
+    source_url: https://github.com/exercism/python
+    license: MIT
+    license_evidence: |
+      repo:exercism/python@1f6aab8667bf653b10cc3799f94352fcdb749db6/LICENSE
+      (MIT, Copyright (c) 2021 Exercism) + README.md §"Exercism Python Track License":
+      "This repository uses the MIT License."
+      Пофайловый audit: docs/exercism_research.md §3 (10 классов файлов — approved;
+      516 .py без отдельных хедеров; 161 .meta/config.json; 7 Project-Euler-
+      производных — парафраз, attribution через source_url).
+    redistribution_allowed: true
+    modification_allowed: true
+    attribution_required: true
+    status: approved

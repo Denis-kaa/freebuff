@@ -1,0 +1,22 @@
+{
+  "authors": [
+    "BethanyG"
+  ***REMOVED***,
+  "files": {
+    "solution": [
+      "lasagna.py"
+    ***REMOVED***,
+    "test": [
+      "lasagna_test.py"
+    ***REMOVED***,
+    "exemplar": [
+      ".meta/exemplar.py"
+    ***REMOVED***
+  ***REMOVED***,
+  "forked_from": [
+    "csharp/lucians-luscious-lasagna",
+    "ruby/lasagna"
+  ***REMOVED***,
+  "icon": "lasagna",
+  "blurb": "Learn the basics of Python by cooking Guido's Gorgeous Lasagna."
+***REMOVED***

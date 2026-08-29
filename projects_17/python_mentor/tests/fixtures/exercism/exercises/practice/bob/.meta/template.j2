@@ -1,0 +1,14 @@
+{%- import "generator_macros.j2" as macros with context -%***REMOVED***
+{{ macros.canonical_ref() ***REMOVED******REMOVED***
+
+{{ macros.header() ***REMOVED******REMOVED***
+
+
+class {{ exercise | camel_case ***REMOVED******REMOVED***Test(unittest.TestCase):
+    {% for case in cases %***REMOVED***
+    def test_{{ case["description"***REMOVED*** | to_snake ***REMOVED******REMOVED***(self):
+        {%- set value = case["input"***REMOVED***["heyBob"***REMOVED*** %***REMOVED***
+	{%- set argument = value.replace("\n", "\\n").replace("\r", "\\r").replace("\t","\\t") %***REMOVED***
+        {%- set expected = case["expected"***REMOVED*** %***REMOVED***
+        self.assertEqual({{case["property"***REMOVED******REMOVED******REMOVED***("{{argument***REMOVED******REMOVED***"), "{{expected***REMOVED******REMOVED***")
+    {% endfor %***REMOVED***

@@ -1,0 +1,15 @@
+name: freebuff-projects
+default_environment: development
+# Зарегистрированные проекты: централизованная точка для Forge / фоновых отчётов.
+# Workspace.load(Workspace) читает projects[***REMOVED*** и явно собирает все указанные
+# директории в Project.load(); если projects[***REMOVED*** пуст — fallback на auto-scan
+# всех поддиректорий с project.yaml/README.md.
+projects:
+  - tg_digital_market
+  - interior_planner
+  - diet_platform
+  - realtor_os
+  - realtor_automation
+  - freebuff_flutter_app
+  - tg_terminal_messenger
+  - public_request_parser

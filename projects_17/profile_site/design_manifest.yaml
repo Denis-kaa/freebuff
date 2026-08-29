@@ -1,0 +1,80 @@
+design_manifest:
+  version: "0.1"
+  project:
+    name: "Denis Litvinov — Profile Site"
+
+  context:
+    domain: "portfolio"
+    business_model: "personal"
+    audience:
+      description: "recruiters, startup founders, clients"
+      technical_level: medium
+
+  intent:
+    primary:
+      - clarity
+      - trust
+      - specificity
+    secondary:
+      - craft
+
+  core_tasks:
+    - "understand who Denis is in 10 seconds"
+    - "review three key project cases"
+    - "contact via Telegram"
+
+  information_architecture:
+    density: medium
+    primary_content:
+      - project index
+      - case studies
+      - approach narrative
+
+  visual_language:
+    aesthetic: editorial
+    mood:
+      - calm
+      - precise
+    density: medium
+
+  typography:
+    display: Piazzolla
+    body: Golos Text
+    mono:
+      allowed_for:
+        - codes
+        - ids
+        - stack lists
+        - metrics
+
+  color:
+    mode: light
+    primary: "#17140F"
+    accent: "#3E6B54"
+
+  rules:
+    forbidden:
+      - glassmorphism
+      - gradient_text
+      - decorative_glow
+      - fake_stats
+      - phantom_social_proof
+      - marquee
+    required:
+      - clear_navigation
+
+  composition:
+    preferred:
+      - editorial_index
+      - object_anatomy
+      - timeline_narrative
+      - comparison_layout
+      - single_focus
+
+  motion:
+    policy: functional_only
+
+  rule_overrides:
+    TYPO-005:
+      verdict: acceptable
+      reason: "IBM Plex Mono is used only for real technical data: stack lists, step numbers, metrics. Documented in the manifest typography.mono.allowed_for."

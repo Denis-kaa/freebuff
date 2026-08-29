@@ -1,0 +1,47 @@
+{
+  "authors": [***REMOVED***,
+  "contributors": [
+    "0xae",
+    "aldraco",
+    "atg-abhishek",
+    "austinlyons",
+    "behrtam",
+    "BethanyG",
+    "cmccandless",
+    "cypher",
+    "Dog",
+    "etrepum",
+    "ikhadykin",
+    "janetriley",
+    "jremmen",
+    "koljakube",
+    "kytrinyx",
+    "lowks",
+    "lucasdpau",
+    "miketamis",
+    "N-Parsons",
+    "patricksjackson",
+    "pheanex",
+    "sdublish",
+    "sjakobi",
+    "stonemirror",
+    "thenigan",
+    "thomasjpfan",
+    "tqa236",
+    "yawpitch"
+  ***REMOVED***,
+  "files": {
+    "solution": [
+      "bob.py"
+    ***REMOVED***,
+    "test": [
+      "bob_test.py"
+    ***REMOVED***,
+    "example": [
+      ".meta/example.py"
+    ***REMOVED***
+  ***REMOVED***,
+  "blurb": "Bob is a lackadaisical teenager. In conversation, his responses are very limited.",
+  "source": "Inspired by the 'Deaf Grandma' exercise in Chris Pine's Learn to Program tutorial.",
+  "source_url": "https://pine.fm/LearnToProgram/chap_06.html"
+***REMOVED***

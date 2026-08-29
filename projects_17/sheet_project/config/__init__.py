@@ -1,0 +1,61 @@
+"""config — декларативный CONFIG (доменная модель) генератора Excel-дашбордов D2.
+
+Public API (см. `contracts.yaml` §1 + `architecture.md` §2.1):
+    from config.schema import Workbook, Sheet, Field, validate_workbook, ...
+"""
+
+from config.schema import (
+    Anchor,
+    AnchorRange,
+    AnchorRow,
+    ArtifactStatus,
+    Card,
+    ConfigValidationError,
+    DashboardBlock,
+    DataSource,
+    DisplayKind,
+    DisplayRule,
+    Field,
+    FieldType,
+    Formula,
+    GenerationArtifact,
+    KPI,
+    LookupTable,
+    Reference,
+    ReferenceKind,
+    Sheet,
+    ValidationKind,
+    ValidationRule,
+    Workbook,
+    from_dict,
+    to_dict,
+    validate_workbook,
+)
+
+__all__ = [
+    "Anchor",
+    "AnchorRange",
+    "AnchorRow",
+    "ArtifactStatus",
+    "Card",
+    "ConfigValidationError",
+    "DashboardBlock",
+    "DataSource",
+    "DisplayKind",
+    "DisplayRule",
+    "Field",
+    "FieldType",
+    "Formula",
+    "GenerationArtifact",
+    "KPI",
+    "LookupTable",
+    "Reference",
+    "ReferenceKind",
+    "Sheet",
+    "ValidationKind",
+    "ValidationRule",
+    "Workbook",
+    "from_dict",
+    "to_dict",
+    "validate_workbook",
+***REMOVED***

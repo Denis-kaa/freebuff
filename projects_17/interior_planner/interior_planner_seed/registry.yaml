@@ -1,0 +1,37 @@
+pipeline:
+  - id: developer
+    file: 09_developer.md
+    type: implementation
+    role: AI Senior Backend Developer
+    description: backend
+    condition: always
+    triggers:
+      - "реализуй модуль"
+  - id: interior_consultant
+    file: 18_interior_consultant.md
+    type: design_consultation
+    role: AI Interior Design & Prompt Consultant
+    description: 2D interior planner + AI prompt generation
+    condition: project_type == mobile_app
+    triggers:
+      - "interior planner"
+      - "react native skia"
+project_types:
+  web:
+    required_roles: [developer***REMOVED***
+    skip_roles: [***REMOVED***
+  mobile_app:
+    required_roles: [developer, interior_consultant***REMOVED***
+    skip_roles: [***REMOVED***
+complexity_routing:
+  small:
+    required_roles: [developer***REMOVED***
+    skip_roles: [***REMOVED***
+  large:
+    required_roles: [developer, interior_consultant***REMOVED***
+    skip_roles: [***REMOVED***
+categories:
+  implementation: [developer***REMOVED***
+  design_consultation: [interior_consultant***REMOVED***
+metadata:
+  version: "3.0.0"

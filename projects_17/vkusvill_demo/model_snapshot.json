@@ -1,0 +1,55 @@
+{
+  "forecasts": {
+    "Молоко 3.2% 1л": {
+      "sma": 282.25,
+      "wd_factor": 1.4,
+      "safety": 3.451222609453062,
+      "shelf": 1.0,
+      "final": 398.60122260945303
+    ***REMOVED***,
+    "Крупа гречневая 800г": {
+      "sma": 92.5,
+      "wd_factor": 1.1,
+      "safety": 1.8447560814373265,
+      "shelf": 1.0,
+      "final": 103.59475608143734
+    ***REMOVED***,
+    "Напиток газир. 1л": {
+      "sma": 145.25,
+      "wd_factor": 1.5,
+      "safety": 2.3696320916969364,
+      "shelf": 1.0,
+      "final": 220.24463209169693
+    ***REMOVED***
+  ***REMOVED***,
+  "orders": {
+    "Молоко 3.2% 1л": {
+      "final_forecast": 398.60122260945303,
+      "current_stock": 10,
+      "order_qty": 760.8975620814633
+    ***REMOVED***,
+    "Крупа гречневая 800г": {
+      "final_forecast": 103.59475608143734,
+      "current_stock": 15,
+      "order_qty": 513.3332560153304
+    ***REMOVED***,
+    "Напиток газир. 1л": {
+      "final_forecast": 220.24463209169693,
+      "current_stock": 20,
+      "order_qty": 662.7583594842604
+    ***REMOVED***
+  ***REMOVED***,
+  "_meta": {
+    "base_date": "2025-06-02",
+    "weeks": 12,
+    "categories": [
+      "Молоко 3.2% 1л",
+      "Крупа гречневая 800г",
+      "Напиток газир. 1л"
+    ***REMOVED***,
+    "non_obvious": {
+      "service_level_z": 1.65,
+      "incident_2024_correction": 0.92
+    ***REMOVED***
+  ***REMOVED***
+***REMOVED***

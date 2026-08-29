@@ -1,0 +1,14 @@
+{%- import "generator_macros.j2" as macros with context -%***REMOVED***
+{{ macros.canonical_ref() ***REMOVED******REMOVED***
+
+{{ macros.header()***REMOVED******REMOVED***
+
+class {{ exercise | camel_case ***REMOVED******REMOVED***Test(unittest.TestCase):
+    {% for case in cases -%***REMOVED***
+    def test_{{ case["description"***REMOVED*** | to_snake ***REMOVED******REMOVED***(self):
+        {% if case["input"***REMOVED***["name"***REMOVED*** is none -%***REMOVED***
+        self.assertEqual({{ case["property"***REMOVED*** | to_snake ***REMOVED******REMOVED***(), "{{ case["expected"***REMOVED*** ***REMOVED******REMOVED***")
+        {% else -%***REMOVED***
+        self.assertEqual({{ case["property"***REMOVED*** | to_snake ***REMOVED******REMOVED***("{{ case["input"***REMOVED***["name"***REMOVED*** ***REMOVED******REMOVED***"), "{{ case["expected"***REMOVED*** ***REMOVED******REMOVED***")
+        {% endif %***REMOVED***
+    {% endfor %***REMOVED***

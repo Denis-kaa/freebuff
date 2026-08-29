@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools">
+
+  <!-- Network -->
+  <uses-permission android:name="android.permission.INTERNET" />
+
+  <!-- Foreground Service — Android 14+ requires explicit type. -->
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+
+  <!-- Wake lock (must be requested together with fg-service for termux ARM64). -->
+  <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+  <!-- Notifications — required to display fg-service notification. -->
+  <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+  <application
+      android:label="Freebuff Mobile"
+      android:icon="@mipmap/ic_launcher">
+
+    <!-- MainActivity entry — FlutterActivity standard. -->
+    <activity
+        android:name=".MainActivity"
+        android:exported="true"
+        android:launchMode="singleTop"
+        android:taskAffinity=""
+        android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|uiMode"
+        android:hardwareAccelerated="true"
+        android:windowSoftInputMode="adjustResize">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+    </activity>
+
+    <!--
+      Freebuff core foreground service.
+      Type = connectedDevice → единственный надёжный тип для Android 14/15+
+      (dataSync deprecated). tools:targetApi="34" явно обозначает, что
+      attribute применим, начиная с API 34; older OS versions просто игнорируют.
+    -->
+    <service
+        android:name=".services.FreebuffForegroundService"
+        android:foregroundServiceType="connectedDevice"
+        android:exported="false"
+        tools:targetApi="34">
+      <intent-filter>
+        <action android:name="com.freebuff.action.START_FOREGROUND" />
+      </intent-filter>
+    </service>
+
+  </application>
+
+</manifest>

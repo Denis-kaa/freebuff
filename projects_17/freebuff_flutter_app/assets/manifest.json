@@ -1,0 +1,46 @@
+{
+  "name": "freebuff_flutter_app",
+  "version": "0.2.0",
+  "freebuff_core": {
+    "base_url": "http://127.0.0.1:8765",
+    "tls": false,
+    "endpoints": {
+      "health": "/",
+      "agent_run": "/v1/agent/run",
+      "agent_status": "/v1/agent/status",
+      "sync_status": "/sync/status"
+    ***REMOVED***,
+    "openai_compat": "/v1/chat/completions",
+    "protocol_version": "v1.0.0"
+  ***REMOVED***,
+  "heartbeat": {
+    "interval_sec": 30,
+    "quick_retry_count": 3,
+    "quick_retry_delay_ms": 2000,
+    "http_timeout_connect_ms": 5000,
+    "http_timeout_read_ms": 2000,
+    "base_url": "http://127.0.0.1:8765",
+    "path": "/"
+  ***REMOVED***,
+  "foreground_service": {
+    "type": "connectedDevice",
+    "channel_id": "freebuff_core_heartbeat",
+    "channel_name": "Freebuff Core Heartbeat",
+    "channel_description": "Сервис удерживает Freebuff core живым в фоне (Phantom Process Killer fix)"
+  ***REMOVED***,
+  "remote_sync": {
+    "indicator": {
+      "poll_interval_sec": 5,
+      "status_tokens": ["idle", "connected", "conflict", "quarantine"***REMOVED***,
+      "status_endpoint": "/sync/status"
+    ***REMOVED***
+  ***REMOVED***,
+  "wake_lock": {
+    "enabled": true,
+    "type": "PARTIAL_WAKE_LOCK",
+    "tag": "Freebuff:ForegroundService",
+    "acquire_timeout_h": 1,
+    "reason": "Phantom Process Killer fix (Android 14/15+ Phantom Reaper process kill)",
+    "refresh_interval_sec": 30
+  ***REMOVED***
+***REMOVED***

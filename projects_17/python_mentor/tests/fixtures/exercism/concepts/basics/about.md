@@ -1,0 +1,382 @@
+# basics
+
+Python is a [dynamic and strongly typed***REMOVED***[dynamic typing in python***REMOVED*** programming language.
+It employs both [duck typing***REMOVED***[duck typing***REMOVED*** and [gradual typing***REMOVED***[gradual typing***REMOVED***, via [type hints***REMOVED***[type hints***REMOVED***.
+Imperative, declarative (e.g., functional), and object-oriented programming _styles_ are all supported, but internally **[everything in Python is an object***REMOVED***[everythings an object***REMOVED*****.
+
+Python puts a strong emphasis on code readability and (_similar to Haskell_) uses [significant indentation***REMOVED***[significant indentation***REMOVED*** to denote function, method, and class definitions.
+
+Python was created by Guido van Rossum and first released in 1991.
+The [Python Software Foundation***REMOVED***[psf***REMOVED*** manages and directs resources for Python and CPython development and receives proposals for changes to the language from [members***REMOVED***[psf membership***REMOVED*** of the community via [Python Enhancement Proposals or PEPs***REMOVED***[peps***REMOVED***.
+
+
+Complete documentation for the current release can be found at [docs.python.org***REMOVED***[python docs***REMOVED***.
+
+- [Python Tutorial***REMOVED***[python tutorial***REMOVED***
+- [Python Library Reference***REMOVED***[python library reference***REMOVED***
+- [Python Language Reference***REMOVED***[python language reference***REMOVED***
+- [Python HOW TOs***REMOVED***[python how tos***REMOVED***
+- [Python FAQs***REMOVED***[python faqs***REMOVED***
+- [Python Glossary of Terms***REMOVED***[python glossary of terms***REMOVED***
+
+<br>
+
+This first concept introduces 4 major Python language features:
+1.  Name Assignment (_variables and constants_),
+2.  Functions (_the `def` keyword and the `return` keyword_),
+3.  Comments, and
+4.  Docstrings.
+
+
+
+~~~~exercism/note
+
+In general, content, tests, and analyzer tooling for the Python track follow the style conventions outlined in [PEP 8***REMOVED***(https://www.python.org/dev/peps/pep-0008/) and [PEP 257***REMOVED***(https://www.python.org/dev/peps/pep-0257/) for Python code style, with the additional (strong) suggestion that there be no single letter variable names.
+
+The [zen of Python (PEP 20)***REMOVED***[the zen of python***REMOVED*** and [What is Pythonic?***REMOVED***[what is pythonic***REMOVED*** lay out additional philosophies.
+
+On the Python track, [variables***REMOVED***[variables***REMOVED*** are always written in [`snake_case`***REMOVED***[snake case***REMOVED***, and constants in `SCREAMING_SNAKE_CASE`
+
+
+[snake case***REMOVED***: https://en.wikipedia.org/wiki/Snake_case
+[the zen of python***REMOVED***: https://www.python.org/dev/peps/pep-0020/
+[variables***REMOVED***: https://realpython.com/python-variables/
+[what is pythonic***REMOVED***: https://blog.startifact.com/posts/older/what-is-pythonic.html
+~~~~
+
+
+## Name Assignment (Variables & Constants)
+
+In Python, there are no keywords used in creating variables or constants.
+Instead, programmers can bind [_names_***REMOVED***[facts-and-myths-about-python-names***REMOVED*** (also called _variables_) to any type of object using the assignment `=` operator: `<name> = <value>`.
+A name can be reassigned (or re-bound) to different values (different object types) over its lifetime.
+
+For example, `my_first_variable` can be re-assigned many times using `=`, and can refer to different object types with each re-assignment:
+
+
+```python
+>>> my_first_variable = 1  # my_first_variable bound to an integer object of value one.
+>>> my_first_variable = 2  # my_first_variable re-assigned to integer value 2.
+
+>>> print(type(my_first_variable))
+<class 'int'>
+
+>>> print(my_first_variable)
+2
+
+>>> my_first_variable = "Now, I'm a string." # <--You may re-bind a name to a different object type and value.
+>>> print(type(my_first_variable))
+<class 'str'>
+
+>>> my_first_variable = 'You can call me "str".' # <--Strings can be declared using single or double quote marks.
+>>> print(my_first_variable)
+You can call me "str".
+
+>>> import collections
+>>> my_first_variable = collections.Counter([1,1,2,3,3,3,4,5,6,7***REMOVED***) # <--Now my_first_variable has been re-bound to a Counter object.
+>>> print(type(my_first_variable))
+<class 'collections.Counter'>
+
+>>> print(my_first_variable)
+Counter({3: 3, 1: 2, 2: 1, 4: 1, 5: 1, 6: 1, 7: 1***REMOVED***)
+```
+
+
+### Constants
+
+Constants are names meant to be assigned only once in a program.
+They should be defined at a [module***REMOVED***[module***REMOVED*** (file) level, and are typically visible to all functions and classes in the program.
+Using `SCREAMING_SNAKE_CASE` signals that the name should not be re-assigned, or its value mutated.
+
+
+```python
+# All caps signal that this is intended as a constant.
+MY_FIRST_CONSTANT = 16
+
+# Re-assignment will be allowed by the compiler & interpreter,
+# but this is VERY strongly discouraged.
+# Please don't do this, it could create problems in your program!
+MY_FIRST_CONSTANT = "Some other value"
+```
+
+
+## Functions
+
+In Python, units of functionality are encapsulated in [_functions_***REMOVED***[functions***REMOVED***, which are themselves [objects***REMOVED***[objects***REMOVED*** (_it's [turtles all the way down***REMOVED***[turtles all the way down***REMOVED***_).
+
+Functions can be executed by themselves, passed as arguments to other functions, nested, or bound to a class.
+When functions are bound to a [class***REMOVED***[classes***REMOVED*** name, they're referred to as [methods***REMOVED***[method objects***REMOVED***.
+Related functions and classes (_with their methods_) can be grouped together in the same file or module, and imported in part or in whole for use in other programs.
+
+The `def` keyword begins a [function definition***REMOVED***[function definition***REMOVED***.
+Each function can have zero or more formal [parameters***REMOVED***[parameters***REMOVED*** in `()` parentheses, followed by a `:` colon.
+Statements for the _body_ of the function begin on the line following `def` and must be _indented in a block_:
+
+
+```python
+# The body of a function is indented by 2 spaces & prints the sum of the numbers.
+def add_two_numbers(number_one, number_two):
+  total = number_one + number_two
+  print(total)  
+
+>>> add_two_numbers(3, 4)
+7
+
+
+# Inconsistent indentation in your code blocks will raise an error.
+>>> def add_three_numbers_misformatted(number_one, number_two, number_three):
+...     result = number_one + number_two + number_three   # This was indented by 4 spaces.
+...    print(result)     # <--This was only indented by 3 spaces.
+...
+...
+  File "<stdin>", line 3
+    print(result)
+    ^
+IndentationError: unindent does not match any outer indentation level
+```
+
+
+Functions _explicitly_ return a value or object via the [`return`***REMOVED***[return***REMOVED*** keyword:
+
+
+```python
+# Function definition on first line, explicit return used on final line.
+def add_two_numbers(number_one, number_two):
+  return number_one + number_two   
+
+
+# Calling the function in the Python shell returns the sum of the numbers.
+>>> add_two_numbers(3, 4)
+7
+
+# Assigning the function call to a variable and printing 
+# the variable will also return the value.
+>>> sum_with_return = add_two_numbers(5, 6)
+>>> print(sum_with_return)
+11
+```
+
+Functions that do not have an _explicit_ expression following a `return` will _implicitly_ return the [`None`***REMOVED***[none***REMOVED*** object.
+The details of `None` will be covered in a later concept.
+For the purposes of this exercise and explanation, `None` is a placeholder that represents nothing, or null:
+
+
+```python
+
+# This function will return `None`
+def square_a_number(number):
+    square = number * number
+    return # <-- note that this return is not followed by an expression
+
+# Calling the function in the Python shell appears 
+# to not return anything at all.
+>>> square_a_number(2)
+>>>
+
+
+# Using print() with the function call shows that 
+# the function is actually returning the **None** object.
+>>> print(square_a_number(2))
+None
+```
+
+Functions that omit `return` will also  _implicitly_ return the [`None`***REMOVED***[none***REMOVED*** object.
+This means that if you do not use `return` in a function, Python will return the `None` object for you.
+
+```python
+
+# This function omits a return keyword altogether
+def add_two_numbers(number_one, number_two):
+  result = number_one + number_two
+
+>>> add_two_numbers(5, 7)
+>>> print(add_two_numbers(5, 7))
+None
+
+# Assigning the function call to a variable and printing 
+# the variable will also show None.
+>>> sum_without_return = add_two_numbers(5, 6)
+>>> print(sum_without_return)
+None
+```
+
+
+### Calling Functions
+
+Functions are [_called_***REMOVED***[calls***REMOVED*** or invoked using their name followed by `()`.
+Dot (`.`) notation is used for calling functions defined inside a class or module.
+
+```python
+>>> def raise_to_power(number, power):
+...     return number ** power
+...
+
+>>> raise_to_power(3,3) # Invoking the function with the arguments 3 and 3.
+27
+
+
+# A mis-match between the number of parameters and the number of arguments will raise an error.
+>>> raise_to_power(4,)
+...
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: raise_to_power() missing 1 required positional argument: 'power'
+
+
+# Calling methods or functions in classes and modules.
+>>> start_text = "my silly sentence for examples."
+>>> str.upper(start_text)  # <--Calling the upper() method from the built-in str class on start_text.
+'MY SILLY SENTENCE FOR EXAMPLES.'
+
+# Because a string is an instance of the str class, methods can also be called on them "directly".
+>>> start_text = "my silly sentence for examples."
+>>> start_text.upper()  # <--Calling the upper() method on start_text directly.
+'MY SILLY SENTENCE FOR EXAMPLES.'
+
+# Alternatively, we can skip the variable assignment (although this gets messy quick).
+>>> "my silly sentence for examples.".upper()
+'MY SILLY SENTENCE FOR EXAMPLES.'
+
+
+# Importing the math module
+>>> import math
+>>> math.pow(2,4)  # <--Calling the pow() function from the math module.
+16.0
+```
+
+
+## Comments
+
+[Comments***REMOVED***[comments***REMOVED*** in Python start with a `#` that is not part of a string, and end at line termination.
+Unlike many other programming languages, Python **does not support** multi-line comment marks.
+Each line of a comment block must start with the `#` character.
+
+Comments are ignored by the interpreter:
+
+
+```python
+# This is a single line comment.
+
+x = "foo"  # This is an in-line comment.
+
+# This is a multi-line
+# comment block over multiple lines --
+# these should be used sparingly.
+```
+
+
+## Docstrings
+
+The first statement of a function body can optionally be a [_docstring_***REMOVED***[docstring***REMOVED***, which concisely summarizes the function or object's purpose.
+Docstrings are declared using triple double quotes (""") indented at the same level as the code block:
+
+
+```python
+# An example from PEP257 of a multi-line docstring
+# reformatted to use Google style non-type hinted docstrings.
+# Some additional details can be found in the Sphinx documentation:
+# https://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html#getting-started
+
+def complex(real=0.0, imag=0.0):
+    """Form a complex number.
+
+    Keyword Arguments:
+        real (float): The real part of the number (default 0.0)
+        imag (float): The imaginary part of the number (default 0.0)
+        
+    """
+
+    if imag == 0.0 and real == 0.0:
+        return complex_zero
+
+```
+
+
+Docstrings are read by automated documentation tools and are returned by calling the special attribute `.__doc__` on the function, method, or class name.
+They are recommended for programs of any size where documentation is needed, and their conventions are laid out in [PEP257***REMOVED***[pep257***REMOVED***.
+
+Docstrings can also function as [lightweight unit tests***REMOVED***[doctests***REMOVED***, which can be read and run by PyTest, or by importing the `doctest` module.
+Testing and `doctest` will be covered in a later concept.
+
+
+```python
+# An example on a user-defined function using a Google style docstring. 
+>>> def raise_to_power(number, power):
+    """Raise a number to an arbitrary power.
+
+    Parameters:
+        number (int): The base number.
+        power (int): The power to raise the base number to.
+    
+    Returns:
+        int: The number raised to the specified power.
+    
+    Takes a number and raises it to the specified power, returning the result.
+
+    """
+
+    return number ** power
+...
+
+# Calling the .__doc__ attribute of the function and printing the result.
+>>> print(raise_to_power.__doc__)
+Raise a number to an arbitrary power.
+
+Parameters:
+    number (int): The base number.
+    power (int): The power to raise the base number to.
+
+Returns:
+    int: The number raised to the specified power.
+
+Takes a number and raises it to the specified power, returning the result.
+
+...
+
+# Printing the __doc__ attribute of the built-in type: str.
+>>> print(str.__doc__)
+str(object='') -> str
+str(bytes_or_buffer[, encoding[, errors***REMOVED******REMOVED***) -> str
+
+Create a new string object from the given object. If encoding or
+errors is specified, then the object must expose a data buffer
+that will be decoded using the given encoding and error handler.
+Otherwise, returns the result of object.__str__() (if defined)
+or repr(object).
+encoding defaults to 'utf-8'.
+errors defaults to 'strict'.
+```
+
+
+[PEP257***REMOVED***: https://www.python.org/dev/peps/pep-0257/
+[calls***REMOVED***: https://docs.python.org/3/reference/expressions.html#calls
+[classes***REMOVED***: https://docs.python.org/3/reference/datamodel.html#classes
+[comments***REMOVED***: https://realpython.com/python-comments-guide/#python-commenting-basics
+[docstring***REMOVED***: https://docs.python.org/3/tutorial/controlflow.html#tut-docstrings
+[doctests***REMOVED***: https://docs.python.org/3/library/doctest.html
+[duck typing***REMOVED***: https://en.wikipedia.org/wiki/Duck_typing
+[dynamic typing in python***REMOVED***: https://stackoverflow.com/questions/11328920/is-python-strongly-typed
+[everythings an object***REMOVED***: https://docs.python.org/3/reference/datamodel.html
+[facts-and-myths-about-python-names***REMOVED***: https://nedbatchelder.com/text/names.html
+[function definition***REMOVED***: https://docs.python.org/3/tutorial/controlflow.html#defining-functions
+[functions***REMOVED***: https://docs.python.org/3/reference/compound_stmts.html#function
+[gradual typing***REMOVED***: https://en.wikipedia.org/wiki/Gradual_typing
+[method objects***REMOVED***: https://docs.python.org/3/c-api/method.html#method-objects
+[module***REMOVED***: https://docs.python.org/3/tutorial/modules.html
+[none***REMOVED***: https://docs.python.org/3/library/constants.html
+[objects***REMOVED***: https://docs.python.org/3/reference/datamodel.html#the-standard-type-hierarchy
+[parameters***REMOVED***: https://docs.python.org/3/glossary.html#term-parameter
+[peps***REMOVED***: https://www.python.org/dev/peps/
+[psf membership***REMOVED***: https://www.python.org/psf/membership/
+[psf***REMOVED***: https://www.python.org/psf/
+[python docs***REMOVED***: https://docs.python.org/3/
+[python faqs***REMOVED***: https://docs.python.org/3/faq/index.html
+[python glossary of terms***REMOVED***: https://docs.python.org/3/glossary.html
+[python how tos***REMOVED***: https://docs.python.org/3/howto/index.html
+[python language reference***REMOVED***: https://docs.python.org/3/reference/index.html
+[python library reference***REMOVED***: https://docs.python.org/3/library/index.html
+[python tutorial***REMOVED***: https://docs.python.org/3/tutorial/index.html
+[return***REMOVED***: https://docs.python.org/3/reference/simple_stmts.html#return
+[significant indentation***REMOVED***: https://docs.python.org/3/reference/lexical_analysis.html#indentation
+[turtles all the way down***REMOVED***: https://en.wikipedia.org/wiki/Turtles_all_the_way_down
+[type hints***REMOVED***: https://docs.python.org/3/library/typing.html
