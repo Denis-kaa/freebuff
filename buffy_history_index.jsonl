@@ -1,0 +1,58 @@
+{"device": "ТЕЛЕФОН", "session": "2026-07-27T21-11-19.076Z", "first_prompt": "прочитай BUFFY.md", "messages": 62, "user": 31***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-07-28T01-51-24.191Z", "first_prompt": "посмотри файл BUFFY.me, посмотри последнюю сессию, скажи на чем мы остановились", "messages": 41, "user": 41***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-07-28T12-03-51.454Z", "first_prompt": "ПРОЧИТАЙ BUFFY.md полностью восстанови контекст, прочитай все что есть в проекте", "messages": 6, "user": 3***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-07-28T14-10-45.584Z", "first_prompt": "ВООСТАНОВИ КОНТЕКСТ, СНАЧАДА ПРОЧИТАЙ BUFFY.md, все файлы и чсю структуру проекта изучи", "messages": 20, "user": 20***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-07-28T17-22-13.359Z", "first_prompt": "перейди в папку /storage/emulated/0/PROJECTS/workstation/freebuff/ прочитай BUFFY.md изучи проект...", "messages": 54, "user": 27***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-07-28T21-55-10.433Z", "first_prompt": "продолжай", "messages": 42, "user": 21***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-07-29T01-27-38.536Z", "first_prompt": "прочитай файл /storage/emulated/0/PROJECTS/workstation/freebuff/pompts/new.md", "messages": 4, "user": 2***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-07-29T01-32-02.436Z", "first_prompt": "продолжвй", "messages": 54, "user": 54***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-07-29T10-42-33.736Z", "first_prompt": "прочитай последний промт, жтоипоследний созданный файл", "messages": 15, "user": 8***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-07-29T14-25-10.141Z", "first_prompt": "продолжай", "messages": 87, "user": 87***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-07-29T21-51-15.400Z", "first_prompt": "на какой задаче мы остановились? посмотри последние задачи", "messages": 2, "user": 1***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-07-31T01-17-11.513Z", "first_prompt": "# AUDIT EVIDENCE REQUEST — сбор недостающих данных> Адресат: Buffy. Источник: `AUDIT_INDEPENDENT_...", "messages": 62, "user": 62***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-01T00-13-52.614Z", "first_prompt": "Please gather all relevant context and then carefully review: all changes made in this conversation", "messages": 91, "user": 91***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-02T02-00-40.006Z", "first_prompt": "bash: /storage/emulated/0/PROJECTS/workstation/freebuff/freebuff_plugin/monitor.sh: No such file ...", "messages": 12, "user": 6***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-02T10-55-28.482Z", "first_prompt": "Не удалось создать сессию Codebuff CLI⚠️  DEPRECATED shim: используйте /storage/emulated/0/PROJEC...", "messages": 4, "user": 2***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-02T14-24-37.176Z", "first_prompt": "найди мою скссию в тг и подключись к ней", "messages": 10, "user": 5***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-02T15-24-17.226Z", "first_prompt": "Please gather all relevant context and then carefully review: all changes made in this conversation", "messages": 4, "user": 2***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-02T17-13-06.201Z", "first_prompt": "расскажи о последних 15 задачах которве выполняои", "messages": 54, "user": 54***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-03T16-36-30.573Z", "first_prompt": "какте последние операции мы выполняли", "messages": 12, "user": 6***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-03T22-45-27.997Z", "first_prompt": "ПОПЖИ СПИСОК ЗАДАЧ", "messages": 108, "user": 108***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-04T23-06-38.669Z", "first_prompt": "Smoke test: reply with OK and today date (2026-08-05). Do not run any commands, just reply.", "messages": 4, "user": 2***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-05T14-56-24.486Z", "first_prompt": "покажи 15 наших последних задач", "messages": 61, "user": 61***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-06T20-34-40.320Z", "first_prompt": "прочитай промт 59 и выполни его через приложение", "messages": 112, "user": 112***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-07T01-55-59.596Z", "first_prompt": "Ты — цифровой ассистент с доступом к поиску. Найди и предоставь для скачивания 3–4 практические к...", "messages": 24, "user": 12***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-07T02-08-20.753Z", "first_prompt": "скачай эти книги ┌─────┬────────────────────┬───────┬─────┬───────────────┐  │ #   │ Книга       ...", "messages": 74, "user": 74***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-08T23-07-19.385Z", "first_prompt": "прочитай promt64", "messages": 2, "user": 1***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-09T17-45-36.821Z", "first_prompt": "прочитай /storage/emulated/0/pompts/1.md", "messages": 28, "user": 14***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-09T22-35-26.140Z", "first_prompt": "найди мое приложение tui tg в проектах, проведи аудит, дай инструкцию как запустить, раньше не ре...", "messages": 33, "user": 33***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-10T19-15-59.412Z", "first_prompt": "прочитай промт 69", "messages": 64, "user": 64***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-11T16-26-47.414Z", "first_prompt": "что такое factory, forge и scenario, и вообще всю систему от. входа до моментов реализации просты...", "messages": 93, "user": 93***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-12T20-51-49.073Z", "first_prompt": "прочитай /storage/emulated/0/PROJECTS/workstation/freebuff/pompts_11/promt81.md", "messages": 148, "user": 148***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-14T13-21-34.837Z", "first_prompt": "(empty chat)", "messages": 0, "user": 0***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-14T20-33-35.284Z", "first_prompt": "проверь состояние выполнения ПРОМТА /storage/emulated/0/PROJECTS/workstation/freebuff/pompts_11/0...", "messages": 32, "user": 16***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-17T06-07-03.473Z", "first_prompt": "ознакомься с файлами внутри проекта /storage/emulated/0/PROJECTS/workstation/freebuff/projects_17...", "messages": 30, "user": 15***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-18T10-12-15.125Z", "first_prompt": "начни вести проект согласно чсем правилам платформы, ты мозг платформы. только сначала ознакомься...", "messages": 2, "user": 2***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-18T10-21-47.001Z", "first_prompt": "начни вести проект согласно чсем правилам платформы, ты мозг платформы. только сначала ознакомься...", "messages": 1, "user": 1***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-18T15-45-46.957Z", "first_prompt": "прочитай /storage/emulated/0/PROJECTS/workstation/freebuff/projects_17/sheet_project/задача.md", "messages": 65, "user": 65***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-20T01-35-09.940Z", "first_prompt": "сгенерируй мне картинку танка", "messages": 6, "user": 3***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-20T05-51-05.695Z", "first_prompt": "ознакомься с файлом /storage/emulated/0/PROJECTS/workstation/freebuff/projects_17/vocal/задача.md", "messages": 32, "user": 32***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-21T07-05-02.409Z", "first_prompt": "привет", "messages": 63, "user": 63***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-22T04-53-52.948Z", "first_prompt": "посмотри в интернете про обновления freebuff нужно ли мне обновлчтьсч", "messages": 3, "user": 2***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-22T06-41-47.378Z", "first_prompt": "Gather all the relevant context and then think carefully about how to implement the following:  ч...", "messages": 2, "user": 1***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-22T06-46-47.985Z", "first_prompt": "посмотри в интернете, стоит ли нам обновлять freebuff у нас в телефоне?", "messages": 26, "user": 13***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-22T10-09-59.520Z", "first_prompt": "ознакомься с правилами платыормы и прочитай промт 108", "messages": 24, "user": 12***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-23T02-30-06.154Z", "first_prompt": "Действуй как веб-аналитик и парсер данных. Твоя задача — глубоко проанализировать сайт https://im...", "messages": 42, "user": 21***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-23T07-37-06.268Z", "first_prompt": "по правилам платформы выполни задание и задокументируй Создать парсер ботаНужен парсер-бот, котор...", "messages": 191, "user": 191***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-23T13-10-51.885Z", "first_prompt": "отработай как мозг платформы найди пиратскую 1с, вообще модно ли скачать для отладки прошраммв", "messages": 4, "user": 2***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-23T15-54-39.380Z", "first_prompt": "прочитай документы из /storage/emulated/0/PROJECTS/workstation/freebuff/projects_17/python_mentor...", "messages": 48, "user": 48***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-24T06-29-03.893Z", "first_prompt": "Твоя задача — написать полностью рабочий бэкенд и фронтенд для AI-ассистента проекта «Северный ча...", "messages": 34, "user": 17***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-27T04-23-10.601Z", "first_prompt": "продолжай", "messages": 1, "user": 1***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-28T12-23-11.363Z", "first_prompt": "/interviewbисследуй весь телефон и гайди все мои прооекты и увлечения, в общем всю информацию и с...", "messages": 57, "user": 57***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-29T08-00-26.145Z", "first_prompt": "https://telerabota.online/interview  посмотри этот сайт скажи что ты что об этом думаешь", "messages": 52, "user": 26***REMOVED***
+{"device": "ТЕЛЕФОН", "session": "2026-08-29T15-08-35.794Z", "first_prompt": "какая модель используется", "messages": 6, "user": 3***REMOVED***
+{"device": "СЕРВЕР", "session": "2026-08-25T16-20-38.974Z", "first_prompt": "0x alpha расскажи о своих возможностях", "messages": 87, "user": 45***REMOVED***
+{"device": "СЕРВЕР", "session": "2026-08-27T08-44-23.923Z", "first_prompt": "прочитай промт promt01_login_fix.md", "messages": 6, "user": 3***REMOVED***
+{"device": "СЕРВЕР", "session": "2026-08-27T18-19-31.001Z", "first_prompt": "прочитай 113.md", "messages": 56, "user": 28***REMOVED***
+{"device": "СЕРВЕР", "session": "2026-08-27T20-39-59.516Z", "first_prompt": "посмотри ролик https://youtu.be/qt-YlLbNrRY и сделай выжимку подробную и обьясеи понятным, доступ...", "messages": 47, "user": 47***REMOVED***
+{"device": "СЕРВЕР", "session": "2026-08-28T08-07-28.223Z", "first_prompt": "скачай и транскрибируй видео, потом проанализируй его и расскажи о чем оно и насколько оно полезн...", "messages": 4, "user": 2***REMOVED***

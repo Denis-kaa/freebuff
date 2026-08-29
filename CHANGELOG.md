@@ -6,7 +6,16 @@
 
 ---
 
-## [5.189.84***REMOVED*** — 2026-08-24
+## [5.189.85***REMOVED*** — 2026-08-29
+
+### 🆕 TUI history import в платформенную память (tui_history_import)
+
+- NEW `scripts_01/tui_history_import.py` — идемпотентный импорт истории TUI-клиента (manicode) в `data_13/context.db` + `context_12/events.db` через официальный `EventStore.store_batch`.
+- Закрывает разрыв памяти: events.db молчал с 08-23 (сессии шли через TUI, минуя платформенный pipeline). Теперь платформа видит 58 сессий (53 phone + 5 server), 3894 сообщения.
+- Регрессионные тесты: `tests_09/test_tui_history_import.py` (детерминированный session_id, формат timestamp — регрессия бага с префиксом tui- в времени, импорт, идемпотентность).
+- Зарегистрирован в MissingRegistry (kind=tool, lifecycle registered → implemented).
+- Работает через env-переопределения (TUI_PHONE_ROOT / TUI_SERVER_ROOT / TUI_CTX_DB / TUI_EVENTS_DB) — пригоден для запуска на сервере.
+
 
 ### ✅ FBM (FreeBuff Manager) — legacy TUI wrapper integration
 
