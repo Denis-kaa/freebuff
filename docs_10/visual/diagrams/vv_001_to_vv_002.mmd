@@ -1,0 +1,49 @@
+%% ============================================================================
+%% Mermaid diagram: VkusVill roadmap-line (VV-001 → VV-002)
+%% Source: generated 2026-08-06 в рамках ROADMAP-VV-002 Stage 1 close-out
+%% Author: Buffy / freebuff
+%% Related: pomt62 (ROADMAP-VV-001), pomt63 (ROADMAP-VV-002),
+%%          core_02/LESSONS.md CON-54 (Teamwork-decomposition),
+%%          core_02/LESSONS.md CON-55 (inline tag protocol for deep research)
+%% Render: paste this file into any Mermaid renderer (mermaid.ink, GitLab/GitHub
+%%         markdown, Obsidian, mermaid-cli). Git-renderable as .mmd asset.
+%% Conventions: htmlLabels=true for multi-line node labels,
+%%              classDef для цвета по статусу (closed/inprogress/artifact/pending),
+%%              flowchart TB (top-bottom) — main artifact-flow сверху вниз.
+%% ============================================================================
+flowchart TB
+    classDef closed fill:#c8e6c9,stroke:#2e7d32,color:#1b5e20
+    classDef inprogress fill:#fff9c4,stroke:#f57f17,color:#5d4037
+    classDef artifact fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
+    classDef pending fill:#f5f5f5,stroke:#9e9e9e,color:#424242
+
+    BRIEF["pompts_11/promt62.md<br/>(Task 0/1/2/3 spec)"***REMOVED***:::closed
+    BRIEF2["pompts_11/promt63.md<br/>(33 секции deep research)"***REMOVED***:::inprogress
+
+    VV001_DOC["docs_10/ROADMAP_VKUSVILL_DEMO_062.md<br/>ROADMAP-VV-001 v5.105.0"***REMOVED***:::closed
+    VV001_ART["projects_17/vkusvill_demo/<br/>• xlsx_builder.py<br/>• model_forecast.xlsx (3 sheets)<br/>• forecast.py (Python recompute)<br/>• parity_check.py (variant b)<br/>• business_logic.md (5 принципов)<br/>• README + short_report<br/>• STEPS.md + LESSONS.md"***REMOVED***:::closed
+    VV001_REG["registry: docs_10/INDEX +<br/>DOCUMENT_REGISTRY ACTIVE 82→83"***REMOVED***:::closed
+    VV001_LESSON["CON-54 Teamwork-decomposition<br/>via ScenarioRegistry"***REMOVED***:::closed
+
+    VV002_DOC["docs_10/ROADMAP_VV_002_RESEARCH.md<br/>ROADMAP-VV-002 orch"***REMOVED***:::inprogress
+    VV002_ART["projects_17/vkusvill_research/<br/>• 01_business_scale.md check<br/>• 02_supply_chain_economics.md check<br/>• 03_legacy_and_forecasting.md stub<br/>• 04_ai_role_and_stack.md stub<br/>• 05_cases_and_competitors.md stub<br/>• 06_candidate_profile.md stub<br/>• 07_interview_strategy.md stub<br/>• 08_final_synthesis.md stub<br/>• SOURCES.md (13 sources)<br/>• README + STEPS + LESSONS"***REMOVED***:::inprogress
+    VV002_LESSON["CON-55 inline tag protocol<br/>(dual-source verify,<br/>Tier 3 cap=15)"***REMOVED***:::inprogress
+
+    OUTCOME["Отклик ВкусВилл × AI-Автоматизация<br/>(deliverable: артефакт + research<br/>доказывает понимание бизнеса)"***REMOVED***:::pending
+
+    BRIEF --> VV001_DOC
+    VV001_DOC --> VV001_ART
+    VV001_DOC --> VV001_REG
+    VV001_ART --> VV001_LESSON
+    VV001_REG --> VV001_LESSON
+
+    BRIEF2 --> VV002_DOC
+    VV002_DOC --> VV002_ART
+    VV002_DOC --> VV002_LESSON
+    VV002_ART -. "cross-link<br/>## Теоретическая база" .- VV001_ART
+
+    VV001_ART --> OUTCOME
+    VV002_ART --> OUTCOME
+
+    style VV001_DOC stroke-width:3px
+    style VV002_DOC stroke-width:3px

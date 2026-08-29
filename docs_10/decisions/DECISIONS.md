@@ -1,6 +1,6 @@
 # Decisions — Архитектурные решения Buffy Project
 
-> **Последнее обновление:** 2026-08-01
+> **Последнее обновление:** 2026-08-22
 > 
 > Этот файл больше не хранит ADR в одном месте. Каждое решение вынесено в отдельный журнал в [`docs_10/engineering-memory/decisions/`***REMOVED***(../engineering-memory/decisions/).
 
@@ -19,6 +19,12 @@
 | ADR-004 | FastAPI Wrapper + Cloudflare Tunnel | 2026-07-28 | ✅ Принято | [ADR_005_FastAPI_Cloudflare.md***REMOVED***(../engineering-memory/decisions/ADR_005_FastAPI_Cloudflare.md) |
 | ADR-005 | ContextManager Bridge for termux-ai-agent | 2026-07-28 | ✅ Принято | [ADR_006_ContextManager_Bridge.md***REMOVED***(../engineering-memory/decisions/ADR_006_ContextManager_Bridge.md) |
 | ADR-006 | Lightpanda Headless Browser Integration | 2026-07-28 | ✅ Принято | [ADR_007_Lightpanda.md***REMOVED***(../engineering-memory/decisions/ADR_007_Lightpanda.md) |
+| **ADR-010** | **Phase 5.3 Remote Sync — Telegram-stored Relay primary, Bluetooth companion deferred to v6.x** | **2026-08-03** | **✅ Принято** | **[ADR_010_Remote_Sync_Telegram_Relay.md***REMOVED***(../engineering-memory/decisions/ADR_010_Remote_Sync_Telegram_Relay.md)** · [phase-grouped view***REMOVED***(../vision/decision_index.md#adr-010-telegram-stored-relay-phase-53) |
+| **ADR-017** | **Единая Workspace модель — SQLite registry (path→workspace mapping) + YAML (конфиг) + аддитивный sync-контракт** | **2026-08-22** | **✅ Accepted/Implemented** (sync_from_config в core_02/workspace_registry.py) | **[ADR_017_Unified_Workspace_Model.md***REMOVED***(../engineering-memory/decisions/ADR_017_Unified_Workspace_Model.md)** |
+| **ADR-018** | **Factory→Forge execution bridge — официальный контракт (BaseFactory.execute → select_forge → ForgeFacade.run_chain); Path B REAL, forge_id адвизорный; + тесты маппинга** | **2026-08-22** | **🟡 Proposed** (реестровый словарь: DRAFT) | **[ADR_018_Factory_Forge_Execution_Bridge.md***REMOVED***(../engineering-memory/decisions/ADR_018_Factory_Forge_Execution_Bridge.md)** |
+| **ADR-019** | **Agent base class + lifecycle — единая сущность «Агент» (роль → capability → модель, композиция ролей, forward-only lifecycle)** | **2026-08-22** | **✅ Accepted/Implemented** (core_02/agent_base.py) | **[ADR_019_Agent_Base_Class.md***REMOVED***(../engineering-memory/decisions/ADR_019_Agent_Base_Class.md)** |
+| **ADR-020** | **Integration adapter boundary — единая граница для внешних мостов (TG/MCP/phone): AuthSpec + capability-роутинг + нормализация** | **2026-08-22** | **✅ Accepted/Implemented** (core_02/integration_base.py) | **[ADR_020_Integration_Adapter_Boundary.md***REMOVED***(../engineering-memory/decisions/ADR_020_Integration_Adapter_Boundary.md)** |
+| **ADR-021** | **Unified Artifact contract — файл ↔ dict ↔ ChainRun; canonical frozen dataclass + backward-compatible adapters** | **2026-08-22** | **✅ Accepted/Implemented** | **[ADR_021_Artifact_Contract.md***REMOVED***(../engineering-memory/decisions/ADR_021_Artifact_Contract.md)** |
 
 ---
 

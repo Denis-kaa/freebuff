@@ -136,7 +136,7 @@ python3 freebuff_plugin_03/bridge.py end a1b2c3d4 --summary "тест"
 
 # Список сессий
 python3 -c "
-from freebuff_plugin.bridge import session_list
+from freebuff_plugin_03.bridge import session_list
 for s in session_list():
     print(f\"{s['session_id'***REMOVED***[:8***REMOVED******REMOVED*** | {s['topic'***REMOVED***[:40***REMOVED******REMOVED*** | {s['status'***REMOVED******REMOVED***\")
 "
@@ -257,7 +257,7 @@ echo "=== SCENARIOS ==="
 python3 freebuff_plugin_03/scenario_engine.py list 2>/dev/null || echo "Engine error"
 echo "=== SYNTAX ==="
 bash -n scripts_01/oom_protect.sh && echo "oom_protect.sh: OK"
-python3 -c "import freebuff_plugin.api; print('api.py: OK')"
-python3 -c "import freebuff_plugin.wrapper; print('wrapper.py: OK')"
-python3 -c "import freebuff_plugin.mcp_server; print('mcp_server.py: OK')"
+python3 -c "import freebuff_plugin_03.api; print('api.py: OK')"
+python3 -c "import freebuff_plugin_03.wrapper; print('wrapper.py: OK')"
+python3 -c "import freebuff_plugin_03.mcp_server; print('mcp_server.py: OK')"
 ```

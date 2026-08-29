@@ -7,8 +7,8 @@
 ## Структура
 
 - [architecture.md***REMOVED***(architecture.md) — иерархия сущностей, JSON-контракты, позиционирование
-- [contracts.md***REMOVED***(contracts.md) — детальные спецификации JSON-контрактов (TODO)
-- [principles.md***REMOVED***(principles.md) — архитектурные принципы (TODO)
+- `contracts.md` — детальные спецификации JSON-контрактов (TODO: создать)
+- `principles.md` — архитектурные принципы (TODO: создать)
 
 ## Правила
 

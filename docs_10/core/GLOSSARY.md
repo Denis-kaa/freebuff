@@ -1,7 +1,7 @@
 # GLOSSARY — Единый глоссарий терминов Workspace OS
 
-> **Версия:** 1.0.0
-> **Дата:** 2026-07-31
+> **Версия:** 1.4.0
+> **Дата:** 2026-08-19
 > **Статус:** 🟢 КАНОНИЧЕСКИЙ — единственный источник истины о значении терминов проекта
 > **Миссия:** Этап 7 консолидации (`pompts_11/032_09_workspace_os_konsolidaciya.md`)
 > **Высший закон:** [ARCHITECTURE_MANIFEST.md***REMOVED***(ARCHITECTURE_MANIFEST.md)
@@ -123,6 +123,7 @@
 | **Workspace (платформа) vs Workspace (сфера)** | Workspace-платформа — корень платформы Buffy (существующее определение §2). Workspace-сфера — уровень доменной модели promt36 (Работа/Хобби/Личное). При использовании уточнять контекст. |
 | **Work Area vs Workspace vs Project** | Work Area — **View**, а не сущность (динамический список проектов по Resource). Workspace — сфера. Project — цель внутри сферы. |
 | **Рекомендация DPE vs User-Choice Override** | DPE **рекомендует** исполнителя по приоритету и ролям; User-Choice Override — право пользователя **переопределить** рекомендацию в любой момент. Рекомендация ≠ принуждение. |
+| **Factory vs Forge vs Scenario vs RoleExecutorRegistry** | Factory — доменный adapter (генерация артефактов по capability, universal boundary). Forge — метасистема оркестрации/валидации (не генерирует LIGHT-артефакты). Scenario — корпус данных (блюпринты ролей). RoleExecutorRegistry — генераторы LIGHT-ролей, отдельный слой от Scenario (ADR-016, §7.3). |
 
 ---
 
@@ -185,6 +186,51 @@
 | **Policy Engine** | Исполнитель пользовательских политик выбора Runtime/Provider/Model/Workflow/Fallback/Cost. Рекомендации Policy Engine — основа DPE (правило 7) и User-Choice Override (правило 11): система рекомендует, пользователь выбирает. |
 | **User-Choice Override** | **Система рекомендует, но пользователь выбирает** (правило 11). Пользователь может назначить конкретную модель/агента для каждой capability, переопределить автоматический выбор системы в любой момент, использовать бесплатные ключи (Qwen, Ollama, локальные модели) и миксовать провайдеров (Claude — архитектура, DeepSeek — код, Gemini — исследования). |
 | **Режимы работы** | SINGLE (1 пользователь) / COWORK (1 + несколько Runtime) / TEAM (2–10 пользователей) / COMMUNITY (100+, будущее). Параллельные ветки с разной изоляцией. |
+
+---
+
+## 12. Конвейер исполнения: Forge / Factory / Blueprint v3 (ADR-013/016)
+
+> Термины конвейера проектирования и автоисполнения ролей. Дополняют §3 (компоненты)
+> и §5 (агенты/Scenario). Не конфликтуют с ними — разграничения в §7.
+
+| Термин | Каноническое определение | Связанные компоненты | Источник |
+|--------|--------------------------|----------------------|----------|
+| **Forge** | Метасистема проектирования: отвечает на вопрос «как Buffy проектирует себя». Оркестрирует pipeline ролей и валидацию. **НЕ** runtime-платформа, НЕ CI/CD, НЕ мониторинг. | ForgeFacade, ForgePipeline, ForgeRegistry | RFC_BUFFY_FORGE_V1.md §12, AGENTS.md §2 |
+| **ForgeFacade** | Единственный санкционированный мост Blueprint v3 → Forge (§7.3: Scenario/роли НЕ вызывают Forge напрямую). `run_chain` — chain-runner по pipeline-ролям. | `core_02/forge_facade.py`, `initiate_forge`, `run_chain` | ADR-013, `core_02/forge_facade.py` |
+| **ForgePipeline** | Полный цикл Forge (FORGE→CHECK→BUILD→TEST→DEPLOY→REPORT) для HEAVY-ролей. Инстанцируется ТОЛЬКО внутри ForgeFacade. | `core_02/forge_pipeline.py`, `stage_check` | `core_02/forge_pipeline.py` |
+| **Factory** | Доменный adapter (content/research/test): universal boundary `resolve(capability → (factory, forge)) → build_execution_request → execute(ForgeFacade.run_chain) → normalize_output → accumulate(MemoryStore)`. | `core_02/factory_base.py`, `scripts_01/{content,research,test***REMOVED***_factory.py`, FactoryRegistry | FACTORY_FORGE_ARCHITECTURE_V1.md, `core_02/factory_base.py` |
+| **Blueprint (Blueprint v3 / BlueprintCorpus)** | Корпус блюпринтов ролей (XML-tagged Markdown + декларативный `registry.yaml`, Kwork Arbitr v3). Reader + creator; `routing_hint(role_id)` → capabilities для SmartRouter. | `core_02/blueprint_v3.py`, BlueprintCorpus, `CAPABILITIES_OVERRIDE` | `core_02/blueprint_v3.py` |
+| **LIGHT-роль** | Pipeline-роль аналитического/документационного типа (explainer/lisa/risk/decomposer/architect/auditor/documenter/retrospective): артефакты создаёт САМА роль, Forge их не генерирует → режим check_only/generate. | `LIGHT_ROLES`, RoleExecutorRegistry, RoleArtifactValidator | `core_02/forge_facade.py` |
+| **HEAVY-роль** | Pipeline-роль с реальными side-effects кода/тестов (developer/tester/fixer/acceptance) → полный цикл ForgePipeline. | `HEAVY_ROLES`, ForgePipeline | `core_02/forge_facade.py` |
+| **RoleExecutor / RoleExecutorRegistry** | Аддитивный слой автоисполнения LIGHT-ролей (ADR-016): реестр `role_id → executor`, отдельный от Scenario (Scenario = корпус данных). Executor НЕ вызывает Forge напрямую (§7.3). | `core_02/role_executor.py`, `BaseRoleExecutor`, `RoleExecutorRegistry` | ADR-016, `core_02/role_executor.py` |
+| **LlmRoleExecutor** | LLM-экзекьютор LIGHT-роли: один вызов `ModelGateway.generate_by_capabilities` по blueprint-промпту → файлы (file-block протокол `@@FILE/@@ENDFILE`). | `core_02/role_executor.py`, ModelGateway | ADR-016 |
+| **LisaExecutor** | Детерминированный executor роли lisa (обёртка `lisa_estimator`, без LLM) — пишет `lisa_report.md`. | `core_02/role_executor.py`, `lisa_estimator` | ADR-016 |
+| **LISA (LISA-3)** | AI-Native Complexity Estimator: детерминированная оценка сложности проекта по 6 осям (engineering/ai-native/verification/operational/production/ai_suitability) + вердикт GO/COND/NO-GO. | `scripts_01/lisa_estimator.py`, `data_13/lisa_calibration.yaml` | `scripts_01/lisa_estimator.py` |
+| **light_mode (check_only \| generate)** | Режим `run_chain` для LIGHT-ролей: `check_only` (валидация существования артефактов) \| `generate` (материализация через RoleExecutorRegistry). | `ForgeFacade.run_chain` | ADR-016, `core_02/forge_facade.py` |
+| **chain / run_chain** | Прогон цепочки pipeline-ролей (PIPELINE_CHAIN) с per-role stage (check_only/generate/full_cycle/conditional_skip) + aggregated overall. | `ForgeFacade.run_chain`, `ChainStage`, `ChainRun` | `core_02/forge_facade.py` |
+| **MissingRegistry / register-first** | Реестр недостающих элементов (capability/tool/engine/forge/role/модуль) с lifecycle `registered→design_ready→prompt_written→implemented`. Принцип: обнаружил недостающее → зафиксируй в реестре ДО реализации. | `core_02/missing_registry.py`, `data_13/missing_registry.yaml` | AGENTS.md §5; **→ см. также: backfill (MissingRegistry), §13** (machine-readable `backfill: bool` поле для retroactive-регистрации уже реализованного) |
+
+---
+
+## 13. Интеллектуальный слой: Scenario / Opportunity / Factory Registry (Phase 8–13)
+
+> Термины интеллектуального слоя платформы (Phase 8–13): domain-neutral выбор подхода,
+> opportunity-адаптер, авто-обнаружение фабрик, хранилище решений, организационная память/обучение
+> и сущности выбора. Дополняют §12 (Factory), §4 (Memory/Knowledge) и §5 (Scenario).
+
+| Термин | Каноническое определение | Связанные компоненты | Источник |
+|--------|--------------------------|----------------------|----------|
+| **ScenarioIntelligence** | Domain-neutral Universal Scenario Intelligence (Phase 8): `discover → evaluate → rank → select → resolve_capability → feedback`. Отвечает «какой подход лучше под Opportunity в контексте проекта», НЕ производит артефакты. Entities: ScenarioCandidate / CapabilityRequirement / ScenarioDecision. ForgeFacade — единственный execution boundary (модуль его НЕ вызывает). | `scripts_01/scenario_intelligence.py`, ScenarioCandidate, ScenarioDecision | `scripts_01/scenario_intelligence.py`, promt 091 |
+| **OpportunityEngine** | Intelligence head поверх execution tail: `propose()` делегирует в ScenarioIntelligence.select (read-only адаптер) с BC-fallback на legacy ScenarioRegistry путь. | `scripts_01/opportunity_engine.py`, `_derive_capability` | `scripts_01/opportunity_engine.py`, promt 079 |
+| **FactoryRegistry** | Авто-обнаружение + query API поверх декларативных YAML-манифестов `runtime_05/factories/<factory_id>/`. `select_forge(capability) → (factory_id, forge_id)`; `resolve_by_policy(capability)`; CODE_RESOLUTION_POLICY (D-2: factory-слой authoritative). | `core_02/factory_registry.py`, `runtime_05/factories/` | `core_02/factory_registry.py`, CANONICAL_ENGINE_ROUTING_V1.md |
+| **DecisionHistoryStore** | Хранилище решений ScenarioIntelligence (YAML `data_13/scenario_decisions.yaml`, атомарный .tmp+replace): per-opportunity latest() для re-selection lifecycle. | `scenario_intelligence.py`, `data_13/scenario_decisions.yaml` | `scripts_01/scenario_intelligence.py`, promt 091 |
+| **MemoryStore** | SQLite-хранилище Organizational Memory (`data_13/context.db`): knowledge objects + граф связей + learning events + analytics. `store_knowledge(kind, …)` (10 закрытых KNOWLEDGE_KINDS), `query_by_type`, `link_knowledge`, `record_learning_event`, `update_feedback` (confidence). | `core_02/memory_store.py`, KNOWLEDGE_KINDS, LIFECYCLE_STAGES | RFC_ORGANIZATIONAL_MEMORY_ENGINE_V1.md §3–§5 |
+| **LearningLoop** | AFC-цикл обучения (Analyze → Formalize → Codify): `analyze(situation) → Analysis` → `formalize` → KnowledgeObject → `codify` (LESSONS.md CON-N / DEBT / TG) → `record_feedback`. Прозрачный, БЕЗ ML/RL. | `core_02/learning_loop.py`, SemanticLayer | RFC_ORGANIZATIONAL_MEMORY_ENGINE_V1.md §7 |
+| **ScenarioCandidate** | Domain-neutral frozen dataclass — один кандидат-способ реализации Opportunity: scenario_id, display_name, role_id, score, reasons, evidence, capability, scenario_caps (full tuple), available. | `scripts_01/scenario_intelligence.py` | promt 091 |
+| **CapabilityRequirement** | Domain-neutral capability token (capability, scenario_id, role_id) для `resolve_capability` → FactoryRegistry.select_forge → (factory_id, forge_id). | `scripts_01/scenario_intelligence.py`, FactoryRegistry | promt 091 |
+| **ScenarioDecision** | Explainable результат селекции с полным provenance: opportunity_id, selected_scenario_id, score, reasons, evidence, capability, factory_id, forge_id, status. | `scripts_01/scenario_intelligence.py` | promt 091 |
+| **backfill (MissingRegistry)** | Machine-readable поле `backfill: bool` в `MissingItem` (запись реестра `MissingRegistry`), фиксирующее факт **retroactive-регистрации** — элемент существовал до создания реестра и был внесён как `status: implemented` без прохождения lifecycle `registered→design_ready→prompt_written`. B10-инвариант: `backfill=true` ⇔ `status==implemented` (семантика: «зарегистрировано задним числом уже реализованное»). Альтернатива free-text маркеру `⚠️ BACKFILL (…)` в `description` устарела с v5.189.49. | `core_02/missing_registry.py`, `data_13/missing_registry.yaml` | CON-63 (register-first disciplinary rule), v5.189.49 (machine-readable field), B10/R-127 (schema invariants) |
 
 ---
 

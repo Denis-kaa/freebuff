@@ -132,6 +132,10 @@ freebuff/
 
 ## 📋 Чек-лист: что создать при старте проекта
 
+> ⚠️ **Канон ведения проектов — `docs_10/core/PROJECT_RULES.md` (§8 чек-лист нового проекта).**
+> Обязательные: **MANIFEST.md (паспорт) · LESSONS.md · decisions/DECISIONS.md + ADR · ROADMAP.md ·
+> README.md · RUNNABLE.md · CHECKLIST.md**. Этот чек-лист ниже — базовые документ-типы, дополняет канон.
+
 - [ ***REMOVED*** README.md
 - [ ***REMOVED*** ARCHITECTURE.md
 - [ ***REMOVED*** RULES.md (этот файл)

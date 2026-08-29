@@ -1,0 +1,71 @@
+%% ============================================================================
+%% Mermaid diagram: Forge meta-system line
+%% Source: generated 2026-08-06 в рамках ROADMAP-FR-001 close-out + ROADMAP-VV-002 buffer-drill
+%% Author: Buffy / freebuff
+%% Related: docs_10/engineering-memory/RFC_BUFFY_FORGE_V1.md (v1.1 at v5.97.0),
+%%          docs_10/engineering-memory/ARB_REVIEW_FACTORY_FORGE_MANIFEST_V1.md,
+%%          docs_10/engineering-memory/factory_forge_manifest.md,
+%%          docs_10/ROADMAP_FORGE_RECONCILIATION.md (FR-001 v1.4 CLOSED),
+%%          docs_10/engineering-memory/LEVIATHAN_INVENTORY_V1.md (v1.1 bump 2026-08-06),
+%%          core_02/LESSONS.md: CON-38/39/40/51/52 (Forge line lessons),
+%%          core_02/{forge_pipeline,forge_registry,workspace***REMOVED***.py (impl v5.103.0).
+%% Render: Mermaid-compatible (mermaid.ink, GitLab/GitHub, Obsidian, mermaid-cli).
+%%   classDef:
+%%     rfc       — RFC документы (blue) — analysis-proposal
+%%     review    — ARB review (orange) — critique
+%%     roadmap   — ROADMAP-FR-001 stages (purple) — execution plans
+%%     closed    — v1.4 CLOSED final state (green) — accomplished
+%%     impl      — core_02/forge_* implementation (light blue) — built artifact
+%%     lesson    — CON-N in LESSONS.md (yellow) — accumulated learning
+%%     vision    — VISION_3.0 input (purple-pink) — strategic anchor
+%% ============================================================================
+flowchart LR
+    classDef rfc fill:#e1f5fe,stroke:#0277bd,color:#01579b
+    classDef review fill:#fff3e0,stroke:#ef6c00,color:#bf360c
+    classDef roadmap fill:#f3e5f5,stroke:#6a1b9a,color:#4a148c
+    classDef closed fill:#c8e6c9,stroke:#2e7d32,color:#1b5e20
+    classDef impl fill:#e3f2fd,stroke:#1565c0,color:#0d47a1
+    classDef lesson fill:#fff9c4,stroke:#f57f17,color:#5d4037
+    classDef vision fill:#fce4ec,stroke:#c2185b,color:#880e4f
+
+    VISION["VISION_3.0.md<br/>стратегическое<br/>видение"***REMOVED***:::vision
+
+    RFC1["RFC_BUFFY_FORGE_V1.md<br/>v5.95.0<br/>метасистема форджей<br/>(L0-L5)"***REMOVED***:::rfc
+    RFC2["RFC_BUFFY_FORGE_V1.md<br/>v1.1 at v5.97.0<br/>+ Section 2a Workspace/Project<br/>контейнеры (Alta A из ARB)"***REMOVED***:::rfc
+    MANIFEST["factory_forge_manifest.md<br/>v5.96.0<br/>визионерский документ 68"***REMOVED***:::rfc
+    ARB["ARB_REVIEW_FACTORY_FORGE_VIST_V1.md<br/>v5.96.0<br/>вердикт: CHANGES REQUIRED"***REMOVED***:::review
+    INVM["LEVIATHAN_INVENTORY_V1.md<br/>v1.1 at v5.97.0<br/>bump cat-A: +Forge pipeline/<br/>registry/workspace (rows 26-28)"***REMOVED***:::rfc
+
+    FR_DOC["ROADMAP_FORGE_RECONCILIATION.md<br/>ROADMAP-FR-001 v1.4"***REMOVED***:::roadmap
+    FR_S1["Step 1: fact-check разрыва<br/>(PB-16, hypothesis C)"***REMOVED***:::roadmap
+    FR_S2["Step 2: Case 2 doc-only<br/>(RFC v1.1 Section 2a.1-2a.3)"***REMOVED***:::roadmap
+    FR_S3["Step 3: LEVIATHAN prep<br/>(CON-52 anti-collision)"***REMOVED***:::roadmap
+    FR_CLOSED["FR-001 v1.4 CLOSED<br/>2026-08-06"***REMOVED***:::closed
+
+    IMPL["core_02/{forge_pipeline,<br/>forge_registry, workspace.py***REMOVED***<br/>scripts_01/forge.py<br/>v5.103.0"***REMOVED***:::impl
+
+    CON38["CON-38: архитектурный синтез"***REMOVED***:::lesson
+    CON39["CON-39: AFC перед именованием"***REMOVED***:::lesson
+    CON40["CON-40: SmartRouter capability check<br/>(pre-condition FR-001)"***REMOVED***:::lesson
+    CON51["CON-51: Forge vs Workspace/Project"***REMOVED***:::lesson
+    CON52["CON-52: уровневое разделение"***REMOVED***:::lesson
+
+    VISION --> RFC1
+    MANIFEST --> ARB
+    ARB -->|"CHANGES REQUIRED<br/>+ naming collision"| RFC2
+    RFC1 --> RFC2
+    RFC2 --> INVM
+    INVM --> FR_DOC
+
+    FR_DOC --> FR_S1 --> FR_S2 --> FR_S3 --> FR_CLOSED
+    FR_S1 -. "PB-16" .- CON40
+    FR_S2 -. "v1.1 sec 2a" .- RFC2
+    FR_S3 -. "CON-52" .- FR_CLOSED
+
+    RFC2 --> IMPL
+    FR_CLOSED --> IMPL
+    IMPL -. "+Cat-A rows 26-28" .- INVM
+
+    style RFC1 stroke-width:2px
+    style RFC2 stroke-width:3px
+    style FR_CLOSED stroke-width:3px

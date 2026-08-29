@@ -131,6 +131,7 @@ freebuff/  (Workspace OS)
 | `infa` | `infa_20` | 20 |
 | `trash` | `trash_21` | 21 |
 | `prototype` | `prototype_22` | 22 |
+| `books_out` | `books_out_23` | 23 | (2026-08-11 — учебные материалы, docs-only, 0 code refs)
 
 **Промты: `TT` = код темы** (устойчивый классификатор):
 
@@ -189,6 +190,24 @@ freebuff/  (Workspace OS)
 | `promt41.md` | `041_03_inventarizaciya_proekta.md` (инвентаризация, тема 03=audit) |
 | `promt42.md` | `042_06_dokumentaciya_meeting_tasks.md` (документация/meeting-задачи, тема 06=ispravleniya) |
 | `promt43.md` | `043_08_frontend_workspace_os_ui.md` (фронтенд Workspace OS, тема 08=prototype) |
+| `promt59.md` | `060_04_telegram_bot_aiogram.md` (2026-08-11; 059 занят 059_11_buffy_tg_external_interface.md) |
+| `promt60.md` | `061_19_roadmap_forge_leviathan.md` |
+| `promt61.md` | `062_04_single_loop_tg_dispatcher.md` |
+| `promt62.md` | `063_08_vkusvill_demo_scenario.md` |
+| `promt63.md` | `064_04_vkusvill_ai_avtomatizaciya.md` |
+| `promt64.md` | `065_03_vkusvill_research_audit.md` |
+| `promt65.md` | `066_09_workspace_os_kus_vkusvill.md` |
+| `promt66.md` | `067_02_design_taxonomy_v0_1.md` |
+| `promt67.md` | `068_07_autonomous_project_executor.md` |
+| `promt68.md` | `069_19_first_vertical_slice_v0_1.md` |
+| `promt69.md` | `070_07_lead_aggregator_scraper.md` |
+| `promt70.md` | `071_02_prompt_architect_1_7.md` |
+| `promt71.md` | `072_02_content_intelligence.md` |
+| `promt72.md` | `073_19_factory_forge_dokumentaciya.md` |
+| `promt73.md` | `074_19_arhitekturnaya_refleksiya_factory_forge.md` |
+| `promt74.md` | `075_04_research_web_capability.md` |
+| `promt75.md` | `076_13_lisa_estimator_capability.md` |
+| `promt76.md` | `077_02_prompt_architect_intelligence_factory.md` |
 
 ---
 
