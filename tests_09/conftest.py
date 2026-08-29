@@ -54,3 +54,34 @@ def mesh_tmp_db(tmp_path: Path):
 def offline_queue_path(tmp_path: Path):
     """Temporary storage path for OfflineQueue tests."""
     yield tmp_path
+
+
+# ═══════════════════════════════════════════════════
+# Corpus isolation fixture (canonical, replaces duplicated _isolate_corpus_root)
+# ═══════════════════════════════════════════════════
+
+
+@pytest.fixture
+def isolated_corpus_root(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
+    """Redirect ``scripts_01.corpus_persistence.DEFAULT_CORPUS_DIR`` to tmp_path.
+
+    Canonical replacement for ``_isolate_corpus_root`` helpers that were duplicated
+    across 3 test files (``test_corpus_persistence``, ``test_corpus_inspector``,
+    ``test_pricing_enumerator``). v5.189.64: single fixture by DRY principle.
+
+    Yields:
+        Path: tmp_path-isolated corpus root (callers use this for direct IO).
+    """
+    corpus_root = tmp_path / "corpus"
+    from scripts_01 import corpus_persistence
+
+    monkeypatch.setattr(corpus_persistence, "DEFAULT_CORPUS_DIR", corpus_root)
+    # Also propagate to subscription-coupling endpoints (pricing_enumerator).
+    try:
+        from scripts_01 import pricing_enumerator  # pragma: no cover
+
+        if hasattr(pricing_enumerator, "DEFAULT_CORPUS_DIR"):
+            monkeypatch.setattr(pricing_enumerator, "DEFAULT_CORPUS_DIR", corpus_root)
+    except ImportError:
+        pass
+    yield corpus_root

@@ -192,8 +192,14 @@ class TestRuntimeAdapter:
         assert adapter.name == "test"
         assert adapter.display_name == "Test Runtime"
 
-    def test_adapter_lifecycle(self):
+    def test_adapter_lifecycle(self, monkeypatch: pytest.MonkeyPatch):
         """StdioMCPAdapter: connect → generate → disconnect."""
+        # DEFERRED-7: короткий handshake-timeout — иначе connect() спавнит
+        # реальный `echo` и ждёт полный MCP_REQUEST_TIMEOUT (30s), пока тот
+        # не ответит валидным JSON-RPC initialize (чего не случится).
+        from freebuff_plugin_03 import mcp_client
+
+        monkeypatch.setattr(mcp_client, "MCP_REQUEST_TIMEOUT", 0.5)
         adapter = StdioMCPAdapter(RuntimeConfig(), "echo", ["hello"***REMOVED***, "test", "Test")
         assert adapter.is_connected() is False
         # connect должен вернуть False (echo не MCP сервер)
@@ -423,6 +429,7 @@ class TestRuntimeRegistry:
         registry = RuntimeRegistry(tmp_storage)
         assert registry.set_active("nonexistent") is False
 
+    @pytest.mark.slow  # v5.189.10: discover по FS (~5.7s)
     def test_discover_runtimes(self, tmp_storage: Path):
         """discover находит установленные Runtime."""
         registry = RuntimeRegistry(tmp_storage)
@@ -462,14 +469,16 @@ class TestRuntimeRegistry:
             config=RuntimeConfig(command="echo"),
         ))
 
-        # connect (создаст адаптер)
-        with patch("freebuff_plugin_03.runtime.registry.shutil.which", return_value=None):
-            with patch("freebuff_plugin_03.runtime.registry.Path.exists", return_value=False):
-                with patch("freebuff_plugin_03.runtime.registry.subprocess.run") as mock_run:
-                    mock_run.return_value.returncode = 0
-                    mock_run.return_value.stdout = ""
+        # DEFERRED-7: mock StdioMCPClient — иначе registry.connect() спавнит
+        # реальный `python -m freebuff_cli` (subprocess.Popen) и ждёт 30s
+        # MCP-инициализацию, которую тот не завершит.
+        with patch("freebuff_plugin_03.runtime.adapter.StdioMCPClient") as mock_cls:
+            mock_cls.return_value.connect.return_value = False
+            # connect (создаст адаптер через mock'нутый клиент)
+            with patch("freebuff_plugin_03.runtime.registry.shutil.which", return_value=None):
+                with patch("freebuff_plugin_03.runtime.registry.Path.exists", return_value=False):
                     ok, msg = registry.connect("freebuff")
-                    # Может не подключиться (echo не MCP сервер), но не должно упасть
+                    # Не подключается (mocked client), но не падает
                     assert isinstance(ok, bool)
                     assert isinstance(msg, str)
 

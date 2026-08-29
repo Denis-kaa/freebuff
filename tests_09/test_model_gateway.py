@@ -575,6 +575,106 @@ class TestPolicyRouting:
         assert model == "gemini-2.5-flash"
         assert source == "router"
 
+    def test_resolve_model_cloud_first_when_ollama_down(self, monkeypatch):
+        """Cloud-first (ANTI-6b): Ollama недоступен + есть ключи → облачная модель.
+
+        documenter routing_hint ['summarize','explain'***REMOVED***: без фильтра SmartRouter
+        выбирает qwen2.5:1.5b (tie-break по latency). С health-check, где Ollama
+        не отвечает, а у DeepSeek есть ключ — должен уйти на deepseek-v4-flash.
+        """
+        gw = ModelGateway()
+        # Ollama не отвечает (health-check False) + DeepSeek имеет ключ.
+        monkeypatch.setattr(gw, "_ollama_reachable", lambda: False)
+        mock_pool = MagicMock()
+        mock_pool.has_key.side_effect = lambda p: p == "deepseek"
+        gw._keypool = mock_pool
+        model, fallback, source = gw.resolve_model(["summarize", "explain"***REMOVED***)
+        assert model == "deepseek-v4-flash"
+        assert source == "router"
+
+    def test_resolve_model_picks_cloud_with_caps_when_keys_and_ollama_up(self, monkeypatch):
+        """CON-65 (v5.189.52): availability-aware cloud-first.
+
+        Когда Ollama доступен И облачные провайдеры имеют валидный ключ И их
+        capabilities совпадают с запросом ['summarize', 'explain'***REMOVED*** — SmartRouter
+        предпочитает CLOUD (gemini-2.5-flash / llama-3.3-70b-versatile / deepseek-v4-flash)
+        over local qwen2.5:1.5b. Это закрывает ANTI-6b trap: local НЕ выигрывает
+        latency tie-break когда у облака есть ключ (CON-65 / v5.189.52).
+        """
+        gw = ModelGateway()
+        monkeypatch.setattr(gw, "_ollama_reachable", lambda: True)
+        mock_pool = MagicMock()
+        mock_pool.has_key.return_value = True
+        gw._keypool = mock_pool
+        model, _fallback, _source = gw.resolve_model(["summarize", "explain"***REMOVED***)
+        # Cloud-wins over local (CON-65 closes ANTI-6b latency tie-break).
+        assert model != "qwen2.5:1.5b", (
+            f"CON-65: cloud с summarize+explain caps должен выиграть у "
+            f"qwen2.5:1.5b когда has_key=True; got {model***REMOVED***"
+        )
+        # deepseek-v4-flash имеет только `summarize` (без `explain`),
+        # поэтому для routing ["summarize","explain"***REMOVED*** score=1 — НЕ выигрывает
+        # tie-break у gemini/llama (score=2). Поэтому deepseek исключён.
+        assert model in (
+            "gemini-2.5-flash",
+            "llama-3.3-70b-versatile",
+        ), f"model {model***REMOVED*** not in summarize+explain-capable cloud tier (CON-65 expectation)"
+
+    def test_resolve_model_local_wins_when_no_cloud_keys(self, monkeypatch):
+        """CON-65 negative case: Ollama reachable + NO cloud keys → local qwen wins.
+
+        Symmetric pair to test_resolve_model_picks_cloud_with_caps_when_keys_and_ollama_up:
+        asserts что "cloud preferred" НЕ переходит в "local dead даже когда offline".
+        Local fallback remains the path when cloud keypool пуст (offline-режим).
+        Без этого теста future over-correction (например, hardcoded
+        `assert model != 'qwen'` everywhere) молча сломает offline/degraded-key
+        scenarios.
+        """
+        gw = ModelGateway()
+        monkeypatch.setattr(gw, "_ollama_reachable", lambda: True)
+        mock_pool = MagicMock()
+        mock_pool.has_key.return_value = False  # NO cloud keys
+        gw._keypool = mock_pool
+        model, _fallback, _source = gw.resolve_model(["summarize", "explain"***REMOVED***)
+        # CON-65 closed-loop: без cloud keys → local fallback обязателен.
+        assert model == "qwen2.5:1.5b", (
+            f"CON-65 negative case violated: when no cloud keys, local "
+            f"qwen должен выиграть; got {model***REMOVED***. Убедиться что ANTI-6b "
+            f"fix (cloud-first) не превратился в local-dead."
+        )
+
+    def test_resolve_model_cloud_first_on_tied_capability_score(self, monkeypatch):
+        """CON-65 (v5.189.52): cloud-first при РАВНОМ capability-score.
+
+        Для ['summarize'***REMOVED*** qwen2.5:1.5b (local, 200ms), deepseek-v4-flash,
+        gemini-2.5-flash, llama-3.3-70b-versatile — все score=1. БЕЗ
+        cloud-first tie-break latency отдаёт local qwen (200ms). С ним —
+        облако (llama 800ms). Честно закрывает ANTI-6b latency trap, а не
+        только через score-differential (score 2 vs 1).
+        """
+        gw = ModelGateway()
+        monkeypatch.setattr(gw, "_ollama_reachable", lambda: True)
+        mock_pool = MagicMock()
+        mock_pool.has_key.return_value = True  # all cloud have keys
+        gw._keypool = mock_pool
+        model, _fallback, _source = gw.resolve_model(["summarize"***REMOVED***)
+        assert model != "qwen2.5:1.5b", (
+            f"CON-65 tied-score cloud-first violated: local qwen won latency "
+            f"tie-break for ['summarize'***REMOVED***; got {model***REMOVED***"
+        )
+
+    def test_provider_available_failsafe_when_keypool_broken(self, monkeypatch):
+        """Кейпул недоступен → _provider_available не ломает роутинг (True)."""
+        gw = ModelGateway()
+        gw._keypool = None  # триггерит ленивый _import_keypool()
+
+        def boom(*a, **k):
+            raise RuntimeError("keypool import failed")
+
+        monkeypatch.setattr("scripts_01.model_gateway._import_keypool", boom)
+        from core_02.router import Provider
+        assert gw._provider_available(Provider.DEEPSEEK) is True
+
     def test_generate_uses_policy_model(self):
         """generate(capabilities=...) вызывает модель из policy override."""
         gw = ModelGateway(policy_engine=self.FakePolicy())
@@ -588,3 +688,194 @@ class TestPolicyRouting:
             )
         kwargs = mock_call.call_args.kwargs
         assert kwargs["model"***REMOVED*** == "anthropic/claude-3.5-sonnet"
+
+
+# ─── v5.189.49: cross-provider cloud fallback (chain [deepseek, gemini, dashscope***REMOVED***) ─
+
+from scripts_01.model_gateway import (
+    PROVIDER_ENDPOINTS,
+    _is_hard_error,
+    _CLOUD_FALLBACK_CHAIN,
+)
+
+
+class TestCrossProviderFallback:
+    """v5.189.49: cross-provider cloud fallback в `_call_with_fallback`.
+
+    Hard error {'402/billing', '401/auth', '5xx/server'***REMOVED*** → switch to next
+    cloud provider WITH a key (e.g. deepseek → gemini → dashscope). НЕ
+    повторяем тот же провайдер на hard error (ANTI-6b defense).
+    """
+
+    def test_cloud_fallback_402_switches_provider_once(self) -> None:
+        """402 (billing) on deepseek → switch to gemini; failsafe: only 1 attempt at deepseek.
+
+        ANTI-6b defense: повтор deepseek после 402 = трата attempt'а на
+        заведомо failable payload (402 → снова 402). _call_with_fallback
+        должен пойти по CLOUD_FALLBACK_CHAIN.
+        """
+        gw = ModelGateway()
+        # Мок KeyPool: deepseek НЕТ ключа (force skip), gemini ЕСТЬ.
+        mock_pool = MagicMock()
+        mock_pool.has_key.side_effect = lambda p: p == "gemini"
+        mock_pool.rotate.return_value = "sk-gemini-fake-key"
+        gw._keypool = mock_pool
+
+        call_count = {"deepseek": 0, "gemini": 0***REMOVED***
+
+        def fake_generate(self, model, messages, temperature=0.7, max_tokens=None, timeout=60):
+            pname = getattr(self, "_provider_name", "gemini")
+            call_count[pname***REMOVED*** += 1
+            if pname == "deepseek":
+                # Hard error 402 — provider error format: "API error 402: ..."
+                raise RuntimeError("API error 402: Payment Required")
+            return ModelResponse(
+                content="ok-from-gemini", model=model, provider=pname,
+            )
+
+        with patch(
+            "scripts_01.model_gateway.OpenAICompatibleProvider.generate", new=fake_generate
+        ), patch(
+            "scripts_01.model_gateway.GeminiProvider.generate", new=fake_generate
+        ):
+            result = gw.generate(
+                model="deepseek-v4-flash",
+                messages=[{"role": "user", "content": "hi"***REMOVED******REMOVED***,
+            )
+
+        # Asserts: cross-provider switch from deepseek → gemini
+        assert call_count["deepseek"***REMOVED*** == 1, (
+            f"expected ONLY 1 deepseek attempt (fail-fast), got {call_count['deepseek'***REMOVED******REMOVED***"
+        )
+        assert call_count["gemini"***REMOVED*** == 1, (
+            f"expected 1 gemini attempt (chain fallback), got {call_count['gemini'***REMOVED******REMOVED***"
+        )
+        assert result.fallback_used is True
+        assert result.provider == "gemini"
+        assert result.content == "ok-from-gemini"
+
+    def test_cloud_fallback_5xx_switches_provider(self) -> None:
+        """5xx (server error) on deepseek → switch to next provider."""
+        gw = ModelGateway()
+        mock_pool = MagicMock()
+        mock_pool.has_key.side_effect = lambda p: p == "gemini"
+        mock_pool.rotate.return_value = "sk-gemini-fake"
+        gw._keypool = mock_pool
+
+        def fake_generate(self, model, messages, temperature=0.7, max_tokens=None, timeout=60):
+            if getattr(self, "_provider_name", "gemini") == "deepseek":
+                raise RuntimeError("Stream API error 502: Bad Gateway")
+            return ModelResponse(content="ok-from-gemini", model=model, provider="gemini")
+
+        with patch(
+            "scripts_01.model_gateway.OpenAICompatibleProvider.generate", new=fake_generate
+        ), patch(
+            "scripts_01.model_gateway.GeminiProvider.generate", new=fake_generate
+        ):
+            result = gw.generate(
+                model="deepseek-v4-flash",
+                messages=[{"role": "user", "content": "hi"***REMOVED******REMOVED***,
+            )
+        assert result.fallback_used is True
+        assert result.provider == "gemini"
+
+    def test_no_key_for_next_provider_falls_to_next(self) -> None:
+        """No key for gemini → fall to dashscope (NOT retry gemini)."""
+        gw = ModelGateway()
+        # KeyPool: deepseek has none, gemini has none, dashscope has one.
+        mock_pool = MagicMock()
+        mock_pool.has_key.side_effect = lambda p: p == "dashscope"
+        mock_pool.rotate.return_value = "sk-dashscope-fake"
+        gw._keypool = mock_pool
+
+        def fake_generate(self, model, messages, temperature=0.7, max_tokens=None, timeout=60):
+            if self._provider_name == "deepseek":
+                raise RuntimeError("API error 402: Payment Required")
+            return ModelResponse(
+                content="ok-from-dashscope", model=model, provider=self._provider_name,
+            )
+
+        with patch(
+            "scripts_01.model_gateway.OpenAICompatibleProvider.generate", new=fake_generate
+        ):
+            result = gw.generate(
+                model="deepseek-v4-flash",
+                messages=[{"role": "user", "content": "hi"***REMOVED******REMOVED***,
+            )
+        # dashscope chosen (not gemini, because gemini.has_key=False)
+        assert result.provider == "dashscope"
+        assert result.fallback_used is True
+
+    def test_fallback_exhaust_raises_runtime_error_with_provider_trail(self) -> None:
+        """All 3 cloud providers fail (no keys, hard errors) → raise с trial_trail."""
+        gw = ModelGateway()
+        mock_pool = MagicMock()
+        mock_pool.has_key.return_value = False  # NO keys
+        gw._keypool = mock_pool
+
+        def fake_generate(self, model, messages, temperature=0.7, max_tokens=None, timeout=60):
+            raise RuntimeError(f"API error 503: Service Unavailable for {self._provider_name***REMOVED***")
+
+        with patch(
+            "scripts_01.model_gateway.OpenAICompatibleProvider.generate", new=fake_generate
+        ):
+            with pytest.raises(RuntimeError, match="All fallback providers exhausted"):
+                gw.generate(
+                    model="deepseek-v4-flash",
+                    messages=[{"role": "user", "content": "hi"***REMOVED******REMOVED***,
+                )
+
+        # CON-17 white-box contract guard: chain order is part of platform
+        # contract (CON-65). Surgical failure (this test only) if chain
+        # grows; avoids import-time blast radius.
+        assert tuple(_CLOUD_FALLBACK_CHAIN) == ("deepseek", "gemini", "dashscope"), (
+            "CON-65 cloud fallback chain mutated without test coverage update"
+        )
+
+    def test_default_catalog_has_two_cloud_providers_with_summarize_explain(self) -> None:
+        """v5.189.49: ≥2 cloud providers в ModelCatalog.default() must have
+        'summarize' AND 'explain' capabilities, чтобы LLM-роли имели резервный маршрут при cloud outage.
+        """
+        from core_02.router import ModelCatalog, Provider
+
+        catalog = ModelCatalog.default()
+        cloud_providers_with_caps: list[tuple[str, Provider, list[str***REMOVED******REMOVED******REMOVED*** = [***REMOVED***
+        for entry in catalog.all:
+            if entry.provider == Provider.OLLAMA:
+                continue  # only cloud
+            cloud_providers_with_caps.append(
+                (entry.name, entry.provider, entry.capabilities)
+            )
+
+        qualifying = [
+            (name, prov) for name, prov, caps in cloud_providers_with_caps
+            if "summarize" in caps and "explain" in caps
+        ***REMOVED***
+        assert len(qualifying) >= 2, (
+            f"expected ≥2 cloud providers with summarize+explain, "
+            f"got {len(qualifying)***REMOVED***: {[n for n, _ in qualifying***REMOVED******REMOVED***"
+        )
+
+    def test_provider_available_ollama_true_when_reachable(self) -> None:
+        """_provider_available(OLLAMA) → True когда локальная машина отвечает.
+
+        Sanity-preserving: проверяет, что health-check Ollama корректно
+        пробрасывается в _provider_available (True при reachable), не трогая
+        cascade-логику cross-provider cloud fallback.
+        """
+        from core_02.router import ModelCatalog, Provider
+
+        # _ollama_reachable True → первый роутер выберет локальную модель
+        # без cloud fallback. Просто smoke: вызвать _ollama_reachable mock
+        # и проверить что _provider_available(OLLAMA) → True.
+        gw = ModelGateway()
+        # Stub keypool
+        mock_pool = MagicMock()
+        mock_pool.has_key.return_value = False  # no cloud keys
+        gw._keypool = mock_pool
+        # Configure ollama_reachable to return True
+        with patch(
+            "scripts_01.model_gateway.ModelGateway._ollama_reachable",
+            return_value=True,
+        ):
+            assert gw._provider_available(Provider.OLLAMA) is True

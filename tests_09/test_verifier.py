@@ -640,6 +640,7 @@ class TestInjectionPrevention:
     """Verify that the verifier cannot be coerced into shell execution
     via templated parameters (Шаг 1, pompts_11/TASK_SECURE_MCP_ACCESS.md)."""
 
+    @pytest.mark.slow  # v5.189.10: тяжеловесный verifier subprocess (~5.3s)
     def test_pytest_injection_via_test_path(self, verifier: Verifier, tmp_path: Path):
         """Метасимволы в test_path не должны выполнять отдельную команду."""
         canary = tmp_path / "pwned_pytest_injection"

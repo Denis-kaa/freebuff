@@ -18,8 +18,27 @@ Tests:
 from __future__ import annotations
 
 import ast
+import json
 import sys
 ***REMOVED***
+
+import yaml
+
+
+def _write_yaml(path: Path, data: dict) -> None:
+    """v5.189.51: helper for backfill_signature tests — minimal registry YAML."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        yaml.safe_dump(data, sort_keys=False, allow_unicode=True),
+        encoding="utf-8",
+    )
+
+
+# v5.189.51: import check under test + SEED list for the exemption test.
+from scripts_01.consistency_check import (  # noqa: E402
+    check_backfill_signatures as check_backfill_signature,
+)
+from core_02.missing_registry import _SEED as _MR_SEED  # noqa: E402
 
 import pytest
 
@@ -32,6 +51,7 @@ from scripts_01.consistency_check import (
     check_engine_files,
     check_glossary_terms,
     check_lifecycle_coverage,
+    check_missing_registry_sync,
     check_module_areas,
     check_naming_convention,
     check_project_book,
@@ -39,6 +59,7 @@ from scripts_01.consistency_check import (
     check_test_counter,
     count_test_functions,
     extract_engine_rows,
+    extract_missing_capabilities,
     run_consistency_check,
     _PytestCollectionVisitor as V,  # [5.39.3***REMOVED*** top-level: synthetic visitor regression-gate
     _chain_key,  # [5.39.3***REMOVED*** top-level: e2e Set-A vs Set-B parity helper
@@ -62,6 +83,85 @@ from scripts_01.consistency_check import (  # noqa: E402
 # ═══════════════════════════════════════════════════════════════
 # Helpers / fixtures
 # ═══════════════════════════════════════════════════════════════
+
+
+# ── pytest --collect-only cross-session cache (v5.189.10 speedup) ──────────
+# Реальный `pytest --collect-only` на tests_09/ стоит 39.5s. Кэш в /tmp с
+# fingerprint-ом (mtime/size тестовых файлов + conftest + pytest.ini):
+# пересборка только когда тесты реально изменились, иначе — повторное
+# использование из предыдущей сессии.
+
+_COLLECT_CACHE_PREFIX = "freebuff_pytest_collect_ids"
+
+
+def _collect_fingerprint() -> str:
+    """SHA-256 по mtime/size тестовых файлов — ключ инвалидации кэша."""
+    import hashlib
+
+    # rglob — покрывает и tests_09/core/ (вложенные тест-модули): иначе
+    # изменение там не инвалидировало бы кэш (reviewer CR v5.189.12).
+    h = hashlib.sha256()
+    targets = sorted((PROJECT_ROOT / "tests_09").rglob("*.py"))
+    targets += [
+        PROJECT_ROOT / "tests_09" / "conftest.py",
+        PROJECT_ROOT / "pytest.ini",
+    ***REMOVED***
+    for p in targets:
+        try:
+            st = p.stat()
+            h.update(f"{p.name***REMOVED***:{st.st_mtime_ns***REMOVED***:{st.st_size***REMOVED***;".encode("utf-8"))
+        except OSError:
+            h.update(f"{p.name***REMOVED***:missing;".encode("utf-8"))
+    return h.hexdigest()[:16***REMOVED***
+
+
+def _collect_only_stdout_lines() -> list[str***REMOVED***:
+    """`pytest --collect-only -q` stdout lines (кэш в /tmp по fingerprint)."""
+    cache_file = Path("/tmp") / f"{_COLLECT_CACHE_PREFIX***REMOVED***_{_collect_fingerprint()***REMOVED***.json"
+    if cache_file.exists():
+        try:
+            return json.loads(cache_file.read_text(encoding="utf-8"))
+        except Exception:
+            pass  # битый кэш → пересборка
+
+    import subprocess
+
+    # Retry ×2: под параллельной нагрузкой (xdist/другие прогоны) collect может
+    # транзиентно упасть (rc!=0, часть модулей не собралась) — повторяем один
+    # раз; кэшируем ТОЛЬКО успешный прогон (v5.189.12 hardening).
+    lines: list[str***REMOVED*** = [***REMOVED***
+    result = None
+    for _attempt in (1, 2):
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "pytest",
+                "tests_09/",
+                "--collect-only",
+                "-q",
+                "--no-header",
+            ***REMOVED***,
+            cwd=str(PROJECT_ROOT),
+            capture_output=True,
+            text=True,
+            timeout=120,
+            check=False,
+            shell=False,  # CQS §3.1 regression-guard (explicit even though default)
+        )
+        if result.returncode == 0:
+            lines = result.stdout.splitlines()
+            break
+    if result is None or result.returncode != 0:
+        raise RuntimeError(
+            f"pytest --collect-only failed (rc={result.returncode if result else '?'***REMOVED***): "
+            f"{result.stderr[:300***REMOVED*** if result else 'no run'!r***REMOVED***"
+        )
+    try:
+        cache_file.write_text(json.dumps(lines, ensure_ascii=False), encoding="utf-8")
+    except OSError:
+        pass  # кэш best-effort
+    return lines
 
 
 def _write(path: Path, text: str) -> None:
@@ -140,6 +240,10 @@ def workspace(tmp_path: Path) -> Path:
     )
     # FINAL_STRUCTURE фиксирует схему именования (проверка naming_convention).
     _write(ws / FINAL_STRUCTURE, "### 2.1 Схема именования (Naming Convention, канон)\n")
+    # §20 карты v1.1 + MissingRegistry — синхронизированы (проверка missing_registry_sync).
+    _write(ws / "docs_10/engineering-memory/FACTORY_FORGE_ARCHITECTURE_V1.md", _S20_DOC)
+    from core_02.missing_registry import MissingRegistry, seed_defaults
+    seed_defaults(MissingRegistry(ws / "data_13/missing_registry.yaml"))
     return ws
 
 
@@ -251,6 +355,100 @@ class TestCheckCrossReferences:
         issues = check_cross_references(ws)
         assert len(issues) >= 1
         assert issues[0***REMOVED***["check"***REMOVED*** == "cross_references"
+
+
+# ═══════════════════════════════════════════════════════════════
+# 10. Missing Registry sync (§20 карты v1.1 ↔ data_13/missing_registry.yaml)
+# ═══════════════════════════════════════════════════════════════
+
+
+_S20_DOC = """## 20. Missing Capabilities
+
+| # | Отсутствующая способность | Где нужна | Приоритет |
+|---|---------------------------|-----------|-----------|
+| 1 | **Factory Registry** (реестр фабрик и кузен, статусы, паспорта) | Каждая Factory | 🟡 Medium — 📋 **дизайн готов** (FORGE_PASSPORT_CODE_REPRESENTATION_V1.md) |
+| 2 | **Scenario Engine** (исполнение сценариев-композиторов поверх Factory) | Workspace OS | 🟡 Medium — 📋 **дизайн готов** (SCENARIO_ENGINE_DESIGN_V1.md) |
+| 3 | **ADR-реестр как структура данных** (Decision Registry) | Decision Forge | 🟡 Medium |
+| 4 | **Машиночитаемый Conformance checker** | Governance Forge | 🟡 Medium |
+| 5 | **Автогенерация моделей/диаграмм** | Modeling Forge | 🟢 Low |
+| 6 | **Web Research (`research_web`)** — веб-исследование | Research Factory | 🟢 Low — ✅ **реализовано** (scripts_01/research_web.py) |
+| 7 | **Estimation (`lisa_estimator`)** — оценка сложности | Research Factory | 🟡 Medium — ✅ **реализовано** (scripts_01/lisa_estimator.py, по промту pompts_11/076_13_lisa_estimator_capability.md) |
+"""
+
+
+class TestExtractMissingCapabilities:
+    def test_parses_all_rows(self):
+        items = extract_missing_capabilities(_S20_DOC)
+        assert len(items) == 7
+        ids = {i["item_id"***REMOVED*** for i in items***REMOVED***
+        assert ids == {
+            "factory_registry", "scenario_engine", "decision_registry",
+            "conformance_checker", "model_diagram_autogen",
+            "research_web", "lisa_estimator",
+        ***REMOVED***
+
+    def test_status_mapping(self):
+        items = {i["item_id"***REMOVED***: i["status"***REMOVED*** for i in extract_missing_capabilities(_S20_DOC)***REMOVED***
+        assert items["research_web"***REMOVED*** == "implemented"
+        assert items["lisa_estimator"***REMOVED*** == "implemented"
+        assert items["factory_registry"***REMOVED*** == "design_ready"
+        assert items["decision_registry"***REMOVED*** == "registered"
+
+    def test_no_section_returns_empty(self):
+        assert extract_missing_capabilities("# No §20 here") == [***REMOVED***
+
+
+class TestCheckMissingRegistrySync:
+    def _workspace(self, tmp_path: Path, doc: str = _S20_DOC) -> Path:
+        ws = tmp_path / "ws"
+        _write(ws / "docs_10/engineering-memory/FACTORY_FORGE_ARCHITECTURE_V1.md", doc)
+        from core_02.missing_registry import MissingRegistry, seed_defaults
+        reg = MissingRegistry(ws / "data_13/missing_registry.yaml")
+        seed_defaults(reg)
+        return ws
+
+    def test_all_synced(self, tmp_path: Path):
+        assert check_missing_registry_sync(self._workspace(tmp_path)) == [***REMOVED***
+
+    def test_missing_doc(self, tmp_path: Path):
+        ws = tmp_path / "ws"
+        issues = check_missing_registry_sync(ws)
+        assert issues and issues[0***REMOVED***["check"***REMOVED*** == "missing_registry_sync"
+        assert "missing" in issues[0***REMOVED***["issue"***REMOVED***.lower()
+
+    def test_missing_registry_file(self, tmp_path: Path):
+        ws = tmp_path / "ws"
+        _write(ws / "docs_10/engineering-memory/FACTORY_FORGE_ARCHITECTURE_V1.md", _S20_DOC)
+        issues = check_missing_registry_sync(ws)
+        assert any("missing_registry.yaml" in i["issue"***REMOVED*** for i in issues)
+
+    def test_doc_item_missing_from_registry(self, tmp_path: Path):
+        doc = _S20_DOC + "| 8 | **Ghost Tool (`ghost_tool`)** | Research Factory | 🟡 Medium |\n"
+        issues = check_missing_registry_sync(self._workspace(tmp_path, doc))
+        ghost = [i for i in issues if i.get("item") == "ghost_tool"***REMOVED***
+        assert len(ghost) == 1
+        assert "register-first" in ghost[0***REMOVED***["issue"***REMOVED***
+
+    def test_registry_item_missing_from_doc(self, tmp_path: Path):
+        ws = self._workspace(tmp_path)
+        from core_02.missing_registry import MissingRegistry
+        reg = MissingRegistry(ws / "data_13/missing_registry.yaml")
+        reg.register_missing("extra_tool", kind="tool", factory="code")
+        issues = check_missing_registry_sync(ws)
+        extra = [i for i in issues if i.get("item") == "extra_tool"***REMOVED***
+        assert len(extra) == 1
+        assert "§20" in extra[0***REMOVED***["issue"***REMOVED***
+
+    def test_registry_lags_behind_doc(self, tmp_path: Path):
+        ws = tmp_path / "ws"
+        _write(ws / "docs_10/engineering-memory/FACTORY_FORGE_ARCHITECTURE_V1.md", _S20_DOC)
+        from core_02.missing_registry import MissingRegistry
+        reg = MissingRegistry(ws / "data_13/missing_registry.yaml")
+        reg.register_missing("research_web", kind="tool", factory="research",
+                             status="registered")  # §20 говорит «реализовано»
+        issues = check_missing_registry_sync(ws)
+        lag = [i for i in issues if i.get("item") == "research_web"***REMOVED***
+        assert any("lags behind" in i["issue"***REMOVED*** for i in lag)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -381,6 +579,72 @@ class TestNamingConventionLegacyRedirect:
             assert _is_legacy_redirect_satisfied(ws, "freebuff_plugin") is True
 
 
+class TestNamingConventionEvaluationPackage:
+    """[v5.189.68***REMOVED*** Evaluation-пакеты с каноническим именем от промта-источника.
+
+    Каталог `architecture_forensics_v2/` назван ИМЕННО так по требованию
+    promt104 §28 REQUIRED OUTPUT (без NN-suffix). Переименование сломало бы
+    имя пакета/архива и противоречило бы промту — поэтому naming_convention
+    пропускает его через _EVALUATION_PACKAGE_DIRS. Не маскирует настоящие
+    нарушения: произвольный bare-dir вне списка по-прежнему флагуется.
+    """
+
+    def _approve_env(self, root: Path) -> None:
+        """Минимальное окружение для naming-проверки (два якоря + pompts_11)."""
+        (root / "pompts_11").mkdir()
+        (root / "pompts_11" / "001_01_dummy.md").write_text("# dummy\n")
+        docs = root / "docs_10" / "core"
+        docs.mkdir(parents=True)
+        (docs / "FINAL_STRUCTURE.md").write_text("## §2.1 Схема именования\n")
+        (docs / "GLOSSARY.md").write_text("## **Naming Convention**\n")
+
+    def test_evaluation_package_dir_skipped(self, tmp_path: Path) -> None:
+        self._approve_env(tmp_path)
+        (tmp_path / "architecture_forensics_v2").mkdir()
+        from scripts_01.consistency_check import check_naming_convention
+        issues = check_naming_convention(tmp_path)
+        pkg = [i for i in issues if i.get("kind") == "dir" and i.get("name") == "architecture_forensics_v2"***REMOVED***
+        assert pkg == [***REMOVED***, (
+            f"evaluation-package dir должен пропускаться (имя от промта), issues={issues***REMOVED***"
+        )
+
+    def test_non_declared_bare_dir_still_flagged(self, tmp_path: Path) -> None:
+        """Произвольный bare-dir вне _EVALUATION_PACKAGE_DIRS — обычное нарушение."""
+        self._approve_env(tmp_path)
+        (tmp_path / "random_package_v2").mkdir()
+        from scripts_01.consistency_check import check_naming_convention
+        issues = check_naming_convention(tmp_path)
+        flagged = [i for i in issues if i.get("kind") == "dir" and i.get("name") == "random_package_v2"***REMOVED***
+        assert len(flagged) == 1, (
+            f"недекларированный bare-dir должен флагуться, issues={issues***REMOVED***"
+        )
+        assert flagged[0***REMOVED***["issue"***REMOVED***.startswith("top-level dir violates")
+
+    def test_evaluation_package_dirs_constant_defined(self) -> None:
+        """Константа _EVALUATION_PACKAGE_DIRS существует и содержит пакет promt104."""
+        from scripts_01.consistency_check import _EVALUATION_PACKAGE_DIRS
+        assert "architecture_forensics_v2" in _EVALUATION_PACKAGE_DIRS
+
+    def test_consolidated_forensics_dir_skipped(self, tmp_path: Path) -> None:
+        """[v5.189.73***REMOVED*** Сводный forensic-архив FORENSICS_104_105_106_107 пропускается.
+
+        Имя задано задачей (единый пакет 4 проходов); NN-suffix нарушил бы
+        соответствие имени архиву FORENSICS_104_105_106_107_v5.189.73.tar.gz.
+        Аналогично architecture_forensics_v2 (promt104 §28).
+        """
+        self._approve_env(tmp_path)
+        (tmp_path / "FORENSICS_104_105_106_107").mkdir()
+        from scripts_01.consistency_check import check_naming_convention
+        issues = check_naming_convention(tmp_path)
+        pkg = [
+            i for i in issues
+            if i.get("kind") == "dir" and i.get("name") == "FORENSICS_104_105_106_107"
+        ***REMOVED***
+        assert pkg == [***REMOVED***, (
+            f"consolidated forensics dir должен пропускаться, issues={issues***REMOVED***"
+        )
+
+
 class TestRealProject:
     def test_conforming_workspace(self, workspace: Path):
         """Фикстура: каталоги имя_NN, FINAL_STRUCTURE с секцией → чисто."""
@@ -422,9 +686,15 @@ class TestRealProject:
         _write(ws / FINAL_STRUCTURE, "### 2.1 Схема именования\n")
         prompts = ws / "pompts_11"
         prompts.mkdir()
+        # README.md/errors.md — служебные файлы очереди (exempt, см. skip в consistency_check)
         _write(prompts / "README.md", "# readme\n")
+        _write(prompts / "errors.md", "# log\n")
+        # Нарушение конвенции ловим на обычном «голом» промте
+        _write(prompts / "bad_name.md", "# bare prompt\n")
         issues = check_naming_convention(ws)
-        assert any(i["kind"***REMOVED*** == "prompt" and i["name"***REMOVED*** == "README.md" for i in issues)
+        assert any(i.get("kind") == "prompt" and i.get("name") == "bad_name.md" for i in issues)
+        # Служебные файлы не должны флагиться
+        assert not any(i.get("name") in ("README.md", "errors.md") for i in issues)
 
     def test_prompt_invalid_theme_code(self, tmp_path: Path):
         ws = tmp_path / "ws"
@@ -588,6 +858,7 @@ class TestPytestCollectionVisitor:
             f"non-test_-prefixed не должны попадать в exclusions, got {v.exclusions***REMOVED***"
         )
 
+    @pytest.mark.slow  # v5.189.10: cross-session кэш; первый прогон платит 39.5s
     def test_count_test_functions_matches_pytest_collect_only_on_real_project(self) -> None:
         """e2e invariant: для PROJECT_ROOT AST count == pytest --collect-only count (deduped).
 
@@ -596,30 +867,12 @@ class TestPytestCollectionVisitor:
         contract: parametrize-экспансия не раздувает счётчик, потому что все
         расширения одного `test_x` dedup'ятся в одну set-entry. Это и есть
         то, что `[5.39.2***REMOVED***` закрыл.
+        v5.189.10: subprocess заменён на `_collect_only_stdout_lines()` —
+        cross-session кэш с mtime-инвалидацией (39.5s → ~0 на повторных прогонах).
         """
-        import subprocess
-
-        result = subprocess.run(
-            [
-                sys.executable,
-                "-m",
-                "pytest",
-                "tests_09/",
-                "--collect-only",
-                "-q",
-                "--no-header",
-            ***REMOVED***,
-            cwd=str(PROJECT_ROOT),
-            capture_output=True,
-            text=True,
-            timeout=120,
-            check=False,
-            shell=False,  # CQS §3.1 regression-guard (explicit even though default)
-        )
-
         # Reproduce Set-A vs Set-B matching from diagnose_test_count_gap.
         pytest_set: set[tuple[str, str, str***REMOVED******REMOVED*** = set()
-        for line in result.stdout.splitlines():
+        for line in _collect_only_stdout_lines():
             line = line.strip()
             if "::" not in line:
                 continue
@@ -740,6 +993,12 @@ class TestReport:
         assert "naming_convention" in report
         assert report["naming_convention"***REMOVED*** == [***REMOVED***
 
+    def test_build_report_includes_anchors_key(self, workspace: Path):
+        """[5.189.4***REMOVED*** check #11 ANCHORS: ключ есть, на пустом workspace — пусто."""
+        report = build_report(workspace)
+        assert "anchors" in report
+        assert report["anchors"***REMOVED*** == [***REMOVED***
+
     def test_run_consistency_check_accepts_str(self, workspace: Path):
         report = run_consistency_check(str(workspace))
         assert report["consistent"***REMOVED*** is True
@@ -769,7 +1028,221 @@ class TestRealWorkspaceConsistent:
     становилась ast_only phantom в [5.39.0***REMOVED*** consistency_check. Теперь обе
     группы под уникальными именами, pytest собирает все 13, gap == 0."""
 
+    @pytest.mark.slow  # v5.189.10: полный AST-скан репозитория (~11s)
     def test_real_project_consistent(self):
         """Фактический проект должен проходить проверку (все реестры согласованы)."""
         report = build_report(PROJECT_ROOT)
         assert report["consistent"***REMOVED*** is True, format(report["total_issues"***REMOVED***)
+    @pytest.mark.slow  # v5.189.63 drift-closure guard
+    def test_build_report_idempotent_under_repeat(self) -> None:
+        """[5.189.63***REMOVED*** `build_report(workspace)` MUST be idempotent: N повторных
+        вызовов возвращают ОДИНАКОВЫЙ total_issues / consistent / per-check dicts.
+
+        Защита от double-application regression (re-run loop, retry-on-fail hook):
+        если consistency_check гонять в цикле, состояние gate должно оставаться
+        СТАБИЛЬНЫМ — иначе closure либо улучшает (ложный успех), либо деградирует
+        (ложный fail) от количества прогонов.
+
+        Catches monotonic-drift bugs:
+          (a) registry YAML file mtime changes on read → doc_by_id/version drift
+          (b) AST visitor accumulates exclusions list BETWEEN calls (state leak)
+          (c) backfill_signature timestamps drift across calls (timestamps != stable)
+          (d) anchors resolver accumulates unverified-set between runs
+        """
+        reports = [build_report(PROJECT_ROOT) for _ in range(5)***REMOVED***
+        first = reports[0***REMOVED***
+        for nth, r in enumerate(reports[1:***REMOVED***, start=2):
+            # 1. Cardinal invariant: total_issues stable.
+            assert r["total_issues"***REMOVED*** == first["total_issues"***REMOVED***, (
+                f"build_report not idempotent on repeat #{nth***REMOVED***: "
+                f"first total_issues={first['total_issues'***REMOVED******REMOVED***, "
+                f"repeat #{nth***REMOVED*** total_issues={r['total_issues'***REMOVED******REMOVED***. "
+                f"Hint: check registry YAML mtime, AST cache, or "
+                f"monotonic dedupe counter across calls."
+            )
+            # 2. Boolean consistent flag must match.
+            assert r["consistent"***REMOVED*** == first["consistent"***REMOVED***, (
+                f"consistent flag flipped between call 1 and call #{nth***REMOVED***: "
+                f"first={first['consistent'***REMOVED******REMOVED***, repeat={r['consistent'***REMOVED******REMOVED***"
+            )
+            # 3. Per-check dicts MUST be deep-equal — no row accumulation/dropout.
+            for check_key in ("test_counter", "missing_registry_sync",
+                              "backfill_signature", "engine_files",
+                              "lifecycle_coverage", "module_areas",
+                              "glossary_terms", "roadmap_refs",
+                              "cross_references", "project_book",
+                              "naming_convention", "anchors"):
+                assert r[check_key***REMOVED*** == first[check_key***REMOVED***, (
+                    f"check '{check_key***REMOVED***' diverged on repeat #{nth***REMOVED***: "
+                    f"first={first[check_key***REMOVED***!r***REMOVED***, repeat=#{nth***REMOVED***={r[check_key***REMOVED***!r***REMOVED***"
+                )
+
+
+
+# ─── v5.189.51: backfill_signature check — retroactive-registration heuristic ─
+#
+# Heuristic: scan `data_13/missing_registry.yaml` for entries that LOOK retroactive
+# (status=implemented + registered_at == updated_at) WITHOUT `backfill:true`.
+# Severity: WARNING (not violation) — emitted into a standalone `backfill_signature`
+# key in build_report(); `consistent=True` if total_issues==0 AFTER `consistent=True`
+# filter. SEED items exempt.
+
+class TestBackfillSignature:
+    """v5.189.51: contract tests for check_backfill_signatures().
+
+    Heuristic coverage:
+      - clean retroactive (status=implemented + backfill=True + same ts) → silent
+      - normal lifecycle (registered_at < updated_at) → silent
+      - missing `backfill` marker on retroactive signature → WARNING
+      - SEED items exempt (canonical entries pre-date backfill:bool discipline)
+      - non-implemented status → silent even with same ts
+    """
+
+    def test_clean_retroregistered_with_backfill_is_silent(self, tmp_path: Path) -> None:
+        """Status=implemented + backfill:true + identical ts → 0 warnings (correct usage)."""
+        _write_yaml(
+            tmp_path / "data_13" / "missing_registry.yaml",
+            {
+                "retro_module": {
+                    "kind": "tool",
+                    "status": "implemented",
+                    "factory": "test",
+                    "registered_at": "2026-08-11T22:00:00+00:00",
+                    "updated_at": "2026-08-11T22:00:00+00:00",
+                    "backfill": True,
+                ***REMOVED***
+            ***REMOVED***,
+        )
+        warnings = check_backfill_signature(tmp_path)
+        assert warnings == [***REMOVED***, f"expected silent, got: {warnings***REMOVED***"
+
+    def test_missing_backfill_marker_on_retroactive_signature_flagged(
+        self, tmp_path: Path
+    ) -> None:
+        """Status=implemented + no backfill + identical ts → 1 WARNING emitted."""
+        _write_yaml(
+            tmp_path / "data_13" / "missing_registry.yaml",
+            {
+                "retro_omitted": {
+                    "kind": "tool",
+                    "status": "implemented",
+                    "factory": "test",
+                    "description": "Created via `register --status implemented` (forgot --backfill).",
+                    "registered_at": "2026-08-11T22:00:00+00:00",
+                    "updated_at": "2026-08-11T22:00:00+00:00",
+                    # backfill field explicitly absent → flagged.
+                ***REMOVED***
+            ***REMOVED***,
+        )
+        warnings = check_backfill_signature(tmp_path)
+        assert len(warnings) == 1, f"expected 1 warning, got: {warnings***REMOVED***"
+        w = warnings[0***REMOVED***
+        assert w["check"***REMOVED*** == "backfill_signature"
+        assert w["severity"***REMOVED*** == "warning"
+        assert w["doc"***REMOVED*** == "data_13/missing_registry.yaml"
+        assert w["item_id"***REMOVED*** == "retro_omitted"
+        assert "registered_at==updated_at" in w["reason"***REMOVED***
+        assert "backfill:true" in w["reason"***REMOVED***
+
+    def test_normal_lifecycle_with_divergent_timestamps_is_silent(
+        self, tmp_path: Path
+    ) -> None:
+        """Genuine lifecycle evolution (registered_at < updated_at) → 0 warnings."""
+        _write_yaml(
+            tmp_path / "data_13" / "missing_registry.yaml",
+            {
+                "legit_lifecycle": {
+                    "kind": "tool",
+                    "status": "implemented",
+                    "factory": "test",
+                    "registered_at": "2026-08-10T22:00:00+00:00",
+                    "updated_at": "2026-08-11T22:00:00+00:00",  # +1 day → genuine lifecycle
+                    "backfill": False,
+                ***REMOVED***
+            ***REMOVED***,
+        )
+        warnings = check_backfill_signature(tmp_path)
+        assert warnings == [***REMOVED***, f"expected silent, got: {warnings***REMOVED***"
+
+    def test_seed_entries_are_exempt(self, tmp_path: Path) -> None:
+        """SEED items pre-date backfill:bool discipline — must NOT be flagged.
+
+        Uses an authoritative item_id from core_02.missing_registry._SEED so
+        the test follows platform evolution (we don't hardcode names).
+        """
+        seed_ids = [
+            str(item["item_id"***REMOVED***)
+            for item in (_MR_SEED or [***REMOVED***)
+            if isinstance(item, dict) and "item_id" in item
+        ***REMOVED***
+        assert seed_ids, "test assumes _SEED is non-empty"
+        sample_seed_id = seed_ids[0***REMOVED***
+        _write_yaml(
+            tmp_path / "data_13" / "missing_registry.yaml",
+            {
+                sample_seed_id: {  # canonical SEED name → exempt
+                    "kind": "tool",
+                    "status": "implemented",
+                    "factory": "seed",
+                    "registered_at": "2026-08-11T22:00:00+00:00",
+                    "updated_at": "2026-08-11T22:00:00+00:00",
+                    "backfill": False,
+                ***REMOVED***
+            ***REMOVED***,
+        )
+        warnings = check_backfill_signature(tmp_path)
+        assert warnings == [***REMOVED***, (
+            f"SEED entry {sample_seed_id!r***REMOVED*** must be exempt; got: {warnings***REMOVED***"
+        )
+
+    def test_non_implemented_status_never_flagged(self, tmp_path: Path) -> None:
+        """If status != implemented (even with identical ts + no backfill), silent.
+
+        Defensive: protects `registered`, `design_ready`, `prompt_written` entries
+        from false positives (they’re IN-PROGRESS, not retroactive).
+        """
+        _write_yaml(
+            tmp_path / "data_13" / "missing_registry.yaml",
+            {
+                "in_progress": {
+                    "kind": "tool",
+                    "status": "prompt_written",
+                    "factory": "test",
+                    "registered_at": "2026-08-11T22:00:00+00:00",
+                    "updated_at": "2026-08-11T22:00:00+00:00",
+                    "backfill": False,
+                ***REMOVED***
+            ***REMOVED***,
+        )
+        warnings = check_backfill_signature(tmp_path)
+        assert warnings == [***REMOVED***, f"non-implemented must NOT be flagged; got: {warnings***REMOVED***"
+
+    def test_aggregated_into_build_report_json(self, tmp_path: Path) -> None:
+        """check_backfill_signatures() result appears as `backfill_signature` key
+        in build_report() output AND contributes to total_issues count.
+
+        Integration: ensures wiring (report dict + all_issues aggregation) works.
+        """
+        _write_yaml(
+            tmp_path / "data_13" / "missing_registry.yaml",
+            {
+                "real_retro_suspect": {
+                    "kind": "tool",
+                    "status": "implemented",
+                    "factory": "test",
+                    "registered_at": "2026-08-11T22:00:00+00:00",
+                    "updated_at": "2026-08-11T22:00:00+00:00",
+                    "backfill": False,  # WILL be flagged
+                ***REMOVED***
+            ***REMOVED***,
+        )
+        report = build_report(tmp_path)
+        assert "backfill_signature" in report, (
+            f"build_report missing backfill_signature key; keys: {sorted(report)***REMOVED***"
+        )
+        sigs = report["backfill_signature"***REMOVED***
+        assert len(sigs) == 1
+        assert sigs[0***REMOVED***["item_id"***REMOVED*** == "real_retro_suspect"
+        # WARNING counted as issue (consistent with severity='warning' convention).
+        assert report["total_issues"***REMOVED*** >= 1
+        assert report["consistent"***REMOVED*** is False  # warning flips consistent

@@ -152,7 +152,7 @@ class TestSchemaValidation(unittest.TestCase):
     def test_schema_payload_is_dict_with_required_and_properties(self) -> None:
         """SMCP-схема — обязательно содержит type/required/properties."""
         tool = SendSmsTool()
-        s = tool.schema()
+        s = tool.input_schema()
         self.assertEqual(s["type"***REMOVED***, "object")
         self.assertIn("to", s["required"***REMOVED***)
         self.assertIn("body", s["required"***REMOVED***)

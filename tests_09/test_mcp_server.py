@@ -983,6 +983,7 @@ class TestToolRegistryIntegration:
         assert "command" in git_tool["inputSchema"***REMOVED***.get("required", [***REMOVED***)
 
     @pytest.mark.skipif(not GIT_AVAILABLE, reason="git not available")
+    @pytest.mark.slow  # v5.189.10: реальный git subprocess (~5.6s)
     def test_call_git_status(self, server):
         # Initialize a git repo in temp workspace
         import subprocess

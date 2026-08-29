@@ -132,6 +132,64 @@ class TestBackgroundWriter:
         """_handle_log with no session_dir doesn't crash."""
         BackgroundWriter._handle_log()  # should not raise
 
+    def test_handle_log_accepts_string_session_dir(self, tmp_path):
+        """_handle_log accepts str session_dir (defensive Path coercion).
+
+        Regression: str / str raised TypeError → message silently lost.
+        """
+        session_dir = tmp_path / "str_session"
+        session_dir.mkdir()
+
+        BackgroundWriter._handle_log(
+            session_dir=str(session_dir),  # строка, не Path
+            role="user",
+            content="Hello via str path",
+            count=2,
+            ts="2026-08-15 12:00:00",
+        )
+
+        log_file = session_dir / "conversation.log"
+        assert log_file.exists()
+        assert "Hello via str path" in log_file.read_text()
+        assert (session_dir / "raw.jsonl").exists()
+
+    def test_handle_checkpoint_accepts_string_session_dir(self, tmp_path):
+        """_handle_checkpoint accepts str session_dir (defensive Path coercion)."""
+        session_dir = tmp_path / "str_cp_session"
+        session_dir.mkdir()
+
+        BackgroundWriter._handle_checkpoint(
+            session_dir=str(session_dir),
+            summary="Checkpoint via str path",
+            count=7,
+            ts="2026-08-15 12:00:00",
+        )
+
+        summary_file = session_dir / "summary.md"
+        assert summary_file.exists()
+        content = summary_file.read_text()
+        assert "msg#7" in content
+        assert "Checkpoint via str path" in content
+
+    def test_worker_processes_string_session_dir(self, tmp_path):
+        """Worker-level: enqueue with str session_dir → files written (no silent loss).
+
+        Regression: the original bug manifested via enqueue(session_dir="/tmp")
+        — str / str TypeError in the daemon thread, message silently lost.
+        """
+        bw = BackgroundWriter()
+        session_dir = tmp_path / "worker_str_session"
+        session_dir.mkdir()
+
+        bw.start()
+        bw.enqueue("log", session_dir=str(session_dir), role="user", content="via queue")
+        bw.flush(timeout=3.0)
+
+        log_file = session_dir / "conversation.log"
+        assert log_file.exists()
+        assert "via queue" in log_file.read_text()
+        assert (session_dir / "raw.jsonl").exists()
+
     def test_handle_checkpoint_writes_summary(self, tmp_path):
         """_handle_checkpoint writes to summary.md."""
         session_dir = tmp_path / "test_session"

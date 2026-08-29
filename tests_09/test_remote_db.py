@@ -164,11 +164,10 @@ def _mock_urlopen(request: Any, timeout: float = 5.0) -> Any:
         def __exit__(self, *a: Any) -> None:
             pass
 
-    if "/ready" in url:
+    if "/status" in url:
         return FakeResp(b"{***REMOVED***")
-    if "/db/query" in url and body:
-        stmts = json.loads(body)
-        # Return mock SELECT result
+    if "/db/query" in url:
+        # rqlite v10: GET /db/query?q=...
         return FakeResp(json.dumps({
             "results": [{"columns": ["key", "value"***REMOVED***, "types": ["text", "text"***REMOVED***,
                          "values": [["mock_key", "mock_value"***REMOVED******REMOVED******REMOVED******REMOVED***

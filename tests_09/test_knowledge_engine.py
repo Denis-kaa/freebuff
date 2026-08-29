@@ -418,12 +418,17 @@ class TestMemoryIntegration:
     def test_rebuild_index(self, knowledge_engine: KnowledgeEngine, tmp_dir: Path):
         """rebuild_index() перестраивает индекс с нуля."""
         from scripts_01.memory_engine import MemoryEngine, MemoryLevel
+        from unittest.mock import patch
 
         mem = MemoryEngine(workspace_root=str(tmp_dir))
         mem.store(MemoryLevel.KNOWLEDGE, "doc1", "router capability content")
         mem.store(MemoryLevel.KNOWLEDGE, "doc2", "memory engine content")
 
-        count = knowledge_engine.rebuild_index()
+        # v5.189.10 speedup: fit_semantic (SVD) стоит 17.8s на этом устройстве;
+        # контракт rebuild-теста — FTS/TF-IDF счётчики (count/total_docs),
+        # они не зависят от SVD-слоя (покрыт test_search_semantic отдельно).
+        with patch.object(KnowledgeEngine, "fit_semantic", return_value=None):
+            count = knowledge_engine.rebuild_index()
         assert count >= 2
         assert knowledge_engine.get_stats().total_docs >= 2
 

@@ -148,6 +148,63 @@ class TestSmartRouter:
         assert isinstance(decision.provider, Provider)
 
 
+class TestSmartRouterAvailability:
+    """Cloud-first роутинг: provider_available фильтрует недоступные провайдеры.
+
+    ANTI-6b defense (core_02/LESSONS.md): если локальная qwen2.5:1.5b
+    (Ollama) не запущена, а у облачных провайдеров есть ключи — роутер
+    ДОЛЖЕН выбрать облачную модель, а не падать в gen_failed. Без фильтра
+    qwen2.5:1.5b выигрывает tie-break по latency (200ms vs 2000ms).
+    """
+
+    def test_route_filters_unavailable_local_provider(self, catalog):
+        """documenter ['summarize','explain'***REMOVED***: недоступный Ollama не выбирается."""
+        def available(provider):
+            return provider != Provider.OLLAMA
+        r = SmartRouter(catalog, fallback="gemini-2.5-flash",
+                        provider_available=available)
+        decision = r.route(required_capabilities=["summarize", "explain"***REMOVED***)
+        # Cloud-first contract: selection is data-driven by score/latency;
+        # it must not depend on one hard-coded cloud provider winning the tie.
+        assert decision.provider in (
+            Provider.DEEPSEEK, Provider.GEMINI, Provider.GROQ,
+            Provider.SAMBANOVA, Provider.OPENROUTER,
+        )
+        assert decision.provider != Provider.OLLAMA
+        assert decision.model != "qwen2.5:1.5b"
+        assert decision.fallback_used is False
+
+    def test_route_prefers_available_cloud_when_availability_known(self, catalog):
+        """При известной доступности cloud-first выбирает лучшую cloud-модель."""
+        r = SmartRouter(catalog, fallback="gemini-2.5-flash",
+                        provider_available=lambda p: True)
+        decision = r.route(required_capabilities=["summarize", "explain"***REMOVED***)
+        assert decision.provider in (
+            Provider.DEEPSEEK, Provider.GEMINI, Provider.GROQ,
+            Provider.SAMBANOVA, Provider.OPENROUTER,
+        )
+        assert decision.provider != Provider.OLLAMA
+        assert decision.fallback_used is False
+
+    def test_route_all_unavailable_falls_back_to_best_effort(self, catalog):
+        """Ни один провайдер не доступен → graceful degradation (не exception)."""
+        r = SmartRouter(catalog, fallback="gemini-2.5-flash",
+                        provider_available=lambda p: False)
+        decision = r.route(required_capabilities=["summarize", "explain"***REMOVED***)
+        # Best-effort: возвращает какое-то решение (падение поймает вызывающий).
+        assert decision.model
+
+    def test_route_no_availability_param_uses_catalog_ranking(self, catalog):
+        """Без provider_available используется обычный ranking каталога (BC)."""
+        required = ["summarize", "explain"***REMOVED***
+        r = SmartRouter(catalog, fallback="gemini-2.5-flash")
+        decision = r.route(required_capabilities=required)
+        expected = catalog.match(required)[0***REMOVED***[0***REMOVED***
+        assert decision.model == expected.name
+        assert decision.provider == expected.provider
+        assert decision.fallback_used is False
+
+
 class TestSmartRouterIntegration:
     """Integration tests with real scenarios."""
 

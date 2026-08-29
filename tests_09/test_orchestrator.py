@@ -538,6 +538,90 @@ class TestOrchestrator:
         result = orch.run_workflow("Test")
         assert result.status in (WorkflowStatus.COMPLETED, WorkflowStatus.FAILED)
 
+    # ── Termination guarantees (v5.189.9) ────────────────────
+
+    class _FixedStepsPlanner:
+        """Planner returning a fixed step list (bypasses DefaultPlanner)."""
+
+        def __init__(self, steps):
+            self._steps = steps
+
+        def plan(self, goal):
+            return list(self._steps)
+
+    def test_skipped_dependency_propagates_and_terminates(self):
+        """Step depending on a SKIPPED step is also SKIPPED — no infinite loop.
+
+        Regression (v5.189.9): chain s1 FAILED → s2 SKIPPED → s3 depends on s2.
+        Before the fix s3 stayed PENDING forever (dep was SKIPPED, not FAILED,
+        so _handle_blocked_steps ignored it) and run_workflow busy-looped.
+        """
+        orch = Orchestrator()
+        wf_steps = [
+            Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
+                 input={"command": "exit 1"***REMOVED***, max_retries=0),
+            Step(id="s2", type=StepType.TOOL, tool=ToolType.SHELL,
+                 input={"command": "echo b"***REMOVED***, depends_on=["s1"***REMOVED***, max_retries=0),
+            Step(id="s3", type=StepType.TOOL, tool=ToolType.SHELL,
+                 input={"command": "echo c"***REMOVED***, depends_on=["s2"***REMOVED***, max_retries=0),
+        ***REMOVED***
+        orch._planner = self._FixedStepsPlanner(wf_steps)
+        result = orch.run_workflow("skip chain")
+        assert result.status in (WorkflowStatus.COMPLETED, WorkflowStatus.FAILED)
+        statuses = {s.id: s.status for s in result.steps***REMOVED***
+        assert statuses["s1"***REMOVED*** == StepStatus.FAILED
+        assert statuses["s2"***REMOVED*** == StepStatus.SKIPPED
+        # Транзитивная пропагация: s3 не виснет PENDING, а скипается
+        assert statuses["s3"***REMOVED*** == StepStatus.SKIPPED
+
+    def test_missing_dependency_terminates_with_failed(self):
+        """depends_on на несуществующий step id → deadlock-guard, а не вечный цикл.
+
+        Regression (v5.189.9): before the fix, a step whose dependency id
+        doesn't exist could never become ready and was never skipped →
+        while True in run_workflow looped forever. Now the deadlock guard
+        fails the workflow with a descriptive error.
+        """
+        orch = Orchestrator()
+        wf_steps = [
+            Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
+                 input={"command": "echo ok"***REMOVED***, depends_on=["ghost"***REMOVED***, max_retries=0),
+        ***REMOVED***
+        orch._planner = self._FixedStepsPlanner(wf_steps)
+        result = orch.run_workflow("ghost dep")
+        assert result.status == WorkflowStatus.FAILED
+        assert any("Deadlock" in e for e in result.errors)
+
+    def test_run_code_workflow_completes_under_10s(self):
+        """Полный code-workflow завершается за <10s — защита от возврата медленного find.
+
+        Regression (v5.189.9): Read Context использовал `find . -name '*.py'`
+        БЕЗ -maxdepth — на Android FUSE обход всего дерева занимал >60s →
+        TimeoutExpired ×3 ретрая → workflow попадал в бесконечный while True
+        (CPU-spin навсегда, full-suite застревал на ~52%).
+
+        С фиксом (`find . -maxdepth 3 ... | head -20`) прогон укладывается в
+        секунды. Порог 10s отделяет фикс от регрессии: вернувшийся unbounded
+        find даёт минуты/вечный цикл, а не <10s.
+
+        Разделение ответственности: этот тест ловит регрессию медленного find
+        (workflow вернётся FAILED после ~180s ретраев → assert сработает с
+        сообщением); регрессию бесконечного while True ловят соседние
+        termination-тесты (test_skipped_dependency_propagates_and_terminates,
+        test_missing_dependency_terminates_with_failed) — они завершаются быстро.
+        """
+        import time
+
+        orch = Orchestrator()
+        start = time.perf_counter()
+        result = orch.run_workflow("Implement a simple hello world")
+        elapsed = time.perf_counter() - start
+        assert elapsed < 10.0, (
+            f"code-workflow занял {elapsed:.1f***REMOVED***s — вероятен возврат медленного "
+            "find (Read Context должен использовать -maxdepth 3)"
+        )
+        assert result.status in (WorkflowStatus.COMPLETED, WorkflowStatus.FAILED)
+
     # ── Thread safety tests ──────────────────────────────────
 
     def test_context_updates_from_parallel_steps(self):

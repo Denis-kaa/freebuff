@@ -164,6 +164,7 @@ class TestEnvironmentChecker:
         state = checker.check_quick()
         assert state.disk_free_gb > 0  # Хотя бы немного места есть
 
+    @pytest.mark.slow  # v5.189.10: реальный git-чек в workspace (~7s)
     def test_check_workspace_git(self, tmp_ws: Path):
         """Проверяет git-репозиторий в workspace (через check(), не check_quick())."""
         (tmp_ws / ".git").mkdir()
@@ -454,6 +455,8 @@ class TestInstaller:
 
 class TestRuntimeDoctor:
     """RuntimeDoctor - 6 tests"""
+
+    pytestmark = pytest.mark.slow  # v5.189.10: тяжёлые diagnose (~5-11s каждый)
 
     def test_diagnose_empty_env(self, tmp_ws: Path):
         """Диагностика пустого окружения."""

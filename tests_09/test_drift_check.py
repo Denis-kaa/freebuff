@@ -394,3 +394,57 @@ def test_legacy_redirect_helper_unit(tmp_path) -> None:
     (tmp_path / "freebuff_plugin_03").mkdir()
     assert dc._is_legacy_redirect_satisfied(tmp_path, "freebuff_plugin") is True
     assert dc._is_legacy_redirect_satisfied(tmp_path, "totally_not_a_real_dir") is False
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Multi-target tuples via real monkeypatch (NOT vacuous): exercises the actual
+# helper after patching `_LEGACY_TOP_LEVEL_REDIRECTS`, so future shape-changes
+# (e.g. `any()` → `all()`, `.is_dir()` → other) are caught. Caught as
+# «vacuous synthetic comprehension» by `code-reviewer-minimax-m3` in v5.37.1
+# review (commit `19b4356`); replaced with real-call form in this fix.
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+def test_legacy_redirect_multi_target_tuple(tmp_path, monkeypatch) -> None:
+    """Multi-target redirects: real monkeypatch + actual helper call.
+
+    The data structure is ``tuple[str, ...***REMOVED***``. The default
+    `_LEGACY_TOP_LEVEL_REDIRECTS` constant has only single-target entries;
+    monkeypatch lets us inject a multi-target dict to exercise branches the
+    default config can't reach.
+
+    Helper contract pinned here:
+    * `any(...)` — satisfied if **at least one** target is a real directory.
+    * `.is_dir()` — not `.exists()`, so a stale file at the target path
+      MUST NOT satisfy the redirect.
+    """
+    # Positive: 1 of 3 targets is a real directory → satisfied.
+    monkeypatch.setattr(
+        dc, "_LEGACY_TOP_LEVEL_REDIRECTS",
+        {"legacy_multi_a": ("does_not_exist_1", "does_not_exist_2", "freebuff_plugin_03")***REMOVED***,
+    )
+    (tmp_path / "freebuff_plugin_03").mkdir()
+    assert dc._is_legacy_redirect_satisfied(tmp_path, "legacy_multi_a") is True
+
+    # Negative: all 3 targets missing → not satisfied.
+    monkeypatch.setattr(
+        dc, "_LEGACY_TOP_LEVEL_REDIRECTS",
+        {"legacy_multi_b": ("missing_a", "missing_b", "missing_c")***REMOVED***,
+    )
+    assert dc._is_legacy_redirect_satisfied(tmp_path, "legacy_multi_b") is False
+
+    # Negative: target exists as a stale regular file (NOT a dir) → not satisfied.
+    # Locks in the `.is_dir()` semantic precision (vs. `.exists()`).
+    monkeypatch.setattr(
+        dc, "_LEGACY_TOP_LEVEL_REDIRECTS",
+        {"legacy_multi_c": ("stale_file_target",)***REMOVED***,
+    )
+    (tmp_path / "stale_file_target").write_text("not a directory", encoding="utf-8")
+    assert dc._is_legacy_redirect_satisfied(tmp_path, "legacy_multi_c") is False
+
+    # Degenerate: empty target tuple → not satisfied.
+    monkeypatch.setattr(
+        dc, "_LEGACY_TOP_LEVEL_REDIRECTS",
+        {"legacy_multi_d": ()***REMOVED***,
+    )
+    assert dc._is_legacy_redirect_satisfied(tmp_path, "legacy_multi_d") is False
