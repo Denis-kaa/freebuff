@@ -126,3 +126,14 @@ projects_17/public_request_parser/hh/*.md
 
 # Generated drift report (drift_check writes it on every run)
 docs_10/DRIFT_REPORT.md
+
+# v5.189.86: hard-deny additions from untracked-file audit (Additive Architecture)
+node_modules/
+*.db-wal
+*.db-shm
+*.tar.gz
+*.tgz
+*.zip
+freebuff.zip
+*.tmp
+nohup.out
