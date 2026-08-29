@@ -224,6 +224,8 @@ _KNOWLEDGE_IGNORE_DIRS = {
     "node_modules",
     "build",
     "dist",
+    "buffy_history_full.md",
+    "buffy_history_index.jsonl",
 ***REMOVED***
 
 # ADR canonical location and legacy redirects.
@@ -432,6 +434,21 @@ def _extract_markdown_links(text: str) -> list[tuple[int, str, str***REMOVED****
     return links
 
 
+def _is_tolerated_historical_tmp_link(md_path: Path, target_clean: str) -> bool:
+    """True если ссылка ведёт на исторический `/tmp/...` путь в CHANGELOG/e2e-логах.
+
+    CAN-12 (§5.14 ARCHITECTURAL_DEBT): записи до v5.51.0 ссылались на
+    `/tmp/interior_planner_e2e/...` — корректно для своего времени; после
+    relocation скриптов в `/storage/...` эти пути больше не существуют,
+    но переписывать историю запрещено (CAN-17). Такие ссылки — не broken link,
+    а историческая достоверность, и должны толерироваться.
+    """
+    if not (target_clean.startswith("/tmp/") or target_clean.startswith("tmp/")):
+        return False
+    file_name = md_path.name
+    return file_name == "CHANGELOG.md" or "e2e_logs" in str(md_path) or "task_archive" in str(md_path)
+
+
 def check_markdown_links(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
     """Scan project markdown docs and report broken relative links.
 
@@ -472,6 +489,9 @@ def check_markdown_links(workspace: Path) -> list[dict[str, Any***REMOVED******R
             # Strip fragment and query from target for file existence check
             target_clean = target.split("#")[0***REMOVED***.split("?")[0***REMOVED***
             if not target_clean:
+                continue
+            # CAN-12: исторические /tmp пути в CHANGELOG/e2e-логах — толерируем
+            if _is_tolerated_historical_tmp_link(md_path, target_clean):
                 continue
             # Absolute links (leading /) resolve against workspace root
             if target_clean.startswith("/"):

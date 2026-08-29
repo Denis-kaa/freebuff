@@ -15,6 +15,9 @@
 - Регрессионные тесты: `tests_09/test_tui_history_import.py` (детерминированный session_id, формат timestamp — регрессия бага с префиксом tui- в времени, импорт, идемпотентность).
 - Зарегистрирован в MissingRegistry (kind=tool, lifecycle registered → implemented).
 - Работает через env-переопределения (TUI_PHONE_ROOT / TUI_SERVER_ROOT / TUI_CTX_DB / TUI_EVENTS_DB) — пригоден для запуска на сервере.
+- Test counter refresh (долг CAN-16/3.3): AST-truth `tests_09/` = **3527** тест-функций; перенесено в CHANGELOG-якорь + CODE_QUALITY_STANDARD §11.6 (цель: 3527+ passed).
+- Naming convention (долг CAN-10/§3.1): переименованы 109/110/113/116/117 в `NNN_TT_name.md`; `imperial_phuket_media/` → `projects_17/`; пустой top-level `projects/` удалён.
+- `python -m pytest tests_09/ -q` — **3527 passed, 0 failures** (AST-truth, 2026-08-29; +171 от v5.189.84 baseline 3356).
 
 
 ### ✅ FBM (FreeBuff Manager) — legacy TUI wrapper integration

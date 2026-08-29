@@ -166,9 +166,31 @@
 | 11.3 | Примеры входных данных | `tmp_path` фикстуры, `conftest.py` с shared fixtures |
 | 11.4 | Ожидаемый результат | `assert result["success"***REMOVED*** is True`, `assert count > 0` |
 | 11.5 | Boundary Testing | Тесты для всех интерфейсов (Core↔Plugin, MCP, REST) |
-| 11.6 | Регрессионные тесты | Полный прогон перед каждым merge (цель: 1891+ passed, 0 failures) |
+| 11.6 | Регрессионные тесты | Полный прогон перед каждым merge (**цель: 3527+ passed, 0 failures**); full-suite real count = 3527 (AST truth 2026-08-29; +83 vs v5.189.64 baseline 3444, +4 TestCacheLayer на pricing_enumerator + 30 PRD release-cycles); для traceability — см. §11.7 ниже |
 
 ---
+
+### 11.7 Counter Milestone Reference — Audit Trail для §3.3 CAN-16 (v5.55.0)
+
+Цель этого раздела: single source-of-truth для cited test counters. Все числа должны иметь file:line provenance — **никогда не выдуманные**. Обновлять при каждом release, который меняет counter (R24 fix: единый язык, R25 discipline).
+
+| Date | Counter | Trigger | Provenance (file:line) |
+| --- | --- | --- | --- |
+| 2026-07-28 | 586 | v2.8.0 security hardening (exec/shell removal) | [CHANGELOG.md:2086***REMOVED***(../../CHANGELOG.md) |
+| 2026-07-29 | 1124 | AUDIT_FULL pre-merge (Stage-8) | [docs_10/audits/AUDIT_FULL_2026-07-29.md:386***REMOVED***(../audits/AUDIT_FULL_2026-07-29.md) |
+| 2026-08-01 | 1671 | Stage 9 consolidation + engine recovery | [TASK.md:114***REMOVED***(../../TASK.md) |
+| 2026-08-02 | 1891 | drift_check + consistency_check regression | [DAY_SUMMARY_2026-08-02.md:142***REMOVED***(../../docs_10/history/DAY_SUMMARY_2026-08-02.md) |
+| 2026-08-02 | 1991 | NIT-3 + negative-tests (v5.39.3) | [CHANGELOG.md v5.39.3 entry***REMOVED***(../../CHANGELOG.md) — anchor |
+| 2026-08-04 | 2181 | consistency_check `check_test_counter` alignment — drift closure (1991→2181 `#` shadow tests across v5.50–v5.81 era) | [consistency_check.py:781***REMOVED***(../../scripts_01/consistency_check.py) — drift closure | **current-state goal bumped to 2181+** (not historical rewrite per CAN-17) |
+| 2026-08-12 | 2694 | Platform audit batch — CI-slice + forensics + audits + factory/forge expansions (R3 fix) | `pytest tests_09/ --collect-only` → 2694 tests collected in 18.75s | **current-state goal bumped to 2694+** (R25 discipline applied; R4 auto-freshness rule added) |
+| 2026-08-18 | 3072 | test_counter drift closure (CHANGELOG anchor 2994 + §11.6 target 3040 → actual 3072) — ADR-016 RoleExecutor/LlmRoleExecutor + LISA calibration + glossary Phase 8-13 | `count_test_functions(tests_09/)` AST → 3072 | **current-state goal bumped to 3072+** (R25 discipline; drift closed without historical rewrite) |
+| 2026-08-18 | 3079 | +7 new tests (SmartRouter availability cloud-first + ModelGateway failsafe) — v5.189.48 | `count_test_functions(tests_09/)` AST → 3079 | **current-state goal bumped to 3079+** (cloud-first routing ANTI-6b defense) |
+| 2026-08-18 | 3089 | +10 new tests (backfill:bool machine-readable field + B10 invariants) — v5.189.49 | `count_test_functions(tests_09/)` AST → 3089 | **current-state goal bumped to 3089+** (backfill as data, not free-text marker) |
+| 2026-08-19 | 3090 | +1 contract test for partial-chain project (smoke) + strict-14 filter + `self.`→module-level clean-up + class rename MockFlag→StageCount — v5.189.50; **full-suite pytest = 3107 passed, 0 failed, 1 xpassed** (tmux 905s); AST count=3090 (consistency_check baseline) | `count_test_functions(tests_09/)` AST → 3090 (+1 contract test) | **current-state AST goal bumped to 3090+ / full-suite goal to 3107+** (partial-chain contract explicit; 0 regression failures) |
+| 2026-08-19 | 3096 | +6 `backfill_signature` tests (v5.189.51: retroactive-registration discipline check в `consistency_check.py`); NEW `check_backfill_signatures()` heuristic — `status=implemented AND registered_at==updated_at AND not backfill` → soft WARNING (NOT counted в `total_issues`, per user 'предупреждение' intent); SEED entries exempt via lazy `_SEED` import; standalone `backfill_signature` key в `build_report()` output | `count_test_functions(tests_09/)` AST → 3096 (+6 contract tests in `TestBackfillSignature` class) | **current-state AST goal bumped to 3096+ / full-suite pending tmux re-run (anchor 3107 from v5.189.50 baseline)** (retroactive-registration discipline surfaced; CON-63/64 traceability preserved; soft-signal semantic — 0 hard CI violations) |
+| 2026-08-19 | 3104 | +8 тестов (v5.189.52: cross-provider cloud fallback + cloud-first tie-break — TestCrossProviderFallback 6 + TestPolicyRouting 3 cloud-first/negative/tied-score); `SmartRouter.route()` cloud-first tie-break (гейт по `provider_available`) + `_call_with_fallback` hard-error class switch (CON-65) | `count_test_functions(tests_09/)` AST → 3104 | **AST goal bumped to 3104+** (CON-65 ANTI-6b closure; cloud-first availability-aware) |
+
+**Правило обновления:** когда release модифицирует counter — привязать bump к конкретной версии + trigger + файл-ссылка. **Правило анти-rewriting:** не изменять старые numbers ради consistency; audit trail должен выжить intact. CAN-16 closure — 2026-08-03 (v5.55.0) — doc-only patch без модификаций существующих references. R24 fix 2026-08-12: единый русский язык для пояснительной секции.
 
 ## 12. Масштабируемость
 

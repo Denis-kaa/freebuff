@@ -32,6 +32,22 @@ This document tracks **architectural debt** identified by the daily self-audit i
 
 > **Schema:** §3 entries use the same `| Field | Value |` table convention as §5 Resolved Debt, with three additions for **OPEN** items: `**Status**` (always `🔴 OPEN`), `**Owner**`, and `**Remediation ETA**`. Older §5.x resolved entries were filed before this schema was introduced, so they omit `Owner` / `Remediation ETA` by historical convention — only **new** OPEN entries require all three. When an OPEN item is closed, it migrates to §5 with a `**Resolved**` date field instead.
 
+### 3.0 §20 Missing-Capabilities Map Drift (17 unregistered rows) — ✅ RESOLVED
+
+> **2026-08-20 (v5.189.67):** Закрыт — counter refresh 3104→3342 + idempotency test + §20 backfill (17 rows). Полная запись — в §5.23 Resolved Debt ниже.
+
+| Field | Value |
+|-------|-------|
+| **ID** | `TRACK-001` (2026-08-20, first-slice vocal-task deferral per AGENTS.md §5) ✅ **CLOSED (v5.189.67)** — counter refresh + idempotency test added; §20 reality: all 28 MR-implemented items already ✅ (scope drift was misdiagnosed) |
+| **Component** | `docs_10/engineering-memory/FACTORY_FORGE_ARCHITECTURE_V1.md` §20 table ↔ `data_13/missing_registry.yaml` (45 entries) — `check_missing_registry_sync` reports 17 items in registry but missing from §20 map. |
+| **Severity** | 🟢 Low → ✅ Resolved — no runtime impact; doc-only drift between two registries; gate (consistency_check.py exit 0) was failing due to unrefreshed counter (3104 vs 3342), now exit 0 per v5.189.67 |
+| **Type** | Documentation mirror/register-first drift — §20 map lags behind `MissingRegistry` for post-v5.189.52 vocal-task entries |
+| **Affected items** | `anti_pattern_miner`, `business_model_constructor`, `capability_gap_auditor`, `capability_gap_auditor_llm`, `claim_source_tracker`, `competitor_matrix_builder`, `corpus_inspector`, `corpus_persistence`, `devil_advocate_pass`, `edtech_market_analyst`, `hypothesis_ledger`, `mvp_design_wizard`, `persona_funnel_analyzer`, `pricing_enumerator`, `qualitative_review_analyzer`, `vanity_metric_filter`, `weighted_scoring_engine` |
+| **Why deferred** | First-slice vocal-task blockers (per cap_gap_auditor P0 priorities) shipped in v5.189.55–v5.189.58 without §20 map updates — implementation was urgent, doc-sync was deferred to NOT block the spiritual value chain (`pricing_enumerator` → `qualitative_review_analyzer` → `business_model_constructor`). User explicitly authorized deferral in session 2026-08-20 (commit message preceding v5.189.59). |
+| **Remediation** | 1. Update `FACTORY_FORGE_ARCHITECTURE_V1.md` §20 to enumerate rows 29–45 (continuing from current row 28) with `(**{item_id***REMOVED*****)` backtick-anchor + status cell per `_s20_status_from_cell` mapping. 2. Refresh test counter to actual AST count (3219) in `CHANGELOG.md` (latest `pytest tests_09/ -q` line) and `CODE_QUALITY_STANDARD.md` §11.6 (target: `3219+ passed`). 3. Add idempotency test in `tests_09/test_consistency_check.py` (run `build_report` twice on same workspace → assert equal output). 4. Re-run gate: `python scripts_01/consistency_check.py` exit 0. |
+| **Owner** | parent (next drift-closure pass; expected post v5.189.59) |
+| **Discovered** | 2026-08-20 (initial consistency_check baseline showed `total_issues=19: 17 missing_registry_sync + 2 test_counter`) |
+
 ### 3.1 Duplicate Telegram Bots — RESOLVED ✅
 
 > **2026-08-01:** Закрыт через `scripts_01/tgbot_base.py` (`BaseTGBot`).
@@ -217,15 +233,15 @@ This document tracks **architectural debt** identified by the daily self-audit i
 
 | Field | Value |
 |-------|-------|
-| **ID** | `CAN-8` (2026-08-03) |
-| **Component** | `interior_planner_e2e/scripts/{e2e_promt47.py:72, interior_consultant_register.py:42***REMOVED***` |
-| **Severity** | 🟡 Medium — affects real-Test (CAN-9) |
+| **ID** | `CAN-8` (2026-08-03) → ✅ **RESOLVED v5.57.0** (подтверждено v5.97.0 факт-чекингом) |
+| **Component** | `interior_planner_e2e/scripts/{e2e_promt47.py, interior_consultant_register.py***REMOVED***` |
+| **Severity** | 🟡 Medium → ✅ Закрыто |
 | **Type** | Architectural / portability |
-| **Description** | Block-A fix (sys.path injection) НЕ покрыл body-level hardcodes. После `/tmp/` → `/storage/.../` move scripts продолжают ссылаться на старые пути. |
-| **Remediation** | Two-line patch: еnv override + walk-up chain (CAN-7 pattern). Один patch pass для всех stale references. |
-| **Related** | CAN-9 (real `--client` verify), ANTI-11 (surgical vs holistic lesson). |
+| **Description** | ~~Block-A fix НЕ покрыл body-level hardcodes.~~ **Факт-чекинг v5.97.0:** grep `/tmp/` по обоим скриптам — 0 hits. Фикс v5.57.0 (env override + canonical hardcode fallback) полностью устранил проблему. Предыдущая запись в ARCHITECTURAL_DEBT.md была документационным дрифтом — не отражала реальное состояние кода. |
+| **Remediation** | ~~Two-line patch.~~ ✅ Выполнено в v5.57.0. |
+| **Related** | CAN-9 (real `--client` verify — также закрыт v5.59.0). PB-* (урок: документационный дрифт между LESSONS.md и ARCHITECTURAL_DEBT.md). |
 | **Owner** | parent |
-| **Discovered** | 2026-08-03 (v5.51.0 verify gate refinement — register.py N/A bypass revealed this debt) |
+| **Discovered** | 2026-08-03 (v5.51.0) / **Re-verified** 2026-08-05 (v5.97.0 fact-check) |
 
 ---
 
@@ -253,7 +269,7 @@ This document tracks **architectural debt** identified by the daily self-audit i
 
 ---
 
-### 5.14 Stale `/tmp/` Paths in CHANGELOG + E2E Logs (drift false-positives) — 🔴 OPEN
+### 5.14 Stale `/tmp/` Paths in CHANGELOG + E2E Logs (drift false-positives) — ✅ RESOLVED (2026-08-29, v5.189.85)
 
 | Field | Value |
 |-------|-------|
@@ -262,7 +278,7 @@ This document tracks **architectural debt** identified by the daily self-audit i
 | **Severity** | 🟢 Low — drift_check false-positives on historical records; no runtime impact |
 | **Type** | Verification noise (drift_check too strict) |
 | **Description** | drift_check flags `/tmp/interior_planner_e2e/...` paths as broken. These are HISTORICAL references in CHANGELOG entries (v5.46/47/48 — valid at the time) AND run logs in `docs_10/e2e_logs/` (each log records what files existed at that run). After v5.51.0 scripts moved to `/storage/.../workstation/interior_planner_e2e/...`, drift_check cannot validate historical accuracy. |
-| **Remediation** | Plan-only registration. Refactor requires: (1) modify `scripts_01/drift_check.py::check_broken_relative_links` to tolerate `/tmp/...` paths in `CHANGELOG.md` + `docs_10/e2e_logs/*` (file-pattern-based whitelist), (2) re-run pytest, (3) verify CAN-11 counter still aligned, (4) optional: add `_is_tolerated_broken_link(file, target)` predicate as documentation marker. Requires reading drift_check.py source carefully to find broken-link-check hook. |
+| **Remediation (DONE 2026-08-29, v5.189.85)** | Реализовано: `scripts_01/drift_check.py` получил `_is_tolerated_historical_tmp_link(md_path, target_clean)` — толерирует `/tmp/...` ссылки в `CHANGELOG.md` + `docs_10/e2e_logs/*` (историческая достоверность per CAN-17, rewriting = lying). Точка вставки — `check_markdown_links` перед проверкой существования. Тесты пройдены. |
 | **Related** | CAN-7 (`/tmp/` snap rotation); CAN-10 (similar cross-reference noise). |
 | **Owner** | parent |
 | **Discovered** | 2026-08-03 (v5.52.0 pre-existing debt cleanup — basher diagnostic showed /tmp refs in CHANGELOG L13/L80/L114 + e2e_logs + INTERIOR_PLANNER_SETUP_LOG) |
@@ -378,4 +394,48 @@ This document tracks **architectural debt** identified by the daily self-audit i
 | **ADR** | YES [docs_10/engineering-memory/decisions/ADR_011_Phase_5_3_D_Listener_Loop.md***REMOVED***(engineering-memory/decisions/ADR_011_Phase_5_3_D_Listener_Loop.md) - Option 3 (Core Fork) selected. |
 | **Related** | CON-31 (TGClient wrapper constraint), section 5.20 (Remote Sync Runtime - RESOLVED), section 5.3-A spec (Protocol-only). |
 | **Prevention / Forward-looking guard (layered)** | (1) _tg_client_v2 fork scoped at Freebuff core (avoids projects_17 upstream taint per ADR-011 D-1). (2) Memory leak guard: collections.deque(maxlen=128) for _incoming_buffer (no unbounded growth). (3) Reconnect guard: TGClient.on_disconnected trigger pull_state history fetch. (4) Asyncio boundary: handler writes to buffer (no coroutine), pull_state reads atomically via drain_incoming(). |
+
+### 5.22 Phase 5.4-OQ26-31 WorkspaceRegistry Real Canonical Seed — ✅ RESOLVED (v5.75.0, 2026-08-04)
+
+| Field | Value |
+|-------|-------|
+| **ID** | DEBT-5.22 |
+| **Component** | `core_02/workspace_registry.py` + `data_13/context.db` (real production DB) |
+| **Severity** | 🟢 Low → ✅ Captured |
+| **Type** | Operational / production-seed evidence |
+| **Description** | Real canonical-wide seed run completed on `data_13/context.db` (production DB at `<freebuff>/data_13/context.db`). `WorkspaceRegistry.seed_defaults()` returned `seeded=3` (idempotent — DB already had the 3 default workspaces from prior test runs with `tmp_path`). Confirmed 3 workspaces in DB: `rabota` (Рабо́та → Работа, 1 path), `uchyoba` (Учёба, 0 paths — graceful skip for missing `projects_17/buffy-playground_19`), `hobbi` (Хобби, 2 paths). Two expected paths — `projects_17/interior_planner` and `projects_17/buffy-playground_19` — were NOT FOUND on filesystem and were gracefully logged `WARNING` + skipped per `seed_defaults()` missing-paths tolerance (CON-21 anti-fragility, forward-looking per §5.21). DB file size now ~2.45 MB. |
+| **Evidence** | 1) `python3 -c 'from core_02.workspace_registry import WorkspaceRegistry; r = WorkspaceRegistry(); n = r.seed_defaults(); print(f"seeded={n***REMOVED***"); print(r.list_workspaces())'` → exit 0, output captured to `/tmp/seed_run_output.log` (4 lines). 2) `PRAGMA journal_mode` → `'wal'` (atomic + crash-recoverable). 3) `drift_check.py` PRE-SEED: exit 0 (already ran today per output). 4) `consistency_check.py` PRE-SEED: exit 0 with 5 pre-existing observations (3 naming-convention: README.md / promt48.md / pompts_11/promt48.md / 048_11_platform_rewrite_directive.md — now compliant (this fix); 2 test-counter divergence: CHANGELOG.md + CODE_QUALITY_STANDARD.md report 1991 instead of actual 2144 — neither caused by seed). 5) Announcement: 3 default seeded workspaces cleanly persisted. 6) `PRAGMA foreign_keys` returns 0 from cold import (sqlite3 default OFF per-connection; WorkspaceRegistry enables inside its connection via `PRAGMA foreign_keys = ON` but cold-PRAGMA check shows 0 — needs explicit enable on every connection). |
+| **msg_id of seed log line** | line_id=L3: "seeded=3" (canonical artifact: `/tmp/seed_run_output.log` — 4 lines, captured 2026-08-04 post-seed) |
+| **Discovered** | 2026-08-04 |
+| **Related** | OQ25 (PLATFORM.md §12, now CLOSED + resolution paragraph), Phase 5.4-OQ26-31, §5.21 (Phase 5.3-D pre-work). |
+| **Owner** | Buffy (user: Литвинов) |
+| **ADR/POLICY link** | ARCHITECTURAL_DEBT.md §5.22 captures evidence; canonical spec deferment policy in FOOTER of PLATFORM.md (WAL/DELETE-mode trade-off). |
+| **Prevention / Forward-looking guard (layered)** | (1) Idempotent `seed_defaults()` is safe to re-run concurrently — converge to fixed 3-workspace state. (2) Missing-paths tolerance (`warn-and-skip`) prevents registry crash on FS desync — `seed_defaults` should be the only canonical way to seed. (3) WAL mode for atomic transactions + crash-recovery — but watch for WAL file accumulation on low-disk devices (manual `PRAGMA wal_checkpoint(TRUNCATE)` recommended; documented in PLATFORM.md FOOTER). (4) `foreign_keys` MUST be explicitly enabled per-connection — sqlite3 default is OFF; without explicit `PRAGMA foreign_keys = ON` per connect, `PrivacyViolationError` semantics vanish. (5) Track real-on-disk vs in-test workspace tables separately — prefer `bot.registry = WorkspaceRegistry(tmp_path / "data_13" / "context.db")` per-instance, not `WorkspaceRegistry()` default factory in production. (6) Update CON-19 lesson: real production DB now has 3 named workspaces; future tests must use `tmp_path` isolation to avoid contamination. |
+
+> **API revision (2026-08-04)** — `seed_defaults()` previously returned `int` (count of created workspaces). Following CAN-14 fail-loud refactor, it now returns `SeedResult(created: int, missing: list[str***REMOVED***)` dataclass so callers know WHICH paths were missing on filesystem (RTX-default warn-and-skip semantics), not just that N were created. To reproduce canonical evidence post-refactor:
+> ```python
+> python3 -c 'from core_02.workspace_registry import WorkspaceRegistry
+> r = WorkspaceRegistry(tmp_path / "context.db");  # ISOLATE via tmp_path per CON-19
+> result = r.seed_defaults()
+> print(f"created={result.created***REMOVED***, missing={len(result.missing)***REMOVED*** paths")'
+> ```
+> On a fresh isolated DB (test convention), this returns `created=3, missing=[<full list of FS-absent paths>***REMOVED***`. On the production `data_13/context.db` (already seeded), this returns `created=0, missing=0` (idempotent re-seed). Note: `add_project()` now returns `bool` (True=bound, False=warn-and-skip) + accepts `*, strict: bool = False` opt-in that raises `FileNotFoundError` on missing-path; `create_workspace()` propagates `strict` to each internal `add_project` call.
+
+---
+
+### 5.23 §20 Missing-Capabilities Map Drift (TRACK-001) — ✅ RESOLVED (v5.189.67, 2026-08-20)
+
+| Field | Value |
+|-------|-------|
+| **ID** | `TRACK-001` (2026-08-20, first-slice vocal-task deferral per AGENTS.md §5) |
+| **Component** | `docs_10/engineering-memory/FACTORY_FORGE_ARCHITECTURE_V1.md` §20 table ↔ `data_13/missing_registry.yaml` (45 entries) — `check_missing_registry_sync` reported 17 items in registry but missing from §20 map |
+| **Severity** | 🟢 Low → ✅ Resolved |
+| **Type** | Documentation mirror / register-first drift — §20 map lagged behind `MissingRegistry` for post-v5.189.52 vocal-task entries |
+| **Description** | Дрифт между `data_13/missing_registry.yaml` (45 записей) и картой §20 в `FACTORY_FORGE_ARCHITECTURE_V1.md` (17 строк отсутствовали). Первоначально diagnosed как «16 missing entries»; факт-чекинг показал, что **все 28 MR-implemented items уже отмечены `✅ реализовано`** в §20 (pre-existing v5.189.55–v5.189.66 evolution) — scope drift был misdiagnosis. Реальная причина exit-1 consistency_check — устаревший counter (3104 вместо 3342) + отсутствие idempotency-инварианта. |
+| **Remediation done** | 1) §20 backfill: 17 rows (#29–#45) добавлены в `FACTORY_FORGE_ARCHITECTURE_V1.md` (6 IMPLEMENTED + 11 REGISTERED) с backtick-anchor `(**{item_id***REMOVED*****)` per `extract_missing_capabilities` regex contract. 2) Counter refresh: 3104 → **3342** в `CHANGELOG.md` + `CODE_QUALITY_STANDARD.md` §11.6 (`3342+ passed`). 3) Idempotency test: `tests_09/test_consistency_check_idempotency.py` (4 теста — two/three-sequential-equal, consistent-baseline-stable, no-side-effects-on-workspace-mtime). 4) `consistency_check` re-run: exit 0, `total_issues=0`, `consistent=True` (cyclic 2x). |
+| **Evidence** | 1) `python3 -m scripts_01.consistency_check` (cyclic 2x) → exit 0 both invocations. 2) `python3 -m pytest tests_09/test_consistency_check_idempotency.py -v` → 4 passed, 0 skipped. 3) AST counter: `count_test_functions(Path('.'))` → **3342**. 4) `python3 -m core_02.missing_registry check` → exit 0 (45 entries, B10/R-127 validate_schema). |
+| **Resolved** | 2026-08-20 (v5.189.67) |
+| **Prevention / Forward-looking guard (layered)** | (1) `consistency_check.py` internal counter = AST-truth (`count_test_functions`), consistent across runs, no subprocess needed — закрывает #1 failure mode «test counter drift». (2) Idempotency test hard-asserts (no skip) — surfaces drift immediately. (3) §20 map now mirrors MissingRegistry (MR-authoritative per REGISTER-FIRST); future drift → `check_missing_registry_sync` flags before release. |
+| **Follow-up (new, 2026-08-21)** | `pompts_11/promt103.md` нарушал naming-конвенцию `NNN_TT_name.md` (класс CAN-10). **RESOLVED v5.189.68** — переименован в `pompts_11/103_19_forensic_engineering_reporter.md`; `consistency_check` снова exit 0 (см. TASK.md snapshot). |
+
 
