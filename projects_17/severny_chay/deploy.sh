@@ -3,7 +3,7 @@
 # Запуск: bash deploy_severny_chay.sh
 set -euo pipefail
 
-KEY="[REDACTED_GEMINI_KEY]"
+KEY="${GEMINI_API_KEY:?set GEMINI_API_KEY in environment}"
 SRC="./projects_17/severny_chay/main.py"
 DST_DIR="~/ai_consultant"
 

@@ -5,7 +5,7 @@ set -euo pipefail
 
 cd /mnt/sdcard/PROJECTS/workstation/freebuff/projects_17/severny_chay
 
-export GEMINI_API_KEY="[REDACTED_GEMINI_KEY]"
+export GEMINI_API_KEY="${GEMINI_API_KEY:?set GEMINI_API_KEY in environment}"
 
 # Стартуем uvicorn в фоне
 python -m uvicorn main:app --host 127.0.0.1 --port 8000 &

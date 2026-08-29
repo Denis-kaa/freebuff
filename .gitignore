@@ -137,3 +137,6 @@ node_modules/
 freebuff.zip
 *.tmp
 nohup.out
+# Local deployment secrets
+projects_17/severny_chay/.env
+**/secrets/**
