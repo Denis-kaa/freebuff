@@ -1,0 +1,871 @@
+{
+  "docs_checked": 208,
+  "total_anchors": 1098,
+  "by_status": {
+    "LESSON": 85,
+    "CURRENT": 925,
+    "UNVERIFIED": 84,
+    "DESIGN_ONLY": 3,
+    "STALE": 1
+  ***REMOVED***,
+  "by_namespace": {
+    "lesson": 85,
+    "entity": 490,
+    "symbol": 5,
+    "test": 98,
+    "event": 126,
+    "contract": 60,
+    "doc": 172,
+    "storage": 42,
+    "decision": 4,
+    "component": 1,
+    "module": 2,
+    "requirement": 1,
+    "scenario": 1,
+    "factory": 4,
+    "forge": 7
+  ***REMOVED***,
+  "unresolved": [
+    {
+      "raw": "@event forge.stage_completed",
+      "namespace": "event",
+      "value": "forge.stage_completed",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 130
+    ***REMOVED***,
+    {
+      "raw": "doc.changelog#5.187.0.c1",
+      "namespace": "doc",
+      "value": "doc.changelog#5.187.0.c1",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.changelog')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 132
+    ***REMOVED***,
+    {
+      "raw": "doc.changelog#5.187.0.c1",
+      "namespace": "doc",
+      "value": "doc.changelog#5.187.0.c1",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.changelog')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 141
+    ***REMOVED***,
+    {
+      "raw": "@event forge.stage_completed",
+      "namespace": "event",
+      "value": "forge.stage_completed",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 142
+    ***REMOVED***,
+    {
+      "raw": "@event opportunity.lifecycle_changed",
+      "namespace": "event",
+      "value": "opportunity.lifecycle_changed",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 155
+    ***REMOVED***,
+    {
+      "raw": "doc.missing_registry#lisa_estimator.c1",
+      "namespace": "doc",
+      "value": "doc.missing_registry#lisa_estimator.c1",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.missing_registry')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 157
+    ***REMOVED***,
+    {
+      "raw": "doc.missing_registry#opportunity_engine.c1",
+      "namespace": "doc",
+      "value": "doc.missing_registry#opportunity_engine.c1",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.missing_registry')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 166
+    ***REMOVED***,
+    {
+      "raw": "@event opportunity.lifecycle_changed",
+      "namespace": "event",
+      "value": "opportunity.lifecycle_changed",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 167
+    ***REMOVED***,
+    {
+      "raw": "doc.missing_registry#whim_capture.c1",
+      "namespace": "doc",
+      "value": "doc.missing_registry#whim_capture.c1",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.missing_registry')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 182
+    ***REMOVED***,
+    {
+      "raw": "doc.missing_registry#whim_capture.c1",
+      "namespace": "doc",
+      "value": "doc.missing_registry#whim_capture.c1",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.missing_registry')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 191
+    ***REMOVED***,
+    {
+      "raw": "doc.drift_report#main",
+      "namespace": "doc",
+      "value": "doc.drift_report#main",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.drift_report')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 207
+    ***REMOVED***,
+    {
+      "raw": "doc.drift_report#main",
+      "namespace": "doc",
+      "value": "doc.drift_report#main",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.drift_report')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 216
+    ***REMOVED***,
+    {
+      "raw": "@event forge.project_registered",
+      "namespace": "event",
+      "value": "forge.project_registered",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 230
+    ***REMOVED***,
+    {
+      "raw": "doc.forge_v17_audit#main",
+      "namespace": "doc",
+      "value": "doc.forge_v17_audit#main",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.forge_v17_audit')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 232
+    ***REMOVED***,
+    {
+      "raw": "doc.changelog#5.187.0.c1",
+      "namespace": "doc",
+      "value": "doc.changelog#5.187.0.c1",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.changelog')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 232
+    ***REMOVED***,
+    {
+      "raw": "doc.forge_v17_audit#main",
+      "namespace": "doc",
+      "value": "doc.forge_v17_audit#main",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.forge_v17_audit')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 241
+    ***REMOVED***,
+    {
+      "raw": "@event forge.project_registered",
+      "namespace": "event",
+      "value": "forge.project_registered",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 242
+    ***REMOVED***,
+    {
+      "raw": "doc.memory_engine_design#main",
+      "namespace": "doc",
+      "value": "doc.memory_engine_design#main",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.memory_engine_design')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 257
+    ***REMOVED***,
+    {
+      "raw": "doc.changelog#5.23.0.c1",
+      "namespace": "doc",
+      "value": "doc.changelog#5.23.0.c1",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.changelog')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 257
+    ***REMOVED***,
+    {
+      "raw": "doc.memory_engine_design#main",
+      "namespace": "doc",
+      "value": "doc.memory_engine_design#main",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.memory_engine_design')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 266
+    ***REMOVED***,
+    {
+      "raw": "doc.role_forge_matrix#main",
+      "namespace": "doc",
+      "value": "doc.role_forge_matrix#main",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.role_forge_matrix')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 282
+    ***REMOVED***,
+    {
+      "raw": "doc.role_forge_matrix#main",
+      "namespace": "doc",
+      "value": "doc.role_forge_matrix#main",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.role_forge_matrix')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 291
+    ***REMOVED***,
+    {
+      "raw": "@event lesson.candidate_registered",
+      "namespace": "event",
+      "value": "lesson.candidate_registered",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 305
+    ***REMOVED***,
+    {
+      "raw": "doc.lessons_archive#main",
+      "namespace": "doc",
+      "value": "doc.lessons_archive#main",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.lessons_archive')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 307
+    ***REMOVED***,
+    {
+      "raw": "doc.lessons_archive#main",
+      "namespace": "doc",
+      "value": "doc.lessons_archive#main",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.lessons_archive')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 316
+    ***REMOVED***,
+    {
+      "raw": "@event lesson.candidate_registered",
+      "namespace": "event",
+      "value": "lesson.candidate_registered",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 317
+    ***REMOVED***,
+    {
+      "raw": "@event lesson.finalized",
+      "namespace": "event",
+      "value": "lesson.finalized",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 317
+    ***REMOVED***,
+    {
+      "raw": "@event remote.sync_completed",
+      "namespace": "event",
+      "value": "remote.sync_completed",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 330
+    ***REMOVED***,
+    {
+      "raw": "doc.remote_sync_design#main",
+      "namespace": "doc",
+      "value": "doc.remote_sync_design#main",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.remote_sync_design')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 332
+    ***REMOVED***,
+    {
+      "raw": "doc.changelog#5.67.0.c1",
+      "namespace": "doc",
+      "value": "doc.changelog#5.67.0.c1",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.changelog')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 332
+    ***REMOVED***,
+    {
+      "raw": "doc.remote_sync_design#main",
+      "namespace": "doc",
+      "value": "doc.remote_sync_design#main",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.remote_sync_design')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 341
+    ***REMOVED***,
+    {
+      "raw": "doc.changelog#5.67.0.c1",
+      "namespace": "doc",
+      "value": "doc.changelog#5.67.0.c1",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.changelog')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 341
+    ***REMOVED***,
+    {
+      "raw": "@event remote.sync_started",
+      "namespace": "event",
+      "value": "remote.sync_started",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 342
+    ***REMOVED***,
+    {
+      "raw": "@event remote.sync_completed",
+      "namespace": "event",
+      "value": "remote.sync_completed",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 342
+    ***REMOVED***,
+    {
+      "raw": "@event remote.drift_detected",
+      "namespace": "event",
+      "value": "remote.drift_detected",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 342
+    ***REMOVED***,
+    {
+      "raw": "doc.event_bus_design#main",
+      "namespace": "doc",
+      "value": "doc.event_bus_design#main",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.event_bus_design')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 357
+    ***REMOVED***,
+    {
+      "raw": "doc.event_bus_design#main",
+      "namespace": "doc",
+      "value": "doc.event_bus_design#main",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in DOCUMENTATION_CODE_MAP_V1.md (base='doc.event_bus_design')",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
+      "line": 366
+    ***REMOVED***,
+    {
+      "raw": "@event forge.stage_completed",
+      "namespace": "event",
+      "value": "forge.stage_completed",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_PROMPT_TEMPLATES_V1.md",
+      "line": 114
+    ***REMOVED***,
+    {
+      "raw": "@event opportunity.lifecycle_blocked",
+      "namespace": "event",
+      "value": "opportunity.lifecycle_blocked",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_PROMPT_TEMPLATES_V1.md",
+      "line": 179
+    ***REMOVED***,
+    {
+      "raw": "@event opportunity.lifecycle_changed",
+      "namespace": "event",
+      "value": "opportunity.lifecycle_changed",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_PROMPT_TEMPLATES_V1.md",
+      "line": 181
+    ***REMOVED***,
+    {
+      "raw": "@event forge.project_registered",
+      "namespace": "event",
+      "value": "forge.project_registered",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_PROMPT_TEMPLATES_V1.md",
+      "line": 226
+    ***REMOVED***,
+    {
+      "raw": "@event lesson.candidate_orphan",
+      "namespace": "event",
+      "value": "lesson.candidate_orphan",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_PROMPT_TEMPLATES_V1.md",
+      "line": 315
+    ***REMOVED***,
+    {
+      "raw": "@event lesson.candidate_registered",
+      "namespace": "event",
+      "value": "lesson.candidate_registered",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_PROMPT_TEMPLATES_V1.md",
+      "line": 317
+    ***REMOVED***,
+    {
+      "raw": "@event lesson.finalized",
+      "namespace": "event",
+      "value": "lesson.finalized",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_PROMPT_TEMPLATES_V1.md",
+      "line": 317
+    ***REMOVED***,
+    {
+      "raw": "@event remote.sync_started",
+      "namespace": "event",
+      "value": "remote.sync_started",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_PROMPT_TEMPLATES_V1.md",
+      "line": 332
+    ***REMOVED***,
+    {
+      "raw": "@event remote.sync_completed",
+      "namespace": "event",
+      "value": "remote.sync_completed",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_PROMPT_TEMPLATES_V1.md",
+      "line": 332
+    ***REMOVED***,
+    {
+      "raw": "@event remote.drift_detected",
+      "namespace": "event",
+      "value": "remote.drift_detected",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/AGENT_PROMPT_TEMPLATES_V1.md",
+      "line": 332
+    ***REMOVED***,
+    {
+      "raw": "@event scenario.role_proposed",
+      "namespace": "event",
+      "value": "scenario.role_proposed",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/CONTRACT_REGISTRY_V1.md",
+      "line": 153
+    ***REMOVED***,
+    {
+      "raw": "@event memory.searched",
+      "namespace": "event",
+      "value": "memory.searched",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/CONTRACT_REGISTRY_V1.md",
+      "line": 256
+    ***REMOVED***,
+    {
+      "raw": "@contract project.boundary",
+      "namespace": "contract",
+      "value": "project.boundary",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in CONTRACT_REGISTRY_V1.md",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/DOCUMENTATION_CODE_MAP_V1.md",
+      "line": 23
+    ***REMOVED***,
+    {
+      "raw": "@contract engine.lifecycle",
+      "namespace": "contract",
+      "value": "engine.lifecycle",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in CONTRACT_REGISTRY_V1.md",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/DOCUMENTATION_CODE_MAP_V1.md",
+      "line": 25
+    ***REMOVED***,
+    {
+      "raw": "@event contract.event",
+      "namespace": "event",
+      "value": "contract.event",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/DOCUMENTATION_CODE_MAP_V1.md",
+      "line": 28
+    ***REMOVED***,
+    {
+      "raw": "@contract forge.chain_invocation",
+      "namespace": "contract",
+      "value": "forge.chain_invocation",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in CONTRACT_REGISTRY_V1.md",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 145
+    ***REMOVED***,
+    {
+      "raw": "@contract opportunity.lifecycle_query",
+      "namespace": "contract",
+      "value": "opportunity.lifecycle_query",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in CONTRACT_REGISTRY_V1.md",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 218
+    ***REMOVED***,
+    {
+      "raw": "@event project.pulse_change",
+      "namespace": "event",
+      "value": "project.pulse_change",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 232
+    ***REMOVED***,
+    {
+      "raw": "@contract whim.sanitize",
+      "namespace": "contract",
+      "value": "whim.sanitize",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in CONTRACT_REGISTRY_V1.md",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 233
+    ***REMOVED***,
+    {
+      "raw": "@event consistency.regression",
+      "namespace": "event",
+      "value": "consistency.regression",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 247
+    ***REMOVED***,
+    {
+      "raw": "@contract consistency.drift_invariant",
+      "namespace": "contract",
+      "value": "consistency.drift_invariant",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in CONTRACT_REGISTRY_V1.md",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 248
+    ***REMOVED***,
+    {
+      "raw": "@event consistency.audited",
+      "namespace": "event",
+      "value": "consistency.audited",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 251
+    ***REMOVED***,
+    {
+      "raw": "@event consistency.regression",
+      "namespace": "event",
+      "value": "consistency.regression",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 251
+    ***REMOVED***,
+    {
+      "raw": "@event consistency.audited",
+      "namespace": "event",
+      "value": "consistency.audited",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 253
+    ***REMOVED***,
+    {
+      "raw": "@contract forge.slug_unique",
+      "namespace": "contract",
+      "value": "forge.slug_unique",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in CONTRACT_REGISTRY_V1.md",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 263
+    ***REMOVED***,
+    {
+      "raw": "@contract forge.dir_creation_race_safe",
+      "namespace": "contract",
+      "value": "forge.dir_creation_race_safe",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in CONTRACT_REGISTRY_V1.md",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 263
+    ***REMOVED***,
+    {
+      "raw": "@event forge.project_registered",
+      "namespace": "event",
+      "value": "forge.project_registered",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 266
+    ***REMOVED***,
+    {
+      "raw": "@event forge.project_registered",
+      "namespace": "event",
+      "value": "forge.project_registered",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 268
+    ***REMOVED***,
+    {
+      "raw": "@contract memory.search.bind",
+      "namespace": "contract",
+      "value": "memory.search.bind",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in CONTRACT_REGISTRY_V1.md",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 278
+    ***REMOVED***,
+    {
+      "raw": "@contract semantic.index_loaded",
+      "namespace": "contract",
+      "value": "semantic.index_loaded",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in CONTRACT_REGISTRY_V1.md",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 278
+    ***REMOVED***,
+    {
+      "raw": "@event memory.searched",
+      "namespace": "event",
+      "value": "memory.searched",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 281
+    ***REMOVED***,
+    {
+      "raw": "@event memory.hit",
+      "namespace": "event",
+      "value": "memory.hit",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 281
+    ***REMOVED***,
+    {
+      "raw": "@event memory.searched",
+      "namespace": "event",
+      "value": "memory.searched",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 283
+    ***REMOVED***,
+    {
+      "raw": "@contract scenario.manifest_unique",
+      "namespace": "contract",
+      "value": "scenario.manifest_unique",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in CONTRACT_REGISTRY_V1.md",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 350
+    ***REMOVED***,
+    {
+      "raw": "@contract scenario.role_missing_marked",
+      "namespace": "contract",
+      "value": "scenario.role_missing_marked",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in CONTRACT_REGISTRY_V1.md",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 350
+    ***REMOVED***,
+    {
+      "raw": "@contract learning.lesson_format",
+      "namespace": "contract",
+      "value": "learning.lesson_format",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in CONTRACT_REGISTRY_V1.md",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 365
+    ***REMOVED***,
+    {
+      "raw": "@contract learning.closed_vocab_check",
+      "namespace": "contract",
+      "value": "learning.closed_vocab_check",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in CONTRACT_REGISTRY_V1.md",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 365
+    ***REMOVED***,
+    {
+      "raw": "@event lesson.archived",
+      "namespace": "event",
+      "value": "lesson.archived",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 368
+    ***REMOVED***,
+    {
+      "raw": "@event lesson.applied",
+      "namespace": "event",
+      "value": "lesson.applied",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 368
+    ***REMOVED***,
+    {
+      "raw": "@event lesson.archived",
+      "namespace": "event",
+      "value": "lesson.archived",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 370
+    ***REMOVED***,
+    {
+      "raw": "@event state.changed",
+      "namespace": "event",
+      "value": "state.changed",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not registered in event_bus.py / Artifact A",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 379
+    ***REMOVED***,
+    {
+      "raw": "@contract remote.lww_resolution",
+      "namespace": "contract",
+      "value": "remote.lww_resolution",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in CONTRACT_REGISTRY_V1.md",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 380
+    ***REMOVED***,
+    {
+      "raw": "@contract telegram.auth_valid",
+      "namespace": "contract",
+      "value": "telegram.auth_valid",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in CONTRACT_REGISTRY_V1.md",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 380
+    ***REMOVED***,
+    {
+      "raw": "@contract event.type_registered",
+      "namespace": "contract",
+      "value": "event.type_registered",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in CONTRACT_REGISTRY_V1.md",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 395
+    ***REMOVED***,
+    {
+      "raw": "@contract event.subscribers_attached",
+      "namespace": "contract",
+      "value": "event.subscribers_attached",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in CONTRACT_REGISTRY_V1.md",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
+      "line": 395
+    ***REMOVED***,
+    {
+      "raw": "@forge forge_unknown",
+      "namespace": "forge",
+      "value": "forge_unknown",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in canonical forges ['forge_idea', 'forge_knowledge', 'forge_architecture', 'forge_implementation', 'forge_validation', 'forge_evolution'***REMOVED***",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/SEMANTIC_ANCHOR_SPEC_V1.md",
+      "line": 195
+    ***REMOVED***,
+    {
+      "raw": "@contract factory.registry.initialization",
+      "namespace": "contract",
+      "value": "factory.registry.initialization",
+      "resolved": false,
+      "status": "UNVERIFIED",
+      "evidence": "not in CONTRACT_REGISTRY_V1.md",
+      "doc": "/mnt/sdcard/PROJECTS/workstation/freebuff/docs_10/engineering-memory/TRACEABILITY_GRAPH_V1.md",
+      "line": 388
+    ***REMOVED***
+  ***REMOVED***,
+  "unresolved_count": 84
+***REMOVED***

@@ -1,0 +1,21 @@
+factory_id: architecture
+display_name: Architecture Factory
+version: "1.0.0"
+status: production
+description: |
+  Forge-семейство для архитектурных решений: проверка (review), политическая
+  балансировка (governance), архитектурные протоколы, role-mapping,
+  decision support (каркас для будущих кузен Phase 1.5+).
+capabilities:                    # C-2: factory-level capability-каталог (⊆ KNOWN_CAPABILITIES)
+  - architecture
+  - review
+  - validate
+  - report
+  - explain
+metadata:
+  owner: core-platform
+  prompt_path: docs_10/engineering-memory/FACTORY_FORGE_ARCHITECTURE_V1.md
+  references:
+    - doc.factory_forge_arch#4
+    - doc.arch_decision_registry#main
+    - doc.role_forge_matrix#main

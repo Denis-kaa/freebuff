@@ -11,11 +11,13 @@ ContextManager: unified session persistence and auto-summarization.
 - Авто-очистка ABANDONED сессий
 - CONTEXT_FULL триггер при превышении порога токенов
 - Версионирование схемы БД
+- Cowork-режим через RemoteDB/rqlite (ADR-024)
 """
 
 from __future__ import annotations
 
 import json
+import logging
 import os
 import sqlite3
 import sys
@@ -25,7 +27,12 @@ from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Any
+from typing import Any, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from core_02.remote_db import RemoteDB, _FakeRow
+
+logger = logging.getLogger(__name__)
 
 # ── Версионирование схемы ──────────────────────────────────────
 
@@ -144,6 +151,47 @@ class SessionSnapshot:
 
 
 
+class _CoworkCursor:
+    """Обёртка над списком _FakeRow — имитирует sqlite3.Cursor для ContextManager."""
+
+    def __init__(self, rows: list[Any***REMOVED***) -> None:
+        self._rows = rows
+
+    def fetchone(self) -> Any | None:
+        return self._rows[0***REMOVED*** if self._rows else None
+
+    def fetchall(self) -> list[Any***REMOVED***:
+        return self._rows
+
+    @property
+    def rowcount(self) -> int:
+        return len(self._rows)
+
+
+class _CoworkConn:
+    """Обёртка над RemoteDB — имитирует sqlite3.Connection для ContextManager.
+
+    Поддерживает ровно те операции, которые использует ContextManager:
+    execute(sql, params) → _CoworkCursor, executescript(sql), commit().
+    """
+
+    def __init__(self, remote_db: RemoteDB) -> None:
+        self._db = remote_db
+
+    def execute(self, sql: str, params: tuple = ()) -> _CoworkCursor:
+        rows = self._db.execute(sql, params)
+        return _CoworkCursor(rows)
+
+    def executescript(self, sql: str) -> None:
+        self._db.executescript(sql)
+
+    def commit(self) -> None:
+        self._db.commit()
+
+    def close(self) -> None:
+        pass  # RemoteDB manages its own lifecycle
+
+
 class ContextManager:
     """
     Универсальный менеджер контекста для freebuff workspace.
@@ -155,6 +203,12 @@ class ContextManager:
         cm.add_message({"role": "user", "content": "..."***REMOVED***)
         cm.export_markdown()
 
+    Cowork-режим (общая БД через rqlite):
+        from core_02.remote_db import RemoteDB
+        remote = RemoteDB(remote_url="http://185.233.184.192:4001")
+        cm = ContextManager("/path/to/freebuff", remote_db=remote)
+        # Все сессии, сообщения, чекпоинты — в общей БД
+
     EventBus: публикует session.created, session.completed, checkpoint.created
     """
 
@@ -163,8 +217,11 @@ class ContextManager:
         workspace_root: str,
         context_threshold: int = DEFAULT_CONTEXT_THRESHOLD,
         event_bus: Any = None,
+        *,
+        remote_db: RemoteDB | None = None,
     ) -> None:
         self._root = workspace_root
+        self._remote_db = remote_db
         self._db_path = os.path.join(workspace_root, "data_13", "context.db")
         self._sessions_dir = os.path.join(workspace_root, "sessions_15")
         self._checkpoints_dir = os.path.join(workspace_root, "context_12", "checkpoints")
@@ -172,6 +229,7 @@ class ContextManager:
         self._context_threshold = context_threshold
         self._lock = threading.Lock()
         self._event_bus = event_bus  # Optional EventBus instance
+        self._cowork_conn: _CoworkConn | None = None
 
         for d in [self._sessions_dir, self._checkpoints_dir, self._summaries_dir***REMOVED***:
             os.makedirs(d, exist_ok=True)
@@ -182,8 +240,20 @@ class ContextManager:
     # Инициализация и миграции БД
     # ═══════════════════════════════════════════════════════════
 
+    @property
+    def is_remote(self) -> bool:
+        """True если используется удалённая БД (Cowork-режим)."""
+        return getattr(self, '_remote_db', None) is not None
+
     def _init_db(self) -> None:
         """Инициализирует БД и применяет миграции."""
+        if getattr(self, '_remote_db', None) is not None:
+            # Cowork mode: создаём схему через RemoteDB, миграции пропускаем
+            logger.info("ContextManager: cowork mode (rqlite)")
+            conn = _CoworkConn(self._remote_db)
+            self._create_schema_v5(conn)
+            return
+
         os.makedirs(os.path.dirname(self._db_path), exist_ok=True)
 
         with self._get_conn() as conn:
@@ -369,6 +439,13 @@ class ContextManager:
 
     @contextmanager
     def _get_conn(self):
+        if getattr(self, '_remote_db', None) is not None:
+            # Cowork mode: reuse singleton wrapper
+            if self._cowork_conn is None:
+                self._cowork_conn = _CoworkConn(self._remote_db)
+            yield self._cowork_conn
+            return
+
         conn = sqlite3.connect(self._db_path, timeout=5.0)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA journal_mode=WAL")

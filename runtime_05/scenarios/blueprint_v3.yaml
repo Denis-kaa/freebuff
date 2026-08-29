@@ -1,0 +1,21 @@
+id: blueprint_v3
+type: blueprint_v3
+display_name: "Kwork Arbitr v3 — AI Engineering Pipeline"
+root: /storage/emulated/0/PROJECTS/workstation/blueprints_v3
+enabled: true
+capabilities:
+  - role-based-pipeline
+  - xml-section-schema
+  - yaml-manifest-registry
+  - code-capable
+  - architecture-capable
+  - qa-capable
+  - review-capable
+metadata:
+  version: "3.0.0"
+  source: kwork-arbitr
+  notes: |
+    Первый зарегистрированный сценарий.
+    Канонический корпус лежит в root, registry.yaml внутри.
+    Не патчите напрямую — используйте BlueprintCorpus.create_blueprint +
+    register_in_registry (с YAML-splice + parse guard).

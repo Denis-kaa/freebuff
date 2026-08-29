@@ -1,0 +1,27 @@
+factory_id: research
+display_name: Research Factory
+version: "1.0.0"
+status: production
+description: |
+  Второй доменный Factory-адаптер (Phase 10, промт 093): нормализация research-входов
+  (opportunity → domain input с полями hypothesis / queries / context), формирование
+  execution request и передача в ForgeFacade (единственный execution boundary).
+  Доказывает УНИВЕРСАЛЬНОСТЬ контракта Factory поверх второй доменной зоны
+  (research vs content): тот же путь resolve → build_execution_request →
+  ForgeFacade.run_chain → memory/feedback, различаются только manifest + role_ids.
+
+  Capabilities зарегистрированы в KNOWN_CAPABILITIES (ANTI-6b, register-first):
+  токен ``research`` уже присутствует (Missing Capability #6, research_web,
+  pompts_11/075_04_research_web_capability.md), здесь он обслуживает второй
+  доменный Factory вместо утилитарного web-research движка.
+
+capabilities:                    # ⊆ KNOWN_CAPABILITIES (закрытый словарь)
+  - research
+
+metadata:
+  owner: research-platform
+  prompt_path: pompts_11/093_19_phase10_research_factory_universality.md
+  references:
+    - doc.intelligence_factory_contract#g
+    - doc.factory_forge_arch#12
+    - doc.phase9_universal_factory_vertical_slice

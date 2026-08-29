@@ -5,7 +5,7 @@ Phase E of `pompts_11/042_06_dokumentaciya_meeting_tasks.md`: реализаци
 Meeting Tasks поверх таблицы `tasks` в `data_13/context.db`.
 
 Канон:
-  * Work Area as View (`prompts_11/037_11_user_choice_override.md` правило 14,
+  * Work Area as View (`pompts_11/037_11_user_choice_override.md` правило 14,
     те же проекты + `project_resources`) — задачи живут внутри конкретного
     проекта, а не Work Area.
   * TaskAnalyzer / Context-Aware Routing: проверка Knowledge/Graph перед

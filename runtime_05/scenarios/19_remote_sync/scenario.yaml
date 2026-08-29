@@ -1,0 +1,128 @@
+# Scenario manifest: Phase 5.3 Remote Sync (Telegram-stored relay)
+# ADR-010 (2026-08-03): https://freebuff/vision/decision_index.md#adr-010
+# Cross-link: rationale + risk-mitigation documented in ADR-010.
+#
+# This scenario does NOT replace interior_planner_app/src/store/roomStore.ts
+# AsyncStorage. AsyncStorage remains the synchronous local Source-of-Truth
+# for the UI. Remote Sync is a delta-overlay that watches AsyncStorage for
+# changes, computes JSON diffs, and relays the diffs through Telegram
+# Saved Messages / Sync Group.
+
+id: remote_sync_v1
+type: remote_sync
+display_name: "Phase 5.3 — Remote Sync (Telegram-stored Relay)"
+schema_version: "1.0.0"
+
+enabled: true
+
+# Topology (CON-X): one RemoteSyncCoordinator runs PER device peer.
+# Replicas across devices: unlimited (multi-device fan-out through TG substrate).
+# Replicas per device:    exactly 1 (single-process coordinator, no double-init).
+topology:
+  replicas_per_device: 1
+  replicas_across_devices: unlimited
+  coordination_model: per_device_independent_with_tg_relay
+
+# Capability tokens consumed by the SmartRouter. Closed-set per CON-8.
+capabilities:
+  - state-sync                 # cross-device state diff/merge
+  - telegram-mtproto-relay     # uses Telethon TGClient (Python), NOT bot API
+  - delta-resolution           # CRDT-lite per-key LWW
+  - chunked-large-state        # TG 4096 char / 2GB document bypass
+
+# Substrate: Telegram as state-relay. NO Freebuff-owns hosting.
+storage_substrate: telegram_stored_relay
+sync_topology: star_or_group_fanout
+
+# Chat-id anchors. Reuses CAN-3 v5.40.0 resolved values from
+# core_02/telegram_contract.py. New constant SYNC_GROUP_CHAT_ID gates the
+# multi-device fan-out (private TG group; console-managed membership).
+chat_anchors:
+  primary_user: 7709651193            # Saved Messages (user_id = chat_id)
+  alex_litvinov: 1063827731           # secondary channel (legacy from CAN-9)
+  sync_group: pending_resolve          # assigned by user at onboarding time
+                                       # (NOT hardcoded — see CON-26)
+
+# Sync algorithm. Per-key LWW (NOT whole-document LWW) — prevents the
+# classic "user-moves-chair-A, user-moves-chair-B, last write erases chair A"
+# anti-pattern that whole-document LWW would cause.
+sync_strategy:
+  name: crdt_lite_lww_per_key
+  conflict_resolution: last_writer_wins_per_field
+  clock_source: telegram_message_timestamp_ms
+  fallback_clock: system_time_utc_ms
+  max_delta_age_seconds: 86400       # stale deltas (older than 24h) → quarantine
+  debounce_push_seconds: 5           # batch local edits into single TG push
+  dedupe_window_seconds: 30          # suppress duplicate pushes within window
+
+# Chunking strategy for states > 4096 chars (TG bot API per-message cap).
+chunking:
+  primary_threshold_chars: 3500      # headroom for headers + JSON envelope
+  fallback_threshold_chars: 2000000  # if needs > 2MB → TG document fallback
+  compression: gzip_base64            # for chunks > 4KB; flag enables zlib
+
+# Encryption: end-to-end via TG's Secret Chats feature is OPT-IN. Default
+# is plaintext (Saved Messages is user-only). For multi-device Sync Group,
+# encryption is mandatory — user-managed TG Secret Chat or external
+# pre-encryption with libsodium.
+encryption:
+  default_mode: none
+  sync_group_mode: required_pre_encryption
+  suggested_algorithm: xsalsa20_poly1305
+
+# Endpoints (mental model; full implementation deferred to v6.0.x).
+endpoints:
+  - name: push_state
+    surface: coordinator_api
+    payload_schema: SyncDelta(JSON)
+    response: bool
+  - name: pull_state
+    surface: coordinator_api
+    payload_schema: SyncDelta(JSON)
+    response: optional(SyncDelta)
+  - name: resolve_conflict
+    surface: inline_per_merge
+    payload_schema: (local_delta, remote_delta) -> resolved_delta
+    response: SyncDelta
+
+# Failure modes (CAN-14 honesty: surface them, don't hide).
+failure_modes:
+  - tg_session_unavailable:
+      behavior: log + drop delta (NO exception propagation)
+      recovery: retry on next debounce tick
+  - tg_rate_limit_exceeded:
+      behavior: backoff exponentially (1s → 2s → 4s → 8s, cap 60s)
+      recovery: resume at next backoff slot
+  - message_too_large:
+      behavior: chunk via primary_threshold, fall back to TG document
+      recovery: automatic
+  - mid_session_disconnect:
+      behavior: reconnect with exponential backoff (1s → 60s cap)
+      recovery: resume delta application from last-seen-offset
+  - conflict_unresolvable:
+      behavior: log conflict + surface via notify_to_saved_messages
+      recovery: manual user resolution via /resolve conflict_id="…"
+
+# Dependencies on Freebuff core. All Freebuff-side, NO extras.
+dependencies:
+  core_modules:
+    - core_02/telegram_contract.py   # TGClient + chat_id constants (CAN-3 v5.40.0)
+    - core_02/memory_engine.py        # in-memory state store, serialized to TG
+    - scripts_01/distributed_agents.py # inspired by DistributedCoordinator
+    - scripts_01/tg_send_v5570.py     # durable TG-send helper (CAN-9 v5.56.0)
+  external_modules:
+    - telethon>=1.36                  # TGClient (already in projects_17/tg_terminal_messenger)
+                                       # NOT bot API → no BotFather, no rate-limit surprises
+
+# Anti-coupling (CON-8 closed-vocabulary alignment):
+#   - capabilities are CLOSED: state-sync | telegram-mtproto-relay |
+#     delta-resolution | chunked-large-state. NO free-form strings.
+#   - sync_strategy is CLOSED: only "crdt_lite_lww_per_key" in v5.x;
+#     future strategies must register in ScenarioRegistry first.
+
+# Reference anchors (cross-Freebuff consistency):
+#   - TASK.md §5.3 (source)
+#   - ADR-010 (decision)
+#   - core_02/telegram_contract.py:SAVED_MESSAGES_CHAT_ID constant
+#   - tg_send_v5570.py::report_to_saved_messages() (canonical TG-send)
+#   - Run log discipline: e2e_logs/remote_sync_<timestamp>.md per smoke run

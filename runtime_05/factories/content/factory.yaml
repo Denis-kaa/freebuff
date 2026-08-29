@@ -1,0 +1,20 @@
+factory_id: content
+display_name: Content Factory
+version: "1.0.0"
+status: production
+description: |
+  Первый доменный Factory-адаптер (Phase 9, промт 092): нормализация контент-входов
+  (opportunity → domain input), формирование execution request и передача в
+  ForgeFacade (единственный execution boundary). НЕ является content-движком:
+  производство артефакта — через существующий Forge. Capabilities зарегистрированы
+  в KNOWN_CAPABILITIES (ANTI-6b, register-first).
+capabilities:                    # ⊆ KNOWN_CAPABILITIES (закрытый словарь)
+  - article_generation
+  - book_generation
+  - report_generation
+metadata:
+  owner: content-platform
+  prompt_path: pompts_11/092_19_phase9_universal_factory_vertical_slice.md
+  references:
+    - doc.intelligence_factory_contract#g
+    - doc.factory_forge_arch#12

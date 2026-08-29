@@ -50,6 +50,8 @@ from datetime import datetime, timezone
 ***REMOVED***
 from typing import Any, Dict, Iterator, List, Optional, Tuple
 
+***REMOVED***
+
 import httpx
 import importlib.util
 
@@ -162,6 +164,43 @@ RUNTIME_MODELS: Dict[str, str***REMOVED*** = {
     "freebuff": "deepseek-v4-flash",
     "claude-code": "anthropic/claude-3.5-sonnet",
 ***REMOVED***
+
+
+# Cross-provider cloud fallback chain (v5.189.49+).
+# Когда hard error {'402/billing', '401/auth', '5xx/server'***REMOVED*** приходит на текущем
+# провайдере, _call_with_fallback проходит по этой цепочке и выбирает
+# следующего облачного провайдера С КЛЮЧОМ в KeyPool (см. .keys/keypool.py).
+# П р и о р и т е т  cloud-first: deepseek (primary) → gemini → dashscope.
+# Локальный Ollama — НЕ ПЕРЕБИРАЕТСЯ автоматически (opt-in only, через
+# SmartRouter.preference=LOCAL). ANTI-6b defense: повтор одной и той же ошибки
+# одного и того же провайдера — трата одного attempt'а на заведомо failable
+# payload (402 на deepseek → retry deepseek → снова 402).
+_CLOUD_FALLBACK_CHAIN: Tuple[str, ...***REMOVED*** = ("deepseek", "gemini", "dashscope")
+# Default cloud model per chain-step (override через fallback='<model>' arg).
+_CLOUD_FALLBACK_MODELS: Dict[str, str***REMOVED*** = {
+    "deepseek":  "deepseek-v4-flash",
+    "gemini":    "gemini-2.5-flash",
+    "dashscope": "qwen-max",
+***REMOVED***
+# Pattern для парсинга HTTP status code из RuntimeError провайдеров (OpenAI-
+# совместимые + Gemini провайдеры бросают `f"API error {status_code***REMOVED***: ...)"`).
+_HARD_ERROR_STATUS_RE = re.compile(r"\berror (\d{3***REMOVED***)\b")
+
+
+def _is_hard_error(exc: Exception) -> bool:
+    """True если ошибка — failover-worthy error class.
+
+    Hard errors {'402/billing', '401/auth', '5xx/server'***REMOVED*** — same provider
+    повторит ту же ошибку; cross-provider fallback — правильное response.
+
+    Soft errors (timeout, network, ConnectError) — possibly transient;
+    допустим same-provider key-rotation retry (attempt < 1).
+    """
+    m = _HARD_ERROR_STATUS_RE.search(str(exc))
+    if not m:
+        return False
+    code = int(m.group(1))
+    return code in (401, 402) or 500 <= code < 600
 
 
 # Маппинг: имя модели → провайдер
@@ -690,6 +729,14 @@ class ModelGateway:
         self._providers: Dict[str, BaseProvider***REMOVED*** = {***REMOVED***
         self._router: Any = None   # SmartRouter — lazy init
         self._cache: Dict[str, ModelResponse***REMOVED*** = {***REMOVED***
+        # Кэш health-check Ollama (cloud-first роутинг, ANTI-6b defense):
+        # чтобы не бить localhost при каждом route(), проверяем с TTL.
+        self._ollama_ok: Optional[bool***REMOVED*** = None
+        self._ollama_checked_at: float = 0.0
+        # TTL кэша health-check локального провайдера (секунды).
+        self._OLLAMA_HEALTH_TTL: float = 5.0
+        # Таймаут health-check (секунды) — быстрый отказ, если сервер не поднят.
+        self._OLLAMA_HEALTH_TIMEOUT: float = 0.5
 
     @property
     def keypool(self):
@@ -701,8 +748,54 @@ class ModelGateway:
     def router(self):
         if self._router is None:
             from core_02.router import SmartRouter, ModelCatalog
-            self._router = SmartRouter(ModelCatalog.default())
+            self._router = SmartRouter(
+                ModelCatalog.default(),
+                provider_available=self._provider_available,
+            )
         return self._router
+
+    # ── availability (cloud-first роутинг, ANTI-6b defense) ────────────────
+
+    def _provider_available(self, provider: Any) -> bool:
+        """Доступен ли провайдер: облачный = есть ключ; локальный (ollama) = отвечает.
+
+        Используется SmartRouter.provider_available для cloud-first выбора:
+        если локальная qwen2.5:1.5b не запущена, а у DeepSeek/Gemini есть
+        ключи — роутер выбирает облачную модель, а не падает в gen_failed.
+        """
+        name = getattr(provider, "value", None) or str(provider)
+        if name == "ollama":
+            return self._ollama_reachable()
+        # Облачный провайдер доступен, если в KeyPool есть ключ. Fail-safe:
+        # если keypool недоступен (ошибка импорта) — считаем провайдера
+        # доступным (роутер не ломаем, падение поймает _call_with_fallback).
+        try:
+            return bool(self.keypool.has_key(name))
+        except Exception:
+            return True
+
+    def _ollama_reachable(self) -> bool:
+        """Кэшированный health-check Ollama (localhost:11434).
+
+        Проверяем один раз за TTL, чтобы route() не делал HTTP на каждый вызов.
+        Fail-safe: любая ошибка (не запущен / нет httpx) → False (недоступен).
+        """
+        now = time.monotonic()
+        if (
+            self._ollama_ok is not None
+            and (now - self._ollama_checked_at) < self._OLLAMA_HEALTH_TTL
+        ):
+            return self._ollama_ok
+        ok = False
+        try:
+            with httpx.Client(timeout=self._OLLAMA_HEALTH_TIMEOUT) as client:
+                client.get("http://localhost:11434/api/tags")
+            ok = True
+        except Exception:
+            ok = False
+        self._ollama_ok = ok
+        self._ollama_checked_at = now
+        return ok
 
     def _get_provider(self, provider_name: str) -> BaseProvider:
         """Возвращает провайдера (создаёт при первом вызове)."""
@@ -834,6 +927,22 @@ class ModelGateway:
         except Exception:
             return None, None, "none"
 
+    def _has_key_for(self, provider_name: str) -> bool:
+        """True если KeyPool имеет key для provider (cloud-first фильтр).
+
+        Soft fail: если keypool не может ответить (ImportError / AttributeError / TypeError) —
+        считаем провайдера доступным (роутер не ломаем, повторная попытка
+        поймает ошибку в _call_with_fallback).
+        """
+        try:
+            return bool(self.keypool.has_key(provider_name))
+        except Exception:
+            return True
+
+    def _default_model_for_provider(self, provider_name: str) -> str:
+        """Default cloud model per provider (uses _CLOUD_FALLBACK_MODELS)."""
+        return _CLOUD_FALLBACK_MODELS.get(provider_name, "deepseek-v4-flash")
+
     def _call_with_fallback(
         self,
         provider_name: str,
@@ -844,9 +953,26 @@ class ModelGateway:
         max_tokens: int | None = None,
         timeout: int = 60,
         attempt: int = 0,
+        provider_chain: Optional[List[str***REMOVED******REMOVED*** = None,
+        trial_trail: Optional[List[str***REMOVED******REMOVED*** = None,
     ) -> ModelResponse:
-        """Вызывает модель с автоматическим fallback."""
-        max_attempts = 3 if fallback else 2
+        """Cross-provider cloud fallback (v5.189.49+).
+
+        Логика:
+          1. Пробуем primary provider/model как есть.
+          2. Soft error + attempt < 1 → rotate key + retry same provider
+             (transient error — вероятно починится ключом/повтором).
+          3. Hard error {'402/401/5xx'***REMOVED*** OR после key rotation → walk
+             _CLOUD_FALLBACK_CHAIN (skip current provider), pick next
+             provider WITH a key (см. .keys/keypool.py), retry.
+          4. После provider chain exhaust → fallback model из user arg
+             (last try, single).
+          5. Все exhaust → RuntimeError с trial trail (list of tried providers).
+        """
+        if provider_chain is None:
+            provider_chain = list(_CLOUD_FALLBACK_CHAIN)
+        if trial_trail is None:
+            trial_trail = [provider_name***REMOVED***
 
         try:
             provider = self._get_provider(provider_name)
@@ -859,29 +985,66 @@ class ModelGateway:
             )
         except Exception as e:
             error_msg = str(e)
+            is_hard = _is_hard_error(e)
 
-            # 1. Пробуем другой ключ того же провайдера
-            if attempt < 1:
+            # 1. Soft error: rotate key + retry same provider (attempt < 1).
+            if not is_hard and attempt < 1:
                 self._rotate_key(provider_name)
                 return self._call_with_fallback(
                     provider_name, model, messages, fallback,
-                    temperature, max_tokens, timeout, attempt + 1,
+                    temperature, max_tokens, timeout,
+                    attempt + 1, provider_chain, trial_trail,
                 )
 
-            # 2. Пробуем fallback модель
-            if fallback and attempt < max_attempts:
-                fb_provider = _model_to_provider(fallback)
-                if fb_provider and fb_provider != provider_name:
-                    result = self._call_with_fallback(
-                        fb_provider, fallback, messages, None,
-                        temperature, max_tokens, timeout, attempt + 1,
-                    )
-                    result.fallback_used = True
-                    result.model = fallback
-                    return result
+            # 2. Walk _CLOUD_FALLBACK_CHAIN (skip current), pick next WITH a key.
+            # НЕ повторяем тот же provider on hard error (CHISTO ANTI-6b defense).
+            if provider_name in provider_chain:
+                start_idx = provider_chain.index(provider_name) + 1
+            else:
+                start_idx = 0
+            next_idx = start_idx
+            # Wrap-around если chain exceeded: ещё одна попытка через fallback param
+            while next_idx < len(provider_chain):
+                next_provider = provider_chain[next_idx***REMOVED***
+                if next_provider != provider_name and self._has_key_for(next_provider):
+                    trial_trail.append(next_provider)
+                    next_model = self._default_model_for_provider(next_provider)
+                    try:
+                        result = self._call_with_fallback(
+                            next_provider, next_model, messages, None,
+                            temperature, max_tokens, timeout,
+                            0, provider_chain, trial_trail,
+                        )
+                        result.fallback_used = True
+                        # Cross-provider switch metadata для audit trail.
+                        result.provider = next_provider
+                        return result
+                    except Exception:
+                        next_idx += 1
+                        continue
+                next_idx += 1
 
+            # 3. Fallback param (user explicit, single model) — last try.
+            if fallback and attempt < 2:
+                fb_provider = _model_to_provider(fallback)
+                if fb_provider and fb_provider not in trial_trail:
+                    trial_trail.append(fb_provider)
+                    try:
+                        result = self._call_with_fallback(
+                            fb_provider, fallback, messages, None,
+                            temperature, max_tokens, timeout,
+                            attempt + 1, provider_chain, trial_trail,
+                        )
+                        result.fallback_used = True
+                        result.model = fallback
+                        return result
+                    except Exception:
+                        pass
+
+            # 4. Exhaust: raise с информативным trail.
             raise RuntimeError(
-                f"All attempts failed for {model***REMOVED***: {error_msg***REMOVED***"
+                f"All fallback providers exhausted for {model***REMOVED***: "
+                f"tried {trial_trail***REMOVED***; last error: {error_msg***REMOVED***"
             ) from e
 
     def generate_stream(

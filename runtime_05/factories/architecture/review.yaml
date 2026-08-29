@@ -1,0 +1,73 @@
+# Architecture Review Forge — паспорт первой материальной кузни
+# Pattern: pomt 078_19 §4 (пример манифеста). Все capabilities ⊆ KNOWN_CAPABILITIES.
+
+forge_id: review
+factory_id: architecture
+display_name: Architecture Review Forge
+version: "1.0.0"
+status: material
+mission: "Проверить архитектурное решение: можно ли его принимать — без silent fallbacks и без замалчивания противоречий"
+
+capabilities:
+  - review            # закрытый словарь: KNOWN_CAPABILITIES ⊂ blueprint_v3
+  - architecture
+  - explain
+
+metadata:
+  prompt_path: docs_10/engineering-memory/FACTORY_FORGE_ARCHITECTURE_V1.md
+  arb_review: docs_10/engineering-memory/ARB_REVIEW_FACTORY_FORGE_ARCHITECTURE_V1.md
+
+# ─── 9 паспортных полей v1.1 ───────────────────────────────────────────────────
+
+inputs:
+  - "architectural_problem"
+  - "architecture"
+  - "models"
+  - "constraints"
+  - "relevant_decisions"
+
+production_workflow:
+  - "problem_validation"
+  - "context_analysis"
+  - "impact_analysis"
+  - "verdict_generation"
+  - "report_generation"
+
+engines:
+  - "@entity blueprint.v3"
+  - "@entity arch_decision_registry"
+  - "@entity scenario.registry"
+
+quality_gates:
+  - "evidence_complete"
+  - "context_complete"
+  - "alternatives_considered"
+  - "risks_assessed"
+  - "single_verdict"
+
+# ОБЯЗАТЕЛЬНО непустой (B10/R-127: 1 Forge = 1 производственный результат)
+outputs:
+  - "review_verdict"
+  - "review_report"
+
+artifacts:
+  - "projects_17/<slug>/forge/architecture_review.yaml"
+  - "projects_17/<slug>/forge/findings.md"
+  - "projects_17/<slug>/forge/risks.md"
+  - "projects_17/<slug>/forge/recommendations.md"
+
+# flat-list (НЕ dict!) — обязательно per pomt §4 последний абзац
+interfaces:
+  - "receives: architecture, models"
+  - "produces: review_result"
+  - "to_decision_forge: APPROVED → Decision Forge"
+  - "from_governance: REQUIRES_ARB_REVIEW → повторный вход"
+
+memory:
+  - "past_verdicts"
+  - "adr"
+  - "lessons"
+
+knowledge:
+  - "patterns: arch_patterns_v1"
+  - "project_context"

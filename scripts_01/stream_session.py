@@ -132,6 +132,9 @@ class BackgroundWriter:
                 else:
                     print(f"⚠️ Unknown BG operation: {op***REMOVED***", file=sys.stderr)
             except Exception as e:
+                # traceback в stderr — иначе ошибка фонового потока невидима
+                import traceback
+                traceback.print_exc(file=sys.stderr)
                 print(f"⚠️ BG writer error: {e***REMOVED***", file=sys.stderr)
             finally:
                 self._queue.task_done()
@@ -149,6 +152,8 @@ class BackgroundWriter:
 
         if not session_dir:
             return
+        # Defensive: Path-коэрция (str / str → TypeError терял сообщение молча)
+        session_dir = Path(session_dir)
 
         icon = {"user": "🧑", "assistant": "🤖", "system": "⚙️"***REMOVED***.get(role, "❓")
 
@@ -181,6 +186,8 @@ class BackgroundWriter:
         count = kw.get("count", 0)
         ts = kw.get("ts", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"))
         if session_dir:
+            # Defensive: Path-коэрция (см. _handle_log)
+            session_dir = Path(session_dir)
             summary_file = session_dir / "summary.md"
             preview = summary[:120***REMOVED***.replace("\n", " ")
             with open(summary_file, "a", encoding="utf-8") as f:

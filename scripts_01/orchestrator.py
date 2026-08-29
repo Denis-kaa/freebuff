@@ -415,7 +415,9 @@ class DefaultPlanner:
                 description="Read relevant files",
                 tool=ToolType.SHELL,
                 input={
-                    "command": f"find . -name '*.py' | head -20",
+                    # v5.189.9: -maxdepth 3 ограничивает обход — полное древо
+                    # на Android FUSE (sdcard) занимает >60s → TimeoutExpired ×3 retries.
+                    "command": "find . -maxdepth 3 -name '*.py' | head -20",
                     "validation": {"not_empty": False***REMOVED***,
                 ***REMOVED***,
                 depends_on=[steps[-1***REMOVED***.id***REMOVED*** if steps else [***REMOVED***,
@@ -626,8 +628,36 @@ class Orchestrator:
                         ***REMOVED***
                     if not remaining:
                         break  # All done
-                    # Blocked steps — skip those with failed deps
-                    self._handle_blocked_steps(workflow, steps)
+                    # Blocked steps — skip those with failed/skipped deps
+                    skipped_now = self._handle_blocked_steps(workflow, steps)
+                    if not skipped_now:
+                        # v5.189.9 deadlock guard: нет активной работы, скипать нечего,
+                        # а шаги остались (несуществующий dep / цикл в DAG) → иначе
+                        # while True крутился бы вечно. Терминируем: оставшиеся шаги
+                        # получают терминальный SKIPPED (чистое финальное состояние),
+                        # workflow — FAILED с описательной ошибкой.
+                        with self._lock:
+                            deadlocked: List[Step***REMOVED*** = [***REMOVED***
+                            for s in remaining:
+                                if s.status in (
+                                    StepStatus.PENDING, StepStatus.READY,
+                                ):
+                                    s.status = StepStatus.SKIPPED
+                                    s.error = (
+                                        "Deadlock: dependencies can never "
+                                        "be satisfied"
+                                    )
+                                    deadlocked.append(s)
+                        # Обсервабилити: те же step.skipped события, что и в
+                        # _handle_blocked_steps (публикация вне лока).
+                        for s in deadlocked:
+                            self._publish_step_event(s, workflow)
+                        workflow.status = WorkflowStatus.FAILED
+                        workflow.errors.append(
+                            "Deadlock: steps can never become ready "
+                            f"({', '.join(s.id for s in remaining)***REMOVED***)"
+                        )
+                        break
                     continue
 
                 # Wait for at least one step to finish
@@ -899,25 +929,36 @@ class Orchestrator:
 
     def _handle_blocked_steps(
         self, workflow: Workflow, steps: List[Step***REMOVED***
-    ) -> None:
-        """Skip steps whose dependencies have failed."""
+    ) -> List[Step***REMOVED***:
+        """Skip steps whose dependencies failed or were skipped.
+
+        v5.189.9: транзитивно блокированные шаги (dep SKIPPED) тоже скипаются —
+        иначе шаг, зависящий от SKIPPED, навсегда остаётся PENDING и
+        run_workflow попадает в бесконечный цикл. Возвращает список скипнутых
+        (пустой список ⇒ run_workflow может применить deadlock-guard).
+        """
         skipped: List[Step***REMOVED*** = [***REMOVED***
         with self._lock:
             for s in steps:
                 if s.status not in (StepStatus.PENDING, StepStatus.READY):
                     continue
-                failed_deps = [
+                dead_deps = [
                     d for d in s.depends_on
-                    if any(ss.id == d and ss.status == StepStatus.FAILED
-                           for ss in steps)
+                    if any(ss.id == d and ss.status in (
+                        StepStatus.FAILED, StepStatus.SKIPPED,
+                    ) for ss in steps)
                 ***REMOVED***
-                if failed_deps:
+                if dead_deps:
                     s.status = StepStatus.SKIPPED
-                    s.error = f"Dependency failed: {', '.join(failed_deps)***REMOVED***"
+                    # Формулировка точная: деп может быть FAILED или SKIPPED
+                    # (речь про блокировку, а не только про фейл). Контракт
+                    # «id депа присутствует в error» сохранён.
+                    s.error = f"Dependency blocked: {', '.join(dead_deps)***REMOVED***"
                     skipped.append(s)
         # Publish outside lock to avoid holding it during EventBus I/O
         for s in skipped:
             self._publish_step_event(s, workflow)
+        return skipped
 
     def _publish_workflow_progress(self, workflow: Workflow) -> None:
         """Publish workflow.progress event with step completion counts."""

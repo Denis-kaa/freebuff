@@ -19,6 +19,21 @@ consistency_check.py — Stage 9: self-consistency audit (registries as data).
   9. TEST COUNTER       — счётчик тестов в CHANGELOG.md и CODE_QUALITY_STANDARD.md
                           (правило 11.6) совпадает с реальным числом test-функций
                           в tests_09/ (AST-подсчёт) — реестры не расходятся с кодом
+ 10. MISSING REGISTRY   — §20 карты v1.1 (FACTORY_FORGE_ARCHITECTURE_V1.md) сверяется
+                          с машиночитаемым MissingRegistry (data_13/missing_registry.yaml,
+                          register-first принцип AGENTS.md §5): item_id в §20, но не в
+                          реестре / в реестре, но не в §20 / статус реестра отстаёт от
+                          §20 (lifecycle registered → design_ready → prompt_written → implemented)
+ 11. ANCHORS             — AnchorResolver (Artifact I §I.3, SEMANTIC_ANCHOR_SPEC_V1.md):
+                          19-namespace семантические анкоры (@entity/@module/@symbol/@test/
+                          @storage/@factory/@forge/@lesson/…, doc.*) резолвятся к коду/файлу/
+                          реестру. HARD-namespaces (entity/component/module/symbol/test/
+                          decision/storage/factory/forge/lesson/opportunity/whim) — UNVERIFIED
+                          = drift (блокирует, реестры как данные). SOFT-namespaces
+                          (event/contract/doc/requirement/scenario) — advisory (реестры
+                          строятся инкрементально; зеркалит §J.4 WARN-философию doc_code_verify).
+                          Мета-спека SEMANTIC_ANCHOR_SPEC_V1.md исключена из скана
+                          (её примеры forge_unknown/StaleClass.old_method — педагогические).
 
 Роль: инструмент Этапа 9 консолидации (promt32) — «реестры как данные для проверки».
 Не изменяет код/документы автоматически.
@@ -47,11 +62,16 @@ import ast
 import json
 ***REMOVED***
 import sys
+import yaml
 from datetime import datetime, timezone
 ***REMOVED***
 from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# Прямой запуск `python scripts_01/consistency_check.py` не кладёт корень
+# в sys.path → bootstrap для импортов core_02.* (missing_registry, anchors_resolver).
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
 
 # ── Канонические реестры (источники истины) ──────────────────────────
 CANONICAL = Path("docs_10/core/ARCHITECTURE_CANONICAL.md")
@@ -86,7 +106,7 @@ REQUIRED_GLOSSARY_TERMS = [
 #   - Промт: `NNN_TT_имя.md` (NNN — хронологический номер, TT — код темы 01..14).
 _TOP_LEVEL_DIR_RE = re.compile(r"^[a-z0-9***REMOVED***[a-z0-9_-***REMOVED****_\d{2***REMOVED***$")
 _PROMPT_FILE_RE = re.compile(r"^(\d{3***REMOVED***)_(\d{2***REMOVED***)_[a-z0-9_***REMOVED***+\.md$")
-_VALID_THEME_CODES = {f"{i:02d***REMOVED***" for i in range(1, 15)***REMOVED***
+_VALID_THEME_CODES = {f"{i:02d***REMOVED***" for i in range(1, 22)***REMOVED***  # 01..21: темы 15-21 добавлены (promt52-58: RFC/ARB/AG/Forge)
 # Системные/скрытые каталоги, не подпадающие под схему именования.
 _SKIP_DIR_PREFIXES = (".", "__")
 # Legacy top-level redirect-shim'ы (Этап 4 консолидации, промт 32): существуют только
@@ -97,6 +117,21 @@ _SKIP_DIR_PREFIXES = (".", "__")
 _LEGACY_TOP_LEVEL_REDIRECTS: dict[str, tuple[str, ...***REMOVED******REMOVED*** = {
     "freebuff_plugin": ("freebuff_plugin_03",),
 ***REMOVED***
+
+# Evaluation-пакеты (prompt-based forensic): каноническое имя задано промтом-источником.
+# Напр. promt104 §28 REQUIRED OUTPUT требует каталог `architecture_forensics_v2/` ИМЕННО
+# с таким именем (без NN-suffix) — это требование источника, а не нарушение конвенции
+# `имя_NN`. Переименование сломало бы имя пакета/архива
+# (architecture_forensics_v2_vX.Y.Z.tar.gz) и противоречило бы промту.
+# `FORENSICS_104_105_106_107` — сводный forensic-архив 4 проходов (v5.189.73): имя
+# задано задачей пользователя/промтом как единый пакет; NN-suffix нарушил бы
+# соответствие имени архиву FORENSICS_104_105_106_107_v5.189.73.tar.gz.
+# Проверка naming_convention пропускает эти каталоги.
+# ВАЖНО: добавлять сюда только каталоги, чьё имя жёстко задано внешним источником (промтом).
+_EVALUATION_PACKAGE_DIRS: frozenset[str***REMOVED*** = frozenset({
+    "architecture_forensics_v2",
+    "FORENSICS_104_105_106_107",
+***REMOVED***)
 
 
 # 10 областей консолидации (Этап 6).
@@ -109,6 +144,48 @@ CONSOLIDATION_AREAS = [
 _ENGINE_ROW_RE = re.compile(
     r"^\|\s*(C\d+|S\d+)\s*\|\s*`([A-Za-z***REMOVED***+)`\s*\|\s*`(scripts_01/[a-z0-9_***REMOVED***+\.py)`"
 )
+
+# §20 карты v1.1 (Missing Capabilities) ↔ MissingRegistry (register-first, AGENTS.md §5).
+MISSING_CAPABILITIES_DOC = Path("docs_10/engineering-memory/FACTORY_FORGE_ARCHITECTURE_V1.md")
+MISSING_REGISTRY_YAML = Path("data_13/missing_registry.yaml")
+
+from core_02.missing_registry import (  # noqa: E402 — статус-константы lifecycle
+    IMPLEMENTED,
+    DESIGN_READY,
+    PROMPT_WRITTEN,
+    REGISTERED,
+    status_rank,
+)
+
+from core_02.anchors_resolver import (  # noqa: E402 — check #11 ANCHORS (Artifact I §I.3)
+    AnchorResolver,
+    STATUS_UNVERIFIED,
+)
+
+# HARD-namespaces: детерминированный резолв (файл/реестр/AST/enum) → UNVERIFIED блокирует.
+HARD_ANCHOR_NAMESPACES: frozenset[str***REMOVED*** = frozenset({
+    "entity", "component", "module", "symbol", "test", "decision",
+    "storage", "factory", "forge", "lesson", "opportunity", "whim",
+***REMOVED***)
+# SOFT-namespaces: реестры строятся инкрементально (event/contract/doc/requirement/
+# scenario) → advisory, НЕ блокируют (зеркалит §J.4 WARN-философию doc_code_verify).
+SOFT_ANCHOR_NAMESPACES: frozenset[str***REMOVED*** = frozenset({
+    "event", "contract", "doc", "requirement", "scenario",
+***REMOVED***)
+# Мета-спека (Artifact I §I.5) содержит ПЕДАГОГИЧЕСКИЕ примеры (forge_unknown,
+# StaleClass.old_method) — не live-claims, исключается из скана. Имя файла
+# вынесено в константу: если спека будет переименована/перенесена, обновить
+# здесь, а не молча потерять исключение (иначе примеры начнут блокировать #11).
+_ANCHOR_EXCLUDED_DOCS: tuple[str, ...***REMOVED*** = ("SEMANTIC_ANCHOR_SPEC_V1.md",)
+
+# Строки §20 без backtick-токена (1–5) → item_id реестра.
+_S20_ITEM_ID_BY_KEYWORD = {
+    "factory registry": "factory_registry",
+    "scenario engine": "scenario_engine",
+    "decision registry": "decision_registry",
+    "conformance checker": "conformance_checker",
+    "автогенерация моделей/диаграмм": "model_diagram_autogen",
+***REMOVED***
 
 
 def _read(workspace: Path, rel: Path) -> str | None:
@@ -358,6 +435,8 @@ def check_naming_convention(workspace: Path) -> list[dict[str, Any***REMOVED****
     Проверяет:
       1. Каждый top-level каталог (кроме скрытых/системных) следует `имя_NN`,
          суффикс-ID `_NN` уникален (FINAL_STRUCTURE присваивает номера 01..22).
+         Исключение: evaluation-пакеты с каноническим именем от промта-источника
+         (_EVALUATION_PACKAGE_DIRS, напр. `architecture_forensics_v2` от promt104 §28).
       2. Каждый промт в pompts_11/ следует `NNN_TT_имя.md` с валидным кодом темы (01..14).
       3. Номера промтов уникальны (гэпы допустимы — 018–021/035 не существовали;
          дубли номеров — нарушение).
@@ -369,6 +448,11 @@ def check_naming_convention(workspace: Path) -> list[dict[str, Any***REMOVED****
     # 1. Top-level каталоги: имя_NN + уникальность суффикса-ID
     seen_dir_suffixes: set[str***REMOVED*** = set()
     for name in _top_level_dir_names(workspace):
+        # 1.0a Evaluation-пакеты (promt104 §28 REQUIRED OUTPUT) — каноническое имя
+        #      задано промтом-источником; пропускаем (не нарушение конвенции,
+        #      см. _EVALUATION_PACKAGE_DIRS).
+        if name in _EVALUATION_PACKAGE_DIRS:
+            continue
         # 1.0 Legacy top-level redirect-shim (Этап 4) — пропускаем, если canonical существует.
         #     Иначе (shim сирота) — флагуем как обычное нарушение `имя_NN`.
         if _is_legacy_redirect_satisfied(workspace, name):
@@ -398,6 +482,8 @@ def check_naming_convention(workspace: Path) -> list[dict[str, Any***REMOVED****
     if prompts_dir.is_dir():
         for path in sorted(prompts_dir.glob("*.md")):
             name = path.name
+            if name in ("README.md", "errors.md"):
+                continue  # служебные файлы очереди pompts_11 (индекс/лог), не промты
             m = _PROMPT_FILE_RE.match(name)
             if not m:
                 issues.append({
@@ -828,8 +914,246 @@ def check_test_counter(workspace: Path) -> list[dict[str, Any***REMOVED******REM
 
 
 # ═══════════════════════════════════════════════════════════════
+# 10. Missing Registry sync (§20 карты v1.1 ↔ data_13/missing_registry.yaml)
+# ═══════════════════════════════════════════════════════════════
+
+
+def _s20_status_from_cell(cell: str) -> str:
+    """Маппинг последней колонки §20 (приоритет/статус) → lifecycle реестра.
+
+    Порядок важен: «✅/реализовано» → implemented; «дизайн готов» → design_ready;
+    «промт на реализацию» → prompt_written; иначе registered.
+    """
+    if "✅" in cell or "реализовано" in cell:
+        return IMPLEMENTED
+    if "дизайн готов" in cell:
+        return DESIGN_READY
+    if "промт на реализацию" in cell:
+        return PROMPT_WRITTEN
+    return REGISTERED
+
+
+def extract_missing_capabilities(text: str) -> list[dict[str, str***REMOVED******REMOVED***:
+    """Разобрать §20-таблицу карты v1.1 → [{item_id, status***REMOVED******REMOVED***.
+
+    item_id берётся из backtick-токена (``research_web``) либо keyword-маппинга
+    строк 1–5 (Factory Registry → factory_registry и т.п.). status — из последней
+    колонки через :func:`_s20_status_from_cell`.
+    """
+    out: list[dict[str, str***REMOVED******REMOVED*** = [***REMOVED***
+    m = re.search(r"## 20\. Missing Capabilities\n(.*?)(?=\n---|\n## |\Z)", text, re.DOTALL)
+    if not m:
+        return out
+    section = m.group(1)
+    for line in section.splitlines():
+        line = line.strip()
+        if not line.startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip("|").split("|")***REMOVED***
+        if len(cells) < 4:
+            continue
+        desc, priority = cells[1***REMOVED***, cells[3***REMOVED***
+        bt = re.search(r"`([a-z***REMOVED***[a-z0-9_***REMOVED***+)`", desc)
+        if bt:
+            item_id = bt.group(1)
+        else:
+            low = desc.lower()
+            item_id = next((v for k, v in _S20_ITEM_ID_BY_KEYWORD.items() if k in low), None)
+        if not item_id:
+            continue
+        out.append({"item_id": item_id, "status": _s20_status_from_cell(priority)***REMOVED***)
+    return out
+
+
+def check_missing_registry_sync(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+    """§20 карты v1.1 ↔ MissingRegistry не расходятся (register-first, AGENTS.md §5).
+
+    Три класса расхождений:
+      1. item_id в §20, но отсутствует в реестре → register-first нарушен;
+      2. item_id в реестре, но отсутствует в §20 → док не обновлён;
+      3. статус реестра отстаёт/обгоняет §20 → lifecycle рассинхронизирован.
+    Плюс schema_violations самого реестра (B10/R-127).
+    """
+    issues: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    text = _read(workspace, MISSING_CAPABILITIES_DOC)
+    if text is None:
+        return [{
+            "check": "missing_registry_sync",
+            "issue": "FACTORY_FORGE_ARCHITECTURE_V1.md missing (§20)",
+        ***REMOVED******REMOVED***
+
+    reg_path = workspace / MISSING_REGISTRY_YAML
+    if not reg_path.exists():
+        return [{
+            "check": "missing_registry_sync",
+            "issue": f"{MISSING_REGISTRY_YAML***REMOVED*** missing (run: python -m core_02.missing_registry seed)",
+        ***REMOVED******REMOVED***
+
+    from core_02.missing_registry import MissingRegistry  # local import — держит модуль независимым
+
+    try:
+        reg = MissingRegistry(reg_path)
+    except Exception as exc:  # noqa: BLE001 — fail-safe
+        return [{"check": "missing_registry_sync", "issue": f"MissingRegistry load failed: {exc***REMOVED***"***REMOVED******REMOVED***
+
+    for v in reg.schema_violations:
+        issues.append({"check": "missing_registry_sync", "issue": f"registry schema violation: {v***REMOVED***"***REMOVED***)
+
+    doc_items = extract_missing_capabilities(text)
+    doc_by_id = {i["item_id"***REMOVED***: i["status"***REMOVED*** for i in doc_items***REMOVED***
+    reg_items = {i.item_id: i.status for i in reg.list_all()***REMOVED***
+
+    for item_id, doc_status in sorted(doc_by_id.items()):
+        if item_id not in reg_items:
+            issues.append({
+                "check": "missing_registry_sync",
+                "item": item_id,
+                "issue": "in §20 map but missing from MissingRegistry (register-first)",
+            ***REMOVED***)
+            continue
+        doc_rank = status_rank(doc_status)
+        reg_rank = status_rank(reg_items[item_id***REMOVED***)
+        if reg_rank < doc_rank:
+            issues.append({
+                "check": "missing_registry_sync",
+                "item": item_id,
+                "doc_status": doc_status,
+                "registry_status": reg_items[item_id***REMOVED***,
+                "issue": "registry lags behind §20 map (register-first: реестр — источник истины)",
+            ***REMOVED***)
+        elif reg_rank > doc_rank:
+            issues.append({
+                "check": "missing_registry_sync",
+                "item": item_id,
+                "doc_status": doc_status,
+                "registry_status": reg_items[item_id***REMOVED***,
+                "issue": "§20 map lags behind registry (update §20 row)",
+            ***REMOVED***)
+
+    for item_id in sorted(reg_items):
+        if item_id not in doc_by_id:
+            issues.append({
+                "check": "missing_registry_sync",
+                "item": item_id,
+                "issue": "in MissingRegistry but missing from §20 map (update §20)",
+            ***REMOVED***)
+
+    return issues
+
+
+# ═══════════════════════════════════════════════════════════════
+# 11. Anchors (AnchorResolver — Artifact I §I.3)
+# ═══════════════════════════════════════════════════════════════
+
+
+def check_anchors(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+    """[5.189.4***REMOVED*** Семантические анкоры резолвятся к коду/файлу/реестру (§I.3).
+
+    Прогоняет AnchorResolver по каноническим корням (engineering-memory,
+    runtime_05, CHANGELOG.md), исключая мета-спеку SEMANTIC_ANCHOR_SPEC_V1.md
+    (педагогические примеры forge_unknown/StaleClass.old_method).
+
+    Блокирующие (hard) namespaces: entity/component/module/symbol/test/decision/
+    storage/factory/forge/lesson/opportunity/whim — UNVERIFIED = drift.
+    Advisory (soft) namespaces: event/contract/doc/requirement/scenario — не
+    блокируют (реестры строятся инкрементально, зеркалит §J.4 WARN-философию
+    doc_code_verify).
+    """
+    resolver = AnchorResolver(workspace)
+    summary = resolver.run(
+        roots=("docs_10/engineering-memory", "runtime_05", "CHANGELOG.md"),
+        exclude=_ANCHOR_EXCLUDED_DOCS,
+    )
+    issues: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    for u in summary.get("unresolved", [***REMOVED***):
+        if u.get("namespace") in HARD_ANCHOR_NAMESPACES:
+            issues.append({
+                "check": "anchors",
+                "namespace": u.get("namespace"),
+                "value": u.get("value"),
+                "doc": u.get("doc"),
+                "line": u.get("line"),
+                "issue": (
+                    f"UNVERIFIED anchor {u.get('raw', '')***REMOVED*** — {u.get('evidence', '')***REMOVED***"
+                ),
+            ***REMOVED***)
+    return issues
+
+
+# ═══════════════════════════════════════════════════════════════
 # Report
 # ═══════════════════════════════════════════════════════════════
+
+
+def check_backfill_signatures(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+    """v5.189.51: scan ``data_13/missing_registry.yaml`` for retroactive-signature
+    entries: ``status=implemented`` + ``registered_at==updated_at`` +
+    ``backfill=False`` (or missing).
+
+    Why: developers sometimes run ``register X --status implemented`` directly
+    without realising the entry LOOKS retroactive (no lifecycle evolution,
+    timestamps identical). This breaks CON-63 / CON-64 register-first discipline
+    ephemerally because downstream queries filter on ``backfill=true`` and
+    silently skip the unflagged retroactive ones. Surfacing them here forces
+    an explicit choice: re-register with ``--backfill`` OR fix the lifecycle
+    timestamps.
+
+    Severity: WARNING (not violation). Heuristic is timestamp-string equality
+    (ISO 8601, second-precision); legitimate single-shot updates could collide
+    and will appear as warnings (acceptable noise — better to over-warn than
+    silent miss). Seed defaults (canonical entries from ``_SEED`` in
+    ``core_02.missing_registry``) are exempt — they pre-date the backfill:bool
+    instrument and flagging them would be historical-cleanup noise.
+
+    Returns:
+        list[dict[str, Any***REMOVED******REMOVED*** of warning dicts (may be empty).
+    """
+    registry_path = workspace / "data_13" / "missing_registry.yaml"
+    if not registry_path.exists():
+        return [***REMOVED***
+    try:
+        data = yaml.safe_load(registry_path.read_text(encoding="utf-8")) or {***REMOVED***
+    except yaml.YAMLError:
+        return [***REMOVED***
+    if not isinstance(data, dict):
+        return [***REMOVED***
+    # Exempt canonical SEED items (those predate backfill:bool discipline).
+    exempt_ids: set[str***REMOVED*** = set()
+    try:
+        from core_02.missing_registry import _SEED as _MR_SEED  # type: ignore[import-not-found***REMOVED***
+        for item in _MR_SEED or [***REMOVED***:
+            if isinstance(item, dict) and "item_id" in item:
+                exempt_ids.add(str(item["item_id"***REMOVED***))
+    except Exception:  # noqa: BLE001 — defensive: missing module/path drift
+        pass
+    warnings: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    for item_id, entry in data.items():
+        if not isinstance(entry, dict):
+            continue
+        if item_id in exempt_ids:
+            continue
+        if entry.get("status") != "implemented":
+            continue
+        registered_at = entry.get("registered_at")
+        updated_at = entry.get("updated_at")
+        if not (registered_at and updated_at):
+            continue
+        if registered_at != updated_at:
+            continue
+        if entry.get("backfill", False) is True:
+            continue
+        warnings.append({
+            "check": "backfill_signature",
+            "severity": "warning",
+            "doc": "data_13/missing_registry.yaml",
+            "item_id": str(item_id),
+            "reason": (
+                "status=implemented + registered_at==updated_at without "
+                "backfill:true — looks retroactive. Re-register with "
+                "`--backfill` (or bump updated_at to differ from registered_at)."
+            ),
+        ***REMOVED***)
+    return warnings
 
 
 def build_report(workspace: Path) -> dict[str, Any***REMOVED***:
@@ -845,6 +1169,9 @@ def build_report(workspace: Path) -> dict[str, Any***REMOVED***:
         "project_book": check_project_book(workspace),
         "naming_convention": check_naming_convention(workspace),
         "test_counter": check_test_counter(workspace),
+        "missing_registry_sync": check_missing_registry_sync(workspace),
+        "backfill_signature": check_backfill_signatures(workspace),
+        "anchors": check_anchors(workspace),
     ***REMOVED***
     all_issues = (
         report["engine_files"***REMOVED***
@@ -856,6 +1183,11 @@ def build_report(workspace: Path) -> dict[str, Any***REMOVED***:
         + report["project_book"***REMOVED***
         + report["naming_convention"***REMOVED***
         + report["test_counter"***REMOVED***
+        + report["missing_registry_sync"***REMOVED***
+        # NOTE: backfill_signature kept in report["backfill_signature"***REMOVED*** for
+        # visibility but NOT aggregated into all_issues (soft discipline signal,
+        # per user 'предупреждение' intent — see v5.189.51 docstring).
+        + report["anchors"***REMOVED***
     )
     report["total_issues"***REMOVED*** = len(all_issues)
     report["consistent"***REMOVED*** = not all_issues
@@ -887,6 +1219,8 @@ def format_report(report: dict[str, Any***REMOVED***) -> str:
         ("project_book", "Project Book consistency (docs_10/engineering-memory)"),
         ("naming_convention", "Naming convention (FINAL_STRUCTURE §2.1: dirs имя_NN, prompts NNN_TT_имя)"),
         ("test_counter", "Test counter (CHANGELOG / CODE_QUALITY_STANDARD vs tests_09 reality)"),
+        ("missing_registry_sync", "Missing Registry sync (§20 карты v1.1 ↔ data_13/missing_registry.yaml, register-first)"),
+        ("anchors", "Anchors (AnchorResolver §I.3: hard namespaces → code/file/registry)"),
     ***REMOVED***
     for key, title in sections:
         items = report[key***REMOVED***

@@ -1,0 +1,66 @@
+# Verifier Forge — паспорт ТРЕТЬЕЙ кузни Phase 11 (promt 093)
+# Pattern: pomt 092 §13 + pomt 093 §12 + runtime_05/factories/architecture/governance.yaml.
+# All capabilities ⊆ KNOWN_CAPABILITIES.
+
+forge_id: verifier
+factory_id: test
+display_name: Code Verifier Forge
+version: "0.5.0"
+status: material
+mission: "Проверка test-artifact: capability=code резолвится в (test, verifier); контракт Capability → FactoryRegistry → TestFactory → ForgeFacade.run_chain → verdict artifact. НЕ production-ready: нет реального Code/Verifier execution pipeline (per promt93 §11 Variant B — MISSING PRODUCTION EXECUTION CAPABILITY)"
+
+capabilities:
+  - code
+
+metadata:
+  prompt_path: pompts_11/093_19_phase9_implementation_continuation.md
+  related_prompts:
+    - pompts_11/094_19_phase10_research_factory_universality.md
+    - pompts_11/092_19_phase9_universal_factory_vertical_slice.md
+  references:
+    - doc.intelligence_factory_contract#g
+    - doc.factory_forge_arch#12
+    - doc.phase9_implementation_continuation
+
+# ─── 9 паспортных полей v1.1 ───────────────────────────────────────────────────
+
+inputs:
+  - "code_request"
+  - "test_assertion"
+  - "expected_outcome"
+  - "verification_context"
+
+production_workflow:
+  - "input_normalization"
+  - "execution_request"
+  - "forge_run"
+  - "verdict_normalization"
+
+engines:
+  - "@entity forge.facade"
+  - "@entity test.factory"
+  - "@entity scenario.intelligence"
+
+quality_gates:
+  - "verdict_recorded"
+  - "verdict_traceable"
+
+outputs:
+  - "verifier_report"
+
+artifacts:
+  - "projects_17/<slug>/forge/verifier_report.md"
+
+interfaces:
+  - "receives: ExecutionRequest (opportunity → capability=code → inputs)"
+  - "produces: verifier_report.md + memory feedback"
+  - "to_forge_facade: run_chain(project, role_ids, project_read_only=True)"
+
+memory:
+  - "verifier_production_log"
+  - "verifier_knowledge_objects"
+
+knowledge:
+  - "code_requests"
+  - "test_assertions"
+  - "production_history"

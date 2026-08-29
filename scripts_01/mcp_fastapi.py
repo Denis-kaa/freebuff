@@ -562,6 +562,41 @@ if HAS_FASTAPI:
         engine = _get_metrics()
         return _metrics_response(engine.get_status(), fmt)
 
+    # ── GET /sync/status — Remote Sync status for Flutter UI indicator (Phase 5.4) ──
+    #
+    # Polled by projects_17/freebuff_flutter_app/lib/sync_status.dart every
+    # poll_interval_sec (manifest remote_sync.indicator.poll_interval_sec).
+    # Same snapshot shape as MCP tool `sync_status` in freebuff_plugin_03.
+    # Open (no Bearer) like /metrics/* and / — local-device status read,
+    # exposes no secrets, only closed-vocab status + counts.
+
+    @app.get("/sync/status")
+    async def sync_status() -> JSONResponse:
+        """Live remote-sync status snapshot (idle/connected/conflict/quarantine).
+
+        Response: {"success": true, "data": {status, listener_running,
+          pending_count, conflict_count, quarantine_count, last_event,
+          registered, timestamp_ms***REMOVED******REMOVED***
+
+        If no coordinator is registered, returns idle with registered=false
+        (soft-fallback per CAN-14 — never raises).
+        """
+        try:
+            from core_02.remote_sync import (
+                derive_sync_status,
+                get_active_coordinator,
+            )
+
+            coord = get_active_coordinator()
+            if coord is None:
+                snapshot = {"status": "idle", "registered": False***REMOVED***
+            else:
+                snapshot = derive_sync_status(coord)
+                snapshot["registered"***REMOVED*** = True
+            return JSONResponse(content={"success": True, "data": snapshot***REMOVED***)
+        except Exception as e:
+            return _policy_error(500, f"sync status failed: {e***REMOVED***")
+
     # ── POST /policy/override — User-Choice Override без MCP ──
 
     def _get_policy_engine() -> Optional[Any***REMOVED***:

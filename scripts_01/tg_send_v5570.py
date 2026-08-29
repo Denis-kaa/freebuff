@@ -15,13 +15,15 @@ import asyncio
 import sys
 ***REMOVED***
 
-# Freebuff root discovery via locator (no PYTHONPATH plumbing needed)
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _freebuff_locator ***REMOVED***solve_freebuff_root  # noqa: E402
-
-ROOT = resolve_freebuff_root()
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+# This script lives at /storage/.../freebuff/scripts_01/tg_send_v5570.py — NOT in
+# sibling-project scripts/. So `_freebuff_locator` (which lives at
+# /storage/.../interior_planner_e2e/interior_planner/scripts/) is NOT a direct
+# sibling. Compute Freebuff root via parent.parent (the file's grandparent
+# directory) and sys.path.insert it directly so `import core_02.telegram_contract`
+# works without PYTHONPATH plumbing.
+FB_ROOT = Path(__file__).resolve().parent.parent
+if str(FB_ROOT) not in sys.path:
+    sys.path.insert(0, str(FB_ROOT))
 
 import core_02.telegram_contract as tc  # noqa: E402
 

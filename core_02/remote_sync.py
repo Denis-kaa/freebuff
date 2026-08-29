@@ -151,6 +151,11 @@ __all__ = [
     "_QUARANTINE_MAX_AGE_SECONDS",
     "_QUARANTINE_MAX_BUFFER_LEN",
     "_SYNC_MARKER_PREFIX",
+    "_SYNC_STATUS_VALUES",
+    "derive_sync_status",
+    "set_active_coordinator",
+    "get_active_coordinator",
+    "publish_sync_status_event",
 ***REMOVED***
 
 
@@ -895,11 +900,17 @@ class RemoteSyncCoordinatorImpl:
         in the correct order.
 
         Idempotent: subsequent calls are ignored (no-op).
+
+        Lock discipline (CON-NEW, code-reviewer N-1): the write is guarded by
+        ``self._lock`` because ``derive_sync_status()`` reads ``_listener``
+        under the same lock — without it, a FastAPI thread-pool read could
+        race a lifecycle write.
         """
-        if self._listener is not None:
-            logger.warning("attach_listener: listener already attached, ignoring")
-            return
-        self._listener = listener
+        with self._lock:
+            if self._listener is not None:
+                logger.warning("attach_listener: listener already attached, ignoring")
+                return
+            self._listener = listener
         logger.info("attach_listener: listener attached (coordinated shutdown)")
 
     # ── Internal helpers ────────────────────────────────────────────────
@@ -1275,4 +1286,108 @@ class RemoteSyncListener:
     def pending_count(self) -> int:
         """Pending envelopes count (for diagnostics + buffer overflow detection)."""
         return len(self._incoming_buffer)
+
+
+# ─── Phase 5.4: Sync status surface (Flutter UI indicator via MCP event stream) ───
+#
+# Closed-vocab status tokens (CON-8). UI indicator in freebuff_flutter_app
+# renders one of: idle / connected / conflict / quarantine.
+
+_SYNC_STATUS_VALUES: Set[str***REMOVED*** = frozenset(
+    {"idle", "connected", "conflict", "quarantine"***REMOVED***
+)
+
+
+def _normalize_sync_status(value: str) -> str:
+    """Closed-vocab guard: unknown tokens collapse to 'idle' (never propagate)."""
+    return value if value in _SYNC_STATUS_VALUES else "idle"
+
+
+def derive_sync_status(coordinator: "RemoteSyncCoordinatorImpl") -> Dict[str, Any***REMOVED***:
+    """Derive a UI-friendly sync-status snapshot (Phase 5.4).
+
+    Priority (worst-first):
+      - quarantine: `_quarantine_buffer` non-empty (manual review pending)
+      - conflict:   `_conflict_log` non-empty (near-simultaneous edits)
+      - connected:  attached listener running (realtime hot-path alive)
+      - idle:       coordinator alive, no active listener / no issues
+
+    Returns a serializable dict (consumed by MCP tool `sync_status`, FastAPI
+    `GET /sync/status`, and the Flutter `SyncStatusIndicator`).
+    """
+    with coordinator._lock:
+        quarantine_count = len(coordinator._quarantine_buffer)
+        conflict_count = len(coordinator._conflict_log)
+        listener = coordinator._listener
+        listener_running = bool(listener is not None and listener.is_running)
+        pending_count = len(coordinator._incoming_buffer)
+        last_event = coordinator._last_event
+
+    if quarantine_count > 0:
+        status = "quarantine"
+    elif conflict_count > 0:
+        status = "conflict"
+    elif listener_running:
+        status = "connected"
+    else:
+        status = "idle"
+
+    return {
+        "status": _normalize_sync_status(status),
+        "listener_running": listener_running,
+        "pending_count": pending_count,
+        "conflict_count": conflict_count,
+        "quarantine_count": quarantine_count,
+        "last_event": last_event,
+        "timestamp_ms": _now_ms(),
+    ***REMOVED***
+
+
+# ── Active-coordinator registry (MCP / FastAPI live status read) ──────────
+
+_ACTIVE_COORDINATOR: Optional["RemoteSyncCoordinatorImpl"***REMOVED*** = None
+_ACTIVE_COORDINATOR_LOCK = threading.Lock()
+
+
+def set_active_coordinator(coordinator: Optional["RemoteSyncCoordinatorImpl"***REMOVED***) -> None:
+    """Register (or clear) the app-level live coordinator for status reads.
+
+    MCP tool `sync_status` / FastAPI `GET /sync/status` read this registry to
+    derive the UI indicator status without holding a long-lived reference.
+    """
+    global _ACTIVE_COORDINATOR
+    with _ACTIVE_COORDINATOR_LOCK:
+        _ACTIVE_COORDINATOR = coordinator
+
+
+def get_active_coordinator() -> Optional["RemoteSyncCoordinatorImpl"***REMOVED***:
+    """Return the registered live coordinator (or None if not registered)."""
+    with _ACTIVE_COORDINATOR_LOCK:
+        return _ACTIVE_COORDINATOR
+
+
+def publish_sync_status_event() -> Optional[str***REMOVED***:
+    """Best-effort publish of a `remote_sync.status.*` event to EventStore.
+
+    None-safe per CAN-14: EventStore may be unavailable in CI → returns None,
+    never raises. Payload = derive_sync_status(active coordinator) — this is
+    the "MCP event stream" source consumed by `event_search`/`event_pulse`.
+    """
+    coordinator = get_active_coordinator()
+    if coordinator is None:
+        return None
+    snapshot = derive_sync_status(coordinator)
+    try:
+        from freebuff_plugin_03.event.store import EventStore
+
+        store = EventStore()
+        return store.store(
+            event_type=f"remote_sync.status.{snapshot['status'***REMOVED******REMOVED***",
+            source="core_02.remote_sync",
+            data=snapshot,
+            project="freebuff",
+        )
+    except Exception as e:
+        logger.warning("publish_sync_status_event: EventStore unavailable: %s", e)
+        return None
 

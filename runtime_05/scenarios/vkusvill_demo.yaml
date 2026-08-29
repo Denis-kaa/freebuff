@@ -1,0 +1,79 @@
+# runtime_05/scenarios/vkusvill_demo.yaml
+# Teamwork-сценарий для ROADMAP-VV-001 (promt 62, v5.105.0):
+# 3 роли работают над модельным .xlsx как demo-сценарий для отклика ВкусВилл.
+#
+# Per Q1-Q4 clarifications:
+# - Q1: parity_check = Python recompute vs pre-computed Excel values
+#       (variant b), NO LibreOffice, NO Excel engine.
+# - Q2: 3 категории (молочка/крупа/напиток).
+# - Q3: ровно 2 неочевидных элемента (SERVICE_LEVEL_Z hardcoded +
+#       INCIDENT_2024_CORRECTION cell-content proxy).
+# - Q4: only Mission B scope (платформенный skill + модельный пример).
+#
+# ScenarioRegistry auto-discovers *.yaml в этой директории; non-standard
+# keys (roles, inputs, verification) — ADDITIVE, не ломают парсер.
+
+id: vkusvill_demand_forecast
+type: teamwork
+display_name: "ВкусВилл demo — разбор legacy Excel/VBA логики прогноза/заказа"
+root: projects_17/vkusvill_demo
+enabled: true
+capabilities:
+  - reasoning
+  - explain
+  - code
+  - validate
+  - verify
+metadata:
+  roadmap_id: ROADMAP-VV-001
+  version: 1.0.0
+  created: 2026-08-06
+  author: Buffy (promt 62)
+  scope: demo-only
+  bound_to_data: false   # модельное, не реальный ритейлер
+  parity_mode: variant_b  # NO LibreOffice
+  categories_count: 3
+  non_obvious_count: 2
+
+# === Teamwork-роли (ADDITIVE — ScenarioRegistry игнорирует незнакомые поля) ===
+roles:
+  - name: analyst
+    output: projects_17/vkusvill_demo/business_logic.md
+    description: |
+      Разобрать структуру .xlsx, документировать 4 принципа (SMA, weekday,
+      safety stock Z×σ×√L, shelf-life correction) + 2 неочевидных элемента
+      с sources (Chopra & Meindl, Hyndman & Athanasopoulos OTexts,
+      AbcSupplyChain, Relex Solutions).
+    capability: [reasoning, explain***REMOVED***
+    primary_model: deepseek-v4-pro
+
+  - name: developer
+    output: projects_17/vkusvill_demo/forecast.py
+    description: |
+      Python-пересчёт прогноза без Excel engine. Named constants only
+      (mirror build_model_xlsx). Output forecast_python.json.
+    capability: [reasoning, code***REMOVED***
+    primary_model: deepseek-v4-pro
+
+  - name: reviewer
+    output: projects_17/vkusvill_demo/parity_check.py + projects_17/vkusvill_demo/parity_report.md
+    description: |
+      Parity-check pre-computed Excel values vs Python recompute (variant b Q1).
+      NO LibreOffice, NO openpyxl formula eval — pure value comparison.
+      Tolerance ±0.01.
+    capability: [reasoning, validate, verify***REMOVED***
+    primary_model: deepseek-v4-pro
+
+# === Inputs (READ-ONLY артефакты) ===
+inputs:
+  - projects_17/vkusvill_demo/model_forecast.xlsx
+
+# === Verification criteria ===
+verification:
+  success_criteria:
+    - Все 3 роли завершены без ошибок (exit 0).
+    - parity_report.md показывает OVERALL=✅ PASS.
+    - forecast.py, parity_check.py imports parseable (no Python errors).
+    - pytest tests_09/test_xlsx_builder.py == 10/10 PASSED.
+  failure_modes:
+    - parity FAIL → возврат в developer итерацию с raw diff строками для фикса formula.

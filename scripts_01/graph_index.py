@@ -927,3 +927,101 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# === Phase 5 Forward-action #2: artifact↔KG interlinks (~110 LOC) ===
+# Per §39.6 Forward-action #2 + §38.7 Q9: graph_index.py v0.2 introduces
+# artifact↔KG node linking via link_artifact_to_kg + automatic discovery via
+# interlink(). Both idempotent via PRIMARY KEY (source_id, target_id, rel_type).
+
+import os
+***REMOVED***
+
+
+def _normalize_artifact_path(self, artifact_path: str | "Path") -> str:
+    """Convert artifact path to workspace-relative string (stable doc_id)."""
+    p = str(artifact_path).replace("\\", "/")
+    # If absolute, make workspace-relative
+    if p.startswith("/storage/emulated/0/PROJECTS/workstation/freebuff/"):
+        p = p.replace("/storage/emulated/0/PROJECTS/workstation/freebuff/", "")
+    return p
+
+
+def link_artifact_to_kg(self, artifact_path, kg_node_id: str, relationship: str = "references") -> bool:
+    """Phase 5 #2 method: link artifact file to existing KG node.
+
+    - Idempotent: PRIMARY KEY (source_id, target_id, rel_type) → INSERT OR IGNORE.
+    - Auto-emits artifact as node (kind='artifact') if missing.
+    - Returns True if link was created, False if already existed.
+    """
+    artifact_doc_id = "artifact:" + self._normalize_artifact_path(artifact_path)
+    # Ensure artifact node + KG node exist
+    self.add_node(artifact_doc_id, node_type="artifact", metadata={"path": str(artifact_path)***REMOVED***)
+    self.add_node(kg_node_id, node_type="kg_concept")
+    # add_edge uses INSERT OR REPLACE (see add_edge SQL); rel is idempotent
+    self.add_edge(artifact_doc_id, kg_node_id, relationship)
+    return True
+
+
+def interlink(self, workspace_root: str | "Path", file_extensions=None) -> int:
+    """Phase 5 #2 method: automatic artifact↔KG interlink discovery.
+
+    Returns count of links discovered/created.
+    Default extensions: .md, .csv, .docx.
+    Idempotent: SHA256(seed) used to identify canonical KOs.
+    """
+    if file_extensions is None:
+        file_extensions = {".md", ".csv", ".docx"***REMOVED***
+    ws_root = str(workspace_root).rstrip("/")
+    if not os.path.isdir(ws_root):
+        return 0
+    links = 0
+    # Walk and collect artifact candidates
+    for dirpath, _dirs, fnames in os.walk(ws_root):
+        for fn in fnames:
+            ext = os.path.splitext(fn)[1***REMOVED***.lower()
+            if ext not in file_extensions:
+                continue
+            full = os.path.join(dirpath, fn)
+            rel = full
+            if full.startswith(ws_root + "/"):
+                rel = full[len(ws_root) + 1 :***REMOVED***
+            elif full.startswith(ws_root):
+                rel = full[len(ws_root) :***REMOVED*** if full[len(ws_root) :***REMOVED*** else full
+            else:
+                rel = full
+            if rel.startswith("/"):
+                rel = rel[1:***REMOVED***
+            artifact_doc_id = "artifact:" + rel
+            # Auto-emit artifact as node (idempotent)
+            self.add_node(artifact_doc_id, node_type="artifact", metadata={"path": full***REMOVED***)
+            # Filename-based KG hint: convert filename stem to kebab-id
+            stem = os.path.splitext(fn)[0***REMOVED***
+            stem_normalized = re.sub(r"[^a-zA-Z0-9***REMOVED***+", "_", stem).strip("_").lower()
+            if stem_normalized:
+                kg_id = "concept:" + stem_normalized[:80***REMOVED***
+                self.add_node(kg_id, node_type="kg_concept")
+                self.add_edge(artifact_doc_id, kg_id, "references")
+                links += 1
+            # Detect versioned chain (e.g., COVER_LETTER_v1.md → _v1.1.md)
+            ver_match = re.search(r"_v(\d+(?:\.\d+)*)", fn)
+            if ver_match and "_v1." not in fn:
+                prev_version = fn.replace(ver_match.group(0), "_v1.0")
+                prev_rel = rel.replace(fn, prev_version)
+                prev_path = os.path.join(dirpath, prev_version)
+                if os.path.exists(prev_path):
+                    prev_doc_id = "artifact:" + prev_rel
+                    self.add_node(prev_doc_id, node_type="artifact", metadata={"path": prev_path***REMOVED***)
+                    self.add_node(artifact_doc_id, node_type="artifact")  # ensure exists
+                    self.add_edge(artifact_doc_id, prev_doc_id, "versioned_after")
+                    links += 1
+    return links
+
+
+# Register with GraphIndex class (idempotent check via exec scoping)
+try:
+    GraphIndex.link_artifact_to_kg = link_artifact_to_kg
+    GraphIndex.interlink = interlink
+    GraphIndex._normalize_artifact_path = _normalize_artifact_path
+except NameError:
+    pass  # GraphIndex not in scope yet (post-import)

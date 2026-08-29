@@ -1,0 +1,61 @@
+# Content Writing Forge — паспорт первой контентной кузни (Phase 9)
+# Pattern: pomt 092 §13 + runtime_05/factories/architecture/governance.yaml. Все capabilities ⊆ KNOWN_CAPABILITIES.
+
+forge_id: writing
+factory_id: content
+display_name: Content Writing Forge
+version: "1.0.0"
+status: material
+mission: "Производство контент-артефактов (статьи/книги/отчёты) через существующий ForgeFacade — доказывает универсальный Factory-контракт (Phase 9 vertical slice)"
+
+capabilities:
+  - article_generation
+  - book_generation
+  - report_generation
+
+metadata:
+  prompt_path: pompts_11/092_19_phase9_universal_factory_vertical_slice.md
+  references:
+    - doc.intelligence_factory_contract#g
+    - doc.factory_forge_arch#12
+
+# ─── 9 паспортных полей v1.1 ───────────────────────────────────────────────────
+
+inputs:
+  - "content_brief"
+  - "source_materials"
+  - "target_format"
+
+production_workflow:
+  - "input_normalization"
+  - "execution_request"
+  - "forge_run"
+  - "output_normalization"
+
+engines:
+  - "@entity forge.facade"
+  - "@entity content.factory"
+  - "@entity scenario.intelligence"
+
+quality_gates:
+  - "artifact_created"
+  - "artifact_validated"
+
+outputs:
+  - "content_artifact"
+
+artifacts:
+  - "projects_17/<slug>/forge/content_artifact.md"
+
+interfaces:
+  - "receives: ExecutionRequest (opportunity → capability → inputs)"
+  - "produces: content artifact + memory feedback"
+  - "to_forge_facade: run_chain(project, role_ids, project_read_only=True)"
+
+memory:
+  - "content_production_log"
+  - "artifact_knowledge_objects"
+
+knowledge:
+  - "content_briefs"
+  - "production_history"

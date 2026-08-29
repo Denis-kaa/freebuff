@@ -305,8 +305,13 @@ class BaseTool:
 
     Подклассы определяют:
       - name (str), description (str)
-      - schema() → dict с 'required' и 'properties'
+      - input_schema() → dict с 'required' и 'properties'
       - _call(api_client, **kwargs) → dict (raw response body, no envelope)
+
+    NOTE: ``input_schema()`` — КАСТОМНЫЙ метод (НЕ pydantic API). Класс не
+    наследует ``pydantic.BaseModel``; метод возвращает plain dict для ключа
+    ``inputSchema`` MCP ``tools/list``. Имя выбрано без коллизии с pydantic
+    v1 ``BaseModel.schema()`` (deprecated в pydantic 2.x).
     """
 
     name: str = ""
@@ -314,7 +319,7 @@ class BaseTool:
     _required: tuple[str, ...***REMOVED*** = ()
     _properties: dict[str, str***REMOVED*** = {***REMOVED***  # param_name → "string" | "integer"
 
-    def schema(self) -> dict[str, Any***REMOVED***:
+    def input_schema(self) -> dict[str, Any***REMOVED***:
         return {
             "type": "object",
             "required": list(self._required),
@@ -481,7 +486,7 @@ class PhoneControlMCP:
                     {
                         "name": tool.name,
                         "description": tool.description,
-                        "inputSchema": tool.schema(),
+                        "inputSchema": tool.input_schema(),
                     ***REMOVED***
                     for tool in self.tools.values()
                 ***REMOVED***

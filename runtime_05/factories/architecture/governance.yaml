@@ -1,0 +1,74 @@
+# Architecture Governance Forge — паспорт второй материальной кузни
+# Pattern: pomt 078_19 §4. Все capabilities ⊆ KNOWN_CAPABILITIES.
+
+forge_id: governance
+factory_id: architecture
+display_name: Architecture Governance Forge
+version: "1.0.0"
+status: material
+mission: "Проверить архитектурное решение на соответствие политикам и governance-инвариантам — выдать single verdict по каждой политике"
+
+capabilities:
+  - validate          # закрытый словарь: KNOWN_CAPABILITIES ⊂ blueprint_v3
+  - report
+  - explain
+
+metadata:
+  prompt_path: docs_10/engineering-memory/FACTORY_FORGE_ARCHITECTURE_V1.md
+  references:
+    - doc.role_forge_matrix#main
+    - doc.arch_decision_registry#main
+
+# ─── 9 паспортных полей v1.1 ───────────────────────────────────────────────────
+
+inputs:
+  - "policy_set"
+  - "current_architecture"
+  - "review_verdict"
+  - "governance_history"
+
+production_workflow:
+  - "policy_extraction"
+  - "architecture_parsing"
+  - "evidence_linking"
+  - "violation_detection"
+  - "remediation_proposal"
+
+engines:
+  - "@entity blueprint.v3"
+  - "@entity arch_decision_registry"
+  - "@entity forge.facade"
+  - "@entity role.artifact_validator"
+
+quality_gates:
+  - "policy_coverage"
+  - "evidence_traceable"
+  - "single_violation_per_policy"
+  - "remediation_actionable"
+
+# ОБЯЗАТЕЛЬНО непустой (B10/R-127: 1 Forge = 1 производственный результат)
+outputs:
+  - "governance_alignment_report"
+  - "policy_violations_index"
+  - "remediation_plan"
+
+artifacts:
+  - "projects_17/<slug>/forge/governance_alignment.yaml"
+  - "projects_17/<slug>/forge/policy_violations.md"
+  - "projects_17/<slug>/forge/remediation_plan.md"
+
+# flat-list (НЕ dict!) — обязательно per pomt §4 последний абзац
+interfaces:
+  - "receives: review_verdict, policy_set"
+  - "produces: governance_alignment"
+  - "to_review_forge: VIOLATION_FOUND → повторный вход с remediation context"
+  - "to_decision_registry: ESCALATE → Decision Registry запись"
+
+memory:
+  - "policy_audit_log"
+  - "violation_history"
+  - "exemption_ledger"
+
+knowledge:
+  - "governance_canons"
+  - "policy_taxonomy_v1"

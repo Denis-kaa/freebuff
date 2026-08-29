@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -181,6 +181,7 @@ class ModelCatalog:
                            "plan",
                            "refactor",
                            "explain",
+                           "summarize",    # v5.189.49+: backup capability для LLM-ролей
                        ***REMOVED***),
             ModelEntry("deepseek-v4-pro", Provider.DEEPSEEK,
                        max_tokens=128000, latency_ms=3000, cost_per_1k=0.002,
@@ -191,6 +192,14 @@ class ModelCatalog:
                            "architecture", # архитектурное проектирование
                            "plan",
                            "review",
+                           "diagnose",     # диагностика окружения
+                           "validate",     # валидация
+                           "report",       # отчётность
+                           "research",     # веб-исследование (research_web, Missing Capability #6)
+                           "estimation",   # оценка сложности LISA-3 (lisa_estimator, Missing Capability #7)
+                           "article_generation",  # Content Factory (Phase 9, промт 092)
+                           "book_generation",     # Content Factory (Phase 9, промт 092)
+                           "report_generation",   # Content Factory (Phase 9, промт 092)
                        ***REMOVED***),
             ModelEntry("gemini-2.5-flash", Provider.GEMINI,
                        max_tokens=1048576, latency_ms=1500, cost_per_1k=0.00015,
@@ -201,6 +210,13 @@ class ModelCatalog:
                            "long_context", # 1M+ токенов
                            "reasoning",
                            "multimodal",
+                           "research",     # веб-исследование (research_web, Missing Capability #6)
+                           "estimation",   # оценка сложности LISA-3 (lisa_estimator, Missing Capability #7)
+                           "article_generation",  # Content Factory (Phase 9, промт 092)
+                           "book_generation",     # Content Factory (Phase 9, промт 092)
+                           "report_generation",   # Content Factory (Phase 9, промт 092)
+                           "summarize",    # v5.189.49+: backup capability для LLM-ролей
+                           "explain",      # v5.189.49+: backup capability для LLM-ролей
                        ***REMOVED***),
             ModelEntry("llama-3.3-70b-versatile", Provider.GROQ,
                        max_tokens=128000, latency_ms=800, cost_per_1k=0.00059,
@@ -209,6 +225,8 @@ class ModelCatalog:
                            "code",
                            "reasoning",
                            "instruct",     # хорошо следует инструкциям
+                           "summarize",    # v5.189.49+: backup capability, LLM-роли cross-cloud
+                           "explain",      # v5.189.49+: backup capability, LLM-роли cross-cloud
                        ***REMOVED***),
         ***REMOVED***)
 
@@ -229,9 +247,32 @@ class SmartRouter:
         self,
         catalog: ModelCatalog,
         fallback: str = "gemini-2.5-flash",
+        provider_available: Optional[Callable[[Provider***REMOVED***, bool***REMOVED******REMOVED*** = None,
     ):
         self.catalog = catalog
         self.fallback = fallback
+        #: Предикат доступности провайдера (облачный = есть ключ; локальный =
+        #: отвечает). None = все провайдеры считаются доступными (обратная
+        #: совместимость). Применяется в route() до выбора лучшей модели —
+        #: cloud-first, когда локальная модель недоступна (ANTI-6b defense).
+        self.provider_available = provider_available
+
+    def _filter_available(
+        self,
+        scored: List[Tuple[ModelEntry, int***REMOVED******REMOVED***,
+    ) -> List[Tuple[ModelEntry, int***REMOVED******REMOVED***:
+        """Оставить только модели доступных провайдеров.
+
+        Если ни один провайдер не доступен — вернуть исходный список
+        (graceful degradation: вызывающий слой всё равно сделает fail-safe
+        при попытке вызова недоступной модели).
+        """
+        if self.provider_available is None:
+            return scored
+        available = [
+            (e, s) for e, s in scored if self.provider_available(e.provider)
+        ***REMOVED***
+        return available if available else scored
 
     def route(
         self,
@@ -258,14 +299,33 @@ class SmartRouter:
         """
         req = required_capabilities or [***REMOVED***
 
-        # 1. Capability-based matching
-        scored = self.catalog.match(req, max_tokens=max_tokens_needed)
+        # 1. Capability-based matching (availability-aware: cloud-first, когда
+        #    локальный провайдер недоступен — ANTI-6b defense).
+        scored = self._filter_available(
+            self.catalog.match(req, max_tokens=max_tokens_needed)
+        )
 
         if scored:
-            best_entry, best_score = scored[0***REMOVED***
+            best_score = scored[0***REMOVED***[1***REMOVED***
 
             # Если есть совпадения — используем лучшую
             if best_score > 0:
+                # CON-65 (v5.189.52): cloud-first среди tied-score моделей.
+                # `_filter_available` уже убрал недоступных облачных провайдеров
+                # (нет ключа → не в списке); среди выживших с равным best_score
+                # предпочитаем облако (не-OLLAMA) над локальным qwen — ANTI-6b
+                # defense против latency tie-break (local ~200ms < cloud ~800ms+).
+                # Гейт по `provider_available`: cloud-first обоснован только когда
+                # известна доступность (gateway передаёт provider_available).
+                # Standalone `SmartRouter()` без предиката сохраняет прежний
+                # pure-latency tie-break (backward compat: нельзя утверждать
+                # «у облака есть ключ», не имея предиката).
+                top_tier = [e for e, s in scored if s == best_score***REMOVED***
+                if self.provider_available is not None:
+                    cloud_tier = [e for e in top_tier if e.provider != Provider.OLLAMA***REMOVED***
+                    best_entry = (cloud_tier or top_tier)[0***REMOVED***
+                else:
+                    best_entry = top_tier[0***REMOVED***
                 return RouteDecision(
                     model=best_entry.name,
                     provider=best_entry.provider,
@@ -285,7 +345,9 @@ class SmartRouter:
 
         # 2. Fallback: требования не совпали ни с одной моделью
         # Пробуем модель с максимальными tokens (чтобы хотя бы обработала)
-        all_models = self.catalog.match([***REMOVED***, max_tokens=0)
+        all_models = self._filter_available(
+            self.catalog.match([***REMOVED***, max_tokens=0)
+        )
 
         if all_models:
             # Берём модель с самой большой ёмкостью контекста
@@ -301,12 +363,13 @@ class SmartRouter:
             )
 
         # 3. Самая последняя надежда — fallback из конфига
-        entry = self.catalog.get(self.fallback)
-        if entry:
+        # (отдельная переменная + None-guard: mypy-конфликт Optional vs ModelEntry)
+        fallback_entry = self.catalog.get(self.fallback)
+        if fallback_entry:
             return RouteDecision(
-                model=entry.name,
-                provider=entry.provider,
-                reason=f"fallback:last_resort",
+                model=fallback_entry.name,
+                provider=fallback_entry.provider,
+                reason="fallback:last_resort",
                 fallback_used=True,
             )
 

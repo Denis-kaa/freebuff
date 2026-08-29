@@ -1,0 +1,28 @@
+factory_id: test
+display_name: Test Factory
+version: "0.5.0"
+status: material
+description: |
+  ТРЕТИЙ доменный Factory-adapter (Phase 11 = Phase 9 CONTINUATION, promt 093):
+  Test Factory — контрольный deterministic executor для проверки универсальности
+  контракта (per promt093 §12). НЕ production-ready (нет реального Code/Verifier
+  Forge executor'a, который бы из opportunity создавал реальный test artifact
+  в production смысле). Доказывает, что Capability → FactoryRegistry → Factory →
+  Execution Boundary → Forge → Artifact цепочка работает независимо от домена.
+
+  Capabilities зарегистрированы в KNOWN_CAPABILITIES (ANTI-6b, register-first):
+  token `code` уже присутствует (Missing Capability #0 Blueprint), здесь он
+  обслуживает ТРЕТИЙ доменный Factory (test/verifier).
+
+capabilities:                    # ⊆ KNOWN_CAPABILITIES (закрытый словарь)
+  - code
+
+metadata:
+  owner: test-platform
+  prompt_path: pompts_11/093_19_phase9_implementation_continuation.md
+  related_prompts:
+    - pompts_11/094_19_phase10_research_factory_universality.md
+  references:
+    - doc.intelligence_factory_contract#g
+    - doc.factory_forge_arch#12
+    - doc.phase9_implementation_continuation

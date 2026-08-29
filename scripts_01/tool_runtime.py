@@ -621,6 +621,7 @@ class ToolRegistry:
       - Валидация параметров перед выполнением
       - EventBus интеграция (tool.executed / tool.failed)
       - Контекст выполнения (workspace, env vars, etc.)
+      - (ADR-022) Tool-ACL: attach_acl() подключает fail-closed политику
     """
 
     def __init__(
@@ -631,6 +632,9 @@ class ToolRegistry:
         self._tools: Dict[str, BaseTool***REMOVED*** = {***REMOVED***
         self._event_bus = event_bus
         self._default_context = default_context or {"workspace": str(WORKSPACE)***REMOVED***
+        # ADR-022: optional ToolACL-слой (None = политика не подключена)
+        self._acl = None
+        self._acl_principal: str = ""
 
     def register(self, tool: BaseTool) -> str:
         """Регистрирует инструмент в реестре.
@@ -799,6 +803,53 @@ class ToolRegistry:
     def set_event_bus(self, event_bus: Any) -> None:
         """Устанавливает или меняет EventBus."""
         self._event_bus = event_bus
+
+    # ── ADR-022: Tool-ACL (fail-closed policy-слой) ──────────────────
+
+    def attach_acl(self, acl: Any, principal: str = "agent") -> None:
+        """Подключить ACL-политику к реестру (ADR-022).
+
+        Args:
+            acl: экземпляр core_02.tool_acl.ToolACL (или объект с методом
+                ``check(principal, tool, params) -> AccessDecision``)
+            principal: роль, от имени которой выполняются вызовы через
+                ``run()``/``execute_acl()`` (по умолчанию — ``agent``)
+        """
+        self._acl = acl
+        self._acl_principal = principal
+        self._acl_fail_closed = True
+
+    def execute_acl(
+        self,
+        tool_name: str,
+        params: Dict[str, Any***REMOVED***,
+        context: Optional[Dict[str, Any***REMOVED******REMOVED*** = None,
+    ) -> ToolResult:
+        """Выполнить инструмент ПОД ACL-проверкой (ADR-022).
+
+        Если ACL не подключён (attach_acl не вызывался) — работает как
+        ``execute()`` (backward compatible). Иначе: решение ACL → DENY
+        возвращает ToolResult(success=False, error="ACL denied: ...") без
+        вызова инструмента.
+        """
+        if self._acl is None:
+            return self.execute(tool_name, params, context)
+
+        decision = self._acl.check(self._acl_principal, tool_name, params or {***REMOVED***)
+        if not decision.allowed:
+            self._publish_event("tool.acl_denied", {
+                "tool": tool_name,
+                "principal": decision.principal,
+                "reason": decision.reason,
+                "params": params,
+            ***REMOVED***)
+            return ToolResult(
+                success=False,
+                error=f"ACL denied ({decision.principal***REMOVED***): {decision.reason***REMOVED***",
+                tool_name=tool_name,
+                metadata={"acl_decision": str(decision)***REMOVED***,
+            )
+        return self.execute(tool_name, params, context)
 
 
 # ═══════════════════════════════════════════════════════════════

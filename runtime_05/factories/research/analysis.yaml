@@ -1,0 +1,62 @@
+# Research Analysis Forge — паспорт второй кузни Phase 10 (промт 093)
+# Pattern: pomt 092 §13 + runtime_05/factories/architecture/governance.yaml. Все capabilities ⊆ KNOWN_CAPABILITIES.
+
+forge_id: analysis
+factory_id: research
+display_name: Research Analysis Forge
+version: "1.0.0"
+status: material
+mission: "Производство research-артефактов (research_report.md — отчёты обзора/синтеза) через существующий ForgeFacade — доказывает универсальность Factory-контракта Phase 10 над ВТОРЫМ доменом (research), паритетно с Content Factory Phase 9"
+
+capabilities:
+  - research
+
+metadata:
+  prompt_path: pompts_11/093_19_phase10_research_factory_universality.md
+  references:
+    - doc.intelligence_factory_contract#g
+    - doc.factory_forge_arch#12
+    - doc.phase9_universal_factory_vertical_slice
+
+# ─── 9 паспортных полей v1.1 ───────────────────────────────────────────────────
+
+inputs:
+  - "research_hypothesis"
+  - "research_queries"
+  - "context_window"
+  - "prior_research"
+
+production_workflow:
+  - "input_normalization"
+  - "execution_request"
+  - "forge_run"
+  - "output_normalization"
+
+engines:
+  - "@entity forge.facade"
+  - "@entity research.factory"
+  - "@entity scenario.intelligence"
+
+quality_gates:
+  - "artifact_created"
+  - "artifact_validated"
+
+outputs:
+  - "research_report"
+
+artifacts:
+  - "projects_17/<slug>/forge/research_report.md"
+
+interfaces:
+  - "receives: ExecutionRequest (opportunity → capability=research → inputs)"
+  - "produces: research_report.md + memory feedback"
+  - "to_forge_facade: run_chain(project, role_ids, project_read_only=True)"
+
+memory:
+  - "research_production_log"
+  - "research_knowledge_objects"
+
+knowledge:
+  - "research_hypotheses"
+  - "research_queries"
+  - "production_history"
