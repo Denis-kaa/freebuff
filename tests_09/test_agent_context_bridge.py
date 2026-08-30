@@ -32,22 +32,22 @@ def test_ensure_session_creates_new_session(tmp_path) -> None:
     assert bridge.session_id == sid
 
     sessions = bridge._cm.list_sessions(SessionStatus.ACTIVE)
-    assert any(s["session_id"***REMOVED*** == sid for s in sessions)
+    assert any(s["session_id"] == sid for s in sessions)
 
 
 def test_log_user_and_assistant(tmp_path) -> None:
     bridge = _make_bridge(tmp_path)
     bridge.ensure_session()
     bridge.log_user("hello")
-    bridge.log_assistant({"status": "ok", "tool": "test"***REMOVED***)
+    bridge.log_assistant({"status": "ok", "tool": "test"})
 
     assert bridge.session_id is not None
     messages = bridge._cm.get_messages(bridge.session_id)
     assert len(messages) == 2
-    assert messages[0***REMOVED***["role"***REMOVED*** == "user"
-    assert messages[0***REMOVED***["content"***REMOVED*** == "hello"
-    assert messages[1***REMOVED***["role"***REMOVED*** == "assistant"
-    assert "ok" in messages[1***REMOVED***["content"***REMOVED***
+    assert messages[0]["role"] == "user"
+    assert messages[0]["content"] == "hello"
+    assert messages[1]["role"] == "assistant"
+    assert "ok" in messages[1]["content"]
 
 
 def test_log_error(tmp_path) -> None:
@@ -58,8 +58,8 @@ def test_log_error(tmp_path) -> None:
     assert bridge.session_id is not None
     messages = bridge._cm.get_messages(bridge.session_id)
     assert len(messages) == 1
-    assert messages[0***REMOVED***["role"***REMOVED*** == "system"
-    assert "boom" in messages[0***REMOVED***["content"***REMOVED***
+    assert messages[0]["role"] == "system"
+    assert "boom" in messages[0]["content"]
 
 
 def test_checkpoint_creates_checkpoint(tmp_path) -> None:
@@ -70,15 +70,15 @@ def test_checkpoint_creates_checkpoint(tmp_path) -> None:
     assert bridge.session_id is not None
     checkpoints = bridge._cm.get_checkpoints(bridge.session_id)
     assert len(checkpoints) == 1
-    assert checkpoints[0***REMOVED***["checkpoint_type"***REMOVED*** == "manual"
-    assert checkpoints[0***REMOVED***["summary"***REMOVED*** == "manual checkpoint"
+    assert checkpoints[0]["checkpoint_type"] == "manual"
+    assert checkpoints[0]["summary"] == "manual checkpoint"
 
 
 def test_auto_conspect_creates_summary(tmp_path) -> None:
     bridge = _make_bridge(tmp_path)
     bridge.ensure_session(project="termux-ai-agent", topic="test")
     bridge.log_user("hello")
-    bridge.log_assistant({"status": "ok"***REMOVED***)
+    bridge.log_assistant({"status": "ok"})
 
     path = bridge.auto_conspect()
     assert path and os.path.exists(path)

@@ -14,7 +14,7 @@ def project_dir(tmp_path):
     p = tmp_path / "demo_app"
     p.mkdir()
     (p / "project.yaml").write_text(
-        "name: demo_app\ntype: web\nstack: [react, node***REMOVED***\nroles: [web_dev***REMOVED***\ncontracts: [build***REMOVED***\n",
+        "name: demo_app\ntype: web\nstack: [react, node]\nroles: [web_dev]\ncontracts: [build]\n",
         encoding="utf-8",
     )
     (p / "README.md").write_text("# Demo", encoding="utf-8")
@@ -22,7 +22,7 @@ def project_dir(tmp_path):
         "## Быстрый старт\n```bash\nnpm run dev\n```\nWeb fallback: да\n",
         encoding="utf-8",
     )
-    (p / "CHECKLIST.md").write_text("- [x***REMOVED*** ok\n", encoding="utf-8")
+    (p / "CHECKLIST.md").write_text("- [x) ok\n", encoding="utf-8")
     return p
 
 
@@ -45,9 +45,9 @@ class TestProject:
         proj = Project.load(project_dir)
         assert proj.name == "demo_app"
         assert proj.type == "web"
-        assert proj.stack == ["react", "node"***REMOVED***
-        assert proj.roles == ["web_dev"***REMOVED***
-        assert proj.contracts == ["build"***REMOVED***
+        assert proj.stack == ["react", "node"]
+        assert proj.roles == ["web_dev"]
+        assert proj.contracts == ["build"]
 
     def test_load_without_config(self, tmp_path):
         p = tmp_path / "plain"
@@ -61,7 +61,7 @@ class TestProject:
         proj = Project.load(project_dir)
         req = proj.get_requirements()
         assert req.has_readme and req.has_runnable and req.has_checklist
-        assert req.missing == [***REMOVED***
+        assert req.missing == []
         assert req.has_web_fallback is True
 
     def test_requirements_missing(self, tmp_path):
@@ -69,7 +69,7 @@ class TestProject:
         p.mkdir()
         proj = Project.load(p)
         req = proj.get_requirements()
-        assert req.missing == ["README.md", "RUNNABLE.md", "CHECKLIST.md"***REMOVED***
+        assert req.missing == ["README.md", "RUNNABLE.md", "CHECKLIST.md"]
         assert req.has_steps is False
         assert req.steps_format_ok is True
 
@@ -89,16 +89,16 @@ class TestProject:
     def test_to_dict(self, project_dir):
         proj = Project.load(project_dir)
         d = proj.to_dict()
-        assert d["name"***REMOVED*** == "demo_app"
-        assert d["requirements"***REMOVED***["readme"***REMOVED*** is True
-        assert d["requirements"***REMOVED***["steps"***REMOVED*** is False
+        assert d["name"] == "demo_app"
+        assert d["requirements"]["readme"] is True
+        assert d["requirements"]["steps"] is False
 
     # STEPS.md (Этап 4.4) — backward-compat: optional по умолчанию
     def test_steps_md_optional(self, project_dir):
         proj = Project.load(project_dir)
         req = proj.get_requirements()
         assert req.has_steps is False
-        assert req.missing == [***REMOVED***
+        assert req.missing == []
 
     def test_steps_md_present_ok(self, project_dir, steps_ok):
         import shutil
@@ -139,7 +139,7 @@ class TestStepsPolicy:
         )
         (p / "README.md").write_text("# strict_proj", encoding="utf-8")
         (p / "RUNNABLE.md").write_text("## Быстрый старт\n", encoding="utf-8")
-        (p / "CHECKLIST.md").write_text("- [x***REMOVED*** ok\n", encoding="utf-8")
+        (p / "CHECKLIST.md").write_text("- [x) ok\n", encoding="utf-8")
         proj = Project.load(p)
         assert proj.requirements_steps == "required"
 
@@ -171,7 +171,7 @@ class TestStepsPolicy:
         )
         (p / "README.md").write_text("# X", encoding="utf-8")
         (p / "RUNNABLE.md").write_text("## s\n", encoding="utf-8")
-        (p / "CHECKLIST.md").write_text("- [x***REMOVED*** ok\n", encoding="utf-8")
+        (p / "CHECKLIST.md").write_text("- [x) ok\n", encoding="utf-8")
         proj = Project.load(p)
         req = proj.get_requirements()
         assert "STEPS.md" in req.missing
@@ -183,14 +183,14 @@ class TestStepsPolicy:
         (p / "project.yaml").write_text("name: no_steps\n", encoding="utf-8")
         (p / "README.md").write_text("# x", encoding="utf-8")
         (p / "RUNNABLE.md").write_text("## s\n", encoding="utf-8")
-        (p / "CHECKLIST.md").write_text("- [x***REMOVED*** ok\n", encoding="utf-8")
+        (p / "CHECKLIST.md").write_text("- [x) ok\n", encoding="utf-8")
         proj = Project.load(p)
         for mode in ("required", "strict"):
             req = proj.get_requirements(steps_policy=mode)
-            assert "STEPS.md" in req.missing, f"mode={mode***REMOVED***"
+            assert "STEPS.md" in req.missing, f"mode={mode}"
         for mode in (None, "optional"):
             req = proj.get_requirements(steps_policy=mode)
-            assert "STEPS.md" not in req.missing, f"mode={mode***REMOVED***"
+            assert "STEPS.md" not in req.missing, f"mode={mode}"
 
     def test_project_override_optional_overrides_strict_workspace(self, tmp_path):
         """project.yaml `requirements.steps: optional` > workspace.yaml strict."""
@@ -204,7 +204,7 @@ class TestStepsPolicy:
         )
         (proj_dir / "README.md").write_text("# soft_pro", encoding="utf-8")
         (proj_dir / "RUNNABLE.md").write_text("## s\n", encoding="utf-8")
-        (proj_dir / "CHECKLIST.md").write_text("- [x***REMOVED*** ok\n", encoding="utf-8")
+        (proj_dir / "CHECKLIST.md").write_text("- [x) ok\n", encoding="utf-8")
         proj = Project.load(proj_dir)
         assert proj.requirements_steps == "optional"
         # Workspace-level strict игнорируется из-за project override.
@@ -228,7 +228,7 @@ class TestStepsStats:
         assert stats.count == 0
         assert stats.last_step_n is None
         assert stats.format_ok is False
-        assert stats.format_problems == [***REMOVED***
+        assert stats.format_problems == []
         # to_line для отсутствующего файла — короткая форма.
         assert stats.to_line() == "STEPS: missing"
 
@@ -269,7 +269,7 @@ class TestStepsStats:
         assert stats.count == 3
         assert stats.last_step_n == 3
         assert stats.format_ok is True
-        assert stats.format_problems == [***REMOVED***
+        assert stats.format_problems == []
         line = stats.to_line()
         assert "count=3" in line
         assert "last=#3" in line
@@ -316,7 +316,7 @@ class TestWorkspace:
         ws_root = tmp_path / "ws"
         ws_root.mkdir()
         (ws_root / "workspace.yaml").write_text(
-            "name: my-workspace\nprojects: [alpha***REMOVED***\ndefault_environment: staging\n",
+            "name: my-workspace\nprojects: [alpha]\ndefault_environment: staging\n",
             encoding="utf-8",
         )
         alpha = ws_root / "alpha"
@@ -327,7 +327,7 @@ class TestWorkspace:
         assert ws.name == "my-workspace"
         assert ws.default_environment == "staging"
         assert len(ws.projects) == 1
-        assert ws.projects[0***REMOVED***.name == "alpha"
+        assert ws.projects[0].name == "alpha"
 
     def test_load_steps_policy_default_optional(self, tmp_path):
         ws_root = tmp_path / "ws"
@@ -351,8 +351,8 @@ class TestWorkspace:
             d.mkdir()
             (d / "README.md").write_text("# %s" % name, encoding="utf-8")
         ws = Workspace.load(ws_root)
-        names = {p.name for p in ws.projects***REMOVED***
-        assert names == {"proj_a", "proj_b"***REMOVED***
+        names = {p.name for p in ws.projects}
+        assert names == {"proj_a", "proj_b"}
 
     def test_get_project(self, tmp_path):
         ws_root = tmp_path / "ws3"
@@ -372,11 +372,11 @@ class TestWorkspace:
         (d / "project.yaml").write_text("name: ok_proj\ntype: cli\n", encoding="utf-8")
         (d / "README.md").write_text("# ok", encoding="utf-8")
         (d / "RUNNABLE.md").write_text("## Быстрый старт\n", encoding="utf-8")
-        (d / "CHECKLIST.md").write_text("- [x***REMOVED***\n", encoding="utf-8")
+        (d / "CHECKLIST.md").write_text("- [x)\n", encoding="utf-8")
         ws = Workspace.load(ws_root)
         health = ws.validate()
         assert len(health.projects) == 1
-        assert health.projects[0***REMOVED***["requirements_missing"***REMOVED*** == [***REMOVED***
+        assert health.projects[0]["requirements_missing"] == []
 
     def test_validate_strict_workspace_degrades_no_steps(self, tmp_path):
         """Workspace.steps_policy=strict и проект без STEPS.md → degraded."""
@@ -388,8 +388,8 @@ class TestWorkspace:
         (d / "project.yaml").write_text("name: needs_steps_proj\ntype: cli\n", encoding="utf-8")
         (d / "README.md").write_text("# x", encoding="utf-8")
         (d / "RUNNABLE.md").write_text("## s\n", encoding="utf-8")
-        (d / "CHECKLIST.md").write_text("- [x***REMOVED***\n", encoding="utf-8")
+        (d / "CHECKLIST.md").write_text("- [x)\n", encoding="utf-8")
         ws = Workspace.load(ws_root)
         health = ws.validate()
         assert "needs_steps_proj" in health.degraded
-        assert "STEPS.md" in health.projects[0***REMOVED***["requirements_missing"***REMOVED***
+        assert "STEPS.md" in health.projects[0]["requirements_missing"]

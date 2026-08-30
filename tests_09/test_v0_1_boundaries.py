@@ -27,7 +27,7 @@ def project(tmp_path):
     (p / "project.yaml").write_text("name: demo\ntype: python\n", encoding="utf-8")
     (p / "README.md").write_text("# Demo", encoding="utf-8")
     (p / "RUNNABLE.md").write_text("## Быстрый старт\n```bash\ncd demo\n```\n", encoding="utf-8")
-    (p / "CHECKLIST.md").write_text("- [x***REMOVED*** ok\n", encoding="utf-8")
+    (p / "CHECKLIST.md").write_text("- [x) ok\n", encoding="utf-8")
     return Project.load(p)
 
 
@@ -98,12 +98,12 @@ class TestR124B2ReadOnly:
 
     def test_read_only_with_artifacts_passes(self, project):
         """Артефакты на месте → read-only FORGE ok, состояние не мутируется."""
-        before = {f.name for f in project.root.iterdir()***REMOVED***
+        before = {f.name for f in project.root.iterdir()}
         pipe = ForgePipeline(project, project_read_only=True)
         res = pipe.stage_forge()
         assert res.status == "ok"
         assert "не мутировалось" in res.details
-        after = {f.name for f in project.root.iterdir()***REMOVED***
+        after = {f.name for f in project.root.iterdir()}
         assert before == after  # ничего не создано и не изменено
 
     def test_default_mode_still_creates_artifacts(self, tmp_path):
@@ -125,7 +125,7 @@ class TestR124B2ReadOnly:
         proj = Project.load(p)
         pipe = ForgePipeline(proj, project_read_only=True)
         missing = pipe._missing_artifacts()
-        assert missing == ["CHECKLIST.md"***REMOVED***
+        assert missing == ["CHECKLIST.md"]
 
 
 # ── R-127 (B10): validate_schema (UNFORGED ≠ UNTESTED) ──────────────────
@@ -134,41 +134,41 @@ class TestR124B2ReadOnly:
 class TestR127B10Schema:
     def test_valid_unforged_passes(self, registry):
         pid = registry.register_project("fresh", "/tmp/fresh")
-        assert registry.validate_schema() == [***REMOVED***
-        assert registry.schema_violations == [***REMOVED***
+        assert registry.validate_schema() == []
+        assert registry.schema_violations == []
 
     def test_unforged_with_last_run_at_violation(self, tmp_path):
         reg = ForgeRegistry(tmp_path / "r.yaml")
         reg.register_project("bad", "/tmp/bad")
         # симулируем битый реестр: UNFORGED, но last_run_at установлен
-        reg._data["bad"***REMOVED***["last_run_at"***REMOVED*** = "2026-08-10T00:00:00+00:00"
+        reg._data["bad"]["last_run_at"] = "2026-08-10T00:00:00+00:00"
         violations = reg.validate_schema()
         assert any("UNFORGED but last_run_at" in v for v in violations)
 
     def test_unforged_with_last_pipeline_violation(self, tmp_path):
         reg = ForgeRegistry(tmp_path / "r.yaml")
         reg.register_project("bad2", "/tmp/bad2")
-        reg._data["bad2"***REMOVED***["last_pipeline"***REMOVED*** = {"overall": "ok"***REMOVED***
+        reg._data["bad2"]["last_pipeline"] = {"overall": "ok"}
         violations = reg.validate_schema()
         assert any("UNFORGED but last_pipeline" in v for v in violations)
 
     def test_deployed_requires_last_run_at(self, tmp_path):
         reg = ForgeRegistry(tmp_path / "r.yaml")
         reg.register_project("ran", "/tmp/ran")
-        reg._data["ran"***REMOVED***["status"***REMOVED*** = DEPLOYED  # без last_run_at → нарушение
+        reg._data["ran"]["status"] = DEPLOYED  # без last_run_at → нарушение
         violations = reg.validate_schema()
         assert any("DEPLOYED/FAILED implies a run" in v for v in violations)
 
     def test_record_run_produces_valid_schema(self, registry):
         """record_run переводит UNFORGED→DEPLOYED с last_run_at → схема валидна."""
         pid = registry.register_project("ok", "/tmp/ok")
-        registry.record_run(pid, {"overall": "ok", "stages": [***REMOVED******REMOVED***)
-        assert registry.validate_schema() == [***REMOVED***
+        registry.record_run(pid, {"overall": "ok", "stages": []})
+        assert registry.validate_schema() == []
 
     def test_invalid_status_violation(self, tmp_path):
         reg = ForgeRegistry(tmp_path / "r.yaml")
         reg.register_project("weird", "/tmp/weird")
-        reg._data["weird"***REMOVED***["status"***REMOVED*** = "UNTESTED"  # UNTESTED не в STATUSES
+        reg._data["weird"]["status"] = "UNTESTED"  # UNTESTED не в STATUSES
         violations = reg.validate_schema()
         assert any("invalid status" in v and "UNTESTED" in v for v in violations)
 
@@ -176,7 +176,7 @@ class TestR127B10Schema:
         reg = ForgeRegistry(tmp_path / "r.yaml")
         pid = reg.register_project("no_root", "/tmp/x")
         assert pid == "no-root"  # _slug: не-алфанум → '-'
-        del reg._data["no-root"***REMOVED***["root"***REMOVED***
+        del reg._data["no-root"]["root"]
         violations = reg.validate_schema()
         assert any("missing required field 'root'" in v for v in violations)
 

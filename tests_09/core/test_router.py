@@ -24,7 +24,7 @@ class TestModelCatalog:
     def test_default_catalog(self, catalog):
         entries = catalog.all
         assert len(entries) >= 6
-        names = {e.name for e in entries***REMOVED***
+        names = {e.name for e in entries}
         assert "qwen2.5:1.5b" in names
         assert "deepseek-v4-flash" in names
         assert "gemini-2.5-flash" in names
@@ -52,30 +52,30 @@ class TestModelCatalog:
         assert catalog.get("new-model") is not None
 
     def test_match_by_capability(self, catalog):
-        scored = catalog.match(["vision"***REMOVED***)
+        scored = catalog.match(["vision"])
         assert len(scored) >= 1
-        best_entry, best_score = scored[0***REMOVED***
+        best_entry, best_score = scored[0]
         assert best_score == 1
         assert "gemini" in best_entry.name
 
     def test_match_multiple_capabilities(self, catalog):
-        scored = catalog.match(["local", "fast"***REMOVED***)
-        best_entry, best_score = scored[0***REMOVED***
+        scored = catalog.match(["local", "fast"])
+        best_entry, best_score = scored[0]
         assert best_score >= 2
         assert best_entry.provider == Provider.OLLAMA
 
     def test_match_no_capabilities_returns_all(self, catalog):
-        scored = catalog.match([***REMOVED***)
+        scored = catalog.match([])
         assert len(scored) == len(catalog.all)
 
     def test_match_context_penalty(self, catalog):
-        scored = catalog.match([***REMOVED***, max_tokens=100000)
-        small_models = [e.name for e, s in scored if "0.5b" in e.name***REMOVED***
+        scored = catalog.match([], max_tokens=100000)
+        small_models = [e.name for e, s in scored if "0.5b" in e.name]
         assert "qwen2.5:0.5b" not in small_models
 
     def test_match_scoring_order(self, catalog):
-        scored = catalog.match(["code", "reasoning", "fast"***REMOVED***)
-        best_entry, best_score = scored[0***REMOVED***
+        scored = catalog.match(["code", "reasoning", "fast"])
+        best_entry, best_score = scored[0]
         assert best_score >= 2
 
 
@@ -83,27 +83,27 @@ class TestSmartRouter:
     """Router tests at module level (not nested)."""
 
     def test_route_by_vision_capability(self, router):
-        decision = router.route(required_capabilities=["vision"***REMOVED***)
+        decision = router.route(required_capabilities=["vision"])
         assert "gemini" in decision.model.lower()
         assert decision.fallback_used is False
 
     def test_route_by_local_preference(self, router):
         decision = router.route(
-            required_capabilities=["summarize"***REMOVED***,
+            required_capabilities=["summarize"],
             preference=Preference.LOCAL,
         )
         assert decision.provider == Provider.OLLAMA
 
     def test_route_by_local_fast(self, router):
         decision = router.route(
-            required_capabilities=["local", "fast"***REMOVED***,
+            required_capabilities=["local", "fast"],
         )
         assert decision.provider == Provider.OLLAMA
         assert decision.fallback_used is False
 
     def test_route_by_code_reasoning(self, router):
         decision = router.route(
-            required_capabilities=["code", "reasoning"***REMOVED***,
+            required_capabilities=["code", "reasoning"],
         )
         assert decision.provider in (
             Provider.DEEPSEEK, Provider.GROQ, Provider.GEMINI
@@ -119,13 +119,13 @@ class TestSmartRouter:
 
     def test_route_no_match_fallback(self, router):
         decision = router.route(
-            required_capabilities=["impossible_capability_xyz"***REMOVED***,
+            required_capabilities=["impossible_capability_xyz"],
         )
         assert decision.fallback_used is True
         assert "fallback" in decision.reason
 
     def test_empty_catalog_raises(self):
-        empty = SmartRouter(ModelCatalog([***REMOVED***), fallback="nonexistent")
+        empty = SmartRouter(ModelCatalog([]), fallback="nonexistent")
         with pytest.raises(RuntimeError, match="No models"):
             empty.route()
 
@@ -133,16 +133,16 @@ class TestSmartRouter:
         cat = ModelCatalog([
             ModelEntry(
                 "gemini-2.5-flash", Provider.GEMINI,
-                capabilities=["vision"***REMOVED***,
+                capabilities=["vision"],
             ),
-        ***REMOVED***)
+        ])
         r = SmartRouter(cat, fallback="gemini-2.5-flash")
-        decision = r.route(required_capabilities=["impossible"***REMOVED***)
+        decision = r.route(required_capabilities=["impossible"])
         assert decision.model == "gemini-2.5-flash"
         assert decision.fallback_used is True
 
     def test_route_returns_route_decision_type(self, router):
-        decision = router.route(required_capabilities=["code"***REMOVED***)
+        decision = router.route(required_capabilities=["code"])
         assert isinstance(decision, RouteDecision)
         assert isinstance(decision.model, str)
         assert isinstance(decision.provider, Provider)
@@ -158,12 +158,12 @@ class TestSmartRouterAvailability:
     """
 
     def test_route_filters_unavailable_local_provider(self, catalog):
-        """documenter ['summarize','explain'***REMOVED***: недоступный Ollama не выбирается."""
+        """documenter ['summarize','explain']: недоступный Ollama не выбирается."""
         def available(provider):
             return provider != Provider.OLLAMA
         r = SmartRouter(catalog, fallback="gemini-2.5-flash",
                         provider_available=available)
-        decision = r.route(required_capabilities=["summarize", "explain"***REMOVED***)
+        decision = r.route(required_capabilities=["summarize", "explain"])
         # Cloud-first contract: selection is data-driven by score/latency;
         # it must not depend on one hard-coded cloud provider winning the tie.
         assert decision.provider in (
@@ -178,7 +178,7 @@ class TestSmartRouterAvailability:
         """При известной доступности cloud-first выбирает лучшую cloud-модель."""
         r = SmartRouter(catalog, fallback="gemini-2.5-flash",
                         provider_available=lambda p: True)
-        decision = r.route(required_capabilities=["summarize", "explain"***REMOVED***)
+        decision = r.route(required_capabilities=["summarize", "explain"])
         assert decision.provider in (
             Provider.DEEPSEEK, Provider.GEMINI, Provider.GROQ,
             Provider.SAMBANOVA, Provider.OPENROUTER,
@@ -190,16 +190,16 @@ class TestSmartRouterAvailability:
         """Ни один провайдер не доступен → graceful degradation (не exception)."""
         r = SmartRouter(catalog, fallback="gemini-2.5-flash",
                         provider_available=lambda p: False)
-        decision = r.route(required_capabilities=["summarize", "explain"***REMOVED***)
+        decision = r.route(required_capabilities=["summarize", "explain"])
         # Best-effort: возвращает какое-то решение (падение поймает вызывающий).
         assert decision.model
 
     def test_route_no_availability_param_uses_catalog_ranking(self, catalog):
         """Без provider_available используется обычный ranking каталога (BC)."""
-        required = ["summarize", "explain"***REMOVED***
+        required = ["summarize", "explain"]
         r = SmartRouter(catalog, fallback="gemini-2.5-flash")
         decision = r.route(required_capabilities=required)
-        expected = catalog.match(required)[0***REMOVED***[0***REMOVED***
+        expected = catalog.match(required)[0][0]
         assert decision.model == expected.name
         assert decision.provider == expected.provider
         assert decision.fallback_used is False
@@ -210,26 +210,26 @@ class TestSmartRouterIntegration:
 
     def test_vision_task(self, router):
         decision = router.route(
-            required_capabilities=["vision", "multimodal"***REMOVED***,
+            required_capabilities=["vision", "multimodal"],
         )
         assert "gemini" in decision.model.lower()
 
     def test_simple_offline_task(self, router):
         decision = router.route(
-            required_capabilities=["local", "fast"***REMOVED***,
+            required_capabilities=["local", "fast"],
         )
         assert decision.provider == Provider.OLLAMA
 
     def test_deep_reasoning_task(self, router):
         decision = router.route(
-            required_capabilities=["deep", "architecture", "review"***REMOVED***,
+            required_capabilities=["deep", "architecture", "review"],
         )
         assert decision.provider == Provider.DEEPSEEK
         assert "pro" in decision.model
 
     def test_large_context_task(self, router):
         decision = router.route(
-            required_capabilities=["long_context"***REMOVED***,
+            required_capabilities=["long_context"],
             max_tokens_needed=500000,
         )
         assert decision.provider in (Provider.GEMINI, Provider.DEEPSEEK)

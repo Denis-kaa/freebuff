@@ -65,44 +65,44 @@ class TestDeriveSyncStatus:
     def test_fresh_coordinator_is_idle(self) -> None:
         coord = _fresh_coordinator()
         snap = derive_sync_status(coord)
-        assert snap["status"***REMOVED*** == "idle"
-        assert snap["listener_running"***REMOVED*** is False
-        assert snap["pending_count"***REMOVED*** == 0
-        assert snap["conflict_count"***REMOVED*** == 0
-        assert snap["quarantine_count"***REMOVED*** == 0
+        assert snap["status"] == "idle"
+        assert snap["listener_running"] is False
+        assert snap["pending_count"] == 0
+        assert snap["conflict_count"] == 0
+        assert snap["quarantine_count"] == 0
         assert "timestamp_ms" in snap
 
     def test_running_listener_is_connected(self) -> None:
         coord = _fresh_coordinator()
-        coord.attach_listener(_FakeListener(running=True))  # type: ignore[arg-type***REMOVED***
+        coord.attach_listener(_FakeListener(running=True))  # type: ignore[arg-type]
         snap = derive_sync_status(coord)
-        assert snap["status"***REMOVED*** == "connected"
-        assert snap["listener_running"***REMOVED*** is True
+        assert snap["status"] == "connected"
+        assert snap["listener_running"] is True
 
     def test_stopped_listener_is_idle(self) -> None:
         coord = _fresh_coordinator()
-        coord.attach_listener(_FakeListener(running=False))  # type: ignore[arg-type***REMOVED***
+        coord.attach_listener(_FakeListener(running=False))  # type: ignore[arg-type]
         snap = derive_sync_status(coord)
-        assert snap["status"***REMOVED*** == "idle"
+        assert snap["status"] == "idle"
 
     def test_conflict_beats_connected(self) -> None:
         coord = _fresh_coordinator()
-        coord.attach_listener(_FakeListener(running=True))  # type: ignore[arg-type***REMOVED***
+        coord.attach_listener(_FakeListener(running=True))  # type: ignore[arg-type]
         with coord._lock:
-            coord._conflict_log["k1"***REMOVED*** = MagicMock()  # type: ignore[attr-defined***REMOVED***
+            coord._conflict_log["k1"] = MagicMock()  # type: ignore[attr-defined]
         snap = derive_sync_status(coord)
-        assert snap["status"***REMOVED*** == "conflict"
-        assert snap["conflict_count"***REMOVED*** == 1
+        assert snap["status"] == "conflict"
+        assert snap["conflict_count"] == 1
 
     def test_quarantine_beats_conflict(self) -> None:
         coord = _fresh_coordinator()
-        coord.attach_listener(_FakeListener(running=True))  # type: ignore[arg-type***REMOVED***
+        coord.attach_listener(_FakeListener(running=True))  # type: ignore[arg-type]
         with coord._lock:
-            coord._conflict_log["k1"***REMOVED*** = MagicMock()  # type: ignore[attr-defined***REMOVED***
-            coord._quarantine_buffer.append(MagicMock())  # type: ignore[attr-defined***REMOVED***
+            coord._conflict_log["k1"] = MagicMock()  # type: ignore[attr-defined]
+            coord._quarantine_buffer.append(MagicMock())  # type: ignore[attr-defined]
         snap = derive_sync_status(coord)
-        assert snap["status"***REMOVED*** == "quarantine"
-        assert snap["quarantine_count"***REMOVED*** == 1
+        assert snap["status"] == "quarantine"
+        assert snap["quarantine_count"] == 1
 
 
 # ── Active-coordinator registry ─────────────────────────────────────────
@@ -124,7 +124,7 @@ class TestActiveCoordinatorRegistry:
     def test_registry_thread_safe(self) -> None:
         """Registry uses a threading.Lock — concurrent set/get must not race."""
         coord = _fresh_coordinator()
-        errors: list[Exception***REMOVED*** = [***REMOVED***
+        errors: list[Exception] = []
 
         def _writer() -> None:
             try:
@@ -134,12 +134,12 @@ class TestActiveCoordinatorRegistry:
             except Exception as e:  # pragma: no cover
                 errors.append(e)
 
-        threads = [threading.Thread(target=_writer) for _ in range(4)***REMOVED***
+        threads = [threading.Thread(target=_writer) for _ in range(4)]
         for t in threads:
             t.start()
         for t in threads:
             t.join()
-        assert errors == [***REMOVED***
+        assert errors == []
 
 
 # ── publish_sync_status_event (None-safe per CAN-14) ────────────────────
@@ -169,17 +169,17 @@ class TestMcpSyncStatusTool:
         from freebuff_plugin_03.mcp_server import MCPServer
 
         server = MCPServer()
-        names = [t["name"***REMOVED*** for t in server._list_sync_tools()***REMOVED***
+        names = [t["name"] for t in server._list_sync_tools()]
         assert "sync_status" in names
 
     def test_tool_handler_returns_closed_vocab_status(self) -> None:
         from freebuff_plugin_03.mcp_server import MCPServer
 
         server = MCPServer()
-        result = server._call_tool("sync_status", {***REMOVED***)
-        assert "content" in result and result["content"***REMOVED***
-        payload = json.loads(result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***)
-        assert payload["status"***REMOVED*** in ("idle", "connected", "conflict", "quarantine")
+        result = server._call_tool("sync_status", {})
+        assert "content" in result and result["content"]
+        payload = json.loads(result["content"][0]["text"])
+        assert payload["status"] in ("idle", "connected", "conflict", "quarantine")
         # No active coordinator in test → idle + registered false
         assert payload.get("registered") is False
         assert "recent_events" in payload  # None-safe EventStore read
@@ -188,5 +188,5 @@ class TestMcpSyncStatusTool:
         from freebuff_plugin_03.mcp_server import MCPServer
 
         server = MCPServer()
-        result = server._call_tool("not_a_tool", {***REMOVED***)
+        result = server._call_tool("not_a_tool", {})
         assert result.get("isError") is True

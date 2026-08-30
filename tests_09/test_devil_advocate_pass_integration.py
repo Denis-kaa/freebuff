@@ -43,13 +43,13 @@ def isolated_ledger(monkeypatch: pytest.MonkeyPatch, tmp_path):
 
 def _seed_open_hypothesis(text: str = "StarMaker pricing tier matters", *, tags=None) -> str:
     """Seed an OPEN hypothesis. Returns hid."""
-    summary = add_hypothesis(text, tags=tags or ["pricing", "starmaker"***REMOVED***, confidence=0.6)
+    summary = add_hypothesis(text, tags=tags or ["pricing", "starmaker"], confidence=0.6)
     return summary.hid
 
 
 def _seed_refuted_hypothesis(text: str = "Already refuted claim") -> str:
     """Seed a hypothesis REFUTED in two-step (open then refute)."""
-    summary = add_hypothesis(text, tags=["legacy"***REMOVED***, confidence=0.5)
+    summary = add_hypothesis(text, tags=["legacy"], confidence=0.5)
     update_status(summary.hid, HypothesisStatus.REFUTED)
     return summary.hid
 
@@ -70,7 +70,7 @@ class TestActiveRefutationLoop:
         """
         hid_a = _seed_open_hypothesis(
             "StarMaker pricing tier matters",
-            tags=["pricing", "starmaker"***REMOVED***,
+            tags=["pricing", "starmaker"],
         )
 
         # Get the HypothesisSummary back from the ledger.
@@ -80,7 +80,7 @@ class TestActiveRefutationLoop:
 
         # ── 1. Pass finished cleanly with refuted=True.
         assert report.refuted is True, (
-            f"devil_advocate_pass should refute the original; warnings={report.warnings***REMOVED***"
+            f"devil_advocate_pass should refute the original; warnings={report.warnings}"
         )
         assert report.original_hid == hid_a
         assert isinstance(report.strategy, str)
@@ -88,24 +88,24 @@ class TestActiveRefutationLoop:
 
         # ── 2. Exactly 3 new candidates registered (inversion+boundary+steel-man).
         assert report.iteration_count == 3, (
-            f"expected 3 candidates (3-kill-questions); got {report.iteration_count***REMOVED***"
+            f"expected 3 candidates (3-kill-questions); got {report.iteration_count}"
         )
         assert len(report.new_candidates) == 3
 
         # ── 3. Each candidate has parent-tag inheritance (cross-pollination).
         for c in report.new_candidates:
-            assert set(c.tags or [***REMOVED***) >= {"pricing", "starmaker"***REMOVED***, (
-                f"candidate {c.hid***REMOVED*** missing parent tags: {c.tags***REMOVED***"
+            assert set(c.tags or []) >= {"pricing", "starmaker"}, (
+                f"candidate {c.hid} missing parent tags: {c.tags}"
             )
 
         # ── 4. Ledger state — original REFUTED, 3 new candidates OPEN.
-        open_candidates = [s for s in query_by_status(HypothesisStatus.OPEN) if s.hid != hid_a***REMOVED***
+        open_candidates = [s for s in query_by_status(HypothesisStatus.OPEN) if s.hid != hid_a]
         refuted = query_by_status(HypothesisStatus.REFUTED)
         assert len(refuted) == 1
-        assert refuted[0***REMOVED***.hid == hid_a
+        assert refuted[0].hid == hid_a
         assert len(open_candidates) >= 3, (
-            f"expected ≥3 new candidates in OPEN; got {len(open_candidates)***REMOVED***: "
-            f"{[c.hid for c in open_candidates***REMOVED******REMOVED***"
+            f"expected ≥3 new candidates in OPEN; got {len(open_candidates)}: "
+            f"{[c.hid for c in open_candidates]}"
         )
 
     def test_devil_advocate_pass_text_heuristics_are_deterministic(
@@ -121,9 +121,9 @@ class TestActiveRefutationLoop:
         report = devil_advocate_pass(a_summary)
         assert report.iteration_count == 3
 
-        texts = {c.text for c in report.new_candidates***REMOVED***
+        texts = {c.text for c in report.new_candidates}
         assert len(texts) == 3, (
-            f"3 heuristics should produce 3 distinct candidate texts; got {len(texts)***REMOVED***: {texts***REMOVED***"
+            f"3 heuristics should produce 3 distinct candidate texts; got {len(texts)}: {texts}"
         )
         # Heuristic signatures: "Counter" / "Edge case" / "Evidence-gap".
         joined = " | ".join(sorted(texts))
@@ -134,14 +134,14 @@ class TestActiveRefutationLoop:
     def test_devil_advocate_pass_inherits_parent_kill_criteria(
         self, isolated_ledger,
     ) -> None:
-        """Parent kill_criteria[:3***REMOVED*** propagated to children."""
+        """Parent kill_criteria[:3] propagated to children."""
         parent_kc = [
-            {"criterion": f"crit_{i***REMOVED***", "met": False, "evidence_url": f"https://x.test/{i***REMOVED***"***REMOVED***
+            {"criterion": f"crit_{i}", "met": False, "evidence_url": f"https://x.test/{i}"}
             for i in range(3)
-        ***REMOVED***
+        ]
         summary = add_hypothesis(
             "Hypothesis with detailed kill criteria",
-            tags=["test"***REMOVED***,
+            tags=["test"],
             kill_criteria=parent_kc,
             confidence=0.6,
         )
@@ -152,9 +152,9 @@ class TestActiveRefutationLoop:
         assert report.iteration_count == 3
         # Each candidate inherits parent's first 3 kill criteria.
         for c in report.new_candidates:
-            assert len(c.kill_criteria or [***REMOVED***) == 3, (
+            assert len(c.kill_criteria or []) == 3, (
                 f"candidate should inherit 3 parent kill_criteria; got "
-                f"{len(c.kill_criteria or [***REMOVED***)***REMOVED*** for {c.hid***REMOVED***"
+                f"{len(c.kill_criteria or [])} for {c.hid}"
             )
 
     def test_devil_advocate_pass_confidence_pessimism(
@@ -168,7 +168,7 @@ class TestActiveRefutationLoop:
         for c in report.new_candidates:
             assert c.confidence == pytest.approx(0.4, abs=1e-6), (
                 f"counter-candidate confidence should be 0.4 (adversarial skepticism); "
-                f"got {c.confidence***REMOVED*** for {c.hid***REMOVED***"
+                f"got {c.confidence} for {c.hid}"
             )
 
 
@@ -213,14 +213,14 @@ class TestADR016FailSafe:
         report = devil_advocate_pass(fake)
 
         assert report.refuted is False
-        assert report.new_candidates == [***REMOVED***
+        assert report.new_candidates == []
         assert report.iteration_count == 0
         assert any(("Import" in w) or ("ModuleNotFound" in w) for w in report.warnings), (
-            f"warnings should mention Import/ModuleNotFoundError; got {report.warnings***REMOVED***"
+            f"warnings should mention Import/ModuleNotFoundError; got {report.warnings}"
         )
         stderr_text = buf.getvalue()
         assert ("hypothesis_ledger" in stderr_text) or ("passive mode" in stderr_text), (
-            f"stderr should mention hypothesis_ledger or passive mode; got {stderr_text!r***REMOVED***"
+            f"stderr should mention hypothesis_ledger or passive mode; got {stderr_text!r}"
         )
 
 
@@ -246,9 +246,9 @@ class TestInvariantsAndIdempotency:
         # Idempotent: no transition attempted.
         assert report.refuted is False
         assert report.iteration_count == 0
-        assert report.new_candidates == [***REMOVED***
+        assert report.new_candidates == []
         # Original stays REFUTED (no rollback).
-        assert query_by_status(HypothesisStatus.REFUTED)[0***REMOVED***.hid == hid_a
+        assert query_by_status(HypothesisStatus.REFUTED)[0].hid == hid_a
         # No spurious OPEN candidates created.
         open_count_before_and_after = len(query_by_status(HypothesisStatus.OPEN))
         assert open_count_before_and_after == 0
@@ -264,8 +264,8 @@ class TestInvariantsAndIdempotency:
             hid: str = ""
             text: str = ""
             status = HypothesisStatus.OPEN
-            tags = [***REMOVED***
-            kill_criteria = [***REMOVED***
+            tags = []
+            kill_criteria = []
 
         fake = _EmptyHid()
         report = devil_advocate_pass(fake)
@@ -283,11 +283,11 @@ class TestFailsOpenWhenCandidatesLost:
         """Monkeypatch add_hypothesis → raise. Devil's-advocate must NOT refute."""
         from scripts_01 import hypothesis_ledger as _hl
 
-        call_count = {"n": 0***REMOVED***
+        call_count = {"n": 0}
 
         def _raising_add(*args, **kwargs):
-            call_count["n"***REMOVED*** += 1
-            raise RuntimeError(f"simulated candidate[{call_count['n'***REMOVED******REMOVED******REMOVED*** add failure")
+            call_count["n"] += 1
+            raise RuntimeError(f"simulated candidate[{call_count['n']}] add failure")
 
         # SEED FIRST (uses real add_hypothesis) — monkeypatch applied AFTER.
         hid_a = _seed_open_hypothesis("Candidate registration failing")
@@ -301,11 +301,11 @@ class TestFailsOpenWhenCandidatesLost:
 
         # Fails-open: refuted=False, no candidates, original stays OPEN.
         assert report.refuted is False
-        assert report.new_candidates == [***REMOVED***
+        assert report.new_candidates == []
         assert report.iteration_count == 0
         # All 3 add_hypothesis attempts were made (deterministic sequential).
-        assert call_count["n"***REMOVED*** == 3, (
-            f"expected 3 add_hypothesis attempts (1 per heuristic); got {call_count['n'***REMOVED******REMOVED***"
+        assert call_count["n"] == 3, (
+            f"expected 3 add_hypothesis attempts (1 per heuristic); got {call_count['n']}"
         )
         # Original is still OPEN (no refutation attempted).
         assert any(s.hid == hid_a for s in query_by_status(HypothesisStatus.OPEN))

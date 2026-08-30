@@ -28,28 +28,28 @@ class TestTaskStatus:
 
 class TestAgentResult:
     def test_ok_result(self):
-        r = AgentResult(status=TaskStatus.OK, agent="a", task="t", data={"x": 1***REMOVED***)
+        r = AgentResult(status=TaskStatus.OK, agent="a", task="t", data={"x": 1})
         assert r.ok is True
         assert r.status == TaskStatus.OK
         d = r.to_dict()
-        assert d["status"***REMOVED*** == "ok"
-        assert d["data"***REMOVED*** == {"x": 1***REMOVED***
+        assert d["status"] == "ok"
+        assert d["data"] == {"x": 1}
 
     def test_error_result(self):
-        r = AgentResult(status=TaskStatus.ERROR, agent="a", task="t", errors=["e1"***REMOVED***)
+        r = AgentResult(status=TaskStatus.ERROR, agent="a", task="t", errors=["e1"])
         assert r.ok is False
-        assert r.errors == ["e1"***REMOVED***
+        assert r.errors == ["e1"]
 
     def test_warn_result(self):
-        r = AgentResult(status=TaskStatus.WARN, agent="a", task="t", warnings=["w1"***REMOVED***)
+        r = AgentResult(status=TaskStatus.WARN, agent="a", task="t", warnings=["w1"])
         assert r.status == TaskStatus.WARN
-        assert r.warnings == ["w1"***REMOVED***
+        assert r.warnings == ["w1"]
 
     def test_empty_defaults(self):
         r = AgentResult(status=TaskStatus.OK, agent="a", task="t")
-        assert r.warnings == [***REMOVED***
-        assert r.errors == [***REMOVED***
-        assert r.meta == {***REMOVED***
+        assert r.warnings == []
+        assert r.errors == []
+        assert r.meta == {}
         assert r.data is None
 
     def test_to_dict_full(self):
@@ -58,19 +58,19 @@ class TestAgentResult:
             agent="test",
             task="run",
             data="result",
-            warnings=["w"***REMOVED***,
-            errors=[***REMOVED***,
-            meta={"key": "val"***REMOVED***,
+            warnings=["w"],
+            errors=[],
+            meta={"key": "val"},
         )
         d = r.to_dict()
         assert d == {
             "status": "ok",
             "agent": "test",
             "task": "run", "data": "result",
-            "warnings": ["w"***REMOVED***,
-            "errors": [***REMOVED***,
-            "meta": {"key": "val"***REMOVED***,
-        ***REMOVED***
+            "warnings": ["w"],
+            "errors": [],
+            "meta": {"key": "val"},
+        }
 
 
 class TestIAgent:
@@ -80,7 +80,7 @@ class TestIAgent:
         result = await agent.run(x=1)
         assert isinstance(result, AgentResult)
         assert result.ok is True
-        assert result.data == {"x": 1***REMOVED***
+        assert result.data == {"x": 1}
 
     def test_name_property(self):
         agent = _TestAgent()
@@ -96,16 +96,16 @@ class TestIAgent:
         assert r.ok is True
         assert r.task == "task1"
         assert r.data == "done"
-        assert r.meta == {"meta_key": "v"***REMOVED***
+        assert r.meta == {"meta_key": "v"}
 
     def test_convenience_err(self):
         agent = _TestAgent()
-        r = agent.err("task2", errors=["fail"***REMOVED***)
+        r = agent.err("task2", errors=["fail"])
         assert r.ok is False
-        assert r.errors == ["fail"***REMOVED***
+        assert r.errors == ["fail"]
 
     def test_convenience_warn(self):
         agent = _TestAgent()
-        r = agent.warn("task3", warnings=["caution"***REMOVED***)
+        r = agent.warn("task3", warnings=["caution"])
         assert r.status == TaskStatus.WARN
-        assert r.warnings == ["caution"***REMOVED***
+        assert r.warnings == ["caution"]

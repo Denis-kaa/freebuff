@@ -20,7 +20,7 @@ def load_dis_engine():
     path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "core_02", "dis_engine.py")
     spec = importlib.util.spec_from_file_location("dis_engine_v02", path)
     mod = importlib.util.module_from_spec(spec)
-    sys.modules["dis_engine_v02"***REMOVED*** = mod
+    sys.modules["dis_engine_v02"] = mod
     spec.loader.exec_module(mod)
     return mod
 
@@ -40,7 +40,7 @@ class TestDISEngineV02(unittest.TestCase):
             "ADR-007 decision. Scalability 10x growth supported."
         )
         s = self.mod.DIRSReviewer().review(text)
-        self.assertEqual(s.overall > 7.0, True, f"Expected overall > 7, got {s.overall***REMOVED***")
+        self.assertEqual(s.overall > 7.0, True, f"Expected overall > 7, got {s.overall}")
         self.assertEqual(s.confidence > 0.0, True)
 
     def test_dirs_reviewer_weighted_average(self):
@@ -53,13 +53,13 @@ class TestDISEngineV02(unittest.TestCase):
         """ConflictAnalyzer detects duplicate-keyword patterns."""
         text = "buffer buffer buffer buffer buffer buffer"
         r = self.mod.ConflictAnalyzer().analyze(text)
-        self.assertGreaterEqual(r["duplicates_found"***REMOVED***, 1)
+        self.assertGreaterEqual(r["duplicates_found"], 1)
 
     def test_technical_debt_analyzer_flags_hardcode(self):
         """TDA flags "hardcode" mention as high-severity debt pattern."""
         text = "We intentionally hardcode the path /tmp/seed."
         hits = self.mod.TechnicalDebtAnalyzer().predict_debt(text)
-        labels = [h["pattern"***REMOVED*** for h in hits***REMOVED***
+        labels = [h["pattern"] for h in hits]
         self.assertIn("hardcoded paths", labels)
 
     def test_policy_checker_blocks_blocking_rule(self):
@@ -77,7 +77,7 @@ class TestDISEngineV02(unittest.TestCase):
             "atomic_write is used everywhere. no /tmp paths. atomic_write + ADR-11 + ADDITIVE all good."
         )
         result = self.mod.PolicyChecker().enforce(text)
-        self.assertTrue(result["passed"***REMOVED***)
+        self.assertTrue(result["passed"])
 
     def test_dis_engine_idempotency(self):
         """Same input -> identical ReviewScore (deterministic)."""

@@ -48,7 +48,7 @@ def test_execute_agent_task(mock_run: mock.MagicMock) -> None:
     assert result.data == "done"
     assert result.error is None
     mock_run.assert_called_once()
-    args = mock_run.call_args[0***REMOVED***[0***REMOVED***
+    args = mock_run.call_args[0][0]
     assert "agent" in args
     assert "--task" in args
     assert "search github" in args
@@ -86,7 +86,7 @@ def test_binary_not_found(mock_run: mock.MagicMock) -> None:
 
 @mock.patch("subprocess.run")
 def test_timeout(mock_run: mock.MagicMock) -> None:
-    mock_run.side_effect = subprocess.TimeoutExpired(cmd=["lightpanda"***REMOVED***, timeout=1)
+    mock_run.side_effect = subprocess.TimeoutExpired(cmd=["lightpanda"], timeout=1)
     worker = LightpandaWorker(binary_path="/usr/local/bin/lightpanda")
     result = worker.execute_agent_task("x", timeout=1)
     assert result.success is False

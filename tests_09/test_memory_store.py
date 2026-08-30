@@ -25,15 +25,15 @@ class TestStoreKnowledge:
             kind="lesson",
             content="Никогда не использовать Unsplash Source API — закрыт в 2024.",
             title="Урок: внешние API",
-            tags=["api", "lessons"***REMOVED***,
-            sources=[{"file_path": "core_02/LESSONS.md"***REMOVED******REMOVED***,
+            tags=["api", "lessons"],
+            sources=[{"file_path": "core_02/LESSONS.md"}],
         )
         ko = store.get_knowledge(kid)
-        assert ko["id"***REMOVED*** == kid
-        assert ko["kind"***REMOVED*** == "lesson"
-        assert ko["title"***REMOVED*** == "Урок: внешние API"
-        assert "api" in ko["tags"***REMOVED***
-        assert ko["lifecycle_stage"***REMOVED*** == "raw"
+        assert ko["id"] == kid
+        assert ko["kind"] == "lesson"
+        assert ko["title"] == "Урок: внешние API"
+        assert "api" in ko["tags"]
+        assert ko["lifecycle_stage"] == "raw"
 
     def test_invalid_kind_rejected(self, store):
         with pytest.raises(MemoryStoreError):
@@ -45,7 +45,7 @@ class TestStoreKnowledge:
 
     def test_query_by_type(self, store):
         for k in ("lesson", "pattern", "lesson"):
-            store.store_knowledge(kind=k, content=f"content-{k***REMOVED***")
+            store.store_knowledge(kind=k, content=f"content-{k}")
         lessons = store.query_by_type("lesson")
         assert len(lessons) == 2
         assert store.count_objects("lesson") == 2
@@ -54,7 +54,7 @@ class TestStoreKnowledge:
     def test_update_and_delete(self, store):
         kid = store.store_knowledge(kind="rule", content="a")
         assert store.update_knowledge(kid, content="b", status="active")
-        assert store.get_knowledge(kid)["content"***REMOVED*** == "b"
+        assert store.get_knowledge(kid)["content"] == "b"
         assert store.delete_knowledge(kid) is True
         assert store.get_knowledge(kid) is None
 
@@ -79,48 +79,48 @@ class TestKnowledgeGraph:
         a, b, _c = self._seed_chain(store)
         related = store.find_related(a, max_depth=1)
         assert len(related) == 1
-        assert related[0***REMOVED***["rel_type"***REMOVED*** == "supports"
-        assert related[0***REMOVED***["knowledge"***REMOVED***["id"***REMOVED*** == b
+        assert related[0]["rel_type"] == "supports"
+        assert related[0]["knowledge"]["id"] == b
 
     def test_find_related_depth2(self, store):
         a, _b, c = self._seed_chain(store)
         related = store.find_related(a, max_depth=2)
-        ids = {r["knowledge"***REMOVED***["id"***REMOVED*** for r in related***REMOVED***
+        ids = {r["knowledge"]["id"] for r in related}
         assert c in ids
-        depths = {r["knowledge"***REMOVED***["id"***REMOVED***: r["depth"***REMOVED*** for r in related***REMOVED***
-        assert depths[c***REMOVED*** == 2
+        depths = {r["knowledge"]["id"]: r["depth"] for r in related}
+        assert depths[c] == 2
 
     def test_find_related_rel_type_filter(self, store):
         a, b, _c = self._seed_chain(store)
-        related = store.find_related(a, rel_types=["contradicts"***REMOVED***, max_depth=2)
-        assert related == [***REMOVED***
-        related = store.find_related(a, rel_types=["supports"***REMOVED***, max_depth=1)
-        assert related[0***REMOVED***["knowledge"***REMOVED***["id"***REMOVED*** == b
+        related = store.find_related(a, rel_types=["contradicts"], max_depth=2)
+        assert related == []
+        related = store.find_related(a, rel_types=["supports"], max_depth=1)
+        assert related[0]["knowledge"]["id"] == b
 
     def test_shortest_path(self, store):
         a, _b, c = self._seed_chain(store)
         path = store.shortest_path(a, c)
-        assert [p["from"***REMOVED*** for p in path***REMOVED*** == [a, _b***REMOVED***
-        assert [p["to"***REMOVED*** for p in path***REMOVED*** == [_b, c***REMOVED***
-        assert [p["rel_type"***REMOVED*** for p in path***REMOVED*** == ["supports", "derived_from"***REMOVED***
+        assert [p["from"] for p in path] == [a, _b]
+        assert [p["to"] for p in path] == [_b, c]
+        assert [p["rel_type"] for p in path] == ["supports", "derived_from"]
 
     def test_shortest_path_none(self, store):
         a = store.store_knowledge(kind="pattern", content="A")
         z = store.store_knowledge(kind="rule", content="Z")
-        assert store.shortest_path(a, z) == [***REMOVED***
+        assert store.shortest_path(a, z) == []
 
     def test_find_patterns(self, store):
         # Две одинаковые тройки A-sup->B-der->C и D-sup->E-der->F
         for n in ("A", "B", "C", "D", "E", "F"):
-            store.store_knowledge(kind="pattern", content=n, knowledge_id=f"ko-{n***REMOVED***")
+            store.store_knowledge(kind="pattern", content=n, knowledge_id=f"ko-{n}")
         store.link_knowledge("ko-A", "ko-B", "supports")
         store.link_knowledge("ko-B", "ko-C", "derived_from")
         store.link_knowledge("ko-D", "ko-E", "supports")
         store.link_knowledge("ko-E", "ko-F", "derived_from")
         patterns = store.find_patterns(min_occurrences=2)
-        assert any(p["pattern"***REMOVED*** == "supports → derived_from" for p in patterns)
-        pat = next(p for p in patterns if p["pattern"***REMOVED*** == "supports → derived_from")
-        assert pat["occurrences"***REMOVED*** == 2
+        assert any(p["pattern"] == "supports → derived_from" for p in patterns)
+        pat = next(p for p in patterns if p["pattern"] == "supports → derived_from")
+        assert pat["occurrences"] == 2
 
     def test_invalid_rel_type(self, store):
         a = store.store_knowledge(kind="pattern", content="A")
@@ -141,16 +141,16 @@ class TestLearningAndAnalytics:
     def test_record_learning_event(self, store):
         eid = store.record_learning_event(
             trigger_id="review-1",
-            context_snapshot={"problem": "TDZ crash"***REMOVED***,
+            context_snapshot={"problem": "TDZ crash"},
             outcome="failure",
         )
         events = store.list_learning_events()
-        assert events[0***REMOVED***["id"***REMOVED*** == eid
-        assert events[0***REMOVED***["outcome"***REMOVED*** == "failure"
+        assert events[0]["id"] == eid
+        assert events[0]["outcome"] == "failure"
 
     def test_invalid_outcome(self, store):
         with pytest.raises(MemoryStoreError):
-            store.record_learning_event(trigger_id="x", context_snapshot={***REMOVED***, outcome="maybe")
+            store.record_learning_event(trigger_id="x", context_snapshot={}, outcome="maybe")
 
     def test_update_feedback_confidence(self, store):
         kid = store.store_knowledge(kind="lesson", content="x", confidence_score=0.5)
@@ -158,9 +158,9 @@ class TestLearningAndAnalytics:
         store.update_feedback(kid, "success")
         c = store.update_feedback(kid, "failure")
         ko = store.get_knowledge(kid)
-        assert ko["success_count"***REMOVED*** == 2
-        assert ko["failure_count"***REMOVED*** == 1
-        assert ko["usage_count"***REMOVED*** == 3
+        assert ko["success_count"] == 2
+        assert ko["failure_count"] == 1
+        assert ko["usage_count"] == 3
         assert c is not None and 0.0 < c < 1.0
         assert abs(c - 2 / 3) < 1e-6
 
@@ -174,7 +174,7 @@ class TestLearningAndAnalytics:
         assert avg is not None and abs(avg - 0.7) < 1e-6
 
     def test_analytics_report(self, store):
-        store.record_learning_event(trigger_id="t", context_snapshot={***REMOVED***, outcome="neutral")
+        store.record_learning_event(trigger_id="t", context_snapshot={}, outcome="neutral")
         report = store.analytics_report()
-        assert report["total_events"***REMOVED*** == 1
+        assert report["total_events"] == 1
         assert "metrics" in report

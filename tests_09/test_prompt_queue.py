@@ -84,7 +84,7 @@ def test_write_parse_model_positional(queue_root):
     meta = parse_prompt(path)
     assert meta is not None
     assert meta.model == "2"
-    assert meta.to_dict()["model"***REMOVED*** == "2"
+    assert meta.to_dict()["model"] == "2"
 
 
 def test_parse_model_missing_legacy_file_defaults_auto(queue_root):
@@ -108,7 +108,7 @@ def test_scan_pending_sorts_by_priority_desc(queue_root):
     write_user_prompt("высокий приоритет", priority=5)
     write_user_prompt("средний приоритет", priority=2)
     pending = scan_pending()
-    assert [m.priority for m in pending***REMOVED*** == [5, 2, 0***REMOVED***
+    assert [m.priority for m in pending] == [5, 2, 0]
 
 
 def test_move_to_status_moves_file(queue_root):
@@ -132,13 +132,13 @@ def test_set_report_writes_report_and_moves(queue_root):
 
 
 def test_queue_counts(queue_root):
-    assert queue_counts() == {"pending": 0, "running": 0, "done": 0, "failed": 0***REMOVED***
+    assert queue_counts() == {"pending": 0, "running": 0, "done": 0, "failed": 0}
     write_user_prompt("задача", chat_id=1)
     p2 = write_user_prompt("задача2", chat_id=2)
     move_to_status(p2, "done")
     counts = queue_counts()
-    assert counts["pending"***REMOVED*** == 1
-    assert counts["done"***REMOVED*** == 1
+    assert counts["pending"] == 1
+    assert counts["done"] == 1
 
 
 def test_recover_stale_running_returns_old_files_to_user(queue_root):
@@ -151,14 +151,14 @@ def test_recover_stale_running_returns_old_files_to_user(queue_root):
     os.utime(running, (old, old))
 
     recovered = recover_stale_running(max_age_s=3600)
-    assert recovered == [running.name***REMOVED***
+    assert recovered == [running.name]
     assert not running.exists()
     assert (queue_dir("pending") / running.name).exists()
 
     # Молодой файл (свежий mtime) не трогается
     p2 = write_user_prompt("свежая", chat_id=2)
     running2 = move_to_status(p2, "running")
-    assert recover_stale_running(max_age_s=3600) == [***REMOVED***
+    assert recover_stale_running(max_age_s=3600) == []
     assert running2.exists()
 
 
@@ -167,6 +167,6 @@ def test_prompt_meta_to_dict_roundtrip(queue_root):
     meta = parse_prompt(path)
     assert meta is not None
     d = meta.to_dict()
-    assert d["chat_id"***REMOVED*** == 42
-    assert d["path"***REMOVED*** == str(path)
-    assert d["task_id"***REMOVED*** == meta.task_id
+    assert d["chat_id"] == 42
+    assert d["path"] == str(path)
+    assert d["task_id"] == meta.task_id

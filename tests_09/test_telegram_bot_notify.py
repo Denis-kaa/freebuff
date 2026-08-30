@@ -40,7 +40,7 @@ def _build_update(chat_id: int = 12345) -> Any:
 def _build_context(*args: str) -> Any:
     """Mimics telegram.ext.ContextTypes.DEFAULT_TYPE with given command args."""
     ctx = MagicMock()
-    ctx.args = list(args) if args else [***REMOVED***
+    ctx.args = list(args) if args else []
     return ctx
 
 
@@ -53,7 +53,7 @@ def _run(coro: Any) -> Any:
 
 def test_cmd_notify_calls_report_to_saved_messages(monkeypatch: pytest.MonkeyPatch) -> None:
     """`/notify <text>` invokes report_to_saved_messages with admin-wrapped text."""
-    captured: list[str***REMOVED*** = [***REMOVED***
+    captured: list[str] = []
 
     async def fake_report(message: str) -> int:
         captured.append(message)
@@ -64,14 +64,14 @@ def test_cmd_notify_calls_report_to_saved_messages(monkeypatch: pytest.MonkeyPat
     update = _build_update()
     _run(tbot.cmd_notify(update, _build_context("hello", "world")))
 
-    assert len(captured) == 1, f"expected 1 call, got {len(captured)***REMOVED***"
-    msg = captured[0***REMOVED***
-    assert "📨 [Freebuff admin notify***REMOVED***" in msg
+    assert len(captured) == 1, f"expected 1 call, got {len(captured)}"
+    msg = captured[0]
+    assert "📨 [Freebuff admin notify]" in msg
     assert "chat_id=12345" in msg
     assert "hello world" in msg
 
     update.effective_message.reply_text.assert_awaited_once()
-    reply = update.effective_message.reply_text.await_args.args[0***REMOVED***
+    reply = update.effective_message.reply_text.await_args.args[0]
     assert "777" in reply and "Доставлено в Избранное" in reply
 
 
@@ -91,7 +91,7 @@ def test_cmd_notify_no_args_usage(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert called is False, "report must not be called without args"
     update.effective_message.reply_text.assert_awaited_once()
-    assert "Usage: /notify" in update.effective_message.reply_text.await_args.args[0***REMOVED***
+    assert "Usage: /notify" in update.effective_message.reply_text.await_args.args[0]
 
 
 def test_cmd_notify_returns_none_warning(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -105,7 +105,7 @@ def test_cmd_notify_returns_none_warning(monkeypatch: pytest.MonkeyPatch) -> Non
     _run(tbot.cmd_notify(update, _build_context("ping")))
 
     update.effective_message.reply_text.assert_awaited_once()
-    reply = update.effective_message.reply_text.await_args.args[0***REMOVED***
+    reply = update.effective_message.reply_text.await_args.args[0]
     assert "Не доставлено в Избранное" in reply
 
 
@@ -120,7 +120,7 @@ def test_cmd_notify_handles_exception(monkeypatch: pytest.MonkeyPatch) -> None:
     _run(tbot.cmd_notify(update, _build_context("ping")))  # should NOT raise
 
     update.effective_message.reply_text.assert_awaited_once()
-    assert "Ошибка notify" in update.effective_message.reply_text.await_args.args[0***REMOVED***
+    assert "Ошибка notify" in update.effective_message.reply_text.await_args.args[0]
 
 
 # ─── /notify_client → report_to_alex_litvinov ───────────────────
@@ -128,7 +128,7 @@ def test_cmd_notify_handles_exception(monkeypatch: pytest.MonkeyPatch) -> None:
 
 def test_cmd_notify_client_calls_report_to_alex_litvinov(monkeypatch: pytest.MonkeyPatch) -> None:
     """`/notify_client <text>` invokes report_to_alex_litvinov with client-wrapped text."""
-    captured: list[str***REMOVED*** = [***REMOVED***
+    captured: list[str] = []
 
     async def fake_report(message: str) -> int:
         captured.append(message)
@@ -139,14 +139,14 @@ def test_cmd_notify_client_calls_report_to_alex_litvinov(monkeypatch: pytest.Mon
     update = _build_update(chat_id=999)
     _run(tbot.cmd_notify_client(update, _build_context("client", "msg")))
 
-    assert len(captured) == 1, f"expected 1 call, got {len(captured)***REMOVED***"
-    msg = captured[0***REMOVED***
-    assert "📨 [Freebuff notify → клиент***REMOVED***" in msg
+    assert len(captured) == 1, f"expected 1 call, got {len(captured)}"
+    msg = captured[0]
+    assert "📨 [Freebuff notify → клиент]" in msg
     assert "chat_id=999" in msg
     assert "client msg" in msg
 
     update.effective_message.reply_text.assert_awaited_once()
-    reply = update.effective_message.reply_text.await_args.args[0***REMOVED***
+    reply = update.effective_message.reply_text.await_args.args[0]
     assert "888" in reply and "Доставлено клиенту" in reply
     assert str(tbot.LITVINOV_CHAT_ID) in reply
 
@@ -167,7 +167,7 @@ def test_cmd_notify_client_no_args_usage(monkeypatch: pytest.MonkeyPatch) -> Non
 
     assert called is False, "report must not be called without args"
     update.effective_message.reply_text.assert_awaited_once()
-    assert "Usage: /notify_client" in update.effective_message.reply_text.await_args.args[0***REMOVED***
+    assert "Usage: /notify_client" in update.effective_message.reply_text.await_args.args[0]
 
 
 def test_cmd_notify_client_returns_none_warning(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -181,7 +181,7 @@ def test_cmd_notify_client_returns_none_warning(monkeypatch: pytest.MonkeyPatch)
     _run(tbot.cmd_notify_client(update, _build_context("ping")))
 
     update.effective_message.reply_text.assert_awaited_once()
-    reply = update.effective_message.reply_text.await_args.args[0***REMOVED***
+    reply = update.effective_message.reply_text.await_args.args[0]
     assert "Не доставлено клиенту" in reply
 
 
@@ -196,7 +196,7 @@ def test_cmd_notify_client_handles_exception(monkeypatch: pytest.MonkeyPatch) ->
     _run(tbot.cmd_notify_client(update, _build_context("ping")))  # should NOT raise
 
     update.effective_message.reply_text.assert_awaited_once()
-    assert "Ошибка notify_client" in update.effective_message.reply_text.await_args.args[0***REMOVED***
+    assert "Ошибка notify_client" in update.effective_message.reply_text.await_args.args[0]
 
 
 # ─── Module-level wrappers ──────────────────────────────────────
@@ -209,8 +209,8 @@ def test_module_wrappers_delegate_to_cmd_handlers(monkeypatch: pytest.MonkeyPatc
     top-level functions (no `self`); the CommandHandler registration uses the
     wrapper to keep a stable binding.
     """
-    notify_called: list[tuple[Any, Any***REMOVED******REMOVED*** = [***REMOVED***
-    notify_client_called: list[tuple[Any, Any***REMOVED******REMOVED*** = [***REMOVED***
+    notify_called: list[tuple[Any, Any]] = []
+    notify_client_called: list[tuple[Any, Any]] = []
 
     async def fake_cmd_notify(update: Any, context: Any) -> None:
         notify_called.append((update, context))
@@ -228,5 +228,5 @@ def test_module_wrappers_delegate_to_cmd_handlers(monkeypatch: pytest.MonkeyPatc
 
     assert len(notify_called) == 1
     assert len(notify_client_called) == 1
-    assert notify_called[0***REMOVED***[0***REMOVED*** is update
-    assert notify_client_called[0***REMOVED***[0***REMOVED*** is update
+    assert notify_called[0][0] is update
+    assert notify_client_called[0][0] is update

@@ -1,6 +1,6 @@
 """Regression tests for ScenarioTGBot.cmd_escalate (v5.42.0 wire-in).
 
-Verifies that `/escalate [note***REMOVED***` handler in `freebuff_plugin_03/tgbot.py`:
+Verifies that `/escalate [note]` handler in `freebuff_plugin_03/tgbot.py`:
   1. Calls `report_to_alex_litvinov` (from `core_02.telegram_contract`) exactly
      once per command invocation.
   2. Includes timestamp, source chat_id, loaded scenario count, and the user's
@@ -38,7 +38,7 @@ def _build_update_with_args(*args: str) -> Any:
 def _build_context(*args: str) -> Any:
     """Mimics telegram.ext.ContextTypes.DEFAULT_TYPE with given /escalate args."""
     ctx = MagicMock()
-    ctx.args = list(args) if args else [***REMOVED***
+    ctx.args = list(args) if args else []
     return ctx
 
 
@@ -47,7 +47,7 @@ def _build_context(*args: str) -> Any:
 
 def test_cmd_escalate_calls_report_with_correct_args(monkeypatch: pytest.MonkeyPatch) -> None:
     """cmd_escalate invokes report_to_alex_litvinov with formatted escalation text."""
-    captured: list[tuple[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    captured: list[tuple[str, Any]] = []
 
     async def fake_report(message: str) -> int:
         captured.append((message, "called"))
@@ -60,10 +60,10 @@ def test_cmd_escalate_calls_report_with_correct_args(monkeypatch: pytest.MonkeyP
         bot.cmd_escalate(_build_update_with_args("test‑note"), _build_context("test‑note"))
     )
 
-    assert len(captured) == 1, f"expected 1 call, got {len(captured)***REMOVED***"
-    msg, _ = captured[0***REMOVED***
+    assert len(captured) == 1, f"expected 1 call, got {len(captured)}"
+    msg, _ = captured[0]
     # Spot‑check the escalation message contents.
-    assert "🚨 [Freebuff escalation***REMOVED***" in msg
+    assert "🚨 [Freebuff escalation]" in msg
     assert "Source chat_id: 12345" in msg
     assert "Note: test‑note" in msg
     assert "Loaded scenarios:" in msg
@@ -72,7 +72,7 @@ def test_cmd_escalate_calls_report_with_correct_args(monkeypatch: pytest.MonkeyP
 
 def test_cmd_escalate_handles_no_note() -> None:
     """cmd_escalate works without args (note → '(none)')."""
-    captured: list[str***REMOVED*** = [***REMOVED***
+    captured: list[str] = []
 
     async def fake_report(message: str) -> int:
         captured.append(message)
@@ -85,7 +85,7 @@ def test_cmd_escalate_handles_no_note() -> None:
         asyncio.run(bot.cmd_escalate(update, ctx))
 
     assert len(captured) == 1
-    assert "Note: (none)" in captured[0***REMOVED***
+    assert "Note: (none)" in captured[0]
 
 
 def test_cmd_escalate_success_replies_with_msg_id(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -95,7 +95,7 @@ def test_cmd_escalate_success_replies_with_msg_id(monkeypatch: pytest.MonkeyPatc
 
     monkeypatch.setattr(tgbot, "report_to_alex_litvinov", fake_report)
 
-    reply_text: list[str***REMOVED*** = [***REMOVED***
+    reply_text: list[str] = []
 
     async def capture_reply(text: str, **kwargs: Any) -> None:
         reply_text.append(text)
@@ -109,7 +109,7 @@ def test_cmd_escalate_success_replies_with_msg_id(monkeypatch: pytest.MonkeyPatc
     asyncio.run(bot.cmd_escalate(update, _build_context("note")))
 
     assert any("12345" in t and "доставлена" in t for t in reply_text), (
-        f"success message not found in {reply_text***REMOVED***"
+        f"success message not found in {reply_text}"
     )
 
 
@@ -120,7 +120,7 @@ def test_cmd_escalate_returns_none_replies_warning(monkeypatch: pytest.MonkeyPat
 
     monkeypatch.setattr(tgbot, "report_to_alex_litvinov", fake_report)
 
-    reply_text: list[str***REMOVED*** = [***REMOVED***
+    reply_text: list[str] = []
 
     async def capture_reply(text: str, **kwargs: Any) -> None:
         reply_text.append(text)
@@ -134,7 +134,7 @@ def test_cmd_escalate_returns_none_replies_warning(monkeypatch: pytest.MonkeyPat
     asyncio.run(bot.cmd_escalate(update, _build_context()))
 
     assert any("не доставлена" in t or "TGClient" in t for t in reply_text), (
-        f"warning expected in {reply_text***REMOVED***"
+        f"warning expected in {reply_text}"
     )
 
 
@@ -145,7 +145,7 @@ def test_cmd_escalate_handles_exception(monkeypatch: pytest.MonkeyPatch) -> None
 
     monkeypatch.setattr(tgbot, "report_to_alex_litvinov", fake_report)
 
-    reply_text: list[str***REMOVED*** = [***REMOVED***
+    reply_text: list[str] = []
 
     async def capture_reply(text: str, **kwargs: Any) -> None:
         reply_text.append(text)
@@ -160,5 +160,5 @@ def test_cmd_escalate_handles_exception(monkeypatch: pytest.MonkeyPatch) -> None
     asyncio.run(bot.cmd_escalate(update, _build_context()))
 
     assert any("Escalation error" in t for t in reply_text), (
-        f"error reply expected in {reply_text***REMOVED***"
+        f"error reply expected in {reply_text}"
     )

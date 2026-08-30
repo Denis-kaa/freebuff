@@ -33,9 +33,9 @@ class FakeTGClient:
     """
 
     next_authorized: bool = True
-    next_send_raises: Optional[Exception***REMOVED*** = None
+    next_send_raises: Optional[Exception] = None
     next_msg_id: int = 999
-    last_send_args: Optional[tuple[Any, str***REMOVED******REMOVED*** = None
+    last_send_args: Optional[tuple[Any, str]] = None
     call_count: int = 0
 
     def __init__(self) -> None:
@@ -60,7 +60,7 @@ class FakeTGClient:
 
 
 @pytest.fixture
-def fake_tg(monkeypatch: pytest.MonkeyPatch) -> type[FakeTGClient***REMOVED***:
+def fake_tg(monkeypatch: pytest.MonkeyPatch) -> type[FakeTGClient]:
     """Reset FakeTGClient state + inject as TGClient factory."""
     FakeTGClient.next_authorized = True
     FakeTGClient.next_send_raises = None
@@ -106,7 +106,7 @@ def test_public_api_exports() -> None:
         "report_to_litvinov",
         "report_to_alex_litvinov",
         "send_to_chat",
-    ***REMOVED***
+    }
     assert set(tc.__all__) >= expected
 
 
@@ -125,7 +125,7 @@ def test_report_functions_are_coroutines() -> None:
         tc.report_to_litvinov,
         tc.report_to_alex_litvinov,
     ):
-        assert asyncio.iscoroutinefunction(fn), f"{fn.__name__***REMOVED*** must be async"
+        assert asyncio.iscoroutinefunction(fn), f"{fn.__name__} must be async"
 
 
 # ─── TGClient availability ────────────────────────────────────
@@ -153,7 +153,7 @@ def test_is_tg_available_returns_false_when_factory_missing(
 # ─── Report functions: happy path (FakeTGClient) ───────────────
 
 
-def test_report_to_saved_messages_returns_msg_id(fake_tg: type[FakeTGClient***REMOVED***) -> None:
+def test_report_to_saved_messages_returns_msg_id(fake_tg: type[FakeTGClient]) -> None:
     async def run() -> int | None:
         return await tc.report_to_saved_messages("hello smoke")
 
@@ -163,7 +163,7 @@ def test_report_to_saved_messages_returns_msg_id(fake_tg: type[FakeTGClient***RE
     assert fake_tg.call_count == 1
 
 
-def test_report_to_litvinov_uses_litvinov_chat_id(fake_tg: type[FakeTGClient***REMOVED***) -> None:
+def test_report_to_litvinov_uses_litvinov_chat_id(fake_tg: type[FakeTGClient]) -> None:
     async def run() -> int | None:
         return await tc.report_to_litvinov("Привет от Freebuff")
 
@@ -173,7 +173,7 @@ def test_report_to_litvinov_uses_litvinov_chat_id(fake_tg: type[FakeTGClient***R
 
 
 def test_report_to_alex_litvinov_uses_litvinov_chat_id(
-    fake_tg: type[FakeTGClient***REMOVED***,
+    fake_tg: type[FakeTGClient],
 ) -> None:
     async def run() -> int | None:
         return await tc.report_to_alex_litvinov("wizard smoke test")
@@ -193,7 +193,7 @@ def test_send_to_chat_is_public_async() -> None:
     assert asyncio.iscoroutinefunction(tc.send_to_chat)
 
 
-def test_send_to_chat_sends_to_arbitrary_chat(fake_tg: type[FakeTGClient***REMOVED***) -> None:
+def test_send_to_chat_sends_to_arbitrary_chat(fake_tg: type[FakeTGClient]) -> None:
     async def run() -> int | None:
         return await tc.send_to_chat(123456, "direct reply")
 
@@ -216,7 +216,7 @@ def test_send_to_chat_returns_none_when_tgclient_missing(
 
 
 def test_send_to_chat_returns_none_when_send_raises(
-    fake_tg: type[FakeTGClient***REMOVED***,
+    fake_tg: type[FakeTGClient],
 ) -> None:
     fake_tg.next_send_raises = RuntimeError("blip")
 
@@ -245,7 +245,7 @@ def test_report_returns_none_when_tgclient_missing(
 
 
 def test_report_returns_none_when_not_authorized(
-    fake_tg: type[FakeTGClient***REMOVED***,
+    fake_tg: type[FakeTGClient],
 ) -> None:
     fake_tg.next_authorized = False
     async def run() -> int | None:
@@ -255,7 +255,7 @@ def test_report_returns_none_when_not_authorized(
 
 
 def test_report_returns_none_when_send_raises(
-    fake_tg: type[FakeTGClient***REMOVED***,
+    fake_tg: type[FakeTGClient],
 ) -> None:
     fake_tg.next_send_raises = RuntimeError("simulated network blip")
     async def run() -> int | None:
@@ -269,7 +269,7 @@ def test_report_returns_none_when_send_raises(
 
 def test_get_tg_client_factory_returns_none_when_module_missing(
     monkeypatch: pytest.MonkeyPatch,
-    capsys: pytest.CaptureFixture[str***REMOVED***,
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     """When sys.path doesn't expose tg_terminal_messenger + cached None,
     _get_tg_client_factory returns None without raising.

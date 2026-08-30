@@ -34,7 +34,7 @@ class _FakeMessage:
 def fake_telethon():
     """Create a mock telethon TelegramClient with tracked methods."""
     tc = MagicMock()
-    tc.get_messages = AsyncMock(return_value=[_FakeMessage(1, "hello")***REMOVED***)
+    tc.get_messages = AsyncMock(return_value=[_FakeMessage(1, "hello")])
     tc.add_event_handler = MagicMock()
     tc.remove_event_handler = MagicMock()
     return tc
@@ -45,7 +45,7 @@ def fake_base_client(fake_telethon):
     """Create a mock TGClient (projects_17 wrapper) with _client attribute."""
     base = MagicMock()
     base._client = fake_telethon
-    base.get_messages = AsyncMock(return_value=[_FakeMessage(99, "from original")***REMOVED***)
+    base.get_messages = AsyncMock(return_value=[_FakeMessage(99, "from original")])
     return base
 
 
@@ -62,10 +62,10 @@ def v2(fake_base_client):
 @pytest.mark.asyncio
 async def test_get_messages_with_ids_kwarg(v2, fake_telethon):
     """When ids= is provided, delegates to telethon's get_messages with ids=."""
-    result = await v2.get_messages(123, ids=[1, 2, 3***REMOVED***)
-    fake_telethon.get_messages.assert_awaited_once_with(123, ids=[1, 2, 3***REMOVED***)
+    result = await v2.get_messages(123, ids=[1, 2, 3])
+    fake_telethon.get_messages.assert_awaited_once_with(123, ids=[1, 2, 3])
     assert len(result) == 1
-    assert result[0***REMOVED***.id == 1
+    assert result[0].id == 1
 
 
 @pytest.mark.asyncio
@@ -73,7 +73,7 @@ async def test_get_messages_without_ids_falls_back(v2, fake_base_client):
     """When ids= is None, falls back to original limit-scan via base client."""
     result = await v2.get_messages(123, limit=10)
     fake_base_client.get_messages.assert_awaited_once_with(123, limit=10)
-    assert result[0***REMOVED***.id == 99  # from original client
+    assert result[0].id == 99  # from original client
 
 
 @pytest.mark.asyncio
@@ -115,7 +115,7 @@ def test_multiple_handlers_independent(v2, fake_telethon):
 
 def test_handler_error_does_not_crash(v2, fake_telethon):
     """A handler that raises does not crash the event loop."""
-    errors = [***REMOVED***
+    errors = []
     def failing_cb(event):
         raise ValueError("test error")
 

@@ -25,7 +25,7 @@ class TestAnalyze:
         ll, _store, _ = loop
         a = ll.analyze("новый паттерн: использование внешнего API без проверки")
         assert a.suggested_kind == "pattern"
-        assert a.relevant == [***REMOVED***
+        assert a.relevant == []
 
     def test_analyze_lesson_kind(self, loop):
         ll, _store, _ = loop
@@ -46,8 +46,8 @@ class TestFormalize:
         a = ll.analyze("паттерн: забыл проверить статус API")
         kid = ll.formalize(a, title="API check", content="текст")
         ko = store.get_knowledge(kid)
-        assert ko["kind"***REMOVED*** == "pattern"
-        assert ko["lifecycle_stage"***REMOVED*** in ("raw", "candidate")
+        assert ko["kind"] == "pattern"
+        assert ko["lifecycle_stage"] in ("raw", "candidate")
 
     def test_formalize_updates_existing_known(self, loop):
         ll, store, _ = loop
@@ -60,8 +60,8 @@ class TestFormalize:
         kid = ll.formalize(a, title="обновлённый", content="новый текст")
         assert kid == p  # обновился существующий
         ko = store.get_knowledge(kid)
-        assert ko["title"***REMOVED*** == "обновлённый"
-        assert ko["evidence_count"***REMOVED*** >= 1
+        assert ko["title"] == "обновлённый"
+        assert ko["evidence_count"] >= 1
 
 
 class TestCodify:
@@ -71,8 +71,8 @@ class TestCodify:
             kind="lesson", title="Урок тест", summary="не используй Unsplash"
         )
         action = ll.codify(kid)
-        assert action["lessons_updated"***REMOVED*** is True
-        assert action["con_id"***REMOVED*** == 1
+        assert action["lessons_updated"] is True
+        assert action["con_id"] == 1
         text = (tmp / "LESSONS.md").read_text(encoding="utf-8")
         assert "CON-1" in text
 
@@ -82,13 +82,13 @@ class TestCodify:
         k2 = store.store_knowledge(kind="pattern", title="Второй")
         ll.codify(k1)
         action = ll.codify(k2)
-        assert action["con_id"***REMOVED*** == 2
+        assert action["con_id"] == 2
 
     def test_codify_skips_non_lessons(self, loop):
         ll, store, _ = loop
         kid = store.store_knowledge(kind="faq", title="Частый вопрос")
         action = ll.codify(kid)
-        assert action["lessons_updated"***REMOVED*** is False
+        assert action["lessons_updated"] is False
 
     def test_codify_missing_raises(self, loop):
         ll, _store, _ = loop
@@ -105,8 +105,8 @@ class TestFeedback:
         c3 = ll.record_feedback(kid, "failure")
         assert c1 is not None and c3 is not None
         ko = store.get_knowledge(kid)
-        assert ko["success_count"***REMOVED*** == 2
-        assert ko["failure_count"***REMOVED*** == 1
+        assert ko["success_count"] == 2
+        assert ko["failure_count"] == 1
         events = store.list_learning_events()
         assert len(events) == 3
 
@@ -118,11 +118,11 @@ class TestCapture:
             situation="паттерн: не проверять статус внешнего API",
             title="API статус",
             summary="Unsplash закрыт",
-            tags=["api"***REMOVED***,
+            tags=["api"],
         )
-        assert result["knowledge_id"***REMOVED***
-        assert result["analysis"***REMOVED***["suggested_kind"***REMOVED*** == "pattern"
-        assert result["action"***REMOVED***["con_id"***REMOVED*** is not None
+        assert result["knowledge_id"]
+        assert result["analysis"]["suggested_kind"] == "pattern"
+        assert result["action"]["con_id"] is not None
         # событие обучения зафиксировано
         assert store.count_learning_events() >= 1
         # LESSONS.md создан

@@ -45,7 +45,7 @@ class TestPipelineStages:
 
     def test_stage_build_bad_cmd_fails(self, project):
         pipe = ForgePipeline(project)
-        res = pipe.stage_build(build_cmd=["definitely-not-a-command-xyz"***REMOVED***)
+        res = pipe.stage_build(build_cmd=["definitely-not-a-command-xyz"])
         assert res.status == "failed"
 
     def test_stage_test_no_tests_skipped(self, project):
@@ -59,16 +59,16 @@ class TestPipelineStages:
         assert res.status == "skipped"
 
     def test_stage_report_hook(self, project):
-        calls = [***REMOVED***
-        pipe = ForgePipeline(project, hooks={"on_report": lambda proj, run: calls.append(proj.name)***REMOVED***)
+        calls = []
+        pipe = ForgePipeline(project, hooks={"on_report": lambda proj, run: calls.append(proj.name)})
         res = pipe.stage_report()
         assert res.status == "ok"
-        assert calls == ["web_app"***REMOVED***
+        assert calls == ["web_app"]
 
     def test_report_hook_sees_final_overall(self, project):
         # хук должен получать run с финальным overall (не "pending") при run()
-        seen = {***REMOVED***
-        pipe = ForgePipeline(project, hooks={"on_report": lambda proj, run: seen.update(overall=run.overall)***REMOVED***)
+        seen = {}
+        pipe = ForgePipeline(project, hooks={"on_report": lambda proj, run: seen.update(overall=run.overall)})
         run = pipe.run()
         assert run.overall in ("ok", "failed")
         assert seen.get("overall") == run.overall
@@ -84,8 +84,8 @@ class TestPipelineRun:
         run = pipe.run()
         assert isinstance(run, PipelineRun)
         assert run.overall in ("ok", "failed")
-        names = [s.name for s in run.stages***REMOVED***
-        assert names == ["FORGE", "CHECK", "BUILD", "TEST", "DEPLOY", "REPORT"***REMOVED***
+        names = [s.name for s in run.stages]
+        assert names == ["FORGE", "CHECK", "BUILD", "TEST", "DEPLOY", "REPORT"]
 
     def test_run_dry_run(self, project):
         pipe = ForgePipeline(project, dry_run=True)
@@ -97,19 +97,19 @@ class TestPipelineRun:
         pipe = ForgePipeline(project)
         run = pipe.run()
         # Если CHECK упал — BUILD/TEST идут skipped (break), overall failed
-        failed = [s for s in run.stages if s.status == "failed"***REMOVED***
+        failed = [s for s in run.stages if s.status == "failed"]
         if failed:
             idx = next(i for i, s in enumerate(run.stages) if s.status == "failed")
             assert all(s.status == "skipped" or s.status == "failed"
-                       for s in run.stages[idx:***REMOVED***)
+                       for s in run.stages[idx:])
 
     def test_run_skip_stage(self, project):
         # PB-17 hermetic fix: dry_run=True делает все stage_* → 'skipped' до skip-branch,
         # устраняя env_doctor-зависимый flake (root-cause: stage_check в run() loop мог
         # вернуть 'failed' при blockers от diagnose(), что вызывало break до stage_report).
         pipe = ForgePipeline(project, dry_run=True)
-        run = pipe.run(skip={"stage_report"***REMOVED***)
-        names = [s.name for s in run.stages***REMOVED***
+        run = pipe.run(skip={"stage_report"})
+        names = [s.name for s in run.stages]
         assert "REPORT" in names
         report = next(s for s in run.stages if s.name == "REPORT")
         assert report.status == "skipped"
@@ -126,7 +126,7 @@ class TestPipelineRun:
         (p / "project.yaml").write_text("name: no_steps_strict\ntype: cli\n", encoding="utf-8")
         (p / "README.md").write_text("# x", encoding="utf-8")
         (p / "RUNNABLE.md").write_text("## s\n", encoding="utf-8")
-        (p / "CHECKLIST.md").write_text("- [x***REMOVED***\n", encoding="utf-8")
+        (p / "CHECKLIST.md").write_text("- [x)\n", encoding="utf-8")
         proj = Project.load(p)
         # strict -> CHECK failed (STEPS.md в missing).
         pipe = ForgePipeline(proj, workspace_steps_policy="strict")
@@ -145,7 +145,7 @@ class TestPipelineRun:
         )
         (p2 / "README.md").write_text("# x", encoding="utf-8")
         (p2 / "RUNNABLE.md").write_text("## s\n", encoding="utf-8")
-        (p2 / "CHECKLIST.md").write_text("- [x***REMOVED***\n", encoding="utf-8")
+        (p2 / "CHECKLIST.md").write_text("- [x)\n", encoding="utf-8")
         proj2 = Project.load(p2)
         pipe3 = ForgePipeline(proj2, workspace_steps_policy="strict")
         res3 = pipe3.stage_check()

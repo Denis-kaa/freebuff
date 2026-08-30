@@ -19,8 +19,8 @@ class TestSemanticLayer:
         kid = store.store_knowledge(
             kind="lesson",
             title="Undo/redo push-after",
-            content="История хранит текущее состояние, undo берёт history[idx-1***REMOVED***.",
-            tags=["undo", "zustand"***REMOVED***,
+            content="История хранит текущее состояние, undo берёт history[idx-1].",
+            tags=["undo", "zustand"],
         )
         sl.index_knowledge(kid)
         hits = sl.semantic_search("undo redo история", top_k=5)
@@ -42,8 +42,8 @@ class TestSemanticLayer:
         sl.index_knowledge(a)
         sl.index_knowledge(b)
         ctx = sl.search_related("картинки Picsum API", top_k=2, max_depth=1)
-        assert len(ctx["hits"***REMOVED***) >= 1
-        assert isinstance(ctx["related"***REMOVED***, list)
+        assert len(ctx["hits"]) >= 1
+        assert isinstance(ctx["related"], list)
 
     def test_find_similar_patterns_filters_kinds(self, layer):
         sl, store = layer
@@ -52,8 +52,8 @@ class TestSemanticLayer:
         sl.index_knowledge(p)
         sl.index_knowledge(r)
         res = sl.find_similar_patterns("паттерн ошибки X повторяется", top_k=5)
-        kinds = {x["kind"***REMOVED*** for x in res***REMOVED***
-        assert kinds <= {"pattern", "lesson", "guideline", "adr", "anti_pattern"***REMOVED***
+        kinds = {x["kind"] for x in res}
+        assert kinds <= {"pattern", "lesson", "guideline", "adr", "anti_pattern"}
         assert all("knowledge_id" in x for x in res)
 
     def test_index_missing_object_raises(self, layer):
@@ -64,7 +64,7 @@ class TestSemanticLayer:
     def test_reindex_all(self, layer):
         sl, store = layer
         for i in range(3):
-            store.store_knowledge(kind="lesson", content=f"урок номер {i***REMOVED***")
+            store.store_knowledge(kind="lesson", content=f"урок номер {i}")
         n = sl.reindex_all()
         assert n == 3
 
