@@ -12,7 +12,7 @@ v2.0.0: читает BUFFY.md, загружает последний консп�
 from __future__ import annotations
 
 import os
-***REMOVED***
+}
 import sys
 from datetime import datetime, timezone
 
@@ -25,9 +25,9 @@ from scripts_01.memory_engine import MemoryEngine, MemoryLevel
 from scripts_01.stream_bridge import StreamBridge
 
 
-def _load_buffy_manifest(path: str) -> list[str***REMOVED***:
+def _load_buffy_manifest(path: str) -> list[str]:
     """Validate the Buffy rules/identity manifest and return warnings."""
-    warnings: list[str***REMOVED*** = [***REMOVED***
+    warnings: list[str] = []
     try:
         with open(path, "r", encoding="utf-8") as f:
             content = f.read()
@@ -38,22 +38,22 @@ def _load_buffy_manifest(path: str) -> list[str***REMOVED***:
     except FileNotFoundError:
         warnings.append("BUFFY.md not found — conventions/identity unavailable")
     except Exception as exc:
-        warnings.append(f"BUFFY.md read error: {exc***REMOVED***")
+        warnings.append(f"BUFFY.md read error: {exc}")
     return warnings
 
 
-def _load_last_real_conspect(workspace: str) -> tuple[str, str***REMOVED*** | None:
+def _load_last_real_conspect(workspace: str) -> tuple[str, str] | None:
     """Return (filename, content) of the latest non-test conspect, or None."""
     summaries_dir = os.path.join(workspace, "context_12", "summaries")
     if not os.path.isdir(summaries_dir):
         return None
 
     files = sorted(
-        [f for f in os.listdir(summaries_dir) if f.endswith(".md")***REMOVED***,
+        [f for f in os.listdir(summaries_dir) if f.endswith(".md")],
         reverse=True,
     )
-    content_markers = ["auto-conspect test", "auto conspect test", "demo", "test session"***REMOVED***
-    filename_markers = ["test", "demo", "auto"***REMOVED***
+    content_markers = ["auto-conspect test", "auto conspect test", "demo", "test session"]
+    filename_markers = ["test", "demo", "auto"]
     for name in files:
         filepath = os.path.join(summaries_dir, name)
         try:
@@ -65,16 +65,16 @@ def _load_last_real_conspect(workspace: str) -> tuple[str, str***REMOVED*** | No
         if any(marker in lower for marker in content_markers):
             continue
         lower_name = name.lower()
-        if any(re.search(rf"\b{marker***REMOVED***\b", lower_name) for marker in filename_markers):
+        if any(re.search(rf"\b{marker}\b", lower_name) for marker in filename_markers):
             continue
         if content.strip():
             return name, content
     return None
 
 
-def _check_task_status(workspace: str, stale_days: int = 3) -> list[str***REMOVED***:
+def _check_task_status(workspace: str, stale_days: int = 3) -> list[str]:
     """Warn if TASK.md is stale or missing/final."""
-    warnings: list[str***REMOVED*** = [***REMOVED***
+    warnings: list[str] = []
     task_path = os.path.join(workspace, "TASK.md")
     if not os.path.exists(task_path):
         warnings.append("TASK.md not found — no active task context")
@@ -88,19 +88,19 @@ def _check_task_status(workspace: str, stale_days: int = 3) -> list[str***REMOVE
         final = any(status in text for status in ("🟢", "completed", "done", "готово"))
         if age_days > stale_days and not final:
             warnings.append(
-                f"TASK.md is {age_days***REMOVED*** days old and not marked final — consider updating or archiving"
+                f"TASK.md is {age_days} days old and not marked final — consider updating or archiving"
             )
     except Exception as exc:
-        warnings.append(f"TASK.md check error: {exc***REMOVED***")
+        warnings.append(f"TASK.md check error: {exc}")
     return warnings
 
 
-def run_startup_self_check(workspace: str, stale_days: int = 3) -> list[str***REMOVED***:
+def run_startup_self_check(workspace: str, stale_days: int = 3) -> list[str]:
     """Trigger 1: perform the session-start self-check.
 
     Returns a list of human-readable warnings. An empty list means all checks passed.
     """
-    warnings: list[str***REMOVED*** = [***REMOVED***
+    warnings: list[str] = []
     warnings.extend(_load_buffy_manifest(os.path.join(workspace, "BUFFY.md")))
     if _load_last_real_conspect(workspace) is None:
         warnings.append("No real conspect found — all saved conspects are auto/test generated")
@@ -157,7 +157,7 @@ def bootstrap(
             _seed_knowledge()
         except Exception as e:
             if not quiet:
-                print(f"️ Knowledge seed: {e***REMOVED***", file=sys.stderr)
+                print(f"️ Knowledge seed: {e}", file=sys.stderr)
 
     cm = ContextManager(WORKSPACE)
     result: dict = {
@@ -168,35 +168,35 @@ def bootstrap(
         "stream_active": False,
         "stream_topic": "",
         "stream_id": "",
-    ***REMOVED***
+    }
 
     # 1. Пробуем восстановить активную сессию
     active = cm.list_sessions(SessionStatus.ACTIVE)
     if active:
-        s = active[0***REMOVED***
-        result["session_id"***REMOVED*** = s["session_id"***REMOVED***
-        result["messages_restored"***REMOVED*** = s["message_count"***REMOVED***
+        s = active[0]
+        result["session_id"] = s["session_id"]
+        result["messages_restored"] = s["message_count"]
         if not quiet:
-            print(f"🔄 Восстановлена сессия: {s['session_id'***REMOVED***[:8***REMOVED******REMOVED***")
-            print(f"   Проект: {s['project'***REMOVED******REMOVED*** | Тема: {s['topic'***REMOVED******REMOVED*** | Сообщений: {s['message_count'***REMOVED******REMOVED***")
+            print(f"🔄 Восстановлена сессия: {s['session_id'][:8]}")
+            print(f"   Проект: {s['project']} | Тема: {s['topic']} | Сообщений: {s['message_count']}")
     else:
         # 2. Новая сессия
         snap = cm.start_session(project=project, topic=topic)
-        result["session_id"***REMOVED*** = snap.session_id
+        result["session_id"] = snap.session_id
         if not quiet:
-            print(f"🟢 Новая сессия: {snap.session_id[:8***REMOVED******REMOVED***")
-            print(f"   Проект: {snap.project***REMOVED*** | Тема: {snap.topic***REMOVED***")
+            print(f"🟢 Новая сессия: {snap.session_id[:8]}")
+            print(f"   Проект: {snap.project} | Тема: {snap.topic}")
 
     # 3. Загружаем последний конспект (игнорируем тестовые/автоматические)
     conspect_info = _load_last_real_conspect(WORKSPACE)
     if conspect_info:
         conspect_name, conspect_content = conspect_info
-        result["conspect"***REMOVED*** = conspect_content
+        result["conspect"] = conspect_content
         if not quiet:
-            print(f"\n📋 Последний конспект: {conspect_name***REMOVED***")
+            print(f"\n📋 Последний конспект: {conspect_name}")
             print("-" * 50)
-            print(result["conspect"***REMOVED***[:500***REMOVED***)
-            if len(result["conspect"***REMOVED***) > 500:
+            print(result["conspect"][:500])
+            if len(result["conspect"]) > 500:
                 print("... (обрезано)")
     else:
         if not quiet:
@@ -206,31 +206,31 @@ def bootstrap(
     if start_stream:
         try:
             bridge = StreamBridge(auto_bootstrap=True, run_gc=True)
-            result["stream_active"***REMOVED*** = bridge.session_id is not None
+            result["stream_active"] = bridge.session_id is not None
             if bridge.session_id:
                 status = bridge.get_status()
-                result["stream_id"***REMOVED*** = bridge.session_id[:8***REMOVED***
+                result["stream_id"] = bridge.session_id[:8]
                 if not quiet:
-                    print(f"\n📡 StreamBridge активен: {result['stream_id'***REMOVED******REMOVED***")
+                    print(f"\n📡 StreamBridge активен: {result['stream_id']}")
                     if "usage_percent" in status:
-                        print(f"   Контекст: {status['usage_percent'***REMOVED******REMOVED***%")
+                        print(f"   Контекст: {status['usage_percent']}%")
         except Exception as e:
             if not quiet:
-                print(f"\n⚠️ StreamBridge: {e***REMOVED***", file=sys.stderr)
+                print(f"\n⚠️ StreamBridge: {e}", file=sys.stderr)
 
     # 5. Запускаем триггер самопроверки (не должен ломать старт)
     try:
-        result["warnings"***REMOVED*** = run_startup_self_check(WORKSPACE)
+        result["warnings"] = run_startup_self_check(WORKSPACE)
     except Exception as exc:
-        result["warnings"***REMOVED*** = [f"Self-check failed: {exc***REMOVED***"***REMOVED***
+        result["warnings"] = [f"Self-check failed: {exc}"]
 
     # 6. Формируем стартовый промпт для Buffy
-    result["buffy_prompt"***REMOVED*** = _build_buffy_prompt(result)
+    result["buffy_prompt"] = _build_buffy_prompt(result)
 
     if not quiet:
         print("\n📋 СТАРТОВЫЙ ПРОМПТ ДЛЯ BUFFY:")
         print("-" * 50)
-        print(result["buffy_prompt"***REMOVED***)
+        print(result["buffy_prompt"])
 
     return result
 
@@ -240,29 +240,29 @@ def _build_buffy_prompt(result: dict) -> str:
     lines = [
         "Я начинаю новую сессию.",
         "",
-        f"Session ID: {result['session_id'***REMOVED******REMOVED***",
-        f"Messages restored: {result['messages_restored'***REMOVED******REMOVED***",
-    ***REMOVED***
+        f"Session ID: {result['session_id']}",
+        f"Messages restored: {result['messages_restored']}",
+    ]
 
     if result.get("stream_active"):
-        lines.append(f"Stream ID: {result.get('stream_id', '?')***REMOVED*** (active)")
+        lines.append(f"Stream ID: {result.get('stream_id', '?')} (active)")
 
-    warnings = result.get("warnings", [***REMOVED***)
+    warnings = result.get("warnings", [])
     if warnings:
         lines.append("")
         lines.append("## ⚠️ Self-check warnings")
         for warning in warnings:
-            lines.append(f"- {warning***REMOVED***")
+            lines.append(f"- {warning}")
 
-    if result["conspect"***REMOVED***:
+    if result["conspect"]:
         lines.append("")
         lines.append("## Контекст предыдущей сессии")
-        lines.append(result["conspect"***REMOVED***[:2000***REMOVED***)  # ограничиваем токены
+        lines.append(result["conspect"][:2000])  # ограничиваем токены
 
     lines.append("")
     lines.append(
         "Прочитай BUFFY.md, восстанови контекст из context.db "
-        f"(session_id={result['session_id'***REMOVED******REMOVED***), и расскажи кратко "
+        f"(session_id={result['session_id']}), и расскажи кратко "
         "что было в прошлой сессии и что мы продолжаем."
     )
 
@@ -277,19 +277,19 @@ def main():
     quiet = False
     seed = False
 
-    args = sys.argv[1:***REMOVED***
+    args = sys.argv[1:]
     i = 0
     while i < len(args):
-        if args[i***REMOVED*** == "--project" and i + 1 < len(args):
-            project = args[i + 1***REMOVED***
+        if args[i] == "--project" and i + 1 < len(args):
+            project = args[i + 1]
             i += 2
-        elif args[i***REMOVED*** == "--topic" and i + 1 < len(args):
-            topic = args[i + 1***REMOVED***
+        elif args[i] == "--topic" and i + 1 < len(args):
+            topic = args[i + 1]
             i += 2
-        elif args[i***REMOVED*** == "--quiet":
+        elif args[i] == "--quiet":
             quiet = True
             i += 1
-        elif args[i***REMOVED*** == "--seed":
+        elif args[i] == "--seed":
             seed = True
             i += 1
         else:
@@ -299,7 +299,7 @@ def main():
 
     if quiet:
         # В quiet-режиме выводим только промпт (для пайпа в другой процесс)
-        print(result["buffy_prompt"***REMOVED***)
+        print(result["buffy_prompt"])
 
 
 if __name__ == "__main__":

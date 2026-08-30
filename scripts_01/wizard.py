@@ -30,10 +30,10 @@ import json
 import os
 import sys
 import tempfile
-***REMOVED***
+}
 
 
-ROOT = Path(__file__).resolve().parents[1***REMOVED***
+ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
@@ -58,14 +58,14 @@ def _seed_minimal_corpus(target_dir: Path) -> Path:
         '      - "реализуй модуль"\n'
         "project_types:\n"
         "  web:\n"
-        "    required_roles: [developer***REMOVED***\n"
-        "    skip_roles: [***REMOVED***\n"
+        "    required_roles: [developer]\n"
+        "    skip_roles: []\n"
         "complexity_routing:\n"
         "  small:\n"
-        "    required_roles: [developer***REMOVED***\n"
-        "    skip_roles: [***REMOVED***\n"
+        "    required_roles: [developer]\n"
+        "    skip_roles: []\n"
         "categories:\n"
-        "  implementation: [developer***REMOVED***\n"
+        "  implementation: [developer]\n"
         "metadata:\n"
         "  version: \"3.0.0\"\n",
         encoding="utf-8",
@@ -91,17 +91,17 @@ def _seed_minimal_corpus(target_dir: Path) -> Path:
 
 def _summarise(result: dict) -> dict:
     out = {
-        "selected_role_id": result["selected_role_id"***REMOVED***,
-        "resolved_model": result["resolved_model"***REMOVED***,
-        "paths": {k: str(v) for k, v in result["paths"***REMOVED***.items()***REMOVED***,
-        "merged_path": str(result["merged_path"***REMOVED***),
-    ***REMOVED***
+        "selected_role_id": result["selected_role_id"],
+        "resolved_model": result["resolved_model"],
+        "paths": {k: str(v) for k, v in result["paths"].items()},
+        "merged_path": str(result["merged_path"]),
+    }
     if "selected_scenario_id" in result:
-        out["selected_scenario_id"***REMOVED*** = result["selected_scenario_id"***REMOVED***
+        out["selected_scenario_id"] = result["selected_scenario_id"]
     return out
 
 
-def _seed_minimal_registry(target_dir: Path) -> tuple[Path, "ScenarioRegistry"***REMOVED***:
+def _seed_minimal_registry(target_dir: Path) -> tuple[Path, "ScenarioRegistry"]:
     """Build a tmp registry using an in-tmp blueprint corpus (for --selftest).
 
     Writes a one-scenario manifest + a 2-role corpus into the temp dir and
@@ -115,7 +115,7 @@ def _seed_minimal_registry(target_dir: Path) -> tuple[Path, "ScenarioRegistry"**
         "id: blueprint_v3_selftest\n"
         "type: blueprint_v3\n"
         f"display_name: selftest\n"
-        f"root: {seed***REMOVED***\n"
+        f"root: {seed}\n"
         "enabled: true\n",
         encoding="utf-8",
     )
@@ -151,14 +151,14 @@ def main(args: argparse.Namespace) -> int:
         # Explicit BC path: legacy single corpus.
         bd = Path(blueprints_dir)
         if not bd.exists():
-            print(f"error: blueprints_dir {bd***REMOVED*** does not exist", file=sys.stderr)
+            print(f"error: blueprints_dir {bd} does not exist", file=sys.stderr)
             return 2
         if not bd.is_dir():
-            print(f"error: blueprints_dir {bd***REMOVED*** is not a directory", file=sys.stderr)
+            print(f"error: blueprints_dir {bd} is not a directory", file=sys.stderr)
             return 2
         if not (bd / "registry.yaml").exists():
             print(
-                f"error: {bd***REMOVED***/registry.yaml missing — pip install/restore blueprint corpus",
+                f"error: {bd}/registry.yaml missing — pip install/restore blueprint corpus",
                 file=sys.stderr,
             )
             return 2
@@ -195,8 +195,8 @@ def main(args: argparse.Namespace) -> int:
         only = registry.get(args.scenario)
         if only is None:
             print(
-                f"error: --scenario {args.scenario!r***REMOVED*** not registered; "
-                f"available: {[sc.scenario_id for sc in registry.list_scenarios()***REMOVED******REMOVED***",
+                f"error: --scenario {args.scenario!r} not registered; "
+                f"available: {[sc.scenario_id for sc in registry.list_scenarios()]}",
                 file=sys.stderr,
             )
             return 2
@@ -259,7 +259,7 @@ if __name__ == "__main__":
         for required in ("name", "project_goal", "task_goal"):
             if not getattr(ns, required):
                 print(
-                    f"error: --{required.replace('_', '-')***REMOVED*** required (or use --selftest)",
+                    f"error: --{required.replace('_', '-')} required (or use --selftest)",
                     file=sys.stderr,
                 )
                 sys.exit(2)

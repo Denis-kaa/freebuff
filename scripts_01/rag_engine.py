@@ -21,7 +21,7 @@ rag_engine.py — RAG 2.0 Engine (Phase 7: CoWork / Companion Platform).
     rag = RAGEngine()
     results = rag.search("capability router scoring", mode="hybrid_rrf")
     for r in results:
-        print(f"  [{r.score:.4f***REMOVED******REMOVED*** {r.doc_id***REMOVED***: {r.snippet[:80***REMOVED******REMOVED***")
+        print(f"  [{r.score:.4f}] {r.doc_id}: {r.snippet[:80]}")
 """
 
 from __future__ import annotations
@@ -29,13 +29,13 @@ from __future__ import annotations
 import argparse
 import json
 import math
-***REMOVED***
+}
 import sys
 import time
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 import numpy as np
@@ -53,16 +53,16 @@ class RAGResult:
     score: float
     content: str
     snippet: str = ""
-    metadata: Dict[str, Any***REMOVED*** = field(default_factory=dict)
-    matched_terms: List[str***REMOVED*** = field(default_factory=list)
-    rank_sources: Dict[str, float***REMOVED*** = field(default_factory=dict)
-    features: Dict[str, float***REMOVED*** = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    matched_terms: List[str] = field(default_factory=list)
+    rank_sources: Dict[str, float] = field(default_factory=dict)
+    features: Dict[str, float] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         """Сериализация в dict для JSON."""
-        snippet = self.snippet or self.content[:200***REMOVED***
+        snippet = self.snippet or self.content[:200]
         if len(snippet) > 200:
-            snippet = snippet[:197***REMOVED*** + "..."
+            snippet = snippet[:197] + "..."
         return {
             "doc_id": self.doc_id,
             "score": round(self.score, 4),
@@ -72,7 +72,7 @@ class RAGResult:
             "matched_terms": self.matched_terms,
             "rank_sources": self.rank_sources,
             "features": self.features,
-        ***REMOVED***
+        }
 
 
 @dataclass
@@ -81,23 +81,23 @@ class RAGReport:
 
     query: str
     mode: str
-    results: List[RAGResult***REMOVED*** = field(default_factory=list)
+    results: List[RAGResult] = field(default_factory=list)
     total_time_ms: float = 0.0
     expanded_query: str = ""
-    query_terms: List[str***REMOVED*** = field(default_factory=list)
+    query_terms: List[str] = field(default_factory=list)
     total_candidates: int = 0
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         """Сериализация в dict для JSON."""
         return {
             "query": self.query,
             "mode": self.mode,
-            "results": [r.to_dict() for r in self.results***REMOVED***,
+            "results": [r.to_dict() for r in self.results],
             "total_time_ms": round(self.total_time_ms, 2),
             "expanded_query": self.expanded_query,
             "query_terms": self.query_terms,
             "total_candidates": self.total_candidates,
-        ***REMOVED***
+        }
 
 
 @dataclass
@@ -112,7 +112,7 @@ class FeatureVector:
     bm25_score: float = 0.0
     semantic_score: float = 0.0
 
-    def combined_score(self, weights: Optional[Dict[str, float***REMOVED******REMOVED*** = None) -> float:
+    def combined_score(self, weights: Optional[Dict[str, float]] = None) -> float:
         """Взвешенная комбинация признаков.
 
         Default weights:
@@ -132,7 +132,7 @@ class FeatureVector:
             "freshness": 0.10,
             "bm25_score": 0.10,
             "semantic_score": 0.05,
-        ***REMOVED***
+        }
         score = 0.0
         score += w.get("coverage", 0.0) * self.coverage
         score += w.get("term_frequency", 0.0) * self.term_frequency
@@ -143,7 +143,7 @@ class FeatureVector:
         score += w.get("semantic_score", 0.0) * self.semantic_score
         return score
 
-    def to_dict(self) -> Dict[str, float***REMOVED***:
+    def to_dict(self) -> Dict[str, float]:
         """Сериализация в dict."""
         return {
             "coverage": self.coverage,
@@ -153,7 +153,7 @@ class FeatureVector:
             "freshness": self.freshness,
             "bm25_score": self.bm25_score,
             "semantic_score": self.semantic_score,
-        ***REMOVED***
+        }
 
 
 class RAGEngine:
@@ -177,10 +177,10 @@ class RAGEngine:
 
     @staticmethod
     def rrf_merge(
-        rank_lists: List[List[Tuple[str, float, str, Dict[str, Any***REMOVED******REMOVED******REMOVED******REMOVED***,
+        rank_lists: List[List[Tuple[str, float, str, Dict[str, Any]]]],
         k: int = 60,
         top_k: int = 10,
-    ) -> List[Tuple[str, float, str, Dict[str, Any***REMOVED***, Dict[str, float***REMOVED******REMOVED******REMOVED***:
+    ) -> List[Tuple[str, float, str, Dict[str, Any], Dict[str, float]]]:
         """Reciprocal Rank Fusion — слияние ранжированных списков.
 
         Args:
@@ -191,31 +191,31 @@ class RAGEngine:
         Returns:
             Список (doc_id, rrf_score, content, metadata, rank_sources)
         """
-        rrf_scores: Dict[str, float***REMOVED*** = defaultdict(float)
-        sources: Dict[str, Dict[str, float***REMOVED******REMOVED*** = defaultdict(dict)
-        content_map: Dict[str, str***REMOVED*** = {***REMOVED***
-        meta_map: Dict[str, Dict[str, Any***REMOVED******REMOVED*** = {***REMOVED***
+        rrf_scores: Dict[str, float] = defaultdict(float)
+        sources: Dict[str, Dict[str, float]] = defaultdict(dict)
+        content_map: Dict[str, str] = {}
+        meta_map: Dict[str, Dict[str, Any]] = {}
 
         for list_idx, rank_list in enumerate(rank_lists):
             for rank, (doc_id, score, content, metadata) in enumerate(rank_list, start=1):
-                rrf_scores[doc_id***REMOVED*** += 1.0 / (k + rank)
-                sources[doc_id***REMOVED***[f"source_{list_idx***REMOVED***"***REMOVED*** = score
+                rrf_scores[doc_id] += 1.0 / (k + rank)
+                sources[doc_id][f"source_{list_idx}"] = score
                 if doc_id not in content_map:
-                    content_map[doc_id***REMOVED*** = content
-                    meta_map[doc_id***REMOVED*** = metadata
+                    content_map[doc_id] = content
+                    meta_map[doc_id] = metadata
 
         merged = sorted(
-            rrf_scores.items(), key=lambda kv: kv[1***REMOVED***, reverse=True
-        )[:top_k***REMOVED***
+            rrf_scores.items(), key=lambda kv: kv[1], reverse=True
+        )[:top_k]
 
         return [
-            (doc_id, score, content_map.get(doc_id, ""), meta_map.get(doc_id, {***REMOVED***), dict(sources[doc_id***REMOVED***))
+            (doc_id, score, content_map.get(doc_id, ""), meta_map.get(doc_id, {}), dict(sources[doc_id]))
             for doc_id, score in merged
-        ***REMOVED***
+        ]
 
     # ── Query Expansion ───────────────────────────────────────────────
 
-    def expand_query(self, query: str, max_terms: int = 5, co_occurrence_window: int = 5) -> Tuple[str, List[str***REMOVED******REMOVED***:
+    def expand_query(self, query: str, max_terms: int = 5, co_occurrence_window: int = 5) -> Tuple[str, List[str]]:
         """Расширяет запрос релевантными терминами.
 
         Стратегия:
@@ -224,16 +224,16 @@ class RAGEngine:
           3. Добавляем термины, часто встречающиеся рядом с терминами запроса
         """
         if not query.strip():
-            return query, [***REMOVED***
+            return query, []
 
-        query_terms = [t for t in re.findall(r"[а-яa-z0-9***REMOVED***+", query.lower(), re.IGNORECASE) if len(t) > 1***REMOVED***
+        query_terms = [t for t in re.findall(r"[а-яa-z0-9)+", query.lower(), re.IGNORECASE) if len(t) > 1]
         if len(query_terms) < 2:
-            return query, [***REMOVED***
+            return query, []
 
         try:
             results = self._ke.search(query, top_k=10, mode="keyword")
         except Exception:
-            return query, [***REMOVED***
+            return query, []
 
         # Считаем термины в найденных документах (TF-IDF-подобная эвристика).
         term_counts: Counter = Counter()
@@ -243,31 +243,31 @@ class RAGEngine:
 
         for res in results:
             content = getattr(res, "content", "") or ""
-            tokens = [t for t in re.findall(r"[а-яa-z0-9***REMOVED***+", content.lower(), re.IGNORECASE) if len(t) > 2***REMOVED***
+            tokens = [t for t in re.findall(r"[а-яa-z0-9)+", content.lower(), re.IGNORECASE) if len(t) > 2]
             doc_terms = set(tokens)
             for t in tokens:
-                term_counts[t***REMOVED*** += 1
+                term_counts[t] += 1
             for t in doc_terms:
-                doc_freq[t***REMOVED*** += 1
+                doc_freq[t] += 1
             # Термины рядом с терминами запроса.
             for i, token in enumerate(tokens):
                 if token in query_terms:
                     for j in range(max(0, i - co_occurrence_window), min(len(tokens), i + co_occurrence_window + 1)):
-                        if i != j and tokens[j***REMOVED*** not in query_terms:
-                            co_occur[tokens[j***REMOVED******REMOVED*** += 1
+                        if i != j and tokens[j] not in query_terms:
+                            co_occur[tokens[j]] += 1
 
         # TF-IDF-эвристика: частота × обратная документная частота.
-        scores: Dict[str, float***REMOVED*** = {***REMOVED***
+        scores: Dict[str, float] = {}
         for term, count in term_counts.items():
             if term in query_terms:
                 continue
-            idf = math.log(1.0 + n_docs / (1.0 + doc_freq[term***REMOVED***))
-            scores[term***REMOVED*** = count * idf * (1.0 + 0.5 * co_occur[term***REMOVED***)
+            idf = math.log(1.0 + n_docs / (1.0 + doc_freq[term]))
+            scores[term] = count * idf * (1.0 + 0.5 * co_occur[term])
 
-        extra_terms = [t for t, _ in sorted(scores.items(), key=lambda kv: kv[1***REMOVED***, reverse=True)[:max_terms***REMOVED******REMOVED***
+        extra_terms = [t for t, _ in sorted(scores.items(), key=lambda kv: kv[1], reverse=True)[:max_terms]]
         expanded = query
         if extra_terms:
-            expanded = f"{query***REMOVED*** {' '.join(extra_terms)***REMOVED***"
+            expanded = f"{query} {' '.join(extra_terms)}"
         return expanded, extra_terms
 
     # ── Feature Extraction ────────────────────────────────────────────
@@ -275,10 +275,10 @@ class RAGEngine:
     def _extract_features(
         self,
         content: str,
-        query_terms: List[str***REMOVED***,
+        query_terms: List[str],
         bm25_score: float = 0.0,
         semantic_score: float = 0.0,
-        metadata: Optional[Dict[str, Any***REMOVED******REMOVED*** = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> FeatureVector:
         """Извлекает признаки для re-ranking из контента документа.
 
@@ -298,7 +298,7 @@ class RAGEngine:
             return fv
 
         # coverage: доля найденных терминов запроса.
-        found = [t for t in query_terms if t in text***REMOVED***
+        found = [t for t in query_terms if t in text]
         fv.coverage = len(found) / n_terms
 
         # term_frequency: нормированная частота терминов запроса.
@@ -307,7 +307,7 @@ class RAGEngine:
         fv.term_frequency = min(1.0, total / words * 10.0)
 
         # position: насколько рано встречается первый термин.
-        first_positions = [text.find(t) for t in found if text.find(t) >= 0***REMOVED***
+        first_positions = [text.find(t) for t in found if text.find(t) >= 0]
         if first_positions:
             first = min(first_positions)
             fv.position = max(0.0, 1.0 - first / 2000.0)
@@ -326,7 +326,7 @@ class RAGEngine:
 
         # freshness: свежесть по created_at (в днях).
         fv.freshness = 0.5  # default (нет даты)
-        meta = metadata or {***REMOVED***
+        meta = metadata or {}
         created = meta.get("created_at")
         if created:
             try:
@@ -347,10 +347,10 @@ class RAGEngine:
     def rerank(
         self,
         query: str,
-        candidates: List[RAGResult***REMOVED***,
-        feature_weights: Optional[Dict[str, float***REMOVED******REMOVED*** = None,
+        candidates: List[RAGResult],
+        feature_weights: Optional[Dict[str, float]] = None,
         keep_features: bool = True,
-    ) -> List[RAGResult***REMOVED***:
+    ) -> List[RAGResult]:
         """Feature-based re-ranking кандидатов.
 
         Args:
@@ -363,9 +363,9 @@ class RAGEngine:
             Переранжированный список RAGResult.
         """
         if not candidates:
-            return [***REMOVED***
-        query_terms = [t for t in re.findall(r"[а-яa-z0-9***REMOVED***+", query.lower(), re.IGNORECASE) if len(t) > 1***REMOVED***
-        scored: List[Tuple[float, RAGResult***REMOVED******REMOVED*** = [***REMOVED***
+            return []
+        query_terms = [t for t in re.findall(r"[а-яa-z0-9)+", query.lower(), re.IGNORECASE) if len(t) > 1]
+        scored: List[Tuple[float, RAGResult]] = []
         for cand in candidates:
             fv = self._extract_features(
                 content=cand.content,
@@ -380,8 +380,8 @@ class RAGEngine:
             # Базовый score (RRF) + вес признаков.
             total = cand.score * 0.4 + combined * 0.6
             scored.append((total, cand))
-        scored.sort(key=lambda kv: kv[0***REMOVED***, reverse=True)
-        return [c for _, c in scored***REMOVED***
+        scored.sort(key=lambda kv: kv[0], reverse=True)
+        return [c for _, c in scored]
 
     # ── Поиск ─────────────────────────────────────────────────────────
 
@@ -421,20 +421,20 @@ class RAGEngine:
         if not query.strip():
             return report
 
-        query_terms = [t for t in re.findall(r"[а-яa-z0-9***REMOVED***+", query.lower(), re.IGNORECASE) if len(t) > 1***REMOVED***
+        query_terms = [t for t in re.findall(r"[а-яa-z0-9)+", query.lower(), re.IGNORECASE) if len(t) > 1]
         report.query_terms = query_terms
 
         expanded = query
-        extra_terms: List[str***REMOVED*** = [***REMOVED***
+        extra_terms: List[str] = []
         if expand_query:
             expanded, extra_terms = self.expand_query(query)
             report.expanded_query = expanded
             if extra_terms:
                 query_terms.extend(extra_terms)
 
-        keyword_results: List[Tuple[str, float, str, Dict[str, Any***REMOVED******REMOVED******REMOVED*** = [***REMOVED***
-        semantic_results: List[Tuple[str, float, str, Dict[str, Any***REMOVED******REMOVED******REMOVED*** = [***REMOVED***
-        semantic_ml_results: List[Tuple[str, float, str, Dict[str, Any***REMOVED******REMOVED******REMOVED*** = [***REMOVED***
+        keyword_results: List[Tuple[str, float, str, Dict[str, Any]]] = []
+        semantic_results: List[Tuple[str, float, str, Dict[str, Any]]] = []
+        semantic_ml_results: List[Tuple[str, float, str, Dict[str, Any]]] = []
 
         try:
             if mode in ("keyword", "hybrid", "hybrid_rrf", "full_rrf"):
@@ -462,59 +462,59 @@ class RAGEngine:
 
         # Инициализация ДО веток режимов — защита от UnboundLocalError
         # при пустых результатах (контракт тестов).
-        merged: List[Tuple[str, float, str, Dict[str, Any***REMOVED******REMOVED******REMOVED*** = [***REMOVED***
-        rank_sources: Dict[str, Dict[str, float***REMOVED******REMOVED*** = {***REMOVED***
+        merged: List[Tuple[str, float, str, Dict[str, Any]]] = []
+        rank_sources: Dict[str, Dict[str, float]] = {}
 
         if mode == "keyword":
-            merged = [(doc_id, score, content, meta) for doc_id, score, content, meta in keyword_results***REMOVED***
+            merged = [(doc_id, score, content, meta) for doc_id, score, content, meta in keyword_results]
         elif mode == "semantic":
-            merged = [(doc_id, score, content, meta) for doc_id, score, content, meta in semantic_results***REMOVED***
+            merged = [(doc_id, score, content, meta) for doc_id, score, content, meta in semantic_results]
         elif mode == "semantic_ml":
-            merged = [(doc_id, score, content, meta) for doc_id, score, content, meta in semantic_ml_results***REMOVED***
+            merged = [(doc_id, score, content, meta) for doc_id, score, content, meta in semantic_ml_results]
         elif mode == "hybrid":
             # Взвешенная комбинация (без RRF).
-            combined: Dict[str, Dict[str, Any***REMOVED******REMOVED*** = {***REMOVED***
+            combined: Dict[str, Dict[str, Any]] = {}
             for doc_id, score, content, meta in keyword_results:
-                combined[doc_id***REMOVED*** = {"score": score * fts_weight, "content": content, "meta": meta, "kw": score***REMOVED***
+                combined[doc_id] = {"score": score * fts_weight, "content": content, "meta": meta, "kw": score}
             for doc_id, score, content, meta in semantic_results:
                 if doc_id in combined:
-                    combined[doc_id***REMOVED***["score"***REMOVED*** += score * (1 - fts_weight)
-                    combined[doc_id***REMOVED***["sem"***REMOVED*** = score
+                    combined[doc_id]["score"] += score * (1 - fts_weight)
+                    combined[doc_id]["sem"] = score
                 else:
-                    combined[doc_id***REMOVED*** = {"score": score * (1 - fts_weight), "content": content, "meta": meta, "sem": score***REMOVED***
+                    combined[doc_id] = {"score": score * (1 - fts_weight), "content": content, "meta": meta, "sem": score}
             merged = [
-                (doc_id, info["score"***REMOVED***, info["content"***REMOVED***, info["meta"***REMOVED***)
-                for doc_id, info in sorted(combined.items(), key=lambda kv: kv[1***REMOVED***["score"***REMOVED***, reverse=True)
-            ***REMOVED***
+                (doc_id, info["score"], info["content"], info["meta"])
+                for doc_id, info in sorted(combined.items(), key=lambda kv: kv[1]["score"], reverse=True)
+            ]
         elif mode in ("hybrid_rrf", "full_rrf"):
-            rank_lists = [keyword_results, semantic_results***REMOVED***
+            rank_lists = [keyword_results, semantic_results]
             if mode == "full_rrf" and semantic_ml_results:
                 rank_lists.append(semantic_ml_results)
             for doc_id, score, content, meta, sources in self.rrf_merge(
                 rank_lists, k=RRF_K, top_k=top_k * 2
             ):
                 merged.append((doc_id, score, content, meta))
-                rank_sources[doc_id***REMOVED*** = sources
+                rank_sources[doc_id] = sources
         else:
-            raise ValueError(f"Unknown search mode: {mode***REMOVED***")
+            raise ValueError(f"Unknown search mode: {mode}")
 
         # Формируем RAGResult.
-        results: List[RAGResult***REMOVED*** = [***REMOVED***
-        seen: Set[str***REMOVED*** = set()
+        results: List[RAGResult] = []
+        seen: Set[str] = set()
         for doc_id, score, content, meta in merged:
             if doc_id in seen:
                 continue
             seen.add(doc_id)
-            snippet = content[:200***REMOVED***
+            snippet = content[:200]
             results.append(
                 RAGResult(
                     doc_id=doc_id,
                     score=float(score),
                     content=content,
                     snippet=snippet,
-                    metadata=dict(meta or {***REMOVED***),
-                    matched_terms=[t for t in query_terms if t in content.lower()***REMOVED***,
-                    rank_sources=rank_sources.get(doc_id, {***REMOVED***),
+                    metadata=dict(meta or {}),
+                    matched_terms=[t for t in query_terms if t in content.lower()],
+                    rank_sources=rank_sources.get(doc_id, {}),
                 )
             )
             if len(results) >= top_k * 3:
@@ -522,9 +522,9 @@ class RAGEngine:
 
         # Переранжирование.
         if rerank_results and mode in ("hybrid_rrf", "full_rrf"):
-            results = self.rerank(query, results[:MAX_RERANK_CANDIDATES***REMOVED***)
+            results = self.rerank(query, results[:MAX_RERANK_CANDIDATES])
 
-        report.results = results[:top_k***REMOVED***
+        report.results = results[:top_k]
         report.total_time_ms = (time.time() - start) * 1000.0
         return report
 
@@ -552,56 +552,56 @@ def _cmd_search(args: argparse.Namespace) -> None:
         expand_query=not args.no_expand,
         rerank_results=not args.no_rerank,
     )
-    print(f"🔍 RAG 2.0 Search (mode: {report.mode***REMOVED***)")
-    print(f"  Query:      {report.query***REMOVED***")
+    print(f"🔍 RAG 2.0 Search (mode: {report.mode})")
+    print(f"  Query:      {report.query}")
     if report.expanded_query:
-        print(f"  Expanded:   {report.expanded_query***REMOVED***")
-    print(f"  Candidates: {report.total_candidates***REMOVED***")
-    print(f"  Time:       {report.total_time_ms:.1f***REMOVED*** ms")
+        print(f"  Expanded:   {report.expanded_query}")
+    print(f"  Candidates: {report.total_candidates}")
+    print(f"  Time:       {report.total_time_ms:.1f} ms")
     if not report.results:
         print("📭 No results")
         return
-    print(f"  Results:    {len(report.results)***REMOVED***")
+    print(f"  Results:    {len(report.results)}")
     for i, r in enumerate(report.results, start=1):
-        print(f"  {i***REMOVED***. [{r.score:.4f***REMOVED******REMOVED*** {r.doc_id***REMOVED***")
-        print(f"     {r.snippet[:120***REMOVED******REMOVED***")
+        print(f"  {i}. [{r.score:.4f}] {r.doc_id}")
+        print(f"     {r.snippet[:120]}")
 
 
 def _cmd_hybrid(args: argparse.Namespace) -> None:
     rag = RAGEngine()
     report = rag.hybrid_search(args.query, top_k=args.top_k)
     print("🔍 RAG 2.0 Hybrid Search (RRF)")
-    print(f"  Query:      {report.query***REMOVED***")
-    print(f"  Candidates: {report.total_candidates***REMOVED***")
-    print(f"  Time:       {report.total_time_ms:.1f***REMOVED*** ms")
+    print(f"  Query:      {report.query}")
+    print(f"  Candidates: {report.total_candidates}")
+    print(f"  Time:       {report.total_time_ms:.1f} ms")
     if not report.results:
         print("📭 No results")
         return
     for i, r in enumerate(report.results, start=1):
-        print(f"  {i***REMOVED***. [{r.score:.4f***REMOVED******REMOVED*** {r.doc_id***REMOVED***")
-        print(f"     {r.snippet[:120***REMOVED******REMOVED***")
+        print(f"  {i}. [{r.score:.4f}] {r.doc_id}")
+        print(f"     {r.snippet[:120]}")
 
 
 def _cmd_rerank(args: argparse.Namespace) -> None:
     rag = RAGEngine()
     report = rag.search(args.query, top_k=args.top_k * 3, mode="hybrid_rrf", rerank_results=False)
     print("Feature-based re-ranking кандидатов.")
-    print(f"  Before rerank: {len(report.results)***REMOVED***")
-    for r in report.results[:3***REMOVED***:
-        print(f"    [{r.score:.4f***REMOVED******REMOVED*** {r.doc_id***REMOVED***")
+    print(f"  Before rerank: {len(report.results)}")
+    for r in report.results[:3]:
+        print(f"    [{r.score:.4f}] {r.doc_id}")
     reranked = rag.rerank(args.query, report.results)
-    print(f"  After rerank: {len(reranked)***REMOVED***")
-    for r in reranked[:args.top_k***REMOVED***:
-        print(f"    [{r.score:.4f***REMOVED******REMOVED*** {r.doc_id***REMOVED***  Features: {r.features***REMOVED***")
+    print(f"  After rerank: {len(reranked)}")
+    for r in reranked[:args.top_k]:
+        print(f"    [{r.score:.4f}] {r.doc_id}  Features: {r.features}")
 
 
 def _cmd_expand(args: argparse.Namespace) -> None:
     rag = RAGEngine()
     expanded, extra = rag.expand_query(args.query, max_terms=args.max_terms)
     print("Query Expansion")
-    print(f"  Original:  {args.query***REMOVED***")
-    print(f"  Expanded:  {expanded***REMOVED***")
-    print(f"  Extra terms: {extra***REMOVED***")
+    print(f"  Original:  {args.query}")
+    print(f"  Expanded:  {expanded}")
+    print(f"  Extra terms: {extra}")
 
 
 def main() -> int:
@@ -637,7 +637,7 @@ def main() -> int:
         "hybrid": _cmd_hybrid,
         "rerank": _cmd_rerank,
         "expand": _cmd_expand,
-    ***REMOVED***
+    }
     handler = handlers.get(args.command)
     if handler is None:
         parser.print_help()

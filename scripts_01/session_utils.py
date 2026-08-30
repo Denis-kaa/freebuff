@@ -23,6 +23,6 @@ def resolve_session_id(cm: "ContextManager", partial_id: str | None) -> str | No
     if len(partial_id) >= 32:  # уже полный UUID
         return partial_id if cm.get_session(partial_id) else None
     for s in cm.list_sessions():
-        if s["session_id"***REMOVED***.startswith(partial_id):
-            return str(s["session_id"***REMOVED***)
+        if s["session_id"].startswith(partial_id):
+            return str(s["session_id"])
     return None

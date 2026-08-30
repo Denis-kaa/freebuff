@@ -13,7 +13,7 @@ Protocol: MCP 2025-03-26 Streamable HTTP
 REST (без MCP-протокола):
   - POST /policy/override: User-Choice Override (правило 11, promt37)
     body: {"message": "use deepseek instead of claude for coding",
-           "capability": "research" (опц.), "dry_run": true (опц.)***REMOVED***
+           "capability": "research" (опц.), "dry_run": true (опц.)]
   - GET  /policy/status: текущие предпочтения из policies.json (правило 11)
 
 Usage:
@@ -30,9 +30,9 @@ Claude Desktop config (Streamable HTTP):
         "buffy": {
           "url": "https://YOUR-TUNNEL.trycloudflare.com/mcp",
           "transport": "streamable-http"
-        ***REMOVED***
-      ***REMOVED***
-    ***REMOVED***
+        }
+      }
+    }
 """
 
 from __future__ import annotations
@@ -41,7 +41,7 @@ import asyncio
 import hmac
 import json
 import os
-***REMOVED***
+}
 import subprocess
 import sys
 import threading
@@ -49,7 +49,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
@@ -104,16 +104,16 @@ class McpAsyncSessionManager:
     """
 
     def __init__(self) -> None:
-        self._sessions: Dict[str, McpAsyncSession***REMOVED*** = {***REMOVED***
+        self._sessions: Dict[str, McpAsyncSession] = {}
         self._lock = asyncio.Lock()
 
     async def create_session(self) -> str:
         session_id = str(uuid.uuid4())
         async with self._lock:
-            self._sessions[session_id***REMOVED*** = McpAsyncSession(session_id=session_id)
+            self._sessions[session_id] = McpAsyncSession(session_id=session_id)
         return session_id
 
-    async def get_session(self, session_id: str) -> Optional[McpAsyncSession***REMOVED***:
+    async def get_session(self, session_id: str) -> Optional[McpAsyncSession]:
         async with self._lock:
             return self._sessions.get(session_id)
 
@@ -148,10 +148,10 @@ if HAS_FASTAPI:
         version="1.0.0",
     )
 
-    _server: Optional[BuffyMcpServer***REMOVED*** = None
-    _sessions: Optional[McpAsyncSessionManager***REMOVED*** = None
-    _metrics: Optional[Any***REMOVED*** = None  # MetricsEngine lazy init
-    _policy_engine: Optional[Any***REMOVED*** = None  # PolicyEngine lazy init (правило 11)
+    _server: Optional[BuffyMcpServer] = None
+    _sessions: Optional[McpAsyncSessionManager] = None
+    _metrics: Optional[Any] = None  # MetricsEngine lazy init
+    _policy_engine: Optional[Any] = None  # PolicyEngine lazy init (правило 11)
 
     @app.on_event("startup")
     async def _startup() -> None:
@@ -163,10 +163,10 @@ if HAS_FASTAPI:
         _policy_engine = None
         print(
             f"🚀 Buffy MCP FastAPI server started\n"
-            f"   Protocol: {PROTOCOL_VERSION***REMOVED***\n"
-            f"   Tools: {len(_server._tools)***REMOVED*** | "
-            f"Resources: {len(_server._resources)***REMOVED*** | "
-            f"Prompts: {len(_server._prompts)***REMOVED***",
+            f"   Protocol: {PROTOCOL_VERSION}\n"
+            f"   Tools: {len(_server._tools)} | "
+            f"Resources: {len(_server._resources)} | "
+            f"Prompts: {len(_server._prompts)}",
             file=sys.stderr,
         )
 
@@ -190,10 +190,10 @@ if HAS_FASTAPI:
         )
 
     def _add_protocol_header(resp: Response) -> Response:
-        resp.headers["Mcp-Protocol-Version"***REMOVED*** = PROTOCOL_VERSION
+        resp.headers["Mcp-Protocol-Version"] = PROTOCOL_VERSION
         return resp
 
-    async def _dispatch(message: Any) -> Optional[str***REMOVED***:
+    async def _dispatch(message: Any) -> Optional[str]:
         """Run synchronous dispatch() in a thread pool to avoid blocking."""
         return await asyncio.to_thread(_server.dispatch, message)
 
@@ -201,10 +201,10 @@ if HAS_FASTAPI:
 
     # ── Bearer-token authentication (Vault-backed) ───────
 
-    _cached_token: Optional[str***REMOVED*** = None
+    _cached_token: Optional[str] = None
     _token_expires_at: float = 0.0
 
-    def _get_active_token() -> Optional[str***REMOVED***:
+    def _get_active_token() -> Optional[str]:
         """Ожидаемый Bearer-токен: Vault (с кешем TTL) -> env fallback.
 
         Логика:
@@ -229,7 +229,7 @@ if HAS_FASTAPI:
 
         if not HAS_HVAC:
             print(
-                "[mcp_fastapi***REMOVED*** hvac не установлен — /mcp будет закрыт",
+                "[mcp_fastapi] hvac не установлен — /mcp будет закрыт",
                 file=sys.stderr,
             )
             return None
@@ -248,7 +248,7 @@ if HAS_FASTAPI:
                 client.token = vault_token
             else:
                 print(
-                    "[mcp_fastapi***REMOVED*** FREEBUFF_VAULT_ADDR задан, но без auth — "
+                    "[mcp_fastapi] FREEBUFF_VAULT_ADDR задан, но без auth — "
                     "fail-closed",
                     file=sys.stderr,
                 )
@@ -261,11 +261,11 @@ if HAS_FASTAPI:
             # Поддерживаем несколько стандартных mount-ов (secret, kv, kv2 и пр.)
             if "/data/" in path:
                 idx = path.find("/data/") + len("/data/")
-                path = path[idx:***REMOVED***
+                path = path[idx:]
             key = os.getenv("FREEBUFF_VAULT_KEY", "token")
 
             resp = client.secrets.kv.v2.read_secret_version(path=path)
-            token = resp["data"***REMOVED***["data"***REMOVED***.get(key)
+            token = resp["data"]["data"].get(key)
             if not isinstance(token, str) or not token:
                 return None
 
@@ -277,7 +277,7 @@ if HAS_FASTAPI:
             return token
         except Exception as e:
             print(
-                f"[mcp_fastapi***REMOVED*** Vault fetch failed: {e***REMOVED***",
+                f"[mcp_fastapi] Vault fetch failed: {e}",
                 file=sys.stderr,
             )
             return None
@@ -296,9 +296,9 @@ if HAS_FASTAPI:
                 "error": {
                     "code": INVALID_REQUEST,
                     "message": "Unauthorized",
-                ***REMOVED***
-            ***REMOVED***,
-            headers={"WWW-Authenticate": 'Bearer realm="buffy-mcp"'***REMOVED***,
+                }
+            },
+            headers={"WWW-Authenticate": 'Bearer realm="buffy-mcp"'},
         )
 
     def verify_bearer_token(request: Request) -> None:
@@ -317,7 +317,7 @@ if HAS_FASTAPI:
         auth = request.headers.get("authorization", "")
         if not auth.startswith("Bearer "):
             raise _unauthorized()
-        provided = auth[len("Bearer ") :***REMOVED***.strip()
+        provided = auth[len("Bearer ") :].strip()
         # DoS-защита: токены реалистично ≤1KB; больше — сразу 401
         if len(provided) > 1024:
             raise _unauthorized()
@@ -351,7 +351,7 @@ if HAS_FASTAPI:
                 resp: Response = JSONResponse(content=json.loads(response))
             else:
                 resp = Response(status_code=202)
-            resp.headers["Mcp-Session-Id"***REMOVED*** = session_id
+            resp.headers["Mcp-Session-Id"] = session_id
             return _add_protocol_header(resp)
 
         # Validate session for non-initialize POSTs
@@ -363,7 +363,7 @@ if HAS_FASTAPI:
 
         # Batch request
         if isinstance(body, list):
-            responses = [***REMOVED***
+            responses = []
             for msg in body:
                 r = await _dispatch(msg)
                 if r:
@@ -406,7 +406,7 @@ if HAS_FASTAPI:
                     msg = await asyncio.wait_for(
                         session.notification_queue.get(), timeout=30
                     )
-                    yield f"data: {msg***REMOVED***\n\n"
+                    yield f"data: {msg}\n\n"
                 except asyncio.TimeoutError:
                     yield ": heartbeat\n\n"
 
@@ -417,7 +417,7 @@ if HAS_FASTAPI:
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",
                 "Mcp-Protocol-Version": PROTOCOL_VERSION,
-            ***REMOVED***,
+            },
         )
 
     # ── DELETE /mcp — session termination ───────────────────
@@ -450,7 +450,7 @@ if HAS_FASTAPI:
             "endpoint": "/mcp",
             "transport": "streamable-http",
             "dashboard": "/dashboard",
-        ***REMOVED***
+        }
 
     # ── GET /dashboard — Metrics Dashboard (HTML) ────────────
 
@@ -461,7 +461,7 @@ if HAS_FASTAPI:
         if not dashboard_path.exists():
             return JSONResponse(
                 status_code=404,
-                content={"error": "Dashboard not found"***REMOVED***,
+                content={"error": "Dashboard not found"},
             )
         from fastapi.responses import HTMLResponse
         html = dashboard_path.read_text(encoding="utf-8")
@@ -482,15 +482,15 @@ if HAS_FASTAPI:
         if fmt == "json":
             return JSONResponse(content=data)
         # text format: pretty-print interpretation
-        lines = [***REMOVED***
+        lines = []
         for key, value in data.items():
             if isinstance(value, dict):
-                lines.append(f"{key***REMOVED***:")
+                lines.append(f"{key}:")
                 for k, v in value.items():
-                    lines.append(f"  {k***REMOVED***: {v***REMOVED***")
+                    lines.append(f"  {k}: {v}")
             else:
-                lines.append(f"{key***REMOVED***: {value***REMOVED***")
-        return {"content": "\n".join(lines), "format": "text"***REMOVED***
+                lines.append(f"{key}: {value}")
+        return {"content": "\n".join(lines), "format": "text"}
 
     def _metric_to_dict(m: Any) -> dict:
         from dataclasses import asdict
@@ -505,12 +505,12 @@ if HAS_FASTAPI:
         try:
             report = engine.compute_report(save=False)
             data = report.to_dict()
-            data["health_score"***REMOVED*** = _compute_health_score_fn(report)
+            data["health_score"] = _compute_health_score_fn(report)
             return _metrics_response(data, fmt)
         except Exception as e:
-            return _metrics_response({"error": str(e)***REMOVED***, fmt)
+            return _metrics_response({"error": str(e)}, fmt)
 
-    # ── GET /metrics/{name***REMOVED*** — одна метрика ──────────────────
+    # ── GET /metrics/{name} — одна метрика ──────────────────
 
     def _compute_health_score_fn(report: Any) -> int:
         from scripts_01.metrics import _compute_health_score
@@ -541,19 +541,19 @@ if HAS_FASTAPI:
         engine = _get_metrics()
         return _metrics_response(_metric_to_dict(engine.compute_ttd()), fmt)
 
-    # ── GET /metrics/trend/{name***REMOVED*** — тренд метрики ───────────
+    # ── GET /metrics/trend/{name} — тренд метрики ───────────
 
-    @app.get("/metrics/trend/{name***REMOVED***")
+    @app.get("/metrics/trend/{name)")
     async def metrics_trend(name: str, limit: int = 10, fmt: str = "json"):
         engine = _get_metrics()
-        available = {"vcr", "srg", "cpvo", "rrr", "ttd"***REMOVED***
+        available = {"vcr", "srg", "cpvo", "rrr", "ttd"}
         if name not in available:
             return _metrics_response(
-                {"error": f"Unknown metric: {name***REMOVED***. Available: {', '.join(sorted(available))***REMOVED***"***REMOVED***,
+                {"error": f"Unknown metric: {name}. Available: {', '.join(sorted(available))}"},
                 fmt,
             )
         history = engine.get_trend(name, limit=limit)
-        return _metrics_response({"metric": name, "history": history***REMOVED***, fmt)
+        return _metrics_response({"metric": name, "history": history}, fmt)
 
     # ── GET /metrics/status — статус Metrics Engine ─────────
 
@@ -576,7 +576,7 @@ if HAS_FASTAPI:
 
         Response: {"success": true, "data": {status, listener_running,
           pending_count, conflict_count, quarantine_count, last_event,
-          registered, timestamp_ms***REMOVED******REMOVED***
+          registered, timestamp_ms]]
 
         If no coordinator is registered, returns idle with registered=false
         (soft-fallback per CAN-14 — never raises).
@@ -589,17 +589,17 @@ if HAS_FASTAPI:
 
             coord = get_active_coordinator()
             if coord is None:
-                snapshot = {"status": "idle", "registered": False***REMOVED***
+                snapshot = {"status": "idle", "registered": False}
             else:
                 snapshot = derive_sync_status(coord)
-                snapshot["registered"***REMOVED*** = True
-            return JSONResponse(content={"success": True, "data": snapshot***REMOVED***)
+                snapshot["registered"] = True
+            return JSONResponse(content={"success": True, "data": snapshot})
         except Exception as e:
-            return _policy_error(500, f"sync status failed: {e***REMOVED***")
+            return _policy_error(500, f"sync status failed: {e}")
 
     # ── POST /policy/override — User-Choice Override без MCP ──
 
-    def _get_policy_engine() -> Optional[Any***REMOVED***:
+    def _get_policy_engine() -> Optional[Any]:
         """Lazy init PolicyEngine (правило 11, User-Choice Override)."""
         global _policy_engine
         if _policy_engine is None:
@@ -614,7 +614,7 @@ if HAS_FASTAPI:
                 _policy_engine = PolicyEngine(registry, cap_reg)
             except Exception as e:
                 print(
-                    f"[mcp_fastapi***REMOVED*** PolicyEngine init failed: {e***REMOVED***",
+                    f"[mcp_fastapi] PolicyEngine init failed: {e}",
                     file=sys.stderr,
                 )
                 return None
@@ -624,13 +624,13 @@ if HAS_FASTAPI:
         """Единый контракт ошибок для REST-эндпоинтов policy/*.
 
         Намеренно отличается от _json_error (JSON-RPC shape
-        {error: {code, message***REMOVED******REMOVED***): REST-клиенты получают {success, error***REMOVED*** —
+        {error: {code, message}}): REST-клиенты получают {success, error} —
         тот же контракт, что у инструмента policy_override в MCP-сервере
-        ({success, data***REMOVED*** / {success: False, error***REMOVED***).
+        ({success, data} / {success: False, error}).
         """
         return JSONResponse(
             status_code=status,
-            content={"success": False, "error": message***REMOVED***,
+            content={"success": False, "error": message},
         )
 
     @app.post("/policy/override")
@@ -642,9 +642,9 @@ if HAS_FASTAPI:
 
         Тело: {"message": "use deepseek instead of claude for coding",
                "capability": "research" (опц., переопределяет capability из фразы),
-               "dry_run": true (опц., показать распознанный интент БЕЗ записи)***REMOVED***
+               "dry_run": true (опц., показать распознанный интент БЕЗ записи)]
         Ответ: {"success": true, "data": {applied, dry_run, capability, runtime,
-                previous_runtime, matched, message***REMOVED******REMOVED***
+                previous_runtime, matched, message]]
         """
         if not _validate_origin(request):
             return _policy_error(403, "Invalid Origin header")
@@ -683,7 +683,7 @@ if HAS_FASTAPI:
                 apply_override, message, engine, capability, dry_run
             )
         except Exception as e:
-            return _policy_error(500, f"Policy override failed: {e***REMOVED***")
+            return _policy_error(500, f"Policy override failed: {e}")
 
         if result is None:
             return _policy_error(
@@ -701,11 +701,11 @@ if HAS_FASTAPI:
                     "capability": result.get("capability"),
                     "runtime": result.get("runtime"),
                     "matched": result.get("matched"),
-                ***REMOVED***)
+                ])
             except Exception:
                 pass
 
-        return JSONResponse(content={"success": True, "data": result***REMOVED***)
+        return JSONResponse(content={"success": True, "data": result})
 
     # ── GET /policy/status — текущие предпочтения (правило 11) ──
 
@@ -716,9 +716,9 @@ if HAS_FASTAPI:
     ) -> Response:
         """Текущие предпочтения из policies.json (правило 11) без MCP.
 
-        Ответ: {"success": true, "data": {"count": N, "preferences": {...***REMOVED***,
+        Ответ: {"success": true, "data": {"count": N, "preferences": {...},
                 "policies": {capability: {preferred_runtime, fallback_chain,
-                constraints***REMOVED******REMOVED******REMOVED******REMOVED***
+                constraints]]]]
         """
         if not _validate_origin(request):
             return _policy_error(403, "Invalid Origin header")
@@ -735,15 +735,15 @@ if HAS_FASTAPI:
         # DRY: сериализация через канонический дамп PolicyEngine
         # (тот же формат, что в save_policy -> policies.json)
         from freebuff_plugin_03.policy import PolicyEngine
-        preferences: Dict[str, str***REMOVED*** = {***REMOVED***
-        serialized: Dict[str, dict***REMOVED*** = {***REMOVED***
+        preferences: Dict[str, str] = {}
+        serialized: Dict[str, dict] = {}
         for cap, policy in policies.items():
             if policy is None:
                 continue
             preferred = getattr(policy, "preferred_runtime", None)
             if preferred:
-                preferences[cap***REMOVED*** = preferred
-            serialized[cap***REMOVED*** = PolicyEngine._dump_capability_policy(policy)
+                preferences[cap] = preferred
+            serialized[cap] = PolicyEngine._dump_capability_policy(policy)
 
         return JSONResponse(content={
             "success": True,
@@ -751,8 +751,8 @@ if HAS_FASTAPI:
                 "count": len(serialized),
                 "preferences": preferences,
                 "policies": serialized,
-            ***REMOVED***,
-        ***REMOVED***)
+            },
+        ])
 
     # ── /api/v1/* — Meeting Tasks REST (для 043 frontend dashboard) ──
     #
@@ -776,7 +776,7 @@ if HAS_FASTAPI:
                     "SELECT 1 FROM sqlite_master "
                     "WHERE type='table' AND name='projects'"
                 ).fetchone() is not None
-                projects: list[dict[str, str***REMOVED******REMOVED*** = [***REMOVED***
+                projects: list[dict[str, str]] = []
                 if has:
                     rows = conn.execute(
                         "SELECT name, description, status, last_scanned "
@@ -784,21 +784,21 @@ if HAS_FASTAPI:
                     ).fetchall()
                     projects = [
                         {
-                            "name": r[0***REMOVED***,
-                            "description": r[1***REMOVED*** or "",
-                            "status": r[2***REMOVED*** or "active",
-                            "last_scanned": r[3***REMOVED***,
-                        ***REMOVED***
+                            "name": r[0],
+                            "description": r[1] or "",
+                            "status": r[2] or "active",
+                            "last_scanned": r[3],
+                        }
                         for r in rows
-                    ***REMOVED***
+                    ]
             finally:
                 conn.close()
             return JSONResponse(content={
                 "success": True,
-                "data": {"projects": projects, "count": len(projects)***REMOVED***,
-            ***REMOVED***)
+                "data": {"projects": projects, "count": len(projects)},
+            ])
         except Exception as e:
-            return _policy_error(500, f"projects list failed: {e***REMOVED***")
+            return _policy_error(500, f"projects list failed: {e}")
 
     @app.get("/api/v1/tasks")
     async def list_tasks_api(
@@ -815,12 +815,12 @@ if HAS_FASTAPI:
             )
             return JSONResponse(content={
                 "success": True,
-                "data": {"tasks": tasks, "count": len(tasks)***REMOVED***,
-            ***REMOVED***)
+                "data": {"tasks": tasks, "count": len(tasks)},
+            ])
         except ValueError as e:
             return _policy_error(400, str(e))
         except Exception as e:
-            return _policy_error(500, f"tasks list failed: {e***REMOVED***")
+            return _policy_error(500, f"tasks list failed: {e}")
 
     @app.post("/api/v1/tasks")
     async def create_task_api(
@@ -831,7 +831,7 @@ if HAS_FASTAPI:
 
         Body: {"project_id": "...", "title": "...", "task_type": "...",
                "description": "...", "priority": "...", "meeting_time": "...",
-               "location": "...", "participants": ["..."***REMOVED******REMOVED***
+               "location": "...", "participants": ["..."]]
         """
         try:
             body = await request.json()
@@ -859,12 +859,12 @@ if HAS_FASTAPI:
             )
             return JSONResponse(
                 status_code=201,
-                content={"success": True, "data": {"task": task***REMOVED******REMOVED***,
+                content={"success": True, "data": {"task": task}},
             )
         except ValueError as e:
             return _policy_error(400, str(e))
         except Exception as e:
-            return _policy_error(500, f"task create failed: {e***REMOVED***")
+            return _policy_error(500, f"task create failed: {e}")
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -877,23 +877,23 @@ def _print_tunnel_config(url: str) -> None:
     config = {
         "mcpServers": {
             "buffy": {
-                "url": f"{url***REMOVED***/mcp",
+                "url": f"{url}/mcp",
                 "transport": "streamable-http",
-            ***REMOVED***
-        ***REMOVED***
-    ***REMOVED***
-    print(f"\n{'=' * 60***REMOVED***", file=sys.stderr)
-    print(f"🔗 Public MCP endpoint: {url***REMOVED***/mcp", file=sys.stderr)
+            }
+        }
+    }
+    print(f"\n{'=' * 60}", file=sys.stderr)
+    print(f"🔗 Public MCP endpoint: {url}/mcp", file=sys.stderr)
     print(f"\n📋 Claude Desktop / Gemini config:", file=sys.stderr)
     print(json.dumps(config, indent=2), file=sys.stderr)
-    print(f"{'=' * 60***REMOVED***\n", file=sys.stderr)
+    print(f"{'=' * 60}\n", file=sys.stderr)
 
 
-def _start_tunnel(port: int) -> Optional[subprocess.Popen***REMOVED***:
+def _start_tunnel(port: int) -> Optional[subprocess.Popen]:
     """Start cloudflared tunnel subprocess. Returns Popen or None."""
     try:
         proc = subprocess.Popen(
-            ["cloudflared", "tunnel", "--url", f"http://localhost:{port***REMOVED***"***REMOVED***,
+            ["cloudflared", "tunnel", "--url", f"http://localhost:{port}"],
             stderr=subprocess.PIPE,
             stdout=subprocess.DEVNULL,
             text=True,
@@ -906,16 +906,16 @@ def _start_tunnel(port: int) -> Optional[subprocess.Popen***REMOVED***:
         )
         return None
     except Exception as e:
-        print(f"❌ cloudflared error: {e***REMOVED***", file=sys.stderr)
+        print(f"❌ cloudflared error: {e}", file=sys.stderr)
         return None
 
-    url_pattern = re.compile(r"https://[a-zA-Z0-9-***REMOVED***+\.trycloudflare\.com")
+    url_pattern = re.compile(r"https://[a-zA-Z0-9-)+\.trycloudflare\.com")
 
     def _read_stderr() -> None:
         for line in proc.stderr:
             line_s = line.strip()
             if line_s:
-                print(f"  [cloudflared***REMOVED*** {line_s***REMOVED***", file=sys.stderr)
+                print(f"  [cloudflared] {line_s}", file=sys.stderr)
             match = url_pattern.search(line_s)
             if match:
                 _print_tunnel_config(match.group(0))
@@ -952,9 +952,9 @@ Claude Desktop config:
       "buffy": {
         "url": "https://YOUR-TUNNEL.trycloudflare.com/mcp",
         "transport": "streamable-http"
-      ***REMOVED***
-    ***REMOVED***
-  ***REMOVED***
+      }
+    }
+  }
 """,
     )
     parser.add_argument(
@@ -979,7 +979,7 @@ Claude Desktop config:
         sys.exit(1)
 
     # Start Cloudflare Tunnel
-    tunnel_proc: Optional[subprocess.Popen***REMOVED*** = None
+    tunnel_proc: Optional[subprocess.Popen] = None
     if args.tunnel:
         print("🌐 Starting Cloudflare Tunnel...", file=sys.stderr)
         tunnel_proc = _start_tunnel(args.port)
@@ -988,8 +988,8 @@ Claude Desktop config:
     import uvicorn
 
     print(f"\n🚀 Buffy MCP FastAPI Server", file=sys.stderr)
-    print(f"   Endpoint: http://{args.host***REMOVED***:{args.port***REMOVED***/mcp", file=sys.stderr)
-    print(f"   Protocol: {PROTOCOL_VERSION***REMOVED***", file=sys.stderr)
+    print(f"   Endpoint: http://{args.host}:{args.port}/mcp", file=sys.stderr)
+    print(f"   Protocol: {PROTOCOL_VERSION}", file=sys.stderr)
     if args.tunnel:
         print(f"   Tunnel:   starting...", file=sys.stderr)
     print(f"   Press Ctrl+C to stop\n", file=sys.stderr)

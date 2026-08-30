@@ -17,7 +17,7 @@ the limit-scan + client-side filter pattern that e2e_remote_sync.py stage3 used.
 
 from __future__ import annotations
 
-***REMOVED***
+}
 from typing import Any, Callable, List, Optional, Union
 
 
@@ -32,8 +32,8 @@ class TGClientV2:
         base = _get_tg_client_factory()(session_path)
         client = TGClientV2(base)
         await client.connect()
-        client.add_event_handler(my_callback, events.NewMessage(chats=[chat_id***REMOVED***))
-        msgs = await client.get_messages(chat_id, ids=[123, 456***REMOVED***)
+        client.add_event_handler(my_callback, events.NewMessage(chats=[chat_id]))
+        msgs = await client.get_messages(chat_id, ids=[123, 456])
     """
 
     def __init__(self, base_client: Any) -> None:
@@ -50,8 +50,8 @@ class TGClientV2:
         if not hasattr(base_client, "_client"):
             raise TypeError(
                 f"TGClientV2 requires a base_client with a '_client' attribute "
-                f"(telethon TelegramClient). Got {type(base_client).__name__!r***REMOVED***: "
-                f"{base_client!r***REMOVED***. Pass a valid TGClient instance from "
+                f"(telethon TelegramClient). Got {type(base_client).__name__!r}: "
+                f"{base_client!r}. Pass a valid TGClient instance from "
                 f"projects_17.tg_terminal_messenger.src.telegram.client.TGClient."
             )
         self._base = base_client
@@ -82,8 +82,8 @@ class TGClientV2:
         self,
         entity: Any,
         limit: int = 5,
-        ids: Optional[Union[int, List[int***REMOVED******REMOVED******REMOVED*** = None,
-    ) -> List[Any***REMOVED***:
+        ids: Optional[Union[int, List[int]]] = None,
+    ) -> List[Any]:
         """Fetch messages by ID (via telethon's native ids= kwarg) or via limit-scan.
 
         This is the CON-31 resolution: previously e2e_remote_sync.py stage3 had to
@@ -114,7 +114,7 @@ class TGClientV2:
             callback: Sync function ``(event) -> None``. **Must not be async** —
                 Telethon does NOT await coroutines returned by ``add_event_handler``.
                 Use ``RemoteSyncListener._on_new_message`` (sync N-1 fix).
-            event: A Telethon event filter, e.g. ``events.NewMessage(chats=[chat_id***REMOVED***)``.
+            event: A Telethon event filter, e.g. ``events.NewMessage(chats=[chat_id])``.
         """
         self._telethon.add_event_handler(callback, event)
 

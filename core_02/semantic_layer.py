@@ -9,14 +9,14 @@
 KnowledgeEngine (FTS5 + TF-IDF + гибридный поиск) и предоставляет:
 
     index_knowledge(knowledge_id, content) -> embedding_id
-    semantic_search(query, top_k=10)       -> list[(knowledge_id, score)***REMOVED***
-    find_similar_patterns(situation_vector) -> list[PatternMatch***REMOVED***
+    semantic_search(query, top_k=10)       -> list[(knowledge_id, score)]
+    find_similar_patterns(situation_vector) -> list[PatternMatch]
 """
 
 from __future__ import annotations
 
-***REMOVED***
-***REMOVED***
+}
+}
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 try:
@@ -29,11 +29,11 @@ from core_02.memory_store import MemoryStore
 
 def _normalize(text: str) -> str:
     """Нормализация для токенизации: нижний регистр, латиница+кириллица."""
-    return re.sub(r"[^a-zа-яё0-9\s***REMOVED***", " ", text.lower())
+    return re.sub(r"[^a-zа-яё0-9\s)", " ", text.lower())
 
 
-def _tokenize(text: str) -> List[str***REMOVED***:
-    return [t for t in _normalize(text).split() if len(t) > 1***REMOVED***
+def _tokenize(text: str) -> List[str]:
+    return [t for t in _normalize(text).split() if len(t) > 1]
 
 
 class SemanticLayer:
@@ -46,7 +46,7 @@ class SemanticLayer:
     def __init__(
         self,
         store: MemoryStore,
-        workspace_root: Optional[str | Path***REMOVED*** = None,
+        workspace_root: Optional[str | Path] = None,
     ):
         self.store = store
         if KnowledgeEngine is None:
@@ -59,8 +59,8 @@ class SemanticLayer:
     def index_knowledge(
         self,
         knowledge_id: str,
-        content: Optional[str***REMOVED*** = None,
-        metadata: Optional[Dict[str, Any***REMOVED******REMOVED*** = None,
+        content: Optional[str] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> str:
         """Индексировать Knowledge Object. Возвращает embedding_id (= knowledge_id).
 
@@ -68,17 +68,17 @@ class SemanticLayer:
         """
         ko = self.store.get_knowledge(knowledge_id)
         if not ko:
-            raise KeyError(f"Knowledge Object {knowledge_id***REMOVED*** не найден в Memory Store")
+            raise KeyError(f"Knowledge Object {knowledge_id} не найден в Memory Store")
         text = content if content is not None else self._ko_text(ko)
-        meta = dict(metadata or {***REMOVED***)
-        meta.setdefault("tags", ",".join(ko.get("tags") or [***REMOVED***))
+        meta = dict(metadata or {})
+        meta.setdefault("tags", ",".join(ko.get("tags") or []))
         meta.setdefault("kind", ko.get("kind"))
         self.engine.index_document(knowledge_id, text, meta)
         return knowledge_id
 
     @staticmethod
-    def _ko_text(ko: Dict[str, Any***REMOVED***) -> str:
-        parts = [ko.get("title", ""), ko.get("summary", ""), ko.get("content", "")***REMOVED***
+    def _ko_text(ko: Dict[str, Any]) -> str:
+        parts = [ko.get("title", ""), ko.get("summary", ""), ko.get("content", "")]
         return "\n".join(p for p in parts if p)
 
     def remove(self, knowledge_id: str) -> None:
@@ -86,10 +86,10 @@ class SemanticLayer:
             self.engine.remove(knowledge_id)
 
     # ── Поиск ────────────────────────────────────────────────────────
-    def semantic_search(self, query: str, top_k: int = 10) -> List[Tuple[str, float***REMOVED******REMOVED***:
-        """Гибридный поиск (keyword + semantic). Возвращает [(knowledge_id, score)***REMOVED***."""
+    def semantic_search(self, query: str, top_k: int = 10) -> List[Tuple[str, float]]:
+        """Гибридный поиск (keyword + semantic). Возвращает [(knowledge_id, score)]."""
         results = self.engine.search(query, top_k=top_k)
-        out: List[Tuple[str, float***REMOVED******REMOVED*** = [***REMOVED***
+        out: List[Tuple[str, float]] = []
         for r in results:
             doc_id = self._result_doc_id(r)
             if doc_id:
@@ -101,33 +101,33 @@ class SemanticLayer:
         query: str,
         top_k: int = 5,
         max_depth: int = 1,
-    ) -> Dict[str, Any***REMOVED***:
+    ) -> Dict[str, Any]:
         """RAG-контекст: top-k гибридного поиска + граф до depth (RFC §6)."""
         hits = self.semantic_search(query, top_k=top_k)
-        related: List[Dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+        related: List[Dict[str, Any]] = []
         seen: set = set()
         for kid, _score in hits:
             if kid in seen:
                 continue
             seen.add(kid)
             for rel in self.store.find_related(kid, max_depth=max_depth):
-                rk = rel["knowledge"***REMOVED***.get("id")
+                rk = rel["knowledge"].get("id")
                 if rk and rk not in seen:
                     seen.add(rk)
                     related.append(rel)
         return {
-            "hits": [{"knowledge_id": kid, "score": sc***REMOVED*** for kid, sc in hits***REMOVED***,
+            "hits": [{"knowledge_id": kid, "score": sc} for kid, sc in hits],
             "related": related,
-        ***REMOVED***
+        }
 
     def find_similar_patterns(
         self,
         situation_vector: str,
         top_k: int = 5,
-    ) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    ) -> List[Dict[str, Any]]:
         """Поиск паттернов/уроков по описанию ситуации (AFC: analyze)."""
         results = self.semantic_search(situation_vector, top_k=top_k)
-        out: List[Dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+        out: List[Dict[str, Any]] = []
         for kid, score in results:
             ko = self.store.get_knowledge(kid)
             if not ko:
@@ -140,15 +140,15 @@ class SemanticLayer:
                 "title": ko.get("title"),
                 "score": score,
                 "confidence": ko.get("confidence_score"),
-            ***REMOVED***)
-        out.sort(key=lambda x: -x["score"***REMOVED***)
+            ])
+        out.sort(key=lambda x: -x["score"])
         return out
 
     @staticmethod
-    def _result_doc_id(result: Any) -> Optional[str***REMOVED***:
+    def _result_doc_id(result: Any) -> Optional[str]:
         # Кортеж: (doc_id, score, ...) — формат FtsIndex/TfidfIndex/LsaIndex
         if isinstance(result, (tuple, list)) and result:
-            return str(result[0***REMOVED***)
+            return str(result[0])
         for attr in ("doc_id", "document_id", "id"):
             v = getattr(result, attr, None)
             if v:
@@ -159,7 +159,7 @@ class SemanticLayer:
     def _result_score(result: Any) -> float:
         if isinstance(result, (tuple, list)) and len(result) > 1:
             try:
-                return float(result[1***REMOVED***)
+                return float(result[1])
             except (TypeError, ValueError):
                 pass
         v = getattr(result, "score", None)
@@ -182,7 +182,7 @@ class SemanticLayer:
         count = 0
         for ko in self.store.query_all():
             try:
-                self.index_knowledge(ko["id"***REMOVED***)
+                self.index_knowledge(ko["id"])
                 count += 1
             except Exception:
                 continue

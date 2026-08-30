@@ -44,20 +44,20 @@ __all__ = [
     "AgentResult",
     "ALLOWED_TRANSITIONS",
     "KNOWN_CAPABILITIES",
-***REMOVED***
+]
 
 
 # ═══════════════════════════════════════════════════════════════════════
 # Vocabulary (mirrors core_02/blueprint_v3.py KNOWN_CAPABILITIES)
 # ═══════════════════════════════════════════════════════════════════════
 
-KNOWN_CAPABILITIES: frozenset[str***REMOVED*** = frozenset({
+KNOWN_CAPABILITIES: frozenset[str] = frozenset({
     "local", "fast",
     "code", "summarize", "router", "classify",
     "reasoning", "plan", "refactor", "explain",
     "deep", "architecture", "review",
     "vision", "tools", "long_context", "multimodal",
-***REMOVED***)
+})
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -75,13 +75,13 @@ class AgentLifecycle(str, Enum):
 
 # Valid transitions (forward-only DAG per ADR-019).
 # FAILED → ACTIVE = retry (единственный обратный переход).
-ALLOWED_TRANSITIONS: Dict[AgentLifecycle, frozenset[AgentLifecycle***REMOVED******REMOVED*** = {
-    AgentLifecycle.CREATED: frozenset({AgentLifecycle.ACTIVE, AgentLifecycle.FAILED***REMOVED***),
-    AgentLifecycle.ACTIVE: frozenset({AgentLifecycle.PAUSED, AgentLifecycle.DONE, AgentLifecycle.FAILED***REMOVED***),
-    AgentLifecycle.PAUSED: frozenset({AgentLifecycle.ACTIVE, AgentLifecycle.FAILED***REMOVED***),
+ALLOWED_TRANSITIONS: Dict[AgentLifecycle, frozenset[AgentLifecycle]] = {
+    AgentLifecycle.CREATED: frozenset({AgentLifecycle.ACTIVE, AgentLifecycle.FAILED}),
+    AgentLifecycle.ACTIVE: frozenset({AgentLifecycle.PAUSED, AgentLifecycle.DONE, AgentLifecycle.FAILED}),
+    AgentLifecycle.PAUSED: frozenset({AgentLifecycle.ACTIVE, AgentLifecycle.FAILED}),
     AgentLifecycle.DONE: frozenset(),    # terminal
-    AgentLifecycle.FAILED: frozenset({AgentLifecycle.ACTIVE***REMOVED***),  # retry
-***REMOVED***
+    AgentLifecycle.FAILED: frozenset({AgentLifecycle.ACTIVE}),  # retry
+}
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -100,19 +100,19 @@ class AgentResult:
         agent_id: str,
         task: str,
         data: Any = None,
-        warnings: Optional[List[str***REMOVED******REMOVED*** = None,
-        errors: Optional[List[str***REMOVED******REMOVED*** = None,
-        meta: Optional[Dict[str, Any***REMOVED******REMOVED*** = None,
-        model_used: Optional[str***REMOVED*** = None,
-        forge_result: Optional[Dict[str, Any***REMOVED******REMOVED*** = None,
+        warnings: Optional[List[str]] = None,
+        errors: Optional[List[str]] = None,
+        meta: Optional[Dict[str, Any]] = None,
+        model_used: Optional[str] = None,
+        forge_result: Optional[Dict[str, Any]] = None,
     ) -> None:
         self.status = status
         self.agent_id = agent_id
         self.task = task
         self.data = data
-        self.warnings = warnings or [***REMOVED***
-        self.errors = errors or [***REMOVED***
-        self.meta = meta or {***REMOVED***
+        self.warnings = warnings or []
+        self.errors = errors or []
+        self.meta = meta or {}
         self.model_used = model_used
         self.forge_result = forge_result
 
@@ -120,8 +120,8 @@ class AgentResult:
     def ok(self) -> bool:
         return self.status == "ok"
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
-        d: Dict[str, Any***REMOVED*** = {
+    def to_dict(self) -> Dict[str, Any]:
+        d: Dict[str, Any] = {
             "status": self.status,
             "agent_id": self.agent_id,
             "task": self.task,
@@ -129,11 +129,11 @@ class AgentResult:
             "warnings": self.warnings,
             "errors": self.errors,
             "meta": self.meta,
-        ***REMOVED***
+        }
         if self.model_used is not None:
-            d["model_used"***REMOVED*** = self.model_used
+            d["model_used"] = self.model_used
         if self.forge_result is not None:
-            d["forge_result"***REMOVED*** = self.forge_result
+            d["forge_result"] = self.forge_result
         return d
 
 
@@ -168,14 +168,14 @@ class Agent(ABC):
     def __init__(
         self,
         *,
-        agent_id: Optional[str***REMOVED*** = None,
-        role_ids: Optional[Tuple[str, ...***REMOVED******REMOVED*** = None,
-        capabilities: Optional[frozenset[str***REMOVED******REMOVED*** = None,
-        model_capability: Optional[str***REMOVED*** = None,
+        agent_id: Optional[str] = None,
+        role_ids: Optional[Tuple[str, ...]] = None,
+        capabilities: Optional[frozenset[str]] = None,
+        model_capability: Optional[str] = None,
         runtime: str = "local",
     ) -> None:
         # ── Identity ───────────────────────────────────────────────────
-        self.agent_id = agent_id or uuid4().hex[:12***REMOVED***
+        self.agent_id = agent_id or uuid4().hex[:12]
         self.role_ids = tuple(role_ids or ())
         self.runtime = runtime  # "local" | "distributed"
 
@@ -184,19 +184,19 @@ class Agent(ABC):
         unknown = raw_caps - KNOWN_CAPABILITIES
         if unknown:
             raise ValueError(
-                f"Agent {self.agent_id***REMOVED***: capabilities содержат токены вне "
-                f"KNOWN_CAPABILITIES: {sorted(unknown)***REMOVED***. "
-                f"Допустимые: {sorted(KNOWN_CAPABILITIES)***REMOVED***. "
+                f"Agent {self.agent_id}: capabilities содержат токены вне "
+                f"KNOWN_CAPABILITIES: {sorted(unknown)}. "
+                f"Допустимые: {sorted(KNOWN_CAPABILITIES)}. "
                 f"См. LESSONS.md ANTI-6b / ADR-019 §Decision пункт 2."
             )
-        self.capabilities: frozenset[str***REMOVED*** = raw_caps
+        self.capabilities: frozenset[str] = raw_caps
 
         # ── Model routing hint ─────────────────────────────────────────
-        self.model_capability: Optional[str***REMOVED*** = model_capability
+        self.model_capability: Optional[str] = model_capability
 
         # ── Lifecycle ──────────────────────────────────────────────────
         self._lifecycle: AgentLifecycle = AgentLifecycle.CREATED
-        self._lifecycle_history: List[Tuple[AgentLifecycle, str***REMOVED******REMOVED*** = [***REMOVED***
+        self._lifecycle_history: List[Tuple[AgentLifecycle, str]] = []
 
     # ── Lifecycle ──────────────────────────────────────────────────────
 
@@ -216,20 +216,20 @@ class Agent(ABC):
         allowed = ALLOWED_TRANSITIONS.get(self._lifecycle, frozenset())
         if target not in allowed:
             raise ValueError(
-                f"Agent {self.agent_id***REMOVED***: недопустимый переход "
-                f"{self._lifecycle.value***REMOVED*** → {target.value***REMOVED***. "
-                f"Разрешено: {[s.value for s in sorted(allowed, key=lambda x: x.value)***REMOVED******REMOVED***"
+                f"Agent {self.agent_id}: недопустимый переход "
+                f"{self._lifecycle.value} → {target.value}. "
+                f"Разрешено: {[s.value for s in sorted(allowed, key=lambda x: x.value)]}"
             )
         self._lifecycle_history.append((self._lifecycle, reason))
         self._lifecycle = target
 
     @property
-    def lifecycle_history(self) -> List[Dict[str, str***REMOVED******REMOVED***:
-        """История переходов: [{"from": "created", "reason": "..."***REMOVED***, ...***REMOVED***."""
+    def lifecycle_history(self) -> List[Dict[str, str]]:
+        """История переходов: [{"from": "created", "reason": "..."], ...]."""
         return [
-            {"from": state.value, "reason": reason***REMOVED***
+            {"from": state.value, "reason": reason}
             for state, reason in self._lifecycle_history
-        ***REMOVED***
+        ]
 
     # ── Abstract execute ───────────────────────────────────────────────
 
@@ -247,7 +247,7 @@ class Agent(ABC):
 
         Returns:
             AgentResult: результат со статусом ok/warn/error.
-                Fail-safe: сбой → AgentResult(status="error", errors=[...***REMOVED***),
+                Fail-safe: сбой → AgentResult(status="error", errors=[...]),
                 НЕ exception наружу.
         """
         ...
@@ -263,11 +263,11 @@ class Agent(ABC):
         Returns:
             model_id (str) — имя модели из ModelCatalog, или "fallback".
         """
-        caps = list(self.capabilities) if self.capabilities else ["summarize"***REMOVED***
+        caps = list(self.capabilities) if self.capabilities else ["summarize"]
         try:
             from core_02.router import ModelCatalog, SmartRouter  # lazy import (fail-safe)
 
-            catalog = ModelCatalog.default()  # type: ignore[attr-defined***REMOVED***
+            catalog = ModelCatalog.default()  # type: ignore[attr-defined]
             router = SmartRouter(catalog)
             decision = router.route(required_capabilities=caps)
             return getattr(decision, "model", "fallback") or "fallback"
@@ -279,18 +279,18 @@ class Agent(ABC):
     def run_forge(
         self,
         project: "Project",
-        role_ids: Optional[Tuple[str, ...***REMOVED******REMOVED*** = None,
-    ) -> Dict[str, Any***REMOVED***:
+        role_ids: Optional[Tuple[str, ...]] = None,
+    ) -> Dict[str, Any]:
         """Делегировать ForgeFacade.run_chain — единственный санкционированный мост к Forge (§7.3).
 
         Использует ``self.role_ids`` если ``role_ids`` не переданы явно.
-        Fail-safe: возвращает ``{"status": "error", ...***REMOVED***`` при сбое,
+        Fail-safe: возвращает ``{"status": "error", ...}`` при сбое,
         НЕ exception наружу.
 
         Returns:
             dict с ключами status/error/chain_id (зависит от ForgeFacade).
         """
-        ids: tuple[str, ...***REMOVED*** = role_ids or self.role_ids
+        ids: tuple[str, ...] = role_ids or self.role_ids
         try:
             from core_02.forge_facade import ForgeFacade  # lazy import (fail-safe)
 
@@ -298,13 +298,13 @@ class Agent(ABC):
             result = facade.run_chain(project, role_ids=ids)
             if hasattr(result, "to_dict"):
                 return result.to_dict()
-            return {"status": "ok", "raw": str(result)***REMOVED***
+            return {"status": "ok", "raw": str(result)}
         except Exception as exc:
-            return {"status": "error", "error": str(exc)***REMOVED***
+            return {"status": "error", "error": str(exc)}
 
     # ── Serialisation ──────────────────────────────────────────────────
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "agent_id": self.agent_id,
             "role_ids": list(self.role_ids),
@@ -313,14 +313,14 @@ class Agent(ABC):
             "runtime": self.runtime,
             "lifecycle": self.lifecycle.value,
             "lifecycle_history": self.lifecycle_history,
-        ***REMOVED***
+        }
 
     def __repr__(self) -> str:
         return (
-            f"Agent(agent_id={self.agent_id!r***REMOVED***, "
-            f"lifecycle={self.lifecycle.value***REMOVED***, "
-            f"roles={list(self.role_ids)***REMOVED***, "
-            f"caps={sorted(self.capabilities)***REMOVED***)"
+            f"Agent(agent_id={self.agent_id!r}, "
+            f"lifecycle={self.lifecycle.value}, "
+            f"roles={list(self.role_ids)}, "
+            f"caps={sorted(self.capabilities)})"
         )
 
     # ── Helpers for subclasses ─────────────────────────────────────────
@@ -335,7 +335,7 @@ class Agent(ABC):
             meta=meta,
         )
 
-    def _err(self, task: str, errors: List[str***REMOVED***, data: Any = None, **meta: Any) -> AgentResult:
+    def _err(self, task: str, errors: List[str], data: Any = None, **meta: Any) -> AgentResult:
         """Создать ошибочный AgentResult (status="error")."""
         return AgentResult(
             status="error",

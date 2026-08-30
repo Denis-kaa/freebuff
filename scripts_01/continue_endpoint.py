@@ -5,7 +5,7 @@
 Принимает POST /api/continue, обновляет маркер-файл, логирует запросы.
 
 Usage:
-    python3 scripts_01/continue_endpoint.py [--port PORT***REMOVED*** [--marker PATH***REMOVED***
+    python3 scripts_01/continue_endpoint.py [--port PORT] [--marker PATH]
 
     Фоновый запуск:
     nohup python3 scripts_01/continue_endpoint.py --port 8081 &
@@ -24,7 +24,7 @@ import os
 import sys
 import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
-***REMOVED***
+}
 from datetime import datetime, timezone
 
 
@@ -49,7 +49,7 @@ class SessionState:
                 "started_at": datetime.fromtimestamp(
                     self.started_at, tz=timezone.utc
                 ).isoformat(),
-            ***REMOVED***, indent=2)
+            ], indent=2)
         )
 
     def status(self) -> dict:
@@ -66,7 +66,7 @@ class SessionState:
             "last_continue_ago_seconds": (
                 round(time.time() - last, 1) if last else None
             ),
-        ***REMOVED***
+        }
 
 
 # ─── HTTP Handler ─────────────────────────────────────────────────────────
@@ -78,7 +78,7 @@ class ContinueHandler(BaseHTTPRequestHandler):
         """Логируем только ошибки (4xx/5xx)."""
         if "40" in fmt or "50" in fmt:
             ts = datetime.now().strftime("%H:%M:%S")
-            print(f"[{ts***REMOVED******REMOVED*** {fmt % args***REMOVED***", file=sys.stderr)
+            print(f"[{ts}] {fmt % args}", file=sys.stderr)
 
     def _json(self, code: int, data: dict) -> None:
         body = json.dumps(data, ensure_ascii=False, indent=2)
@@ -99,26 +99,26 @@ class ContinueHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == "/api/ping":
-            self._json(200, {"ping": "pong", "timestamp": datetime.now(timezone.utc).isoformat()***REMOVED***)
+            self._json(200, {"ping": "pong", "timestamp": datetime.now(timezone.utc).isoformat()})
         elif self.path == "/api/status":
             s = self.state or SessionState("")
             self._json(200, s.status())
         else:
-            self._json(404, {"error": "not found"***REMOVED***)
+            self._json(404, {"error": "not found"})
 
     def do_POST(self):
         if self.path == "/api/continue":
             if not self.state:
-                self._json(500, {"error": "server not initialized"***REMOVED***)
+                self._json(500, {"error": "server not initialized"})
                 return
             self.state.touch()
             self._json(200, {
                 "message": "continue acknowledged",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 **self.state.status(),
-            ***REMOVED***)
+            ])
         else:
-            self._json(404, {"error": "not found"***REMOVED***)
+            self._json(404, {"error": "not found"})
 
 
 # ─── CLI ──────────────────────────────────────────────────────────────────
@@ -137,12 +137,12 @@ def main():
     ContinueHandler.state = state
 
     server = HTTPServer(("0.0.0.0", args.port), ContinueHandler)
-    print(f"✅ Continue endpoint: http://0.0.0.0:{args.port***REMOVED***")
+    print(f"✅ Continue endpoint: http://0.0.0.0:{args.port}")
     print(f"   POST /api/continue — подтвердить сессию")
     print(f"   GET  /api/status   — статус")
     print(f"   GET  /api/ping     — healthcheck")
-    print(f"   Маркер: {args.marker***REMOVED***")
-    print(f"   PID: {os.getpid()***REMOVED***")
+    print(f"   Маркер: {args.marker}")
+    print(f"   PID: {os.getpid()}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

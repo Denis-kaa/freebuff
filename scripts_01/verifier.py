@@ -31,13 +31,13 @@ import json
 import os
 import sqlite3
 import subprocess
-***REMOVED***
+}
 import sys
 import time
 import uuid
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Callable, Dict, List, Optional
 
 WORKSPACE = Path(__file__).resolve().parent.parent
@@ -53,9 +53,9 @@ CHECK_TYPES = {
     "pytest": "Запуск pytest теста",
     "sqlite": "SQL-запрос к SQLite (check rows/values)",
     "http": "HTTP запрос (check status/body)",
-***REMOVED***
+}
 
-SEVERITY_LEVELS = ["critical", "major", "minor"***REMOVED***
+SEVERITY_LEVELS = ["critical", "major", "minor"]
 
 
 @dataclass
@@ -80,7 +80,7 @@ class VerificationRule:
     description: str = ""
     task_type: str = "any"
     check_type: str = "file_exists"
-    check_params: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    check_params: Dict[str, Any] = field(default_factory=dict)
     expected: str = ""
     severity: str = "major"
     enabled: bool = True
@@ -91,7 +91,7 @@ class VerificationRule:
 
     def __post_init__(self):
         if not self.rule_id:
-            self.rule_id = uuid.uuid4().hex[:12***REMOVED***
+            self.rule_id = uuid.uuid4().hex[:12]
         if self.severity not in SEVERITY_LEVELS:
             self.severity = "major"
         self.weight = max(0.0, min(1.0, self.weight))
@@ -130,7 +130,7 @@ class VerificationResult:
 
     def __post_init__(self):
         if not self.result_id:
-            self.result_id = uuid.uuid4().hex[:12***REMOVED***
+            self.result_id = uuid.uuid4().hex[:12]
 
 
 @dataclass
@@ -186,7 +186,7 @@ class VerifierStorage:
                     description TEXT DEFAULT '',
                     task_type TEXT DEFAULT 'any',
                     check_type TEXT NOT NULL,
-                    check_params TEXT DEFAULT '{***REMOVED***',
+                    check_params TEXT DEFAULT '{}',
                     expected TEXT DEFAULT '',
                     severity TEXT DEFAULT 'major',
                     enabled INTEGER DEFAULT 1,
@@ -267,11 +267,11 @@ class VerifierStorage:
             return self._row_to_rule(row)
 
     def list_rules(self, task_type: str | None = None,
-                   enabled_only: bool = False) -> List[VerificationRule***REMOVED***:
+                   enabled_only: bool = False) -> List[VerificationRule]:
         """Список правил с опциональной фильтрацией."""
         query = "SELECT * FROM verification_rules"
-        conditions: List[str***REMOVED*** = [***REMOVED***
-        params: List[Any***REMOVED*** = [***REMOVED***
+        conditions: List[str] = []
+        params: List[Any] = []
 
         if task_type and task_type != "any":
             conditions.append("(task_type = ? OR task_type = 'any')")
@@ -287,31 +287,31 @@ class VerifierStorage:
 
         with self._connect() as conn:
             rows = conn.execute(query, params).fetchall()
-            return [self._row_to_rule(r) for r in rows***REMOVED***
+            return [self._row_to_rule(r) for r in rows]
 
     def count_rules(self) -> int:
         """Количество правил в БД."""
         with self._connect() as conn:
             return conn.execute(
                 "SELECT COUNT(*) FROM verification_rules"
-            ).fetchone()[0***REMOVED***
+            ).fetchone()[0]
 
     @staticmethod
     def _row_to_rule(row: sqlite3.Row) -> VerificationRule:
         """Конвертирует строку SQLite в VerificationRule."""
         data = dict(row)
         return VerificationRule(
-            rule_id=data["rule_id"***REMOVED***,
-            name=data["name"***REMOVED***,
-            description=data["description"***REMOVED***,
-            task_type=data["task_type"***REMOVED***,
-            check_type=data["check_type"***REMOVED***,
-            check_params=json.loads(data["check_params"***REMOVED***) if isinstance(data["check_params"***REMOVED***, str) else {***REMOVED***,
-            expected=data["expected"***REMOVED***,
-            severity=data["severity"***REMOVED***,
-            enabled=bool(data["enabled"***REMOVED***),
-            weight=float(data["weight"***REMOVED***),
-            created_at=data["created_at"***REMOVED***,
+            rule_id=data["rule_id"],
+            name=data["name"],
+            description=data["description"],
+            task_type=data["task_type"],
+            check_type=data["check_type"],
+            check_params=json.loads(data["check_params"]) if isinstance(data["check_params"], str) else {},
+            expected=data["expected"],
+            severity=data["severity"],
+            enabled=bool(data["enabled"]),
+            weight=float(data["weight"]),
+            created_at=data["created_at"],
         )
 
     # ── Results CRUD ───────────────────────────────────────
@@ -333,14 +333,14 @@ class VerifierStorage:
             )
             conn.commit()
 
-    def get_results(self, task_id: str) -> List[VerificationResult***REMOVED***:
+    def get_results(self, task_id: str) -> List[VerificationResult]:
         """Получает все результаты для задачи."""
         with self._connect() as conn:
             rows = conn.execute(
                 "SELECT * FROM verification_results WHERE task_id = ? ORDER BY timestamp",
                 (task_id,),
             ).fetchall()
-            return [self._row_to_result(r) for r in rows***REMOVED***
+            return [self._row_to_result(r) for r in rows]
 
     def get_summary(self, task_id: str) -> VerificationSummary | None:
         """Собирает сводку по результатам для задачи."""
@@ -355,7 +355,7 @@ class VerifierStorage:
 
         return VerificationSummary(
             task_id=task_id,
-            task_type=results[0***REMOVED***.task_type if results else "",
+            task_type=results[0].task_type if results else "",
             total_rules=total,
             passed=passed,
             failed=failed,
@@ -364,21 +364,21 @@ class VerifierStorage:
             threshold=0.7,
         )
 
-    def get_stats(self) -> Dict[str, Any***REMOVED***:
+    def get_stats(self) -> Dict[str, Any]:
         """Статистика верификации."""
         with self._connect() as conn:
             total_results = conn.execute(
                 "SELECT COUNT(*) FROM verification_results"
-            ).fetchone()[0***REMOVED***
+            ).fetchone()[0]
             total_passed = conn.execute(
                 "SELECT COUNT(*) FROM verification_results WHERE passed = 1"
-            ).fetchone()[0***REMOVED***
+            ).fetchone()[0]
             total_failed = conn.execute(
                 "SELECT COUNT(*) FROM verification_results WHERE passed = 0"
-            ).fetchone()[0***REMOVED***
+            ).fetchone()[0]
             unique_tasks = conn.execute(
                 "SELECT COUNT(DISTINCT task_id) FROM verification_results"
-            ).fetchone()[0***REMOVED***
+            ).fetchone()[0]
             return {
                 "total_rules": self.count_rules(),
                 "total_results": total_results,
@@ -386,24 +386,24 @@ class VerifierStorage:
                 "total_failed": total_failed,
                 "unique_tasks": unique_tasks,
                 "pass_rate": total_passed / total_results if total_results > 0 else 0.0,
-            ***REMOVED***
+            }
 
     @staticmethod
     def _row_to_result(row: sqlite3.Row) -> VerificationResult:
         """Конвертирует строку SQLite в VerificationResult."""
         data = dict(row)
         return VerificationResult(
-            result_id=data["result_id"***REMOVED***,
-            rule_id=data["rule_id"***REMOVED***,
-            task_id=data["task_id"***REMOVED***,
-            task_type=data["task_type"***REMOVED***,
-            passed=bool(data["passed"***REMOVED***),
-            actual=data["actual"***REMOVED***,
-            expected=data["expected"***REMOVED***,
-            duration_ms=float(data["duration_ms"***REMOVED***),
-            timestamp=data["timestamp"***REMOVED***,
-            verified_by=data["verified_by"***REMOVED***,
-            error=data["error"***REMOVED***,
+            result_id=data["result_id"],
+            rule_id=data["rule_id"],
+            task_id=data["task_id"],
+            task_type=data["task_type"],
+            passed=bool(data["passed"]),
+            actual=data["actual"],
+            expected=data["expected"],
+            duration_ms=float(data["duration_ms"]),
+            timestamp=data["timestamp"],
+            verified_by=data["verified_by"],
+            error=data["error"],
         )
 
 
@@ -411,13 +411,13 @@ class VerifierStorage:
 # Built-in verification rules
 # ═══════════════════════════════════════════════════════════════
 
-DEFAULT_RULES: List[VerificationRule***REMOVED*** = [
+DEFAULT_RULES: List[VerificationRule] = [
     VerificationRule(
         name="Check file exists after implementation",
         description="Проверяет, что файл был создан после задачи",
         task_type="implement",
         check_type="file_exists",
-        check_params={"path": "{{output_path***REMOVED******REMOVED***"***REMOVED***,
+        check_params={"path": "{{output_path}]"],
         expected="exists",
         severity="critical",
         weight=1.0,
@@ -427,7 +427,7 @@ DEFAULT_RULES: List[VerificationRule***REMOVED*** = [
         description="Запускает тесты и проверяет exit code",
         task_type="test",
         check_type="pytest",
-        check_params={"test_path": "{{test_path***REMOVED******REMOVED***", "timeout": 60***REMOVED***,
+        check_params={"test_path": "{{test_path}]", "timeout": 60],
         expected="0 failures",
         severity="critical",
         weight=1.0,
@@ -437,7 +437,7 @@ DEFAULT_RULES: List[VerificationRule***REMOVED*** = [
         description="Проверяет, что файл содержит ожидаемый текст",
         task_type="refactor",
         check_type="file_contains",
-        check_params={"path": "{{file_path***REMOVED******REMOVED***", "pattern": "{{expected_pattern***REMOVED******REMOVED***"***REMOVED***,
+        check_params={"path": "{{file_path}]", "pattern": "{{expected_pattern]]"],
         expected="found",
         severity="major",
         weight=0.8,
@@ -448,10 +448,10 @@ DEFAULT_RULES: List[VerificationRule***REMOVED*** = [
         task_type="implement",
         check_type="sqlite",
         check_params={
-            "db_path": "{{db_path***REMOVED******REMOVED***",
-            "query": "{{query***REMOVED******REMOVED***",
+            "db_path": "{{db_path]]",
+            "query": "{{query]]",
             "min_rows": 1,
-        ***REMOVED***,
+        },
         expected="rows > 0",
         severity="major",
         weight=0.6,
@@ -461,7 +461,7 @@ DEFAULT_RULES: List[VerificationRule***REMOVED*** = [
         description="Проверяет, что результат исследования не пустой",
         task_type="research",
         check_type="file_contains",
-        check_params={"path": "{{output_path***REMOVED******REMOVED***", "pattern": ".{100,***REMOVED***"***REMOVED***,
+        check_params={"path": "{{output_path}]", "pattern": ".{100,]"],
         expected="non-empty",
         severity="minor",
         weight=0.5,
@@ -471,12 +471,12 @@ DEFAULT_RULES: List[VerificationRule***REMOVED*** = [
         description="Проверяет доступность HTTP эндпоинта",
         task_type="implement",
         check_type="http",
-        check_params={"url": "{{url***REMOVED******REMOVED***", "timeout": 10***REMOVED***,
+        check_params={"url": "{{url}]", "timeout": 10],
         expected="200",
         severity="major",
         weight=0.7,
     ),
-***REMOVED***
+}
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -484,8 +484,8 @@ DEFAULT_RULES: List[VerificationRule***REMOVED*** = [
 # ═══════════════════════════════════════════════════════════════
 
 
-def _check_file_exists(params: Dict[str, Any***REMOVED***,
-                       context: Dict[str, Any***REMOVED***) -> VerificationResult:
+def _check_file_exists(params: Dict[str, Any],
+                       context: Dict[str, Any]) -> VerificationResult:
     """Проверяет, существует ли файл."""
     path_template = params.get("path", "")
     path_str = _resolve_template(path_template, context)
@@ -505,8 +505,8 @@ def _check_file_exists(params: Dict[str, Any***REMOVED***,
     )
 
 
-def _check_file_contains(params: Dict[str, Any***REMOVED***,
-                         context: Dict[str, Any***REMOVED***) -> VerificationResult:
+def _check_file_contains(params: Dict[str, Any],
+                         context: Dict[str, Any]) -> VerificationResult:
     """Проверяет, что файл содержит ожидаемый паттерн."""
     path_template = params.get("path", "")
     pattern = params.get("pattern", "")
@@ -524,7 +524,7 @@ def _check_file_contains(params: Dict[str, Any***REMOVED***,
             passed=False,
             actual="file not found",
             expected=pattern,
-            error=f"File not found: {path***REMOVED***",
+            error=f"File not found: {path}",
             verified_by="verifier",
         )
 
@@ -536,17 +536,17 @@ def _check_file_contains(params: Dict[str, Any***REMOVED***,
             task_id=context.get("task_id", ""),
             task_type=context.get("task_type", ""),
             passed=False,
-            actual=f"error: {e***REMOVED***",
+            actual=f"error: {e}",
             expected=pattern,
             error=str(e),
             verified_by="verifier",
         )
 
-    if pattern == ".{100,***REMOVED***":
+    if pattern == ".{100,]":
         found = len(content) >= 100
-        actual = f"{len(content)***REMOVED*** chars" if found else f"too short ({len(content)***REMOVED*** chars)"
+        actual = f"{len(content)} chars" if found else f"too short ({len(content)} chars)"
     else:
-        ***REMOVED***
+        }
         try:
             found = bool(re.search(pattern, content, re.DOTALL))
         except re.error:
@@ -564,8 +564,8 @@ def _check_file_contains(params: Dict[str, Any***REMOVED***,
     )
 
 
-def _check_pytest(params: Dict[str, Any***REMOVED***,
-                  context: Dict[str, Any***REMOVED***) -> VerificationResult:
+def _check_pytest(params: Dict[str, Any],
+                  context: Dict[str, Any]) -> VerificationResult:
     """Запускает pytest через argv-список (без shell=True)."""
     test_path_template = params.get("test_path", "")
     timeout = params.get("timeout", 60)
@@ -574,7 +574,7 @@ def _check_pytest(params: Dict[str, Any***REMOVED***,
     start = time.time()
     try:
         result = subprocess.run(
-            [sys.executable, "-m", "pytest", test_path, "-q", "--tb=no"***REMOVED***,
+            [sys.executable, "-m", "pytest", test_path, "-q", "--tb=no"],
             capture_output=True,
             text=True,
             timeout=timeout,
@@ -588,7 +588,7 @@ def _check_pytest(params: Dict[str, Any***REMOVED***,
     duration_ms = (time.time() - start) * 1000
 
     passed = rc == 0
-    actual = "0 failures" if passed else f"exit code {rc***REMOVED***"
+    actual = "0 failures" if passed else f"exit code {rc}"
 
     # Считаем failures из вывода
     if not passed:
@@ -610,8 +610,8 @@ def _check_pytest(params: Dict[str, Any***REMOVED***,
     )
 
 
-def _check_sqlite(params: Dict[str, Any***REMOVED***,
-                  context: Dict[str, Any***REMOVED***) -> VerificationResult:
+def _check_sqlite(params: Dict[str, Any],
+                  context: Dict[str, Any]) -> VerificationResult:
     """Выполняет SQL-запрос и проверяет результат."""
     db_path_template = params.get("db_path", "")
     query = params.get("query", "")
@@ -630,8 +630,8 @@ def _check_sqlite(params: Dict[str, Any***REMOVED***,
             task_type=context.get("task_type", ""),
             passed=False,
             actual="db not found",
-            expected=f"rows >= {min_rows***REMOVED***",
-            error=f"DB not found: {db_path_obj***REMOVED***",
+            expected=f"rows >= {min_rows}",
+            error=f"DB not found: {db_path_obj}",
             verified_by="verifier",
         )
 
@@ -642,16 +642,16 @@ def _check_sqlite(params: Dict[str, Any***REMOVED***,
         conn.close()
         duration_ms = (time.time() - start) * 1000
         # Берём значение из первой колонки первой строки (например COUNT(*))
-        row_count = rows[0***REMOVED***[0***REMOVED*** if rows else 0
+        row_count = rows[0][0] if rows else 0
         passed = row_count >= min_rows
-        actual = f"{row_count***REMOVED*** rows" if passed else f"only {row_count***REMOVED*** rows (min {min_rows***REMOVED***)"
+        actual = f"{row_count} rows" if passed else f"only {row_count} rows (min {min_rows})"
         return VerificationResult(
             rule_id=context.get("_rule_id", ""),
             task_id=context.get("task_id", ""),
             task_type=context.get("task_type", ""),
             passed=passed,
             actual=actual,
-            expected=f"rows >= {min_rows***REMOVED***",
+            expected=f"rows >= {min_rows}",
             duration_ms=duration_ms,
             verified_by="verifier",
         )
@@ -662,16 +662,16 @@ def _check_sqlite(params: Dict[str, Any***REMOVED***,
             task_id=context.get("task_id", ""),
             task_type=context.get("task_type", ""),
             passed=False,
-            actual=f"error: {e***REMOVED***",
-            expected=f"rows >= {min_rows***REMOVED***",
+            actual=f"error: {e}",
+            expected=f"rows >= {min_rows}",
             duration_ms=duration_ms,
             error=str(e),
             verified_by="verifier",
         )
 
 
-def _check_http(params: Dict[str, Any***REMOVED***,
-                context: Dict[str, Any***REMOVED***) -> VerificationResult:
+def _check_http(params: Dict[str, Any],
+                context: Dict[str, Any]) -> VerificationResult:
     """Выполняет HTTP-запрос и проверяет status code."""
     import urllib.request
     import urllib.error
@@ -694,8 +694,8 @@ def _check_http(params: Dict[str, Any***REMOVED***,
             task_id=context.get("task_id", ""),
             task_type=context.get("task_type", ""),
             passed=passed,
-            actual=f"HTTP {status***REMOVED***",
-            expected=f"HTTP {expected_status***REMOVED***",
+            actual=f"HTTP {status}",
+            expected=f"HTTP {expected_status}",
             duration_ms=duration_ms,
             verified_by="verifier",
         )
@@ -706,8 +706,8 @@ def _check_http(params: Dict[str, Any***REMOVED***,
             task_id=context.get("task_id", ""),
             task_type=context.get("task_type", ""),
             passed=e.code == expected_status,
-            actual=f"HTTP {e.code***REMOVED***",
-            expected=f"HTTP {expected_status***REMOVED***",
+            actual=f"HTTP {e.code}",
+            expected=f"HTTP {expected_status}",
             duration_ms=duration_ms,
             error=str(e),
             verified_by="verifier",
@@ -719,8 +719,8 @@ def _check_http(params: Dict[str, Any***REMOVED***,
             task_id=context.get("task_id", ""),
             task_type=context.get("task_type", ""),
             passed=False,
-            actual=f"error: {e***REMOVED***",
-            expected=f"HTTP {expected_status***REMOVED***",
+            actual=f"error: {e}",
+            expected=f"HTTP {expected_status}",
             duration_ms=duration_ms,
             error=str(e),
             verified_by="verifier",
@@ -728,21 +728,21 @@ def _check_http(params: Dict[str, Any***REMOVED***,
 
 
 # Registry of checkers
-CHECKER_REGISTRY: Dict[str, Callable***REMOVED*** = {
+CHECKER_REGISTRY: Dict[str, Callable] = {
     "file_exists": _check_file_exists,
     "file_contains": _check_file_contains,
     "pytest": _check_pytest,
     "sqlite": _check_sqlite,
     "http": _check_http,
-***REMOVED***
+}
 
 
-def _resolve_template(template: str, context: Dict[str, Any***REMOVED***) -> str:
-    """Заменяет {{variable***REMOVED******REMOVED*** в шаблоне на значения из context."""
+def _resolve_template(template: str, context: Dict[str, Any]) -> str:
+    """Заменяет {{variable]] в шаблоне на значения из context."""
     def replacer(match):
         key = match.group(1)
         return str(context.get(key, match.group(0)))
-    return re.sub(r"\{\{(\w+)\***REMOVED***\***REMOVED***", replacer, template)
+    return re.sub(r"\{\{(\w+)\*)\*]", replacer, template)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -761,19 +761,19 @@ class Verifier:
         results = verifier.verify(
             task_id="wf-123",
             task_type="refactor",
-            context={"file_path": "src_06/router.py", "expected_pattern": "class Router"***REMOVED***,
+            context={"file_path": "src_06/router.py", "expected_pattern": "class Router"},
         )
 
         # Просмотр сводки
         summary = verifier.get_summary("wf-123")
-        print(f"Status: {summary.status***REMOVED***, Score: {summary.score:.0%***REMOVED***")
+        print(f"Status: {summary.status}, Score: {summary.score:.0%}")
     """
 
     def __init__(self, storage: VerifierStorage | None = None,
                  event_bus: Any = None):
         self._storage = storage or VerifierStorage()
         self._event_bus = event_bus  # Optional EventBus
-        self._subscribers: List[Any***REMOVED*** = [***REMOVED***  # EventBus subscriptions
+        self._subscribers: List[Any] = []  # EventBus subscriptions
 
     # ── Rule management ────────────────────────────────────
 
@@ -809,7 +809,7 @@ class Verifier:
                         "name": rule.name,
                         "task_type": rule.task_type,
                         "check_type": rule.check_type,
-                    ***REMOVED***,
+                    },
                 ))
             except Exception:
                 pass
@@ -820,7 +820,7 @@ class Verifier:
         return self._storage.delete_rule(rule_id)
 
     def list_rules(self, task_type: str | None = None,
-                   enabled_only: bool = False) -> List[VerificationRule***REMOVED***:
+                   enabled_only: bool = False) -> List[VerificationRule]:
         """Список правил."""
         return self._storage.list_rules(task_type=task_type, enabled_only=enabled_only)
 
@@ -831,20 +831,20 @@ class Verifier:
     # ── Verification ───────────────────────────────────────
 
     def verify(self, task_id: str, task_type: str = "any",
-               context: Dict[str, Any***REMOVED*** | None = None) -> List[VerificationResult***REMOVED***:
+               context: Dict[str, Any] | None = None) -> List[VerificationResult]:
         """Запускает верификацию задачи.
 
         Args:
             task_id: ID задачи
             task_type: тип задачи (refactor, test, implement, research)
-            context: контекст с переменными для шаблонов ({{path***REMOVED******REMOVED***, {{file_path***REMOVED******REMOVED***, etc.)
+            context: контекст с переменными для шаблонов ({{path}}, {{file_path}}, etc.)
 
         Returns:
             Список VerificationResult по каждому правилу.
         """
-        ctx = dict(context or {***REMOVED***)
-        ctx["task_id"***REMOVED*** = task_id
-        ctx["task_type"***REMOVED*** = task_type
+        ctx = dict(context or {})
+        ctx["task_id"] = task_id
+        ctx["task_type"] = task_type
 
         # Подбираем правила
         rules = self._storage.list_rules(task_type=task_type, enabled_only=True)
@@ -852,7 +852,7 @@ class Verifier:
             # Пробуем без фильтрации по типу
             rules = self._storage.list_rules(enabled_only=True)
             # Фильтруем только 'any'
-            rules = [r for r in rules if r.task_type in ("any", task_type)***REMOVED***
+            rules = [r for r in rules if r.task_type in ("any", task_type)]
 
         if not rules:
             if self._event_bus is not None:
@@ -861,16 +861,16 @@ class Verifier:
                     self._event_bus.publish(Event(
                         type="verifier.no_rules",
                         source="verifier",
-                        data={"task_id": task_id, "task_type": task_type***REMOVED***,
+                        data={"task_id": task_id, "task_type": task_type},
                     ))
                 except Exception:
                     pass
-            return [***REMOVED***
+            return []
 
-        results: List[VerificationResult***REMOVED*** = [***REMOVED***
+        results: List[VerificationResult] = []
 
         for rule in rules:
-            ctx["_rule_id"***REMOVED*** = rule.rule_id
+            ctx["_rule_id"] = rule.rule_id
             checker = CHECKER_REGISTRY.get(rule.check_type)
             if checker is None:
                 results.append(VerificationResult(
@@ -880,7 +880,7 @@ class Verifier:
                     passed=False,
                     actual="unknown check_type",
                     expected=rule.expected,
-                    error=f"No checker for: {rule.check_type***REMOVED***",
+                    error=f"No checker for: {rule.check_type}",
                     verified_by="verifier",
                 ))
                 continue
@@ -926,7 +926,7 @@ class Verifier:
                         "passed": sum(1 for r in results if r.passed),
                         "failed": sum(1 for r in results if not r.passed),
                         "total": len(results),
-                    ***REMOVED***,
+                    },
                 ))
             except Exception:
                 pass
@@ -937,11 +937,11 @@ class Verifier:
         """Сводка по результатам верификации задачи."""
         return self._storage.get_summary(task_id)
 
-    def get_results(self, task_id: str) -> List[VerificationResult***REMOVED***:
+    def get_results(self, task_id: str) -> List[VerificationResult]:
         """Все результаты верификации для задачи."""
         return self._storage.get_results(task_id)
 
-    def get_stats(self) -> Dict[str, Any***REMOVED***:
+    def get_stats(self) -> Dict[str, Any]:
         """Статистика верификации."""
         return self._storage.get_stats()
 
@@ -958,7 +958,7 @@ class Verifier:
             """Авто-верификация при поступлении task.claimed."""
             task_id = event.data.get("task_id", "")
             task_type = event.data.get("task_type", "any")
-            context = event.data.get("context", {***REMOVED***)
+            context = event.data.get("context", {})
 
             if not task_id:
                 return
@@ -978,7 +978,7 @@ class Verifier:
 
     # ── Diagnosis / status ─────────────────────────────────
 
-    def diagnose(self) -> Dict[str, Any***REMOVED***:
+    def diagnose(self) -> Dict[str, Any]:
         """Диагностика Verifier."""
         stats = self.get_stats()
         rules = self.list_rules()
@@ -990,7 +990,7 @@ class Verifier:
             "eventbus_connected": self._event_bus is not None,
             "storage": str(self._storage._db_path),
             **stats,
-        ***REMOVED***
+        }
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1008,11 +1008,11 @@ class Colors:
 
     @staticmethod
     def status_icon(passed: bool) -> str:
-        return f"{Colors.GREEN***REMOVED***✓{Colors.RESET***REMOVED***" if passed else f"{Colors.RED***REMOVED***✗{Colors.RESET***REMOVED***"
+        return f"{Colors.GREEN}✓{Colors.RESET}" if passed else f"{Colors.RED}✗{Colors.RESET}"
 
     @staticmethod
     def severity_color(severity: str) -> str:
-        return {"critical": Colors.RED, "major": Colors.YELLOW, "minor": Colors.BLUE***REMOVED***.get(severity, Colors.RESET)
+        return {"critical": Colors.RED, "major": Colors.YELLOW, "minor": Colors.BLUE}.get(severity, Colors.RESET)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1021,22 +1021,22 @@ class Colors:
 
 
 def _print_header(text: str) -> None:
-    print(f"\n{Colors.BOLD***REMOVED***{Colors.CYAN***REMOVED***{'=' * 60***REMOVED***{Colors.RESET***REMOVED***")
-    print(f"{Colors.BOLD***REMOVED***{Colors.CYAN***REMOVED***  {text***REMOVED***{Colors.RESET***REMOVED***")
-    print(f"{Colors.BOLD***REMOVED***{Colors.CYAN***REMOVED***{'=' * 60***REMOVED***{Colors.RESET***REMOVED***")
+    print(f"\n{Colors.BOLD}{Colors.CYAN}{'=' * 60}{Colors.RESET}")
+    print(f"{Colors.BOLD}{Colors.CYAN}  {text}{Colors.RESET}")
+    print(f"{Colors.BOLD}{Colors.CYAN}{'=' * 60}{Colors.RESET}")
 
 
 def _cmd_verify(args: argparse.Namespace, verifier: Verifier) -> None:
     """Команда: verify — запустить верификацию."""
-    context: Dict[str, Any***REMOVED*** = {***REMOVED***
+    context: Dict[str, Any] = {}
     if args.context:
         try:
             context = json.loads(args.context)
         except json.JSONDecodeError:
-            print(f"{Colors.RED***REMOVED***Error: invalid JSON in --context{Colors.RESET***REMOVED***")
+            print(f"{Colors.RED}Error: invalid JSON in --context{Colors.RESET}")
             sys.exit(1)
 
-    _print_header(f"Verifying task: {args.task_id***REMOVED*** ({args.task_type***REMOVED***)")
+    _print_header(f"Verifying task: {args.task_id} ({args.task_type})")
     results = verifier.verify(
         task_id=args.task_id,
         task_type=args.task_type,
@@ -1044,7 +1044,7 @@ def _cmd_verify(args: argparse.Namespace, verifier: Verifier) -> None:
     )
 
     if not results:
-        print(f"  {Colors.YELLOW***REMOVED***⚠ No rules matched for task_type '{args.task_type***REMOVED***'{Colors.RESET***REMOVED***")
+        print(f"  {Colors.YELLOW}⚠ No rules matched for task_type '{args.task_type}'{Colors.RESET}")
         print(f"  Run 'python scripts_01/verifier.py rules list' to see available rules")
         return
 
@@ -1054,51 +1054,51 @@ def _cmd_verify(args: argparse.Namespace, verifier: Verifier) -> None:
     for result in results:
         icon = Colors.status_icon(result.passed)
         rule = verifier.get_rule(result.rule_id)
-        rule_name = rule.name if rule else result.rule_id[:8***REMOVED***
-        print(f"  {icon***REMOVED*** {rule_name***REMOVED***")
-        print(f"     Expected: {result.expected***REMOVED***")
-        print(f"     Actual:   {result.actual***REMOVED***")
+        rule_name = rule.name if rule else result.rule_id[:8]
+        print(f"  {icon} {rule_name}")
+        print(f"     Expected: {result.expected}")
+        print(f"     Actual:   {result.actual}")
         if result.error:
-            print(f"     Error:    {Colors.RED***REMOVED***{result.error***REMOVED***{Colors.RESET***REMOVED***")
+            print(f"     Error:    {Colors.RED}{result.error}{Colors.RESET}")
         if result.duration_ms > 0:
-            print(f"     Duration: {result.duration_ms:.0f***REMOVED***ms")
+            print(f"     Duration: {result.duration_ms:.0f}ms")
 
     score = passed / len(results) if results else 0.0
     summary = verifier.get_summary(args.task_id)
 
     _print_header("Summary")
-    print(f"  {passed***REMOVED***/{len(results)***REMOVED*** passed ({score:.0%***REMOVED***)")
+    print(f"  {passed}/{len(results)} passed ({score:.0%})")
     if summary:
-        print(f"  Status: {Colors.GREEN if summary.status == 'verified' else Colors.RED***REMOVED***{summary.status***REMOVED***{Colors.RESET***REMOVED***")
-        print(f"  Threshold: {summary.threshold:.0%***REMOVED***")
+        print(f"  Status: {Colors.GREEN if summary.status == 'verified' else Colors.RED}{summary.status}{Colors.RESET}")
+        print(f"  Threshold: {summary.threshold:.0%}")
 
 
 def _cmd_rules(args: argparse.Namespace, verifier: Verifier) -> None:
     """Команда: rules — управление правилами."""
     if args.action == "list":
         rules = verifier.list_rules(task_type=args.task_type, enabled_only=args.enabled_only)
-        _print_header(f"Verification Rules ({len(rules)***REMOVED*** total)")
+        _print_header(f"Verification Rules ({len(rules)} total)")
         if not rules:
             print("  (no rules)")
             return
 
         for rule in rules:
             sev_color = Colors.severity_color(rule.severity)
-            enabled = f"{Colors.GREEN***REMOVED***active{Colors.RESET***REMOVED***" if rule.enabled else f"{Colors.RED***REMOVED***disabled{Colors.RESET***REMOVED***"
-            print(f"  {Colors.BOLD***REMOVED***{rule.name***REMOVED***{Colors.RESET***REMOVED*** [{sev_color***REMOVED***{rule.severity***REMOVED***{Colors.RESET***REMOVED******REMOVED*** ({enabled***REMOVED***)")
-            print(f"     ID:        {rule.rule_id***REMOVED***")
-            print(f"     Type:      {rule.check_type***REMOVED*** | Task: {rule.task_type***REMOVED***")
-            print(f"     Desc:      {rule.description***REMOVED***")
-            print(f"     Params:    {json.dumps(rule.check_params, ensure_ascii=False)***REMOVED***")
+            enabled = f"{Colors.GREEN}active{Colors.RESET}" if rule.enabled else f"{Colors.RED}disabled{Colors.RESET}"
+            print(f"  {Colors.BOLD}{rule.name}{Colors.RESET} [{sev_color}{rule.severity}{Colors.RESET}] ({enabled})")
+            print(f"     ID:        {rule.rule_id}")
+            print(f"     Type:      {rule.check_type} | Task: {rule.task_type}")
+            print(f"     Desc:      {rule.description}")
+            print(f"     Params:    {json.dumps(rule.check_params, ensure_ascii=False)}")
             print()
 
     elif args.action == "add":
-        check_params: Dict[str, Any***REMOVED*** = {***REMOVED***
+        check_params: Dict[str, Any] = {}
         if args.params:
             try:
                 check_params = json.loads(args.params)
             except json.JSONDecodeError:
-                print(f"{Colors.RED***REMOVED***Error: invalid JSON in --params{Colors.RESET***REMOVED***")
+                print(f"{Colors.RED}Error: invalid JSON in --params{Colors.RESET}")
                 sys.exit(1)
 
         rule = VerificationRule(
@@ -1112,19 +1112,19 @@ def _cmd_rules(args: argparse.Namespace, verifier: Verifier) -> None:
             enabled=not args.disabled,
         )
         rule_id = verifier.add_rule(rule)
-        print(f"{Colors.GREEN***REMOVED***✓{Colors.RESET***REMOVED*** Rule added: {rule_id***REMOVED***")
-        print(f"  Name: {rule.name***REMOVED***")
+        print(f"{Colors.GREEN}✓{Colors.RESET} Rule added: {rule_id}")
+        print(f"  Name: {rule.name}")
 
     elif args.action == "remove":
         if verifier.remove_rule(args.rule_id):
-            print(f"{Colors.GREEN***REMOVED***✓{Colors.RESET***REMOVED*** Rule removed: {args.rule_id***REMOVED***")
+            print(f"{Colors.GREEN}✓{Colors.RESET} Rule removed: {args.rule_id}")
         else:
-            print(f"{Colors.RED***REMOVED***✗{Colors.RESET***REMOVED*** Rule not found: {args.rule_id***REMOVED***")
+            print(f"{Colors.RED}✗{Colors.RESET} Rule not found: {args.rule_id}")
             sys.exit(1)
 
     elif args.action == "seed":
         count = verifier.seed_default_rules(force=args.force)
-        print(f"{Colors.GREEN***REMOVED***✓{Colors.RESET***REMOVED*** Seeded {count***REMOVED*** default rules")
+        print(f"{Colors.GREEN}✓{Colors.RESET} Seeded {count} default rules")
 
 
 def _cmd_status(args: argparse.Namespace, verifier: Verifier) -> None:
@@ -1133,27 +1133,27 @@ def _cmd_status(args: argparse.Namespace, verifier: Verifier) -> None:
     summary = verifier.get_summary(args.task_id)
 
     if not results and not summary:
-        print(f"{Colors.YELLOW***REMOVED***⚠ No verification results for task: {args.task_id***REMOVED***{Colors.RESET***REMOVED***")
+        print(f"{Colors.YELLOW}⚠ No verification results for task: {args.task_id}{Colors.RESET}")
         return
 
-    _print_header(f"Verification Status: {args.task_id***REMOVED***")
+    _print_header(f"Verification Status: {args.task_id}")
 
     if summary:
         status_color = Colors.GREEN if summary.status == "verified" else Colors.RED
-        print(f"  Status:   {status_color***REMOVED***{summary.status***REMOVED***{Colors.RESET***REMOVED***")
-        print(f"  Score:    {summary.score:.0%***REMOVED*** (threshold: {summary.threshold:.0%***REMOVED***)")
-        print(f"  Passed:   {summary.passed***REMOVED***/{summary.total_rules***REMOVED***")
-        print(f"  Failed:   {summary.failed***REMOVED***")
+        print(f"  Status:   {status_color}{summary.status}{Colors.RESET}")
+        print(f"  Score:    {summary.score:.0%} (threshold: {summary.threshold:.0%})")
+        print(f"  Passed:   {summary.passed}/{summary.total_rules}")
+        print(f"  Failed:   {summary.failed}")
 
     if results:
         print()
         for r in results:
             icon = Colors.status_icon(r.passed)
             rule = verifier.get_rule(r.rule_id)
-            rule_name = rule.name if rule else r.rule_id[:8***REMOVED***
-            print(f"  {icon***REMOVED*** {rule_name***REMOVED***: {r.actual***REMOVED***")
+            rule_name = rule.name if rule else r.rule_id[:8]
+            print(f"  {icon} {rule_name}: {r.actual}")
             if r.error:
-                print(f"     Error: {r.error***REMOVED***")
+                print(f"     Error: {r.error}")
 
 
 def _cmd_diagnose(args: argparse.Namespace, verifier: Verifier) -> None:
@@ -1164,14 +1164,14 @@ def _cmd_diagnose(args: argparse.Namespace, verifier: Verifier) -> None:
         return
 
     _print_header("Verifier Diagnosis")
-    print(f"  Status:            {Colors.GREEN if diag['status'***REMOVED*** == 'ok' else Colors.RED***REMOVED***{diag['status'***REMOVED******REMOVED***{Colors.RESET***REMOVED***")
-    print(f"  Rules:             {diag['rules_count'***REMOVED******REMOVED*** ({diag['rules_enabled'***REMOVED******REMOVED*** enabled)")
-    print(f"  Check types:       {', '.join(diag['check_types_available'***REMOVED***)***REMOVED***")
-    print(f"  EventBus:          {'✅' if diag['eventbus_connected'***REMOVED*** else '❌'***REMOVED***")
-    print(f"  Storage:           {diag['storage'***REMOVED******REMOVED***")
-    print(f"  Total results:     {diag['total_results'***REMOVED******REMOVED***")
-    print(f"  Unique tasks:      {diag['unique_tasks'***REMOVED******REMOVED***")
-    print(f"  Pass rate:         {diag['pass_rate'***REMOVED***:.0%***REMOVED***")
+    print(f"  Status:            {Colors.GREEN if diag['status'] == 'ok' else Colors.RED}{diag['status']}{Colors.RESET}")
+    print(f"  Rules:             {diag['rules_count']} ({diag['rules_enabled']} enabled)")
+    print(f"  Check types:       {', '.join(diag['check_types_available'])}")
+    print(f"  EventBus:          {'✅' if diag['eventbus_connected'] else '❌'}")
+    print(f"  Storage:           {diag['storage']}")
+    print(f"  Total results:     {diag['total_results']}")
+    print(f"  Unique tasks:      {diag['unique_tasks']}")
+    print(f"  Pass rate:         {diag['pass_rate']:.0%}")
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1185,9 +1185,9 @@ def main() -> None:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Примеры:
-  python scripts_01/verifier.py verify --task-id wf-123 --task-type refactor --context '{"file_path":"src_06/main.py","expected_pattern":"def main"***REMOVED***'
+  python scripts_01/verifier.py verify --task-id wf-123 --task-type refactor --context '{"file_path":"src_06/main.py","expected_pattern":"def main"]'
   python scripts_01/verifier.py rules list
-  python scripts_01/verifier.py rules add --name "Check CSS" --check-type file_exists --params '{"path":"src_06/style.css"***REMOVED***'
+  python scripts_01/verifier.py rules add --name "Check CSS" --check-type file_exists --params '{"path":"src_06/style.css"]'
   python scripts_01/verifier.py rules seed
   python scripts_01/verifier.py status --task-id wf-123
   python scripts_01/verifier.py diagnose
@@ -1200,16 +1200,16 @@ def main() -> None:
     p_verify = sub.add_parser("verify", help="Запустить верификацию задачи")
     p_verify.add_argument("--task-id", required=True, help="ID задачи")
     p_verify.add_argument("--task-type", default="any", help="Тип задачи (refactor/test/implement/research)")
-    p_verify.add_argument("--context", default="{***REMOVED***", help="JSON контекст для шаблонов")
+    p_verify.add_argument("--context", default="{)", help="JSON контекст для шаблонов")
 
     # rules
     p_rules = sub.add_parser("rules", help="Управление правилами")
-    p_rules.add_argument("action", choices=["list", "add", "remove", "seed"***REMOVED***)
+    p_rules.add_argument("action", choices=["list", "add", "remove", "seed"])
     p_rules.add_argument("--name", help="Имя правила (для add)")
     p_rules.add_argument("--description", help="Описание правила")
     p_rules.add_argument("--task-type", help="Тип задачи")
     p_rules.add_argument("--check-type", choices=list(CHECK_TYPES.keys()), help="Тип проверки (для add)")
-    p_rules.add_argument("--params", default="{***REMOVED***", help="JSON параметры проверки")
+    p_rules.add_argument("--params", default="{)", help="JSON параметры проверки")
     p_rules.add_argument("--expected", help="Ожидаемый результат")
     p_rules.add_argument("--severity", choices=SEVERITY_LEVELS, default="major", help="Критичность")
     p_rules.add_argument("--disabled", action="store_true", help="Создать неактивное правило")

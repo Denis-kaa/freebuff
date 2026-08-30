@@ -17,7 +17,7 @@ import json
 import os
 import sys
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import List, Optional
 
 # Добавляем freebuff в путь
@@ -29,7 +29,7 @@ from scripts_01.context_manager import ContextManager
 QWEN_HOME = Path(os.environ.get("QWEN_HOME", str(Path.home() / ".qwen")))
 
 
-def import_memories(cm: ContextManager) -> Optional[str***REMOVED***:
+def import_memories(cm: ContextManager) -> Optional[str]:
     """Импортирует Qwen memories как одну сессию с чекпоинтами."""
     memories_dir = QWEN_HOME / "memories"
     if not memories_dir.exists():
@@ -42,7 +42,7 @@ def import_memories(cm: ContextManager) -> Optional[str***REMOVED***:
     mem_file = memories_dir / "MEMORY.md"
     if mem_file.exists():
         content = mem_file.read_text()
-        cm.add_message(snap.session_id, "system", f"# Qwen MEMORY.md\n\n{content***REMOVED***", token_count=len(content.split()))
+        cm.add_message(snap.session_id, "system", f"# Qwen MEMORY.md\n\n{content}", token_count=len(content.split()))
 
     # User memories
     for md_file in sorted(memories_dir.rglob("*.md")):
@@ -52,25 +52,25 @@ def import_memories(cm: ContextManager) -> Optional[str***REMOVED***:
         content = md_file.read_text()
         cm.add_message(
             snap.session_id, "system",
-            f"# {rel***REMOVED***\n\n{content***REMOVED***",
+            f"# {rel}\n\n{content}",
             token_count=len(content.split()),
         )
 
-    cm.save_checkpoint(snap.session_id, f"Импортировано {len(list(memories_dir.rglob('*.md')))***REMOVED*** memory-файлов")
+    cm.save_checkpoint(snap.session_id, f"Импортировано {len(list(memories_dir.rglob('*.md')))} memory-файлов")
     cm.complete_session(snap.session_id)
 
-    print(f"✅ Memories: сессия {snap.session_id[:8***REMOVED******REMOVED*** ({len(list(memories_dir.rglob('*.md')))***REMOVED*** файлов)")
+    print(f"✅ Memories: сессия {snap.session_id[:8]} ({len(list(memories_dir.rglob('*.md')))} файлов)")
     return snap.session_id
 
 
-def import_file_history(cm: ContextManager, max_sessions: int = 10) -> List[str***REMOVED***:
+def import_file_history(cm: ContextManager, max_sessions: int = 10) -> List[str]:
     """Импортирует Qwen file-history как сессии."""
     history_dir = QWEN_HOME / "file-history"
     if not history_dir.exists():
         print("⚠️ Qwen file-history не найден")
-        return [***REMOVED***
+        return []
 
-    session_ids = [***REMOVED***
+    session_ids = []
     imported = 0
 
     for session_dir in sorted(history_dir.iterdir()):
@@ -79,39 +79,39 @@ def import_file_history(cm: ContextManager, max_sessions: int = 10) -> List[str*
         if imported >= max_sessions:
             break
 
-        snap = cm.start_session(project="qwen", topic=f"File-History: {session_dir.name[:8***REMOVED******REMOVED***")
+        snap = cm.start_session(project="qwen", topic=f"File-History: {session_dir.name[:8]}")
 
         file_count = 0
         for f in sorted(session_dir.iterdir()):
             if f.is_file():
                 try:
-                    content = f.read_text()[:8000***REMOVED***  # обрезаем
+                    content = f.read_text()[:8000]  # обрезаем
                     cm.add_message(
                         snap.session_id, "system",
-                        f"# {f.name***REMOVED***\n\n```\n{content***REMOVED***\n```",
+                        f"# {f.name}\n\n```\n{content}\n```",
                         token_count=len(content.split()),
                     )
                     file_count += 1
                 except Exception:
                     pass
 
-        cm.save_checkpoint(snap.session_id, f"Импортировано {file_count***REMOVED*** версий файлов из Qwen file-history")
+        cm.save_checkpoint(snap.session_id, f"Импортировано {file_count} версий файлов из Qwen file-history")
         cm.complete_session(snap.session_id)
         session_ids.append(snap.session_id)
         imported += 1
-        print(f"✅ History {session_dir.name[:8***REMOVED******REMOVED***: {file_count***REMOVED*** файлов → сессия {snap.session_id[:8***REMOVED******REMOVED***")
+        print(f"✅ History {session_dir.name[:8]}: {file_count} файлов → сессия {snap.session_id[:8]}")
 
-    print(f"📊 Импортировано {imported***REMOVED*** file-history сессий (из {len(list(history_dir.iterdir()))***REMOVED***)")
+    print(f"📊 Импортировано {imported} file-history сессий (из {len(list(history_dir.iterdir()))})")
     return session_ids
 
 
-def import_projects(cm: ContextManager) -> List[str***REMOVED***:
+def import_projects(cm: ContextManager) -> List[str]:
     """Импортирует метаданные Qwen-проектов."""
     projects_dir = QWEN_HOME / "projects_17"
     if not projects_dir.exists():
-        return [***REMOVED***
+        return []
 
-    session_ids = [***REMOVED***
+    session_ids = []
     for proj_dir in projects_dir.iterdir():
         if not proj_dir.is_dir():
             continue
@@ -125,30 +125,30 @@ def import_projects(cm: ContextManager) -> List[str***REMOVED***:
             continue
 
         name = meta.get("name", proj_dir.name.replace("-", "/"))
-        snap = cm.start_session(project="qwen", topic=f"Project: {name***REMOVED***")
+        snap = cm.start_session(project="qwen", topic=f"Project: {name}")
 
         cm.add_message(
             snap.session_id, "system",
-            f"# Qwen Project Metadata: {name***REMOVED***\n\n```json\n{json.dumps(meta, indent=2, ensure_ascii=False)***REMOVED***\n```",
+            f"# Qwen Project Metadata: {name}\n\n```json\n{json.dumps(meta, indent=2, ensure_ascii=False)}\n```",
         )
-        cm.save_checkpoint(snap.session_id, f"Метаданные проекта Qwen: {name***REMOVED***")
+        cm.save_checkpoint(snap.session_id, f"Метаданные проекта Qwen: {name}")
         cm.complete_session(snap.session_id)
         session_ids.append(snap.session_id)
-        print(f"✅ Project {name***REMOVED***: сессия {snap.session_id[:8***REMOVED******REMOVED***")
+        print(f"✅ Project {name}: сессия {snap.session_id[:8]}")
 
     return session_ids
 
 
 def main():
     cm = ContextManager(str(FREEBUFF_ROOT))
-    args = sys.argv[1:***REMOVED***
+    args = sys.argv[1:]
 
     do_memories = "--history-only" not in args
     do_history = "--memories-only" not in args
     do_projects = True
 
     print("📥 Импорт Qwen → ContextManager")
-    print(f"   QWEN_HOME: {QWEN_HOME***REMOVED***")
+    print(f"   QWEN_HOME: {QWEN_HOME}")
     print()
 
     total = 0
@@ -159,7 +159,7 @@ def main():
     if do_projects:
         total += len(import_projects(cm))
 
-    print(f"\n🎉 Импортировано: {total***REMOVED*** сессий в context.db")
+    print(f"\n🎉 Импортировано: {total} сессий в context.db")
 
 
 if __name__ == "__main__":

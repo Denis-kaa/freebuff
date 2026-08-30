@@ -16,7 +16,7 @@ SDK Bridge: freebuff.core ↔ termux-ai-agent
 from __future__ import annotations
 
 import sys
-***REMOVED***
+}
 from typing import Any, Dict, Optional
 
 # Добавляем freebuff в путь (если не установлен как пакет)
@@ -37,7 +37,7 @@ class SmartRouterAdapter:
     Может быть передан в run(router=adapter).
     """
 
-    def __init__(self, catalog: Optional[ModelCatalog***REMOVED*** = None):
+    def __init__(self, catalog: Optional[ModelCatalog] = None):
         self._catalog = catalog or ModelCatalog.default()
         self._router = SmartRouter(self._catalog)
 
@@ -57,17 +57,17 @@ class SmartRouterAdapter:
         words = len(text.split())
         context_size = len(text)
 
-        caps = [***REMOVED***
+        caps = []
         if words < 10:
-            caps = ["fast", "classify"***REMOVED***  # короткий запрос → быстрая классификация
-        elif any(kw in text.lower() for kw in ["изображен", "картинк", "фото", "image", "picture"***REMOVED***):
-            caps = ["vision", "multimodal", "reasoning"***REMOVED***
-        elif any(kw in text.lower() for kw in ["архитектур", "спроектиру", "design", "architecture"***REMOVED***):
-            caps = ["architecture", "reasoning", "plan"***REMOVED***
+            caps = ["fast", "classify"]  # короткий запрос → быстрая классификация
+        elif any(kw in text.lower() for kw in ["изображен", "картинк", "фото", "image", "picture"]):
+            caps = ["vision", "multimodal", "reasoning"]
+        elif any(kw in text.lower() for kw in ["архитектур", "спроектиру", "design", "architecture"]):
+            caps = ["architecture", "reasoning", "plan"]
         elif words > 200:
-            caps = ["code", "reasoning", "plan"***REMOVED***
+            caps = ["code", "reasoning", "plan"]
         else:
-            caps = ["code", "reasoning"***REMOVED***
+            caps = ["code", "reasoning"]
 
         # Предпочтение: если текст маленький → local
         pref = Preference.LOCAL if words < 50 else Preference.BALANCED
@@ -91,7 +91,7 @@ class SmartRouterAdapter:
 
 
 def result_to_agent_result(
-    tool_result: Dict[str, Any***REMOVED***,
+    tool_result: Dict[str, Any],
     agent_name: str = "termux-ai-agent",
 ) -> AgentResult:
     """Конвертировать ToolResult (dict) → AgentResult."""
@@ -99,7 +99,7 @@ def result_to_agent_result(
         "ok": TaskStatus.OK,
         "partial": TaskStatus.WARN,
         "error": TaskStatus.ERROR,
-    ***REMOVED***
+    }
     raw_status = tool_result.get("status", "ok")
     status = status_map.get(raw_status, TaskStatus.ERROR)
 
@@ -108,26 +108,26 @@ def result_to_agent_result(
         agent=agent_name,
         task=tool_result.get("tool", "unknown"),
         data=tool_result.get("data"),
-        warnings=tool_result.get("warnings", [***REMOVED***),
-        errors=[tool_result["error"***REMOVED******REMOVED*** if tool_result.get("error") else [***REMOVED***,
+        warnings=tool_result.get("warnings", []),
+        errors=[tool_result["error"]] if tool_result.get("error") else [],
         meta={
             "duration_ms": tool_result.get("duration_ms"),
             "llm_calls": tool_result.get("llm_calls"),
-        ***REMOVED***,
+        },
     )
 
 
-def agent_result_to_dict(result: AgentResult) -> Dict[str, Any***REMOVED***:
+def agent_result_to_dict(result: AgentResult) -> Dict[str, Any]:
     """Конвертировать AgentResult → dict для termux-ai-agent."""
     return {
         "status": result.status.value,
         "tool": result.task,
         "data": result.data,
         "warnings": result.warnings,
-        "error": result.errors[0***REMOVED*** if result.errors else None,
+        "error": result.errors[0] if result.errors else None,
         "duration_ms": result.meta.get("duration_ms"),
         "llm_calls": result.meta.get("llm_calls"),
-    ***REMOVED***
+    }
 
 
 # ── Пример использования ────────────────────────────────────
@@ -144,10 +144,10 @@ if __name__ == "__main__":
         ("привет", "простой"),
         ("напиши функцию для парсинга JSON с обработкой ошибок", "средний"),
         ("разработай архитектуру микросервиса с event sourcing и CQRS", "сложный"),
-    ***REMOVED***
+    ]
 
     for query, label in tests:
         req = FakeRequest()
         req.normalized_text = query
         result = adapter.route(req)
-        print(f"[{label***REMOVED******REMOVED*** {query[:50***REMOVED******REMOVED***... → {result['tool_name'***REMOVED******REMOVED*** (conf={result['confidence'***REMOVED***:.2f***REMOVED***)")
+        print(f"[{label}] {query[:50]}... → {result['tool_name']} (conf={result['confidence']:.2f})")

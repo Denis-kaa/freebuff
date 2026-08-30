@@ -15,19 +15,19 @@ import argparse
 import os
 import subprocess
 from dataclasses import dataclass, field
-***REMOVED***
+}
 from typing import Iterable, List, Sequence, Tuple
 
-REPO_ROOT = Path(__file__).resolve().parents[1***REMOVED***
+REPO_ROOT = Path(__file__).resolve().parents[1]
 DOCS_DIR = REPO_ROOT / "docs_10"
 
 
 @dataclass
 class Trigger:
     name: str
-    doc_files: Sequence[str***REMOVED***
-    file_patterns: Sequence[str***REMOVED*** = field(default_factory=tuple)
-    file_suffixes: Sequence[str***REMOVED*** = field(default_factory=tuple)
+    doc_files: Sequence[str]
+    file_patterns: Sequence[str] = field(default_factory=tuple)
+    file_suffixes: Sequence[str] = field(default_factory=tuple)
     always: bool = False
     severity: str = "warn"  # "warn" or "block" (strict mode only fails on "block")
 
@@ -44,22 +44,22 @@ class Trigger:
         return False
 
 
-TRIGGERS: Tuple[Trigger, ...***REMOVED*** = (
-    Trigger("New task", ["TASK.md"***REMOVED***, always=True, severity="warn"),
-    Trigger("Code change", ["CHANGELOG.md", "TASK.md"***REMOVED***, file_suffixes=(".py", ".sh", ".js", ".ts", ".html", ".css"), severity="block"),
-    Trigger("Architecture change", ["docs_10/core/ARCHITECTURE_3.0.md"***REMOVED***, file_patterns=["src_06/", "scripts_01/", "freebuff_cli.py"***REMOVED***),
-    Trigger("README feature", ["README.md"***REMOVED***, file_patterns=["freebuff_cli.py", "scripts_01/", "src_06/"***REMOVED***),
-    Trigger("Architectural decision", ["docs_10/decisions/DECISIONS.md", "docs_10/engineering-memory/decisions/"***REMOVED***, file_patterns=["decision", "adr", "architecture"***REMOVED***),
-    Trigger("Research / spike", ["docs_10/decisions/IDEAS.md"***REMOVED***, file_patterns=["research", "spike", "experiment"***REMOVED***),
-    Trigger("Bug fix", ["docs_10/ops/TROUBLESHOOTING.md"***REMOVED***, file_patterns=["bug", "fix", "error"***REMOVED***),
-    Trigger("API change", ["docs_10/ops/API.md"***REMOVED***, file_patterns=["api", "mcp_server", "endpoint"***REMOVED***),
-    Trigger("Worker / tool", ["docs_10/projects_meta/WORKERS.md"***REMOVED***, file_patterns=["workers", "tool_runtime"***REMOVED***),
-    Trigger("Documentation change", ["docs_10/core/RULES.md"***REMOVED***, file_suffixes=(".md",)),
+TRIGGERS: Tuple[Trigger, ...] = (
+    Trigger("New task", ["TASK.md"], always=True, severity="warn"),
+    Trigger("Code change", ["CHANGELOG.md", "TASK.md"], file_suffixes=(".py", ".sh", ".js", ".ts", ".html", ".css"), severity="block"),
+    Trigger("Architecture change", ["docs_10/core/ARCHITECTURE_3.0.md"], file_patterns=["src_06/", "scripts_01/", "freebuff_cli.py"]),
+    Trigger("README feature", ["README.md"], file_patterns=["freebuff_cli.py", "scripts_01/", "src_06/"]),
+    Trigger("Architectural decision", ["docs_10/decisions/DECISIONS.md", "docs_10/engineering-memory/decisions/"], file_patterns=["decision", "adr", "architecture"]),
+    Trigger("Research / spike", ["docs_10/decisions/IDEAS.md"], file_patterns=["research", "spike", "experiment"]),
+    Trigger("Bug fix", ["docs_10/ops/TROUBLESHOOTING.md"], file_patterns=["bug", "fix", "error"]),
+    Trigger("API change", ["docs_10/ops/API.md"], file_patterns=["api", "mcp_server", "endpoint"]),
+    Trigger("Worker / tool", ["docs_10/projects_meta/WORKERS.md"], file_patterns=["workers", "tool_runtime"]),
+    Trigger("Documentation change", ["docs_10/core/RULES.md"], file_suffixes=(".md",)),
 )
 
 
 def run_git_diff(*, cached: bool = False, base: str = "HEAD") -> str:
-    cmd = ["git", "diff", "--name-status"***REMOVED***
+    cmd = ["git", "diff", "--name-status"]
     if cached:
         cmd.append("--cached")
     if base:
@@ -70,60 +70,60 @@ def run_git_diff(*, cached: bool = False, base: str = "HEAD") -> str:
         return ""
 
 
-def parse_changed_files(diff_text: str) -> List[str***REMOVED***:
-    files: List[str***REMOVED*** = [***REMOVED***
+def parse_changed_files(diff_text: str) -> List[str]:
+    files: List[str] = []
     for line in diff_text.splitlines():
         if not line.strip() or line.startswith("#"):
             continue
         parts = line.split(maxsplit=1)
         if len(parts) == 2:
-            files.append(parts[1***REMOVED***.strip())
+            files.append(parts[1].strip())
         elif len(parts) == 1:
-            files.append(parts[0***REMOVED***.strip())
+            files.append(parts[0].strip())
     return files
 
 
-def determine_triggers(changed_files: Sequence[str***REMOVED***) -> List[Tuple[Trigger, List[str***REMOVED******REMOVED******REMOVED***:
-    results: List[Tuple[Trigger, List[str***REMOVED******REMOVED******REMOVED*** = [***REMOVED***
+def determine_triggers(changed_files: Sequence[str]) -> List[Tuple[Trigger, List[str]]]:
+    results: List[Tuple[Trigger, List[str]]] = []
     for trigger in TRIGGERS:
-        matched = [f for f in changed_files if trigger.matches(f)***REMOVED***
+        matched = [f for f in changed_files if trigger.matches(f)]
         if matched or trigger.always:
             results.append((trigger, matched))
     return results
 
 
-def build_checklist(results: Sequence[Tuple[Trigger, List[str***REMOVED******REMOVED******REMOVED***) -> str:
-    lines = ["# Auto-Doc Checklist\n", f"Project root: {REPO_ROOT***REMOVED***\n"***REMOVED***
+def build_checklist(results: Sequence[Tuple[Trigger, List[str]]]) -> str:
+    lines = ["# Auto-Doc Checklist\n", f"Project root: {REPO_ROOT}\n"]
     for trigger, matched in results:
-        lines.append(f"\n## {trigger.name***REMOVED***\n")
-        lines.append(f"  Required docs: {', '.join(trigger.doc_files)***REMOVED***\n")
+        lines.append(f"\n## {trigger.name}\n")
+        lines.append(f"  Required docs: {', '.join(trigger.doc_files)}\n")
         if matched:
             lines.append("  Matched files:\n")
-            for f in matched[:10***REMOVED***:
-                lines.append(f"    - {f***REMOVED***\n")
+            for f in matched[:10]:
+                lines.append(f"    - {f}\n")
             if len(matched) > 10:
-                lines.append(f"    ... and {len(matched) - 10***REMOVED*** more\n")
+                lines.append(f"    ... and {len(matched) - 10} more\n")
     return "".join(lines)
 
 
-def touch_missing_docs(results: Sequence[Tuple[Trigger, List[str***REMOVED******REMOVED******REMOVED***) -> List[str***REMOVED***:
-    created: List[str***REMOVED*** = [***REMOVED***
+def touch_missing_docs(results: Sequence[Tuple[Trigger, List[str]]]) -> List[str]:
+    created: List[str] = []
     for trigger, _ in results:
         for doc in trigger.doc_files:
             path = REPO_ROOT / doc
             if not path.exists():
                 path.parent.mkdir(parents=True, exist_ok=True)
-                path.write_text(f"# {path.stem***REMOVED***\n\nAuto-created by buffy_autodoc.py\n")
+                path.write_text(f"# {path.stem}\n\nAuto-created by buffy_autodoc.py\n")
                 created.append(str(path))
     return created
 
 
-def _docs_only_commit(changed: Sequence[str***REMOVED***) -> bool:
+def _docs_only_commit(changed: Sequence[str]) -> bool:
     """Return True if every changed file is a Markdown document."""
     return all(Path(f).suffix.lower() == ".md" for f in changed)
 
 
-def main(argv: Sequence[str***REMOVED*** | None = None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Buffy Auto-Doc trigger helper")
     parser.add_argument("--cached", action="store_true", help="use staged diff")
     parser.add_argument("--apply", action="store_true", help="create missing doc stubs")
@@ -150,8 +150,8 @@ def main(argv: Sequence[str***REMOVED*** | None = None) -> int:
             print("\nDocs-only commit detected. Passing strict checks.")
             return 0
 
-        blockers: List[Tuple[str, Sequence[str***REMOVED******REMOVED******REMOVED*** = [***REMOVED***
-        warnings: List[Tuple[str, Sequence[str***REMOVED******REMOVED******REMOVED*** = [***REMOVED***
+        blockers: List[Tuple[str, Sequence[str]]] = []
+        warnings: List[Tuple[str, Sequence[str]]] = []
         for trigger, matched in results:
             if not matched and not trigger.always:
                 continue
@@ -168,12 +168,12 @@ def main(argv: Sequence[str***REMOVED*** | None = None) -> int:
         if warnings:
             print("\n⚠️  Consider updating the following docs:")
             for trigger_name, doc_files in warnings:
-                print(f"   [{trigger_name***REMOVED******REMOVED*** -> {', '.join(doc_files)***REMOVED***")
+                print(f"   [{trigger_name}] -> {', '.join(doc_files)}")
 
         if blockers:
             print("\n❌ Strict mode: the following required docs are missing:")
             for trigger_name, doc_files in blockers:
-                print(f"   [{trigger_name***REMOVED******REMOVED*** -> {', '.join(doc_files)***REMOVED***")
+                print(f"   [{trigger_name}] -> {', '.join(doc_files)}")
             print("\n🛑 Commit blocked! Update the required docs or bypass with:")
             print("     git commit --no-verify")
             print("   or SKIP_AUTODOC=1 git commit ...")
@@ -184,7 +184,7 @@ def main(argv: Sequence[str***REMOVED*** | None = None) -> int:
         if created:
             print("\nCreated missing doc stubs:")
             for c in created:
-                print(f"  - {c***REMOVED***")
+                print(f"  - {c}")
         else:
             print("\nNo missing doc stubs.")
     return 0

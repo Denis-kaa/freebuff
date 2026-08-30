@@ -35,10 +35,10 @@ from __future__ import annotations
 
 import fnmatch
 import ipaddress
-***REMOVED***
+}
 import shlex
 from dataclasses import dataclass, field
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
 __all__ = [
@@ -46,7 +46,7 @@ __all__ = [
     "AclRule",
     "ToolACL",
     "default_policy",
-***REMOVED***
+]
 
 # Эффекты
 ALLOW = "allow"
@@ -70,7 +70,7 @@ _ACTION_PARAM = {
     "git": "command",
     "http": "method",
     "sqlite": "query",
-***REMOVED***
+}
 
 # Путевые параметры всех инструментов
 _PATH_PARAMS = ("path", "cwd", "db_path", "destination")
@@ -83,7 +83,7 @@ class AccessDecision:
     allowed: bool
     reason: str
     principal: str = "default"
-    matched_rules: Tuple[str, ...***REMOVED*** = ()
+    matched_rules: Tuple[str, ...] = ()
     tool: str = ""
 
 
@@ -99,10 +99,10 @@ class AclRule:
     role: str
     tool: str
     effect: str  # ALLOW | DENY
-    op: Optional[str***REMOVED*** = None
+    op: Optional[str] = None
     note: str = ""
 
-    def matches(self, role: str, tool: str, operation: Optional[str***REMOVED***) -> bool:
+    def matches(self, role: str, tool: str, operation: Optional[str]) -> bool:
         if role != self.role and self.role != "*":
             return False
         if not fnmatch.fnmatch(tool, self.tool_glob):
@@ -133,35 +133,35 @@ class ToolACL:
       5. иначе → default-эффект роли (по умолчанию DENY).
     """
 
-    def __init__(self, root: Optional[Path | str***REMOVED*** = None) -> None:
+    def __init__(self, root: Optional[Path | str] = None) -> None:
         self._root = (Path(root) if root else Path.cwd()).resolve()
-        self._default_effects: Dict[str, str***REMOVED*** = {***REMOVED***
-        self._allow_tools: Dict[str, Set[str***REMOVED******REMOVED*** = {***REMOVED***
-        self._deny_tools: Dict[str, Set[str***REMOVED******REMOVED*** = {***REMOVED***
-        self._rules: List[AclRule***REMOVED*** = [***REMOVED***
+        self._default_effects: Dict[str, str] = {}
+        self._allow_tools: Dict[str, Set[str]] = {}
+        self._deny_tools: Dict[str, Set[str]] = {}
+        self._rules: List[AclRule] = []
         # роль × инструмент → разрешённые операции (опциональные restrict-списки)
-        self._op_restrict: Dict[Tuple[str, str***REMOVED***, Set[str***REMOVED******REMOVED*** = {***REMOVED***
+        self._op_restrict: Dict[Tuple[str, str], Set[str]] = {}
         # deny-списки shell-паттернов (B2) — расширяемые
-        self._shell_patterns: List[re.Pattern[str***REMOVED******REMOVED*** = [
-            re.compile(r"\brm\s+(-[a-z***REMOVED****[rf***REMOVED***)+\s+(/|~|/[\w.-***REMOVED***+|\.\s*/\s*)$|rm\s+-rf\s*/$", re.IGNORECASE),
+        self._shell_patterns: List[re.Pattern[str]] = [
+            re.compile(r"\brm\s+(-[a-z)*[rf])+\s+(/|~|/[\w.-]+|\.\s*/\s*)$|rm\s+-rf\s*/$", re.IGNORECASE),
             re.compile(r"\bmkfs\b"), re.compile(r"\bdd\s+if=", re.IGNORECASE),
-            re.compile(r"\b:\(\)\s*\{\s*:\|:&\s*\***REMOVED***;:"),
+            re.compile(r"\b:\(\)\s*\{\s*:\|:&\s*\*);:"),
             re.compile(r"\bsudo\b", re.IGNORECASE),
             re.compile(r">\s*/dev/(sd|hd|xvd)", re.IGNORECASE),
-            re.compile(r"\b(chmod|chown)\b.*(-R\s*)?\s*7[0-7***REMOVED***{2***REMOVED***\s+/", re.IGNORECASE),
+            re.compile(r"\b(chmod|chown)\b.*(-R\s*)?\s*7[0-7){2]\s+/", re.IGNORECASE),
             re.compile(r"\b(wget|curl)\b.*\|\s*(ba)?sh\b", re.IGNORECASE),
-            re.compile(r"\bbash\s+-c\s+['\"***REMOVED***.*curl", re.IGNORECASE),
+            re.compile(r"\bbash\s+-c\s+['\").*curl", re.IGNORECASE),
             re.compile(r"\bpoweroff\b|\breboot\b|\bshutdown\b", re.IGNORECASE),
             re.compile(r"\b>+\s*/dev/\w+\s*(;|&&|\||$)"),
-        ***REMOVED***
+        ]
 
     # ── конфигурация ─────────────────────────────────────────────────
 
     def define_role(self, role: str, default_effect: str = DENY) -> "ToolACL":
         """Создать роль с fallback-эффектом (по умолчанию DENY = fail-closed)."""
         if default_effect not in (ALLOW, DENY):
-            raise ValueError(f"Невалидный default_effect: {default_effect!r***REMOVED***")
-        self._default_effects[role***REMOVED*** = default_effect
+            raise ValueError(f"Невалидный default_effect: {default_effect!r}")
+        self._default_effects[role] = default_effect
         self._allow_tools.setdefault(role, set())
         self._deny_tools.setdefault(role, set())
         return self
@@ -169,13 +169,13 @@ class ToolACL:
     def allow_tool(self, role: str, tool_glob: str) -> "ToolACL":
         """Разрешить role вызывать инструменты, попадающие под glob."""
         self.define_role(role)
-        self._allow_tools[role***REMOVED***.add(tool_glob)
+        self._allow_tools[role].add(tool_glob)
         return self
 
     def deny_tool(self, role: str, tool_glob: str) -> "ToolACL":
         """Запретить role инструменты, попадающие под glob (deny-wins)."""
         self.define_role(role)
-        self._deny_tools[role***REMOVED***.add(tool_glob)
+        self._deny_tools[role].add(tool_glob)
         return self
 
     def add_rule(self, rule: AclRule) -> "ToolACL":
@@ -183,7 +183,7 @@ class ToolACL:
         self._rules.append(rule)
         return self
 
-    def restrict_ops(self, role: str, tool: str, ops: Sequence[str***REMOVED***) -> "ToolACL":
+    def restrict_ops(self, role: str, tool: str, ops: Sequence[str]) -> "ToolACL":
         """Разрешить role у инструмента только перечисленные операции (glob).
 
         Если restrict-список задан — любая операция вне списка → DENY:
@@ -195,7 +195,7 @@ class ToolACL:
         # "*" в списке означает «без ограничений» — сбрасываем restrict
         if "*" in patterns:
             patterns.clear()
-        self._op_restrict[(role, tool)***REMOVED*** = patterns
+        self._op_restrict[(role, tool)] = patterns
         return self
 
     def add_shell_pattern(self, pattern: str) -> "ToolACL":
@@ -209,13 +209,13 @@ class ToolACL:
         self,
         principal: str,
         tool: str,
-        params: Optional[Dict[str, Any***REMOVED******REMOVED*** = None,
+        params: Optional[Dict[str, Any]] = None,
     ) -> AccessDecision:
-        params = params or {***REMOVED***
+        params = params or {}
         if principal not in self._default_effects:
             return AccessDecision(
                 allowed=False,
-                reason=f"ACL: неизвестный principal {principal!r***REMOVED*** (fail-closed)",
+                reason=f"ACL: неизвестный principal {principal!r} (fail-closed)",
                 principal=principal,
                 tool=tool,
             )
@@ -232,7 +232,7 @@ class ToolACL:
             if rule.effect == DENY and rule.matches(principal, tool, operation):
                 return AccessDecision(
                     allowed=False,
-                    reason=f"ACL deny-rule: {rule.note or rule!r***REMOVED***",
+                    reason=f"ACL deny-rule: {rule.note or rule!r}",
                     principal=principal,
                     matched_rules=(str(rule),),
                     tool=tool,
@@ -242,14 +242,14 @@ class ToolACL:
         if any(fnmatch.fnmatch(tool, g) for g in self._deny_tools.get(principal, ())):
             return AccessDecision(
                 allowed=False,
-                reason=f"ACL deny_tool({principal***REMOVED***, {tool***REMOVED***)",
+                reason=f"ACL deny_tool({principal}, {tool})",
                 principal=principal,
-                matched_rules=tuple(sorted(self._deny_tools[principal***REMOVED***)),
+                matched_rules=tuple(sorted(self._deny_tools[principal])),
                 tool=tool,
             )
 
         # 3) точечные allow-правила (только для отчёта —— грант решает tool-glob)
-        allow_matched: List[str***REMOVED*** = [***REMOVED***
+        allow_matched: List[str] = []
         for rule in self._rules:
             if rule.effect == ALLOW and rule.matches(principal, tool, operation):
                 allow_matched.append(str(rule))
@@ -263,8 +263,8 @@ class ToolACL:
                 return AccessDecision(
                     allowed=False,
                     reason=(
-                        f"ACL restrict_ops({principal***REMOVED***, {tool***REMOVED***): операция "
-                        f"{operation!r***REMOVED*** не входит в {sorted(restrict)***REMOVED***"
+                        f"ACL restrict_ops({principal}, {tool}): операция "
+                        f"{operation!r} не входит в {sorted(restrict)}"
                     ),
                     principal=principal,
                     matched_rules=tuple(allow_matched),
@@ -279,8 +279,8 @@ class ToolACL:
                 return AccessDecision(
                     allowed=False,
                     reason=(
-                        f"ACL: инструмент {tool!r***REMOVED*** не разрешён для роли "
-                        f"{principal!r***REMOVED*** (fallback {effect***REMOVED***)"
+                        f"ACL: инструмент {tool!r} не разрешён для роли "
+                        f"{principal!r} (fallback {effect})"
                     ),
                     principal=principal,
                     matched_rules=tuple(allow_matched),
@@ -297,7 +297,7 @@ class ToolACL:
 
         return AccessDecision(
             allowed=True,
-            reason=f"ACL: инструмент {tool!r***REMOVED*** разрешён для роли {principal!r***REMOVED***",
+            reason=f"ACL: инструмент {tool!r} разрешён для роли {principal!r}",
             principal=principal,
             matched_rules=tuple(allow_matched),
             tool=tool,
@@ -305,9 +305,9 @@ class ToolACL:
 
     # ── внутреннее ───────────────────────────────────────────────────
 
-    def _operation(self, tool: str, params: Dict[str, Any***REMOVED***) -> Optional[str***REMOVED***:
+    def _operation(self, tool: str, params: Dict[str, Any]) -> Optional[str]:
         """Извлечь «операцию» вызова (action/command/method) для сопоставления с правилами."""
-        tool_norm = tool.split(".")[0***REMOVED***
+        tool_norm = tool.split(".")[0]
         key = _ACTION_PARAM.get(tool_norm)
         if key is None:
             return None
@@ -319,15 +319,15 @@ class ToolACL:
             return None
         # sqlite — первый ключевое слово запроса ("SELECT …" → select)
         if tool_norm == "sqlite":
-            m = re.match(r"^[\s(***REMOVED****([a-z***REMOVED***+)", text, re.IGNORECASE)
+            m = re.match(r"^[\s()*([a-z]+)", text, re.IGNORECASE)
             return m.group(1).lower() if m else text.lower()
         # git — первое слово команды ("status --short" → status); http — метод
         if tool_norm in ("git", "http"):
-            return text.split()[0***REMOVED***.lower()
+            return text.split()[0].lower()
         # file — полное значение action
         return text.lower()
 
-    def _check_boundary(self, tool: str, params: Dict[str, Any***REMOVED***) -> Optional[AccessDecision***REMOVED***:
+    def _check_boundary(self, tool: str, params: Dict[str, Any]) -> Optional[AccessDecision]:
         """B1–B3: проверки, которые не обходятся ни одной ролью. None = ок."""
         # B1 — пути внутри root
         for key in _PATH_PARAMS:
@@ -342,7 +342,7 @@ class ToolACL:
             except OSError as exc:
                 return AccessDecision(
                     allowed=False,
-                    reason=f"ACL B1: ошибка резолва пути {val!r***REMOVED***: {exc***REMOVED***",
+                    reason=f"ACL B1: ошибка резолва пути {val!r}: {exc}",
                     principal="*",
                     tool=tool,
                 )
@@ -350,47 +350,47 @@ class ToolACL:
             if resolved != root_resolved and not str(resolved).startswith(str(root_resolved) + "/"):
                 return AccessDecision(
                     allowed=False,
-                    reason=f"ACL B1: путь {val!r***REMOVED*** вне workspace {root_resolved***REMOVED***",
+                    reason=f"ACL B1: путь {val!r} вне workspace {root_resolved}",
                     principal="*",
                     tool=tool,
                 )
 
         # B2 shell-паттерны
-        if tool.split(".")[0***REMOVED*** == _TOOL_SHELL:
+        if tool.split(".")[0] == _TOOL_SHELL:
             command = params.get("command", "")
             if isinstance(command, str):
                 for rx in self._shell_patterns:
                     if rx.search(command):
                         return AccessDecision(
                             allowed=False,
-                            reason=f"ACL B2: shell-паттерн {rx.pattern!r***REMOVED*** запрещён",
+                            reason=f"ACL B2: shell-паттерн {rx.pattern!r} запрещён",
                             principal="*",
                             tool=tool,
                         )
 
         # B3 network/SSRF — только если у роли нет сетевого grant
-        if tool.split(".")[0***REMOVED*** == _TOOL_HTTP:
+        if tool.split(".")[0] == _TOOL_HTTP:
             url = params.get("url", "")
             if isinstance(url, str) and url:
                 decision = self._check_url(url)
                 if not decision.allowed:
                     return decision
-        return None  # type: ignore[return-value***REMOVED***
+        return None  # type: ignore[return-value]
 
-    def _check_url(self, url: str) -> Optional[AccessDecision***REMOVED***:
+    def _check_url(self, url: str) -> Optional[AccessDecision]:
         """B3: запретить loopback/private для HTTP (anti-SSRF)."""
         host = self._extract_host(url)
         if host is None:
             return None
         try:
-            ip = ipaddress.ip_address(host.strip("[***REMOVED***"))
+            ip = ipaddress.ip_address(host.strip("[)"))
         except ValueError:
             # hostname: локальные имена
             low = host.lower()
             if low in ("localhost",) or low.endswith(".local"):
                 return AccessDecision(
                     allowed=False,
-                    reason=f"ACL B3: локальный хост {host!r***REMOVED*** запрещён",
+                    reason=f"ACL B3: локальный хост {host!r} запрещён",
                     principal="*",
                     tool="http",
                 )
@@ -398,20 +398,20 @@ class ToolACL:
         if ip.is_loopback or ip.is_private or ip.is_link_local or ip.is_reserved:
             return AccessDecision(
                 allowed=False,
-                reason=f"ACL B3: непубличный адрес {ip***REMOVED*** запрещён (anti-SSRF)",
+                reason=f"ACL B3: непубличный адрес {ip} запрещён (anti-SSRF)",
                 principal="*",
                 tool="http",
             )
         return None
 
     @staticmethod
-    def _extract_host(url: str) -> Optional[str***REMOVED***:
+    def _extract_host(url: str) -> Optional[str]:
         """Извлечь host из URL (без парсинга полных URI — лёгкий regex)."""
-        m = re.match(r"^(?:https?|ftp)://([^/?#:***REMOVED***+)", url, re.IGNORECASE)
+        m = re.match(r"^(?:https?|ftp)://([^/?#:)+)", url, re.IGNORECASE)
         return m.group(1) if m else None
 
 
-def default_policy(root: Optional[Path | str***REMOVED*** = None) -> ToolACL:
+def default_policy(root: Optional[Path | str] = None) -> ToolACL:
     """Политика по умолчанию (три роли; см. docstring модуля)."""
     acl = ToolACL(root=root)
 

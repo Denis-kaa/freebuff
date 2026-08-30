@@ -13,7 +13,7 @@ event_subscribers.py — Подписчики событий для Buffy EventB
   checkpoint_logger → логирование в файл
 
 Использование:
-    from scripts_01.event_subscribers ***REMOVED***gister_all
+    from scripts_01.event_subscribers ]gister_all
 
     bus = EventBus()
     register_all(bus, workspace_root=".")
@@ -22,23 +22,23 @@ event_subscribers.py — Подписчики событий для Buffy EventB
 
 from __future__ import annotations
 
-***REMOVED***
+}
 from typing import Any, Dict
 
-from scripts_01.notification ***REMOVED***gister_notification_subscribers
+from scripts_01.notification ]gister_notification_subscribers
 
 
 # ═══════════════════════════════════════════════════════════════
 # Cached KnowledgeEngine instances per workspace
 # ═══════════════════════════════════════════════════════════════
 
-_KE_CACHE: Dict[str, Any***REMOVED*** = {***REMOVED***
+_KE_CACHE: Dict[str, Any] = {}
 
 # ═══════════════════════════════════════════════════════════════
 # Cached EMEngine instances per workspace
 # ═══════════════════════════════════════════════════════════════
 
-_EM_ENGINE_CACHE: Dict[str, Any***REMOVED*** = {***REMOVED***
+_EM_ENGINE_CACHE: Dict[str, Any] = {}
 
 
 def _get_em_engine(workspace_root: str) -> "EMEngine":
@@ -47,11 +47,11 @@ def _get_em_engine(workspace_root: str) -> "EMEngine":
 
     key = str(Path(workspace_root).resolve())
     if key not in _EM_ENGINE_CACHE:
-        _EM_ENGINE_CACHE[key***REMOVED*** = EMEngine(workspace_root=key)
-    return _EM_ENGINE_CACHE[key***REMOVED***
+        _EM_ENGINE_CACHE[key] = EMEngine(workspace_root=key)
+    return _EM_ENGINE_CACHE[key]
 
 
-def _should_create_retrospective(data: Dict[str, Any***REMOVED***) -> bool:
+def _should_create_retrospective(data: Dict[str, Any]) -> bool:
     """Определяет, достаточно ли задача значима для автоматического ретроспективы."""
     # Проваленные задачи всегда значимы
     if data.get("status") in ("failed", "error", "Ошибка"):
@@ -79,8 +79,8 @@ def _get_knowledge_engine(workspace_root: str) -> Any:
 
     key = str(Path(workspace_root).resolve())
     if key not in _KE_CACHE:
-        _KE_CACHE[key***REMOVED*** = KnowledgeEngine(workspace_root=key)
-    return _KE_CACHE[key***REMOVED***
+        _KE_CACHE[key] = KnowledgeEngine(workspace_root=key)
+    return _KE_CACHE[key]
 
 
 def auto_index_subscriber(event: Any) -> None:
@@ -107,19 +107,19 @@ def auto_index_subscriber(event: Any) -> None:
         if not content or not workspace_root:
             return
 
-        doc_id = f"mem_{level***REMOVED***_{key***REMOVED***"
+        doc_id = f"mem_{level}_{key}"
         ke = _get_knowledge_engine(workspace_root)
         ke.index_document(
             doc_id=doc_id,
             content=content,
             metadata={
                 "title": key,
-                "source": f"memory/{level***REMOVED***/{key***REMOVED***",
+                "source": f"memory/{level}/{key}",
                 "doc_type": content_type,
-            ***REMOVED***,
+            },
         )
     except Exception as e:
-        print(f"⚠️ Auto-index: {e***REMOVED***")
+        print(f"⚠️ Auto-index: {e}")
 
 
 def checkpoint_logger(event: Any) -> None:
@@ -129,8 +129,8 @@ def checkpoint_logger(event: Any) -> None:
             return
         data = event.data
         cp_type = data.get("checkpoint_type", "unknown")
-        summary = data.get("summary", "")[:100***REMOVED***
-        print(f"📝 Checkpoint [{cp_type***REMOVED******REMOVED***: {summary***REMOVED***...")
+        summary = data.get("summary", "")[:100]
+        print(f"📝 Checkpoint [{cp_type}]: {summary}...")
     except Exception:
         pass
 
@@ -162,7 +162,7 @@ def register_all(event_bus: Any, workspace_root: str | Path | None = None) -> No
             data = event.data
             level = data.get("level", "")
             if level in ("knowledge", "project"):
-                print(f"📚 Memory '{level***REMOVED***' cleared — consider rebuilding knowledge index")
+                print(f"📚 Memory '{level}' cleared — consider rebuilding knowledge index")
         except Exception:
             pass
 
@@ -175,7 +175,7 @@ def register_all(event_bus: Any, workspace_root: str | Path | None = None) -> No
             draft_id = data.get("draft_id", "unknown")
             doc_type = data.get("type", "record")
             title = data.get("title", "")
-            print(f"📝 EM draft created: [{doc_type***REMOVED******REMOVED*** {title***REMOVED*** ({draft_id***REMOVED***)")
+            print(f"📝 EM draft created: [{doc_type}] {title} ({draft_id})")
         except Exception:
             pass
 
@@ -186,7 +186,7 @@ def register_all(event_bus: Any, workspace_root: str | Path | None = None) -> No
             doc_type = data.get("type", "record")
             title = data.get("title", "")
             path = data.get("path", "")
-            print(f"✅ EM document finalized: [{doc_type***REMOVED******REMOVED*** {title***REMOVED*** ({doc_id***REMOVED***) -> {path***REMOVED***")
+            print(f"✅ EM document finalized: [{doc_type}] {title} ({doc_id}) -> {path}")
         except Exception:
             pass
 
@@ -217,24 +217,24 @@ def _register_em_auto_triggers(event_bus: Any, workspace_root: str | Path | None
 
             em = _get_em_engine(root)
             task_id = str(data.get("task_id") or data.get("task_name") or "unknown")
-            ref = f"task_completed_{task_id***REMOVED***"
+            ref = f"task_completed_{task_id}"
             if em.has_auto_trigger(ref):
                 return
 
             draft_id = em.record_task_retrospective(
-                title=f"Ретроспектива: {data.get('task_name', task_id)***REMOVED***",
+                title=f"Ретроспектива: {data.get('task_name', task_id)}",
                 intent=data.get("intent") or data.get("goal") or "(авто-триггер)",
                 reality=data.get("details") or data.get("result") or "(завершено)",
                 friction=data.get("friction", ""),
                 discoveries=data.get("discoveries", ""),
                 follow_ups=data.get("follow_ups", ""),
-                tags=["auto-trigger", "retrospective", "task"***REMOVED***,
-                related_tasks=[task_id***REMOVED***,
+                tags=["auto-trigger", "retrospective", "task"],
+                related_tasks=[task_id],
             )
             em.set_auto_trigger(ref)
-            print(f" Auto EM draft created: task retrospective ({draft_id***REMOVED***)")
+            print(f" Auto EM draft created: task retrospective ({draft_id})")
         except Exception as exc:
-            print(f"⚠️ EM auto-trigger task.completed: {exc***REMOVED***")
+            print(f"⚠️ EM auto-trigger task.completed: {exc}")
 
     def _on_task_failed(event: Any) -> None:
         try:
@@ -243,23 +243,23 @@ def _register_em_auto_triggers(event_bus: Any, workspace_root: str | Path | None
             data = event.data
             em = _get_em_engine(root)
             task_id = str(data.get("task_id") or data.get("task_name") or "unknown")
-            ref = f"task_failed_{task_id***REMOVED***"
+            ref = f"task_failed_{task_id}"
             if em.has_auto_trigger(ref):
                 return
 
             draft_id = em.record_incident(
-                title=f"Инцидент: {data.get('task_name', task_id)***REMOVED***",
-                summary=f"Задача {task_id***REMOVED*** завершилась ошибкой",
+                title=f"Инцидент: {data.get('task_name', task_id)}",
+                summary=f"Задача {task_id} завершилась ошибкой",
                 root_cause=data.get("error") or data.get("root_cause") or "(неизвестно)",
                 resolution=data.get("resolution") or "(требует анализа)",
                 prevention=data.get("prevention", ""),
-                tags=["auto-trigger", "incident", "task"***REMOVED***,
-                related_tasks=[task_id***REMOVED***,
+                tags=["auto-trigger", "incident", "task"],
+                related_tasks=[task_id],
             )
             em.set_auto_trigger(ref)
-            print(f" Auto EM draft created: incident from task failure ({draft_id***REMOVED***)")
+            print(f" Auto EM draft created: incident from task failure ({draft_id})")
         except Exception as exc:
-            print(f"⚠️ EM auto-trigger task.failed: {exc***REMOVED***")
+            print(f"⚠️ EM auto-trigger task.failed: {exc}")
 
     def _on_git_merge(event: Any) -> None:
         try:
@@ -268,24 +268,24 @@ def _register_em_auto_triggers(event_bus: Any, workspace_root: str | Path | None
             data = event.data
             em = _get_em_engine(root)
             branch = str(data.get("branch") or data.get("ref") or "unknown")
-            ref = f"git_merge_{branch***REMOVED***"
+            ref = f"git_merge_{branch}"
             if em.has_auto_trigger(ref):
                 return
 
             draft_id = em.record_task_retrospective(
-                title=f"Merge: {branch***REMOVED***",
-                intent=data.get("intent") or f"Объединить ветку {branch***REMOVED***",
-                reality=data.get("details") or f"Merge завершён: {branch***REMOVED***",
+                title=f"Merge: {branch}",
+                intent=data.get("intent") or f"Объединить ветку {branch}",
+                reality=data.get("details") or f"Merge завершён: {branch}",
                 friction=data.get("friction", ""),
                 discoveries=data.get("discoveries", ""),
                 follow_ups=data.get("follow_ups", ""),
-                tags=["auto-trigger", "git", "merge"***REMOVED***,
-                related_commits=[data.get("commit", "")***REMOVED*** if data.get("commit") else [***REMOVED***,
+                tags=["auto-trigger", "git", "merge"],
+                related_commits=[data.get("commit", "")] if data.get("commit") else [],
             )
             em.set_auto_trigger(ref)
-            print(f"📝 Auto EM draft created: merge retrospective ({draft_id***REMOVED***)")
+            print(f"📝 Auto EM draft created: merge retrospective ({draft_id})")
         except Exception as exc:
-            print(f"⚠️ EM auto-trigger git.merge: {exc***REMOVED***")
+            print(f"⚠️ EM auto-trigger git.merge: {exc}")
 
     def _on_system_error(event: Any) -> None:
         try:
@@ -294,23 +294,23 @@ def _register_em_auto_triggers(event_bus: Any, workspace_root: str | Path | None
             data = event.data
             em = _get_em_engine(root)
             error_id = str(data.get("error_id") or data.get("component") or "system")
-            ref = f"system_error_{error_id***REMOVED***"
+            ref = f"system_error_{error_id}"
             if em.has_auto_trigger(ref):
                 return
 
             draft_id = em.record_incident(
-                title=f"Системная ошибка: {error_id***REMOVED***",
+                title=f"Системная ошибка: {error_id}",
                 summary=data.get("summary") or data.get("message") or "(авто-триггер)",
                 root_cause=data.get("root_cause") or data.get("error") or "(неизвестно)",
                 resolution=data.get("resolution") or "(требует анализа)",
                 impact=data.get("impact", ""),
-                tags=["auto-trigger", "incident", "system"***REMOVED***,
-                related_components=[error_id***REMOVED***,
+                tags=["auto-trigger", "incident", "system"],
+                related_components=[error_id],
             )
             em.set_auto_trigger(ref)
-            print(f"📝 Auto EM draft created: system error incident ({draft_id***REMOVED***)")
+            print(f"📝 Auto EM draft created: system error incident ({draft_id})")
         except Exception as exc:
-            print(f"⚠️ EM auto-trigger system.error: {exc***REMOVED***")
+            print(f"⚠️ EM auto-trigger system.error: {exc}")
 
     event_bus.subscribe("task.completed", _on_task_completed)
     event_bus.subscribe("task.failed", _on_task_failed)

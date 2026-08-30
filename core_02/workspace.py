@@ -23,9 +23,9 @@
 
 from __future__ import annotations
 
-***REMOVED***
+}
 from dataclasses import dataclass, field
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional, Tuple
 
 try:
@@ -37,35 +37,35 @@ except ImportError:  # pragma: no cover
 _STEP_REGEX = re.compile(r"^##? step (\d+):", re.MULTILINE)
 
 # Синонимы strict/required: workspace.yaml пишет 'strict', project.yaml — 'required'.
-_STRICT_ALIASES = frozenset({"required", "strict"***REMOVED***)
+_STRICT_ALIASES = frozenset({"required", "strict"})
 
 
 def _steps_template(project_name: str) -> str:
     """Шаблон STEPS.md для только что созданного проекта."""
     return (
-        f"# STEPS.md — {project_name***REMOVED***\n\n"
-        f"> **Проект:** `{project_name***REMOVED***`\n"
+        f"# STEPS.md — {project_name}\n\n"
+        f"> **Проект:** `{project_name}`\n"
         f"> **Формат:** `step N: <что сделано>; <почему>; <что дальше>`\n\n"
         f"---\n\n"
     )
 
 
-def _validate_steps_format(path: Path) -> Tuple[bool, List[str***REMOVED******REMOVED***:
+def _validate_steps_format(path: Path) -> Tuple[bool, List[str]]:
     """Валидирует формат STEPS.md: '# STEPS.md' первая строка + минимум один `## step N:`."""
-    problems: List[str***REMOVED*** = [***REMOVED***
+    problems: List[str] = []
     try:
         text = path.read_text(encoding="utf-8")
     except Exception as exc:
-        problems.append(f"не удалось прочитать STEPS.md: {exc***REMOVED***")
+        problems.append(f"не удалось прочитать STEPS.md: {exc}")
         return False, problems
-    lines = [l for l in text.splitlines() if l.strip()***REMOVED***
+    lines = [l for l in text.splitlines() if l.strip()]
     if not lines:
         problems.append("STEPS.md пустой.")
         return False, problems
-    head = lines[0***REMOVED***.lstrip("# ").strip().lower()
+    head = lines[0].lstrip("# ").strip().lower()
     if not head.startswith("steps.md"):
         problems.append(
-            f"первая строка должна начинаться с «# STEPS.md» (нашла: {lines[0***REMOVED***[:80***REMOVED***!r***REMOVED***)"
+            f"первая строка должна начинаться с «# STEPS.md» (нашла: {lines[0][:80]!r})"
         )
     if not _STEP_REGEX.search(text):
         problems.append("не найден ни один заголовок вида `## step N:`.")
@@ -80,9 +80,9 @@ class StepsStats:
     """Статистика по STEPS.md (для стадии REPORT и TG-уведомлений)."""
     exists: bool
     count: int
-    last_step_n: Optional[int***REMOVED***
+    last_step_n: Optional[int]
     format_ok: bool
-    format_problems: List[str***REMOVED*** = field(default_factory=list)
+    format_problems: List[str] = field(default_factory=list)
 
     def to_line(self) -> str:
         """Краткая строка для логов и TG: 'count=N last=N format=OK/.../missing'."""
@@ -90,13 +90,13 @@ class StepsStats:
             return "STEPS: missing"
         if not self.format_ok:
             return (
-                f"STEPS: count={self.count***REMOVED***"
-                + (f" last=#{self.last_step_n***REMOVED***" if self.last_step_n is not None else "")
+                f"STEPS: count={self.count}"
+                + (f" last=#{self.last_step_n}" if self.last_step_n is not None else "")
                 + " format=malformed"
             )
         return (
-            f"STEPS: count={self.count***REMOVED***"
-            + (f" last=#{self.last_step_n***REMOVED***" if self.last_step_n is not None else " last=none")
+            f"STEPS: count={self.count}"
+            + (f" last=#{self.last_step_n}" if self.last_step_n is not None else " last=none")
             + " format=OK"
         )
 
@@ -110,16 +110,16 @@ class ProjectRequirements:
     has_web_fallback: bool = False
     runnable_quickstart: str = ""
     steps_format_ok: bool = True
-    steps_format_problems: List[str***REMOVED*** = field(default_factory=list)
-    missing: List[str***REMOVED*** = field(default_factory=list)
+    steps_format_problems: List[str] = field(default_factory=list)
+    missing: List[str] = field(default_factory=list)
 
 
 @dataclass
 class EnvDiagnosis:
     ok: bool
-    blockers: List[str***REMOVED*** = field(default_factory=list)
-    warnings: List[str***REMOVED*** = field(default_factory=list)
-    raw: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    blockers: List[str] = field(default_factory=list)
+    warnings: List[str] = field(default_factory=list)
+    raw: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -128,12 +128,12 @@ class Project:
     name: str
     root: Path
     type: str = "unknown"
-    stack: List[str***REMOVED*** = field(default_factory=list)
-    roles: List[str***REMOVED*** = field(default_factory=list)
-    contracts: List[str***REMOVED*** = field(default_factory=list)
+    stack: List[str] = field(default_factory=list)
+    roles: List[str] = field(default_factory=list)
+    contracts: List[str] = field(default_factory=list)
     # requirements.steps из project.yaml: 'optional'/'required' — per-project override.
-    requirements_steps: Optional[str***REMOVED*** = None
-    config_path: Optional[Path***REMOVED*** = None
+    requirements_steps: Optional[str] = None
+    config_path: Optional[Path] = None
 
     @classmethod
     def load(cls, path: str | Path) -> "Project":
@@ -141,15 +141,15 @@ class Project:
         cfg_path = root / "project.yaml"
         if cfg_path.exists() and yaml is not None:
             try:
-                cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {***REMOVED***
+                cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
             except Exception:
-                cfg = {***REMOVED***
+                cfg = {}
         else:
-            cfg = {***REMOVED***
+            cfg = {}
         name = cfg.get("name") or root.name
         # Strict-mode per-project override: только валидные значения, иначе None.
         # Принимаем strict/required как синонимы (workspace-side и project-side).
-        _rs_raw = (cfg.get("requirements") or {***REMOVED***).get("steps")
+        _rs_raw = (cfg.get("requirements") or {}).get("steps")
         if _rs_raw in ("optional", "required", "strict"):
             # Нормализация: "strict" на стороне project.yaml трактуется как "required"
             # (для единообразия резолюции ниже).
@@ -160,14 +160,14 @@ class Project:
             name=name,
             root=root,
             type=cfg.get("type", "unknown"),
-            stack=[str(s) for s in cfg.get("stack", [***REMOVED***)***REMOVED***,
-            roles=[str(r) for r in cfg.get("roles", [***REMOVED***)***REMOVED***,
-            contracts=[str(c) for c in cfg.get("contracts", [***REMOVED***)***REMOVED***,
+            stack=[str(s) for s in cfg.get("stack", [])],
+            roles=[str(r) for r in cfg.get("roles", [])],
+            contracts=[str(c) for c in cfg.get("contracts", [])],
             requirements_steps=_requirements_steps,
             config_path=cfg_path if cfg_path.exists() else None,
         )
 
-    def get_requirements(self, steps_policy: Optional[str***REMOVED*** = None) -> ProjectRequirements:
+    def get_requirements(self, steps_policy: Optional[str] = None) -> ProjectRequirements:
         req = ProjectRequirements()
         req.has_readme = (self.root / "README.md").exists()
         req.has_runnable = (self.root / "RUNNABLE.md").exists()
@@ -191,7 +191,7 @@ class Project:
             req.steps_format_ok, req.steps_format_problems = _validate_steps_format(
                 self.root / "STEPS.md"
             )
-        missing = [***REMOVED***
+        missing = []
         if not req.has_readme:
             missing.append("README.md")
         if not req.has_runnable:
@@ -218,11 +218,11 @@ class Project:
             steps_path.parent.mkdir(parents=True, exist_ok=True)
             steps_path.write_text(_steps_template(self.name), encoding="utf-8")
         existing = steps_path.read_text(encoding="utf-8")
-        nums = [int(m.group(1)) for m in _STEP_REGEX.finditer(existing)***REMOVED***
+        nums = [int(m.group(1)) for m in _STEP_REGEX.finditer(existing)]
         next_n = (max(nums) + 1) if nums else 1
         block = (
-            f"## step {next_n***REMOVED***: {phase.strip()***REMOVED***\n\n"
-            f"{text.strip()***REMOVED***\n\n"
+            f"## step {next_n}: {phase.strip()}\n\n"
+            f"{text.strip()}\n\n"
             f"---\n\n"
         )
         new_text = existing.rstrip() + "\n\n" + block
@@ -235,9 +235,9 @@ class Project:
         Возвращает StepsStats с полями:
           - exists: bool — файл присутствует?
           - count: int — количество заголовков `## step N:`
-          - last_step_n: Optional[int***REMOVED*** — максимальный N (None, если нет шагов)
+          - last_step_n: Optional[int] — максимальный N (None, если нет шагов)
           - format_ok: bool — формат валиден (если exists; иначе False)
-          - format_problems: List[str***REMOVED*** — найденные проблемы формата
+          - format_problems: List[str] — найденные проблемы формата
 
         Используется в stage_report для post-processing и в TG-уведомлении
         через on_report-hook (см. scripts_01/forge.py: cmd_forge).
@@ -247,17 +247,17 @@ class Project:
         if not steps_path.exists():
             return StepsStats(
                 exists=False, count=0, last_step_n=None,
-                format_ok=False, format_problems=[***REMOVED***,
+                format_ok=False, format_problems=[],
             )
         try:
             text = steps_path.read_text(encoding="utf-8")
         except Exception as exc:
             return StepsStats(
                 exists=True, count=0, last_step_n=None,
-                format_ok=False, format_problems=[f"read error: {exc***REMOVED***"***REMOVED***,
+                format_ok=False, format_problems=[f"read error: {exc}"],
             )
         matches = list(_STEP_REGEX.finditer(text))
-        nums = [int(m.group(1)) for m in matches***REMOVED***
+        nums = [int(m.group(1)) for m in matches]
         format_ok, format_problems = _validate_steps_format(steps_path)
         return StepsStats(
             exists=True,
@@ -272,9 +272,9 @@ class Project:
             from core_02.environment_doctor import diagnose
             raw = diagnose(self.root)
         except Exception as exc:  # pragma: no cover
-            return EnvDiagnosis(ok=False, blockers=[f"Env Doctor недоступен: {exc***REMOVED***"***REMOVED***, raw={***REMOVED***)
-        blockers = [str(b) for b in raw.get("blockers", [***REMOVED***)***REMOVED***
-        warnings = [str(w) for w in raw.get("warnings", [***REMOVED***)***REMOVED***
+            return EnvDiagnosis(ok=False, blockers=[f"Env Doctor недоступен: {exc}"], raw={})
+        blockers = [str(b) for b in raw.get("blockers", [])]
+        warnings = [str(w) for w in raw.get("warnings", [])]
         return EnvDiagnosis(
             ok=bool(raw.get("ok", not blockers)),
             blockers=blockers,
@@ -286,7 +286,7 @@ class Project:
         path = self.root / "AGENTS.md"
         return path.read_text(encoding="utf-8") if path.exists() else ""
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         req = self.get_requirements()
         return {
             "name": self.name,
@@ -303,8 +303,8 @@ class Project:
                 "steps": (self.root / "STEPS.md").exists(),
                 "steps_format_ok": req.steps_format_ok if req.has_steps else None,
                 "missing": req.missing,
-            ***REMOVED***,
-        ***REMOVED***
+            },
+        }
 
 
 # ─── Workspace (L-1) ──────────────────────────────────────────────────────
@@ -313,8 +313,8 @@ class Project:
 @dataclass
 class WorkspaceHealth:
     ok: bool
-    projects: List[Dict[str, Any***REMOVED******REMOVED*** = field(default_factory=list)
-    degraded: List[str***REMOVED*** = field(default_factory=list)
+    projects: List[Dict[str, Any]] = field(default_factory=list)
+    degraded: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -322,21 +322,21 @@ class Workspace:
     """L-1 контейнер верхнего уровня."""
     name: str
     root: Path
-    projects: List[Project***REMOVED*** = field(default_factory=list)
+    projects: List[Project] = field(default_factory=list)
     default_environment: str = "development"
     steps_policy: str = "optional"  # 'optional' (default) | 'strict'
-    config_path: Optional[Path***REMOVED*** = None
+    config_path: Optional[Path] = None
 
     @classmethod
     def load(cls, root: str | Path) -> "Workspace":
         root = Path(root)
         cfg_path = root / "workspace.yaml"
-        cfg: Dict[str, Any***REMOVED*** = {***REMOVED***
+        cfg: Dict[str, Any] = {}
         if cfg_path.exists() and yaml is not None:
             try:
-                cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {***REMOVED***
+                cfg = yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
             except Exception:
-                cfg = {***REMOVED***
+                cfg = {}
         ws_policy = str(cfg.get("steps_policy") or "optional").strip().lower()
         if ws_policy not in ("optional", "strict"):
             ws_policy = "optional"
@@ -347,12 +347,12 @@ class Workspace:
             steps_policy=ws_policy,
             config_path=cfg_path if cfg_path.exists() else None,
         )
-        configured = [str(p) for p in cfg.get("projects", [***REMOVED***)***REMOVED***
+        configured = [str(p) for p in cfg.get("projects", [])]
         scan_targets = configured or [
             d.name for d in root.iterdir()
             if (d.is_dir() and not d.name.startswith(".") and (d / "project.yaml").exists())
             or (d.is_dir() and not d.name.startswith(".") and (d / "README.md").exists())
-        ***REMOVED***
+        ]
         seen: set = set()
         for name in scan_targets:
             p = root / name
@@ -362,10 +362,10 @@ class Workspace:
             ws.projects.append(Project.load(p))
         return ws
 
-    def list_projects(self) -> List[Project***REMOVED***:
+    def list_projects(self) -> List[Project]:
         return self.projects
 
-    def get_project(self, name: str) -> Optional[Project***REMOVED***:
+    def get_project(self, name: str) -> Optional[Project]:
         for p in self.projects:
             if p.name == name or p.root.name == name:
                 return p
@@ -382,7 +382,7 @@ class Workspace:
                 "env_ok": diag.ok,
                 "env_blockers": diag.blockers,
                 "requirements_missing": req.missing,
-            ***REMOVED***
+            }
             health.projects.append(entry)
             if not diag.ok:
                 health.ok = False
@@ -391,14 +391,14 @@ class Workspace:
                 health.degraded.append(p.name)
         return health
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "name": self.name,
             "root": str(self.root),
             "default_environment": self.default_environment,
             "steps_policy": self.steps_policy,
-            "projects": [p.to_dict() for p in self.projects***REMOVED***,
-        ***REMOVED***
+            "projects": [p.to_dict() for p in self.projects],
+        }
 
 
 # === B7 Sub-Project container (Phase 5 Forward-action #1) ===
@@ -418,29 +418,29 @@ class SubProject:
     isolated_forge_scope: bool = True  # default B7 enforcement
 
     def namespace(self) -> str:
-        return f"subproj:{self.workspace_id***REMOVED***:{self.parent_project_id***REMOVED***:{self.sub_project_id***REMOVED***"
+        return f"subproj:{self.workspace_id}:{self.parent_project_id}:{self.sub_project_id}"
 
 
 def load_subprojects(parent_project_id: str) -> list:
     """Load Sub-Projects for a parent Project (yaml-driven)."""
     import os, yaml
     subproj_path = os.path.join(
-        "projects_17", f"{parent_project_id***REMOVED***", "subprojects.yaml"
+        "projects_17", f"{parent_project_id}", "subprojects.yaml"
     )
     if not os.path.exists(subproj_path):
-        return [***REMOVED***
+        return []
     try:
         with open(subproj_path, "r", encoding="utf-8") as f:
-            data = yaml.safe_load(f) or {***REMOVED***
-        subs = data.get("subprojects", [***REMOVED***)
+            data = yaml.safe_load(f) or {}
+        subs = data.get("subprojects", [])
         return [
             SubProject(
-                sub_project_id=s["sub_project_id"***REMOVED***,
+                sub_project_id=s["sub_project_id"],
                 parent_project_id=parent_project_id,
                 workspace_id=s.get("workspace_id", ""),
                 description=s.get("description", ""),
             )
             for s in subs
-        ***REMOVED***
+        ]
     except Exception:
-        return [***REMOVED***
+        return []

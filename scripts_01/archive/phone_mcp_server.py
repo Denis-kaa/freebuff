@@ -38,12 +38,12 @@ TOOLS = [
     types.Tool(
         name="phone_battery",
         description="Уровень заряда батареи и статус",
-        inputSchema={"type": "object", "properties": {***REMOVED******REMOVED***,
+        inputSchema={"type": "object", "properties": {}},
     ),
     types.Tool(
         name="phone_storage",
         description="Занятость хранилища телефона",
-        inputSchema={"type": "object", "properties": {***REMOVED******REMOVED***,
+        inputSchema={"type": "object", "properties": {}},
     ),
     types.Tool(
         name="phone_sms_list",
@@ -51,9 +51,9 @@ TOOLS = [
         inputSchema={
             "type": "object",
             "properties": {
-                "limit": {"type": "integer", "description": "Сколько SMS показать", "default": 10***REMOVED***
-            ***REMOVED***,
-        ***REMOVED***,
+                "limit": {"type": "integer", "description": "Сколько SMS показать", "default": 10}
+            },
+        },
     ),
     types.Tool(
         name="phone_camera_photo",
@@ -61,9 +61,9 @@ TOOLS = [
         inputSchema={
             "type": "object",
             "properties": {
-                "camera_id": {"type": "integer", "description": "0 — задняя, 1 — фронтальная", "default": 0***REMOVED***
-            ***REMOVED***,
-        ***REMOVED***,
+                "camera_id": {"type": "integer", "description": "0 — задняя, 1 — фронтальная", "default": 0}
+            },
+        },
     ),
     types.Tool(
         name="phone_run_command",
@@ -71,10 +71,10 @@ TOOLS = [
         inputSchema={
             "type": "object",
             "properties": {
-                "command": {"type": "string", "description": "Команда для Termux"***REMOVED***
-            ***REMOVED***,
-            "required": ["command"***REMOVED***,
-        ***REMOVED***,
+                "command": {"type": "string", "description": "Команда для Termux"}
+            },
+            "required": ["command"],
+        },
     ),
     types.Tool(
         name="phone_read_file",
@@ -82,10 +82,10 @@ TOOLS = [
         inputSchema={
             "type": "object",
             "properties": {
-                "path": {"type": "string", "description": "Абсолютный путь к файлу"***REMOVED***
-            ***REMOVED***,
-            "required": ["path"***REMOVED***,
-        ***REMOVED***,
+                "path": {"type": "string", "description": "Абсолютный путь к файлу"}
+            },
+            "required": ["path"],
+        },
     ),
     types.Tool(
         name="phone_list_dir",
@@ -93,88 +93,88 @@ TOOLS = [
         inputSchema={
             "type": "object",
             "properties": {
-                "path": {"type": "string", "description": "Путь к директории", "default": "/storage/emulated/0"***REMOVED***
-            ***REMOVED***,
-        ***REMOVED***,
+                "path": {"type": "string", "description": "Путь к директории", "default": "/storage/emulated/0"}
+            },
+        },
     ),
     types.Tool(
         name="phone_gps_location",
         description="Текущие GPS-координаты телефона (через termux-location)",
-        inputSchema={"type": "object", "properties": {***REMOVED******REMOVED***,
+        inputSchema={"type": "object", "properties": {}},
     ),
-***REMOVED***
+]
 
 
 def run_termux(cmd: str, timeout: int = 15) -> str:
     """Выполнить команду в Termux и вернуть stdout."""
     result = subprocess.run(
-        ["sh", "-c", cmd***REMOVED***,
+        ["sh", "-c", cmd],
         capture_output=True, text=True, timeout=timeout,
-        env={**os.environ, "PATH": "/data/data/com.termux/files/usr/bin:" + os.environ.get("PATH", "")***REMOVED***,
+        env={**os.environ, "PATH": "/data/data/com.termux/files/usr/bin:" + os.environ.get("PATH", "")},
     )
     if result.returncode != 0:
-        raise RuntimeError(f"Ошибка ({result.returncode***REMOVED***): {result.stderr.strip()***REMOVED***")
+        raise RuntimeError(f"Ошибка ({result.returncode}): {result.stderr.strip()}")
     return result.stdout
 
 
-async def handle_tool_call(name: str, arguments: dict) -> list[types.TextContent***REMOVED***:
+async def handle_tool_call(name: str, arguments: dict) -> list[types.TextContent]:
     """Обработчик вызова инструмента."""
     try:
         if name == "phone_battery":
             out = run_termux("termux-battery-status")
             data = json.loads(out)
-            return [types.TextContent(type="text", text=json.dumps(data, indent=2, ensure_ascii=False))***REMOVED***
+            return [types.TextContent(type="text", text=json.dumps(data, indent=2, ensure_ascii=False))]
 
         elif name == "phone_storage":
-            out = run_termux(f"df -h {shlex.quote(PHONE_STORAGE_ROOT)***REMOVED*** \"$HOME\"")
-            return [types.TextContent(type="text", text=out)***REMOVED***
+            out = run_termux(f"df -h {shlex.quote(PHONE_STORAGE_ROOT)} \"$HOME\"")
+            return [types.TextContent(type="text", text=out)]
 
         elif name == "phone_sms_list":
             limit = arguments.get("limit", 10)
-            out = run_termux(f"termux-sms-list -l {limit***REMOVED***")
-            return [types.TextContent(type="text", text=out)***REMOVED***
+            out = run_termux(f"termux-sms-list -l {limit}")
+            return [types.TextContent(type="text", text=out)]
 
         elif name == "phone_camera_photo":
             cam = arguments.get("camera_id", 0)
-            path = f"/storage/emulated/0/DCIM/mcp_photo_{asyncio.get_event_loop().time():.0f***REMOVED***.jpg"
-            run_termux(f"termux-camera-photo -c {cam***REMOVED*** {path***REMOVED***")
-            return [types.TextContent(type="text", text=f"Фото сохранено: {path***REMOVED***")***REMOVED***
+            path = f"/storage/emulated/0/DCIM/mcp_photo_{asyncio.get_event_loop().time():.0f}.jpg"
+            run_termux(f"termux-camera-photo -c {cam} {path}")
+            return [types.TextContent(type="text", text=f"Фото сохранено: {path}")]
 
         elif name == "phone_run_command":
-            cmd = arguments["command"***REMOVED***
+            cmd = arguments["command"]
             out = run_termux(cmd, timeout=30)
-            return [types.TextContent(type="text", text=out[:5000***REMOVED***)***REMOVED***  # обрезаем вывод
+            return [types.TextContent(type="text", text=out[:5000])]  # обрезаем вывод
 
         elif name == "phone_read_file":
-            path = arguments["path"***REMOVED***
-            out = run_termux(f"cat '{path***REMOVED***'")
-            return [types.TextContent(type="text", text=out[:10000***REMOVED***)***REMOVED***
+            path = arguments["path"]
+            out = run_termux(f"cat '{path}'")
+            return [types.TextContent(type="text", text=out[:10000])]
 
         elif name == "phone_list_dir":
             path = arguments.get("path", "/storage/emulated/0")
-            out = run_termux(f"ls -la '{path***REMOVED***'")
-            return [types.TextContent(type="text", text=out[:5000***REMOVED***)***REMOVED***
+            out = run_termux(f"ls -la '{path}'")
+            return [types.TextContent(type="text", text=out[:5000])]
 
         elif name == "phone_gps_location":
             out = run_termux("termux-location")
-            return [types.TextContent(type="text", text=out[:2000***REMOVED***)***REMOVED***
+            return [types.TextContent(type="text", text=out[:2000])]
 
         else:
-            raise ValueError(f"Неизвестный инструмент: {name***REMOVED***")
+            raise ValueError(f"Неизвестный инструмент: {name}")
 
     except Exception as e:
-        return [types.TextContent(type="text", text=f"Ошибка: {str(e)***REMOVED***")***REMOVED***
+        return [types.TextContent(type="text", text=f"Ошибка: {str(e)}")]
 
 
 async def main():
     server = Server("phone-mcp-server")
 
     @server.list_tools()
-    async def list_tools() -> list[types.Tool***REMOVED***:
+    async def list_tools() -> list[types.Tool]:
         return TOOLS
 
     @server.call_tool()
-    async def call_tool(name: str, arguments: dict) -> list[types.TextContent***REMOVED***:
+    async def call_tool(name: str, arguments: dict) -> list[types.TextContent]:
         return await handle_tool_call(name, arguments)
 
     async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
@@ -186,7 +186,7 @@ async def main():
                 server_version="1.0.0",
                 capabilities=server.get_capabilities(
                     notification_options=NotificationOptions(),
-                    experimental_capabilities={***REMOVED***,
+                    experimental_capabilities={},
                 ),
             ),
         )

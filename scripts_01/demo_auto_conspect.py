@@ -27,17 +27,17 @@ def main() -> None:
     if not sessions:
         print("No active sessions. Starting a test session...")
         snap = cm.start_session(project="freebuff", topic="Auto-conspect test")
-        print(f"Created session: {snap.session_id***REMOVED***")
+        print(f"Created session: {snap.session_id}")
         cm.add_message(snap.session_id, "user", "Test message 1", token_count=20)
         cm.add_message(snap.session_id, "assistant", "Test response 1", token_count=50)
         cm.save_checkpoint(snap.session_id, "Test checkpoint", ctype=CheckpointType.AUTO_INTERVAL)
         result = auto_conspect(snap.session_id)
-        print(f"Conspect saved to: {result***REMOVED***")
+        print(f"Conspect saved to: {result}")
     else:
         for s in sessions:
-            print(f"Conspecting session: {s['session_id'***REMOVED***[:8***REMOVED******REMOVED*** ({s['topic'***REMOVED******REMOVED***)")
-            result = auto_conspect(s["session_id"***REMOVED***)
-            print(f"  → {result***REMOVED***")
+            print(f"Conspecting session: {s['session_id'][:8]} ({s['topic']})")
+            result = auto_conspect(s["session_id"])
+            print(f"  → {result}")
 
 
 if __name__ == "__main__":

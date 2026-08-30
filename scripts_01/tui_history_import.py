@@ -14,7 +14,7 @@ context.db не содержит ни одной TUI-сессии.
 - messages: INSERT OR IGNORE невозможен (нет UNIQUE) -> перед вставкой
   проверяется существование session_id в sessions; повторный запуск
   пропускает уже импортированные сессии целиком.
-- events: INSERT OR IGNORE по event_id = sha1(session)[:12***REMOVED***.
+- events: INSERT OR IGNORE по event_id = sha1(session)[:12].
 
 Соответствие CODE_QUALITY_STANDARD: type hints, docstrings, идемпотентность,
 обработка ошибок, без магических чисел (константы вверху).
@@ -25,11 +25,11 @@ import glob
 import hashlib
 import json
 import os
-***REMOVED***
+}
 import sqlite3
 import sys
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any
 
 # ══════════════════════════════════════════════════════════
@@ -65,46 +65,46 @@ def to_platform_ts(raw: str, session_id: str, seq: int) -> str:
     session_id имеет вид 'tui-<device>-YYYY-MM-DDT...', поэтому дата
     извлекается с фиксированного смещения, а не с начала строки.
     """
-    m = re.search(r"(\d{4***REMOVED***-\d{2***REMOVED***-\d{2***REMOVED***)", session_id)
+    m = re.search(r"(\d{4)-\d{2]-\d{2])", session_id)
     date_part = m.group(1) if m else "1970-01-01"
-    ts = f"{date_part***REMOVED***T12:00:00.000000+00:00"
+    ts = f"{date_part}T12:00:00.000000+00:00"
     if raw:
         try:
             dt = datetime.strptime(raw.strip(), "%I:%M %p")
-            ts = f"{date_part***REMOVED***T{dt.strftime('%H:%M')***REMOVED***:00.000000+00:00"
+            ts = f"{date_part}T{dt.strftime('%H:%M')}:00.000000+00:00"
         except ValueError:
             pass
     # seq гарантирует монотонность внутри сессии (секунды-дубликаты разрешены)
-    return ts.replace("00.000000+00:00", f"{min(seq, 59):02d***REMOVED***.000000+00:00")
+    return ts.replace("00.000000+00:00", f"{min(seq, 59):02d}.000000+00:00")
 
 
 def deterministic_session_id(device: str, chat_dir: str) -> str:
     """tui-<device>-<chat-dir>: детерминированный, коллизий нет (проверено)."""
-    return f"{SESSION_PREFIX***REMOVED***-{device***REMOVED***-{chat_dir***REMOVED***"
+    return f"{SESSION_PREFIX}-{device}-{chat_dir}"
 
 
-def ai_text_from_blocks(msg: dict[str, Any***REMOVED***) -> str:
+def ai_text_from_blocks(msg: dict[str, Any]) -> str:
     """Склеивает текстовые блоки ai-сообщения."""
-    parts = [***REMOVED***
-    for b in msg.get("blocks") or [***REMOVED***:
+    parts = []
+    for b in msg.get("blocks") or []:
         if b.get("type") == "text" and isinstance(b.get("content"), str):
-            parts.append(b["content"***REMOVED***)
+            parts.append(b["content"])
     return " ".join(parts)
 
 
-def load_chat_messages(sess_dir: str) -> list[dict[str, Any***REMOVED******REMOVED***:
+def load_chat_messages(sess_dir: str) -> list[dict[str, Any]]:
     """Читает chat-messages.json сессии (малые целиком, большие - USER-реплики)."""
     path = os.path.join(sess_dir, "chat-messages.json")
     if not os.path.exists(path):
-        return [***REMOVED***
+        return []
     size = os.path.getsize(path)
     try:
         with open(path, encoding="utf-8") as f:
             data = json.load(f)
-        return data if isinstance(data, list) else [***REMOVED***
+        return data if isinstance(data, list) else []
     except Exception as exc:
-        print(f"  WARN: {path***REMOVED***: {exc***REMOVED***", file=sys.stderr)
-        return [***REMOVED***
+        print(f"  WARN: {path}: {exc}", file=sys.stderr)
+        return []
 
 
 def first_prompt_from_meta(sess_dir: str) -> str:
@@ -115,12 +115,12 @@ def first_prompt_from_meta(sess_dir: str) -> str:
     try:
         with open(path, encoding="utf-8") as f:
             meta = json.load(f)
-        return str(meta.get("firstPrompt", ""))[:300***REMOVED***
+        return str(meta.get("firstPrompt", ""))[:300]
     except Exception:
         return ""
 
 
-def find_sessions(root: str) -> list[str***REMOVED***:
+def find_sessions(root: str) -> list[str]:
     """Все папки-сессии в projects/*/chats/*/. """
     return sorted(
         os.path.dirname(p)
@@ -128,7 +128,7 @@ def find_sessions(root: str) -> list[str***REMOVED***:
     )
 
 
-def import_context_db(device: str, sessions: list[tuple[str, str***REMOVED******REMOVED***) -> int:
+def import_context_db(device: str, sessions: list[tuple[str, str]]) -> int:
     """Импортирует сессии в context.db. Возвращает число новых сессий."""
     con = sqlite3.connect(CTX_DB, timeout=10.0)
     con.execute("PRAGMA busy_timeout=5000")
@@ -161,9 +161,9 @@ def import_context_db(device: str, sessions: list[tuple[str, str***REMOVED******
                     topic,
                     len(msgs),
                     token_est,
-                    f"imported from manicode TUI ({device***REMOVED***)",
+                    f"imported from manicode TUI ({device})",
                     json.dumps(
-                        {"device": device, "source": "manicode", "import": "tui_history_import"***REMOVED***,
+                        {"device": device, "source": "manicode", "import": "tui_history_import"},
                         ensure_ascii=False,
                     ),
                     now,
@@ -171,15 +171,15 @@ def import_context_db(device: str, sessions: list[tuple[str, str***REMOVED******
                 ),
             )
 
-            rows = [***REMOVED***
+            rows = []
             for seq, m in enumerate(msgs, start=1):
                 variant = m.get("variant")
                 if variant == "user":
                     role = "user"
-                    content = str(m.get("content") or "")[:MAX_USER_CHARS***REMOVED***
+                    content = str(m.get("content") or "")[:MAX_USER_CHARS]
                 elif variant == "ai":
                     role = "assistant"
-                    content = ai_text_from_blocks(m)[:MAX_AI_SNIPPET***REMOVED***
+                    content = ai_text_from_blocks(m)[:MAX_AI_SNIPPET]
                 else:
                     continue  # divider и пр.
                 if not content.strip():
@@ -200,7 +200,7 @@ def import_context_db(device: str, sessions: list[tuple[str, str***REMOVED******
     return imported
 
 
-def import_events(device: str, sessions: list[tuple[str, str***REMOVED******REMOVED***) -> int:
+def import_events(device: str, sessions: list[tuple[str, str]]) -> int:
     """Пакетный импорт событий в event_store через официальный EventStore.store_batch.
 
     Данные берутся из context.db (уже импортированные сессии),
@@ -211,7 +211,7 @@ def import_events(device: str, sessions: list[tuple[str, str***REMOVED******REMO
 
     con = sqlite3.connect(CTX_DB, timeout=10.0)
     con.execute("PRAGMA busy_timeout=5000")
-    events = [***REMOVED***
+    events = []
     for session_id, _sess_dir in sessions:
         row = con.execute(
             """SELECT topic, message_count, token_estimate
@@ -224,8 +224,8 @@ def import_events(device: str, sessions: list[tuple[str, str***REMOVED******REMO
         user_count = con.execute(
             "SELECT COUNT(*) FROM messages WHERE session_id = ? AND role = 'user'",
             (session_id,),
-        ).fetchone()[0***REMOVED***
-        eid = hashlib.sha1(session_id.encode()).hexdigest()[:12***REMOVED***
+        ).fetchone()[0]
+        eid = hashlib.sha1(session_id.encode()).hexdigest()[:12]
         events.append(
             {
                 "event_id": eid,
@@ -240,39 +240,39 @@ def import_events(device: str, sessions: list[tuple[str, str***REMOVED******REMO
                     "message_count": msg_count,
                     "user_count": user_count,
                     "token_estimate": token_est,
-                    "first_prompt": topic[:200***REMOVED***,
-                ***REMOVED***,
-                "metadata": {"import": "tui_history_import", "device": device***REMOVED***,
-            ***REMOVED***
+                    "first_prompt": topic[:200],
+                },
+                "metadata": {"import": "tui_history_import", "device": device},
+            }
         )
     con.close()
     store = EventStore(db_path=Path(EVENTS_DB).resolve())
     total = 0
     for i in range(0, len(events), BATCH_SIZE):
-        total += store.store_batch(events[i : i + BATCH_SIZE***REMOVED***)
+        total += store.store_batch(events[i : i + BATCH_SIZE])
     return total
 
 
 def main() -> None:
-    devices = [("phone", PHONE_ROOT), ("server", SERVER_ROOT)***REMOVED***
+    devices = [("phone", PHONE_ROOT), ("server", SERVER_ROOT)]
     grand_sessions = 0
     grand_events = 0
     for device, root in devices:
         if not os.path.isdir(root):
-            print(f"SKIP {device***REMOVED***: {root***REMOVED*** not found")
+            print(f"SKIP {device}: {root} not found")
             continue
         sess_dirs = find_sessions(root)
         pairs = [
             (deterministic_session_id(device, os.path.basename(d)), d)
             for d in sess_dirs
-        ***REMOVED***
-        print(f"{device***REMOVED***: {len(pairs)***REMOVED*** sessions found")
+        ]
+        print(f"{device}: {len(pairs)} sessions found")
         n_sess = import_context_db(device, pairs)
         n_evt = import_events(device, pairs)
         grand_sessions += n_sess
         grand_events += n_evt
-        print(f"{device***REMOVED***: imported {n_sess***REMOVED*** sessions, {n_evt***REMOVED*** events")
-    print(f"TOTAL: {grand_sessions***REMOVED*** sessions, {grand_events***REMOVED*** events")
+        print(f"{device}: imported {n_sess} sessions, {n_evt} events")
+    print(f"TOTAL: {grand_sessions} sessions, {grand_events} events")
 
 
 if __name__ == "__main__":

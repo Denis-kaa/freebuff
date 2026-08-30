@@ -32,7 +32,7 @@ import json
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any
 
 DEFAULT_OUT = "lisa_report.md"
@@ -55,7 +55,7 @@ AXES = (
     "ai_suitability",
 )
 
-# Ключи JSON-схемы DoD (076_13_lisa_estimator_capability §5.2): description, scores{...***REMOVED***, verdict, calibrated, degraded
+# Ключи JSON-схемы DoD (076_13_lisa_estimator_capability §5.2): description, scores{...}, verdict, calibrated, degraded
 JSON_SCHEMA_KEYS = ("description", "scores", "verdict", "calibrated", "degraded")
 
 
@@ -67,7 +67,7 @@ JSON_SCHEMA_KEYS = ("description", "scores", "verdict", "calibrated", "degraded"
 # описания («in»-матчинг, устойчив к морфологии). Положительные сигналы
 # повышают оценку оси, для ai_suitability есть и отрицательные (понижают).
 
-AXIS_POSITIVE: dict[str, tuple[tuple[str, float***REMOVED***, ...***REMOVED******REMOVED*** = {
+AXIS_POSITIVE: dict[str, tuple[tuple[str, float], ...]] = {
     "engineering_complexity": (
         ("api", 0.7),
         ("интеграц", 0.8),
@@ -193,9 +193,9 @@ AXIS_POSITIVE: dict[str, tuple[tuple[str, float***REMOVED***, ...***REMOVED*****
         ("копия", 0.5),
         ("import", 0.6),
     ),
-***REMOVED***
+}
 
-AXIS_NEGATIVE: dict[str, tuple[tuple[str, float***REMOVED***, ...***REMOVED******REMOVED*** = {
+AXIS_NEGATIVE: dict[str, tuple[tuple[str, float], ...]] = {
     "ai_suitability": (  # понижают пригодность для AI-реализации
         ("hardware", -1.0),
         ("желез", -1.0),
@@ -212,7 +212,7 @@ AXIS_NEGATIVE: dict[str, tuple[tuple[str, float***REMOVED***, ...***REMOVED*****
         ("точность", -0.4),
         ("критичн", -0.5),
     ),
-***REMOVED***
+}
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -231,7 +231,7 @@ class Scores:
     production_risk: float = 0.0
     ai_suitability: float = 0.0
 
-    def to_dict(self) -> dict[str, float***REMOVED***:
+    def to_dict(self) -> dict[str, float]:
         return {
             "engineering_complexity": self.engineering_complexity,
             "ai_native_complexity": self.ai_native_complexity,
@@ -239,7 +239,7 @@ class Scores:
             "operational_risk": self.operational_risk,
             "production_risk": self.production_risk,
             "ai_suitability": self.ai_suitability,
-        ***REMOVED***
+        }
 
 
 @dataclass
@@ -252,13 +252,13 @@ class LisaReport:
     calibrated: bool = False
     degraded: bool = False
     estimated: bool = True
-    rationale: dict[str, list[str***REMOVED******REMOVED*** = field(default_factory=dict)
-    warnings: list[str***REMOVED*** = field(default_factory=list)
+    rationale: dict[str, list[str]] = field(default_factory=dict)
+    warnings: list[str] = field(default_factory=list)
     generated_at: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
 
-    def to_dict(self) -> dict[str, Any***REMOVED***:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "description": self.description,
             "scores": self.scores.to_dict(),
@@ -269,23 +269,23 @@ class LisaReport:
             "rationale": self.rationale,
             "warnings": self.warnings,
             "generated_at": self.generated_at,
-        ***REMOVED***
+        }
 
     def to_markdown(self) -> str:
         """Markdown-отчёт (файл lisa_report.md по умолчанию)."""
         lines = [
             "# LISA Report (LISA-3 AI-Native Complexity Estimator)",
             "",
-            f"**Описание:** {self.description or '(пусто)'***REMOVED***",
-            f"**Сгенерирован:** {self.generated_at***REMOVED***",
-            f"**Оценено:** {'да' if self.estimated else 'нет (degraded)'***REMOVED***",
-            f"**Калибровка:** {'да' if self.calibrated else 'нет (дефолтные веса)'***REMOVED***",
+            f"**Описание:** {self.description or '(пусто)'}",
+            f"**Сгенерирован:** {self.generated_at}",
+            f"**Оценено:** {'да' if self.estimated else 'нет (degraded)'}",
+            f"**Калибровка:** {'да' if self.calibrated else 'нет (дефолтные веса)'}",
             "",
             "## Оценки осей (0–10)",
             "",
             "| Ось | Оценка | Признаки |",
             "|-----|:------:|----------|",
-        ***REMOVED***
+        ]
         axis_labels = {
             "engineering_complexity": "Engineering complexity",
             "ai_native_complexity": "AI-native complexity",
@@ -293,30 +293,30 @@ class LisaReport:
             "operational_risk": "Operational risk",
             "production_risk": "Production risk",
             "ai_suitability": "AI suitability",
-        ***REMOVED***
+        }
         for axis in AXES:
             value = getattr(self.scores, axis)
-            signals = self.rationale.get(axis, [***REMOVED***)
-            hint = ", ".join(signals[:5***REMOVED***) if signals else "_нет явных сигналов_"
-            lines.append(f"| {axis_labels[axis***REMOVED******REMOVED*** | {value:.1f***REMOVED*** | {hint***REMOVED*** |")
+            signals = self.rationale.get(axis, [])
+            hint = ", ".join(signals[:5]) if signals else "_нет явных сигналов_"
+            lines.append(f"| {axis_labels[axis]} | {value:.1f} | {hint} |")
 
         lines += [
             "",
             "## Вердикт",
             "",
-            f"**{self.verdict***REMOVED***** — "
+            f"**{self.verdict}** — "
             + {
                 "GO": "проект пригоден для AI-реализации.",
                 "COND": "условно пригоден: требуется доработка/ручные этапы.",
                 "NO-GO": "не пригоден для AI-реализации на текущем описании.",
-            ***REMOVED***[self.verdict***REMOVED***,
+            ][self.verdict],
             "",
             "## Предупреждения",
             "",
-        ***REMOVED***
+        }
         if self.warnings:
             for w in self.warnings:
-                lines.append(f"- ⚠️ {w***REMOVED***")
+                lines.append(f"- ⚠️ {w}")
         else:
             lines.append("_Нет._")
         lines.append("")
@@ -328,7 +328,7 @@ class LisaReport:
 # ═══════════════════════════════════════════════════════════════════
 
 
-def _score_axis(text: str, axis: str) -> tuple[float, list[str***REMOVED******REMOVED***:
+def _score_axis(text: str, axis: str) -> tuple[float, list[str]]:
     """Оценка одной оси по сигналам описания. Возвращает (score 0–10, matched).
 
     Args:
@@ -339,7 +339,7 @@ def _score_axis(text: str, axis: str) -> tuple[float, list[str***REMOVED******RE
         Кортеж (оценка 0–10 с округлением 0.1, список сработавших сигналов).
     """
     low = text.lower()
-    matched: list[str***REMOVED*** = [***REMOVED***
+    matched: list[str] = []
     total = 0.0
     for term, weight in AXIS_POSITIVE.get(axis, ()):
         if term in low:
@@ -365,7 +365,7 @@ def _verdict(scores: Scores) -> str:
     return "NO-GO"
 
 
-def _load_calibration(path: str) -> dict[str, float***REMOVED***:
+def _load_calibration(path: str) -> dict[str, float]:
     """Загрузить калибровку весов осей из YAML-файла.
 
     Формат::
@@ -382,64 +382,64 @@ def _load_calibration(path: str) -> dict[str, float***REMOVED***:
     raw = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
     if not isinstance(raw, dict):
         raise ValueError("калибровка должна быть YAML mapping")
-    weights_raw = raw.get("weights") or {***REMOVED***
+    weights_raw = raw.get("weights") or {}
     if not isinstance(weights_raw, dict):
         raise ValueError("калибровка: секция 'weights' должна быть mapping")
-    out: dict[str, float***REMOVED*** = {***REMOVED***
+    out: dict[str, float] = {}
     for axis in AXES:
         w = weights_raw.get(axis)
         if isinstance(w, (int, float)):
-            out[axis***REMOVED*** = float(w)
+            out[axis] = float(w)
     return out
 
 
 def _load_calibration_store(
     path: str | Path,
-) -> tuple[dict[str, float***REMOVED***, dict[str, dict[str, float***REMOVED******REMOVED******REMOVED***:
+) -> tuple[dict[str, float], dict[str, dict[str, float]]]:
     """Загрузить каноничное хранилище весов (data_13/lisa_calibration.yaml).
 
     Returns:
         (weights, domains):
           - weights — глобальные множители осей (только заданные);
-          - domains — {name: {axis: multiplier***REMOVED******REMOVED*** доменные приоры.
-        Fail-safe: отсутствующий/битый файл → ({***REMOVED***, {***REMOVED***) (caller добавляет warning).
+          - domains — {name: {axis: multiplier}} доменные приоры.
+        Fail-safe: отсутствующий/битый файл → ({}, {}) (caller добавляет warning).
     """
     import yaml  # local import — PyYAML нужен только для калибровки
 
     try:
         raw = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
     except Exception:  # noqa: BLE001 — fail-safe по дизайну
-        return {***REMOVED***, {***REMOVED***
+        return {}, {}
     if not isinstance(raw, dict):
-        return {***REMOVED***, {***REMOVED***
+        return {}, {}
 
-    weights_raw = raw.get("weights") or {***REMOVED***
-    weights: dict[str, float***REMOVED*** = {***REMOVED***
+    weights_raw = raw.get("weights") or {}
+    weights: dict[str, float] = {}
     if isinstance(weights_raw, dict):
         for axis in AXES:
             w = weights_raw.get(axis)
             if isinstance(w, (int, float)):
-                weights[axis***REMOVED*** = float(w)
+                weights[axis] = float(w)
 
-    domains_raw = raw.get("domains") or {***REMOVED***
-    domains: dict[str, dict[str, float***REMOVED******REMOVED*** = {***REMOVED***
+    domains_raw = raw.get("domains") or {}
+    domains: dict[str, dict[str, float]] = {}
     if isinstance(domains_raw, dict):
         for name, entry in domains_raw.items():
             if not isinstance(entry, dict):
                 continue
-            dom: dict[str, float***REMOVED*** = {***REMOVED***
+            dom: dict[str, float] = {}
             for axis in AXES:
                 w = entry.get(axis)
                 if isinstance(w, (int, float)):
-                    dom[axis***REMOVED*** = float(w)
+                    dom[axis] = float(w)
             if dom:
-                domains[str(name)***REMOVED*** = dom
+                domains[str(name)] = dom
     return weights, domains
 
 
 def _merge_weights(
-    base: dict[str, float***REMOVED***, override: dict[str, float***REMOVED***
-) -> dict[str, float***REMOVED***:
+    base: dict[str, float], override: dict[str, float]
+) -> dict[str, float]:
     """Слить глобальные веса + доменное переопределение (override выигрывает)."""
     merged = dict(base)
     merged.update(override)
@@ -447,33 +447,33 @@ def _merge_weights(
 
 
 def _save_calibration_to_store(
-    name: str, weights: dict[str, float***REMOVED***, path: str | Path
+    name: str, weights: dict[str, float], path: str | Path
 ) -> None:
     """Сохранить доменные веса в каноничное хранилище под именем ``name``.
 
     Merge-семантика: читает существующий файл (если есть), обновляет
-    ``domains[name***REMOVED***``, пишет обратно атомарно (.tmp + replace). Существующие
+    ``domains[name]``, пишет обратно атомарно (.tmp + replace). Существующие
     домены и глобальные веса не теряются.
     """
     import yaml  # local import
 
     p = Path(path)
-    existing: dict[str, Any***REMOVED*** = {***REMOVED***
+    existing: dict[str, Any] = {}
     if p.is_file():
         try:
             loaded = yaml.safe_load(p.read_text(encoding="utf-8"))
             if isinstance(loaded, dict):
                 existing = loaded
         except Exception:  # noqa: BLE001 — fail-safe: перезапишем заново
-            existing = {***REMOVED***
+            existing = {}
 
     if not isinstance(existing.get("weights"), dict):
-        existing["weights"***REMOVED*** = {axis: 1.0 for axis in AXES***REMOVED***
+        existing["weights"] = {axis: 1.0 for axis in AXES}
     domains = existing.get("domains")
     if not isinstance(domains, dict):
-        domains = {***REMOVED***
-    domains[name***REMOVED*** = {axis: float(weights.get(axis, 1.0)) for axis in AXES***REMOVED***
-    existing["domains"***REMOVED*** = domains
+        domains = {}
+    domains[name] = {axis: float(weights.get(axis, 1.0)) for axis in AXES}
+    existing["domains"] = domains
     existing.setdefault("version", "1.0")
 
     if p.parent and not p.parent.exists():
@@ -518,7 +518,7 @@ def lisa_estimator(
     Детерминированно: без LLM-вызовов, эвристики по сигналам.
     """
     description = (description or "").strip()
-    warnings: list[str***REMOVED*** = [***REMOVED***
+    warnings: list[str] = []
 
     if not description:
         report = LisaReport(
@@ -528,26 +528,26 @@ def lisa_estimator(
             calibrated=False,
             degraded=True,
             estimated=False,
-            rationale={axis: [***REMOVED*** for axis in AXES***REMOVED***,
-            warnings=["пустое описание: оценка невозможна (degraded)"***REMOVED***,
+            rationale={axis: [] for axis in AXES},
+            warnings=["пустое описание: оценка невозможна (degraded)"],
         )
         if save:
             _write_report(report, out or DEFAULT_OUT)
         _emit_events(report)
         return report
 
-    rationale: dict[str, list[str***REMOVED******REMOVED*** = {***REMOVED***
-    raw: dict[str, float***REMOVED*** = {***REMOVED***
+    rationale: dict[str, list[str]] = {}
+    raw: dict[str, float] = {}
     for axis in AXES:
         score, matched = _score_axis(description, axis)
-        raw[axis***REMOVED*** = score
-        rationale[axis***REMOVED*** = matched
+        raw[axis] = score
+        rationale[axis] = matched
 
     calibrated = False
-    weights: dict[str, float***REMOVED*** = {***REMOVED***
+    weights: dict[str, float] = {}
     if calibrate and domain:
         warnings.append(
-            f"--domain {domain!r***REMOVED*** игнорируется: задан --calibrate "
+            f"--domain {domain!r} игнорируется: задан --calibrate "
             f"(приоритет у --calibrate)"
         )
     if calibrate:
@@ -557,7 +557,7 @@ def lisa_estimator(
                 calibrated = True
         except Exception as exc:  # noqa: BLE001 — fail-safe по дизайну
             warnings.append(
-                f"калибровка {calibrate***REMOVED*** не загружена: {type(exc).__name__***REMOVED***: {exc***REMOVED***"
+                f"калибровка {calibrate} не загружена: {type(exc).__name__}: {exc}"
             )
     elif domain:
         store_path = calibration_store or str(DEFAULT_CALIBRATION_STORE)
@@ -569,21 +569,21 @@ def lisa_estimator(
                 calibrated = True
             elif domain in domains:
                 warnings.append(
-                    f"домен {domain!r***REMOVED*** найден, но без числовых весов"
+                    f"домен {domain!r} найден, но без числовых весов"
                 )
             else:
                 warnings.append(
-                    f"домен {domain!r***REMOVED*** не найден в калибровке {store_path***REMOVED***"
+                    f"домен {domain!r} не найден в калибровке {store_path}"
                 )
         except Exception as exc:  # noqa: BLE001 — fail-safe по дизайну
             warnings.append(
-                f"калибровка {store_path***REMOVED*** не загружена: "
-                f"{type(exc).__name__***REMOVED***: {exc***REMOVED***"
+                f"калибровка {store_path} не загружена: "
+                f"{type(exc).__name__}: {exc}"
             )
 
     if weights:
         for axis, w in weights.items():
-            raw[axis***REMOVED*** = round(max(0.0, min(10.0, raw[axis***REMOVED*** * w)), 1)
+            raw[axis] = round(max(0.0, min(10.0, raw[axis] * w)), 1)
 
     if save_calibration:
         store_path = calibration_store or str(DEFAULT_CALIBRATION_STORE)
@@ -592,8 +592,8 @@ def lisa_estimator(
                 _save_calibration_to_store(save_calibration, weights, store_path)
             except Exception as exc:  # noqa: BLE001 — fail-safe по дизайну
                 warnings.append(
-                    f"сохранение калибровки {save_calibration!r***REMOVED*** не удалось: "
-                    f"{type(exc).__name__***REMOVED***: {exc***REMOVED***"
+                    f"сохранение калибровки {save_calibration!r} не удалось: "
+                    f"{type(exc).__name__}: {exc}"
                 )
         else:
             warnings.append(
@@ -602,12 +602,12 @@ def lisa_estimator(
             )
 
     scores = Scores(
-        engineering_complexity=raw["engineering_complexity"***REMOVED***,
-        ai_native_complexity=raw["ai_native_complexity"***REMOVED***,
-        verification_burden=raw["verification_burden"***REMOVED***,
-        operational_risk=raw["operational_risk"***REMOVED***,
-        production_risk=raw["production_risk"***REMOVED***,
-        ai_suitability=raw["ai_suitability"***REMOVED***,
+        engineering_complexity=raw["engineering_complexity"],
+        ai_native_complexity=raw["ai_native_complexity"],
+        verification_burden=raw["verification_burden"],
+        operational_risk=raw["operational_risk"],
+        production_risk=raw["production_risk"],
+        ai_suitability=raw["ai_suitability"],
     )
 
     report = LisaReport(
@@ -651,11 +651,11 @@ def _emit_events(report: LisaReport) -> None:
             Event(
                 type="lisa_estimator.completed",
                 data={
-                    "description": report.description[:200***REMOVED***,
+                    "description": report.description[:200],
                     "verdict": report.verdict,
                     "degraded": report.degraded,
                     "calibrated": report.calibrated,
-                ***REMOVED***,
+                },
                 source="lisa_estimator",
             )
         )
@@ -667,10 +667,10 @@ def _emit_events(report: LisaReport) -> None:
         MemoryStore().record_learning_event(
             trigger_id="lisa_estimator",
             context_snapshot={
-                "description": report.description[:200***REMOVED***,
+                "description": report.description[:200],
                 "verdict": report.verdict,
                 "degraded": report.degraded,
-            ***REMOVED***,
+            },
             outcome="success" if report.estimated else "neutral",
         )
     except Exception:  # noqa: BLE001
@@ -688,7 +688,7 @@ def main() -> int:
     )
     parser.add_argument("description", nargs="?", default=None,
                         help="описание проекта/ТЗ (или --input / stdin)")
-    parser.add_argument("--out", default=None, help=f"файл отчёта (default {DEFAULT_OUT***REMOVED***)")
+    parser.add_argument("--out", default=None, help=f"файл отчёта (default {DEFAULT_OUT})")
     parser.add_argument("--json", action="store_true", help="stdout в JSON (для Scenario Engine/API)")
     parser.add_argument("--input", default=None,
                         help="вход из файла (brief.md / parsed_requirements.md)")
@@ -699,7 +699,7 @@ def main() -> int:
     parser.add_argument("--save-calibration", default=None, metavar="NAME",
                         help="сохранить веса (из --calibrate/--domain) в каноничное хранилище под именем NAME (независимо от --no-save)")
     parser.add_argument("--calibration-store", default=None,
-                        help=f"путь к каноничному хранилищу (default {DEFAULT_CALIBRATION_STORE***REMOVED***)")
+                        help=f"путь к каноничному хранилищу (default {DEFAULT_CALIBRATION_STORE})")
     parser.add_argument("--no-save", action="store_true", help="без записи файла (dry-run)")
     args = parser.parse_args()
 
@@ -710,7 +710,7 @@ def main() -> int:
                 description + "\n" + Path(args.input).read_text(encoding="utf-8")
             ).strip()
         except OSError as exc:
-            print(f"error: не удалось прочитать вход {args.input***REMOVED***: {exc***REMOVED***", file=sys.stderr)
+            print(f"error: не удалось прочитать вход {args.input}: {exc}", file=sys.stderr)
             return 2
     if not description and not sys.stdin.isatty():
         description = sys.stdin.read().strip()

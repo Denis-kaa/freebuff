@@ -22,9 +22,9 @@ from __future__ import annotations
 
 import fnmatch
 import logging
-***REMOVED***
+}
 from abc import ABC, abstractmethod
-***REMOVED***
+}
 from typing import TYPE_CHECKING, Dict, List, Optional
 
 from core_02.workspace import Project
@@ -41,7 +41,7 @@ __all__ = [
     "default_executor_registry",
     "llm_executor_registry",
     "LLM_ROLE_IDS",
-***REMOVED***
+]
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ logger = logging.getLogger(__name__)
 class BaseRoleExecutor(ABC):
     """Генератор артефактов одной LIGHT-роли (role_id → executor, ADR-016).
 
-    Интерфейс: ``execute(project, role_id, **kwargs) -> list[str***REMOVED***`` — список
+    Интерфейс: ``execute(project, role_id, **kwargs) -> list[str]`` — список
     созданных файлов (relative paths от ``project.root``). Executor НЕ вызывает
     Forge напрямую (§7.3) и НЕ мутирует Project-контейнер (только файлы).
     """
@@ -58,10 +58,10 @@ class BaseRoleExecutor(ABC):
     role_id: str = ""
 
     @abstractmethod
-    def execute(self, project: Project, role_id: str, **kwargs) -> List[str***REMOVED***:
+    def execute(self, project: Project, role_id: str, **kwargs) -> List[str]:
         """Сгенерировать артефакты роли. Возвращает relative-пути созданных файлов.
 
-        Fail-safe: сбой → ``[***REMOVED***`` (пустой список), НЕ exception наружу.
+        Fail-safe: сбой → ``[]`` (пустой список), НЕ exception наружу.
         """
         raise NotImplementedError
 
@@ -75,23 +75,23 @@ class RoleExecutorRegistry:
     """
 
     def __init__(
-        self, executors: Optional[List[BaseRoleExecutor***REMOVED******REMOVED*** = None
+        self, executors: Optional[List[BaseRoleExecutor]] = None
     ) -> None:
-        self._executors: Dict[str, BaseRoleExecutor***REMOVED*** = {***REMOVED***
-        for ex in executors or [***REMOVED***:
+        self._executors: Dict[str, BaseRoleExecutor] = {}
+        for ex in executors or []:
             self.register(ex)
 
     def register(self, executor: BaseRoleExecutor) -> None:
         """Зарегистрировать executor под его ``role_id`` (перезапись при дубле)."""
         if not executor.role_id:
             raise ValueError("executor без role_id нельзя регистрировать")
-        self._executors[executor.role_id***REMOVED*** = executor
+        self._executors[executor.role_id] = executor
 
-    def get(self, role_id: str) -> Optional[BaseRoleExecutor***REMOVED***:
+    def get(self, role_id: str) -> Optional[BaseRoleExecutor]:
         """Executor для роли (None, если не зарегистрирован)."""
         return self._executors.get(role_id)
 
-    def role_ids(self) -> List[str***REMOVED***:
+    def role_ids(self) -> List[str]:
         """Все зарегистрированные role_id (в порядке регистрации)."""
         return list(self._executors)
 
@@ -110,20 +110,20 @@ class LisaExecutor(BaseRoleExecutor):
     fallback — ``project.name``. Затем ``scripts_01.lisa_estimator.lisa_estimator``
     пишет ``lisa_report.md`` в ``project.root`` (save=True).
 
-    Выход: ``["lisa_report.md"***REMOVED***`` если файл создан, иначе ``[***REMOVED***``.
+    Выход: ``["lisa_report.md"]`` если файл создан, иначе ``[]``.
     """
 
     role_id = "lisa"
 
     # Порядок приоритета входных файлов для сбора описания проекта.
-    INPUT_CANDIDATES: tuple[str, ...***REMOVED*** = (
+    INPUT_CANDIDATES: tuple[str, ...] = (
         "brief.md",
         "parsed_requirements.md",
         "promt1.md",
         "README.md",
     )
 
-    def execute(self, project: Project, role_id: str, **kwargs) -> List[str***REMOVED***:
+    def execute(self, project: Project, role_id: str, **kwargs) -> List[str]:
         description = self._gather_description(project)
         out = project.root / "lisa_report.md"
         try:
@@ -132,8 +132,8 @@ class LisaExecutor(BaseRoleExecutor):
             lisa_estimator(description, out=str(out), save=True)
         except Exception:
             # fail-safe: сбой генерации → пустой список (chain пометит gen_failed).
-            return [***REMOVED***
-        return ["lisa_report.md"***REMOVED*** if out.is_file() else [***REMOVED***
+            return []
+        return ["lisa_report.md"] if out.is_file() else []
 
     def _gather_description(self, project: Project) -> str:
         """Собрать описание проекта из входных файлов (fallback — project.name)."""
@@ -151,7 +151,7 @@ class LisaExecutor(BaseRoleExecutor):
 
 def default_executor_registry() -> RoleExecutorRegistry:
     """Собрать реестр детерминированных executor'ов (первый срез ADR-016)."""
-    return RoleExecutorRegistry([LisaExecutor()***REMOVED***)
+    return RoleExecutorRegistry([LisaExecutor()])
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -167,16 +167,16 @@ def default_executor_registry() -> RoleExecutorRegistry:
 #     @@ENDFILE
 #
 # Безопасность: блоки вне expected_outputs и небезопасные пути (../, absolute)
-# отбрасываются; executor НЕ вызывает Forge напрямую (§7.3); fail-safe → [***REMOVED***.
+# отбрасываются; executor НЕ вызывает Forge напрямую (§7.3); fail-safe → [].
 
 # Роли, для которых есть LLM-экзекьютор (все LIGHT кроме детерминированной lisa).
-LLM_ROLE_IDS: tuple[str, ...***REMOVED*** = (
+LLM_ROLE_IDS: tuple[str, ...] = (
     "explainer", "risk", "decomposer", "architect", "auditor", "documenter",
 )
 
 # Входные артефакты для сбора контекста каждой LLM-роли (по dependencies
 # registry.yaml). Читаются безопасно: отсутствующие игнорируются.
-LLM_ROLE_INPUTS: Dict[str, tuple[str, ...***REMOVED******REMOVED*** = {
+LLM_ROLE_INPUTS: Dict[str, tuple[str, ...]] = {
     "explainer": ("promt1.md", "задача.md", "task.md", "README.md"),
     "risk": ("brief.md", "parsed_requirements.md", "lisa_report.md"),
     "decomposer": (
@@ -195,14 +195,14 @@ LLM_ROLE_INPUTS: Dict[str, tuple[str, ...***REMOVED******REMOVED*** = {
         "brief.md", "parsed_requirements.md", "architecture.md", "contracts.yaml",
         "audit_report.md",
     ),
-***REMOVED***
+}
 
 # Максимум символов одного входного файла в контексте (защита от раздувания промпта).
 _CONTEXT_FILE_CAP: int = 8000
 
 # File-block протокол: @@FILE:name + содержимое + @@ENDFILE (DOTALL, non-greedy).
 _FILE_BLOCK_RE = re.compile(
-    r"@@FILE:\s*([^\n***REMOVED***+?)\s*\n(.*?)\n@@ENDFILE",
+    r"@@FILE:\s*([^\n]+?)\s*\n(.*?)\n@@ENDFILE",
     re.DOTALL,
 )
 
@@ -215,7 +215,7 @@ def _is_safe_filename(name: str) -> bool:
     return not any(p in ("", ".", "..") for p in parts)
 
 
-def _is_allowed_output(name: str, expected: tuple[str, ...***REMOVED***) -> bool:
+def _is_allowed_output(name: str, expected: tuple[str, ...]) -> bool:
     """Файл допустим, если совпадает с одним из expected_outputs (fnmatch)."""
     return any(fnmatch.fnmatch(name, pat) for pat in expected)
 
@@ -228,7 +228,7 @@ class LlmRoleExecutor(BaseRoleExecutor):
     протоколу; блоки вне expected_outputs и небезопасные пути отбрасываются.
 
     Fail-safe: любая ошибка (модель недоступна, пустой ответ, битый blueprint) →
-    ``[***REMOVED***`` (chain пометит gen_failed), НЕ exception наружу.
+    ``[]`` (chain пометит gen_failed), НЕ exception наружу.
 
     Тестируемость: ``gateway`` и ``corpus`` внедряются через конструктор
     (fake-объекты в тестах, без сети и без monkeypatch).
@@ -237,34 +237,34 @@ class LlmRoleExecutor(BaseRoleExecutor):
     def __init__(
         self,
         role_id: str,
-        expected_outputs: tuple[str, ...***REMOVED***,
-        gateway: Optional["ModelGateway"***REMOVED*** = None,
-        corpus: Optional["BlueprintCorpus"***REMOVED*** = None,
+        expected_outputs: tuple[str, ...],
+        gateway: Optional["ModelGateway"] = None,
+        corpus: Optional["BlueprintCorpus"] = None,
     ) -> None:
         self.role_id = role_id
         self.expected_outputs = tuple(expected_outputs)
         self._gateway = gateway
         self._corpus = corpus
 
-    def execute(self, project: Project, role_id: str, **kwargs) -> List[str***REMOVED***:
+    def execute(self, project: Project, role_id: str, **kwargs) -> List[str]:
         try:
             corpus = self._resolve_corpus()
             gateway = self._resolve_gateway()
             bp = corpus.load_blueprint(self.role_id)
-            capabilities = corpus.routing_hint(self.role_id) or ["summarize"***REMOVED***
+            capabilities = corpus.routing_hint(self.role_id) or ["summarize"]
             system = self._build_system_prompt(bp)
             user = self._build_user_prompt(bp, self._gather_context(project))
             response = gateway.generate_by_capabilities(
                 capabilities=capabilities,
                 messages=[
-                    {"role": "system", "content": system***REMOVED***,
-                    {"role": "user", "content": user***REMOVED***,
-                ***REMOVED***,
+                    {"role": "system", "content": system},
+                    {"role": "user", "content": user},
+                ],
             )
             return self._parse_and_save(project, response.content)
         except Exception as exc:  # noqa: BLE001 — fail-safe по дизайну
             logger.warning("LlmRoleExecutor(%s) failed: %s", self.role_id, exc)
-            return [***REMOVED***
+            return []
 
     # ── dependency resolution (lazy, тестируемо через DI) ────────────────
 
@@ -284,7 +284,7 @@ class LlmRoleExecutor(BaseRoleExecutor):
 
     @staticmethod
     def _build_system_prompt(bp) -> str:
-        parts: List[str***REMOVED*** = [***REMOVED***
+        parts: List[str] = []
         for key in ("role", "system_role", "implementation_scope_rules"):
             val = bp.sections.get(key, "").strip()
             if val:
@@ -292,28 +292,28 @@ class LlmRoleExecutor(BaseRoleExecutor):
         return "\n\n".join(parts) if parts else bp.sections.get("role", "")
 
     def _build_user_prompt(self, bp, context: str) -> str:
-        parts: List[str***REMOVED*** = [***REMOVED***
+        parts: List[str] = []
         objective = bp.sections.get("main_objective", "").strip()
         if objective:
-            parts.append(f"ЦЕЛЬ:\n{objective***REMOVED***")
+            parts.append(f"ЦЕЛЬ:\n{objective}")
         fmt = bp.sections.get("output_format", "").strip()
         if fmt:
-            parts.append(f"ФОРМАТ ВЫХОДА:\n{fmt***REMOVED***")
-        files = "\n".join(f"- {o***REMOVED***" for o in self.expected_outputs)
+            parts.append(f"ФОРМАТ ВЫХОДА:\n{fmt}")
+        files = "\n".join(f"- {o}" for o in self.expected_outputs)
         parts.append(
             "ВЫВОДИ СТРОГО В ФОРМАТЕ ФАЙЛОВЫХ БЛОКОВ (по одному на файл):\n"
             "@@FILE:<имя_файла>\n<содержимое>\n@@ENDFILE\n"
-            f"Требуемые файлы:\n{files***REMOVED***"
+            f"Требуемые файлы:\n{files}"
         )
         if context:
-            parts.append(f"=== КОНТЕКСТ ПРОЕКТА ===\n{context***REMOVED***")
+            parts.append(f"=== КОНТЕКСТ ПРОЕКТА ===\n{context}")
         return "\n\n".join(parts)
 
     # ── context gathering ────────────────────────────────────────────────
 
     def _gather_context(self, project: Project) -> str:
         candidates = LLM_ROLE_INPUTS.get(self.role_id, ())
-        chunks: List[str***REMOVED*** = [***REMOVED***
+        chunks: List[str] = []
         for name in candidates:
             p = project.root / name
             if not p.is_file():
@@ -325,16 +325,16 @@ class LlmRoleExecutor(BaseRoleExecutor):
             if not text:
                 continue
             if len(text) > _CONTEXT_FILE_CAP:
-                text = text[:_CONTEXT_FILE_CAP***REMOVED*** + "\n...(truncated)"
-            chunks.append(f"--- {name***REMOVED*** ---\n{text***REMOVED***")
+                text = text[:_CONTEXT_FILE_CAP] + "\n...(truncated)"
+            chunks.append(f"--- {name} ---\n{text}")
         if not chunks:
-            chunks.append(f"--- project ---\n{project.name***REMOVED***")
+            chunks.append(f"--- project ---\n{project.name}")
         return "\n\n".join(chunks)
 
     # ── parse & save ─────────────────────────────────────────────────────
 
-    def _parse_and_save(self, project: Project, text: str) -> List[str***REMOVED***:
-        created: List[str***REMOVED*** = [***REMOVED***
+    def _parse_and_save(self, project: Project, text: str) -> List[str]:
+        created: List[str] = []
         blocks = _FILE_BLOCK_RE.findall(text or "")
         for name, content in blocks:
             name = name.strip()
@@ -362,18 +362,18 @@ class LlmRoleExecutor(BaseRoleExecutor):
             concrete = [
                 o for o in self.expected_outputs
                 if not any(ch in o for ch in "*?[")
-            ***REMOVED***
-            if len(concrete) == 1 and _is_safe_filename(concrete[0***REMOVED***):
-                target = project.root / concrete[0***REMOVED***
+            ]
+            if len(concrete) == 1 and _is_safe_filename(concrete[0]):
+                target = project.root / concrete[0]
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_text(text.strip() + "\n", encoding="utf-8")
-                created.append(concrete[0***REMOVED***)
+                created.append(concrete[0])
         return created
 
 
 def llm_executor_registry(
-    gateway: Optional["ModelGateway"***REMOVED*** = None,
-    corpus: Optional["BlueprintCorpus"***REMOVED*** = None,
+    gateway: Optional["ModelGateway"] = None,
+    corpus: Optional["BlueprintCorpus"] = None,
 ) -> RoleExecutorRegistry:
     """Полный реестр: детерминированный LisaExecutor + 6 LLM-экзекьюторов.
 

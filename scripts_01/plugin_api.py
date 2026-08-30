@@ -50,7 +50,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-***REMOVED***
+}
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type
 
 
@@ -84,10 +84,10 @@ class PluginMeta:
     version: str = "1.0.0"
     description: str = ""
     author: str = ""
-    dependencies: List[str***REMOVED*** = field(default_factory=list)
-    tags: List[str***REMOVED*** = field(default_factory=list)
-    events_subscribed: List[str***REMOVED*** = field(default_factory=list)
-    tools_registered: List[str***REMOVED*** = field(default_factory=list)
+    dependencies: List[str] = field(default_factory=list)
+    tags: List[str] = field(default_factory=list)
+    events_subscribed: List[str] = field(default_factory=list)
+    tools_registered: List[str] = field(default_factory=list)
     homepage: str = ""
     license: str = "MIT"
 
@@ -99,9 +99,9 @@ class PluginManifest:
     version: str = "1.0.0"
     description: str = ""
     author: str = ""
-    dependencies: List[str***REMOVED*** = field(default_factory=list)
-    tags: List[str***REMOVED*** = field(default_factory=list)
-    events_subscribed: List[str***REMOVED*** = field(default_factory=list)
+    dependencies: List[str] = field(default_factory=list)
+    tags: List[str] = field(default_factory=list)
+    events_subscribed: List[str] = field(default_factory=list)
     python_version: str = ">=3.10"
     homepage: str = ""
     license: str = "MIT"
@@ -114,9 +114,9 @@ class PluginManifest:
             version=data.get("version", "1.0.0"),
             description=data.get("description", ""),
             author=data.get("author", ""),
-            dependencies=data.get("dependencies", [***REMOVED***),
-            tags=data.get("tags", [***REMOVED***),
-            events_subscribed=data.get("events_subscribed", [***REMOVED***),
+            dependencies=data.get("dependencies", []),
+            tags=data.get("tags", []),
+            events_subscribed=data.get("events_subscribed", []),
             python_version=data.get("python_version", ">=3.10"),
             homepage=data.get("homepage", ""),
             license=data.get("license", "MIT"),
@@ -135,7 +135,7 @@ class PluginManifest:
             "python_version": self.python_version,
             "homepage": self.homepage,
             "license": self.license,
-        ***REMOVED***
+        }
 
 
 @dataclass
@@ -144,14 +144,14 @@ class PluginEntry:
     name: str
     path: Path
     state: PluginState = PluginState.DISCOVERED
-    meta: Optional[PluginMeta***REMOVED*** = None
-    manifest: Optional[PluginManifest***REMOVED*** = None
-    instance: Optional["BasePlugin"***REMOVED*** = None
+    meta: Optional[PluginMeta] = None
+    manifest: Optional[PluginManifest] = None
+    instance: Optional["BasePlugin"] = None
     module: Any = None
-    subscriptions: List[Any***REMOVED*** = field(default_factory=list)
-    error: Optional[str***REMOVED*** = None
-    loaded_at: Optional[str***REMOVED*** = None
-    enabled_at: Optional[str***REMOVED*** = None
+    subscriptions: List[Any] = field(default_factory=list)
+    error: Optional[str] = None
+    loaded_at: Optional[str] = None
+    enabled_at: Optional[str] = None
 
 
 @dataclass
@@ -159,7 +159,7 @@ class PluginResult:
     """Результат выполнения действия плагина."""
     success: bool
     data: Any = None
-    error: Optional[str***REMOVED*** = None
+    error: Optional[str] = None
     duration_ms: float = 0.0
     plugin_name: str = ""
 
@@ -194,9 +194,9 @@ class BasePlugin(ABC):
         self._loaded = False
         self._event_bus: Any = None
         self._tool_registry: Any = None
-        self._subscriptions: List[Any***REMOVED*** = [***REMOVED***
-        self._config: Dict[str, Any***REMOVED*** = {***REMOVED***
-        self.last_error: Optional[Exception***REMOVED*** = None
+        self._subscriptions: List[Any] = []
+        self._config: Dict[str, Any] = {}
+        self.last_error: Optional[Exception] = None
 
     # ── Свойства ────────────────────────────────────────────
 
@@ -220,13 +220,13 @@ class BasePlugin(ABC):
             version=self._version,
             description=self._description,
             events_subscribed=self.events_subscribed,
-            tools_registered=[t.meta.name for t in self.get_tools()***REMOVED***,
+            tools_registered=[t.meta.name for t in self.get_tools()],
         )
 
     @property
-    def events_subscribed(self) -> List[str***REMOVED***:
+    def events_subscribed(self) -> List[str]:
         """Какие события EventBus слушает плагин. Переопределите."""
-        return [***REMOVED***
+        return []
 
     @property
     def is_enabled(self) -> bool:
@@ -282,19 +282,19 @@ class BasePlugin(ABC):
     def on_error(self, error: Exception) -> None:
         """Вызывается при ошибке в lifecycle плагина."""
         self.last_error = error
-        print(f"⚠️ Plugin '{self._name***REMOVED***' error: {error***REMOVED***")
+        print(f"⚠️ Plugin '{self._name}' error: {error}")
 
     # ── Инструменты ─────────────────────────────────────────
 
-    def get_tools(self) -> List[Any***REMOVED***:
+    def get_tools(self) -> List[Any]:
         """Возвращает список инструментов (BaseTool) для регистрации.
 
         По умолчанию пустой список. Переопределите, если плагин
         предоставляет инструменты.
         """
-        return [***REMOVED***
+        return []
 
-    def get_commands(self) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    def get_commands(self) -> List[Dict[str, Any]]:
         """Возвращает список CLI-команд плагина.
 
         Каждая команда — словарь с ключами:
@@ -302,11 +302,11 @@ class BasePlugin(ABC):
 
         По умолчанию пустой список.
         """
-        return [***REMOVED***
+        return []
 
     # ── Выполнение ──────────────────────────────────────────
 
-    def execute(self, action: str, params: Dict[str, Any***REMOVED***) -> PluginResult:
+    def execute(self, action: str, params: Dict[str, Any]) -> PluginResult:
         """Выполнить действие плагина.
 
         Args:
@@ -319,11 +319,11 @@ class BasePlugin(ABC):
         По умолчанию вызывает метод с именем action, если он существует.
         Переопределите для кастомной логики.
         """
-        handler = getattr(self, f"do_{action***REMOVED***", None)
+        handler = getattr(self, f"do_{action}", None)
         if handler is None:
             return PluginResult(
                 success=False,
-                error=f"Unknown action: {action***REMOVED***",
+                error=f"Unknown action: {action}",
                 plugin_name=self._name,
             )
         try:
@@ -353,7 +353,7 @@ class BasePlugin(ABC):
     def _set_tool_registry(self, registry: Any) -> None:
         self._tool_registry = registry
 
-    def _set_config(self, config: Dict[str, Any***REMOVED***) -> None:
+    def _set_config(self, config: Dict[str, Any]) -> None:
         self._config = config
 
     def _do_load(self) -> None:
@@ -375,7 +375,7 @@ class BasePlugin(ABC):
             self.on_error(e)
             raise
 
-    def _do_enable(self) -> List[Any***REMOVED***:
+    def _do_enable(self) -> List[Any]:
         """Активирует плагин: подписывается на события, регистрирует инструменты.
 
         Returns:
@@ -385,7 +385,7 @@ class BasePlugin(ABC):
             Если on_enable() вызывает exception, ВСЕ подписки
             отзываются (rollback), чтобы не было частичного состояния.
         """
-        subscriptions: List[Any***REMOVED*** = [***REMOVED***
+        subscriptions: List[Any] = []
         try:
             # Подписка на события через EventBus
             if self._event_bus and self.events_subscribed:
@@ -399,7 +399,7 @@ class BasePlugin(ABC):
                     try:
                         self._tool_registry.register(tool)
                     except Exception as e:
-                        print(f"⚠️ Plugin '{self._name***REMOVED***': tool registration error: {e***REMOVED***")
+                        print(f"⚠️ Plugin '{self._name}': tool registration error: {e}")
 
             self.on_enable()
             self._enabled = True
@@ -450,9 +450,9 @@ class PluginLoader:
 
     def __init__(self, registry: "PluginRegistry"):
         self._registry = registry
-        self._loaded_paths: Set[str***REMOVED*** = set()
+        self._loaded_paths: Set[str] = set()
 
-    def discover(self, plugins_dir: str | Path = "") -> List[Path***REMOVED***:
+    def discover(self, plugins_dir: str | Path = "") -> List[Path]:
         """Сканирует директорию на наличие плагинов.
 
         Args:
@@ -463,9 +463,9 @@ class PluginLoader:
         """
         plugins_path = Path(plugins_dir) if plugins_dir else DEFAULT_PLUGINS_DIR
         if not plugins_path.exists():
-            return [***REMOVED***
+            return []
 
-        discovered: List[Path***REMOVED*** = [***REMOVED***
+        discovered: List[Path] = []
         for entry in sorted(plugins_path.iterdir()):
             if not entry.is_dir():
                 continue
@@ -480,7 +480,7 @@ class PluginLoader:
 
         return discovered
 
-    def load(self, plugin_path: Path) -> Optional[PluginEntry***REMOVED***:
+    def load(self, plugin_path: Path) -> Optional[PluginEntry]:
         """Загружает один плагин из директории.
 
         1. Читает manifest.json (если есть)
@@ -509,15 +509,15 @@ class PluginLoader:
                     data = json.loads(manifest_file.read_text(encoding="utf-8"))
                     manifest = PluginManifest.from_dict(data)
                 except (json.JSONDecodeError, Exception) as e:
-                    print(f"⚠️ Plugin '{plugin_name***REMOVED***': invalid manifest.json: {e***REMOVED***")
+                    print(f"⚠️ Plugin '{plugin_name}': invalid manifest.json: {e}")
 
             # 2. Загружаем модуль
             spec = importlib.util.spec_from_file_location(
-                f"plugins.{plugin_name***REMOVED***",
+                f"plugins.{plugin_name}",
                 str(init_file),
             )
             if spec is None or spec.loader is None:
-                raise ImportError(f"Cannot load spec for {plugin_name***REMOVED***")
+                raise ImportError(f"Cannot load spec for {plugin_name}")
 
             module = importlib.util.module_from_spec(spec)
             # Добавляем директорию плагина в sys.path для относительных импортов
@@ -539,13 +539,13 @@ class PluginLoader:
 
             if instance is None:
                 raise ValueError(
-                    f"Plugin '{plugin_name***REMOVED***' has no '{PLUGIN_VAR_NAME***REMOVED***' "
+                    f"Plugin '{plugin_name}' has no '{PLUGIN_VAR_NAME}' "
                     f"variable and no BasePlugin subclass"
                 )
 
             if not isinstance(instance, BasePlugin):
                 raise TypeError(
-                    f"Plugin '{plugin_name***REMOVED***': '{PLUGIN_VAR_NAME***REMOVED***' is not a BasePlugin instance"
+                    f"Plugin '{plugin_name}': '{PLUGIN_VAR_NAME}' is not a BasePlugin instance"
                 )
 
             # 4. Регистрируем в реестре
@@ -565,19 +565,19 @@ class PluginLoader:
                 if violations:
                     print(format_violations(plugin_name, violations))
             except Exception as e:
-                print(f"⚠️ Plugin '{plugin_name***REMOVED***': contract check error: {e***REMOVED***")
+                print(f"⚠️ Plugin '{plugin_name}': contract check error: {e}")
 
             self._loaded_paths.add(str(plugin_path))
             return entry
 
         except Exception as e:
-            error_msg = f"Failed to load plugin '{plugin_name***REMOVED***': {e***REMOVED***"
-            print(f"⚠️ {error_msg***REMOVED***")
+            error_msg = f"Failed to load plugin '{plugin_name}': {e}"
+            print(f"⚠️ {error_msg}")
             # Регистрируем как ошибочный
             self._registry._add_error_entry(plugin_name, plugin_path, str(e))
             return None
 
-    def load_all(self, plugins_dir: str | Path = "") -> List[PluginEntry***REMOVED***:
+    def load_all(self, plugins_dir: str | Path = "") -> List[PluginEntry]:
         """Загружает все найденные плагины.
 
         Args:
@@ -587,7 +587,7 @@ class PluginLoader:
             Список загруженных PluginEntry
         """
         discovered = self.discover(plugins_dir)
-        entries: List[PluginEntry***REMOVED*** = [***REMOVED***
+        entries: List[PluginEntry] = []
         for path in discovered:
             entry = self.load(path)
             if entry:
@@ -617,16 +617,16 @@ class PluginRegistry:
         self._event_bus = event_bus
         self._tool_registry = tool_registry
         self._lock = threading.Lock()
-        self._plugins: Dict[str, PluginEntry***REMOVED*** = {***REMOVED***  # name → entry
+        self._plugins: Dict[str, PluginEntry] = {}  # name → entry
 
     # ── Регистрация ─────────────────────────────────────────
 
     def register(
         self,
         instance: BasePlugin,
-        path: Optional[Path***REMOVED*** = None,
-        manifest: Optional[PluginManifest***REMOVED*** = None,
-        name: Optional[str***REMOVED*** = None,
+        path: Optional[Path] = None,
+        manifest: Optional[PluginManifest] = None,
+        name: Optional[str] = None,
     ) -> PluginEntry:
         """Регистрирует экземпляр плагина в реестре.
 
@@ -664,7 +664,7 @@ class PluginRegistry:
             entry.error = str(e)
 
         with self._lock:
-            self._plugins[plugin_name***REMOVED*** = entry
+            self._plugins[plugin_name] = entry
 
         return entry
 
@@ -677,7 +677,7 @@ class PluginRegistry:
             error=error,
         )
         with self._lock:
-            self._plugins[name***REMOVED*** = entry
+            self._plugins[name] = entry
 
     # ── Enable / Disable ────────────────────────────────────
 
@@ -718,7 +718,7 @@ class PluginRegistry:
             self._publish_event("plugin.enabled", {
                 "plugin": name,
                 "version": instance.version,
-            ***REMOVED***)
+            ])
 
             return True
         except Exception as e:
@@ -755,13 +755,13 @@ class PluginRegistry:
 
         try:
             instance._do_disable()
-            entry.subscriptions = [***REMOVED***
+            entry.subscriptions = []
             entry.state = PluginState.DISABLED
 
             # Публикуем событие plugin.disabled
             self._publish_event("plugin.disabled", {
                 "plugin": name,
-            ***REMOVED***)
+            ])
 
             return True
         except Exception as e:
@@ -831,7 +831,7 @@ class PluginRegistry:
                         self._tool_registry.unregister(tool.meta.name)
                     except Exception:
                         pass
-            del self._plugins[name***REMOVED***
+            del self._plugins[name]
 
         return True
 
@@ -851,12 +851,12 @@ class PluginRegistry:
 
     # ── Query ───────────────────────────────────────────────
 
-    def get(self, name: str) -> Optional[PluginEntry***REMOVED***:
+    def get(self, name: str) -> Optional[PluginEntry]:
         """Получает запись плагина по имени."""
         with self._lock:
             return self._plugins.get(name)
 
-    def list(self, state: Optional[PluginState***REMOVED*** = None) -> List[PluginEntry***REMOVED***:
+    def list(self, state: Optional[PluginState] = None) -> List[PluginEntry]:
         """Список всех плагинов, опционально фильтрованных по состоянию.
 
         Args:
@@ -868,10 +868,10 @@ class PluginRegistry:
         with self._lock:
             entries = list(self._plugins.values())
         if state:
-            entries = [e for e in entries if e.state == state***REMOVED***
+            entries = [e for e in entries if e.state == state]
         return sorted(entries, key=lambda e: e.name)
 
-    def count(self, state: Optional[PluginState***REMOVED*** = None) -> int:
+    def count(self, state: Optional[PluginState] = None) -> int:
         """Количество плагинов."""
         return len(self.list(state))
 
@@ -882,7 +882,7 @@ class PluginRegistry:
 
     # ── Выполнение ──────────────────────────────────────────
 
-    def execute(self, name: str, action: str, params: Dict[str, Any***REMOVED***) -> PluginResult:
+    def execute(self, name: str, action: str, params: Dict[str, Any]) -> PluginResult:
         """Выполняет действие плагина.
 
         Args:
@@ -897,20 +897,20 @@ class PluginRegistry:
         if entry is None:
             return PluginResult(
                 success=False,
-                error=f"Plugin not found: {name***REMOVED***",
+                error=f"Plugin not found: {name}",
                 plugin_name=name,
             )
         if entry.instance is None:
             return PluginResult(
                 success=False,
-                error=f"Plugin '{name***REMOVED***' has no instance",
+                error=f"Plugin '{name}' has no instance",
                 plugin_name=name,
             )
         return entry.instance.execute(action, params)
 
     # ── Публикация событий ──────────────────────────────────
 
-    def _publish_event(self, event_type: str, data: Dict[str, Any***REMOVED***) -> None:
+    def _publish_event(self, event_type: str, data: Dict[str, Any]) -> None:
         """Публикует событие плагина в EventBus."""
         if self._event_bus is None:
             return
@@ -918,7 +918,7 @@ class PluginRegistry:
             from scripts_01.event_bus import Event
             self._event_bus.publish(Event(
                 type=event_type,
-                source=f"plugin:{event_type.split('.')[1***REMOVED******REMOVED***",
+                source=f"plugin:{event_type.split('.')[1]}",
                 data=data,
             ))
         except Exception:
@@ -926,7 +926,7 @@ class PluginRegistry:
 
     # ── Состояние ───────────────────────────────────────────
 
-    def get_state(self) -> Dict[str, Any***REMOVED***:
+    def get_state(self) -> Dict[str, Any]:
         """Полное состояние реестра плагинов."""
         entries = self.list()
         return {
@@ -942,10 +942,10 @@ class PluginRegistry:
                     "version": e.meta.version if e.meta else "?",
                     "description": e.meta.description if e.meta else "",
                     "error": e.error,
-                ***REMOVED***
+                }
                 for e in entries
-            ***REMOVED***,
-        ***REMOVED***
+            ],
+        }
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -957,7 +957,7 @@ def create_plugin_registrar(
     event_bus: Any = None,
     tool_registry: Any = None,
     plugins_dir: str | Path = "",
-) -> Tuple[PluginLoader, PluginRegistry***REMOVED***:
+) -> Tuple[PluginLoader, PluginRegistry]:
     """Создаёт и настраивает PluginLoader + PluginRegistry.
 
     Args:
@@ -978,7 +978,7 @@ def create_plugin_registrar(
     entries = loader.load_all(plugins_dir)
 
     if entries:
-        print(f"🔌 Loaded {len(entries)***REMOVED*** plugin(s): {', '.join(e.name for e in entries)***REMOVED***")
+        print(f"🔌 Loaded {len(entries)} plugin(s): {', '.join(e.name for e in entries)}")
 
     return loader, registry
 
@@ -999,7 +999,7 @@ def main():
 
     # list
     p_list = sub.add_parser("list", help="Список плагинов")
-    p_list.add_argument("--state", choices=[s.value for s in PluginState***REMOVED***, help="Фильтр по состоянию")
+    p_list.add_argument("--state", choices=[s.value for s in PluginState], help="Фильтр по состоянию")
 
     # enable
     p_enable = sub.add_parser("enable", help="Активировать плагин")
@@ -1013,7 +1013,7 @@ def main():
     p_exec = sub.add_parser("execute", help="Выполнить действие плагина")
     p_exec.add_argument("name", help="Имя плагина")
     p_exec.add_argument("action", help="Действие")
-    p_exec.add_argument("--params", default="{***REMOVED***", help="JSON параметры")
+    p_exec.add_argument("--params", default="{)", help="JSON параметры")
 
     # status
     sub.add_parser("status", help="Состояние реестра")
@@ -1036,7 +1036,7 @@ def main():
         if not entries:
             print("📭 No plugins")
             return
-        print(f"🔌 Plugins ({len(entries)***REMOVED***):")
+        print(f"🔌 Plugins ({len(entries)}):")
         for e in entries:
             state_str = {
                 PluginState.DISCOVERED: "🔍",
@@ -1044,58 +1044,58 @@ def main():
                 PluginState.ENABLED: "✅",
                 PluginState.DISABLED: "⏸️",
                 PluginState.ERROR: "❌",
-            ***REMOVED***.get(e.state, "❓")
+            ].get(e.state, "❓")
             version = e.meta.version if e.meta else "?"
             desc = e.meta.description if e.meta else ""
-            error = f" — {e.error***REMOVED***" if e.error else ""
-            print(f"  {state_str***REMOVED*** {e.name:20***REMOVED*** v{version***REMOVED***  {desc***REMOVED***{error***REMOVED***")
+            error = f" — {e.error}" if e.error else ""
+            print(f"  {state_str} {e.name:20} v{version}  {desc}{error}")
 
     elif args.command == "enable":
         if registry.enable(args.name):
-            print(f"✅ Plugin '{args.name***REMOVED***' enabled")
+            print(f"✅ Plugin '{args.name}' enabled")
         else:
-            print(f"❌ Cannot enable '{args.name***REMOVED***'")
+            print(f"❌ Cannot enable '{args.name}'")
 
     elif args.command == "disable":
         if registry.disable(args.name):
-            print(f"⏸️  Plugin '{args.name***REMOVED***' disabled")
+            print(f"⏸️  Plugin '{args.name}' disabled")
         else:
-            print(f"❌ Cannot disable '{args.name***REMOVED***'")
+            print(f"❌ Cannot disable '{args.name}'")
 
     elif args.command == "execute":
         try:
             params = json.loads(args.params)
         except json.JSONDecodeError:
-            params = {***REMOVED***
+            params = {}
         result = registry.execute(args.name, args.action, params)
         if result.success:
-            print(f"✅ {result.data***REMOVED***")
+            print(f"✅ {result.data}")
         else:
-            print(f"❌ {result.error***REMOVED***")
+            print(f"❌ {result.error}")
 
     elif args.command == "status":
         state = registry.get_state()
         print(f"📊 PLUGIN REGISTRY STATUS")
-        print(f"   Total:   {state['total'***REMOVED******REMOVED***")
-        print(f"   Enabled: {state['enabled'***REMOVED******REMOVED***")
-        print(f"   Loaded:  {state['loaded'***REMOVED******REMOVED***")
-        print(f"   Disabled:{state['disabled'***REMOVED******REMOVED***")
-        print(f"   Error:   {state['error'***REMOVED******REMOVED***")
-        if state["plugins"***REMOVED***:
+        print(f"   Total:   {state['total']}")
+        print(f"   Enabled: {state['enabled']}")
+        print(f"   Loaded:  {state['loaded']}")
+        print(f"   Disabled:{state['disabled']}")
+        print(f"   Error:   {state['error']}")
+        if state["plugins"]:
             print(f"   Plugins:")
-            for p in state["plugins"***REMOVED***:
-                icon = "✅" if p["state"***REMOVED*** == "enabled" else "📦" if p["state"***REMOVED*** == "loaded" else "❌"
-                print(f"     {icon***REMOVED*** {p['name'***REMOVED***:20***REMOVED*** {p['state'***REMOVED***:10***REMOVED*** v{p['version'***REMOVED******REMOVED***")
+            for p in state["plugins"]:
+                icon = "✅" if p["state"] == "enabled" else "📦" if p["state"] == "loaded" else "❌"
+                print(f"     {icon} {p['name']:20} {p['state']:10} v{p['version']}")
 
     elif args.command == "reload":
         count = registry.unload_all()
         _, registry = create_plugin_registrar()
-        print(f"🔄 Reloaded — {registry.count()***REMOVED*** plugin(s)")
+        print(f"🔄 Reloaded — {registry.count()} plugin(s)")
 
     elif args.command == "contract":
         entry = registry.get(args.name)
         if entry is None:
-            print(f"❌ Plugin not found: {args.name***REMOVED***")
+            print(f"❌ Plugin not found: {args.name}")
             return
         from scripts_01.plugin_contract import (
             format_violations,
@@ -1116,5 +1116,5 @@ if __name__ == "__main__":
     # (и класса BasePlugin), из-за чего isinstance(plugin, BasePlugin) в
     # PluginLoader.load() ломается: "'plugin' is not a BasePlugin instance".
     # Регистрируем себя под каноническим именем до загрузки плагинов.
-    sys.modules.setdefault("scripts_01.plugin_api", sys.modules[__name__***REMOVED***)
+    sys.modules.setdefault("scripts_01.plugin_api", sys.modules[__name__])
     main()

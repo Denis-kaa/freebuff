@@ -48,8 +48,8 @@ class Boundary:
     namespace: str  # qualified-ID prefix pattern
 
     def blurb(self) -> str:
-        return (f"B{b_id.lstrip("B")***REMOVED*** ({self.state.value***REMOVED***, owner={self.owner.value***REMOVED***): "
-                f"{self.description[:60***REMOVED******REMOVED***...")
+        return (f"B{b_id.lstrip("B")) ({self.state.value}, owner={self.owner.value)): "
+                f"{self.description[:60]}...")
 
 
 # 18 boundaries per §37.7 compliance table
@@ -186,7 +186,7 @@ BOUNDARIES_V17 = {
         disallowed="Direct shell-exec from UI",
         tolerance="strict (compile-time)",
         namespace="gui:ui_id"),
-***REMOVED***
+}
 
 
 def compliance_summary():
@@ -198,8 +198,8 @@ def compliance_summary():
 
 if __name__ == "__main__":
     sum_ = compliance_summary()
-    print(f"v17 boundaries: {len(BOUNDARIES_V17)***REMOVED***")
+    print(f"v17 boundaries: {len(BOUNDARIES_V17)}")
     for state, n in sum_.items():
-        print(f"  {state***REMOVED***: {n***REMOVED***")
+        print(f"  {state}: {n}")
     for key, b in BOUNDARIES_V17.items():
-        print(f"  {b.blurb()***REMOVED***")
+        print(f"  {b.blurb()}")

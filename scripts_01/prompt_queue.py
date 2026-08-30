@@ -1,6 +1,6 @@
 """prompt_queue.py — файловая очередь промтов (promt 48).
 
-Статусы = перемещение файлов между папками `pompts_11/{user,running,done,failed***REMOVED***`
+Статусы = перемещение файлов между папками `pompts_11/{user,running,done,failed}`
 (детерминированный файловый подход, без БД — как требует promt 48).
 
 Формат файла промта:
@@ -15,12 +15,12 @@
 from __future__ import annotations
 
 import os
-***REMOVED***
+}
 import time as _time
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional
 
 # ── Папки очереди ─────────────────────────────────────────────
@@ -32,7 +32,7 @@ STATUS_DIR_MAP = {
     "running": "running",
     "done": "done",
     "failed": "failed",
-***REMOVED***
+}
 
 
 def _workspace_root() -> Path:
@@ -63,7 +63,7 @@ def ensure_queue_dirs() -> None:
 
 # ── Метаданные файла ──────────────────────────────────────────
 
-_META_PATTERN = re.compile(r"^\*\*(?P<key>[A-Za-z ***REMOVED***+):\*\*\s*(?P<value>.*)$")
+_META_PATTERN = re.compile(r"^\*\*(?P<key>[A-Za-z )+):\*\*\s*(?P<value>.*)$")
 
 
 @dataclass
@@ -98,7 +98,7 @@ class PromptMeta:
     clarification_count: int = 0
     max_clarifications: int = 10
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "task_id": self.task_id,
             "chat_id": self.chat_id,
@@ -117,19 +117,19 @@ class PromptMeta:
             "clarification_count": self.clarification_count,
             "max_clarifications": self.max_clarifications,
             "path": str(self.path),
-        ***REMOVED***
+        }
 
 
 def new_task_id() -> str:
     """Уникальный id задачи: <timestamp>_<short-uuid>."""
     ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    return f"{ts***REMOVED***_{uuid.uuid4().hex[:6***REMOVED******REMOVED***"
+    return f"{ts}_{uuid.uuid4().hex[:6]}"
 
 
 def prompt_filename(task_id: str, chat_id: int = 0) -> str:
     """Имя файла промта: task_<task_id>_<chat или anon>.md."""
     suffix = str(chat_id) if chat_id else "anon"
-    return f"task_{task_id***REMOVED***_{suffix***REMOVED***.md"
+    return f"task_{task_id}_{suffix}.md"
 
 
 def write_user_prompt(
@@ -156,22 +156,22 @@ def write_user_prompt(
     if not title:
         # Первая строка текста как название (до ~60 символов)
         first = next((ln.strip() for ln in text.splitlines() if ln.strip()), "")
-        title = first[:60***REMOVED*** or tid
+        title = first[:60] or tid
 
     content = (
-        f"# TASK: {title***REMOVED***\n\n"
-        f"**ID:** {tid***REMOVED***\n"
-        f"**Chat ID:** {chat_id***REMOVED***\n"
-        f"**Created:** {stamp***REMOVED***\n"
-        f"**Priority:** {int(priority)***REMOVED***\n"
+        f"# TASK: {title}\n\n"
+        f"**ID:** {tid}\n"
+        f"**Chat ID:** {chat_id}\n"
+        f"**Created:** {stamp}\n"
+        f"**Priority:** {int(priority)}\n"
         f"**Status:** pending\n"
-        f"**Source:** {source***REMOVED***\n"
-        f"**Model:** {model***REMOVED***\n"
+        f"**Source:** {source}\n"
+        f"**Model:** {model}\n"
         f"**Iteration:** 1\n"
         f"**Max Iterations:** 3\n"
         f"**Max Clarifications:** 10\n"
         f"\n---\n\n"
-        f"{text.strip()***REMOVED***\n"
+        f"{text.strip()}\n"
         f"\n---\n\n"
         f"## Отчёт\n\n**Результат:** (ожидает диспетчер)\n"
     )
@@ -179,7 +179,7 @@ def write_user_prompt(
     return path
 
 
-def parse_prompt(path: Path) -> Optional[PromptMeta***REMOVED***:
+def parse_prompt(path: Path) -> Optional[PromptMeta]:
     """Разбирает файл промта в PromptMeta. None при невалидном файле."""
     if not path.exists():
         return None
@@ -188,20 +188,20 @@ def parse_prompt(path: Path) -> Optional[PromptMeta***REMOVED***:
     except OSError:
         return None
 
-    meta: Dict[str, str***REMOVED*** = {***REMOVED***
+    meta: Dict[str, str] = {}
     title = ""
     body_start = 0
     in_header = False
     for i, ln in enumerate(lines):
         stripped = ln.strip()
         if stripped.startswith("# TASK:"):
-            title = stripped[len("# TASK:"):***REMOVED***.strip()
+            title = stripped[len("# TASK:"):].strip()
             in_header = True
             continue
         if in_header:
             m = _META_PATTERN.match(stripped)
             if m:
-                meta[m.group("key").strip().lower()***REMOVED*** = m.group("value").strip()
+                meta[m.group("key").strip().lower()] = m.group("value").strip()
                 continue
             if stripped == "---":
                 body_start = i + 1
@@ -210,7 +210,7 @@ def parse_prompt(path: Path) -> Optional[PromptMeta***REMOVED***:
             body_start = i + 1
             break
 
-    body_lines = [ln for ln in lines[body_start:***REMOVED*** if ln.strip()***REMOVED***
+    body_lines = [ln for ln in lines[body_start:] if ln.strip()]
     body = "\n".join(body_lines)
 
     # Секция отчёта
@@ -247,10 +247,10 @@ def parse_prompt(path: Path) -> Optional[PromptMeta***REMOVED***:
     )
 
 
-def scan_pending() -> List[PromptMeta***REMOVED***:
+def scan_pending() -> List[PromptMeta]:
     """Все ожидающие промты из user/, отсортированные по приоритету (убыв) затем по имени."""
     ensure_queue_dirs()
-    results: List[PromptMeta***REMOVED*** = [***REMOVED***
+    results: List[PromptMeta] = []
     for p in sorted(queue_dir("pending").glob("*.md")):
         meta = parse_prompt(p)
         if meta is not None:
@@ -259,7 +259,7 @@ def scan_pending() -> List[PromptMeta***REMOVED***:
     return results
 
 
-def scan_resumable() -> List[PromptMeta***REMOVED***:
+def scan_resumable() -> List[PromptMeta]:
     """Multi-turn: сканирует running/ на файлы со status 'running-pending' или 'running-resumable'.
 
     Chronologically ordered by iteration (ascending: earlier tasks first). Excludes
@@ -268,7 +268,7 @@ def scan_resumable() -> List[PromptMeta***REMOVED***:
     ensure_queue_dirs()
     sub = prompts_dir() / "running"
     active = sub / ".in_progress"
-    results: List[PromptMeta***REMOVED*** = [***REMOVED***
+    results: List[PromptMeta] = []
     for p in sorted(sub.glob("*.md")):
         # Skip files currently held under .in_progress/ lock (active processing).
         if active in p.parents:
@@ -283,7 +283,7 @@ def scan_resumable() -> List[PromptMeta***REMOVED***:
     return results
 
 
-def scan_in_progress_locked() -> List[Path***REMOVED***:
+def scan_in_progress_locked() -> List[Path]:
     """Возвращает файлы, заблокированные текущим cron-тиком (running/.in_progress/).
 
     Диагностика только — диспетчер не обрабатывает эти файлы. Используется для
@@ -312,13 +312,13 @@ def move_to_status(path: Path, status: str) -> Path:
 def set_report(path: Path, status: str, report_text: str) -> Path:
     """Записывает отчёт и перемещает файл в папку статуса (done/failed)."""
     text = path.read_text(encoding="utf-8")
-    text = text.replace("**Status:** pending", f"**Status:** {status***REMOVED***")
-    text = text.replace("**Status:** running", f"**Status:** {status***REMOVED***")
+    text = text.replace("**Status:** pending", f"**Status:** {status}")
+    text = text.replace("**Status:** running", f"**Status:** {status}")
     if "## Отчёт" in text:
         head, _, _tail = text.partition("## Отчёт")
-        text = f"{head***REMOVED***## Отчёт\n\n{report_text.strip()***REMOVED***\n"
+        text = f"{head}## Отчёт\n\n{report_text.strip()}\n"
     else:
-        text = f"{text***REMOVED***\n\n## Отчёт\n\n{report_text.strip()***REMOVED***\n"
+        text = f"{text}\n\n## Отчёт\n\n{report_text.strip()}\n"
     path.write_text(text, encoding="utf-8")
     return move_to_status(path, status)
 
@@ -343,20 +343,20 @@ def append_iteration(
         timestamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     text = path.read_text(encoding="utf-8")
     # Update Status + Iteration headers (in-place replacement)
-    text = re.sub(r"\*\*Status:\*\*[^\n***REMOVED****", f"**Status:** {new_status***REMOVED***", text)
-    text = re.sub(r"\*\*Iteration:\*\*[^\n***REMOVED****", f"**Iteration:** {iteration***REMOVED***", text)
+    text = re.sub(r"\*\*Status:\*\*[^\n)*", f"**Status:** {new_status}", text)
+    text = re.sub(r"\*\*Iteration:\*\*[^\n)*", f"**Iteration:** {iteration}", text)
 
     iter_block = (
-        f"\n--- Iteration {iteration***REMOVED*** ({timestamp***REMOVED***) ---\n"
-        f"**Баффи:** {pending_question.strip()***REMOVED***\n"
+        f"\n--- Iteration {iteration} ({timestamp}) ---\n"
+        f"**Баффи:** {pending_question.strip()}\n"
     )
     if "## Отчёт" in text:
         head, _, tail = text.partition("## Отчёт")
         # Replace existing '## Отчёт' section with new framing.
-        report_prelude = f"## Отчёт\n\n**Статус:** iteration {iteration***REMOVED*** оставил pending_task; ожидает следующий cron-тик.\n\n"
-        text = f"{head***REMOVED***{iter_block***REMOVED***\n{report_prelude***REMOVED***{tail.lstrip()***REMOVED***"
+        report_prelude = f"## Отчёт\n\n**Статус:** iteration {iteration} оставил pending_task; ожидает следующий cron-тик.\n\n"
+        text = f"{head}{iter_block}\n{report_prelude}{tail.lstrip()}"
     else:
-        text = f"{text***REMOVED***{iter_block***REMOVED***\n"
+        text = f"{text}{iter_block}\n"
     path.write_text(text, encoding="utf-8")
     return path
 
@@ -369,21 +369,21 @@ def update_meta_value(path: Path, key: str, value: Any) -> Path:
     move_to_status не нужен — файл остаётся в running/).
     """
     text = path.read_text(encoding="utf-8")
-    pattern = re.compile(rf"\*\*{re.escape(key)***REMOVED***:\*\*[^\n***REMOVED****")
+    pattern = re.compile(rf"\*\*{re.escape(key)}:\*\*[^\n]*")
     if pattern.search(text):
-        text = pattern.sub(f"**{key***REMOVED***:** {value***REMOVED***", text)
+        text = pattern.sub(f"**{key}:** {value}", text)
     else:
         # Insert before the body's first `---` separator
         if "\n---" in text:
             head, sep, tail = text.partition("\n---")
-            text = f"{head***REMOVED***\n**{key***REMOVED***:** {value***REMOVED***\n{sep***REMOVED***{tail***REMOVED***"
+            text = f"{head}\n**{key}:** {value}\n{sep}{tail}"
         else:
-            text = f"{text***REMOVED***\n**{key***REMOVED***:** {value***REMOVED***\n"
+            text = f"{text}\n**{key}:** {value}\n"
     path.write_text(text, encoding="utf-8")
     return path
 
 
-def recover_stale_running(max_age_s: int = 3600) -> List[str***REMOVED***:
+def recover_stale_running(max_age_s: int = 3600) -> List[str]:
     """Возвращает зависшие промты из running/ обратно в user/ (по mtime).
 
     Если диспетчер упал между move_to_status(running) и set_report(done/failed),
@@ -396,7 +396,7 @@ def recover_stale_running(max_age_s: int = 3600) -> List[str***REMOVED***:
         Список имён возвращённых файлов.
     """
     ensure_queue_dirs()
-    recovered: List[str***REMOVED*** = [***REMOVED***
+    recovered: List[str] = []
 
     now = _time.time()
     for p in sorted(queue_dir("running").glob("*.md")):
@@ -410,22 +410,22 @@ def recover_stale_running(max_age_s: int = 3600) -> List[str***REMOVED***:
     return recovered
 
 
-def queue_counts() -> Dict[str, int***REMOVED***:
+def queue_counts() -> Dict[str, int]:
     """Счётчики по папкам (для /status и диагностики)."""
     ensure_queue_dirs()
     return {
         status: len(list(queue_dir(status).glob("*.md")))
         for status in ("pending", "running", "done", "failed")
-    ***REMOVED***
+    }
 
 
 if __name__ == "__main__":
     # Ручной CLI: python scripts_01/prompt_queue.py "<текст>"
     import sys
 
-    text = " ".join(sys.argv[1:***REMOVED***)
+    text = " ".join(sys.argv[1:])
     if not text:
         print("Usage: python scripts_01/prompt_queue.py '<task text>'")
         sys.exit(1)
     path = write_user_prompt(text, source="cli")
-    print(f"✅ Промт создан: {path***REMOVED***")
+    print(f"✅ Промт создан: {path}")

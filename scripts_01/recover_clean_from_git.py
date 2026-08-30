@@ -17,7 +17,7 @@ import sys
 import time
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-MARKER = b"***REMOVED***"
+MARKER = b"]"
 OUT = ROOT / ".recovery_git_clean"
 FILES_DIR = OUT / "files"
 META_DIR = OUT / "meta"

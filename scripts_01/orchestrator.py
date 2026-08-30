@@ -6,7 +6,7 @@ orchestrator.py — FSM/DAG Orchestrator для Buffy Project.
 
 Архитектура:
   Orchestrator
-  ├── Planner     — разбивает Goal на Step[***REMOVED*** (DAG)
+  ├── Planner     — разбивает Goal на Step[] (DAG)
   ├── Executor    — выполняет Step через Tool/Agent/Model
   ├── Validator   — проверяет результат Step
   └── FSM         — управляет состояниями Workflow + Step
@@ -28,7 +28,7 @@ orchestrator.py — FSM/DAG Orchestrator для Buffy Project.
     result = orch.run_workflow("Refactor router module")
     print(result.status)  # WorkflowStatus.COMPLETED
     for step in result.steps:
-        print(f"  {step.id***REMOVED***: {step.status***REMOVED*** → {step.result[:50***REMOVED******REMOVED***")
+        print(f"  {step.id}: {step.status} → {step.result[:50]}")
 
 События (EventBus):
   workflow.created   — workflow создан
@@ -57,7 +57,7 @@ import uuid
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
 from enum import Enum
-***REMOVED***
+}
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 
@@ -111,18 +111,18 @@ class Step:
     type: StepType
     name: str = ""
     description: str = ""
-    input: Dict[str, Any***REMOVED*** = field(default_factory=dict)
-    depends_on: List[str***REMOVED*** = field(default_factory=list)
-    tool: Optional[ToolType***REMOVED*** = None
-    agent: Optional[str***REMOVED*** = None
-    model_capabilities: Optional[List[str***REMOVED******REMOVED*** = None
+    input: Dict[str, Any] = field(default_factory=dict)
+    depends_on: List[str] = field(default_factory=list)
+    tool: Optional[ToolType] = None
+    agent: Optional[str] = None
+    model_capabilities: Optional[List[str]] = None
     status: StepStatus = StepStatus.PENDING
     result: Any = None
-    error: Optional[str***REMOVED*** = None
+    error: Optional[str] = None
     retry_count: int = 0
     max_retries: int = 2
     timeout_seconds: int = 60
-    output_key: str = ""      # сохранить результат в context[key***REMOVED***
+    output_key: str = ""      # сохранить результат в context[key]
 
 
 @dataclass
@@ -130,19 +130,19 @@ class Workflow:
     """Полный workflow — от goal до результата."""
     id: str
     goal: str
-    steps: List[Step***REMOVED*** = field(default_factory=list)
+    steps: List[Step] = field(default_factory=list)
     status: WorkflowStatus = WorkflowStatus.PENDING
-    context: Dict[str, Any***REMOVED*** = field(default_factory=dict)
-    errors: List[str***REMOVED*** = field(default_factory=list)
+    context: Dict[str, Any] = field(default_factory=dict)
+    errors: List[str] = field(default_factory=list)
     created_at: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
     updated_at: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
-    metadata: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         """Сериализация в dict."""
         return {
             "id": self.id,
@@ -155,14 +155,14 @@ class Workflow:
                     "status": s.status.value,
                     "depends_on": s.depends_on,
                     "error": s.error,
-                ***REMOVED***
+                }
                 for s in self.steps
-            ***REMOVED***,
+            ],
             "status": self.status.value,
             "errors": self.errors,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
-        ***REMOVED***
+        }
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -178,8 +178,8 @@ class ToolExecutor:
     """
 
     @staticmethod
-    def run(tool: ToolType, input_data: Dict[str, Any***REMOVED***,
-            timeout: int = 60) -> Tuple[bool, Any, Optional[str***REMOVED******REMOVED***:
+    def run(tool: ToolType, input_data: Dict[str, Any],
+            timeout: int = 60) -> Tuple[bool, Any, Optional[str]]:
         """Запускает инструмент.
 
         Returns:
@@ -198,49 +198,49 @@ class ToolExecutor:
         elif tool == ToolType.GIT:
             return ToolExecutor._run_git(input_data, timeout)
         else:
-            return False, None, f"Unknown tool: {tool***REMOVED***"
+            return False, None, f"Unknown tool: {tool}"
 
     @staticmethod
-    def _run_shell(data: Dict[str, Any***REMOVED***, timeout: int) -> Tuple[bool, Any, Optional[str***REMOVED******REMOVED***:
+    def _run_shell(data: Dict[str, Any], timeout: int) -> Tuple[bool, Any, Optional[str]]:
         command = data.get("command", "")
         if not command:
             return False, None, "No command specified"
         cwd = data.get("cwd", str(WORKSPACE))
         try:
             result = subprocess.run(
-                ["sh", "-c", command***REMOVED***, capture_output=True, text=True,
+                ["sh", "-c", command], capture_output=True, text=True,
                 timeout=timeout, cwd=cwd,
             )
             output = result.stdout + result.stderr
             success = result.returncode == 0
-            return success, output, None if success else f"Exit code: {result.returncode***REMOVED***"
+            return success, output, None if success else f"Exit code: {result.returncode}"
         except subprocess.TimeoutExpired:
-            return False, "", f"Timeout ({timeout***REMOVED***s)"
+            return False, "", f"Timeout ({timeout}s)"
         except Exception as e:
             return False, "", str(e)
 
     @staticmethod
-    def _run_python(data: Dict[str, Any***REMOVED***, timeout: int) -> Tuple[bool, Any, Optional[str***REMOVED******REMOVED***:
+    def _run_python(data: Dict[str, Any], timeout: int) -> Tuple[bool, Any, Optional[str]]:
         """Execute Python code in an isolated subprocess (no exec())."""
         code = data.get("code", "")
         if not code:
             return False, None, "No code specified"
         try:
             result = subprocess.run(
-                [sys.executable, "-c", code***REMOVED***,
+                [sys.executable, "-c", code],
                 capture_output=True, text=True,
                 timeout=timeout, cwd=str(WORKSPACE),
             )
             output = result.stdout + result.stderr
             success = result.returncode == 0
-            return success, output, None if success else f"Exit code: {result.returncode***REMOVED***"
+            return success, output, None if success else f"Exit code: {result.returncode}"
         except subprocess.TimeoutExpired:
-            return False, "", f"Timeout ({timeout***REMOVED***s)"
+            return False, "", f"Timeout ({timeout}s)"
         except Exception as e:
             return False, "", str(e)
 
     @staticmethod
-    def _run_memory(data: Dict[str, Any***REMOVED***) -> Tuple[bool, Any, Optional[str***REMOVED******REMOVED***:
+    def _run_memory(data: Dict[str, Any]) -> Tuple[bool, Any, Optional[str]]:
         from scripts_01.memory_engine import MemoryEngine, MemoryLevel
         engine = MemoryEngine(workspace_root=str(WORKSPACE))
         action = data.get("action", "search")
@@ -250,24 +250,24 @@ class ToolExecutor:
         if action == "search":
             results = engine.search(query, level=MemoryLevel(level) if level else None)
             return True, [
-                {"key": r.key, "summary": r.summary, "level": r.level.value***REMOVED***
-                for r in results[:5***REMOVED***
-            ***REMOVED***, None
+                {"key": r.key, "summary": r.summary, "level": r.level.value}
+                for r in results[:5]
+            ], None
         elif action == "get":
             entry = engine.retrieve(
                 level=MemoryLevel(data.get("level")),
                 key=data.get("key"),
             ) if data.get("level") and data.get("key") else None
-            return True, entry.content[:500***REMOVED*** if entry else None, None
+            return True, entry.content[:500] if entry else None, None
         elif action == "list":
             entries = engine.list_entries(
                 level=MemoryLevel(level) if level else None
             )
-            return True, [(e.key, e.level.value, len(e.content)) for e in entries***REMOVED***, None
-        return False, None, f"Unknown action: {action***REMOVED***"
+            return True, [(e.key, e.level.value, len(e.content)) for e in entries], None
+        return False, None, f"Unknown action: {action}"
 
     @staticmethod
-    def _run_knowledge(data: Dict[str, Any***REMOVED***) -> Tuple[bool, Any, Optional[str***REMOVED******REMOVED***:
+    def _run_knowledge(data: Dict[str, Any]) -> Tuple[bool, Any, Optional[str]]:
         from scripts_01.knowledge_engine import KnowledgeEngine
         ke = KnowledgeEngine(workspace_root=str(WORKSPACE))
         query = data.get("query", "")
@@ -276,12 +276,12 @@ class ToolExecutor:
             return False, None, "No query specified"
         results = ke.search(query, top_k=5, mode=mode)
         return True, [
-            {"doc_id": r.doc_id, "score": r.score, "snippet": r.snippet[:200***REMOVED******REMOVED***
+            {"doc_id": r.doc_id, "score": r.score, "snippet": r.snippet[:200]}
             for r in results
-        ***REMOVED***, None
+        ], None
 
     @staticmethod
-    def _run_file(data: Dict[str, Any***REMOVED***) -> Tuple[bool, Any, Optional[str***REMOVED******REMOVED***:
+    def _run_file(data: Dict[str, Any]) -> Tuple[bool, Any, Optional[str]]:
         action = data.get("action", "read")
         path = data.get("path", "")
         if not path:
@@ -290,28 +290,28 @@ class ToolExecutor:
         try:
             if action == "read":
                 if not full_path.exists():
-                    return False, None, f"File not found: {path***REMOVED***"
+                    return False, None, f"File not found: {path}"
                 content = full_path.read_text(encoding="utf-8")
                 return True, content, None
             elif action == "write":
                 content = data.get("content", "")
                 full_path.parent.mkdir(parents=True, exist_ok=True)
                 full_path.write_text(content, encoding="utf-8")
-                return True, f"Written {len(content)***REMOVED*** chars", None
+                return True, f"Written {len(content)} chars", None
             elif action == "list":
                 if not full_path.exists():
-                    return False, None, f"Directory not found: {path***REMOVED***"
-                files = [str(f.relative_to(WORKSPACE)) for f in sorted(full_path.rglob("*"))***REMOVED***
-                return True, files[:50***REMOVED***, None
+                    return False, None, f"Directory not found: {path}"
+                files = [str(f.relative_to(WORKSPACE)) for f in sorted(full_path.rglob("*"))]
+                return True, files[:50], None
         except Exception as e:
             return False, None, str(e)
-        return False, None, f"Unknown action: {action***REMOVED***"
+        return False, None, f"Unknown action: {action}"
 
     @staticmethod
-    def _run_git(data: Dict[str, Any***REMOVED***, timeout: int) -> Tuple[bool, Any, Optional[str***REMOVED******REMOVED***:
+    def _run_git(data: Dict[str, Any], timeout: int) -> Tuple[bool, Any, Optional[str]]:
         command = data.get("command", "status")
         cwd = data.get("cwd", str(WORKSPACE))
-        cmd_parts = ["git"***REMOVED*** + shlex.split(command)
+        cmd_parts = ["git"] + shlex.split(command)
         try:
             result = subprocess.run(
                 cmd_parts, capture_output=True, text=True,
@@ -319,7 +319,7 @@ class ToolExecutor:
             )
             output = result.stdout + result.stderr
             success = result.returncode == 0
-            return success, output, None if success else f"Exit code: {result.returncode***REMOVED***"
+            return success, output, None if success else f"Exit code: {result.returncode}"
         except Exception as e:
             return False, "", str(e)
 
@@ -333,17 +333,17 @@ class StepValidator:
     """Валидатор результатов шагов."""
 
     @staticmethod
-    def validate(step: Step, context: Dict[str, Any***REMOVED***) -> Tuple[bool, Optional[str***REMOVED******REMOVED***:
+    def validate(step: Step, context: Dict[str, Any]) -> Tuple[bool, Optional[str]]:
         """Проверяет результат шага.
 
         Returns:
             (is_valid, error_message)
         """
         if step.status != StepStatus.SUCCESS:
-            return False, f"Step status is {step.status.value***REMOVED***, not SUCCESS"
+            return False, f"Step status is {step.status.value}, not SUCCESS"
 
         # Проверка по типу шага
-        validation_rules = step.input.get("validation", {***REMOVED***)
+        validation_rules = step.input.get("validation", {})
 
         # not_empty — результат не должен быть пустым
         if validation_rules.get("not_empty", False):
@@ -353,13 +353,13 @@ class StepValidator:
         # min_length — минимальная длина результата
         min_len = validation_rules.get("min_length", 0)
         if isinstance(step.result, str) and len(step.result) < min_len:
-            return False, f"Result too short: {len(step.result)***REMOVED*** < {min_len***REMOVED***"
+            return False, f"Result too short: {len(step.result)} < {min_len}"
 
         # contains — результат должен содержать строку
         contains = validation_rules.get("contains", "")
         if contains and isinstance(step.result, str):
             if contains not in step.result:
-                return False, f"Result doesn't contain '{contains***REMOVED***'"
+                return False, f"Result doesn't contain '{contains}'"
 
         # error_free — без ошибок (уже проверено статусом)
         if step.error:
@@ -383,16 +383,16 @@ class DefaultPlanner:
     """
 
     @staticmethod
-    def plan(goal: str) -> List[Step***REMOVED***:
+    def plan(goal: str) -> List[Step]:
         """Создаёт список шагов на основе goal."""
         goal_lower = goal.lower()
-        steps: List[Step***REMOVED*** = [***REMOVED***
+        steps: List[Step] = []
         step_id = 0
 
         def _sid(prefix: str = "step") -> str:
             nonlocal step_id
             step_id += 1
-            return f"{prefix***REMOVED***_{step_id***REMOVED***"
+            return f"{prefix}_{step_id}"
 
         # Всегда: поиск релевантных знаний
         steps.append(Step(
@@ -401,13 +401,13 @@ class DefaultPlanner:
             name="Search Knowledge",
             description="Search relevant knowledge for the goal",
             tool=ToolType.KNOWLEDGE,
-            input={"query": goal, "mode": "hybrid"***REMOVED***,
+            input={"query": goal, "mode": "hybrid"},
             output_key="knowledge_results",
         ))
 
         # Если запрос на код/рефакторинг
         if any(w in goal_lower for w in ["refactor", "implement", "create", "code",
-                                           "write", "add", "fix", "update", "change"***REMOVED***):
+                                           "write", "add", "fix", "update", "change"]):
             steps.append(Step(
                 id=_sid("read"),
                 type=StepType.TOOL,
@@ -418,9 +418,9 @@ class DefaultPlanner:
                     # v5.189.9: -maxdepth 3 ограничивает обход — полное древо
                     # на Android FUSE (sdcard) занимает >60s → TimeoutExpired ×3 retries.
                     "command": "find . -maxdepth 3 -name '*.py' | head -20",
-                    "validation": {"not_empty": False***REMOVED***,
-                ***REMOVED***,
-                depends_on=[steps[-1***REMOVED***.id***REMOVED*** if steps else [***REMOVED***,
+                    "validation": {"not_empty": False},
+                },
+                depends_on=[steps[-1].id] if steps else [],
                 output_key="file_list",
             ))
             steps.append(Step(
@@ -430,37 +430,37 @@ class DefaultPlanner:
                 description="Execute the task",
                 tool=ToolType.SHELL,
                 input={
-                    "command": f"echo 'TODO: implement for: {goal***REMOVED***'",
-                    "validation": {"min_length": 10***REMOVED***,
-                ***REMOVED***,
-                depends_on=[steps[-1***REMOVED***.id***REMOVED*** if steps else [***REMOVED***,
+                    "command": f"echo 'TODO: implement for: {goal}'",
+                    "validation": {"min_length": 10},
+                },
+                depends_on=[steps[-1].id] if steps else [],
                 output_key="execution_result",
             ))
 
         # Если запрос на исследование/анализ
         elif any(w in goal_lower for w in ["research", "analyze", "search", "find",
-                                             "explain", "what", "how", "compare"***REMOVED***):
+                                             "explain", "what", "how", "compare"]):
             steps.append(Step(
                 id=_sid("analyze"),
                 type=StepType.TOOL,
                 name="Analyze",
                 description="Deep analysis",
                 tool=ToolType.KNOWLEDGE,
-                input={"query": goal, "mode": "semantic_ml"***REMOVED***,
-                depends_on=[steps[-1***REMOVED***.id***REMOVED*** if steps else [***REMOVED***,
+                input={"query": goal, "mode": "semantic_ml"},
+                depends_on=[steps[-1].id] if steps else [],
                 output_key="analysis_results",
             ))
 
         # Если запрос на архитектуру/проектирование
-        elif any(w in goal_lower for w in ["architecture", "design", "plan", "propose"***REMOVED***):
+        elif any(w in goal_lower for w in ["architecture", "design", "plan", "propose"]):
             steps.append(Step(
                 id=_sid("memory"),
                 type=StepType.TOOL,
                 name="Check Memory",
                 description="Check existing context in memory",
                 tool=ToolType.MEMORY,
-                input={"action": "search", "query": goal***REMOVED***,
-                depends_on=[steps[-1***REMOVED***.id***REMOVED*** if steps else [***REMOVED***,
+                input={"action": "search", "query": goal},
+                depends_on=[steps[-1].id] if steps else [],
                 output_key="memory_context",
             ))
 
@@ -472,10 +472,10 @@ class DefaultPlanner:
                 name="Validate Result",
                 description="Validate the final result",
                 input={
-                    "validation": {"not_empty": True, "min_length": 10***REMOVED***,
-                    "validate_step_id": steps[-1***REMOVED***.id,
-                ***REMOVED***,
-                depends_on=[steps[-1***REMOVED***.id***REMOVED***,
+                    "validation": {"not_empty": True, "min_length": 10},
+                    "validate_step_id": steps[-1].id,
+                },
+                depends_on=[steps[-1].id],
             ))
 
         return steps
@@ -492,7 +492,7 @@ class Orchestrator:
     Жизненный цикл:
       run_workflow(goal)
         → workflow.status = PLANNING
-        → planner.plan(goal) → steps[***REMOVED***
+        → planner.plan(goal) → steps[]
         → workflow.status = RUNNING
         → while steps remain:
             ready = get_ready_steps()  # DAG resolution
@@ -510,12 +510,12 @@ class Orchestrator:
 
     def __init__(
         self,
-        planner: Optional[DefaultPlanner***REMOVED*** = None,
-        executor: Optional[ToolExecutor***REMOVED*** = None,
-        validator: Optional[StepValidator***REMOVED*** = None,
-        event_bus: Optional[Any***REMOVED*** = None,  # EventBus instance
-        tool_registry: Optional[Any***REMOVED*** = None,  # ToolRegistry instance
-        policy_engine: Optional[Any***REMOVED*** = None,  # PolicyEngine (правило 11) — опционально
+        planner: Optional[DefaultPlanner] = None,
+        executor: Optional[ToolExecutor] = None,
+        validator: Optional[StepValidator] = None,
+        event_bus: Optional[Any] = None,  # EventBus instance
+        tool_registry: Optional[Any] = None,  # ToolRegistry instance
+        policy_engine: Optional[Any] = None,  # PolicyEngine (правило 11) — опционально
         max_workers: int = 4,  # max parallel steps (1 = sequential)
     ):
         self._planner = planner or DefaultPlanner()
@@ -527,7 +527,7 @@ class Orchestrator:
         self.max_workers = max_workers
         self._lock = threading.Lock()
 
-    def _get_policy_engine(self) -> Optional[Any***REMOVED***:
+    def _get_policy_engine(self) -> Optional[Any]:
         """Ленивый PolicyEngine (правило 11 User-Choice Override), graceful degradation.
 
         Возвращает None, если policy-движок недоступен — workflow не блокируется,
@@ -555,7 +555,7 @@ class Orchestrator:
         Синхронная версия (для CLI/скриптов).
         """
         workflow = Workflow(
-            id=uuid.uuid4().hex[:12***REMOVED***,
+            id=uuid.uuid4().hex[:12],
             goal=goal,
         )
 
@@ -563,25 +563,25 @@ class Orchestrator:
         self._publish_event("workflow.created", {
             "workflow_id": workflow.id,
             "goal": goal,
-        ***REMOVED***)
+        ])
 
         # Правило 8 (Context-Aware Routing): перед созданием задачи проверяем
         # Knowledge/Graph на существующие похожие работы — не создаём дубли.
         # Результат сохраняется в workflow.metadata и публикуется событием.
         context_matches = self.check_existing_context(goal)
-        workflow.metadata["context_matches"***REMOVED*** = context_matches
+        workflow.metadata["context_matches"] = context_matches
         self._publish_event("workflow.context_check", {
             "workflow_id": workflow.id,
             "goal": goal,
             "matches": len(context_matches),
-        ***REMOVED***)
+        ])
 
         # Phase 1: Plan
         workflow.status = WorkflowStatus.PLANNING
         self._publish_event("workflow.planning", {
             "workflow_id": workflow.id,
             "goal": goal,
-        ***REMOVED***)
+        ])
 
         steps = self._planner.plan(goal)
         workflow.steps = steps
@@ -593,7 +593,7 @@ class Orchestrator:
                 "workflow_id": workflow.id,
                 "goal": goal,
                 "error": "Planner returned no steps",
-            ***REMOVED***)
+            ])
             return workflow
 
         # Phase 2: Execute (parallel DAG execution)
@@ -602,9 +602,9 @@ class Orchestrator:
             "workflow_id": workflow.id,
             "goal": goal,
             "step_count": len(steps),
-        ***REMOVED***)
+        ])
 
-        active_futures: Dict[concurrent.futures.Future, Step***REMOVED*** = {***REMOVED***
+        active_futures: Dict[concurrent.futures.Future, Step] = {}
 
         with concurrent.futures.ThreadPoolExecutor(
             max_workers=self.max_workers
@@ -617,7 +617,7 @@ class Orchestrator:
                 # Submit ready steps to thread pool
                 for step in ready_steps:
                     future = pool.submit(self._execute_step, step, workflow)
-                    active_futures[future***REMOVED*** = step
+                    active_futures[future] = step
 
                 if not active_futures:
                     # No active work — check if we're done or blocked
@@ -625,7 +625,7 @@ class Orchestrator:
                         remaining = [
                             s for s in steps
                             if s.status in (StepStatus.PENDING, StepStatus.READY)
-                        ***REMOVED***
+                        ]
                     if not remaining:
                         break  # All done
                     # Blocked steps — skip those with failed/skipped deps
@@ -637,7 +637,7 @@ class Orchestrator:
                         # получают терминальный SKIPPED (чистое финальное состояние),
                         # workflow — FAILED с описательной ошибкой.
                         with self._lock:
-                            deadlocked: List[Step***REMOVED*** = [***REMOVED***
+                            deadlocked: List[Step] = []
                             for s in remaining:
                                 if s.status in (
                                     StepStatus.PENDING, StepStatus.READY,
@@ -655,7 +655,7 @@ class Orchestrator:
                         workflow.status = WorkflowStatus.FAILED
                         workflow.errors.append(
                             "Deadlock: steps can never become ready "
-                            f"({', '.join(s.id for s in remaining)***REMOVED***)"
+                            f"({', '.join(s.id for s in remaining)})"
                         )
                         break
                     continue
@@ -671,7 +671,7 @@ class Orchestrator:
                         future.result()  # re-raise thread exceptions
                     except Exception:
                         pass  # errors already handled in _execute_step
-                    del active_futures[future***REMOVED***
+                    del active_futures[future]
 
                 # Publish progress
                 self._publish_workflow_progress(workflow)
@@ -687,14 +687,14 @@ class Orchestrator:
             "status": workflow.status.value,
             "step_count": len(workflow.steps),
             "error_count": len(workflow.errors),
-        ***REMOVED***)
+        ])
 
         workflow.updated_at = datetime.now(timezone.utc).isoformat()
         return workflow
 
     def check_existing_context(
         self, goal: str, top_k: int = 5
-    ) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    ) -> List[Dict[str, Any]]:
         """Правило 8: Context-Aware Routing — поиск существующего контекста.
 
         Перед созданием задачи проверяет Knowledge Engine (FTS + TF-IDF + graph)
@@ -709,7 +709,7 @@ class Orchestrator:
         Returns:
             Список dict-совпадений из Knowledge Engine.
         """
-        matches: List[Dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+        matches: List[Dict[str, Any]] = []
         try:
             from scripts_01.knowledge_engine import (
                 DEFAULT_DB_PATH,
@@ -721,21 +721,21 @@ class Orchestrator:
             ke = KnowledgeEngine(workspace_root=str(WORKSPACE))
             results = ke.search(goal, top_k=top_k, mode="hybrid")
             for r in results:
-                meta = r.metadata or {***REMOVED***
+                meta = r.metadata or {}
                 matches.append({
                     "doc_id": r.doc_id,
                     "score": round(float(r.score), 4),
                     "title": meta.get("title", ""),
                     "doc_type": meta.get("doc_type", ""),
-                    "snippet": r.snippet[:160***REMOVED***,
-                ***REMOVED***)
+                    "snippet": r.snippet[:160],
+                ])
         except Exception:
             pass  # Knowledge недоступен — workflow не блокируем
         return matches
 
-    def _get_ready_steps(self, workflow: Workflow) -> List[Step***REMOVED***:
+    def _get_ready_steps(self, workflow: Workflow) -> List[Step]:
         """Находит шаги, готовые к выполнению (DAG resolution)."""
-        ready: List[Step***REMOVED*** = [***REMOVED***
+        ready: List[Step] = []
         for step in workflow.steps:
             if step.status != StepStatus.PENDING:
                 continue
@@ -752,7 +752,7 @@ class Orchestrator:
 
         return ready
 
-    def _publish_event(self, event_type: str, data: Dict[str, Any***REMOVED***) -> None:
+    def _publish_event(self, event_type: str, data: Dict[str, Any]) -> None:
         """Публикует событие через EventBus, если он подключён."""
         if self._event_bus is not None:
             from scripts_01.event_bus import Event
@@ -770,21 +770,21 @@ class Orchestrator:
                 "step_id": step.id,
                 "workflow_id": workflow.id,
                 "step_name": step.name or step.id,
-            ***REMOVED***)
+            ])
         elif status == StepStatus.FAILED:
             self._publish_event("step.failed", {
                 "step_id": step.id,
                 "workflow_id": workflow.id,
                 "step_name": step.name or step.id,
                 "error": step.error,
-            ***REMOVED***)
+            ])
         elif status == StepStatus.SKIPPED:
             self._publish_event("step.skipped", {
                 "step_id": step.id,
                 "workflow_id": workflow.id,
                 "step_name": step.name or step.id,
                 "error": step.error,
-            ***REMOVED***)
+            ])
 
     def _execute_step(self, step: Step, workflow: Workflow) -> None:
         """Выполняет один шаг. Thread-safe — вызывается из ThreadPoolExecutor."""
@@ -798,11 +798,11 @@ class Orchestrator:
             "step_name": step.name or step.id,
             "step_type": step.type.value,
             "tool": step.tool.value if step.tool else None,
-        ***REMOVED***)
+        ])
 
         success = False
         result = None
-        error: Optional[str***REMOVED*** = None
+        error: Optional[str] = None
 
         if step.type == StepType.TOOL:
             # ToolRuntime delegation (если подключён)
@@ -826,13 +826,13 @@ class Orchestrator:
                     success = True
                     result = "Validation passed"
                 else:
-                    error = f"Validation failed for {target_id***REMOVED***: {validation_err***REMOVED***"
+                    error = f"Validation failed for {target_id}: {validation_err}"
             else:
-                error = f"Target step not found: {target_id***REMOVED***"
+                error = f"Target step not found: {target_id}"
 
         elif step.type == StepType.MODEL:
             try:
-                caps = step.model_capabilities or ["code"***REMOVED***
+                caps = step.model_capabilities or ["code"]
                 model = None
                 routed_via = "router"
 
@@ -840,14 +840,14 @@ class Orchestrator:
                 policy_engine = self._get_policy_engine()
                 if policy_engine is not None:
                     from freebuff_plugin_03.policy import is_policy_override
-                    resolved = policy_engine.resolve(caps[0***REMOVED***)
+                    resolved = policy_engine.resolve(caps[0])
                     runtime = resolved.get("runtime") if isinstance(resolved, dict) else None
                     is_override = is_policy_override(resolved)
                     if runtime and is_override:
                         from scripts_01.model_gateway import RUNTIME_MODELS
                         model = RUNTIME_MODELS.get(runtime)
                         if model:
-                            routed_via = f"policy:{runtime***REMOVED***"
+                            routed_via = f"policy:{runtime}"
 
                 # Fallback: авто-маршрутизация SmartRouter
                 if model is None:
@@ -859,13 +859,13 @@ class Orchestrator:
                     )
                     model = decision.model  # RouteDecision.model (не model_id)
 
-                result = f"Routed to: {model***REMOVED*** ({routed_via***REMOVED***)"
+                result = f"Routed to: {model} ({routed_via})"
                 success = True
             except Exception as e:
                 error = str(e)
 
         else:
-            error = f"Unsupported step type: {step.type***REMOVED***"
+            error = f"Unsupported step type: {step.type}"
 
         # Thread-safe status update
         with self._lock:
@@ -883,11 +883,11 @@ class Orchestrator:
                         "retry_count": step.retry_count,
                         "max_retries": step.max_retries,
                         "error": error,
-                    ***REMOVED***)
+                    ])
                 else:
                     step.status = StepStatus.FAILED
                     workflow.errors.append(
-                        f"Step {step.id***REMOVED*** failed after {step.max_retries***REMOVED*** retries: {error***REMOVED***"
+                        f"Step {step.id} failed after {step.max_retries} retries: {error}"
                     )
 
         # Publish step event after execution
@@ -896,40 +896,40 @@ class Orchestrator:
         # Thread-safe context update
         with self._lock:
             if step.status == StepStatus.SUCCESS and step.output_key:
-                workflow.context[step.output_key***REMOVED*** = step.result
+                workflow.context[step.output_key] = step.result
 
-    def _run_via_tool_registry(self, step: Step) -> Tuple[bool, Any, Optional[str***REMOVED******REMOVED***:
+    def _run_via_tool_registry(self, step: Step) -> Tuple[bool, Any, Optional[str]]:
         """Делегирует выполнение шага в ToolRegistry."""
         try:
             tool_name = step.tool.value if step.tool else ""
-            params = {***REMOVED***
+            params = {}
             if step.tool == ToolType.SHELL:
                 params = {
                     "command": step.input.get("command", ""),
                     "cwd": step.input.get("cwd", str(WORKSPACE)),
                     "timeout": step.timeout_seconds,
-                ***REMOVED***
+                }
             elif step.tool == ToolType.FILE:
                 params = {
                     "action": step.input.get("action", "read"),
                     "path": step.input.get("path", ""),
                     "content": step.input.get("content", ""),
-                ***REMOVED***
+                }
             elif step.tool == ToolType.GIT:
                 params = {
                     "command": step.input.get("command", "status"),
                     "args": step.input.get("args", ""),
                     "cwd": step.input.get("cwd", str(WORKSPACE)),
                     "timeout": step.timeout_seconds,
-                ***REMOVED***
+                }
             result = self._tool_registry.execute(tool_name, params)
             return result.success, result.data, result.error
         except Exception as e:
-            return False, None, f"ToolRuntime error: {e***REMOVED***"
+            return False, None, f"ToolRuntime error: {e}"
 
     def _handle_blocked_steps(
-        self, workflow: Workflow, steps: List[Step***REMOVED***
-    ) -> List[Step***REMOVED***:
+        self, workflow: Workflow, steps: List[Step]
+    ) -> List[Step]:
         """Skip steps whose dependencies failed or were skipped.
 
         v5.189.9: транзитивно блокированные шаги (dep SKIPPED) тоже скипаются —
@@ -937,7 +937,7 @@ class Orchestrator:
         run_workflow попадает в бесконечный цикл. Возвращает список скипнутых
         (пустой список ⇒ run_workflow может применить deadlock-guard).
         """
-        skipped: List[Step***REMOVED*** = [***REMOVED***
+        skipped: List[Step] = []
         with self._lock:
             for s in steps:
                 if s.status not in (StepStatus.PENDING, StepStatus.READY):
@@ -947,13 +947,13 @@ class Orchestrator:
                     if any(ss.id == d and ss.status in (
                         StepStatus.FAILED, StepStatus.SKIPPED,
                     ) for ss in steps)
-                ***REMOVED***
+                ]
                 if dead_deps:
                     s.status = StepStatus.SKIPPED
                     # Формулировка точная: деп может быть FAILED или SKIPPED
                     # (речь про блокировку, а не только про фейл). Контракт
                     # «id депа присутствует в error» сохранён.
-                    s.error = f"Dependency blocked: {', '.join(dead_deps)***REMOVED***"
+                    s.error = f"Dependency blocked: {', '.join(dead_deps)}"
                     skipped.append(s)
         # Publish outside lock to avoid holding it during EventBus I/O
         for s in skipped:
@@ -972,7 +972,7 @@ class Orchestrator:
             "workflow_id": workflow.id,
             "completed_steps": completed,
             "total_steps": total,
-        ***REMOVED***)
+        ])
 
     def save_workflow(self, workflow: Workflow) -> None:
         """Сохраняет workflow в Memory Engine."""
@@ -981,24 +981,24 @@ class Orchestrator:
         engine = MemoryEngine(workspace_root=str(WORKSPACE))
         engine.store(
             level=MemoryLevel.WORKING,
-            key=f"workflow_{workflow.id***REMOVED***",
+            key=f"workflow_{workflow.id}",
             content=json.dumps(workflow.to_dict(), ensure_ascii=False, indent=2),
             content_type=ContentType.JSON,
-            summary=f"Workflow: {workflow.goal[:80***REMOVED******REMOVED***",
+            summary=f"Workflow: {workflow.goal[:80]}",
             metadata={
                 "workflow_id": workflow.id,
                 "status": workflow.status.value,
                 "step_count": len(workflow.steps),
-            ***REMOVED***,
+            },
         )
 
-    def list_workflows(self, limit: int = 10) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    def list_workflows(self, limit: int = 10) -> List[Dict[str, Any]]:
         """Список сохранённых workflows."""
         from scripts_01.memory_engine import MemoryEngine, MemoryLevel
 
         engine = MemoryEngine(workspace_root=str(WORKSPACE))
         entries = engine.list_entries(level=MemoryLevel.WORKING)
-        workflows = [***REMOVED***
+        workflows = []
         for e in entries:
             if e.key.startswith("workflow_"):
                 try:
@@ -1007,7 +1007,7 @@ class Orchestrator:
                 except (json.JSONDecodeError, KeyError):
                     continue
         workflows.sort(key=lambda w: w.get("created_at", ""), reverse=True)
-        return workflows[:limit***REMOVED***
+        return workflows[:limit]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1047,12 +1047,12 @@ def main():
     orch = Orchestrator()
 
     if args.command == "run":
-        print(f"🚀 Starting workflow: {args.goal***REMOVED***")
+        print(f"🚀 Starting workflow: {args.goal}")
         print()
         result = orch.run_workflow(args.goal)
-        print(f"📊 Status: {result.status.value***REMOVED***")
-        print(f"   Steps: {len(result.steps)***REMOVED***")
-        print(f"   Errors: {len(result.errors)***REMOVED***")
+        print(f"📊 Status: {result.status.value}")
+        print(f"   Steps: {len(result.steps)}")
+        print(f"   Errors: {len(result.errors)}")
         print()
         for i, step in enumerate(result.steps, 1):
             icon = {
@@ -1062,18 +1062,18 @@ def main():
                 StepStatus.PENDING: "⏳",
                 StepStatus.READY: "📋",
                 StepStatus.SKIPPED: "⏭️",
-            ***REMOVED***.get(step.status, "❓")
-            print(f"  {icon***REMOVED*** {i***REMOVED***. {step.name or step.id***REMOVED***")
+            ].get(step.status, "❓")
+            print(f"  {icon} {i}. {step.name or step.id}")
             if step.error:
-                print(f"     Error: {step.error[:100***REMOVED******REMOVED***")
+                print(f"     Error: {step.error[:100]}")
             if step.result:
-                result_str = str(step.result)[:100***REMOVED***
-                print(f"     Result: {result_str***REMOVED***...")
+                result_str = str(step.result)[:100]
+                print(f"     Result: {result_str}...")
         print()
         if result.status == WorkflowStatus.COMPLETED:
             print("✅ Workflow completed successfully!")
         else:
-            print(f"❌ Workflow failed: {', '.join(result.errors[:3***REMOVED***)***REMOVED***")
+            print(f"❌ Workflow failed: {', '.join(result.errors[:3])}")
 
         # Save
         orch.save_workflow(result)
@@ -1083,32 +1083,32 @@ def main():
         if not workflows:
             print("📭 No workflows")
             return
-        print(f"📋 Workflows ({len(workflows)***REMOVED***):")
+        print(f"📋 Workflows ({len(workflows)}):")
         for w in workflows:
             icon = {
                 "completed": "✅",
                 "failed": "❌",
                 "running": "🔄",
-            ***REMOVED***.get(w.get("status", ""), "❓")
-            print(f"  {icon***REMOVED*** {w['id'***REMOVED******REMOVED*** | {w['goal'***REMOVED***[:60***REMOVED******REMOVED*** | {w['status'***REMOVED******REMOVED*** | {len(w['steps'***REMOVED***)***REMOVED*** steps")
+            ].get(w.get("status", ""), "❓")
+            print(f"  {icon} {w['id']} | {w['goal'][:60]} | {w['status']} | {len(w['steps'])} steps")
 
     elif args.command == "get":
         workflows = orch.list_workflows(limit=100)
-        found = [w for w in workflows if w["id"***REMOVED***.startswith(args.workflow_id)***REMOVED***
+        found = [w for w in workflows if w["id"].startswith(args.workflow_id)]
         if not found:
-            print(f"❌ Workflow not found: {args.workflow_id***REMOVED***")
+            print(f"❌ Workflow not found: {args.workflow_id}")
             return
-        w = found[0***REMOVED***
-        print(f"📋 Workflow: {w['id'***REMOVED******REMOVED***")
-        print(f"   Goal:   {w['goal'***REMOVED******REMOVED***")
-        print(f"   Status: {w['status'***REMOVED******REMOVED***")
-        print(f"   Steps:  {len(w['steps'***REMOVED***)***REMOVED***")
-        print(f"   Errors: {len(w.get('errors', [***REMOVED***))***REMOVED***")
+        w = found[0]
+        print(f"📋 Workflow: {w['id']}")
+        print(f"   Goal:   {w['goal']}")
+        print(f"   Status: {w['status']}")
+        print(f"   Steps:  {len(w['steps'])}")
+        print(f"   Errors: {len(w.get('errors', []))}")
         print()
-        for s in w["steps"***REMOVED***:
-            print(f"  [{s['status'***REMOVED******REMOVED******REMOVED*** {s['name'***REMOVED******REMOVED*** ({s['type'***REMOVED******REMOVED***)")
+        for s in w["steps"]:
+            print(f"  [{s['status']}] {s['name']} ({s['type']})")
             if s.get("error"):
-                print(f"    Error: {s['error'***REMOVED***[:80***REMOVED******REMOVED***")
+                print(f"    Error: {s['error'][:80]}")
 
     else:
         parser.print_help()

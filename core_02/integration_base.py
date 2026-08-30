@@ -39,7 +39,7 @@ __all__ = [
     "AuthSpec",
     "INTENT_CAPABILITY_MAP",
     "IntegrationAdapter",
-***REMOVED***
+]
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -98,16 +98,16 @@ class AdapterRequest:
     Все внешние системы приводят свои входы к этому формату.
     """
     intent: str                    # "execute_project", "report_status", "phone_sms"
-    payload: Dict[str, Any***REMOVED*** = field(default_factory=dict)
-    meta: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    payload: Dict[str, Any] = field(default_factory=dict)
+    meta: Dict[str, Any] = field(default_factory=dict)
     # метаданные источника (chat_id, client_ip, session_id — зависит от адаптера)
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "intent": self.intent,
             "payload": self.payload,
             "meta": self.meta,
-        ***REMOVED***
+        }
 
 
 @dataclass
@@ -116,23 +116,23 @@ class AdapterResponse:
     status: str                   # "ok" | "error" | "deferred"
     intent: str                   # исходный intent запроса
     data: Any = None
-    errors: List[str***REMOVED*** = field(default_factory=list)
-    warnings: List[str***REMOVED*** = field(default_factory=list)
-    capability_used: Optional[str***REMOVED*** = None  # capability-токен, выбранный роутером
-    model_used: Optional[str***REMOVED*** = None       # модель, выбранная SmartRouter
+    errors: List[str] = field(default_factory=list)
+    warnings: List[str] = field(default_factory=list)
+    capability_used: Optional[str] = None  # capability-токен, выбранный роутером
+    model_used: Optional[str] = None       # модель, выбранная SmartRouter
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
-        d: Dict[str, Any***REMOVED*** = {
+    def to_dict(self) -> Dict[str, Any]:
+        d: Dict[str, Any] = {
             "status": self.status,
             "intent": self.intent,
             "data": self.data,
             "errors": self.errors,
             "warnings": self.warnings,
-        ***REMOVED***
+        }
         if self.capability_used is not None:
-            d["capability_used"***REMOVED*** = self.capability_used
+            d["capability_used"] = self.capability_used
         if self.model_used is not None:
-            d["model_used"***REMOVED*** = self.model_used
+            d["model_used"] = self.model_used
         return d
 
     @property
@@ -147,7 +147,7 @@ class AdapterResponse:
 # Закрытый словарь intent→capability (ANTI-6b: capability — подмножество
 # agent_base.KNOWN_CAPABILITIES). Неизвестный intent → fail-safe отказ,
 # НЕ fallback на неизвестную capability.
-INTENT_CAPABILITY_MAP: Dict[str, str***REMOVED*** = {
+INTENT_CAPABILITY_MAP: Dict[str, str] = {
     # TG
     "execute_project": "code",
     "status_check": "summarize",
@@ -169,7 +169,7 @@ INTENT_CAPABILITY_MAP: Dict[str, str***REMOVED*** = {
     "knowledge_base_query": "long_context",
     # Fallback
     "fallback": "summarize",
-***REMOVED***
+}
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -195,7 +195,7 @@ class IntegrationAdapter(ABC):
         *,
         adapter_id: str,
         direction: AdapterDirection = AdapterDirection.INBOUND,
-        auth: Optional[AuthSpec***REMOVED*** = None,
+        auth: Optional[AuthSpec] = None,
     ) -> None:
         self.adapter_id = adapter_id
         self.direction = direction
@@ -216,7 +216,7 @@ class IntegrationAdapter(ABC):
 
         Returns:
             AdapterResponse (status ok/error/deferred).
-            Fail-safe: сбой → AdapterResponse(status="error", errors=[...***REMOVED***),
+            Fail-safe: сбой → AdapterResponse(status="error", errors=[...]),
             НЕ exception наружу.
         """
         ...
@@ -235,7 +235,7 @@ class IntegrationAdapter(ABC):
         """
         return INTENT_CAPABILITY_MAP.get(
             intent,
-            INTENT_CAPABILITY_MAP["fallback"***REMOVED***,
+            INTENT_CAPABILITY_MAP["fallback"],
         )
 
     # ── Service: platform call ──────────────────────────────────────────
@@ -243,16 +243,16 @@ class IntegrationAdapter(ABC):
     def call_platform(
         self,
         capability: str,
-        payload: Dict[str, Any***REMOVED***,
+        payload: Dict[str, Any],
         *,
         event_bus: Any = None,
-    ) -> Dict[str, Any***REMOVED***:
+    ) -> Dict[str, Any]:
         """Явный вызов платформы: capability → SmartRouter → модель.
 
         НЕ вызывает ForgePipeline напрямую (§7.3). Использует SmartRouter
         для model routing и ModelGateway для исполнения.
 
-        Fail-safe: возвращает ``{"status": "error", ...***REMOVED***`` при сбое.
+        Fail-safe: возвращает ``{"status": "error", ...}`` при сбое.
 
         Returns:
             dict с ключами status / model_used / result — совместимо с
@@ -261,10 +261,10 @@ class IntegrationAdapter(ABC):
         try:
             from core_02.router import ModelCatalog, SmartRouter  # lazy import (fail-safe)
 
-            catalog = ModelCatalog.default()  # type: ignore[attr-defined***REMOVED***
+            catalog = ModelCatalog.default()  # type: ignore[attr-defined]
             router = SmartRouter(catalog)
             decision = router.route(
-                required_capabilities=[capability***REMOVED***,
+                required_capabilities=[capability],
             )
 
             return {
@@ -274,13 +274,13 @@ class IntegrationAdapter(ABC):
                 "reason": getattr(decision, "reason", ""),
                 "fallback_used": getattr(decision, "fallback_used", False),
                 "payload": payload,
-            ***REMOVED***
+            }
         except Exception as exc:
             return {
                 "status": "error",
                 "error": str(exc),
                 "payload": payload,
-            ***REMOVED***
+            }
 
     # ── Helpers ─────────────────────────────────────────────────────────
 
@@ -305,7 +305,7 @@ class IntegrationAdapter(ABC):
                 status=response.status,
                 capability_used=response.capability_used,
                 model_used=response.model_used,
-            )  # type: ignore[union-attr***REMOVED***
+            )  # type: ignore[union-attr]
         except Exception:
             pass  # fail-safe: логгирование не ломает основной поток
 
@@ -313,8 +313,8 @@ class IntegrationAdapter(ABC):
         self,
         request: AdapterRequest,
         data: Any = None,
-        capability: Optional[str***REMOVED*** = None,
-        model: Optional[str***REMOVED*** = None,
+        capability: Optional[str] = None,
+        model: Optional[str] = None,
     ) -> AdapterResponse:
         """Создать успешный AdapterResponse."""
         return AdapterResponse(
@@ -328,20 +328,20 @@ class IntegrationAdapter(ABC):
     def _err_response(
         self,
         request: AdapterRequest,
-        errors: List[str***REMOVED***,
-        warnings: Optional[List[str***REMOVED******REMOVED*** = None,
+        errors: List[str],
+        warnings: Optional[List[str]] = None,
     ) -> AdapterResponse:
         """Создать ошибочный AdapterResponse (fail-safe)."""
         return AdapterResponse(
             status="error",
             intent=request.intent,
             errors=errors,
-            warnings=warnings or [***REMOVED***,
+            warnings=warnings or [],
         )
 
     def __repr__(self) -> str:
         return (
-            f"IntegrationAdapter(id={self.adapter_id!r***REMOVED***, "
-            f"dir={self.direction.value***REMOVED***, "
-            f"auth={self.auth.method.value***REMOVED***)"
+            f"IntegrationAdapter(id={self.adapter_id!r}, "
+            f"dir={self.direction.value}, "
+            f"auth={self.auth.method.value})"
         )

@@ -11,11 +11,11 @@ from __future__ import annotations
 
 import os
 import tempfile
-***REMOVED***
+}
 from typing import Union
 
 
-def atomic_write_text(path: Union[str, Path***REMOVED***, content: str, *, encoding: str = "utf-8") -> Path:
+def atomic_write_text(path: Union[str, Path], content: str, *, encoding: str = "utf-8") -> Path:
     """Atomically write `content` to `path` (temp file + os.replace).
 
     - Parent directory is created if missing (mkdir parents=True).
@@ -26,7 +26,7 @@ def atomic_write_text(path: Union[str, Path***REMOVED***, content: str, *, encod
     """
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp_name = tempfile.mkstemp(dir=str(target.parent), prefix=f".{target.name***REMOVED***.", suffix=".tmp")
+    fd, tmp_name = tempfile.mkstemp(dir=str(target.parent), prefix=f".{target.name}.", suffix=".tmp")
     try:
         with os.fdopen(fd, "w", encoding=encoding) as fh:
             fh.write(content)
@@ -42,11 +42,11 @@ def atomic_write_text(path: Union[str, Path***REMOVED***, content: str, *, encod
     return target
 
 
-def atomic_write_bytes(path: Union[str, Path***REMOVED***, content: bytes) -> Path:
+def atomic_write_bytes(path: Union[str, Path], content: bytes) -> Path:
     """Byte-array variant (immune to encoding errors by construction)."""
     target = Path(path)
     target.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp_name = tempfile.mkstemp(dir=str(target.parent), prefix=f".{target.name***REMOVED***.", suffix=".tmp")
+    fd, tmp_name = tempfile.mkstemp(dir=str(target.parent), prefix=f".{target.name}.", suffix=".tmp")
     try:
         with os.fdopen(fd, "wb") as fh:
             fh.write(content)

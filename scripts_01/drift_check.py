@@ -12,10 +12,10 @@ from __future__ import annotations
 
 import argparse
 import os
-***REMOVED***
+}
 import sys
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any
 
 
@@ -23,18 +23,18 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 # Known architectural blocks → expected files/directories.
 # Used when BUFFY_PROJECT.md status table lists module names instead of paths.
-BLOCK_TO_PATHS: dict[str, list[str***REMOVED******REMOVED*** = {
-    "Streaming Context": ["scripts_01/context_manager.py", "scripts_01/stream_session.py"***REMOVED***,
-    "Context Builder": ["scripts_01/context_builder.py"***REMOVED***,
-    "Orchestrator": ["scripts_01/orchestrator.py"***REMOVED***,
-    "Capability-based Router": ["core_02/router.py"***REMOVED***,
-    "Tool Runtime": ["scripts_01/tool_runtime.py"***REMOVED***,
-    "Knowledge Engine": ["scripts_01/knowledge_engine.py"***REMOVED***,
-    "Memory Layers": ["scripts_01/memory_engine.py"***REMOVED***,
-    "Event Bus": ["scripts_01/event_bus.py"***REMOVED***,
-    "Streaming Context Layer": ["scripts_01/stream_bridge.py", "scripts_01/stream_session.py"***REMOVED***,
-    "Plugin System": ["plugins_04/"***REMOVED***,
-***REMOVED***
+BLOCK_TO_PATHS: dict[str, list[str]] = {
+    "Streaming Context": ["scripts_01/context_manager.py", "scripts_01/stream_session.py"],
+    "Context Builder": ["scripts_01/context_builder.py"],
+    "Orchestrator": ["scripts_01/orchestrator.py"],
+    "Capability-based Router": ["core_02/router.py"],
+    "Tool Runtime": ["scripts_01/tool_runtime.py"],
+    "Knowledge Engine": ["scripts_01/knowledge_engine.py"],
+    "Memory Layers": ["scripts_01/memory_engine.py"],
+    "Event Bus": ["scripts_01/event_bus.py"],
+    "Streaming Context Layer": ["scripts_01/stream_bridge.py", "scripts_01/stream_session.py"],
+    "Plugin System": ["plugins_04/"],
+}
 
 
 def _lines_of(path: Path) -> int:
@@ -46,23 +46,23 @@ def _lines_of(path: Path) -> int:
         return 0
 
 
-def _is_status_row(row: list[str***REMOVED***) -> bool:
+def _is_status_row(row: list[str]) -> bool:
     return any(k in " ".join(row) for k in ("Статус", "Status"))
 
 
-def _parse_markdown_tables(text: str) -> list[list[list[str***REMOVED******REMOVED******REMOVED***:
+def _parse_markdown_tables(text: str) -> list[list[list[str]]]:
     """Return a list of parsed markdown tables cells."""
-    tables: list[list[list[str***REMOVED******REMOVED******REMOVED*** = [***REMOVED***
+    tables: list[list[list[str]]] = []
     lines = text.splitlines()
     i = 0
     while i < len(lines):
-        line = lines[i***REMOVED***.strip()
+        line = lines[i].strip()
         if line.startswith("|") and line.endswith("|"):
-            rows: list[list[str***REMOVED******REMOVED*** = [***REMOVED***
-            while i < len(lines) and lines[i***REMOVED***.strip().startswith("|"):
-                row_text = lines[i***REMOVED***.strip()
+            rows: list[list[str]] = []
+            while i < len(lines) and lines[i].strip().startswith("|"):
+                row_text = lines[i].strip()
                 if row_text.strip("|-: "):
-                    cells = [c.strip() for c in row_text.strip("|").split("|")***REMOVED***
+                    cells = [c.strip() for c in row_text.strip("|").split("|")]
                     rows.append(cells)
                 i += 1
             if rows:
@@ -83,19 +83,19 @@ def _status_emoji(status: str) -> str:
     return "❓"
 
 
-def check_buffy_project_status(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+def check_buffy_project_status(workspace: Path) -> list[dict[str, Any]]:
     """Compare BUFFY_PROJECT.md status tables with real files/modules."""
-    discrepancies: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    discrepancies: list[dict[str, Any]] = []
     path = workspace / "BUFFY_PROJECT.md"
     if not path.exists():
-        return [{"block": "BUFFY_PROJECT.md", "issue": "file missing"***REMOVED******REMOVED***
+        return [{"block": "BUFFY_PROJECT.md", "issue": "file missing"}]
 
     text = path.read_text(encoding="utf-8")
     for table in _parse_markdown_tables(text):
-        if not table or not _is_status_row(table[0***REMOVED***):
+        if not table or not _is_status_row(table[0]):
             continue
 
-        header = [h.lower() for h in table[0***REMOVED******REMOVED***
+        header = [h.lower() for h in table[0]]
         status_idx = next((i for i, h in enumerate(header) if "status" in h), None)
         impl_idx = next((i for i, h in enumerate(header) if h in ("реализация", "implementation", "realization")), None)
         block_idx = next((i for i, h in enumerate(header) if h and "блок" in h), 0)
@@ -103,12 +103,12 @@ def check_buffy_project_status(workspace: Path) -> list[dict[str, Any***REMOVED*
         if status_idx is None or impl_idx is None:
             continue
 
-        for row in table[1:***REMOVED***:
+        for row in table[1:]:
             if len(row) <= max(status_idx, impl_idx):
                 continue
-            block = row[block_idx***REMOVED*** if block_idx < len(row) else "?"
-            status = row[status_idx***REMOVED***
-            impl = row[impl_idx***REMOVED***
+            block = row[block_idx] if block_idx < len(row) else "?"
+            status = row[status_idx]
+            impl = row[impl_idx]
             emoji = _status_emoji(status)
 
             # Extract candidate file/dir references from implementation column
@@ -116,7 +116,7 @@ def check_buffy_project_status(workspace: Path) -> list[dict[str, Any***REMOVED*
 
             # Fallback: known block names map to real files/directories
             if not refs and block in BLOCK_TO_PATHS:
-                refs = BLOCK_TO_PATHS[block***REMOVED***
+                refs = BLOCK_TO_PATHS[block]
 
             # Last-resort heuristic for unknown blocks
             if not refs:
@@ -134,7 +134,7 @@ def check_buffy_project_status(workspace: Path) -> list[dict[str, Any***REMOVED*
                             "issue": "marked not started but has substantial code",
                             "file": str(candidate.relative_to(workspace)),
                             "lines": _lines_of(candidate),
-                        ***REMOVED***)
+                        ])
             elif emoji in ("🟡", "✅"):
                 # MVP/Production should have at least one real artifact
                 found = False
@@ -144,7 +144,7 @@ def check_buffy_project_status(workspace: Path) -> list[dict[str, Any***REMOVED*
                         found = True
                         break
                     # Maybe it's a directory
-                    if (workspace / ref.split(".")[0***REMOVED***).exists():
+                    if (workspace / ref.split(".")[0]).exists():
                         found = True
                         break
                 if not found and refs:
@@ -153,36 +153,36 @@ def check_buffy_project_status(workspace: Path) -> list[dict[str, Any***REMOVED*
                         "status_doc": status,
                         "issue": "status claims implementation but none of the referenced files exist",
                         "references": refs,
-                    ***REMOVED***)
+                    ])
 
     return discrepancies
 
 
-def _guess_block_paths(workspace: Path, slug: str) -> list[str***REMOVED***:
+def _guess_block_paths(workspace: Path, slug: str) -> list[str]:
     """Return candidate file/directory paths for a block name slug."""
-    candidates: list[str***REMOVED*** = [***REMOVED***
+    candidates: list[str] = []
     for prefix in ("scripts_01", "core_02", "src_06"):
-        candidates.append(f"{prefix***REMOVED***/{slug***REMOVED***.py")
-        candidates.append(f"{prefix***REMOVED***/{slug***REMOVED***")
+        candidates.append(f"{prefix}/{slug}.py")
+        candidates.append(f"{prefix}/{slug}")
         # plural-ish directory, e.g. "memory_layers" -> "scripts_01/memory"
         if slug.endswith("s"):
-            candidates.append(f"{prefix***REMOVED***/{slug[:-1***REMOVED******REMOVED***")
+            candidates.append(f"{prefix}/{slug[:-1]}")
     return candidates
 
 
-def _extract_impl_refs(impl: str) -> list[str***REMOVED***:
+def _extract_impl_refs(impl: str) -> list[str]:
     """Extract candidate paths from the implementation/description column.
 
     Falls back to a block-name-to-directory heuristic when no explicit files
     are mentioned.
     """
-    refs: list[str***REMOVED*** = [***REMOVED***
-    refs += re.findall(r"[\w/\-***REMOVED***+(?:\.py|\.md)", impl)
-    refs += re.findall(r"\b(core_02|scripts_01|src_06|plugins_04|docs_10|freebuff_plugin_03)/[\w/\-***REMOVED***+", impl)
+    refs: list[str] = []
+    refs += re.findall(r"[\w/\-)+(?:\.py|\.md)", impl)
+    refs += re.findall(r"\b(core_02|scripts_01|src_06|plugins_04|docs_10|freebuff_plugin_03)/[\w/\-)+", impl)
     return refs
 
 
-def _collect_indexed_sources(workspace: Path) -> list[str***REMOVED***:
+def _collect_indexed_sources(workspace: Path) -> list[str]:
     """Return the list of docs seed_knowledge would index.
 
     Mirrors the public logic of `scripts.seed_knowledge` without importing a
@@ -199,7 +199,7 @@ def _collect_indexed_sources(workspace: Path) -> list[str***REMOVED***:
         "AGENTS.md",
         "CLAUDE.md",
         "CODY.md",
-    ***REMOVED***
+    }
     docs_dir = workspace / "docs_10"
     if docs_dir.is_dir():
         for doc in docs_dir.rglob("*.md"):
@@ -226,16 +226,16 @@ _KNOWLEDGE_IGNORE_DIRS = {
     "dist",
     "buffy_history_full.md",
     "buffy_history_index.jsonl",
-***REMOVED***
+}
 
 # ADR canonical location and legacy redirects.
 _ADR_CANONICAL_DIR = Path("docs_10/engineering-memory/decisions")
 _ADR_INDEX = Path("docs_10/decisions/DECISIONS.md")
 # Described paths that historically pointed to ADRs but have moved.
-_ADR_REDIRECTS: dict[str, tuple[str, ...***REMOVED******REMOVED*** = {
+_ADR_REDIRECTS: dict[str, tuple[str, ...]] = {
     "decisions": (str(_ADR_CANONICAL_DIR), str(_ADR_INDEX)),
     "docs_10/decisions": (str(_ADR_CANONICAL_DIR), str(_ADR_INDEX)),
-***REMOVED***
+}
 
 
 def _is_legacy_redirect_satisfied(workspace: Path, top_dir: str) -> bool:
@@ -257,13 +257,13 @@ def _is_legacy_redirect_satisfied(workspace: Path, top_dir: str) -> bool:
 # Add an entry here whenever a rename leaves a thin compat shim behind.
 # Values mirror `_ADR_REDIRECTS` style: each target is rendered via
 # ``str(Path(...))`` so callers can append nested paths without re-stringifying.
-_LEGACY_TOP_LEVEL_REDIRECTS: dict[str, tuple[str, ...***REMOVED******REMOVED*** = {
+_LEGACY_TOP_LEVEL_REDIRECTS: dict[str, tuple[str, ...]] = {
     # freebuff_plugin/ → freebuff_plugin_03/ (NN-name scheme, v5.25.x)
     "freebuff_plugin": (str(Path("freebuff_plugin_03")),),
-***REMOVED***
+}
 
-# Markdown link patterns: [text***REMOVED***(target) and ![alt***REMOVED***(target)
-_MARKDOWN_LINK_RE = re.compile(r"!?\[([^\***REMOVED******REMOVED****)\***REMOVED***\(([^)***REMOVED***+)\)")
+# Markdown link patterns: [text](target) and ![alt](target)
+_MARKDOWN_LINK_RE = re.compile(r"!?\[([^\*)]*)\*]\(([^)]+)\)")
 # External URLs, anchors and other non-file targets we cannot/should not resolve.
 _EXTERNAL_LINK_PREFIXES = (
     "http://",
@@ -282,7 +282,7 @@ def _is_knowledge_doc(path: Path, workspace: Path) -> bool:
     """Return True if path is a project markdown doc worth indexing."""
     rel = path.relative_to(workspace)
     # Only root-level files or files inside docs_10/
-    if len(rel.parts) > 1 and rel.parts[0***REMOVED*** != "docs_10":
+    if len(rel.parts) > 1 and rel.parts[0] != "docs_10":
         return False
     if any(part in _KNOWLEDGE_IGNORE_DIRS for part in rel.parts):
         return False
@@ -292,44 +292,44 @@ def _is_knowledge_doc(path: Path, workspace: Path) -> bool:
     return True
 
 
-def check_knowledge_index(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+def check_knowledge_index(workspace: Path) -> list[dict[str, Any]]:
     """Find project docs that exist but are not indexed by seed_knowledge."""
     actual = {
         str(p.relative_to(workspace))
         for p in workspace.rglob("*.md")
         if _is_knowledge_doc(p, workspace)
-    ***REMOVED***
+    }
     indexed = set(_collect_indexed_sources(workspace))
     missing = sorted(actual - indexed)
 
-    result: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    result: list[dict[str, Any]] = []
     if missing:
         result.append({
             "issue": "unindexed project docs",
             "count": len(missing),
-            "files": missing[:20***REMOVED***,
-        ***REMOVED***)
+            "files": missing[:20],
+        ])
     return result
 
 
-def _extract_code_blocks(text: str) -> list[str***REMOVED***:
+def _extract_code_blocks(text: str) -> list[str]:
     """Extract contents of markdown fenced code blocks.
 
     Uses line-oriented parsing so opening and closing fences are correctly
     paired regardless of whether a plain '```' line appears as a closing or
     opening fence.
     """
-    blocks: list[str***REMOVED*** = [***REMOVED***
+    blocks: list[str] = []
     inside: bool = False
-    buffer: list[str***REMOVED*** = [***REMOVED***
+    buffer: list[str] = []
     for line in text.splitlines():
         stripped = line.strip()
         if stripped.startswith("```"):
             if inside:
                 blocks.append("\n".join(buffer))
-                buffer = [***REMOVED***
+                buffer = []
             else:
-                buffer = [***REMOVED***
+                buffer = []
             inside = not inside
             continue
         if inside:
@@ -337,7 +337,7 @@ def _extract_code_blocks(text: str) -> list[str***REMOVED***:
     return blocks
 
 
-def _extract_tree_paths(text: str) -> list[tuple[str, str***REMOVED******REMOVED***:
+def _extract_tree_paths(text: str) -> list[tuple[str, str]]:
     """Extract file/directory paths from tree-like code blocks in markdown.
 
     Handles nested directory structures using indentation to reconstruct full
@@ -349,9 +349,9 @@ def _extract_tree_paths(text: str) -> list[tuple[str, str***REMOVED******REMOVED
     Returns a list of (path, root) tuples where ``root`` is the bare root node
     name (``""`` when the block starts directly with a branch item).
     """
-    results: list[tuple[str, str***REMOVED******REMOVED*** = [***REMOVED***
+    results: list[tuple[str, str]] = []
     for block in _extract_code_blocks(text):
-        stack: list[tuple[int, str***REMOVED******REMOVED*** = [***REMOVED***
+        stack: list[tuple[int, str]] = []
         root = ""
         first = True
         for raw_line in block.splitlines():
@@ -364,22 +364,22 @@ def _extract_tree_paths(text: str) -> list[tuple[str, str***REMOVED******REMOVED
             # A bare root node is the first line without a branch character
             # and matching a plain path-like token, e.g. "freebuff/" or
             # "docs_10/" (full-line comments/prose are ignored).
-            if first and not re.match(r"^[│\s***REMOVED****(?:├|└)", line) and re.match(r"^[\w.\-/***REMOVED***+/?$", line):
+            if first and not re.match(r"^[│\s)*(?:├|└)", line) and re.match(r"^[\w.\-/)+/?$", line):
                 root = line.strip().rstrip("/")
                 first = False
                 continue
             first = False
             # Match tree item: indentation prefix + ├/└ + name
-            m = re.match(r"^([│\s***REMOVED****)(?:├|└)──\s*([\w\-.\-/***REMOVED***+)(?:\s+|$)", line)
+            m = re.match(r"^([│\s)*)(?:├|└)──\s*([\w\-.\-/]+)(?:\s+|$)", line)
             if not m:
                 continue
             indent_part, name = m.group(1), m.group(2)
             # Standard tree diagrams use 4 characters per nesting level
             # (e.g. "│   " or "    ").
             depth = len(indent_part) // 4
-            while stack and stack[-1***REMOVED***[0***REMOVED*** >= depth:
+            while stack and stack[-1][0] >= depth:
                 stack.pop()
-            parent = stack[-1***REMOVED***[1***REMOVED*** if stack else ""
+            parent = stack[-1][1] if stack else ""
             full_path = (parent + "/" + name if parent else name).rstrip("/")
             if full_path:
                 results.append((full_path, root))
@@ -398,7 +398,7 @@ def _is_external_link(target: str) -> bool:
 def _strip_code_blocks(text: str) -> str:
     """Replace fenced code blocks with blank lines to avoid false-positive links."""
     lines = text.splitlines()
-    result: list[str***REMOVED*** = [***REMOVED***
+    result: list[str] = []
     inside = False
     fence: str | None = None
     for line in lines:
@@ -418,13 +418,13 @@ def _strip_code_blocks(text: str) -> str:
     return "\n".join(result)
 
 
-def _extract_markdown_links(text: str) -> list[tuple[int, str, str***REMOVED******REMOVED***:
+def _extract_markdown_links(text: str) -> list[tuple[int, str, str]]:
     """Extract markdown links from text.
 
     Returns a list of (line_number, link_text, target) tuples.
     Content inside fenced code blocks is ignored.
     """
-    links: list[tuple[int, str, str***REMOVED******REMOVED*** = [***REMOVED***
+    links: list[tuple[int, str, str]] = []
     cleaned_text = _strip_code_blocks(text)
     for line_no, line in enumerate(cleaned_text.splitlines(), start=1):
         for match in _MARKDOWN_LINK_RE.finditer(line):
@@ -449,17 +449,17 @@ def _is_tolerated_historical_tmp_link(md_path: Path, target_clean: str) -> bool:
     return file_name == "CHANGELOG.md" or "e2e_logs" in str(md_path) or "task_archive" in str(md_path)
 
 
-def check_markdown_links(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+def check_markdown_links(workspace: Path) -> list[dict[str, Any]]:
     """Scan project markdown docs and report broken relative links.
 
     Checks only files under docs_10/ and root-level .md files.
     External URLs, anchors and mailto links are skipped.
     """
-    issues: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    issues: list[dict[str, Any]] = []
     if not workspace.exists():
         return issues
 
-    markdown_files: list[Path***REMOVED*** = [***REMOVED***
+    markdown_files: list[Path] = []
     docs_dir = workspace / "docs_10"
     if docs_dir.is_dir():
         markdown_files.extend(docs_dir.rglob("*.md"))
@@ -487,7 +487,7 @@ def check_markdown_links(workspace: Path) -> list[dict[str, Any***REMOVED******R
             # Resolve relative to the markdown file's directory
             base_dir = md_path.parent
             # Strip fragment and query from target for file existence check
-            target_clean = target.split("#")[0***REMOVED***.split("?")[0***REMOVED***
+            target_clean = target.split("#")[0].split("?")[0]
             if not target_clean:
                 continue
             # CAN-12: исторические /tmp пути в CHANGELOG/e2e-логах — толерируем
@@ -506,7 +506,7 @@ def check_markdown_links(workspace: Path) -> list[dict[str, Any***REMOVED******R
                         "text": link_text,
                         "target": target,
                         "issue": "broken relative link",
-                    ***REMOVED***)
+                    ])
             except Exception:
                 continue
 
@@ -517,13 +517,13 @@ def _is_redirect_satisfied(workspace: Path, described_path: str) -> bool:
     """Return True if a described path has moved to a known canonical location."""
     if described_path not in _ADR_REDIRECTS:
         return False
-    return any((workspace / target).exists() for target in _ADR_REDIRECTS[described_path***REMOVED***)
+    return any((workspace / target).exists() for target in _ADR_REDIRECTS[described_path])
 
 
-def check_directory_structure(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+def check_directory_structure(workspace: Path) -> list[dict[str, Any]]:
     """Compare directory structure described in BUFFY.md/RULES.md with reality."""
-    issues: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
-    described_paths: set[str***REMOVED*** = set()
+    issues: list[dict[str, Any]] = []
+    described_paths: set[str] = set()
 
     for doc in ("BUFFY.md", "docs_10/core/RULES.md"):
         path = workspace / doc
@@ -535,7 +535,7 @@ def check_directory_structure(workspace: Path) -> list[dict[str, Any***REMOVED**
             # relative to that root; the root dir itself is also described.
             if root and (workspace / root).is_dir():
                 described_paths.add(root)
-                described_paths.add(f"{root***REMOVED***/{tree_path***REMOVED***")
+                described_paths.add(f"{root}/{tree_path}")
             else:
                 # Bare root is the workspace itself (e.g. "freebuff/") —
                 # children are workspace-relative.
@@ -548,47 +548,47 @@ def check_directory_structure(workspace: Path) -> list[dict[str, Any***REMOVED**
             if _is_redirect_satisfied(workspace, d):
                 # ADR location has been redirected to a canonical location.
                 continue
-            issues.append({"dir": d, "issue": "described but does not exist"***REMOVED***)
+            issues.append({"dir": d, "issue": "described but does not exist"})
         elif p.is_dir() and not any(p.iterdir()):
             if _is_redirect_satisfied(workspace, d):
                 # Directory exists but is effectively superseded by canonical ADR location.
                 continue
-            issues.append({"dir": d, "issue": "described but empty"***REMOVED***)
+            issues.append({"dir": d, "issue": "described but empty"})
 
     # Check real top-level dirs not described
     real_dirs = {
         d.name for d in workspace.iterdir()
         if d.is_dir() and not d.name.startswith(".") and d.name not in ("__pycache__",)
-    ***REMOVED***
+    }
     for d in sorted(real_dirs - described_paths):
         # Legacy compat shims (e.g. `freebuff_plugin/` → `freebuff_plugin_03/`)
         # forward to a canonical location and are not architectural components.
         if _is_legacy_redirect_satisfied(workspace, d):
             continue
-        issues.append({"dir": d, "issue": "exists but not described in BUFFY.md/RULES.md"***REMOVED***)
+        issues.append({"dir": d, "issue": "exists but not described in BUFFY.md/RULES.md"})
 
     return issues
 
 
-def check_adr_canonical_location(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+def check_adr_canonical_location(workspace: Path) -> list[dict[str, Any]]:
     """Verify the canonical ADR directory exists and contains ADR files.
 
     Returns issues if the canonical location is missing, empty, or contains
     no ADR-style files.
     """
-    issues: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    issues: list[dict[str, Any]] = []
     adr_dir = workspace / _ADR_CANONICAL_DIR
     if not adr_dir.exists():
         issues.append({
             "dir": str(_ADR_CANONICAL_DIR),
             "issue": "canonical ADR directory does not exist",
-        ***REMOVED***)
+        ])
         return issues
     if not adr_dir.is_dir():
         issues.append({
             "dir": str(_ADR_CANONICAL_DIR),
             "issue": "canonical ADR path is not a directory",
-        ***REMOVED***)
+        ])
         return issues
 
     adr_files = sorted(adr_dir.glob("ADR_*.md"))
@@ -596,7 +596,7 @@ def check_adr_canonical_location(workspace: Path) -> list[dict[str, Any***REMOVE
         issues.append({
             "dir": str(_ADR_CANONICAL_DIR),
             "issue": "canonical ADR directory is empty (no ADR_*.md files)",
-        ***REMOVED***)
+        ])
 
     # Also ensure the index still exists
     index = workspace / _ADR_INDEX
@@ -604,7 +604,7 @@ def check_adr_canonical_location(workspace: Path) -> list[dict[str, Any***REMOVE
         issues.append({
             "dir": str(_ADR_INDEX),
             "issue": "ADR index file is missing",
-        ***REMOVED***)
+        ])
 
     return issues
 
@@ -635,88 +635,88 @@ def _record_run(workspace: Path) -> None:
         pass
 
 
-def build_report(workspace: Path) -> dict[str, Any***REMOVED***:
-    report: dict[str, Any***REMOVED*** = {
+def build_report(workspace: Path) -> dict[str, Any]:
+    report: dict[str, Any] = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "status_tables": check_buffy_project_status(workspace),
         "knowledge_index": check_knowledge_index(workspace),
         "directory_structure": check_directory_structure(workspace),
         "adr_canonical_location": check_adr_canonical_location(workspace),
         "markdown_links": check_markdown_links(workspace),
-    ***REMOVED***
+    }
     all_issues = (
-        report["status_tables"***REMOVED***
-        + report["knowledge_index"***REMOVED***
-        + report["directory_structure"***REMOVED***
-        + report["adr_canonical_location"***REMOVED***
-        + report["markdown_links"***REMOVED***
+        report["status_tables"]
+        + report["knowledge_index"]
+        + report["directory_structure"]
+        + report["adr_canonical_location"]
+        + report["markdown_links"]
     )
-    report["has_drift"***REMOVED*** = bool(all_issues)
+    report["has_drift"] = bool(all_issues)
     return report
 
 
-def format_report(report: dict[str, Any***REMOVED***, workspace: Path) -> str:
-    lines: list[str***REMOVED*** = [
+def format_report(report: dict[str, Any], workspace: Path) -> str:
+    lines: list[str] = [
         "# Drift Report",
         "",
-        f"_Generated at: {report['generated_at'***REMOVED******REMOVED***_",
+        f"_Generated at: {report['generated_at']}_",
         "",
         "> This report is produced automatically by `scripts_01/drift_check.py`. "
         "> It lists discrepancies between documentation and the actual project state.",
         "",
-    ***REMOVED***
+    ]
 
-    if not report["has_drift"***REMOVED***:
-        lines.extend(["## ✅ No drift detected", "", "Documentation matches reality."***REMOVED***)
+    if not report["has_drift"]:
+        lines.extend(["## ✅ No drift detected", "", "Documentation matches reality."])
         return "\n".join(lines)
 
     lines.append("## Status table drift (BUFFY_PROJECT.md vs. code)")
-    if not report["status_tables"***REMOVED***:
+    if not report["status_tables"]:
         lines.append("_No discrepancies found._")
-    for item in report["status_tables"***REMOVED***:
-        lines.append(f"- **{item['block'***REMOVED******REMOVED*****: {item['issue'***REMOVED******REMOVED***")
+    for item in report["status_tables"]:
+        lines.append(f"- **{item['block']}**: {item['issue']}")
         if "file" in item:
-            lines.append(f"  - file: `{item['file'***REMOVED******REMOVED***` ({item.get('lines', '?')***REMOVED*** lines)")
+            lines.append(f"  - file: `{item['file']}` ({item.get('lines', '?')} lines)")
         if "references" in item:
-            lines.append(f"  - missing refs: {', '.join(item['references'***REMOVED***)***REMOVED***")
+            lines.append(f"  - missing refs: {', '.join(item['references'])}")
 
     lines.append("")
     lines.append("## Knowledge index drift (seed_knowledge vs. real docs)")
-    if not report["knowledge_index"***REMOVED***:
+    if not report["knowledge_index"]:
         lines.append("_No discrepancies found._")
-    for item in report["knowledge_index"***REMOVED***:
-        lines.append(f"- **{item['issue'***REMOVED******REMOVED*****: {item.get('count', '?')***REMOVED*** files")
-        for f in item.get("files", [***REMOVED***):
-            lines.append(f"  - `{f***REMOVED***`")
+    for item in report["knowledge_index"]:
+        lines.append(f"- **{item['issue']}**: {item.get('count', '?')} files")
+        for f in item.get("files", []):
+            lines.append(f"  - `{f}`")
 
     lines.append("")
     lines.append("## Directory structure drift (docs vs. filesystem)")
-    if not report["directory_structure"***REMOVED***:
+    if not report["directory_structure"]:
         lines.append("_No discrepancies found._")
-    for item in report["directory_structure"***REMOVED***:
-        lines.append(f"- `{item['dir'***REMOVED******REMOVED***`: {item['issue'***REMOVED******REMOVED***")
+    for item in report["directory_structure"]:
+        lines.append(f"- `{item['dir']}`: {item['issue']}")
 
     lines.append("")
     lines.append("## ADR canonical location drift")
-    if not report["adr_canonical_location"***REMOVED***:
+    if not report["adr_canonical_location"]:
         lines.append("_No discrepancies found._")
-    for item in report["adr_canonical_location"***REMOVED***:
-        lines.append(f"- `{item['dir'***REMOVED******REMOVED***`: {item['issue'***REMOVED******REMOVED***")
+    for item in report["adr_canonical_location"]:
+        lines.append(f"- `{item['dir']}`: {item['issue']}")
 
     lines.append("")
     lines.append("## Markdown link drift (broken relative links)")
-    if not report["markdown_links"***REMOVED***:
+    if not report["markdown_links"]:
         lines.append("_No discrepancies found._")
-    for item in report["markdown_links"***REMOVED***:
+    for item in report["markdown_links"]:
         lines.append(
-            f"- `{item['file'***REMOVED******REMOVED***:{item['line'***REMOVED******REMOVED***` → `{item['target'***REMOVED******REMOVED***` "
-            f"(text: _{item['text'***REMOVED******REMOVED***_)"
+            f"- `{item['file']}:{item['line']}` → `{item['target']}` "
+            f"(text: _{item['text']}_)"
         )
 
     return "\n".join(lines)
 
 
-def run_drift_check(workspace: Path | str, force: bool = False, write: bool = True) -> dict[str, Any***REMOVED***:
+def run_drift_check(workspace: Path | str, force: bool = False, write: bool = True) -> dict[str, Any]:
     """Run the daily drift check and optionally write docs_10/audits/DRIFT_REPORT.md."""
     ws = Path(workspace) if isinstance(workspace, str) else workspace
     report = build_report(ws)
@@ -747,10 +747,10 @@ def main() -> int:
 
     report = run_drift_check(workspace, force=args.force)
 
-    if args.report or report["has_drift"***REMOVED***:
+    if args.report or report["has_drift"]:
         print(format_report(report, workspace))
 
-    return 0 if not report["has_drift"***REMOVED*** else 1
+    return 0 if not report["has_drift"] else 1
 
 
 if __name__ == "__main__":

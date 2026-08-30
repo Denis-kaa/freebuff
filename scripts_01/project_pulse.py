@@ -58,13 +58,13 @@ import time
 import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional
 
 WORKSPACE = Path(__file__).resolve().parent
 PULSE_DB = WORKSPACE / "data_13" / "project_pulse.db"
 
-PULSE_TYPES: Dict[str, str***REMOVED*** = {
+PULSE_TYPES: Dict[str, str] = {
     "git.commit": "💾",
     "git.branch": "🌿",
     "file.created": "📄",
@@ -80,14 +80,14 @@ PULSE_TYPES: Dict[str, str***REMOVED*** = {
     "event.presence": "🟢",
     "event.metrics": "📊",
     "event.unknown": "❓",
-***REMOVED***
+}
 
 SNAPSHOT_FILE = WORKSPACE / ".pulse_snapshot.json"
 
 
 def get_pulse_icon(event_type: str) -> str:
     """Get icon for pulse entry type."""
-    return PULSE_TYPES.get(event_type, PULSE_TYPES["event.unknown"***REMOVED***)
+    return PULSE_TYPES.get(event_type, PULSE_TYPES["event.unknown"])
 
 
 @dataclass
@@ -101,12 +101,12 @@ class PulseEntry:
     source: str = ""
     ref: str = ""
     timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    metadata: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         """Сериализация в dict для JSON."""
         d = asdict(self)
-        d["icon"***REMOVED*** = get_pulse_icon(self.event_type)
+        d["icon"] = get_pulse_icon(self.event_type)
         return d
 
     @property
@@ -158,7 +158,7 @@ class ProjectPulse:
                     source TEXT DEFAULT '',
                     ref TEXT DEFAULT '',
                     timestamp TEXT NOT NULL,
-                    metadata TEXT DEFAULT '{***REMOVED***'
+                    metadata TEXT DEFAULT '{}'
                 )
                 """
                 )
@@ -190,8 +190,8 @@ class ProjectPulse:
         event_type: str = "",
         title: str = "",
         ref: str = "",
-        metadata: Optional[Dict[str, Any***REMOVED******REMOVED*** = None,
-        timestamp: Optional[str***REMOVED*** = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        timestamp: Optional[str] = None,
     ) -> str:
         """Низкоуровневое добавление записи в пульс.
 
@@ -207,7 +207,7 @@ class ProjectPulse:
             source=source,
             ref=ref,
             timestamp=timestamp or datetime.now(timezone.utc).isoformat(),
-            metadata=metadata or {***REMOVED***,
+            metadata=metadata or {},
         )
         self._insert(entry)
         return entry.id
@@ -238,7 +238,7 @@ class ProjectPulse:
             finally:
                 conn.close()
 
-    def get(self, entry_id: str | PulseEntry) -> Optional[PulseEntry***REMOVED***:
+    def get(self, entry_id: str | PulseEntry) -> Optional[PulseEntry]:
         """Получает запись по ID (или извлекает ID из PulseEntry)."""
         if isinstance(entry_id, PulseEntry):
             entry_id = entry_id.id
@@ -256,10 +256,10 @@ class ProjectPulse:
         self,
         limit: int = 50,
         offset: int = 0,
-        event_type: Optional[str***REMOVED*** = None,
-        source: Optional[str***REMOVED*** = None,
-        since: Optional[str***REMOVED*** = None,
-    ) -> List[PulseEntry***REMOVED***:
+        event_type: Optional[str] = None,
+        source: Optional[str] = None,
+        since: Optional[str] = None,
+    ) -> List[PulseEntry]:
         """Получает ленту изменений.
 
         Args:
@@ -273,8 +273,8 @@ class ProjectPulse:
             Список PulseEntry.
         """
         query = "SELECT * FROM pulse_entries"
-        conditions: List[str***REMOVED*** = [***REMOVED***
-        params: List[Any***REMOVED*** = [***REMOVED***
+        conditions: List[str] = []
+        params: List[Any] = []
         if event_type:
             conditions.append("event_type = ?")
             params.append(event_type)
@@ -287,34 +287,34 @@ class ProjectPulse:
         if conditions:
             query += " WHERE " + " AND ".join(conditions)
         query += " ORDER BY timestamp DESC LIMIT ? OFFSET ?"
-        params.extend([limit, offset***REMOVED***)
+        params.extend([limit, offset])
         with self._lock:
             conn = self._connect()
             try:
                 rows = conn.execute(query, params).fetchall()
-                return [self._row_to_entry(r) for r in rows***REMOVED***
+                return [self._row_to_entry(r) for r in rows]
             finally:
                 conn.close()
 
     def list_json(
         self,
         limit: int = 50,
-        event_type: Optional[str***REMOVED*** = None,
-        source: Optional[str***REMOVED*** = None,
-    ) -> Dict[str, Any***REMOVED***:
+        event_type: Optional[str] = None,
+        source: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """JSON-совместимый список записей (для MCP).
 
         Returns:
             JSON-ready dict.
         """
         entries = self.list(limit=limit, event_type=event_type, source=source)
-        entry_dicts = [e.to_dict() for e in entries***REMOVED***
+        entry_dicts = [e.to_dict() for e in entries]
         return {
             "success": True,
             "total": len(entries),
             "entries": entry_dicts,
-            "data": {"total": len(entries), "entries": entry_dicts***REMOVED***,
-        ***REMOVED***
+            "data": {"total": len(entries), "entries": entry_dicts},
+        }
 
     def clear(self) -> int:
         """Очищает все записи.
@@ -333,17 +333,17 @@ class ProjectPulse:
 
     def _row_to_entry(self, row: sqlite3.Row) -> PulseEntry:
         try:
-            metadata = json.loads(row["metadata"***REMOVED***) if row["metadata"***REMOVED*** else {***REMOVED***
+            metadata = json.loads(row["metadata"]) if row["metadata"] else {}
         except (TypeError, ValueError):
-            metadata = {***REMOVED***
+            metadata = {}
         return PulseEntry(
-            id=row["id"***REMOVED***,
-            event_type=row["event_type"***REMOVED***,
-            title=row["title"***REMOVED***,
-            description=row["description"***REMOVED***,
-            source=row["source"***REMOVED***,
-            ref=row["ref"***REMOVED***,
-            timestamp=row["timestamp"***REMOVED***,
+            id=row["id"],
+            event_type=row["event_type"],
+            title=row["title"],
+            description=row["description"],
+            source=row["source"],
+            ref=row["ref"],
+            timestamp=row["timestamp"],
             metadata=metadata,
         )
 
@@ -378,7 +378,7 @@ class ProjectPulse:
         try:
             # Коммиты.
             result = subprocess.run(
-                ["git", "-C", str(git_dir), "log", "--oneline", "--all", "-n", "50"***REMOVED***,
+                ["git", "-C", str(git_dir), "log", "--oneline", "--all", "-n", "50"],
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -387,16 +387,16 @@ class ProjectPulse:
                 if not line.strip():
                     continue
                 parts = line.split(" ", 1)
-                hash_id = parts[0***REMOVED***
-                subject = parts[1***REMOVED*** if len(parts) > 1 else ""
-                ref = f"git:commit:{hash_id***REMOVED***"
+                hash_id = parts[0]
+                subject = parts[1] if len(parts) > 1 else ""
+                ref = f"git:commit:{hash_id}"
                 if self._exists_by_ref(ref):
                     continue
                 self._insert(
                     PulseEntry(
                         id=str(uuid.uuid4()),
                         event_type="git.commit",
-                        title=f"Commit: {hash_id[:8***REMOVED******REMOVED***",
+                        title=f"Commit: {hash_id[:8]}",
                         description=subject,
                         source="git",
                         ref=ref,
@@ -405,7 +405,7 @@ class ProjectPulse:
                 added += 1
             # Ветки.
             result = subprocess.run(
-                ["git", "-C", str(git_dir), "branch", "-a"***REMOVED***,
+                ["git", "-C", str(git_dir), "branch", "-a"],
                 capture_output=True,
                 text=True,
                 timeout=30,
@@ -415,15 +415,15 @@ class ProjectPulse:
                 if not branch:
                     continue
                 if branch.startswith("remotes/origin/"):
-                    branch = branch[len("remotes/origin/"):***REMOVED***
-                ref = f"git:branch:{branch***REMOVED***"
+                    branch = branch[len("remotes/origin/"):]
+                ref = f"git:branch:{branch}"
                 if self._exists_by_ref(ref):
                     continue
                 self._insert(
                     PulseEntry(
                         id=str(uuid.uuid4()),
                         event_type="git.branch",
-                        title=f"Branch: {branch***REMOVED***",
+                        title=f"Branch: {branch}",
                         description="",
                         source="git",
                         ref=ref,
@@ -436,7 +436,7 @@ class ProjectPulse:
 
     # ── Файловый сканер ───────────────────────────────────────────────
 
-    def scan_files(self, paths: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
+    def scan_files(self, paths: Optional[List[str]] = None) -> int:
         """Сканирует изменения файлов в workspace.
 
         Сравнивает текущее состояние файлов с предыдущим снимком.
@@ -448,13 +448,13 @@ class ProjectPulse:
             Количество новых записей в пульсе.
         """
         snapshot = self._load_snapshot()
-        current: Dict[str, float***REMOVED*** = {***REMOVED***
+        current: Dict[str, float] = {}
         base = self._workspace
         if paths:
             for p in paths:
                 fp = Path(p)
                 if fp.exists() and fp.is_file():
-                    current[str(fp)***REMOVED*** = fp.stat().st_mtime
+                    current[str(fp)] = fp.stat().st_mtime
         else:
             for root, _dirs, files in os.walk(base):
                 for fname in files:
@@ -462,7 +462,7 @@ class ProjectPulse:
                     if ".git" in fp.parts:
                         continue
                     try:
-                        current[str(fp)***REMOVED*** = fp.stat().st_mtime
+                        current[str(fp)] = fp.stat().st_mtime
                     except OSError:
                         continue
         added = 0
@@ -475,10 +475,10 @@ class ProjectPulse:
                     PulseEntry(
                         id=str(uuid.uuid4()),
                         event_type="file.created",
-                        title=f"New file: {rel***REMOVED***",
+                        title=f"New file: {rel}",
                         description="",
                         source="file",
-                        ref=f"file:created:{path***REMOVED***",
+                        ref=f"file:created:{path}",
                         timestamp=now,
                     )
                 )
@@ -488,10 +488,10 @@ class ProjectPulse:
                     PulseEntry(
                         id=str(uuid.uuid4()),
                         event_type="file.modified",
-                        title=f"File changed: {rel***REMOVED***",
+                        title=f"File changed: {rel}",
                         description="",
                         source="file",
-                        ref=f"file:modified:{path***REMOVED***:{mtime***REMOVED***",
+                        ref=f"file:modified:{path}:{mtime}",
                         timestamp=now,
                     )
                 )
@@ -504,10 +504,10 @@ class ProjectPulse:
                     PulseEntry(
                         id=str(uuid.uuid4()),
                         event_type="file.deleted",
-                        title=f"File removed: {rel***REMOVED***",
+                        title=f"File removed: {rel}",
                         description="",
                         source="file",
-                        ref=f"file:deleted:{path***REMOVED***",
+                        ref=f"file:deleted:{path}",
                         timestamp=now,
                     )
                 )
@@ -515,18 +515,18 @@ class ProjectPulse:
         self._save_snapshot(current)
         return added
 
-    def _load_snapshot(self) -> Dict[str, float***REMOVED***:
+    def _load_snapshot(self) -> Dict[str, float]:
         """Загружает предыдущий снимок файлов."""
         snap_file = self._workspace / ".pulse_snapshot.json"
         try:
             if snap_file.exists():
                 with open(snap_file, "r", encoding="utf-8") as f:
-                    return {k: float(v) for k, v in json.load(f).items()***REMOVED***
+                    return {k: float(v) for k, v in json.load(f).items()}
         except (OSError, ValueError, TypeError):
             pass
-        return {***REMOVED***
+        return {}
 
-    def _save_snapshot(self, snapshot: Dict[str, float***REMOVED***) -> None:
+    def _save_snapshot(self, snapshot: Dict[str, float]) -> None:
         """Сохраняет снимок файлов."""
         snap_file = self._workspace / ".pulse_snapshot.json"
         try:
@@ -566,27 +566,27 @@ class ProjectPulse:
     def _on_event(self, event: Any) -> None:
         """Обработчик событий EventBus — сохраняет в пульс."""
         event_type = getattr(event, "type", "") or getattr(event, "event_type", "") or ""
-        data = getattr(event, "data", {***REMOVED***) or {***REMOVED***
+        data = getattr(event, "data", {}) or {}
         pulse_type = self._map_event_type(event_type)
         title = event_type
         if isinstance(data, dict):
             title = data.get("title") or data.get("task") or data.get("step") or data.get("message") or event_type
-        ref = f"event:{event_type***REMOVED***:{getattr(event, 'id', '')***REMOVED***"
+        ref = f"event:{event_type}:{getattr(event, 'id', '')}"
         if self._exists_by_ref(ref):
             return
         self._insert(
             PulseEntry(
                 id=str(uuid.uuid4()),
                 event_type=pulse_type,
-                title=str(title)[:200***REMOVED***,
+                title=str(title)[:200],
                 description="",
                 source="event",
                 ref=ref,
-                metadata={"original_type": event_type***REMOVED*** if isinstance(data, dict) else {***REMOVED***,
+                metadata={"original_type": event_type} if isinstance(data, dict) else {},
             )
         )
 
-    _EVENT_CATEGORY_MAP: Dict[str, str***REMOVED*** = {
+    _EVENT_CATEGORY_MAP: Dict[str, str] = {
         "system": "system",
         "task": "task",
         "step": "step",
@@ -598,7 +598,7 @@ class ProjectPulse:
         "git": "git",
         "file": "file",
         "event": "event",
-    ***REMOVED***
+    }
 
     def _map_event_type(self, event_type: str) -> str:
         """Maps EventBus event type to pulse event type.
@@ -611,19 +611,19 @@ class ProjectPulse:
             return "event.unknown"
         if event_type.startswith("event."):
             return event_type
-        category = event_type.split(".", 1)[0***REMOVED***
+        category = event_type.split(".", 1)[0]
         mapped = self._EVENT_CATEGORY_MAP.get(category)
         if mapped is None:
             return "event.unknown"
-        return f"event.{mapped***REMOVED***"
+        return f"event.{mapped}"
 
     # ── Полное сканирование и статистика ──────────────────────────────
 
-    def full_scan(self) -> Dict[str, int***REMOVED***:
+    def full_scan(self) -> Dict[str, int]:
         """Полное сканирование: git + файлы.
 
         Returns:
-            Словарь {source: new_entries_count***REMOVED***. Ключ 'files' — число
+            Словарь {source: new_entries_count}. Ключ 'files' — число
             новых файловых записей (контракт тестов).
         """
         git_count = self.scan_git()
@@ -632,9 +632,9 @@ class ProjectPulse:
             "git": git_count,
             "file": files_count,
             "files": files_count,
-        ***REMOVED***
+        }
 
-    def get_stats(self) -> Dict[str, Any***REMOVED***:
+    def get_stats(self) -> Dict[str, Any]:
         """Статистика пульса.
 
         Returns:
@@ -643,7 +643,7 @@ class ProjectPulse:
         with self._lock:
             conn = self._connect()
             try:
-                total = conn.execute("SELECT COUNT(*) FROM pulse_entries").fetchone()[0***REMOVED***
+                total = conn.execute("SELECT COUNT(*) FROM pulse_entries").fetchone()[0]
                 type_rows = conn.execute(
                     "SELECT event_type, COUNT(*) as cnt FROM pulse_entries GROUP BY event_type"
                 ).fetchall()
@@ -659,12 +659,12 @@ class ProjectPulse:
                 ).fetchone()
                 return {
                     "total_entries": int(total),
-                    "type_counts": {r["event_type"***REMOVED***: int(r["cnt"***REMOVED***) for r in type_rows***REMOVED***,
-                    "source_counts": {r["source"***REMOVED***: int(r["cnt"***REMOVED***) for r in source_rows***REMOVED***,
-                    "last_entry": last_row[0***REMOVED*** if last_row else "never",
-                    "last_24h": int(last_24h_row[0***REMOVED***),
+                    "type_counts": {r["event_type"]: int(r["cnt"]) for r in type_rows},
+                    "source_counts": {r["source"]: int(r["cnt"]) for r in source_rows},
+                    "last_entry": last_row[0] if last_row else "never",
+                    "last_24h": int(last_24h_row[0]),
                     "db_path": str(self._db_path),
-                ***REMOVED***
+                }
             finally:
                 conn.close()
 
@@ -689,36 +689,36 @@ def _cmd_list(args: argparse.Namespace) -> None:
     if not entries:
         print("📭 No pulse entries")
         return
-    print(f"Project Pulse ({len(entries)***REMOVED*** entries)")
+    print(f"Project Pulse ({len(entries)} entries)")
     for e in entries:
         icon = get_pulse_icon(e.event_type)
-        print(f"  {icon***REMOVED*** [{e.timestamp***REMOVED******REMOVED*** {e.title***REMOVED***")
+        print(f"  {icon} [{e.timestamp}] {e.title}")
         if e.description:
-            print(f"     {e.description[:100***REMOVED******REMOVED***")
+            print(f"     {e.description[:100]}")
 
 
 def _cmd_stats(args: argparse.Namespace) -> None:
     pulse = ProjectPulse(db_path=args.db_path)
     stats = pulse.get_stats()
     print("Project Pulse Statistics")
-    print(f"  Total entries: {stats['total_entries'***REMOVED******REMOVED***")
-    print(f"  Last 24h:      {stats['last_24h'***REMOVED******REMOVED***")
-    print(f"  Last entry:    {stats['last_entry'***REMOVED******REMOVED***")
-    if stats["type_counts"***REMOVED***:
+    print(f"  Total entries: {stats['total_entries']}")
+    print(f"  Last 24h:      {stats['last_24h']}")
+    print(f"  Last entry:    {stats['last_entry']}")
+    if stats["type_counts"]:
         print("  By type:")
-        for t, cnt in sorted(stats["type_counts"***REMOVED***.items()):
-            print(f"    {get_pulse_icon(t)***REMOVED*** {t***REMOVED***: {cnt***REMOVED***")
-    if stats["source_counts"***REMOVED***:
+        for t, cnt in sorted(stats["type_counts"].items()):
+            print(f"    {get_pulse_icon(t)} {t}: {cnt}")
+    if stats["source_counts"]:
         print("  By source:")
-        for s, cnt in sorted(stats["source_counts"***REMOVED***.items()):
-            print(f"    {s***REMOVED***: {cnt***REMOVED***")
+        for s, cnt in sorted(stats["source_counts"].items()):
+            print(f"    {s}: {cnt}")
 
 
 def _cmd_scan(args: argparse.Namespace) -> None:
     pulse = ProjectPulse(db_path=args.db_path)
     print("🔍 Scanning project...")
     result = pulse.full_scan()
-    print(f"✅ Done: {result['git'***REMOVED******REMOVED*** git entries, {result['files'***REMOVED******REMOVED*** file entries")
+    print(f"✅ Done: {result['git']} git entries, {result['files']} file entries")
 
 
 def _cmd_watch(args: argparse.Namespace) -> None:
@@ -754,7 +754,7 @@ def main() -> int:
         "stats": _cmd_stats,
         "scan": _cmd_scan,
         "watch": _cmd_watch,
-    ***REMOVED***
+    }
     handler = handlers.get(args.command)
     if handler is None:
         parser.print_help()

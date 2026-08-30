@@ -21,9 +21,9 @@ AFC-цикл:
 
 from __future__ import annotations
 
-***REMOVED***
+}
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional
 
 from core_02.memory_store import MemoryStore
@@ -39,7 +39,7 @@ class Analysis:
     def __init__(
         self,
         situation: str,
-        relevant: List[Dict[str, Any***REMOVED******REMOVED***,
+        relevant: List[Dict[str, Any]],
         is_known_pattern: bool,
         suggested_kind: str,
     ):
@@ -48,13 +48,13 @@ class Analysis:
         self.is_known_pattern = is_known_pattern
         self.suggested_kind = suggested_kind
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "situation": self.situation,
             "relevant": self.relevant,
             "is_known_pattern": self.is_known_pattern,
             "suggested_kind": self.suggested_kind,
-        ***REMOVED***
+        }
 
 
 class LearningLoop:
@@ -63,9 +63,9 @@ class LearningLoop:
     def __init__(
         self,
         store: MemoryStore,
-        semantic: Optional[SemanticLayer***REMOVED*** = None,
-        lessons_path: Optional[str | Path***REMOVED*** = None,
-        debt_path: Optional[str | Path***REMOVED*** = None,
+        semantic: Optional[SemanticLayer] = None,
+        lessons_path: Optional[str | Path] = None,
+        debt_path: Optional[str | Path] = None,
     ):
         self.store = store
         self.semantic = semantic
@@ -79,10 +79,10 @@ class LearningLoop:
         top_k: int = 5,
     ) -> Analysis:
         """Оценить ситуацию: какие знания релевантны, паттерн известен? (RFC §7)."""
-        relevant: List[Dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+        relevant: List[Dict[str, Any]] = []
         if self.semantic is not None:
             relevant = self.semantic.find_similar_patterns(situation, top_k=top_k)
-        best = relevant[0***REMOVED*** if relevant else None
+        best = relevant[0] if relevant else None
         is_known = bool(best and best.get("score", 0) >= 0.5)
         kind = self._suggest_kind(situation)
         return Analysis(
@@ -125,8 +125,8 @@ class LearningLoop:
         title: str = "",
         summary: str = "",
         content: str = "",
-        tags: Optional[List[str***REMOVED******REMOVED*** = None,
-        sources: Optional[List[Dict[str, Any***REMOVED******REMOVED******REMOVED*** = None,
+        tags: Optional[List[str]] = None,
+        sources: Optional[List[Dict[str, Any]]] = None,
         confidence: float = 0.5,
     ) -> str:
         """Создать/обновить Knowledge Object и связать с релевантными (RFC §7).
@@ -134,9 +134,9 @@ class LearningLoop:
         Возвращает knowledge_id. Если паттерн известен (score >= 0.5) — обновляет
         существующий объект (evidence_count+1), иначе создаёт новый.
         """
-        best = analysis.relevant[0***REMOVED*** if analysis.relevant else None
+        best = analysis.relevant[0] if analysis.relevant else None
         if best and best.get("score", 0) >= 0.5:
-            kid = best["knowledge_id"***REMOVED***
+            kid = best["knowledge_id"]
             self.store.update_knowledge(
                 kid,
                 title=title or best.get("title", ""),
@@ -150,11 +150,11 @@ class LearningLoop:
         # Новый Knowledge Object
         kid = self.store.store_knowledge(
             kind=analysis.suggested_kind,
-            title=title or analysis.situation[:80***REMOVED***,
+            title=title or analysis.situation[:80],
             summary=summary,
             content=content or analysis.situation,
-            tags=tags or [***REMOVED***,
-            sources=sources or [***REMOVED***,
+            tags=tags or [],
+            sources=sources or [],
             lifecycle_stage="candidate" if analysis.is_known_pattern else "raw",
             status="draft",
             confidence_score=confidence,
@@ -169,9 +169,9 @@ class LearningLoop:
                 (knowledge_id,),
             )
 
-    def _link_to_related(self, kid: str, relevant: List[Dict[str, Any***REMOVED******REMOVED***) -> None:
-        for rel in relevant[:5***REMOVED***:
-            other = rel["knowledge_id"***REMOVED***
+    def _link_to_related(self, kid: str, relevant: List[Dict[str, Any]]) -> None:
+        for rel in relevant[:5]:
+            other = rel["knowledge_id"]
             if other == kid:
                 continue
             try:
@@ -184,17 +184,17 @@ class LearningLoop:
         self,
         knowledge_id: str,
         notify_tg: bool = False,
-    ) -> Dict[str, Any***REMOVED***:
+    ) -> Dict[str, Any]:
         """Кодифицировать знание в артефакты: LESSONS.md (CON-N), DEBT.md, TG.
 
-        Возвращает action-отчёт: {lessons_updated, con_id, debt_updated, tg_sent***REMOVED***.
+        Возвращает action-отчёт: {lessons_updated, con_id, debt_updated, tg_sent}.
         """
         ko = self.store.get_knowledge(knowledge_id)
         if not ko:
-            raise KeyError(f"Knowledge Object {knowledge_id***REMOVED*** не найден")
+            raise KeyError(f"Knowledge Object {knowledge_id} не найден")
 
-        action: Dict[str, Any***REMOVED*** = {"lessons_updated": False, "con_id": None,
-                                  "debt_updated": False, "tg_sent": False***REMOVED***
+        action: Dict[str, Any] = {"lessons_updated": False, "con_id": None,
+                                  "debt_updated": False, "tg_sent": False]
 
         # 1) LESSONS.md — запись CON-N
         if ko.get("kind") in ("lesson", "pattern", "anti_pattern", "guideline", "rule", "adr", "workflow"):
@@ -203,53 +203,53 @@ class LearningLoop:
             self.lessons_path.parent.mkdir(parents=True, exist_ok=True)
             with self.lessons_path.open("a", encoding="utf-8") as f:
                 f.write("\n" + entry + "\n")
-            action["lessons_updated"***REMOVED*** = True
-            action["con_id"***REMOVED*** = con_id
+            action["lessons_updated"] = True
+            action["con_id"] = con_id
 
         # 2) ARCHITECTURAL_DEBT.md — если это архитектурный долг
         if ko.get("kind") == "adr" and "долг" in (ko.get("summary") or "").lower():
             with self.debt_path.open("a", encoding="utf-8") as f:
-                f.write(f"\n- {ko.get('title')***REMOVED*** (OM:{knowledge_id***REMOVED***)\n")
-            action["debt_updated"***REMOVED*** = True
+                f.write(f"\n- {ko.get('title')} (OM:{knowledge_id})\n")
+            action["debt_updated"] = True
 
         # 3) Telegram-уведомление
         if notify_tg:
             try:
                 from core_02.telegram_contract import send_message  # type: ignore
                 send_message(
-                    f"🧠 OM: {ko.get('kind')***REMOVED*** «{ko.get('title')***REMOVED***» зафиксирован (CON-{action['con_id'***REMOVED*** or '—'***REMOVED***)"
+                    f"🧠 OM: {ko.get('kind')} «{ko.get('title')}» зафиксирован (CON-{action['con_id'] or '—'})"
                 )
-                action["tg_sent"***REMOVED*** = True
+                action["tg_sent"] = True
             except Exception:
-                action["tg_sent"***REMOVED*** = False
+                action["tg_sent"] = False
         return action
 
     def _next_con_id(self) -> int:
         if not self.lessons_path.exists():
             return 1
         text = self.lessons_path.read_text(encoding="utf-8")
-        ids = [int(m) for m in CON_PATTERN.findall(text)***REMOVED***
+        ids = [int(m) for m in CON_PATTERN.findall(text)]
         return (max(ids) + 1) if ids else 1
 
     @staticmethod
-    def _format_con_entry(con_id: int, ko: Dict[str, Any***REMOVED***) -> str:
+    def _format_con_entry(con_id: int, ko: Dict[str, Any]) -> str:
         now = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         title = ko.get("title") or ko.get("kind", "knowledge")
-        summary = ko.get("summary") or ko.get("content", "")[:200***REMOVED***
+        summary = ko.get("summary") or ko.get("content", "")[:200]
         return (
-            f"### CON-{con_id***REMOVED*** — {title***REMOVED***\n\n"
-            f"**Сценарий:** {summary***REMOVED***\n"
-            f"**Knowledge Object:** `{ko.get('id')***REMOVED***` (kind={ko.get('kind')***REMOVED***, "
-            f"confidence={ko.get('confidence_score')***REMOVED***, OM {now***REMOVED***)\n"
+            f"### CON-{con_id} — {title}\n\n"
+            f"**Сценарий:** {summary}\n"
+            f"**Knowledge Object:** `{ko.get('id')}` (kind={ko.get('kind')}, "
+            f"confidence={ko.get('confidence_score')}, OM {now})\n"
         )
 
     # ── Замыкание цикла: feedback (§7) ──────────────────────────────
-    def record_feedback(self, knowledge_id: str, outcome: str) -> Optional[float***REMOVED***:
+    def record_feedback(self, knowledge_id: str, outcome: str) -> Optional[float]:
         """Feedback после применения: success/failure/neutral. Возвращает confidence."""
         confidence = self.store.update_feedback(knowledge_id, outcome)
         self.store.record_learning_event(
-            trigger_id=f"feedback-{knowledge_id***REMOVED***",
-            context_snapshot={"outcome": outcome***REMOVED***,
+            trigger_id=f"feedback-{knowledge_id}",
+            context_snapshot={"outcome": outcome},
             outcome=outcome,
             lesson_id=knowledge_id,
         )
@@ -262,10 +262,10 @@ class LearningLoop:
         title: str = "",
         summary: str = "",
         content: str = "",
-        tags: Optional[List[str***REMOVED******REMOVED*** = None,
-        sources: Optional[List[Dict[str, Any***REMOVED******REMOVED******REMOVED*** = None,
+        tags: Optional[List[str]] = None,
+        sources: Optional[List[Dict[str, Any]]] = None,
         notify_tg: bool = False,
-    ) -> Dict[str, Any***REMOVED***:
+    ) -> Dict[str, Any]:
         """AFC одной командой: analyze → formalize → codify → feedback neutral."""
         analysis = self.analyze(situation)
         kid = self.formalize(analysis, title=title, summary=summary,
@@ -273,7 +273,7 @@ class LearningLoop:
         action = self.codify(kid, notify_tg=notify_tg)
         self.store.record_learning_event(
             trigger_id="capture",
-            context_snapshot={"situation": situation, "kind": analysis.suggested_kind***REMOVED***,
+            context_snapshot={"situation": situation, "kind": analysis.suggested_kind},
             outcome="neutral",
             lesson_id=kid,
         )
@@ -281,4 +281,4 @@ class LearningLoop:
             "knowledge_id": kid,
             "analysis": analysis.to_dict(),
             "action": action,
-        ***REMOVED***
+        }

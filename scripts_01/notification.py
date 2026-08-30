@@ -41,13 +41,13 @@ import threading
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
     from scripts_01.event_bus import Subscription as _EventSubscription
 
-logging.basicConfig(level=logging.INFO, format="[%(levelname)s***REMOVED*** %(message)s", stream=sys.stderr)
+logging.basicConfig(level=logging.INFO, format="[%(levelname)s) %(message)s", stream=sys.stderr)
 logger = logging.getLogger("notification")
 
 # Пути к бинарникам Termux:API (fallback для is_available()).
@@ -69,7 +69,7 @@ DEFAULT_PRIORITY = "high"
 DEFAULT_ID = "runtime"
 DEFAULT_GROUP = "ai-agent"
 
-# Визуальный [SUMMARY***REMOVED*** блок.
+# Визуальный [SUMMARY] блок.
 _VISUAL_BOX_WIDTH = 56
 _VISUAL_LINE_WIDTH = 52
 
@@ -103,7 +103,7 @@ def _try_primary_channel(
         logger.error("❌ termux-notification не найден. Установи Termux:API из F-Droid и выполни: pkg install termux-api")
         return False
     for attempt in range(1, MAX_RETRIES + 1):
-        logger.info("[INFO***REMOVED*** Sending completion notification... (attempt %s)", attempt)
+        logger.info("[INFO) Sending completion notification... (attempt %s)", attempt)
         try:
             proc = subprocess.run(
                 [
@@ -114,24 +114,24 @@ def _try_primary_channel(
                     "--group", group,
                     "--priority", priority,
                     "--alert-once",
-                ***REMOVED***,
+                ],
                 capture_output=True,
                 text=True,
                 timeout=10,
             )
             if proc.returncode == 0:
-                logger.info("[INFO***REMOVED*** Notification delivered.")
+                logger.info("[INFO) Notification delivered.")
                 return True
-            logger.error("[ERROR***REMOVED*** Notification failed (attempt %s): %s", attempt, proc.stderr.strip())
+            logger.error("[ERROR) Notification failed (attempt %s): %s", attempt, proc.stderr.strip())
         except subprocess.TimeoutExpired:
-            logger.error("[ERROR***REMOVED*** Notification timeout (attempt %s): timeout (10s)", attempt)
+            logger.error("[ERROR) Notification timeout (attempt %s): timeout (10s)", attempt)
         except FileNotFoundError:
             logger.error(
                 "❌ termux-notification: command not found despite is_available() check"
             )
             return False
         except Exception as exc:  # noqa: BLE001
-            logger.error("[ERROR***REMOVED*** Notification exception (attempt %s): %s", attempt, exc)
+            logger.error("[ERROR) Notification exception (attempt %s): %s", attempt, exc)
         if attempt < MAX_RETRIES:
             delay = RETRY_BASE_DELAY * (RETRY_BACKOFF ** (attempt - 1))
             logger.info("Retrying in %.1f seconds", delay)
@@ -154,16 +154,16 @@ def _try_toast_channel(title: str, content: str) -> bool:
     if not TERMUX_TOAST or not os.access(cmd, os.X_OK):
         logger.warning("⚠️  termux-toast не найден в %s", cmd)
         return False
-    message = f"{title***REMOVED***: {content***REMOVED***" if title else content
+    message = f"{title}: {content}" if title else content
     # Android обрезает длинные сообщения — усекаем заранее (≤ 240 символов).
     if len(message) > 240:
-        message = message[:237***REMOVED*** + "..."
+        message = message[:237] + "..."
     try:
-        proc = subprocess.run([cmd, message***REMOVED***, capture_output=True, text=True, timeout=10)
+        proc = subprocess.run([cmd, message], capture_output=True, text=True, timeout=10)
         if proc.returncode == 0:
-            logger.info("[INFO***REMOVED*** Notification delivered via toast fallback.")
+            logger.info("[INFO) Notification delivered via toast fallback.")
             return True
-        logger.warning("[WARN***REMOVED*** termux-toast error: %s", proc.stderr.strip())
+        logger.warning("[WARN) termux-toast error: %s", proc.stderr.strip())
         return False
     except Exception:  # noqa: BLE001
         return False
@@ -186,16 +186,16 @@ def _try_log_channel(title: str, content: str) -> bool:
     try:
         ts = datetime.now(timezone.utc).isoformat()
         with open(log_path, "a", encoding="utf-8") as f:
-            f.write(f"[{ts***REMOVED******REMOVED*** {title***REMOVED***: {content***REMOVED***\n")
-        logger.info("[INFO***REMOVED*** Notification logged to %s", log_path)
+            f.write(f"[{ts}] {title}: {content}\n")
+        logger.info("[INFO) Notification logged to %s", log_path)
         return True
     except OSError as exc:
-        logger.error("[ERROR***REMOVED*** Cannot write to %s: %s", log_path, exc)
+        logger.error("[ERROR) Cannot write to %s: %s", log_path, exc)
         return False
 
 
 def _get_visual_output_stream():
-    """Выбирает поток для печати [SUMMARY***REMOVED*** блока (honor user stdout request).
+    """Выбирает поток для печати [SUMMARY] блока (honor user stdout request).
 
     Приоритет:
       1. Если FREEBUFF_FORCE_VISUAL установлен → принудительно sys.stderr
@@ -217,7 +217,7 @@ def _get_visual_output_stream():
 
 
 def _is_visual_summary_enabled() -> bool:
-    """Определяет, нужно ли печатать визуальный [SUMMARY***REMOVED*** блок.
+    """Определяет, нужно ли печатать визуальный [SUMMARY] блок.
 
     Логика:
     - FREEBUFF_FORCE_VISUAL=1   → принудительная печать
@@ -231,7 +231,7 @@ def _is_visual_summary_enabled() -> bool:
 
 
 def _print_visual_summary(title: str, body: str, channel_reason: str = "") -> bool:
-    """Side-effect: печатает pipe-safe визуальный [SUMMARY***REMOVED*** блок в stderr.
+    """Side-effect: печатает pipe-safe визуальный [SUMMARY] блок в stderr.
 
     Гарантии:
     - Безопасен для pipe (`python script.py > out.log`): молча пропускается
@@ -250,28 +250,28 @@ def _print_visual_summary(title: str, body: str, channel_reason: str = "") -> bo
         return False
     # Defensive truncation: не ломать геометрию бокса.
     if len(title) > 43:
-        title = title[:43***REMOVED*** + "..."
+        title = title[:43] + "..."
     if body and len(body) > _VISUAL_LINE_WIDTH:
-        body = body[:_VISUAL_LINE_WIDTH***REMOVED*** + "..."
+        body = body[:_VISUAL_LINE_WIDTH] + "..."
     if len(channel_reason) > _VISUAL_LINE_WIDTH:
-        channel_reason = channel_reason[:_VISUAL_LINE_WIDTH***REMOVED*** + "..."
-    lines = [***REMOVED***
+        channel_reason = channel_reason[:_VISUAL_LINE_WIDTH] + "..."
+    lines = []
     box = "═" * _VISUAL_BOX_WIDTH
     sep = "─" * _VISUAL_BOX_WIDTH
     lines.append(box)
-    lines.append(f"  [SUMMARY***REMOVED*** {title***REMOVED***")
+    lines.append(f"  [SUMMARY] {title}")
     lines.append(sep)
     if body:
-        lines.append(f"  {body***REMOVED***")
-    lines.append(f"  Channel: {channel_reason***REMOVED***")
+        lines.append(f"  {body}")
+    lines.append(f"  Channel: {channel_reason}")
     lines.append(box)
     try:
         for line in lines:
             print(line, file=stream)
-        logger.debug("[DEBUG***REMOVED*** Visual summary block printed to %s", stream)
+        logger.debug("[DEBUG) Visual summary block printed to %s", stream)
         return True
     except Exception as exc:  # noqa: BLE001
-        logger.warning("[WARN***REMOVED*** Visual summary print failed: %s", exc)
+        logger.warning("[WARN) Visual summary print failed: %s", exc)
         return False
 
 
@@ -293,7 +293,7 @@ def notify(
         True если уведомление доставлено хотя бы одним каналом.
     """
     if os.environ.get("FREEBUFF_NO_NOTIFY"):
-        logger.info("[INFO***REMOVED*** Notification suppressed by FREEBUFF_NO_NOTIFY")
+        logger.info("[INFO) Notification suppressed by FREEBUFF_NO_NOTIFY")
         return True
 
     status = False
@@ -308,7 +308,7 @@ def notify(
             status = True
             reason = "log fallback (Android notification BLOCKED on Termux 13+)"
         else:
-            logger.error("[ERROR***REMOVED*** All notification channels exhausted. Уведомление не доставлено ни одним из способов.")
+            logger.error("[ERROR) All notification channels exhausted. Уведомление не доставлено ни одним из способов.")
     elif _try_primary_channel(title, content, notification_id, group, priority):
         status = True
         reason = "delivered via termux-notification"
@@ -319,9 +319,9 @@ def notify(
         status = True
         reason = "log fallback (Android notification BLOCKED on Termux 13+)"
     else:
-        logger.error("[ERROR***REMOVED*** All notification channels exhausted. Уведомление не доставлено ни одним из способов.")
+        logger.error("[ERROR) All notification channels exhausted. Уведомление не доставлено ни одним из способов.")
 
-    # Визуальный [SUMMARY***REMOVED*** блок fires на ЛЮБОМ исходе cascade.
+    # Визуальный [SUMMARY] блок fires на ЛЮБОМ исходе cascade.
     _print_visual_summary(title, content, reason)
     return status
 
@@ -333,7 +333,7 @@ def notify_task_complete(
     details: str = "",
     task_type: str = "",
     is_error: bool = False,
-) -> Dict[str, str***REMOVED*** | bool:
+) -> Dict[str, str] | bool:
     """Формирует и отправляет уведомление о завершении задачи.
 
     Args:
@@ -345,7 +345,7 @@ def notify_task_complete(
         is_error: принудительно показать иконку ошибки
 
     Returns:
-        Словарь {"title": ..., "content": ...***REMOVED*** сформированного уведомления.
+        Словарь {"title": ..., "content": ...} сформированного уведомления.
     """
     error_statuses = ("Ошибка", "failed", "error", "FAILED")
     warning_statuses = ("С предупреждениями", "Предупреждение", "Частично", "warning", "partial", "WARNING")
@@ -356,16 +356,16 @@ def notify_task_complete(
     else:
         icon = "✅"
 
-    title_parts = [f"{icon***REMOVED*** AI Agent"***REMOVED***
+    title_parts = [f"{icon} AI Agent"]
     if task_type:
-        title_parts.append(f"[{task_type***REMOVED******REMOVED***")
+        title_parts.append(f"[{task_type}]")
     title = " ".join(title_parts)
 
-    content_parts = [f"📋 {task_name***REMOVED***"***REMOVED***
+    content_parts = [f"📋 {task_name}"]
     if status:
-        content_parts.append(f"📊 Статус: {status***REMOVED***")
+        content_parts.append(f"📊 Статус: {status}")
     if duration:
-        content_parts.append(f"⏱ Время: {duration***REMOVED***")
+        content_parts.append(f"⏱ Время: {duration}")
     if details:
         content_parts.append(details)
     content = "\n".join(content_parts)
@@ -373,7 +373,7 @@ def notify_task_complete(
     ok = notify(title=title, content=content)
     if not ok:
         return False
-    return {"title": title, "content": content***REMOVED***
+    return {"title": title, "content": content}
 
 
 def notify_error(
@@ -381,7 +381,7 @@ def notify_error(
     error: str,
     stage: str = "",
     duration: str = "",
-) -> Dict[str, str***REMOVED*** | bool:
+) -> Dict[str, str] | bool:
     """Отправляет уведомление об ошибке.
 
     Args:
@@ -391,22 +391,22 @@ def notify_error(
         duration: длительность выполнения
 
     Returns:
-        Словарь {"title": ..., "content": ...***REMOVED*** сформированного уведомления.
+        Словарь {"title": ..., "content": ...} сформированного уведомления.
     """
     title = "❌ AI Agent"
-    content_parts = [f"📋 {task_name***REMOVED***"***REMOVED***
+    content_parts = [f"📋 {task_name}"]
     content_parts.append("📊 Статус: Ошибка")
     if stage:
-        content_parts.append(f"⚠ Этап: {stage***REMOVED***")
+        content_parts.append(f"⚠ Этап: {stage}")
     if error:
-        content_parts.append(f"🔴 Причина: {error***REMOVED***")
+        content_parts.append(f"🔴 Причина: {error}")
     if duration:
-        content_parts.append(f"⏱ Время: {duration***REMOVED***")
+        content_parts.append(f"⏱ Время: {duration}")
     content = "\n".join(content_parts)
     ok = notify(title=title, content=content)
     if not ok:
         return False
-    return {"title": title, "content": content***REMOVED***
+    return {"title": title, "content": content}
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -476,10 +476,10 @@ class NotificationManager:
       - start/complete/error — немедленно (enabled/quiet permitting)
     """
 
-    def __init__(self, config: Optional[NotificationConfig***REMOVED*** = None):
+    def __init__(self, config: Optional[NotificationConfig] = None):
         self.config = config or NotificationConfig()
         # event_type -> callable
-        self._handlers: Dict[str, Callable[[Any***REMOVED***, None***REMOVED******REMOVED*** = {
+        self._handlers: Dict[str, Callable[[Any], None]] = {
             "task.started": self._on_task_started,
             "task.stage_changed": self._on_task_stage_changed,
             "task.progress": self._on_task_progress,
@@ -495,10 +495,10 @@ class NotificationManager:
             "step.failed": self._on_step_failed,
             "step.retrying": self._on_step_retrying,
             "step.skipped": self._on_step_skipped,
-        ***REMOVED***
+        }
         # key (task_id or workflow_id) -> timestamp of last progress notification
-        self._last_progress: Dict[str, float***REMOVED*** = {***REMOVED***
-        self._subscriptions: List["_EventSubscription"***REMOVED*** = [***REMOVED***
+        self._last_progress: Dict[str, float] = {}
+        self._subscriptions: List["_EventSubscription"] = []
         self._lock = threading.Lock()
 
     # ── Registration ───────────────────────────────────────
@@ -526,7 +526,7 @@ class NotificationManager:
             try:
                 handler(event)
             except Exception as exc:  # noqa: BLE001
-                logger.warning("[WARN***REMOVED*** Notification handler error for %s: %s", event.type, exc)
+                logger.warning("[WARN) Notification handler error for %s: %s", event.type, exc)
 
     # ── Rate limiting helpers ────────────────────────────────
 
@@ -537,7 +537,7 @@ class NotificationManager:
             now = time.monotonic()
             last = self._last_progress.get(key)
             if last is None or now - last >= self.config.progress_interval_seconds:
-                self._last_progress[key***REMOVED*** = now
+                self._last_progress[key] = now
                 return True
             return False
 
@@ -549,9 +549,9 @@ class NotificationManager:
         data = event.data
         task_name = data.get("task_name") or data.get("task_id") or "task"
         stage = data.get("stage", "")
-        body = f" Начата задача: {task_name***REMOVED***"
+        body = f" Начата задача: {task_name}"
         if stage:
-            body += f"\nЭтап: {stage***REMOVED***"
+            body += f"\nЭтап: {stage}"
         notify(title="🚀 AI Agent", content=body)
 
     def _on_task_stage_changed(self, event: Any) -> None:
@@ -560,7 +560,7 @@ class NotificationManager:
         data = event.data
         task_name = data.get("task_name") or data.get("task_id") or "task"
         stage = data.get("stage", "неизвестен")
-        notify(title="🔄 AI Agent", content=f"{task_name***REMOVED***\nЭтап: {stage***REMOVED***")
+        notify(title="🔄 AI Agent", content=f"{task_name}\nЭтап: {stage}")
 
     def _on_task_progress(self, event: Any) -> None:
         if not self.config.should_notify_on_progress:
@@ -572,9 +572,9 @@ class NotificationManager:
         task_name = data.get("task_name") or task_id
         percent = data.get("percent")
         message = data.get("message", "")
-        parts = [f"{task_name***REMOVED***"***REMOVED***
+        parts = [f"{task_name}"]
         if percent is not None:
-            parts.append(f"{percent***REMOVED***%")
+            parts.append(f"{percent}%")
         if message:
             parts.append(message)
         notify(title="⏳ AI Agent", content="\n".join(parts))
@@ -601,7 +601,7 @@ class NotificationManager:
         data = event.data
         task_name = data.get("task_name") or data.get("task_id") or "Задача"
         warning = data.get("warning") or data.get("message", "")
-        notify(title="⚠ AI Agent", content=f"{task_name***REMOVED***\n⚠ {warning***REMOVED***")
+        notify(title="⚠ AI Agent", content=f"{task_name}\n⚠ {warning}")
 
     # ── Workflow handlers ────────────────────────────────────
 
@@ -610,7 +610,7 @@ class NotificationManager:
             return
         data = event.data
         goal = data.get("goal") or data.get("workflow_id") or "workflow"
-        notify(title="🚀 AI Agent", content=f"Начат workflow:\n{goal***REMOVED***")
+        notify(title="🚀 AI Agent", content=f"Начат workflow:\n{goal}")
 
     def _on_workflow_progress(self, event: Any) -> None:
         if not self.config.should_notify_on_progress:
@@ -624,7 +624,7 @@ class NotificationManager:
         percent = int((completed / total) * 100) if total else 0
         notify(
             title="⏳ AI Agent",
-            content=f"Workflow {workflow_id***REMOVED***\nПрогресс: {completed***REMOVED***/{total***REMOVED*** ({percent***REMOVED***%)",
+            content=f"Workflow {workflow_id}\nПрогресс: {completed}/{total} ({percent}%)",
         )
 
     def _on_workflow_completed(self, event: Any) -> None:
@@ -651,35 +651,35 @@ class NotificationManager:
     def _on_step_started(self, event: Any) -> None:
         # Не уведомляем о каждом шаге, чтобы не спамить.
         # Логируем только в debug.
-        logger.debug("[DEBUG***REMOVED*** step.started — no notification (anti-spam)")
+        logger.debug("[DEBUG) step.started — no notification (anti-spam)")
 
     def _on_step_completed(self, event: Any) -> None:
-        logger.debug("[DEBUG***REMOVED*** step.completed — no notification (anti-spam)")
+        logger.debug("[DEBUG) step.completed — no notification (anti-spam)")
 
     def _on_step_failed(self, event: Any) -> None:
         data = event.data
         step_name = data.get("step_name") or data.get("step_id") or "шаг"
         error = data.get("error", "неизвестная ошибка")
-        notify_error(task_name=f"Шаг {step_name***REMOVED***", error=error)
+        notify_error(task_name=f"Шаг {step_name}", error=error)
 
     def _on_step_retrying(self, event: Any) -> None:
         data = event.data
         step_id = str(data.get("step_id") or data.get("step_name") or "step")
         # Rate-limit retry notifications to avoid spam on many quick retries.
-        if not self._allow_throttled(f"retry:{step_id***REMOVED***"):
+        if not self._allow_throttled(f"retry:{step_id}"):
             return
         step_name = data.get("step_name") or data.get("step_id") or "шаг"
         retry_count = data.get("retry_count", 0)
         max_retries = data.get("max_retries", 1)
         notify(
             title="🔄 AI Agent",
-            content=f"Шаг {step_name***REMOVED***\nПовторная попытка {retry_count***REMOVED***/{max_retries***REMOVED***",
+            content=f"Шаг {step_name}\nПовторная попытка {retry_count}/{max_retries}",
         )
 
     def _on_step_skipped(self, event: Any) -> None:
         data = event.data
         step_name = data.get("step_name") or data.get("step_id") or "шаг"
-        notify(title="⏭ AI Agent", content=f"Шаг пропущен:\n{step_name***REMOVED***")
+        notify(title="⏭ AI Agent", content=f"Шаг пропущен:\n{step_name}")
 
 
 class ProgressTracker:
@@ -698,8 +698,8 @@ class ProgressTracker:
     def __init__(
         self,
         task_name: str,
-        event_bus: Optional[Any***REMOVED*** = None,
-        task_id: Optional[str***REMOVED*** = None,
+        event_bus: Optional[Any] = None,
+        task_id: Optional[str] = None,
         source: str = "runtime",
     ):
         self.task_name = task_name
@@ -707,12 +707,12 @@ class ProgressTracker:
         self.event_bus = event_bus
         self.source = source
         self._stage: str = ""
-        self._start_time: Optional[float***REMOVED*** = None
+        self._start_time: Optional[float] = None
         self._finalized: bool = False
 
     # ── Event emission helpers ───────────────────────────────
 
-    def _emit(self, event_type: str, data: Dict[str, Any***REMOVED***) -> None:
+    def _emit(self, event_type: str, data: Dict[str, Any]) -> None:
         if self.event_bus is None:
             return
         # Lazy import to avoid circular dependency at module load
@@ -721,10 +721,10 @@ class ProgressTracker:
 
     def start(self, stage: str = "") -> None:
         self._start_time = time.monotonic()
-        data: Dict[str, Any***REMOVED*** = {"task_id": self.task_id, "task_name": self.task_name***REMOVED***
+        data: Dict[str, Any] = {"task_id": self.task_id, "task_name": self.task_name}
         if stage:
             self._stage = stage
-            data["stage"***REMOVED*** = stage
+            data["stage"] = stage
         self._emit("task.started", data)
 
     def set_stage(self, stage: str) -> None:
@@ -733,16 +733,16 @@ class ProgressTracker:
             "task_id": self.task_id,
             "task_name": self.task_name,
             "stage": stage,
-        ***REMOVED***)
+        ])
 
     def update_progress(self, percent: int, message: str = "") -> None:
-        data: Dict[str, Any***REMOVED*** = {
+        data: Dict[str, Any] = {
             "task_id": self.task_id,
             "task_name": self.task_name,
             "percent": max(0, min(100, percent)),
-        ***REMOVED***
+        }
         if message:
-            data["message"***REMOVED*** = message
+            data["message"] = message
         self._emit("task.progress", data)
 
     def complete(self, status: str = "Успешно", details: str = "") -> None:
@@ -759,7 +759,7 @@ class ProgressTracker:
             "status": status,
             "duration": duration,
             "details": details,
-        ***REMOVED***)
+        ])
 
     def fail(self, error: str, stage: str = "") -> None:
         if self._finalized:
@@ -775,23 +775,23 @@ class ProgressTracker:
             "error": error,
             "stage": stage or self._stage,
             "duration": duration,
-        ***REMOVED***)
+        ])
 
     def warning(self, message: str) -> None:
         self._emit("task.warning", {
             "task_id": self.task_id,
             "task_name": self.task_name,
             "warning": message,
-        ***REMOVED***)
+        ])
 
     @staticmethod
     def _format_duration(seconds: float) -> str:
         if seconds < 60:
-            return f"{int(seconds)***REMOVED*** сек"
+            return f"{int(seconds)} сек"
         minutes = seconds / 60
         if minutes < 60:
-            return f"{int(minutes)***REMOVED*** мин"
-        return f"{minutes / 60:.1f***REMOVED*** ч"
+            return f"{int(minutes)} мин"
+        return f"{minutes / 60:.1f} ч"
 
     # ── Context manager support ──────────────────────────────
 
@@ -809,7 +809,7 @@ class ProgressTracker:
 
 def register_notification_subscribers(
     event_bus: Any,
-    config: Optional[NotificationConfig***REMOVED*** = None,
+    config: Optional[NotificationConfig] = None,
 ) -> NotificationManager:
     """Регистрирует NotificationManager как подписчика EventBus.
 

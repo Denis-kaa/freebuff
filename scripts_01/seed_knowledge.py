@@ -14,9 +14,9 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-***REMOVED***
+}
 import sys
-***REMOVED***
+}
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
@@ -41,14 +41,14 @@ DEFAULT_DOC_SOURCES = [
     "AGENTS.md",
     "CLAUDE.md",
     "CODY.md",
-***REMOVED***
+]
 
 # Patterns that generate noise or are not useful for knowledge retrieval.
 # Unix shell-style wildcards are supported via fnmatch.
 EXCLUDED_DOC_PATTERNS = [
     "docs_10/audits/AUDIT_*.md",
     "docs_10/ops/TASK_TEMPLATE.md",
-***REMOVED***
+]
 
 
 def _is_excluded(rel_path: str) -> bool:
@@ -61,13 +61,13 @@ def _is_excluded(rel_path: str) -> bool:
     return False
 
 
-def _collect_doc_sources(ws: Path) -> list[str***REMOVED***:
+def _collect_doc_sources(ws: Path) -> list[str]:
     """Return all Markdown docs that should be seeded into Knowledge Memory.
 
     Combines core project manifests with every *.md file inside docs_10/,
     except explicitly excluded patterns (AUDIT files, templates, etc.).
     """
-    sources: list[str***REMOVED*** = list(DEFAULT_DOC_SOURCES)
+    sources: list[str] = list(DEFAULT_DOC_SOURCES)
     docs_dir = ws / "docs_10"
     if docs_dir.exists() and docs_dir.is_dir():
         for md_file in sorted(docs_dir.rglob("*.md")):
@@ -102,7 +102,7 @@ DEFAULT_KNOWLEDGE_CARDS = {
 - Validate model responses and provide fallbacks.
 - Use local models for simple tasks and cloud models for complex ones.
 """,
-***REMOVED***
+}
 
 
 # ══════════════════════════════════════════════════════════════
@@ -153,7 +153,7 @@ def seed(
         if not force and _already_seeded(me, key, content_hash):
             continue
 
-        summary = content.strip().splitlines()[0***REMOVED***[:200***REMOVED*** if content.strip() else ""
+        summary = content.strip().splitlines()[0][:200] if content.strip() else ""
 
         me.store(
             MemoryLevel.KNOWLEDGE,
@@ -166,7 +166,7 @@ def seed(
                 "doc_type": "markdown",
                 "seeded": True,
                 "content_hash": content_hash,
-            ***REMOVED***,
+            },
         )
         stored += 1
 
@@ -182,13 +182,13 @@ def seed(
             key=key,
             content=content,
             content_type=ContentType.MARKDOWN,
-            summary=content.strip().splitlines()[0***REMOVED***[:200***REMOVED***,
+            summary=content.strip().splitlines()[0][:200],
             metadata={
                 "source": "seed_knowledge.py",
                 "doc_type": "markdown",
                 "seeded": True,
                 "content_hash": content_hash,
-            ***REMOVED***,
+            },
         )
         stored += 1
 
@@ -203,8 +203,8 @@ def seed(
 def _safe_key(name: str) -> str:
     """Convert a filename or title into a valid MemoryEngine key."""
     # Split into words on any non-alphanumeric characters and join with underscores
-    words = re.split(r"[^a-zA-Z0-9***REMOVED***+", name.strip().lower())
-    words = [w for w in words if w***REMOVED***
+    words = re.split(r"[^a-zA-Z0-9)+", name.strip().lower())
+    words = [w for w in words if w]
     key = "_".join(words)
     return key or "untitled"
 
@@ -250,7 +250,7 @@ def main() -> None:
         rebuild=not args.no_rebuild,
         force=args.force,
     )
-    print(f"✅ Seeded {count***REMOVED*** knowledge entries")
+    print(f"✅ Seeded {count} knowledge entries")
 
 
 if __name__ == "__main__":

@@ -30,7 +30,7 @@ Usage::
         extra_sections={
             "role": "Ты — AI Mobile Developer уровня Senior, специализирующийся на React Native + Skia...\\n",
             "main_objective": "Реализовать production-ready мобильное приложение под iOS + Android с производительным 60 FPS канвасом.",
-        ***REMOVED***,
+        },
     )
     corpus.write_blueprint(new)
     corpus.register_in_registry(...)
@@ -39,11 +39,11 @@ Usage::
 from __future__ import annotations
 
 import os
-***REMOVED***
+}
 import shutil
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Optional
 
 import yaml
@@ -57,7 +57,7 @@ DEFAULT_BLUEPRINTS_DIR = Path("/storage/emulated/0/PROJECTS/workstation/blueprin
 
 
 # Required XML sections per v3 schema (any missing ⇒ blueprint is incomplete).
-REQUIRED_SECTIONS: tuple[str, ...***REMOVED*** = (
+REQUIRED_SECTIONS: tuple[str, ...] = (
     "role",
     "system_role",
     "input",
@@ -67,7 +67,7 @@ REQUIRED_SECTIONS: tuple[str, ...***REMOVED*** = (
 )
 
 # Optional but recommended sections in v3 (validated, but absence is not an error).
-OPTIONAL_SECTIONS: tuple[str, ...***REMOVED*** = (
+OPTIONAL_SECTIONS: tuple[str, ...] = (
     "micro_architecture_canon",
     "immutable_vs_mutable",
     "decomposition_rules",
@@ -86,7 +86,7 @@ OPTIONAL_SECTIONS: tuple[str, ...***REMOVED*** = (
 
 # Available role types (mirrors MANIFEST categories). New categories are allowed
 # but must be added here so registry typing stays consistent.
-ROLE_TYPES: tuple[str, ...***REMOVED*** = (
+ROLE_TYPES: tuple[str, ...] = (
     "management",
     "analysis",
     "estimation",
@@ -128,26 +128,26 @@ ROLE_TYPES: tuple[str, ...***REMOVED*** = (
 # author + Blueprint v3 author). The two layers coexist by design (CON-7
 # + D-3 invariant) and never collapse to make a single source of truth.
 # See CANONICAL_ENGINE_ROUTING_V1.md for the full 3-layer routing model.
-CAPABILITIES_OVERRIDE: dict[str, list[str***REMOVED******REMOVED*** = {
-    "orchestrator":   ["reasoning", "plan", "explain", "summarize"***REMOVED***,
-    "context_keeper": ["summarize", "explain"***REMOVED***,
-    "explainer":      ["summarize", "explain", "classify"***REMOVED***,
-    "lisa":           ["summarize", "estimation"***REMOVED***,
-    "risk":           ["summarize", "explain", "reasoning"***REMOVED***,
-    "decomposer":     ["architecture", "explain", "plan"***REMOVED***,
-    "architect":      ["architecture", "explain", "summarize"***REMOVED***,
-    "auditor":        ["review", "architecture", "explain"***REMOVED***,
-    "response_writer": ["explain", "summarize"***REMOVED***,
-    "developer":      ["code", "refactor", "explain", "summarize"***REMOVED***,
-    "frontend":       ["code", "summarize", "explain"***REMOVED***,
-    "devops":         ["code", "summarize", "reasoning"***REMOVED***,
-    "tester":         ["code", "summarize", "review"***REMOVED***,
-    "fixer":          ["code", "refactor", "explain"***REMOVED***,
-    "acceptance":     ["review", "explain", "summarize"***REMOVED***,
-    "documenter":     ["summarize", "explain"***REMOVED***,
-    "retrospective":  ["summarize", "explain", "reasoning"***REMOVED***,
-    "environment_doctor": ["diagnose", "validate", "report"***REMOVED***,
-***REMOVED***
+CAPABILITIES_OVERRIDE: dict[str, list[str]] = {
+    "orchestrator":   ["reasoning", "plan", "explain", "summarize"],
+    "context_keeper": ["summarize", "explain"],
+    "explainer":      ["summarize", "explain", "classify"],
+    "lisa":           ["summarize", "estimation"],
+    "risk":           ["summarize", "explain", "reasoning"],
+    "decomposer":     ["architecture", "explain", "plan"],
+    "architect":      ["architecture", "explain", "summarize"],
+    "auditor":        ["review", "architecture", "explain"],
+    "response_writer": ["explain", "summarize"],
+    "developer":      ["code", "refactor", "explain", "summarize"],
+    "frontend":       ["code", "summarize", "explain"],
+    "devops":         ["code", "summarize", "reasoning"],
+    "tester":         ["code", "summarize", "review"],
+    "fixer":          ["code", "refactor", "explain"],
+    "acceptance":     ["review", "explain", "summarize"],
+    "documenter":     ["summarize", "explain"],
+    "retrospective":  ["summarize", "explain", "reasoning"],
+    "environment_doctor": ["diagnose", "validate", "report"],
+}
 
 
 # Closed set of capability strings the SmartRouter understands. MUST stay in
@@ -156,7 +156,7 @@ CAPABILITIES_OVERRIDE: dict[str, list[str***REMOVED******REMOVED*** = {
 # ``test_known_capabilities_subset_of_actual_catalog`` panics if drift is
 # detected. New capability strings MUST be added both here and in the
 # catalog before they can appear in CAPABILITIES_OVERRIDE.
-KNOWN_CAPABILITIES: frozenset[str***REMOVED*** = frozenset({
+KNOWN_CAPABILITIES: frozenset[str] = frozenset({
     "local", "fast", "code", "summarize",
     "router", "classify",
     "reasoning", "plan", "refactor", "explain",
@@ -169,7 +169,7 @@ KNOWN_CAPABILITIES: frozenset[str***REMOVED*** = frozenset({
     "article_generation",  # Content Factory (Phase 9, промт 092)
     "book_generation",     # Content Factory (Phase 9, промт 092)
     "report_generation",   # Content Factory (Phase 9, промт 092)
-***REMOVED***)
+])
 
 
 @dataclass
@@ -177,29 +177,29 @@ class Blueprint:
     """Parsed role blueprint mirror of a v3 .md file."""
 
     file: str  # e.g. "09_developer.md"
-    header_meta: dict[str, str***REMOVED*** = field(default_factory=dict)
-    sections: dict[str, str***REMOVED*** = field(default_factory=dict)
+    header_meta: dict[str, str] = field(default_factory=dict)
+    sections: dict[str, str] = field(default_factory=dict)
 
     def to_markdown(self) -> str:
         """Render back to a v3-compliant Markdown string."""
         role_line = self.header_meta.get("ROLE", "ROLE: (unset)")
         version_line = self.header_meta.get("VERSION", "3.1.0")
-        out: list[str***REMOVED*** = [f"ROLE: {role_line***REMOVED***", f"VERSION: {version_line***REMOVED***", ""***REMOVED***
+        out: list[str] = [f"ROLE: {role_line}", f"VERSION: {version_line}", ""]
         # Required first, then optional, in declared order to keep diffs stable.
         order = list(REQUIRED_SECTIONS) + list(OPTIONAL_SECTIONS)
         for sec in order:
             if sec in self.sections:
-                out.append(f"<{sec***REMOVED***>")
-                out.append(self.sections[sec***REMOVED***.rstrip())
-                out.append(f"</{sec***REMOVED***>")
+                out.append(f"<{sec}>")
+                out.append(self.sections[sec].rstrip())
+                out.append(f"</{sec}>")
                 out.append("")
         return "\n".join(out).rstrip() + "\n"
 
 
 # ─── parsing primitives ──────────────────────────────────────────────────────
 
-_SECTION_RE = re.compile(r"<(\w+)>([\s\S***REMOVED****?)</\1>", re.MULTILINE)
-_HEADER_RE = re.compile(r"^([A-Z***REMOVED***[A-Z0-9_***REMOVED***+):[ \t***REMOVED***+(.+?)$", re.MULTILINE)
+_SECTION_RE = re.compile(r"<(\w+)>([\s\S)*?)</\1>", re.MULTILINE)
+_HEADER_RE = re.compile(r"^([A-Z)[A-Z0-9_]+):[ \t]+(.+?)$", re.MULTILINE)
 
 
 def parse_blueprint_md(text: str) -> Blueprint:
@@ -208,8 +208,8 @@ def parse_blueprint_md(text: str) -> Blueprint:
     Public so test fixtures and downstream tools can reuse the same parser
     without reaching into private symbols.
     """
-    sections = {m.group(1).lower(): m.group(2).strip() for m in _SECTION_RE.finditer(text)***REMOVED***
-    header_meta = {m.group(1): m.group(2).strip() for m in _HEADER_RE.finditer(text)***REMOVED***
+    sections = {m.group(1).lower(): m.group(2).strip() for m in _SECTION_RE.finditer(text)}
+    header_meta = {m.group(1): m.group(2).strip() for m in _HEADER_RE.finditer(text)}
     return Blueprint(file="", header_meta=header_meta, sections=sections)
 
 
@@ -234,11 +234,11 @@ def _insert_into_pipeline(text: str, block: str) -> str:
     # Find the next top-level section (column 0, non-comment, non-empty).
     insert_at = len(lines)
     for j in range(pipeline_idx + 1, len(lines)):
-        ln = lines[j***REMOVED***
+        ln = lines[j]
         if ln and not ln.startswith((" ", "\t", "#")):
             insert_at = j
             break
-    out = lines[:insert_at***REMOVED*** + [block.rstrip("\n")***REMOVED*** + lines[insert_at:***REMOVED***
+    out = lines[:insert_at] + [block.rstrip("\n")] + lines[insert_at:]
     return "\n".join(out) + "\n"
 
 
@@ -248,12 +248,12 @@ def _insert_into_pipeline(text: str, block: str) -> str:
 class BlueprintCorpus:
     """Reader + creator for the Kwork Arbitr v3 pipeline corpus."""
 
-    def __init__(self, root: Optional[Path***REMOVED*** = None, scenario_id: str = "blueprint_v3"):
+    def __init__(self, root: Optional[Path] = None, scenario_id: str = "blueprint_v3"):
         self.root = Path(root) if root is not None else DEFAULT_BLUEPRINTS_DIR
         if not (self.root / "registry.yaml").exists():
-            raise FileNotFoundError(f"registry.yaml not found at {self.root***REMOVED***")
+            raise FileNotFoundError(f"registry.yaml not found at {self.root}")
         self.registry = self._load_registry()
-        self._index: dict[str, dict***REMOVED*** = {e["id"***REMOVED***: e for e in self.registry.get("pipeline", [***REMOVED***)***REMOVED***
+        self._index: dict[str, dict] = {e["id"]: e for e in self.registry.get("pipeline", [])}
         self._scenario_id = scenario_id
         # Vocabulary drift defense: any override token that doesn't overlap with
         # KNOWN_CAPABILITIES (the real catalog) silently demotes routing to
@@ -282,7 +282,7 @@ class BlueprintCorpus:
         """Human-readable label for UI."""
         return "Kwork Arbitr v3 — AI Engineering Pipeline"
 
-    def role_objects(self) -> list["Role"***REMOVED***:
+    def role_objects(self) -> list["Role"]:
         """Project ``list_roles()`` tuples into :class:`Role` dataclasses.
 
         Used by :class:`core_02.scenario_registry.ScenarioRegistry` for
@@ -291,11 +291,11 @@ class BlueprintCorpus:
         in one pass.
 
         Uses ``role_objects()`` (not ``roles()``) to avoid shadowing the
-        legacy ``def roles(self) -> list[dict***REMOVED***`` further down in this file
+        legacy ``def roles(self) -> list[dict]`` further down in this file
         that returns ``_index.values()``. See LESSONS ANTI-7b / PB-8.
         """
         from core_02.scenario import Role
-        out: list[Role***REMOVED*** = [***REMOVED***
+        out: list[Role] = []
         for role_id, file_name, title, role_type in self.list_roles():
             try:
                 hint = tuple(self.routing_hint(role_id))
@@ -328,26 +328,26 @@ class BlueprintCorpus:
             bp.sections.get("role", ""),
             bp.sections.get("system_role", ""),
             bp.sections.get("main_objective", ""),
-        ***REMOVED***
+        ]
         return " ".join(p for p in parts if p)
 
-    def validate(self) -> list[str***REMOVED***:
+    def validate(self) -> list[str]:
         """Per-scenario validation gate called by ``ScenarioRegistry.validate_all``.
 
         Vocabulary drift defense is enforced at :meth:`__init__` already —
         this method exists for the ABC contract and reports lazy errors
         (corrupt blueprint sections discovered on demand).
         """
-        errors: list[str***REMOVED*** = [***REMOVED***
+        errors: list[str] = []
         for role_id, _file, _title, _type in self.list_roles():
             try:
                 bp = self.load_blueprint(role_id)
             except FileNotFoundError as exc:
-                errors.append(f"role_id {role_id!r***REMOVED***: {exc***REMOVED***")
+                errors.append(f"role_id {role_id!r}: {exc}")
                 continue
             missing = self.validate_blueprint(bp)
             if missing:
-                errors.append(f"role_id {role_id!r***REMOVED***: missing sections {missing***REMOVED***")
+                errors.append(f"role_id {role_id!r}: missing sections {missing}")
         return errors
 
     @classmethod
@@ -360,18 +360,18 @@ class BlueprintCorpus:
         instead of silently passing through to a broken init.
         """
         unknown_by_role = {
-            role_id: [c for c in caps if c not in KNOWN_CAPABILITIES***REMOVED***
+            role_id: [c for c in caps if c not in KNOWN_CAPABILITIES]
             for role_id, caps in CAPABILITIES_OVERRIDE.items()
             if any(c not in KNOWN_CAPABILITIES for c in caps)
-        ***REMOVED***
+        }
         if unknown_by_role:
             raise ValueError(
                 "CAPABILITIES_OVERRIDE содержит capability tokens, которых нет "
                 "в ModelCatalog (core_02/router.py) — это вызывает silent fallback "
                 "на qwen2.5:1.5b у SmartRouter: "
-                f"{unknown_by_role***REMOVED***. "
+                f"{unknown_by_role}. "
                 "Используй только строки из KNOWN_CAPABILITIES. "
-                f"Закрытое множество: {sorted(KNOWN_CAPABILITIES)***REMOVED***."
+                f"Закрытое множество: {sorted(KNOWN_CAPABILITIES)}."
             )
 
     # ─── reading ─────────────────────────────────────────────────────────────
@@ -386,19 +386,19 @@ class BlueprintCorpus:
             # ValueError, not a raw traceback (self-healing UX for the
             # "pipeline fell mid-project" scenario).
             raise ValueError(
-                f"registry.yaml повреждён (невалидный YAML) в {path***REMOVED***: {exc***REMOVED***. "
+                f"registry.yaml повреждён (невалидный YAML) в {path}: {exc}. "
                 "Восстанови файл из .bak.* бэкапа или почини синтаксис "
                 "секции перед повторным запуском."
             ) from exc
         if not isinstance(data, dict):
             # Empty file / null document — cannot build the pipeline index.
             raise ValueError(
-                f"registry.yaml пуст или имеет неожиданную структуру в {path***REMOVED***: "
+                f"registry.yaml пуст или имеет неожиданную структуру в {path}: "
                 "ожидался словарь с секцией 'pipeline'."
             )
         return data
 
-    def role_entries(self) -> list[dict***REMOVED***:
+    def role_entries(self) -> list[dict]:
         """Return all role entries as plain dicts (read-only view).
 
         Kept under a distinct name from ``role_objects()`` so the latter
@@ -407,51 +407,51 @@ class BlueprintCorpus:
         """
         return list(self._index.values())
 
-    def list_roles(self) -> list[tuple[str, str, str, str***REMOVED******REMOVED***:
+    def list_roles(self) -> list[tuple[str, str, str, str]]:
         """Return (id, file, role_title, type) tuples — handy for human display."""
         return [
             (rid, e.get("file", ""), e.get("role", ""), e.get("type", ""))
             for rid, e in self._index.items()
-        ***REMOVED***
+        ]
 
-    def list_by_type(self, role_type: str) -> list[tuple[str, str, str, str***REMOVED******REMOVED***:
-        return [r for r in self.list_roles() if r[3***REMOVED*** == role_type***REMOVED***
+    def list_by_type(self, role_type: str) -> list[tuple[str, str, str, str]]:
+        return [r for r in self.list_roles() if r[3] == role_type]
 
     def load_blueprint(self, role_id: str) -> Blueprint:
-        entry = self._index[role_id***REMOVED***
-        path = self.root / entry["file"***REMOVED***
+        entry = self._index[role_id]
+        path = self.root / entry["file"]
         if not path.exists():
-            raise FileNotFoundError(f"blueprint missing on disk: {path***REMOVED***")
+            raise FileNotFoundError(f"blueprint missing on disk: {path}")
         bp = parse_blueprint_md(path.read_text(encoding="utf-8"))
-        bp.file = entry["file"***REMOVED***
+        bp.file = entry["file"]
         return bp
 
-    def validate_blueprint(self, bp: Blueprint) -> list[str***REMOVED***:
+    def validate_blueprint(self, bp: Blueprint) -> list[str]:
         """Return list of missing required section names (empty = valid)."""
-        return [s for s in REQUIRED_SECTIONS if s not in bp.sections***REMOVED***
+        return [s for s in REQUIRED_SECTIONS if s not in bp.sections]
 
-    def resolve_pipeline(self, project_type: Optional[str***REMOVED*** = None,
-                         complexity: Optional[str***REMOVED*** = None) -> list[str***REMOVED***:
+    def resolve_pipeline(self, project_type: Optional[str] = None,
+                         complexity: Optional[str] = None) -> list[str]:
         """Compute canonical role order for the given project_type + complexity tier.
 
         Mirrors registry.yaml's project_types.* and complexity_routing.* tables.
         Both filters are optional; pass only one to apply a single constraint.
         """
-        required = {rid for rid in self._index.keys()***REMOVED***
-        skip: set[str***REMOVED*** = set()
+        required = {rid for rid in self._index.keys()}
+        skip: set[str] = set()
         if project_type:
-            cfg = self.registry.get("project_types", {***REMOVED***).get(project_type, {***REMOVED***)
-            required &= set(cfg.get("required_roles", [***REMOVED***)) or required
-            skip |= set(cfg.get("skip_roles", [***REMOVED***))
+            cfg = self.registry.get("project_types", {}).get(project_type, {})
+            required &= set(cfg.get("required_roles", [])) or required
+            skip |= set(cfg.get("skip_roles", []))
         if complexity:
-            cfg = self.registry.get("complexity_routing", {***REMOVED***).get(complexity, {***REMOVED***)
-            required &= set(cfg.get("required_roles", [***REMOVED***)) or required
-            skip |= set(cfg.get("skip_roles", [***REMOVED***))
+            cfg = self.registry.get("complexity_routing", {}).get(complexity, {})
+            required &= set(cfg.get("required_roles", [])) or required
+            skip |= set(cfg.get("skip_roles", []))
         return sorted(required - skip)
 
     # ─── routing_hint bridge (Blueprint ↔ SmartRouter) ───────────────────────
 
-    def routing_hint(self, role_id: str) -> list[str***REMOVED***:
+    def routing_hint(self, role_id: str) -> list[str]:
         """Return capability strings for ``role_id``, ready for SmartRouter.route().
 
         Resolution priority:
@@ -463,15 +463,15 @@ class BlueprintCorpus:
         See ``core_02/LESSONS.md`` ANTI-6 / CAN-5 for design rationale.
         """
         if role_id not in self._index:
-            raise KeyError(f"role_id '{role_id***REMOVED***' not in registry")
+            raise KeyError(f"role_id '{role_id}' not in registry")
         try:
             bp = self.load_blueprint(role_id)
         except FileNotFoundError:
             # Bare blueprint file missing — return override only.
-            return list(CAPABILITIES_OVERRIDE.get(role_id, [***REMOVED***))
+            return list(CAPABILITIES_OVERRIDE.get(role_id, []))
         if "capabilities" in bp.sections:
-            raw = bp.sections["capabilities"***REMOVED***
-            caps = [***REMOVED***
+            raw = bp.sections["capabilities"]
+            caps = []
             for line in raw.splitlines():
                 stripped = line.strip()
                 if not stripped or stripped.startswith("#"):
@@ -482,16 +482,16 @@ class BlueprintCorpus:
                     caps.append(cleaned)
             if caps:
                 return caps
-        return list(CAPABILITIES_OVERRIDE.get(role_id, [***REMOVED***))
+        return list(CAPABILITIES_OVERRIDE.get(role_id, []))
 
     # ─── creation ────────────────────────────────────────────────────────────
 
-    def _stubs_for_role(self, role_title: str) -> dict[str, str***REMOVED***:
+    def _stubs_for_role(self, role_title: str) -> dict[str, str]:
         """Default stub content for required sections when caller leaves them blank."""
         return {
             "role": (
                 f"# Кто ты и что отвечаешь\n"
-                f"Ты — {role_title***REMOVED*** внутри AI Engineering Pipeline.\n"
+                f"Ты — {role_title} внутри AI Engineering Pipeline.\n"
                 f"# Обновить: добавить 2–3 предложения про область экспертизы."
             ),
             "system_role": (
@@ -514,7 +514,7 @@ class BlueprintCorpus:
                 "Разрешено:\n- (allowed action)\n\n"
                 "Запрещено:\n- (forbidden action)"
             ),
-        ***REMOVED***
+        }
 
     def create_blueprint(
         self,
@@ -522,7 +522,7 @@ class BlueprintCorpus:
         file_name: str,
         role_title: str,
         role_type: str,
-        extra_sections: Optional[dict[str, str***REMOVED******REMOVED*** = None,
+        extra_sections: Optional[dict[str, str]] = None,
         version: str = "3.1.0",
     ) -> Blueprint:
         """Scaffold a new Blueprint for ``role_id``.
@@ -533,9 +533,9 @@ class BlueprintCorpus:
         refine as experience grows.
         """
         if role_id in self._index:
-            raise ValueError(f"role_id '{role_id***REMOVED***' уже зарегистрирован в registry.yaml")
+            raise ValueError(f"role_id '{role_id}' уже зарегистрирован в registry.yaml")
         if role_type not in ROLE_TYPES:
-            raise ValueError(f"role_type '{role_type***REMOVED***' не из списка {ROLE_TYPES***REMOVED***")
+            raise ValueError(f"role_type '{role_type}' не из списка {ROLE_TYPES}")
         if not file_name.endswith(".md"):
             raise ValueError("file_name должен заканчиваться на .md")
 
@@ -545,7 +545,7 @@ class BlueprintCorpus:
 
         return Blueprint(
             file=file_name,
-            header_meta={"ROLE": role_title, "VERSION": version***REMOVED***,
+            header_meta={"ROLE": role_title, "VERSION": version},
             sections=sections,
         )
 
@@ -559,11 +559,11 @@ class BlueprintCorpus:
         target = self.root / bp.file
         if target.exists():
             raise FileExistsError(
-                f"{target***REMOVED*** уже существует — не перезаписываем молча. "
+                f"{target} уже существует — не перезаписываем молча. "
                 f"Передай новое имя файла или удали существующий перед записью."
             )
         if not os.access(self.root, os.W_OK):
-            raise PermissionError(f"{self.root***REMOVED*** не доступен на запись")
+            raise PermissionError(f"{self.root} не доступен на запись")
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(bp.to_markdown(), encoding="utf-8")
         return target
@@ -575,9 +575,9 @@ class BlueprintCorpus:
         role_title: str,
         role_type: str,
         description: str,
-        triggers: list[str***REMOVED***,
-        dependencies: Optional[list[str***REMOVED******REMOVED*** = None,
-        outputs: Optional[list[str***REMOVED******REMOVED*** = None,
+        triggers: list[str],
+        dependencies: Optional[list[str]] = None,
+        outputs: Optional[list[str]] = None,
         condition: str = "always",
         dry_run: bool = False,
     ):
@@ -590,31 +590,31 @@ class BlueprintCorpus:
         corruption of user-owned registry.yaml).
         """
         if role_id in self._index:
-            raise ValueError(f"role_id '{role_id***REMOVED***' уже зарегистрирован")
+            raise ValueError(f"role_id '{role_id}' уже зарегистрирован")
         if role_type not in ROLE_TYPES:
-            raise ValueError(f"role_type '{role_type***REMOVED***' не из списка {ROLE_TYPES***REMOVED***")
+            raise ValueError(f"role_type '{role_type}' не из списка {ROLE_TYPES}")
 
-        dep = dependencies or [***REMOVED***
-        out = outputs or [***REMOVED***
+        dep = dependencies or []
+        out = outputs or []
         block_lines = [
-            f"  - id: {role_id***REMOVED***",
-            f"    file: {file_name***REMOVED***",
-            f"    type: {role_type***REMOVED***",
-            f"    role: {role_title***REMOVED***",
-            f"    description: {description***REMOVED***",
-            f"    condition: {condition***REMOVED***",
+            f"  - id: {role_id}",
+            f"    file: {file_name}",
+            f"    type: {role_type}",
+            f"    role: {role_title}",
+            f"    description: {description}",
+            f"    condition: {condition}",
             "    triggers:",
-        ***REMOVED***
+        ]
         for t in triggers:
-            block_lines.append(f'      - "{t***REMOVED***"')
+            block_lines.append(f'      - "{t}"')
         if dep:
             block_lines.append("    dependencies:")
             for d in dep:
-                block_lines.append(f"      - {d***REMOVED***")
+                block_lines.append(f"      - {d}")
         if out:
             block_lines.append("    outputs:")
             for o in out:
-                block_lines.append(f"      - {o***REMOVED***")
+                block_lines.append(f"      - {o}")
         block = "\n".join(block_lines) + "\n"
 
         import yaml  # kept local so a missing PyYAML only fails when needed
@@ -634,7 +634,7 @@ class BlueprintCorpus:
             parsed = yaml.safe_load(new_text)
         except yaml.YAMLError as exc:
             raise ValueError(
-                f"Сплис реестра дал невалидный YAML — НЕ пишем на диск: {exc***REMOVED***"
+                f"Сплис реестра дал невалидный YAML — НЕ пишем на диск: {exc}"
             ) from exc
         if not isinstance(parsed, dict) or "pipeline" not in parsed:
             raise ValueError(
@@ -645,7 +645,7 @@ class BlueprintCorpus:
             return new_text
         # Backup with timestamp (overwrite-collisions safe on multi-step edits).
         backup = registry_path.with_name(
-            registry_path.name + f".bak.{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')***REMOVED***"
+            registry_path.name + f".bak.{datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%S')}"
         )
         shutil.copy2(registry_path, backup)
         try:
@@ -669,7 +669,7 @@ __all__ = [
     "Blueprint",
     "BlueprintCorpus",
     "BlueprintScenario",
-***REMOVED***
+]
 
 
 # ─── virtual subclass registration (closes isinstance failures) ─────────────

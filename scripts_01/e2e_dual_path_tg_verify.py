@@ -30,7 +30,7 @@ import sys
 import tempfile
 import time
 import uuid
-***REMOVED***
+}
 
 WORKSPACE = Path(__file__).resolve().parent.parent
 
@@ -41,15 +41,15 @@ TARGET_LATENCY_SECS = 5.0
 
 TG_TERMINAL_MESSENGER = WORKSPACE / "projects_17/tg_terminal_messenger"
 TG_SESSION_NAME = "tg_session"  # canonical (CON-31 wrap)
-TG_SESSION_PATH = TG_TERMINAL_MESSENGER / f"{TG_SESSION_NAME***REMOVED***.session"
+TG_SESSION_PATH = TG_TERMINAL_MESSENGER / f"{TG_SESSION_NAME}.session"
 
 # v5.86.0 user-facing reauth instruction (plain ASCII; use chr(39) for apostrophes in Python source —
 # here strings use double outer-quote so single apostrophes are literal and don't escape hell).
 TG_REAUTH_HINT = (
     "To regenerate the TG session, run a Telethon interactive sign-in:\n"
     "   python3 -c 'from telethon.sync import TelegramClient;"
-    " c = TelegramClient(\"tg_session\", int(os.environ[\"TG_API_ID\"***REMOVED***),"
-    " os.environ[\"TG_API_HASH\"***REMOVED***); c.start()'\n"
+    " c = TelegramClient(\"tg_session\", int(os.environ[\"TG_API_ID\"]),"
+    " os.environ[\"TG_API_HASH\"]); c.start()'\n"
     "Requires TG_API_ID + TG_API_HASH env vars (from https://my.telegram.org/apps)"
     " and an interactive TTY (does NOT work under cron / non-TTY)."
 )
@@ -60,8 +60,8 @@ _REAUTH_REQUIRED_CLASSES: frozenset = frozenset({
     "AuthKeyUnregisteredError",
     "InvalidAuthKeyError",
     "AuthKeyDuplicatedError",
-***REMOVED***)
-_2FA_CLASSES: frozenset = frozenset({"SessionPasswordNeededError"***REMOVED***)
+])
+_2FA_CLASSES: frozenset = frozenset({"SessionPasswordNeededError"})
 
 
 # ============================================================
@@ -107,7 +107,7 @@ async def _probe_tg_session() -> bool:
             SessionPasswordNeededError,  # round-7: 2FA promoted to fail-loud
         )
     except ImportError as imp_exc:
-        print(f"FAIL telethon public auth-error classes unavailable: {imp_exc***REMOVED***", flush=True)
+        print(f"FAIL telethon public auth-error classes unavailable: {imp_exc}", flush=True)
         print("     falling back to legacy 2-class catch (round-3 behavior); see CON-NEW fwd-guard", flush=True)
         # Legacy fallback: only catch what existed pre-v5.86.0 (still better than nothing).
         TG_AUTH_FAILURES = (
@@ -127,13 +127,13 @@ async def _probe_tg_session() -> bool:
                 await client.disconnect()
             except Exception:
                 pass
-            print(f"  ok TG probe OK (attempt {attempt***REMOVED***/2)", flush=True)
+            print(f"  ok TG probe OK (attempt {attempt}/2)", flush=True)
             return True
         except TG_AUTH_FAILURES as exc:
             # Non-recoverable, fail-loud per CAN-14. Unified exit(2) per round-4 review.
             cls_name = type(exc).__name__
-            print(f"FAIL TG AUTH FAILURE ({cls_name***REMOVED***): {exc***REMOVED***", flush=True)
-            print(f"     session path: {TG_SESSION_PATH***REMOVED***", flush=True)
+            print(f"FAIL TG AUTH FAILURE ({cls_name}): {exc}", flush=True)
+            print(f"     session path: {TG_SESSION_PATH}", flush=True)
             # Round-9: dispatch table for which auth classes require reauth vs block.
             # Uses module-level constants (hoisted from inline definition per code-reviewer round-8).
             if cls_name in _2FA_CLASSES:
@@ -155,7 +155,7 @@ async def _probe_tg_session() -> bool:
             # FloodWaitError (rate-limit): echo seconds-readable so cron operator can plan next run.
             if isinstance(exc, FloodWaitError):
                 seconds = getattr(exc, "seconds", 60)
-                print(f"FAIL TG FLOOD-WAIT: must wait {seconds***REMOVED***s before retrying; aborting.", flush=True)
+                print(f"FAIL TG FLOOD-WAIT: must wait {seconds}s before retrying; aborting.", flush=True)
                 if client is not None:
                     try:
                         await client.disconnect()
@@ -165,7 +165,7 @@ async def _probe_tg_session() -> bool:
             # Transient (network level): retry-once.
             if isinstance(exc, (ConnectionError, TimeoutError, OSError)):
                 last_exc = exc
-                print(f"  warn transient probe error (attempt {attempt***REMOVED***/2): {type(exc).__name__***REMOVED***: {exc***REMOVED***",
+                print(f"  warn transient probe error (attempt {attempt}/2): {type(exc).__name__}: {exc}",
                       flush=True)
                 if attempt == 1:
                     await _asyncio.sleep(1)
@@ -176,11 +176,11 @@ async def _probe_tg_session() -> bool:
                             pass
                         client = None
                     continue
-                print(f"FAIL TG probe failed after 2 attempts; last error: {last_exc***REMOVED***", flush=True)
+                print(f"FAIL TG probe failed after 2 attempts; last error: {last_exc}", flush=True)
                 sys.exit(2)
             # Unknown error: soft-warn, retry-once. Final strike returns False (CAN-14 partial).
             last_exc = exc
-            print(f"  warn unexpected probe error (attempt {attempt***REMOVED***/2): {type(exc).__name__***REMOVED***: {exc***REMOVED***",
+            print(f"  warn unexpected probe error (attempt {attempt}/2): {type(exc).__name__}: {exc}",
                   flush=True)
             if attempt == 1:
                 await _asyncio.sleep(1)
@@ -215,11 +215,11 @@ async def _probe_tg_session() -> bool:
 class _MockMessage:
     def __init__(self, chat_id: int) -> None:
         self.chat_id = chat_id
-        self.replies: list = [***REMOVED***
-        self.reply_text_calls: list = [***REMOVED***
+        self.replies: list = []
+        self.reply_text_calls: list = []
 
     async def reply_text(self, text: str, **kwargs) -> None:
-        self.reply_text_calls.append({"text": text, **kwargs***REMOVED***)
+        self.reply_text_calls.append({"text": text, **kwargs})
 
 
 class _MockChat:
@@ -240,7 +240,7 @@ class _MockUpdate:
 
 
 class _MockContext:
-    def __init__(self, args: "list[str***REMOVED***") -> None:
+    def __init__(self, args: "list[str)") -> None:
         self.args = args
 
 
@@ -248,17 +248,17 @@ def _preflight() -> None:
     """0-side-effect checks. Exit 1 on any failure (no TG touch)."""
     session = TG_SESSION_PATH
     if not session.exists():
-        print(f"FAIL Pre-flight FAILED: TG session file missing: {session***REMOVED***")
+        print(f"FAIL Pre-flight FAILED: TG session file missing: {session}")
         sys.exit(1)
     age_h = (time.time() - session.stat().st_mtime) / 3600.0
     if age_h > 36:
-        print(f"WARN Pre-flight WARNING: TG session is {age_h:.1f***REMOVED***h old (may indicate expired auth).")
-        print(f"     session path: {session***REMOVED***")
+        print(f"WARN Pre-flight WARNING: TG session is {age_h:.1f}h old (may indicate expired auth).")
+        print(f"     session path: {session}")
 
     for sub in ("user", "running", "done", "failed"):
         d = WORKSPACE / "pompts_11" / sub
         if not d.is_dir():
-            print(f"FAIL Pre-flight FAILED: queue dir missing: {d***REMOVED***")
+            print(f"FAIL Pre-flight FAILED: queue dir missing: {d}")
             sys.exit(1)
 
     logs_dir = WORKSPACE / "logs_14"
@@ -271,7 +271,7 @@ async def _invoke_cmd_task(text: str, chat_id: int) -> tuple:
     sys.path.insert(0, str(WORKSPACE))
     from scripts_01.telegram_bot import cmd_task  # NOQA: E402
 
-    update = _MockUpdate(text=f"/task {text***REMOVED***", chat_id=chat_id)
+    update = _MockUpdate(text=f"/task {text}", chat_id=chat_id)
     context = _MockContext(args=text.split(" "))
 
     t0 = time.time()
@@ -279,10 +279,10 @@ async def _invoke_cmd_task(text: str, chat_id: int) -> tuple:
     latency = time.time() - t0
 
     bot_replies = list(update.message.reply_text_calls)
-    print(f"  cmd_task latency: {latency:.2f***REMOVED***s (target <{TARGET_LATENCY_SECS***REMOVED***s)")
+    print(f"  cmd_task latency: {latency:.2f}s (target <{TARGET_LATENCY_SECS}s)")
     for c in bot_replies:
-        text_short = (c["text"***REMOVED***[:120***REMOVED*** + "...") if len(c.get("text", "")) > 120 else c.get("text", "")
-        print(f"  bot reply: {text_short***REMOVED***")
+        text_short = (c["text"][:120] + "...") if len(c.get("text", "")) > 120 else c.get("text", "")
+        print(f"  bot reply: {text_short}")
 
     return latency, text, bot_replies
 
@@ -293,11 +293,11 @@ async def _wait_for_spawn_log(prefix: str, before: float, max_secs: int = 30) ->
     deadline = time.time() + max_secs
     while time.time() < deadline:
         candidates = sorted(
-            [p for p in logs_dir.glob("tg_spawn_*.log") if p.stat().st_mtime >= before***REMOVED***,
+            [p for p in logs_dir.glob("tg_spawn_*.log") if p.stat().st_mtime >= before],
             key=lambda p: p.stat().st_mtime,
         )
         if candidates:
-            latest = candidates[-1***REMOVED***
+            latest = candidates[-1]
             content = latest.read_text(encoding="utf-8", errors="replace")
             if prefix in content or "dispatch" in content.lower():
                 return latest
@@ -315,7 +315,7 @@ def _round_trip_chat_id_sync(chat_id: int, search_text: str, _run_tag: str = "")
         from projects_17.tg_terminal_messenger.src.telegram.client import TGClient  # NOQA: E402
         base = TGClient(session_name=TG_SESSION_NAME)
     except Exception as exc:
-        print(f"WARN TGClient base instantiation failed: {exc***REMOVED***")
+        print(f"WARN TGClient base instantiation failed: {exc}")
         return None
 
     async def _runner() -> "int | None":
@@ -335,7 +335,7 @@ def _round_trip_chat_id_sync(chat_id: int, search_text: str, _run_tag: str = "")
                 except Exception:
                     pass
         except Exception as exc:
-            print(f"WARN TG round-trip failed: {exc***REMOVED***")
+            print(f"WARN TG round-trip failed: {exc}")
             try:
                 await client.disconnect()
             except Exception:
@@ -350,7 +350,7 @@ def _round_trip_chat_id_sync(chat_id: int, search_text: str, _run_tag: str = "")
     try:
         return asyncio.run(_runner())
     except Exception as exc:
-        print(f"WARN round-trip async runner failed: {exc***REMOVED***")
+        print(f"WARN round-trip async runner failed: {exc}")
         return None
 
 
@@ -364,7 +364,7 @@ def _append_audit_trail(
     """Prepend at TOP of `## Historical Verification Runs` section per CAN-17."""
     md_path = WORKSPACE / "docs_10/e2e_logs" / "promt47_run.md"
     if not md_path.exists():
-        print(f"WARN audit trail file missing: {md_path***REMOVED***")
+        print(f"WARN audit trail file missing: {md_path}")
         return
     src = md_path.read_text(encoding="utf-8")
     marker = "## Historical Verification Runs"
@@ -380,14 +380,14 @@ def _append_audit_trail(
             insert_at = i + 1
             break
     new_row = (
-        f"| {time.strftime('%Y-%m-%d %H:%M:%S')***REMOVED*** | `{task_id***REMOVED***` | "
-        f"{saved_msg_id or chr(0x2014)***REMOVED*** | {lit_msg_id or chr(0x2014)***REMOVED*** | "  # em-dash U+2014 per promt47_run.md canonical
-        f"{latency:.2f***REMOVED***s | {run_tag***REMOVED*** |"
+        f"| {time.strftime('%Y-%m-%d %H:%M:%S')} | `{task_id}` | "
+        f"{saved_msg_id or chr(0x2014)} | {lit_msg_id or chr(0x2014)} | "  # em-dash U+2014 per promt47_run.md canonical
+        f"{latency:.2f}s | {run_tag} |"
     )
     lines.insert(insert_at, new_row)
     new_tail = "\n".join(lines)
     md_path.write_text(head + sep + new_tail + "\n", encoding="utf-8")
-    print(f"ok prepended audit row → {md_path.name***REMOVED***")
+    print(f"ok prepended audit row → {md_path.name}")
 
 
 async def main_async(
@@ -402,10 +402,10 @@ async def main_async(
     # v5.86.0 round-7: --dry-run is single disable (replaces legacy NO_TG/env dual-gate).
     send_tg = not dry_run
 
-    safe_text = text if text else f"v5.86.0 dual-path verify @ {time.strftime('%H:%M:%S')***REMOVED***"
-    print(f"\n=== v5.86.0 dual-path LIVE e2e TAG={run_tag***REMOVED*** (dry-run={dry_run***REMOVED***, send_tg={send_tg***REMOVED***) ===")
-    print(f"  text: {safe_text!r***REMOVED***")
-    print(f"  saved_chat_id: {chat_id_saved***REMOVED*** | litvinov_chat_id: {chat_id_litvinov***REMOVED***")
+    safe_text = text if text else f"v5.86.0 dual-path verify @ {time.strftime('%H:%M:%S')}"
+    print(f"\n=== v5.86.0 dual-path LIVE e2e TAG={run_tag} (dry-run={dry_run}, send_tg={send_tg}) ===")
+    print(f"  text: {safe_text!r}")
+    print(f"  saved_chat_id: {chat_id_saved} | litvinov_chat_id: {chat_id_litvinov}")
 
     before = time.time()
     latency, task_text, bot_replies = await _invoke_cmd_task(safe_text, chat_id_saved)
@@ -413,9 +413,9 @@ async def main_async(
     print("\n... waiting for spawn log file (<=30s)...")
     spawn_log = await _wait_for_spawn_log(prefix=safe_text, before=before, max_secs=30)
     if spawn_log:
-        log_head = "\n".join(spawn_log.read_text(encoding="utf-8", errors="replace").splitlines()[:25***REMOVED***)
-        print(f"ok log file OK: {spawn_log.name***REMOVED***")
-        print(f"  head:\n{log_head***REMOVED***")
+        log_head = "\n".join(spawn_log.read_text(encoding="utf-8", errors="replace").splitlines()[:25])
+        print(f"ok log file OK: {spawn_log.name}")
+        print(f"  head:\n{log_head}")
     else:
         print("WARN spawn log file not found within 30s (dispatch may have exited or stuck)")
 
@@ -430,21 +430,21 @@ async def main_async(
 
         print("\n... TG round-trip Saved...")
         saved_msg_id = _round_trip_chat_id_sync(chat_id_saved, search_text=safe_text)
-        print(f"  saved: {saved_msg_id if saved_msg_id else 'NOT FOUND'***REMOVED***")
+        print(f"  saved: {saved_msg_id if saved_msg_id else 'NOT FOUND'}")
         print("... TG round-trip Litvinov...")
         lit_msg_id = _round_trip_chat_id_sync(chat_id_litvinov, search_text=safe_text)
-        print(f"  litvinov: {lit_msg_id if lit_msg_id else 'NOT FOUND (optional channel)'***REMOVED***")
+        print(f"  litvinov: {lit_msg_id if lit_msg_id else 'NOT FOUND (optional channel)'}")
     else:
         print("\n... skipping TG round-trip (--dry-run). "
               "Dispatcher may STILL send TG messages (e.g., cron dispatch).")
 
     # Extract a synthesized task_id from bot reply if available.
-    task_id = f"task_{run_tag[:18***REMOVED******REMOVED***"
+    task_id = f"task_{run_tag[:18]}"
     for c in bot_replies:
         m = c.get("text", "")
         if "Task ID:" in m and "`" in m:
             try:
-                task_id = m.split("Task ID: ")[1***REMOVED***.strip("` \n").splitlines()[0***REMOVED***.strip()
+                task_id = m.split("Task ID: ")[1].strip("` \n").splitlines()[0].strip()
             except Exception:
                 pass
 
@@ -457,7 +457,7 @@ async def main_async(
     )
 
     if latency >= TARGET_LATENCY_SECS:
-        print(f"\nWARN LATENCY WARNING: {latency:.2f***REMOVED***s >= target {TARGET_LATENCY_SECS***REMOVED***s")
+        print(f"\nWARN LATENCY WARNING: {latency:.2f}s >= target {TARGET_LATENCY_SECS}s")
     if send_tg and not saved_msg_id:
         print("WARN ROUND-TRIP WARNING: real TG round-trip did not find msg in history")
 
@@ -467,7 +467,7 @@ def main() -> int:
     p.add_argument("--chat-id-saved", type=int, default=SAVED_MESSAGES_CHAT_ID)
     p.add_argument("--chat-id-litvinov", type=int, default=ALEX_LITVINOV_CHAT_ID)
     p.add_argument("--text", type=str, default="")
-    p.add_argument("--run-tag", type=str, default=f"v5.86.0_e2e_{uuid.uuid4().hex[:6***REMOVED******REMOVED***")
+    p.add_argument("--run-tag", type=str, default=f"v5.86.0_e2e_{uuid.uuid4().hex[:6]}")
     p.add_argument("--dry-run", action="store_true",
                    help="skip real TG send (preflight + pytest smoke + structural e2e)")
     args = p.parse_args()

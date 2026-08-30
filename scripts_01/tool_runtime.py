@@ -26,7 +26,7 @@ tool_runtime.py — Tool Runtime для Buffy Project.
     registry.register(FileTool())
     registry.register(ShellTool())
 
-    result = registry.execute("file.read", {"path": "README.md"***REMOVED***)
+    result = registry.execute("file.read", {"path": "README.md"})
     print(result.data)
 """
 
@@ -44,7 +44,7 @@ import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import httpx
@@ -67,10 +67,10 @@ class ToolResult:
     """Стандартный результат выполнения инструмента."""
     success: bool
     data: Any = None
-    error: Optional[str***REMOVED*** = None
+    error: Optional[str] = None
     duration_ms: float = 0.0
     tool_name: str = ""
-    metadata: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -81,10 +81,10 @@ class ParamSchema:
     description: str = ""
     required: bool = False
     default: Any = None
-    enum: Optional[List[str***REMOVED******REMOVED*** = None
-    pattern: Optional[str***REMOVED*** = None  # regex
-    min_length: Optional[int***REMOVED*** = None
-    max_length: Optional[int***REMOVED*** = None
+    enum: Optional[List[str]] = None
+    pattern: Optional[str] = None  # regex
+    min_length: Optional[int] = None
+    max_length: Optional[int] = None
 
 
 @dataclass
@@ -94,8 +94,8 @@ class ToolMeta:
     description: str
     version: str = "1.0.0"
     category: str = "general"  # "git", "database", "network", "filesystem", "shell"
-    parameters: List[ParamSchema***REMOVED*** = field(default_factory=list)
-    examples: List[Dict[str, Any***REMOVED******REMOVED*** = field(default_factory=list)
+    parameters: List[ParamSchema] = field(default_factory=list)
+    examples: List[Dict[str, Any]] = field(default_factory=list)
     timeout_default: int = 30
 
 
@@ -114,7 +114,7 @@ class BaseTool(ABC):
         ...
 
     @abstractmethod
-    def execute(self, params: Dict[str, Any***REMOVED***, context: Optional[Dict[str, Any***REMOVED******REMOVED*** = None) -> ToolResult:
+    def execute(self, params: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> ToolResult:
         """Выполняет инструмент с переданными параметрами.
 
         Args:
@@ -126,48 +126,48 @@ class BaseTool(ABC):
         """
         ...
 
-    def validate_params(self, params: Dict[str, Any***REMOVED***) -> List[str***REMOVED***:
+    def validate_params(self, params: Dict[str, Any]) -> List[str]:
         """Валидирует параметры по схеме.
 
         Returns:
             Список ошибок валидации (пустой = всё ок)
         """
-        errors: List[str***REMOVED*** = [***REMOVED***
+        errors: List[str] = []
         for p in self.meta.parameters:
             value = params.get(p.name)
             if p.required and value is None:
-                errors.append(f"Missing required parameter: {p.name***REMOVED***")
+                errors.append(f"Missing required parameter: {p.name}")
                 continue
             if value is None:
                 continue
 
             # Type check
             if p.type == "string" and not isinstance(value, str):
-                errors.append(f"Parameter '{p.name***REMOVED***' must be string, got {type(value).__name__***REMOVED***")
+                errors.append(f"Parameter '{p.name}' must be string, got {type(value).__name__}")
             elif p.type == "integer" and not isinstance(value, int):
-                errors.append(f"Parameter '{p.name***REMOVED***' must be integer, got {type(value).__name__***REMOVED***")
+                errors.append(f"Parameter '{p.name}' must be integer, got {type(value).__name__}")
             elif p.type == "boolean" and not isinstance(value, bool):
-                errors.append(f"Parameter '{p.name***REMOVED***' must be boolean, got {type(value).__name__***REMOVED***")
+                errors.append(f"Parameter '{p.name}' must be boolean, got {type(value).__name__}")
 
             # String validations
             if isinstance(value, str):
                 if p.min_length is not None and len(value) < p.min_length:
-                    errors.append(f"Parameter '{p.name***REMOVED***' too short: {len(value)***REMOVED*** < {p.min_length***REMOVED***")
+                    errors.append(f"Parameter '{p.name}' too short: {len(value)} < {p.min_length}")
                 if p.max_length is not None and len(value) > p.max_length:
-                    errors.append(f"Parameter '{p.name***REMOVED***' too long: {len(value)***REMOVED*** > {p.max_length***REMOVED***")
+                    errors.append(f"Parameter '{p.name}' too long: {len(value)} > {p.max_length}")
 
             # Enum
             if p.enum and value is not None and value not in p.enum:
-                errors.append(f"Parameter '{p.name***REMOVED***' must be one of {p.enum***REMOVED***, got '{value***REMOVED***'")
+                errors.append(f"Parameter '{p.name}' must be one of {p.enum}, got '{value}'")
 
         return errors
 
-    def with_defaults(self, params: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def with_defaults(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Заполняет отсутствующие параметры значениями по умолчанию."""
         result = dict(params)
         for p in self.meta.parameters:
             if p.name not in result and p.default is not None:
-                result[p.name***REMOVED*** = p.default
+                result[p.name] = p.default
         return result
 
 
@@ -191,16 +191,16 @@ class GitTool(BaseTool):
                 ParamSchema(name="args", type="string", description="Additional arguments for the git command", default=""),
                 ParamSchema(name="cwd", type="string", description="Working directory", default=str(WORKSPACE)),
                 ParamSchema(name="timeout", type="integer", description="Timeout in seconds", default=60),
-            ***REMOVED***,
+            ],
             examples=[
-                {"command": "status", "description": "Show working tree status"***REMOVED***,
-                {"command": "diff", "args": "--cached", "description": "Show staged changes"***REMOVED***,
-                {"command": "log", "args": "--oneline -5", "description": "Last 5 commits"***REMOVED***,
-                {"command": "branch", "description": "List branches"***REMOVED***,
-            ***REMOVED***,
+                {"command": "status", "description": "Show working tree status"},
+                {"command": "diff", "args": "--cached", "description": "Show staged changes"},
+                {"command": "log", "args": "--oneline -5", "description": "Last 5 commits"},
+                {"command": "branch", "description": "List branches"},
+            ],
         )
 
-    def execute(self, params: Dict[str, Any***REMOVED***, context: Optional[Dict[str, Any***REMOVED******REMOVED*** = None) -> ToolResult:
+    def execute(self, params: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> ToolResult:
         params = self.with_defaults(params)
         command = params.get("command", "")
         args = params.get("args", "")
@@ -210,7 +210,7 @@ class GitTool(BaseTool):
         if not command:
             return ToolResult(success=False, error="No git command specified", tool_name="git")
 
-        cmd_parts = ["git", command***REMOVED*** + (shlex.split(args) if args else [***REMOVED***)
+        cmd_parts = ["git", command] + (shlex.split(args) if args else [])
         try:
             start = time.time()
             result = subprocess.run(
@@ -223,13 +223,13 @@ class GitTool(BaseTool):
             return ToolResult(
                 success=success,
                 data=output,
-                error=None if success else f"Exit code: {result.returncode***REMOVED***\n{result.stderr[:200***REMOVED******REMOVED***",
+                error=None if success else f"Exit code: {result.returncode}\n{result.stderr[:200]}",
                 duration_ms=duration_ms,
                 tool_name="git",
-                metadata={"returncode": result.returncode, "command": " ".join(cmd_parts)***REMOVED***,
+                metadata={"returncode": result.returncode, "command": " ".join(cmd_parts)},
             )
         except subprocess.TimeoutExpired:
-            return ToolResult(success=False, error=f"Git timeout ({timeout***REMOVED***s)", tool_name="git")
+            return ToolResult(success=False, error=f"Git timeout ({timeout}s)", tool_name="git")
         except Exception as e:
             return ToolResult(success=False, error=str(e), tool_name="git")
 
@@ -252,20 +252,20 @@ class SQLiteTool(BaseTool):
             parameters=[
                 ParamSchema(name="query", type="string", description="SQL query to execute", required=True),
                 ParamSchema(name="db_path", type="string", description="Path to SQLite database file", required=True),
-                ParamSchema(name="params", type="array", description="Query parameters (for prepared statements)", default=[***REMOVED***),
-                ParamSchema(name="fetch", type="string", description="Fetch mode: 'all', 'one', 'none'", default="all", enum=["all", "one", "none"***REMOVED***),
-            ***REMOVED***,
+                ParamSchema(name="params", type="array", description="Query parameters (for prepared statements)", default=[]),
+                ParamSchema(name="fetch", type="string", description="Fetch mode: 'all', 'one', 'none'", default="all", enum=["all", "one", "none"]),
+            ],
             examples=[
-                {"query": "SELECT * FROM sessions LIMIT 5", "db_path": "data_13/context.db", "description": "Read sessions"***REMOVED***,
-                {"query": "INSERT INTO sessions (id, project) VALUES (?, ?)", "db_path": "data_13/context.db", "params": ["s1", "test"***REMOVED***, "fetch": "none", "description": "Insert session"***REMOVED***,
-            ***REMOVED***,
+                {"query": "SELECT * FROM sessions LIMIT 5", "db_path": "data_13/context.db", "description": "Read sessions"},
+                {"query": "INSERT INTO sessions (id, project) VALUES (?, ?)", "db_path": "data_13/context.db", "params": ["s1", "test"], "fetch": "none", "description": "Insert session"},
+            ],
         )
 
-    def execute(self, params: Dict[str, Any***REMOVED***, context: Optional[Dict[str, Any***REMOVED******REMOVED*** = None) -> ToolResult:
+    def execute(self, params: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> ToolResult:
         params = self.with_defaults(params)
         query = params.get("query", "")
         db_path = params.get("db_path", "")
-        bind_params = params.get("params", [***REMOVED***)
+        bind_params = params.get("params", [])
         fetch = params.get("fetch", "all")
 
         if not query:
@@ -278,7 +278,7 @@ class SQLiteTool(BaseTool):
             full_path = WORKSPACE / full_path
 
         if not full_path.exists():
-            return ToolResult(success=False, error=f"Database not found: {full_path***REMOVED***", tool_name="sqlite")
+            return ToolResult(success=False, error=f"Database not found: {full_path}", tool_name="sqlite")
 
         try:
             start = time.time()
@@ -290,7 +290,7 @@ class SQLiteTool(BaseTool):
 
             if fetch == "all":
                 rows = cursor.fetchall()
-                data = [dict(row) for row in rows***REMOVED***
+                data = [dict(row) for row in rows]
             elif fetch == "one":
                 row = cursor.fetchone()
                 data = dict(row) if row else None
@@ -306,7 +306,7 @@ class SQLiteTool(BaseTool):
                 data=data,
                 duration_ms=duration_ms,
                 tool_name="sqlite",
-                metadata={"affected_rows": affected, "fetch_mode": fetch***REMOVED***,
+                metadata={"affected_rows": affected, "fetch_mode": fetch},
             )
         except Exception as e:
             return ToolResult(success=False, error=str(e), tool_name="sqlite")
@@ -329,23 +329,23 @@ class HTTPTool(BaseTool):
             category="network",
             parameters=[
                 ParamSchema(name="url", type="string", description="Request URL", required=True),
-                ParamSchema(name="method", type="string", description="HTTP method", default="GET", enum=["GET", "POST", "PUT", "DELETE", "HEAD", "PATCH"***REMOVED***),
-                ParamSchema(name="headers", type="object", description="HTTP headers as dict", default={***REMOVED***),
+                ParamSchema(name="method", type="string", description="HTTP method", default="GET", enum=["GET", "POST", "PUT", "DELETE", "HEAD", "PATCH"]),
+                ParamSchema(name="headers", type="object", description="HTTP headers as dict", default={}),
                 ParamSchema(name="body", type="object", description="Request body (JSON-serializable)", default=None),
                 ParamSchema(name="timeout", type="integer", description="Timeout in seconds", default=10),
                 ParamSchema(name="follow_redirects", type="boolean", description="Follow redirects", default=True),
-            ***REMOVED***,
+            ],
             examples=[
-                {"url": "https://api.github.com/repos/user/repo", "description": "GET repo info"***REMOVED***,
-                {"url": "https://httpbin.org/post", "method": "POST", "body": {"key": "value"***REMOVED***, "description": "POST JSON"***REMOVED***,
-            ***REMOVED***,
+                {"url": "https://api.github.com/repos/user/repo", "description": "GET repo info"},
+                {"url": "https://httpbin.org/post", "method": "POST", "body": {"key": "value"}, "description": "POST JSON"},
+            ],
         )
 
-    def execute(self, params: Dict[str, Any***REMOVED***, context: Optional[Dict[str, Any***REMOVED******REMOVED*** = None) -> ToolResult:
+    def execute(self, params: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> ToolResult:
         params = self.with_defaults(params)
         url = params.get("url", "")
         method = params.get("method", "GET")
-        headers = params.get("headers", {***REMOVED***)
+        headers = params.get("headers", {})
         body = params.get("body")
         timeout = params.get("timeout", 10)
         follow_redirects = params.get("follow_redirects", True)
@@ -364,23 +364,23 @@ class HTTPTool(BaseTool):
                 try:
                     response_data = response.json()
                 except Exception:
-                    response_data = response.text[:10000***REMOVED***
+                    response_data = response.text[:10000]
 
                 success = 200 <= response.status_code < 300
                 return ToolResult(
                     success=success,
                     data=response_data,
-                    error=None if success else f"HTTP {response.status_code***REMOVED***: {response.reason_phrase***REMOVED***",
+                    error=None if success else f"HTTP {response.status_code}: {response.reason_phrase}",
                     duration_ms=duration_ms,
                     tool_name="http",
                     metadata={
                         "status_code": response.status_code,
                         "method": method,
                         "url": url,
-                    ***REMOVED***,
+                    },
                 )
         except httpx.TimeoutException:
-            return ToolResult(success=False, error=f"HTTP timeout ({timeout***REMOVED***s)", tool_name="http")
+            return ToolResult(success=False, error=f"HTTP timeout ({timeout}s)", tool_name="http")
         except Exception as e:
             return ToolResult(success=False, error=str(e), tool_name="http")
 
@@ -402,39 +402,39 @@ class FileTool(BaseTool):
             category="filesystem",
             parameters=[
                 ParamSchema(name="action", type="string", description="File operation", required=True,
-                            enum=["read", "write", "list", "delete", "copy", "move", "exists", "mkdir"***REMOVED***),
+                            enum=["read", "write", "list", "delete", "copy", "move", "exists", "mkdir"]),
                 ParamSchema(name="path", type="string", description="File or directory path", required=True),
                 ParamSchema(name="content", type="string", description="Content to write (for write action)", default=""),
                 ParamSchema(name="destination", type="string", description="Destination path (for copy/move)", default=""),
                 ParamSchema(name="recursive", type="boolean", description="Recursive (for delete/list)", default=False),
-            ***REMOVED***,
+            ],
             examples=[
-                {"action": "read", "path": "README.md", "description": "Read a file"***REMOVED***,
-                {"action": "write", "path": "test.txt", "content": "hello", "description": "Write a file"***REMOVED***,
-                {"action": "list", "path": "src", "description": "List directory"***REMOVED***,
-            ***REMOVED***,
+                {"action": "read", "path": "README.md", "description": "Read a file"},
+                {"action": "write", "path": "test.txt", "content": "hello", "description": "Write a file"},
+                {"action": "list", "path": "src", "description": "List directory"},
+            ],
         )
 
-    def _resolve_path(self, path: str, context: Optional[Dict[str, Any***REMOVED******REMOVED*** = None) -> Path:
+    def _resolve_path(self, path: str, context: Optional[Dict[str, Any]] = None) -> Path:
         workspace = WORKSPACE
         if context and context.get("workspace"):
-            workspace = Path(context["workspace"***REMOVED***)
+            workspace = Path(context["workspace"])
         p = Path(path)
         if not p.is_absolute():
             p = workspace / p
         return p.resolve()
 
-    def _validate_safe_path(self, path: Path, context: Optional[Dict[str, Any***REMOVED******REMOVED*** = None) -> None:
+    def _validate_safe_path(self, path: Path, context: Optional[Dict[str, Any]] = None) -> None:
         """Проверяет, что путь не выходит за пределы workspace."""
         workspace = WORKSPACE
         if context and context.get("workspace"):
-            workspace = Path(context["workspace"***REMOVED***)
+            workspace = Path(context["workspace"])
         resolved = path.resolve()
         workspace_resolved = workspace.resolve()
         if not str(resolved).startswith(str(workspace_resolved)):
-            raise PermissionError(f"Path outside workspace: {path***REMOVED*** (workspace: {workspace_resolved***REMOVED***)")
+            raise PermissionError(f"Path outside workspace: {path} (workspace: {workspace_resolved})")
 
-    def execute(self, params: Dict[str, Any***REMOVED***, context: Optional[Dict[str, Any***REMOVED******REMOVED*** = None) -> ToolResult:
+    def execute(self, params: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> ToolResult:
         params = self.with_defaults(params)
         action = params.get("action", "")
         path = params.get("path", "")
@@ -453,51 +453,51 @@ class FileTool(BaseTool):
 
             workspace = WORKSPACE
             if context and context.get("workspace"):
-                workspace = Path(context["workspace"***REMOVED***)
+                workspace = Path(context["workspace"])
 
             start = time.time()
 
             if action == "read":
                 if not full_path.exists():
-                    return ToolResult(success=False, error=f"File not found: {path***REMOVED***", tool_name="file")
+                    return ToolResult(success=False, error=f"File not found: {path}", tool_name="file")
                 if not full_path.is_file():
-                    return ToolResult(success=False, error=f"Not a file: {path***REMOVED***", tool_name="file")
+                    return ToolResult(success=False, error=f"Not a file: {path}", tool_name="file")
                 data = full_path.read_text(encoding="utf-8")
                 duration_ms = (time.time() - start) * 1000
                 return ToolResult(success=True, data=data, duration_ms=duration_ms, tool_name="file",
-                                  metadata={"size": len(data), "path": str(full_path)***REMOVED***)
+                                  metadata={"size": len(data), "path": str(full_path)})
 
             elif action == "write":
                 full_path.parent.mkdir(parents=True, exist_ok=True)
                 full_path.write_text(content, encoding="utf-8")
                 duration_ms = (time.time() - start) * 1000
-                return ToolResult(success=True, data=f"Written {len(content)***REMOVED*** chars", duration_ms=duration_ms,
-                                  tool_name="file", metadata={"size": len(content), "path": str(full_path)***REMOVED***)
+                return ToolResult(success=True, data=f"Written {len(content)} chars", duration_ms=duration_ms,
+                                  tool_name="file", metadata={"size": len(content), "path": str(full_path)})
 
             elif action == "list":
                 if not full_path.exists():
-                    return ToolResult(success=False, error=f"Directory not found: {path***REMOVED***", tool_name="file")
+                    return ToolResult(success=False, error=f"Directory not found: {path}", tool_name="file")
                 if not full_path.is_dir():
-                    return ToolResult(success=False, error=f"Not a directory: {path***REMOVED***", tool_name="file")
+                    return ToolResult(success=False, error=f"Not a directory: {path}", tool_name="file")
                 pattern = "**/*" if recursive else "*"
-                files = [***REMOVED***
+                files = []
                 for f in sorted(full_path.glob(pattern)):
                     rel = str(f.relative_to(workspace)) if str(f).startswith(str(workspace)) else str(f)
                     ftype = "dir" if f.is_dir() else "file"
-                    files.append({"path": str(rel), "type": ftype, "size": f.stat().st_size if f.is_file() else 0***REMOVED***)
+                    files.append({"path": str(rel), "type": ftype, "size": f.stat().st_size if f.is_file() else 0})
                 duration_ms = (time.time() - start) * 1000
                 return ToolResult(success=True, data=files, duration_ms=duration_ms, tool_name="file")
 
             elif action == "delete":
                 if not full_path.exists():
-                    return ToolResult(success=False, error=f"Not found: {path***REMOVED***", tool_name="file")
+                    return ToolResult(success=False, error=f"Not found: {path}", tool_name="file")
                 if full_path.is_file():
                     full_path.unlink()
                 elif full_path.is_dir():
                     import shutil
                     shutil.rmtree(full_path)
                 duration_ms = (time.time() - start) * 1000
-                return ToolResult(success=True, data=f"Deleted: {path***REMOVED***", duration_ms=duration_ms, tool_name="file")
+                return ToolResult(success=True, data=f"Deleted: {path}", duration_ms=duration_ms, tool_name="file")
 
             elif action == "copy":
                 if not destination:
@@ -511,7 +511,7 @@ class FileTool(BaseTool):
                 elif full_path.is_dir():
                     shutil.copytree(str(full_path), str(dest_path))
                 duration_ms = (time.time() - start) * 1000
-                return ToolResult(success=True, data=f"Copied {path***REMOVED*** → {destination***REMOVED***", duration_ms=duration_ms, tool_name="file")
+                return ToolResult(success=True, data=f"Copied {path} → {destination}", duration_ms=duration_ms, tool_name="file")
 
             elif action == "move":
                 if not destination:
@@ -521,7 +521,7 @@ class FileTool(BaseTool):
                 dest_path.parent.mkdir(parents=True, exist_ok=True)
                 full_path.rename(dest_path)
                 duration_ms = (time.time() - start) * 1000
-                return ToolResult(success=True, data=f"Moved {path***REMOVED*** → {destination***REMOVED***", duration_ms=duration_ms, tool_name="file")
+                return ToolResult(success=True, data=f"Moved {path} → {destination}", duration_ms=duration_ms, tool_name="file")
 
             elif action == "exists":
                 data = full_path.exists()
@@ -531,10 +531,10 @@ class FileTool(BaseTool):
             elif action == "mkdir":
                 full_path.mkdir(parents=True, exist_ok=True)
                 duration_ms = (time.time() - start) * 1000
-                return ToolResult(success=True, data=f"Created directory: {path***REMOVED***", duration_ms=duration_ms, tool_name="file")
+                return ToolResult(success=True, data=f"Created directory: {path}", duration_ms=duration_ms, tool_name="file")
 
             else:
-                return ToolResult(success=False, error=f"Unknown action: {action***REMOVED***", tool_name="file")
+                return ToolResult(success=False, error=f"Unknown action: {action}", tool_name="file")
 
         except PermissionError as e:
             return ToolResult(success=False, error=str(e), tool_name="file")
@@ -562,21 +562,21 @@ class ShellTool(BaseTool):
                             min_length=1),
                 ParamSchema(name="cwd", type="string", description="Working directory", default=str(WORKSPACE)),
                 ParamSchema(name="timeout", type="integer", description="Timeout in seconds", default=30),
-                ParamSchema(name="env", type="object", description="Additional environment variables", default={***REMOVED***),
-            ***REMOVED***,
+                ParamSchema(name="env", type="object", description="Additional environment variables", default={}),
+            ],
             examples=[
-                {"command": "ls -la", "description": "List files"***REMOVED***,
-                {"command": "python -c 'print(\"hello\")'", "description": "Run Python inline"***REMOVED***,
-                {"command": "find . -name '*.py' | head -10", "description": "Find Python files"***REMOVED***,
-            ***REMOVED***,
+                {"command": "ls -la", "description": "List files"},
+                {"command": "python -c 'print(\"hello\")'", "description": "Run Python inline"},
+                {"command": "find . -name '*.py' | head -10", "description": "Find Python files"},
+            ],
         )
 
-    def execute(self, params: Dict[str, Any***REMOVED***, context: Optional[Dict[str, Any***REMOVED******REMOVED*** = None) -> ToolResult:
+    def execute(self, params: Dict[str, Any], context: Optional[Dict[str, Any]] = None) -> ToolResult:
         params = self.with_defaults(params)
         command = params.get("command", "")
         cwd = params.get("cwd", str(WORKSPACE))
         timeout = params.get("timeout", 30)
-        extra_env = params.get("env", {***REMOVED***)
+        extra_env = params.get("env", {})
 
         if not command:
             return ToolResult(success=False, error="No command specified", tool_name="shell")
@@ -587,7 +587,7 @@ class ShellTool(BaseTool):
 
             start = time.time()
             result = subprocess.run(
-                ["sh", "-c", command***REMOVED***, capture_output=True, text=True,
+                ["sh", "-c", command], capture_output=True, text=True,
                 timeout=timeout, cwd=cwd, env=env,
             )
             duration_ms = (time.time() - start) * 1000
@@ -597,13 +597,13 @@ class ShellTool(BaseTool):
             return ToolResult(
                 success=success,
                 data=output,
-                error=None if success else f"Exit code: {result.returncode***REMOVED***\n{result.stderr[:500***REMOVED******REMOVED***",
+                error=None if success else f"Exit code: {result.returncode}\n{result.stderr[:500]}",
                 duration_ms=duration_ms,
                 tool_name="shell",
-                metadata={"returncode": result.returncode, "command": command[:100***REMOVED******REMOVED***,
+                metadata={"returncode": result.returncode, "command": command[:100]},
             )
         except subprocess.TimeoutExpired:
-            return ToolResult(success=False, error=f"Shell timeout ({timeout***REMOVED***s)", tool_name="shell")
+            return ToolResult(success=False, error=f"Shell timeout ({timeout}s)", tool_name="shell")
         except Exception as e:
             return ToolResult(success=False, error=str(e), tool_name="shell")
 
@@ -626,12 +626,12 @@ class ToolRegistry:
 
     def __init__(
         self,
-        event_bus: Optional[Any***REMOVED*** = None,
-        default_context: Optional[Dict[str, Any***REMOVED******REMOVED*** = None,
+        event_bus: Optional[Any] = None,
+        default_context: Optional[Dict[str, Any]] = None,
     ):
-        self._tools: Dict[str, BaseTool***REMOVED*** = {***REMOVED***
+        self._tools: Dict[str, BaseTool] = {}
         self._event_bus = event_bus
-        self._default_context = default_context or {"workspace": str(WORKSPACE)***REMOVED***
+        self._default_context = default_context or {"workspace": str(WORKSPACE)}
         # ADR-022: optional ToolACL-слой (None = политика не подключена)
         self._acl = None
         self._acl_principal: str = ""
@@ -647,26 +647,26 @@ class ToolRegistry:
         """
         name = tool.meta.name
         if name in self._tools:
-            raise ValueError(f"Tool already registered: {name***REMOVED***")
-        self._tools[name***REMOVED*** = tool
+            raise ValueError(f"Tool already registered: {name}")
+        self._tools[name] = tool
         return name
 
-    def register_defaults(self) -> List[str***REMOVED***:
+    def register_defaults(self) -> List[str]:
         """Регистрирует все встроенные инструменты.
 
         Returns:
             Список имён зарегистрированных инструментов
         """
-        names = [***REMOVED***
-        for tool_cls in [GitTool, SQLiteTool, HTTPTool, FileTool, ShellTool***REMOVED***:
+        names = []
+        for tool_cls in [GitTool, SQLiteTool, HTTPTool, FileTool, ShellTool]:
             names.append(self.register(tool_cls()))
         return names
 
-    def get(self, name: str) -> Optional[BaseTool***REMOVED***:
+    def get(self, name: str) -> Optional[BaseTool]:
         """Получает инструмент по имени."""
         return self._tools.get(name)
 
-    def list_tools(self, category: Optional[str***REMOVED*** = None) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    def list_tools(self, category: Optional[str] = None) -> List[Dict[str, Any]]:
         """Список всех или отфильтрованных инструментов с метаданными.
 
         Args:
@@ -675,7 +675,7 @@ class ToolRegistry:
         Returns:
             Список метаданных инструментов
         """
-        result = [***REMOVED***
+        result = []
         for name, tool in sorted(self._tools.items()):
             meta = tool.meta
             if category and meta.category != category:
@@ -693,18 +693,18 @@ class ToolRegistry:
                         "required": p.required,
                         "default": p.default,
                         "enum": p.enum,
-                    ***REMOVED***
+                    }
                     for p in meta.parameters
-                ***REMOVED***,
+                ],
                 "examples": meta.examples,
-            ***REMOVED***)
+            ])
         return result
 
     def execute(
         self,
         tool_name: str,
-        params: Dict[str, Any***REMOVED***,
-        context: Optional[Dict[str, Any***REMOVED******REMOVED*** = None,
+        params: Dict[str, Any],
+        context: Optional[Dict[str, Any]] = None,
     ) -> ToolResult:
         """Выполняет инструмент с валидацией и EventBus интеграцией.
 
@@ -718,12 +718,12 @@ class ToolRegistry:
         """
         tool = self._tools.get(tool_name)
         if not tool:
-            err_msg = f"Tool not found: {tool_name***REMOVED***"
+            err_msg = f"Tool not found: {tool_name}"
             self._publish_event("tool.failed", {
                 "tool": tool_name,
                 "error": err_msg,
                 "params": params,
-            ***REMOVED***)
+            ])
             return ToolResult(success=False, error=err_msg, tool_name=tool_name)
 
         # Merge contexts
@@ -740,7 +740,7 @@ class ToolRegistry:
                 "error": err_msg,
                 "params": params,
                 "validation_errors": errors,
-            ***REMOVED***)
+            ])
             return ToolResult(success=False, error=err_msg, tool_name=tool_name)
 
         # Execute
@@ -757,16 +757,16 @@ class ToolRegistry:
             "duration_ms": result.duration_ms,
             "error": result.error,
             "params": params,
-        ***REMOVED***)
+        ])
 
         return result
 
     def execute_multi(
         self,
-        calls: List[Tuple[str, Dict[str, Any***REMOVED******REMOVED******REMOVED***,
-        context: Optional[Dict[str, Any***REMOVED******REMOVED*** = None,
+        calls: List[Tuple[str, Dict[str, Any]]],
+        context: Optional[Dict[str, Any]] = None,
         stop_on_error: bool = False,
-    ) -> List[ToolResult***REMOVED***:
+    ) -> List[ToolResult]:
         """Выполняет несколько инструментов последовательно.
 
         Args:
@@ -777,7 +777,7 @@ class ToolRegistry:
         Returns:
             Список ToolResult
         """
-        results: List[ToolResult***REMOVED*** = [***REMOVED***
+        results: List[ToolResult] = []
         for tool_name, params in calls:
             result = self.execute(tool_name, params, context)
             results.append(result)
@@ -787,7 +787,7 @@ class ToolRegistry:
 
     # ── EventBus ───────────────────────────────────────────
 
-    def _publish_event(self, event_type: str, data: Dict[str, Any***REMOVED***) -> None:
+    def _publish_event(self, event_type: str, data: Dict[str, Any]) -> None:
         """Публикует событие через EventBus."""
         if self._event_bus is not None:
             try:
@@ -822,8 +822,8 @@ class ToolRegistry:
     def execute_acl(
         self,
         tool_name: str,
-        params: Dict[str, Any***REMOVED***,
-        context: Optional[Dict[str, Any***REMOVED******REMOVED*** = None,
+        params: Dict[str, Any],
+        context: Optional[Dict[str, Any]] = None,
     ) -> ToolResult:
         """Выполнить инструмент ПОД ACL-проверкой (ADR-022).
 
@@ -835,19 +835,19 @@ class ToolRegistry:
         if self._acl is None:
             return self.execute(tool_name, params, context)
 
-        decision = self._acl.check(self._acl_principal, tool_name, params or {***REMOVED***)
+        decision = self._acl.check(self._acl_principal, tool_name, params or {})
         if not decision.allowed:
             self._publish_event("tool.acl_denied", {
                 "tool": tool_name,
                 "principal": decision.principal,
                 "reason": decision.reason,
                 "params": params,
-            ***REMOVED***)
+            ])
             return ToolResult(
                 success=False,
-                error=f"ACL denied ({decision.principal***REMOVED***): {decision.reason***REMOVED***",
+                error=f"ACL denied ({decision.principal}): {decision.reason}",
                 tool_name=tool_name,
-                metadata={"acl_decision": str(decision)***REMOVED***,
+                metadata={"acl_decision": str(decision)},
             )
         return self.execute(tool_name, params, context)
 
@@ -857,7 +857,7 @@ class ToolRegistry:
 # ═══════════════════════════════════════════════════════════════
 
 
-def create_default_registry(event_bus: Optional[Any***REMOVED*** = None) -> ToolRegistry:
+def create_default_registry(event_bus: Optional[Any] = None) -> ToolRegistry:
     """Создаёт реестр со всеми встроенными инструментами.
 
     Args:
@@ -886,9 +886,9 @@ def main():
 Примеры:
   python scripts_01/tool_runtime.py list
   python scripts_01/tool_runtime.py list --category git
-  python scripts_01/tool_runtime.py run shell '{"command": "ls -la"***REMOVED***'
-  python scripts_01/tool_runtime.py run file '{"action": "read", "path": "README.md"***REMOVED***'
-  python scripts_01/tool_runtime.py run git '{"command": "status"***REMOVED***'
+  python scripts_01/tool_runtime.py run shell '{"command": "ls -la"]'
+  python scripts_01/tool_runtime.py run file '{"action": "read", "path": "README.md"]'
+  python scripts_01/tool_runtime.py run git '{"command": "status"]'
         """,
     )
     sub = parser.add_subparsers(dest="command")
@@ -909,24 +909,24 @@ def main():
 
     if args.command == "list":
         tools = registry.list_tools(category=args.category)
-        print(f"🔧 Tools ({len(tools)***REMOVED***):")
+        print(f"🔧 Tools ({len(tools)}):")
         for t in tools:
             params_str = ", ".join(
-                f"{p['name'***REMOVED******REMOVED***:{p['type'***REMOVED******REMOVED***{'*' if p.get('required') else ''***REMOVED***"
-                for p in t["parameters"***REMOVED***
+                f"{p['name']}:{p['type']}{'*' if p.get('required') else ''}"
+                for p in t["parameters"]
             )
-            print(f"  {t['name'***REMOVED***:10***REMOVED***  [{t['category'***REMOVED***:12***REMOVED******REMOVED***  {t['description'***REMOVED***[:60***REMOVED******REMOVED***")
+            print(f"  {t['name']:10}  [{t['category']:12}]  {t['description'][:60]}")
             if params_str:
-                print(f"             params: {params_str***REMOVED***")
+                print(f"             params: {params_str}")
             if t.get("examples"):
-                for ex in t["examples"***REMOVED***[:2***REMOVED***:
-                    print(f"             eg: {ex['command'***REMOVED******REMOVED***")
+                for ex in t["examples"][:2]:
+                    print(f"             eg: {ex['command']}")
 
     elif args.command == "run":
         try:
             params = json.loads(args.params)
         except json.JSONDecodeError as e:
-            print(f"❌ Invalid JSON params: {e***REMOVED***")
+            print(f"❌ Invalid JSON params: {e}")
             return
 
         context = None
@@ -934,19 +934,19 @@ def main():
             try:
                 context = json.loads(args.context)
             except json.JSONDecodeError as e:
-                print(f"⚠️ Invalid JSON context: {e***REMOVED***")
+                print(f"⚠️ Invalid JSON context: {e}")
 
         result = registry.execute(args.tool, params, context)
 
         if result.success:
-            print(f"✅ {args.tool***REMOVED*** — OK ({result.duration_ms:.0f***REMOVED***ms)")
+            print(f"✅ {args.tool} — OK ({result.duration_ms:.0f}ms)")
             if isinstance(result.data, str):
-                print(result.data[:2000***REMOVED***)
+                print(result.data[:2000])
             else:
-                print(json.dumps(result.data, ensure_ascii=False, indent=2)[:2000***REMOVED***)
+                print(json.dumps(result.data, ensure_ascii=False, indent=2)[:2000])
         else:
-            print(f"❌ {args.tool***REMOVED*** — FAILED ({result.duration_ms:.0f***REMOVED***ms)")
-            print(f"   Error: {result.error***REMOVED***")
+            print(f"❌ {args.tool} — FAILED ({result.duration_ms:.0f}ms)")
+            print(f"   Error: {result.error}")
 
     else:
         parser.print_help()

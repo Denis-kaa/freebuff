@@ -36,13 +36,13 @@ class FreebuffBridge:
         summaries_dir = os.path.join(WORKSPACE, "context_12", "summaries")
         if os.path.isdir(summaries_dir):
             files = sorted(
-                [f for f in os.listdir(summaries_dir) if f.endswith(".md")***REMOVED***,
+                [f for f in os.listdir(summaries_dir) if f.endswith(".md")],
                 reverse=True,
             )
             if files:
-                with open(os.path.join(summaries_dir, files[0***REMOVED***), "r") as f:
-                    conspect = f.read()[:2000***REMOVED***
-                sys.stderr.write(f"[FreebuffBridge***REMOVED*** Loaded conspect: {files[0***REMOVED******REMOVED*** ({len(conspect)***REMOVED*** chars)\n")
+                with open(os.path.join(summaries_dir, files[0]), "r") as f:
+                    conspect = f.read()[:2000]
+                sys.stderr.write(f"[FreebuffBridge] Loaded conspect: {files[0]} ({len(conspect)} chars)\n")
 
         return self._active_session
 
@@ -55,7 +55,7 @@ class FreebuffBridge:
         self._cm.add_message(
             session_id=self._active_session,
             role="user",
-            content=query[:2000***REMOVED***,
+            content=query[:2000],
             token_count=len(query.split()),
             auto_checkpoint_interval=self._auto_interval,
         )
@@ -64,7 +64,7 @@ class FreebuffBridge:
             self._cm.add_message(
                 session_id=self._active_session,
                 role="assistant",
-                content=str(result)[:2000***REMOVED***,
+                content=str(result)[:2000],
                 token_count=50,
             )
 

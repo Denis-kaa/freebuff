@@ -22,7 +22,7 @@ import json
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Optional
 
 import httpx
@@ -34,7 +34,7 @@ USER_AGENT = (
     "Mozilla/5.0 (X11; Linux x86_64) "
     "research_web/1.0 (Freebuff Workspace OS; local-first)"
 )
-# Ключи JSON-схемы DoD (075_04_research_web_capability §5): query, sources[***REMOVED***, synthesis, evidence_checked, degraded
+# Ключи JSON-схемы DoD (075_04_research_web_capability §5): query, sources[], synthesis, evidence_checked, degraded
 JSON_SCHEMA_KEYS = ("query", "sources", "synthesis", "evidence_checked", "degraded")
 
 
@@ -47,13 +47,13 @@ class Source:
     snippet: str = ""
     verified: bool = False
 
-    def to_dict(self) -> dict[str, Any***REMOVED***:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "url": self.url,
             "title": self.title,
             "snippet": self.snippet,
             "verified": self.verified,
-        ***REMOVED***
+        }
 
 
 @dataclass
@@ -61,11 +61,11 @@ class ResearchReport:
     """Результат веб-исследования (Research Report)."""
 
     query: str
-    sources: list[Source***REMOVED*** = field(default_factory=list)
+    sources: list[Source] = field(default_factory=list)
     synthesis: str = ""
     evidence_checked: int = 0
     degraded: bool = False
-    warnings: list[str***REMOVED*** = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
     generated_at: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
@@ -74,47 +74,47 @@ class ResearchReport:
     def sources_checked(self) -> int:
         return len(self.sources)
 
-    def to_dict(self) -> dict[str, Any***REMOVED***:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "query": self.query,
-            "sources": [s.to_dict() for s in self.sources***REMOVED***,
+            "sources": [s.to_dict() for s in self.sources],
             "synthesis": self.synthesis,
             "evidence_checked": self.evidence_checked,
             "degraded": self.degraded,
             "warnings": self.warnings,
             "sources_checked": self.sources_checked,
             "generated_at": self.generated_at,
-        ***REMOVED***
+        }
 
     def to_markdown(self) -> str:
         """Markdown-отчёт (файл research_report.md по умолчанию)."""
         lines = [
             "# Research Report",
             "",
-            f"**Запрос:** {self.query***REMOVED***",
-            f"**Сгенерирован:** {self.generated_at***REMOVED***",
-            f"**Источников проверено:** {self.sources_checked***REMOVED***",
-            f"**Degraded:** {'да' if self.degraded else 'нет'***REMOVED***",
+            f"**Запрос:** {self.query}",
+            f"**Сгенерирован:** {self.generated_at}",
+            f"**Источников проверено:** {self.sources_checked}",
+            f"**Degraded:** {'да' if self.degraded else 'нет'}",
             "",
             "## Цель исследования",
             "",
-            f"Веб-исследование по запросу «{self.query***REMOVED***»: сбор источников, "
+            f"Веб-исследование по запросу «{self.query}»: сбор источников, "
             "проверка evidence и синтез выводов.",
             "",
             "## Найденные источники",
             "",
-        ***REMOVED***
+        ]
         if not self.sources:
             lines.append("_Источники не найдены (нет сети или пустой результат)._")
         for s in self.sources:
-            lines.append(f"- **[{s.title or s.url***REMOVED******REMOVED***({s.url***REMOVED***)** — {s.snippet or '(без фрагмента)'***REMOVED***")
+            lines.append(f"- **[{s.title or s.url}]({s.url})** — {s.snippet or '(без фрагмента)'}")
             if s.verified:
                 lines.append("  - ✅ подтверждён независимой загрузкой")
         lines += [
             "",
             "## Проверка evidence",
             "",
-            f"Подтверждено независимой загрузкой источников: **{self.evidence_checked***REMOVED*****.",
+            f"Подтверждено независимой загрузкой источников: **{self.evidence_checked}**.",
             "",
             "## Синтез",
             "",
@@ -122,10 +122,10 @@ class ResearchReport:
             "",
             "## Ограничения / непроверенное",
             "",
-        ***REMOVED***
+        ]
         if self.warnings:
             for w in self.warnings:
-                lines.append(f"- ⚠️ {w***REMOVED***")
+                lines.append(f"- ⚠️ {w}")
         else:
             lines.append("_Нет._")
         lines.append("")
@@ -137,15 +137,15 @@ class ResearchReport:
 # ═══════════════════════════════════════════════════════════════════
 
 
-def search_web(query: str, max_sources: int = 10, timeout: float = 10.0) -> list[Source***REMOVED***:
+def search_web(query: str, max_sources: int = 10, timeout: float = 10.0) -> list[Source]:
     """Поиск через DuckDuckGo HTML (без API-ключа). Возвращает список источников.
 
     Raises:
         httpx.HTTPError: сетевая ошибка / не-2xx ответ.
     """
     url = "https://html.duckduckgo.com/html/"
-    headers = {"User-Agent": USER_AGENT***REMOVED***
-    params = {"q": query***REMOVED***
+    headers = {"User-Agent": USER_AGENT}
+    params = {"q": query}
     with httpx.Client(timeout=timeout, follow_redirects=True) as client:
         resp = client.get(url, params=params, headers=headers)
         resp.raise_for_status()
@@ -154,28 +154,28 @@ def search_web(query: str, max_sources: int = 10, timeout: float = 10.0) -> list
 
 def fetch_page(url: str, timeout: float = 10.0) -> str:
     """Загрузить страницу источника. Возвращает HTML. Raises на любом сбое."""
-    headers = {"User-Agent": USER_AGENT***REMOVED***
+    headers = {"User-Agent": USER_AGENT}
     with httpx.Client(timeout=timeout, follow_redirects=True) as client:
         resp = client.get(url, headers=headers)
         resp.raise_for_status()
     return resp.text
 
 
-def _parse_ddg_results(html: str, max_sources: int) -> list[Source***REMOVED***:
+def _parse_ddg_results(html: str, max_sources: int) -> list[Source]:
     """Разобрать HTML-выдачу DuckDuckGo в список Source (URL + title + snippet)."""
     soup = BeautifulSoup(html, "html.parser")
-    sources: list[Source***REMOVED*** = [***REMOVED***
+    sources: list[Source] = []
     for result in soup.select(".result"):
         a = result.select_one(".result__a")
         if not a or not a.get("href"):
             continue
-        href = a["href"***REMOVED***
+        href = a["href"]
         url = _extract_ddg_url(href) or href
         if not url.startswith(("http://", "https://")):
             continue
         snippet_el = result.select_one(".result__snippet")
         snippet = snippet_el.get_text(" ", strip=True) if snippet_el else ""
-        sources.append(Source(url=url, title=a.get_text(" ", strip=True), snippet=snippet[:300***REMOVED***))
+        sources.append(Source(url=url, title=a.get_text(" ", strip=True), snippet=snippet[:300]))
         if len(sources) >= max_sources:
             break
     return sources
@@ -190,17 +190,17 @@ def _extract_ddg_url(href: str) -> str:
     parsed = urlparse(href)
     uddg = parse_qs(parsed.query).get("uddg")
     if uddg:
-        return uddg[0***REMOVED***
+        return uddg[0]
     return href
 
 
 def _extract_snippet(html: str, max_chars: int = 300) -> str:
     """Вытащить читаемый текстовый фрагмент из HTML страницы."""
     soup = BeautifulSoup(html, "html.parser")
-    for tag in soup(["script", "style", "nav", "footer", "header"***REMOVED***):
+    for tag in soup(["script", "style", "nav", "footer", "header"]):
         tag.decompose()
     text = soup.get_text(" ", strip=True)
-    return " ".join(text.split())[:max_chars***REMOVED***
+    return " ".join(text.split())[:max_chars]
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -208,14 +208,14 @@ def _extract_snippet(html: str, max_chars: int = 300) -> str:
 # ═══════════════════════════════════════════════════════════════════
 
 
-def _significant_terms(text: str, min_len: int = 4) -> set[str***REMOVED***:
+def _significant_terms(text: str, min_len: int = 4) -> set[str]:
     """Значимые термы текста (нижний регистр, без стоп-слов/цифр)."""
     stop = {
         "this", "that", "with", "from", "they", "have", "were", "will", "their",
         "there", "what", "about", "into", "them", "then", "these", "those",
         "этот", "это", "для", "что", "как", "при", "его", "ее", "её", "все",
         "они", "также", "можно", "такое", "очень", "уже", "еще", "ещё", "или",
-    ***REMOVED***
+    }
     words = set()
     for w in text.lower().split():
         w = "".join(ch for ch in w if ch.isalnum())
@@ -224,7 +224,7 @@ def _significant_terms(text: str, min_len: int = 4) -> set[str***REMOVED***:
     return words
 
 
-def _count_evidence(sources: list[Source***REMOVED***, query: str) -> int:
+def _count_evidence(sources: list[Source], query: str) -> int:
     """Сколько источников независимо подтверждено (CON-55 anti-hallucination).
 
     Evidence = количество verified-источников, чей фрагмент разделяет хотя бы
@@ -232,7 +232,7 @@ def _count_evidence(sources: list[Source***REMOVED***, query: str) -> int:
     """
     if not sources:
         return 0
-    term_sets = [_significant_terms(f"{s.title***REMOVED*** {s.snippet***REMOVED***") for s in sources***REMOVED***
+    term_sets = [_significant_terms(f"{s.title} {s.snippet}") for s in sources]
     counted = 0
     for i, s in enumerate(sources):
         if not s.verified:
@@ -240,29 +240,29 @@ def _count_evidence(sources: list[Source***REMOVED***, query: str) -> int:
         for j, other in enumerate(term_sets):
             if i == j:
                 continue
-            if term_sets[i***REMOVED*** & other:
+            if term_sets[i] & other:
                 counted += 1
                 break
     return counted
 
 
-def _synthesize(query: str, sources: list[Source***REMOVED***, warnings: list[str***REMOVED***) -> str:
+def _synthesize(query: str, sources: list[Source], warnings: list[str]) -> str:
     """Простой детерминированный синтез по фрагментам (без LLM-вызова)."""
     if not sources:
         return (
-            f"Источники по запросу «{query***REMOVED***» не найдены. Проверь сеть/запрос "
+            f"Источники по запросу «{query}» не найдены. Проверь сеть/запрос "
             "или запусти с --max-sources больше (CON-55: не делаем выводов без evidence)."
         )
-    top = sources[:5***REMOVED***
-    parts = [f"По запросу «{query***REMOVED***» найдено {len(sources)***REMOVED*** источников."***REMOVED***
+    top = sources[:5]
+    parts = [f"По запросу «{query}» найдено {len(sources)} источников."]
     parts.append("Ключевые материалы:")
     for s in top:
         title = s.title or s.url
-        parts.append(f"- {title***REMOVED*** — {s.snippet[:120***REMOVED*** or '(без фрагмента)'***REMOVED***")
+        parts.append(f"- {title} — {s.snippet[:120] or '(без фрагмента)'}")
     if len(sources) > 5:
-        parts.append(f"- … и ещё {len(sources) - 5***REMOVED***.")
+        parts.append(f"- … и ещё {len(sources) - 5}.")
     if warnings:
-        parts.append(f"⚠️ Часть источников не проверена: {len(warnings)***REMOVED*** предупреждений.")
+        parts.append(f"⚠️ Часть источников не проверена: {len(warnings)} предупреждений.")
     return " ".join(parts)
 
 
@@ -278,7 +278,7 @@ def research_web(
     timeout: float = 10.0,
     save: bool = True,
     *,
-    corpus_dir: Optional[Path***REMOVED*** = None,
+    corpus_dir: Optional[Path] = None,
     persist_corpus: bool = True,
 ) -> ResearchReport:
     """Выполнить веб-исследование. Возвращает ResearchReport.
@@ -299,14 +299,14 @@ def research_web(
     Fail-safe: сбой поиска/источника → warning + continue; нет сети →
     degraded-отчёт с ``sources_checked: 0``.
     """
-    warnings: list[str***REMOVED*** = [***REMOVED***
+    warnings: list[str] = []
     query = (query or "").strip()
 
     try:
         sources = search_web(query, max_sources=max_sources, timeout=timeout)
     except Exception as exc:  # noqa: BLE001 — fail-safe по дизайну
-        warnings.append(f"поиск недоступен: {type(exc).__name__***REMOVED***: {exc***REMOVED***")
-        sources = [***REMOVED***
+        warnings.append(f"поиск недоступен: {type(exc).__name__}: {exc}")
+        sources = []
 
     # Проверка каждого источника (fail-safe на битый URL)
     for src in sources:
@@ -326,16 +326,16 @@ def research_web(
                     persist(
                         url=src.url, source="research_web",
                         title=src.title or None,
-                        metadata={"status": 200, "query": query***REMOVED***,
+                        metadata={"status": 200, "query": query},
                         root=corpus_dir,
                     )
                 except Exception as exc:  # noqa: BLE001 — ADR-016 fail-safe
                     warnings.append(
-                        f"corpus_persistence error ({src.url***REMOVED***): "
-                        f"{type(exc).__name__***REMOVED***: {exc***REMOVED***"
+                        f"corpus_persistence error ({src.url}): "
+                        f"{type(exc).__name__}: {exc}"
                     )
         except Exception as exc:  # noqa: BLE001
-            warnings.append(f"источник не подтверждён ({src.url***REMOVED***): {type(exc).__name__***REMOVED***: {exc***REMOVED***")
+            warnings.append(f"источник не подтверждён ({src.url}): {type(exc).__name__}: {exc}")
 
     degraded = len(sources) == 0
     evidence_checked = _count_evidence(sources, query)
@@ -360,7 +360,7 @@ def research_web(
 
 def _write_report(report: ResearchReport, target: str) -> None:
     """Записать markdown-отчёт (идемпотентно, atomic-запись)."""
-    ***REMOVED***
+    }
 
     path = Path(target)
     if path.parent and not path.parent.exists():
@@ -388,7 +388,7 @@ def _emit_events(report: ResearchReport) -> None:
                     "sources_checked": report.sources_checked,
                     "evidence_checked": report.evidence_checked,
                     "degraded": report.degraded,
-                ***REMOVED***,
+                },
                 source="research_web",
             )
         )
@@ -403,7 +403,7 @@ def _emit_events(report: ResearchReport) -> None:
                 "query": report.query,
                 "sources_checked": report.sources_checked,
                 "degraded": report.degraded,
-            ***REMOVED***,
+            },
             outcome="success" if not report.degraded else "neutral",
         )
     except Exception:  # noqa: BLE001
@@ -420,7 +420,7 @@ def main() -> int:
         description="Web Research capability (Tool: research_web) — Research Factory"
     )
     parser.add_argument("query", help="тема/запрос исследования")
-    parser.add_argument("--out", default=None, help=f"файл отчёта (default {DEFAULT_OUT***REMOVED***)")
+    parser.add_argument("--out", default=None, help=f"файл отчёта (default {DEFAULT_OUT})")
     parser.add_argument("--json", action="store_true", help="stdout в JSON (для Scenario Engine/API)")
     parser.add_argument("--max-sources", type=int, default=10, help="лимит источников (default 10)")
     parser.add_argument("--timeout", type=float, default=10.0, help="таймаут на запрос, сек (default 10)")

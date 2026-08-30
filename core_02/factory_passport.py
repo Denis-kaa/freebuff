@@ -17,23 +17,23 @@ Usage::
 
     from core_02.factory_passport import FactoryPassport
     fp = FactoryPassport.from_yaml("runtime_05/factories/architecture/factory.yaml")
-    fp.validate()  # list[str***REMOVED*** violations; empty = valid
+    fp.validate()  # list[str] violations; empty = valid
     fp.to_dict()   # JSON-convention
 """
 
 from __future__ import annotations
 
-***REMOVED***
+}
 from dataclasses import dataclass, field, asdict
-***REMOVED***
+}
 from typing import Any, Optional, Union, cast
 
 
 # ─── Closed vocab (ANTI-6b) — imported lazily to avoid hard dep at import-time ──
-_KNOWN_CAPABILITIES_CACHE: Optional[frozenset[str***REMOVED******REMOVED*** = None
+_KNOWN_CAPABILITIES_CACHE: Optional[frozenset[str]] = None
 
 
-def _get_known_capabilities() -> frozenset[str***REMOVED***:
+def _get_known_capabilities() -> frozenset[str]:
     """Lazy import of KNOWN_CAPABILITIES from blueprint_v3 (avoid hard dep up-front)."""
     global _KNOWN_CAPABILITIES_CACHE
     if _KNOWN_CAPABILITIES_CACHE is None:
@@ -47,11 +47,11 @@ def _get_known_capabilities() -> frozenset[str***REMOVED***:
 
 # ─── module-level safety helpers ──────────────────────────────────────────────
 
-_SLUG_RE = re.compile(r"^[a-z***REMOVED***[a-z0-9_***REMOVED***{1,30***REMOVED***$")
-_VALID_STATUSES: tuple[str, ...***REMOVED*** = ("design", "material", "production")
+_SLUG_RE = re.compile(r"^[a-z)[a-z0-9_]{1,30]$")
+_VALID_STATUSES: tuple[str, ...] = ("design", "material", "production")
 
 
-def _as_tuple(value: Any, *, field_name: str) -> tuple[Any, ...***REMOVED***:
+def _as_tuple(value: Any, *, field_name: str) -> tuple[Any, ...]:
     """Convert list-like → tuple. Raises ValueError if dict/None/non-iterable
     (громкая ошибка per B10/R-127 — НЕ тихая потеря данных)."""
     if value is None or value == "":
@@ -61,19 +61,19 @@ def _as_tuple(value: Any, *, field_name: str) -> tuple[Any, ...***REMOVED***:
     if isinstance(value, list):
         return tuple(value)
     raise ValueError(
-        f"{field_name***REMOVED***: ожидался YAML список; получено {type(value).__name__***REMOVED***. "
+        f"{field_name}: ожидался YAML список; получено {type(value).__name__}. "
         f"НЕ-scalar → НЕ тихая потеря (B10/R-127)."
     )
 
 
-def _as_dict(value: Any, *, field_name: str) -> dict[str, Any***REMOVED***:
+def _as_dict(value: Any, *, field_name: str) -> dict[str, Any]:
     """Convert dict-like → dict. Raises if scalar (per B10/R-127)."""
     if value is None or value == "":
-        return {***REMOVED***
+        return {}
     if isinstance(value, dict):
         return value
     raise ValueError(
-        f"{field_name***REMOVED***: ожидался YAML-объект (dict); получено {type(value).__name__***REMOVED***. "
+        f"{field_name}: ожидался YAML-объект (dict); получено {type(value).__name__}. "
         f"НЕ-scalar-для-объекта → НЕ тихая потеря (B10/R-127)."
     )
 
@@ -100,17 +100,17 @@ class FactoryPassport:
     version: str
     status: str  # 'design' | 'material' | 'production'
     description: str
-    capabilities: tuple[str, ...***REMOVED*** = field(default_factory=tuple)
-    metadata: dict[str, Any***REMOVED*** = field(default_factory=dict)
+    capabilities: tuple[str, ...] = field(default_factory=tuple)
+    metadata: dict[str, Any] = field(default_factory=dict)
 
-    REQUIRED_FIELDS: tuple[str, ...***REMOVED*** = (
+    REQUIRED_FIELDS: tuple[str, ...] = (
         "factory_id", "display_name", "version", "status", "description",
     )
 
     # ─── YAML load / dump ──────────────────────────────────────────────────
 
     @classmethod
-    def from_yaml(cls, path: Union[str, Path***REMOVED***) -> "FactoryPassport":
+    def from_yaml(cls, path: Union[str, Path]) -> "FactoryPassport":
         """Load passport from deterministic YAML manifest.
 
         Raises FileNotFoundError if path missing; ValueError on schema errors
@@ -120,31 +120,31 @@ class FactoryPassport:
         p = Path(path)
         if not p.exists():
             raise FileNotFoundError(
-                f"Манифест фабрики не найден: {p***REMOVED***. Паспорт живёт в "
+                f"Манифест фабрики не найден: {p}. Паспорт живёт в "
                 f"runtime_05/factories/<factory_id>/factory.yaml."
             )
         try:
             data = yaml.safe_load(p.read_text(encoding="utf-8"))
         except yaml.YAMLError as exc:
             raise ValueError(
-                f"Манифест фабрики повреждён (невалидный YAML) в {p***REMOVED***: {exc***REMOVED***. "
+                f"Манифест фабрики повреждён (невалидный YAML) в {p}: {exc}. "
                 f"Восстанови из .bak.* или почини синтаксис."
             ) from exc
 
         if not isinstance(data, dict):
             raise ValueError(
-                f"Манифест {p***REMOVED*** не является YAML-словарём (ожидался dict, "
-                f"получено {type(data).__name__***REMOVED***)."
+                f"Манифест {p} не является YAML-словарём (ожидался dict, "
+                f"получено {type(data).__name__})."
             )
 
         return cls._from_dict(data, source=str(p))
 
     @classmethod
-    def _from_dict(cls, data: dict[str, Any***REMOVED***, *, source: str = "<dict>") -> "FactoryPassport":
+    def _from_dict(cls, data: dict[str, Any], *, source: str = "<dict>") -> "FactoryPassport":
         """Internal: build from already-parsed dict (used by from_yaml + tests)."""
 
         def err(field: str, why: str) -> ValueError:
-            return ValueError(f"{source***REMOVED***: factory_passport::{field***REMOVED*** — {why***REMOVED***")
+            return ValueError(f"{source}: factory_passport::{field} — {why}")
 
         factory_id = str(data.get("factory_id", "")).strip()
         if not factory_id:
@@ -152,7 +152,7 @@ class FactoryPassport:
         if not _SLUG_RE.match(factory_id):
             raise err(
                 "factory_id",
-                f"должен соответствовать {_SLUG_RE.pattern***REMOVED*** (lowercase, начинается с буквы)",
+                f"должен соответствовать {_SLUG_RE.pattern} (lowercase, начинается с буквы)",
             )
 
         display_name = str(data.get("display_name", "")).strip()
@@ -167,7 +167,7 @@ class FactoryPassport:
         if status not in _VALID_STATUSES:
             raise err(
                 "status",
-                f"должен быть ∈ {_VALID_STATUSES***REMOVED***, получено {status!r***REMOVED***",
+                f"должен быть ∈ {_VALID_STATUSES}, получено {status!r}",
             )
 
         description = str(data.get("description", "")).strip()
@@ -180,8 +180,8 @@ class FactoryPassport:
             version=version,
             status=status,
             description=description,
-            capabilities=_as_tuple(data.get("capabilities", [***REMOVED***), field_name="capabilities"),
-            metadata=_as_dict(data.get("metadata", {***REMOVED***), field_name="metadata"),
+            capabilities=_as_tuple(data.get("capabilities", []), field_name="capabilities"),
+            metadata=_as_dict(data.get("metadata", {}), field_name="metadata"),
         )
 
     def to_yaml(self) -> str:
@@ -190,39 +190,39 @@ class FactoryPassport:
         out = asdict(self)
         return cast(str, yaml.safe_dump(out, sort_keys=False, allow_unicode=True, default_flow_style=False))
 
-    def to_dict(self) -> dict[str, Any***REMOVED***:
+    def to_dict(self) -> dict[str, Any]:
         """JSON-convention dict (lists instead of tuples for JSON-friendliness)."""
         d = asdict(self)
         for k, v in list(d.items()):
             if isinstance(v, tuple):
-                d[k***REMOVED*** = list(v)
+                d[k] = list(v)
         return d
 
     # ─── validation (B10/R-127 invariants + ANTI-6b vocab guard) ──────────
 
-    def validate(self) -> list[str***REMOVED***:
+    def validate(self) -> list[str]:
         """Return list of violation strings (empty = valid).
 
         Invariants (per runtime_05/factories/README.md §1 + B10/R-127 + ANTI-6b):
         - factory_id lowercase-slug non-empty;
         - display_name non-empty;
-        - status ∈ {'design', 'material', 'production'***REMOVED***;
+        - status ∈ {'design', 'material', 'production'};
         - description non-empty (фабрика без описания — фабрика без смысла);
         - capabilities ⊆ KNOWN_CAPABILITIES (закрытый словарь, ANTI-6b).
         """
-        violations: list[str***REMOVED*** = [***REMOVED***
+        violations: list[str] = []
         if not self.factory_id:
             violations.append("factory_id must be non-empty (B10)")
         elif not _SLUG_RE.match(self.factory_id):
             violations.append(
-                f"factory_id {self.factory_id!r***REMOVED*** must match {_SLUG_RE.pattern***REMOVED*** "
+                f"factory_id {self.factory_id!r} must match {_SLUG_RE.pattern} "
                 f"(lowercase + starts-with-letter; B10/R-127)"
             )
         if not self.display_name:
             violations.append("display_name must be non-empty (B10)")
         if self.status not in _VALID_STATUSES:
             violations.append(
-                f"status {self.status!r***REMOVED*** must be ∈ {_VALID_STATUSES***REMOVED***"
+                f"status {self.status!r} must be ∈ {_VALID_STATUSES}"
             )
         if not self.description:
             violations.append(
@@ -231,10 +231,10 @@ class FactoryPassport:
         if self.capabilities:
             known = _get_known_capabilities()
             if known:  # only validate when KNOWN_CAPABILITIES is importable
-                unknown = [c for c in self.capabilities if c not in known***REMOVED***
+                unknown = [c for c in self.capabilities if c not in known]
                 if unknown:
                     violations.append(
-                        f"capabilities содержат unknown tokens {unknown***REMOVED*** (закрытый "
+                        f"capabilities содержат unknown tokens {unknown} (закрытый "
                         f"словарь KNOWN_CAPABILITIES требует ANTI-6b compliance; "
                         f"silently demoting routing запрещено)."
                     )
@@ -244,14 +244,14 @@ class FactoryPassport:
     def __post_init__(self) -> None:
         if self.factory_id and not _SLUG_RE.match(self.factory_id):
             raise ValueError(
-                f"factory_id {self.factory_id!r***REMOVED*** must match {_SLUG_RE.pattern***REMOVED***"
+                f"factory_id {self.factory_id!r} must match {_SLUG_RE.pattern}"
             )
 
 
 __all__ = [
     "FactoryPassport",
     "REQUIRED_FIELDS",  # backward-compat re-export
-***REMOVED***
+]
 
 
 # Module-level re-export for `from core_02.factory_passport import REQUIRED_FIELDS`.

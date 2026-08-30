@@ -7,8 +7,8 @@
 
     register_project(project_config)      -> project_id
     get_project_status(project_id)        -> ForgeStatus
-    list_projects_by_status(status_filter) -> list[ForgeStatus***REMOVED***
-    get_pipeline_history(project_id)      -> list[PipelineRun***REMOVED***
+    list_projects_by_status(status_filter) -> list[ForgeStatus]
+    get_pipeline_history(project_id)      -> list[PipelineRun]
     record_run(project_id, run)           -> обновляет статус + историю
 
 Статусы: UNFORGED, CHECKING, BUILDING, TESTING, DEPLOYED, FAILED.
@@ -19,7 +19,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional
 
 try:
@@ -51,12 +51,12 @@ class ForgeStatus:
     name: str
     root: str
     status: str = UNFORGED
-    last_run_at: Optional[str***REMOVED*** = None
-    last_pipeline: Dict[str, Any***REMOVED*** = field(default_factory=dict)
-    pipeline_history: List[Dict[str, Any***REMOVED******REMOVED*** = field(default_factory=list)
+    last_run_at: Optional[str] = None
+    last_pipeline: Dict[str, Any] = field(default_factory=dict)
+    pipeline_history: List[Dict[str, Any]] = field(default_factory=list)
     registered_at: str = ""
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "project_id": self.project_id,
             "name": self.name,
@@ -64,9 +64,9 @@ class ForgeStatus:
             "status": self.status,
             "last_run_at": self.last_run_at,
             "last_pipeline": self.last_pipeline,
-            "pipeline_history": self.pipeline_history[-10:***REMOVED***,
+            "pipeline_history": self.pipeline_history[-10:],
             "registered_at": self.registered_at,
-        ***REMOVED***
+        }
 
 
 class ForgeRegistry:
@@ -75,35 +75,35 @@ class ForgeRegistry:
     def __init__(self, path: str | Path = "data_13/forge_registry.yaml"):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self._data: Dict[str, Dict[str, Any***REMOVED******REMOVED*** = self._load()
-        self._schema_violations: List[str***REMOVED*** = self.validate_schema()
+        self._data: Dict[str, Dict[str, Any]] = self._load()
+        self._schema_violations: List[str] = self.validate_schema()
 
     # ── persistence ──────────────────────────────────────────────────
-    def _load(self) -> Dict[str, Dict[str, Any***REMOVED******REMOVED***:
-        """Загрузить реестр. При ошибке чтения/парсинга возвращает {***REMOVED***
+    def _load(self) -> Dict[str, Dict[str, Any]]:
+        """Загрузить реестр. При ошибке чтения/парсинга возвращает {]
         и фиксирует факт повреждения в self._load_error (R-127/B10:
         битый файл НЕ должен молча выглядеть валидным — см. validate_schema).
         """
-        self._load_error: Optional[str***REMOVED*** = None
+        self._load_error: Optional[str] = None
         if not self.path.exists():
-            return {***REMOVED***
+            return {}
         try:
             text = self.path.read_text(encoding="utf-8")
             if yaml is not None:
-                data = yaml.safe_load(text) or {***REMOVED***
+                data = yaml.safe_load(text) or {}
             else:  # pragma: no cover
                 data = json.loads(text)
-            return {k: dict(v) for k, v in data.items()***REMOVED*** if isinstance(data, dict) else {***REMOVED***
+            return {k: dict(v) for k, v in data.items()} if isinstance(data, dict) else {}
         except Exception as exc:
             # R-127 (B10): потеря/повреждение файла — нарушение целостности.
             self._load_error = str(exc)
-            return {***REMOVED***
+            return {}
 
     def _save(self) -> None:
         payload = {
             k: v for k, v in self._data.items()
             if not self._is_ephemeral_leak(v)
-        ***REMOVED***
+        }
         if yaml is not None:
             self.path.write_text(
                 yaml.safe_dump(payload, allow_unicode=True, sort_keys=False),
@@ -132,7 +132,7 @@ class ForgeRegistry:
         s = str(path)
         return s == "/tmp" or s.startswith("/tmp/")
 
-    def _is_ephemeral_leak(self, entry: Dict[str, Any***REMOVED***) -> bool:
+    def _is_ephemeral_leak(self, entry: Dict[str, Any]) -> bool:
         """Guard: запись с ephemeral root в НЕ-ephemeral реестре — утечка mock.
 
         Условие (root ephemeral И registry НЕ ephemeral):
@@ -156,55 +156,55 @@ class ForgeRegistry:
         return self._is_ephemeral_path(entry.get("root"))
 
     # ── B10 schema validation (R-127, промт 68) ───────────────────────
-    def validate_schema(self) -> List[str***REMOVED***:
+    def validate_schema(self) -> List[str]:
         """R-127 (B10): машинно-проверяемая семантика UNFORGED vs UNTESTED.
 
         UNFORGED = «никогда не проходил Forge» (может быть human-only проект,
-        §32.4 [АРХ-32-11***REMOVED***, Q4 2024 DR incident CON-34) — НЕ алиас UNTESTED.
+        §32.4 [АРХ-32-11], Q4 2024 DR incident CON-34) — НЕ алиас UNTESTED.
         Машинные инварианты:
           - обязательные поля: project_id, name, root, status;
           - status ∈ STATUSES (UNFORGED, CHECKING, BUILDING, TESTING, DEPLOYED, FAILED);
           - UNFORGED ⇒ last_run_at is None и last_pipeline пуст (никогда не запускался);
           - DEPLOYED/FAILED ⇒ last_run_at установлен (запускался).
 
-        Возвращает список нарушений ([***REMOVED*** = реестр валиден). Вызывается при
+        Возвращает список нарушений ([] = реестр валиден). Вызывается при
         инстанцировании (self._schema_violations) и доступен как метод.
         """
-        violations: List[str***REMOVED*** = [***REMOVED***
+        violations: List[str] = []
         # R-127 (B10): нечитаемый/повреждённый реестр — нарушение integrity.
-        # Без этого битый YAML молча выглядел бы валидным (validate_schema по {***REMOVED***).
+        # Без этого битый YAML молча выглядел бы валидным (validate_schema по {}).
         if self._load_error:
-            violations.append(f"registry: unreadable YAML ({self._load_error***REMOVED***)")
+            violations.append(f"registry: unreadable YAML ({self._load_error})")
         for pid, entry in self._data.items():
             for f in REQUIRED_FIELDS:
                 if f not in entry:
-                    violations.append(f"{pid***REMOVED***: missing required field {f!r***REMOVED***")
+                    violations.append(f"{pid}: missing required field {f!r}")
             status = entry.get("status")
             if status is not None and status not in STATUSES:
                 violations.append(
-                    f"{pid***REMOVED***: invalid status {status!r***REMOVED*** (allowed: {STATUSES***REMOVED***)"
+                    f"{pid}: invalid status {status!r} (allowed: {STATUSES})"
                 )
             if status == UNFORGED:
                 if entry.get("last_run_at") is not None:
                     violations.append(
-                        f"{pid***REMOVED***: UNFORGED but last_run_at set "
+                        f"{pid}: UNFORGED but last_run_at set "
                         "(UNFORGED ≠ UNTESTED; never ran through Forge)"
                     )
                 if entry.get("last_pipeline"):
                     violations.append(
-                        f"{pid***REMOVED***: UNFORGED but last_pipeline non-empty "
+                        f"{pid}: UNFORGED but last_pipeline non-empty "
                         "(UNFORGED ≠ UNTESTED)"
                     )
             elif status in (DEPLOYED, FAILED):
                 if entry.get("last_run_at") is None:
                     violations.append(
-                        f"{pid***REMOVED***: {status***REMOVED*** but last_run_at missing "
+                        f"{pid}: {status} but last_run_at missing "
                         "(DEPLOYED/FAILED implies a run happened)"
                     )
         return violations
 
     @property
-    def schema_violations(self) -> List[str***REMOVED***:
+    def schema_violations(self) -> List[str]:
         """Нарушения B10-схемы, найденные при загрузке реестра."""
         return list(self._schema_violations)
 
@@ -213,7 +213,7 @@ class ForgeRegistry:
         self,
         name: str,
         root: str | Path,
-        project_id: Optional[str***REMOVED*** = None,
+        project_id: Optional[str] = None,
     ) -> str:
         """Зарегистрировать проект. Возвращает project_id."""
         pid = project_id or self._slug(name)
@@ -225,31 +225,31 @@ class ForgeRegistry:
                 "root": str(root),
                 "status": UNFORGED,
                 "last_run_at": None,
-                "last_pipeline": {***REMOVED***,
-                "pipeline_history": [***REMOVED***,
+                "last_pipeline": {},
+                "pipeline_history": [],
                 "registered_at": _now(),
-            ***REMOVED***
+            }
         else:
-            entry["name"***REMOVED*** = name
-            entry["root"***REMOVED*** = str(root)
-        self._data[pid***REMOVED*** = entry
+            entry["name"] = name
+            entry["root"] = str(root)
+        self._data[pid] = entry
         self._save()
         return pid
 
-    def get_project_status(self, project_id: str) -> Optional[ForgeStatus***REMOVED***:
+    def get_project_status(self, project_id: str) -> Optional[ForgeStatus]:
         entry = self._data.get(project_id)
         if entry is None:
             return None
         return ForgeStatus(**entry)
 
-    def get_project_status_by_root(self, root: str) -> Optional[ForgeStatus***REMOVED***:
+    def get_project_status_by_root(self, root: str) -> Optional[ForgeStatus]:
         for entry in self._data.values():
             if str(entry.get("root")) == str(root):
                 return ForgeStatus(**entry)
         return None
 
-    def list_projects_by_status(self, status_filter: Optional[str***REMOVED*** = None) -> List[ForgeStatus***REMOVED***:
-        out = [***REMOVED***
+    def list_projects_by_status(self, status_filter: Optional[str] = None) -> List[ForgeStatus]:
+        out = []
         for entry in self._data.values():
             if status_filter is None or entry.get("status") == status_filter:
                 out.append(ForgeStatus(**entry))
@@ -270,12 +270,12 @@ class ForgeRegistry:
           - любое другое ("failed", "partial", ...) → FAILED.
         """
         if project_id not in self._data:
-            raise KeyError(f"Проект {project_id***REMOVED*** не зарегистрирован")
+            raise KeyError(f"Проект {project_id} не зарегистрирован")
         run_dict = run.to_dict() if hasattr(run, "to_dict") else dict(run)
-        entry = self._data[project_id***REMOVED***
+        entry = self._data[project_id]
         overall = run_dict.get("overall")
         if overall == "ok":
-            entry["status"***REMOVED*** = DEPLOYED
+            entry["status"] = DEPLOYED
         elif overall == "degraded":
             # v5.189.10 (R-1 closure): degraded (exit 0, верификация неполна)
             # НЕ даунгрейдит и НЕ сертифицирует — статус сохраняется прежним.
@@ -285,23 +285,23 @@ class ForgeRegistry:
             if entry.get("status") == UNFORGED:
                 return ForgeStatus(**entry)
         else:
-            entry["status"***REMOVED*** = FAILED
-        entry["last_run_at"***REMOVED*** = _now()
-        entry["last_pipeline"***REMOVED*** = run_dict
-        history = entry.get("pipeline_history") or [***REMOVED***
-        history.append({"at": entry["last_run_at"***REMOVED***, **run_dict***REMOVED***)
-        entry["pipeline_history"***REMOVED*** = history[-20:***REMOVED***
-        self._data[project_id***REMOVED*** = entry
+            entry["status"] = FAILED
+        entry["last_run_at"] = _now()
+        entry["last_pipeline"] = run_dict
+        history = entry.get("pipeline_history") or []
+        history.append({"at": entry["last_run_at"], **run_dict})
+        entry["pipeline_history"] = history[-20:]
+        self._data[project_id] = entry
         self._save()
         return ForgeStatus(**entry)
 
-    def get_pipeline_history(self, project_id: str) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    def get_pipeline_history(self, project_id: str) -> List[Dict[str, Any]]:
         entry = self._data.get(project_id)
-        return (entry or {***REMOVED***).get("pipeline_history", [***REMOVED***)
+        return (entry or {}).get("pipeline_history", [])
 
     def unregister(self, project_id: str) -> bool:
         if project_id in self._data:
-            del self._data[project_id***REMOVED***
+            del self._data[project_id]
             self._save()
             return True
         return False
@@ -328,8 +328,8 @@ def _check_workspace_profile(project_id: str) -> bool:
         return False  # No registered profiles yet = assume partial enforcement
     try:
         with open(ws_profiles, "r", encoding="utf-8") as f:
-            profiles = yaml.safe_load(f) or {***REMOVED***
-        workspace_id = project_id.split(":")[0***REMOVED*** if ":" in project_id else project_id
+            profiles = yaml.safe_load(f) or {}
+        workspace_id = project_id.split(":")[0] if ":" in project_id else project_id
         return workspace_id in profiles
     except Exception:
         return False
@@ -339,11 +339,11 @@ def register_project_with_profile(project_id: str, profile: dict):
     """Register a project ONLY if its workspace has a registered profile (B15)."""
     ws_profiles = os.path.join("data_13", "workspace_profiles.yaml")
     import os, yaml
-    profiles = {***REMOVED***
+    profiles = {}
     if os.path.exists(ws_profiles):
         with open(ws_profiles, "r", encoding="utf-8") as f:
-            profiles = yaml.safe_load(f) or {***REMOVED***
-    workspace_id = project_id.split(":")[0***REMOVED*** if ":" in project_id else project_id
-    profiles[workspace_id***REMOVED*** = profile
+            profiles = yaml.safe_load(f) or {}
+    workspace_id = project_id.split(":")[0] if ":" in project_id else project_id
+    profiles[workspace_id] = profile
     with open(ws_profiles, "w", encoding="utf-8") as f:
         yaml.safe_dump(profiles, f, default_flow_style=False, sort_keys=True)

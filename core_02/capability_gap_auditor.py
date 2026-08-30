@@ -20,10 +20,10 @@ ADR-016 (auto-generation of light-role artifacts): этот модуль доб�
    умолчанию загружается из канонического пути ``data_13/missing_registry.yaml``.
    Тесты подменяют registry на in-memory fixture без диска.
 4. **Fail-safe per ADR-016.** Любая ошибка (нет входного файла, битый MR,
-   исключение внутри) → ``[***REMOVED***`` (chain пометит ``gen_failed``), НЕ exception
+   исключение внутри) → ``[]`` (chain пометит ``gen_failed``), НЕ exception
    наружу.
 5. **Прозрачный tagging.** Каждое утверждение в отчёте явно отмечено как
-   ``[observation***REMOVED***`` (regex+MR lookup, детерминировано) или ``[conclusion***REMOVED***``
+   ``[observation]`` (regex+MR lookup, детерминировано) или ``[conclusion]``
    (first-slice рекомендация, требует ручной валидации) — соблюдение §24
    Code Quality Standard.
 
@@ -34,7 +34,7 @@ ADR-016 (auto-generation of light-role artifacts): этот модуль доб�
 
     auditor = CapabilityGapAuditorExecutor(registry=MissingRegistry())
     created = auditor.execute(project, "capability_gap_auditor")
-    # -> ["capability_gap_report.md"***REMOVED***
+    # -> ["capability_gap_report.md"]
 
 CLI::
 
@@ -48,10 +48,10 @@ from __future__ import annotations
 
 import json
 import logging
-***REMOVED***
+}
 import shlex
 import sys
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional, Tuple
 
 from core_02.role_executor import BaseRoleExecutor, RoleExecutorRegistry
@@ -61,9 +61,9 @@ from core_02.workspace import Project
 # unit-тесты без канонического data_13/missing_registry.yaml не падали на импорте.
 try:
     from core_02.missing_registry import MissingRegistry
-    _MissingRegistryCls: Optional[type***REMOVED*** = MissingRegistry
+    _MissingRegistryCls: Optional[type] = MissingRegistry
 except ImportError:  # pragma: no cover — defensive
-    _MissingRegistryCls = None  # type: ignore[assignment***REMOVED***
+    _MissingRegistryCls = None  # type: ignore[assignment]
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -84,7 +84,7 @@ __all__ = [
     "LLM_SYSTEM_PROMPT",
     "LLM_USER_PROMPT_TEMPLATE",
     "_parse_llm_response",
-***REMOVED***
+]
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +100,7 @@ logger = logging.getLogger(__name__)
 # остаётся компактным).
 
 # Тип: (compiled regex, item_id, kind, factory, description)
-_TaxonomyEntry = Tuple[re.Pattern[str***REMOVED***, str, str, str, str***REMOVED***
+_TaxonomyEntry = Tuple[re.Pattern[str], str, str, str, str]
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -110,12 +110,12 @@ _TaxonomyEntry = Tuple[re.Pattern[str***REMOVED***, str, str, str, str***REMOVED
 # записи с kind вне этого множества, иначе — silent drift на registry cross-check
 # (LLM может вернуть kind="service"/"agent"/"skill", а в MR они не зарегистрированы).
 # Синхронизирован с MissingRegistry.KINDS (требует ревью при изменении того файла).
-_KINDS: frozenset = frozenset({"tool", "module", "role", "engine"***REMOVED***)
+_KINDS: frozenset = frozenset({"tool", "module", "role", "engine"})
 
 
-TAXONOMY: tuple[_TaxonomyEntry, ...***REMOVED*** = (
+TAXONOMY: tuple[_TaxonomyEntry, ...] = (
     # research_web: web-исследование, чтение URL
-    (re.compile(r"(?i)\b(web[- ***REMOVED***?research|читать\s+url|url\s+research|external\s+url|web\s+page|scrape)\b"),
+    (re.compile(r"(?i)\b(web[- )?research|читать\s+url|url\s+research|external\s+url|web\s+page|scrape)\b"),
      "research_web", "tool", "research",
      "Web Research — корпус URL-источников (веб-чтение, поиск, источник-трекинг)"),
 
@@ -125,7 +125,7 @@ TAXONOMY: tuple[_TaxonomyEntry, ...***REMOVED*** = (
      "Estimation / Unit-economics для creator-economy (Teacher Time/$, калибровка)"),
 
     # qualitative_review_analyzer: отзывы, qualitative
-    (re.compile(r"(?i)\b(review|отзыв|qualitative)\b\s*(?i:analys|кластер|pain[- ***REMOVED***?point)?"),
+    (re.compile(r"(?i)\b(review|отзыв|qualitative)\b\s*(?i:analys|кластер|pain[- )?point)?"),
      "qualitative_review_analyzer", "tool", "research",
      "Качественный анализ отзывов (pain-points / churn / praise кластеризация)"),
 
@@ -140,7 +140,7 @@ TAXONOMY: tuple[_TaxonomyEntry, ...***REMOVED*** = (
      "Верифицированный прайс-сканер (реальный price, не «примерно 10–20 тыс.»)"),
 
     # anti_pattern_miner
-    (re.compile(r"(?i)\b(anti[- ***REMOVED***?pattern|заброш\w*|закрыт\w*)\s+(курс|школ|проект|launch|product)?"),
+    (re.compile(r"(?i)\b(anti[- )?pattern|заброш\w*|закрыт\w*)\s+(курс|школ|проект|launch|product)?"),
      "anti_pattern_miner", "tool", "research",
      "Anti-pattern mining (закрытые курсы/школы/заброшенные продукты)"),
 
@@ -150,12 +150,12 @@ TAXONOMY: tuple[_TaxonomyEntry, ...***REMOVED*** = (
      "MVP-механики (предпродажа, пилот, диагностическая воронка)"),
 
     # business_model_constructor
-    (re.compile(r"(?i)\b(business\s+model|бизнес[- ***REMOVED***модел|монетизаци\w*|14[- ***REMOVED***полей\s+конструкци)"),
+    (re.compile(r"(?i)\b(business\s+model|бизнес[- )модел|монетизаци\w*|14[- )полей\s+конструкци)"),
      "business_model_constructor", "module", "doc",
      "Конструктор бизнес-моделей (14 полей, валидированный шаблон)"),
 
     # hypothesis_ledger
-    (re.compile(r"(?i)\b(hypothesis\s+ledger|гипотез\w*\s+(статус|ledger)|kill[- ***REMOVED***?criteria)"),
+    (re.compile(r"(?i)\b(hypothesis\s+ledger|гипотез\w*\s+(статус|ledger)|kill[- )?criteria)"),
      "hypothesis_ledger", "module", "docs_10",
      "Hypothesis ledger (статусы open/supported/refuted/kill-criteria-met)"),
 
@@ -169,13 +169,13 @@ TAXONOMY: tuple[_TaxonomyEntry, ...***REMOVED*** = (
      "corpus_persistence", "tool", "nil",
      "Corpus-persistence (источники между сессиями, не теряются)"),
 
-    # claim_source_tracker (NOTE: bracketed tags [observation***REMOVED***/[hypothesis***REMOVED***/[conclusion***REMOVED***
+    # claim_source_tracker (NOTE: bracketed tags [observation]/[hypothesis]/[conclusion]
     # опущены намеренно — иначе аудит собственного отчёта даёт false-positive, т.к.
-    # тело отчёта использует ровно эти метки. Сохраняем `[fact***REMOVED***` (он не используется
+    # тело отчёта использует ровно эти метки. Сохраняем `[fact]` (он не используется
     # в отчёте) и русскую фразу «факт/наблюден/гипотез»).
-    (re.compile(r"(?i)\b(кажд\w*\s+существенн\w*\s+утвержден\w*\s+подкрепл\w*\s+источник\w*|не\s+выдава\w*\s+предположен\w*\s+за\s+факт\w*|claim\s+source\s+tracker|факт\s*\/\s*наблюден\s*\/\s*гипотез\w*|tag(?:ging)?\w*\s+\[fact\***REMOVED***|\[fact\***REMOVED***|\bfact\b\s*\/\s*observation|\[hypothesis\***REMOVED***)"),
+    (re.compile(r"(?i)\b(кажд\w*\s+существенн\w*\s+утвержден\w*\s+подкрепл\w*\s+источник\w*|не\s+выдава\w*\s+предположен\w*\s+за\s+факт\w*|claim\s+source\s+tracker|факт\s*\/\s*наблюден\s*\/\s*гипотез\w*|tag(?:ging)?\w*\s+\[fact\*)|\[fact\*)|\bfact\b\s*\/\s*observation|\[hypothesis\*])"),
      "claim_source_tracker", "module", "docs_10",
-     "Claim-source-tracker (тег [fact***REMOVED*** и формат факт/наблюдение/гипотеза)"),
+     "Claim-source-tracker (тег [fact] и формат факт/наблюдение/гипотеза)"),
 
     # vanity_metric_filter
     (re.compile(r"(?i)\b(vanity\s+metric|лайк\w*\s+не\s+успех|подписч\w*\s+не\s+успех|просмотр\w*\s+не\s+успех)"),
@@ -201,7 +201,7 @@ TAXONOMY: tuple[_TaxonomyEntry, ...***REMOVED*** = (
 # Возвращает список (heading, body). heading — текст после маркера `#`.
 
 _SECTION_RE = re.compile(
-    r"^(?:#{1,4***REMOVED***\s+|(?:\d+|[IVX***REMOVED***+)\.\s+|\(\d+\)\s+)(.+?)(?:\n|$)",
+    r"^(?:#{1,4]\s+|(?:\d+|[IVX]+)\.\s+|\(\d+\)\s+)(.+?)(?:\n|$)",
     re.MULTILINE,
 )
 
@@ -209,37 +209,37 @@ _SECTION_RE = re.compile(
 _MIN_BODY_LEN = 60
 
 
-def _split_sections(text: str) -> List[Tuple[str, str***REMOVED******REMOVED***:
+def _split_sections(text: str) -> List[Tuple[str, str]]:
     """Сплитит markdown на список (heading, body). Если заголовков нет — весь текст как одна секция."""
     matches = list(_SECTION_RE.finditer(text))
     if not matches:
         intro = text.strip()
-        return [("(intro)", intro)***REMOVED*** if intro else [***REMOVED***
-    out: List[Tuple[str, str***REMOVED******REMOVED*** = [***REMOVED***
+        return [("(intro)", intro)] if intro else []
+    out: List[Tuple[str, str]] = []
     for i, m in enumerate(matches):
         start = m.start()
-        end = matches[i + 1***REMOVED***.start() if i + 1 < len(matches) else len(text)
+        end = matches[i + 1].start() if i + 1 < len(matches) else len(text)
         raw_heading = m.group(1).strip().rstrip(":").strip()
-        body = text[start:end***REMOVED***.strip()
+        body = text[start:end].strip()
         # Heading = первая строка body без маркера.
         first_nl = body.find("\n")
-        first_line = body[:first_nl***REMOVED***.strip() if first_nl >= 0 else body
-        heading = raw_heading or first_line or f"(section {i+1***REMOVED***)"
+        first_line = body[:first_nl].strip() if first_nl >= 0 else body
+        heading = raw_heading or first_line or f"(section {i+1})"
         out.append((heading, body))
     return out
 
 
-def _extract_capabilities_from_text(text: str) -> List[Tuple[str, str, str, str***REMOVED******REMOVED***:
+def _extract_capabilities_from_text(text: str) -> List[Tuple[str, str, str, str]]:
     """Возвращает список найденных (item_id, kind, factory, description) для данного текста.
 
     Дедуп по item_id (несколько regex могут сработать на один cap — берём первое описание).
     """
-    found: Dict[str, Tuple[str, str, str, str***REMOVED******REMOVED*** = {***REMOVED***
+    found: Dict[str, Tuple[str, str, str, str]] = {}
     for pattern, item_id, kind, factory, description in TAXONOMY:
         if item_id in found:
             continue
         if pattern.search(text):
-            found[item_id***REMOVED*** = (item_id, kind, factory, description)
+            found[item_id] = (item_id, kind, factory, description)
     return list(found.values())
 
 
@@ -251,13 +251,13 @@ def _extract_capabilities_from_text(text: str) -> List[Tuple[str, str, str, str*
 # Ранг < _IMPLEMENTED_RANK означает «не реализован» → блокер для first-slice.
 _IMPLEMENTED_RANK = 9
 _IMPLEMENTED_STATUS = "implemented"
-_BLOCKER_PRIORITY: Dict[str, int***REMOVED*** = {
+_BLOCKER_PRIORITY: Dict[str, int] = {
     "absent": 0,
     "registered": 1,
     "design_ready": 2,
     "prompt_written": 3,
     "implemented": _IMPLEMENTED_RANK,    # sentinel — не блокер
-***REMOVED***
+}
 
 # Set comprehension из _BLOCKER_PRIORITY (single source of truth; dead-consistency loop fix).
 _BLOCKER_STATUSES = frozenset(
@@ -268,7 +268,7 @@ _BLOCKER_STATUSES = frozenset(
 class CapabilityGapReporter:
     """Генерирует Markdown-отчёт. DI: registry для cross-check (None = автономный режим).
 
-    ``pre_extracted_entries`` (keyword-only, optional) — если передан ``Dict[item_id, (kind, factory, description)***REMOVED***``,
+    ``pre_extracted_entries`` (keyword-only, optional) — если передан ``Dict[item_id, (kind, factory, description)]``,
     ``render()`` пропускает детерминированный ``_extract_capabilities_from_text`` и напрямую
     использует переданный map. Это путь LLM-варианта ``CapabilityGapLlmExecutor`` —
     backward-compatible default ``None`` сохраняет детерминированное поведение.
@@ -276,42 +276,42 @@ class CapabilityGapReporter:
 
     def __init__(
         self,
-        registry: Optional["MissingRegistry"***REMOVED*** = None,
+        registry: Optional["MissingRegistry"] = None,
         *,
-        pre_extracted_entries: Optional[Dict[str, Tuple[str, str, str***REMOVED******REMOVED******REMOVED*** = None,
+        pre_extracted_entries: Optional[Dict[str, Tuple[str, str, str]]] = None,
     ) -> None:
         self.registry = registry
         self._pre_extracted_entries = pre_extracted_entries
 
-    def render(self, sections: List[Tuple[str, str***REMOVED******REMOVED***) -> str:
+    def render(self, sections: List[Tuple[str, str]]) -> str:
         # ── 1. Сбор требуемых capabilities по секциям ─────────────────
-        per_section: List[Tuple[str, List[Tuple[str, str, str, str***REMOVED******REMOVED******REMOVED******REMOVED*** = [***REMOVED***
-        all_required: Dict[str, Tuple[str, str, str***REMOVED******REMOVED*** = {***REMOVED***  # item_id → (kind, factory, description)
+        per_section: List[Tuple[str, List[Tuple[str, str, str, str]]]] = []
+        all_required: Dict[str, Tuple[str, str, str]] = {}  # item_id → (kind, factory, description)
 
         if self._pre_extracted_entries is not None:
             # LLM-путь: единый плоский список (без per-section breakdown).
             all_required = dict(self._pre_extracted_entries)
-            per_section = [(heading, [***REMOVED***) for heading, _ in sections***REMOVED***
+            per_section = [(heading, []) for heading, _ in sections]
         else:
             for heading, body in sections:
                 entries = _extract_capabilities_from_text(body)
                 per_section.append((heading, entries))
                 for item_id, kind, factory, description in entries:
                     if item_id not in all_required:
-                        all_required[item_id***REMOVED*** = (kind, factory, description)
+                        all_required[item_id] = (kind, factory, description)
 
         # ── 2. Рендер структуры отчёта ────────────────────────────────
-        lines: List[str***REMOVED*** = [***REMOVED***
+        lines: List[str] = []
         lines.append("# Capability Gap Audit Report")
         lines.append("")
         lines.append("> Сгенерировано `CapabilityGapAuditorExecutor` (ADR-016, deterministic v1).")
         lines.append("> Вердикт основан на keyword/regex-матче секций задачи против курируемой таксономии.")
         lines.append("> LLM-вариант (более точный вывод, дополнительная стоимость) — `CapabilityGapLlmExecutor`, следующая итерация.")
         lines.append("")
-        lines.append(f"**Всего секций проанализировано:** {len(sections)***REMOVED*** [observation***REMOVED***")
-        lines.append(f"**Уникальных требуемых capabilities:** {len(all_required)***REMOVED*** [observation***REMOVED***")
-        lines.append(f"**Блокеров (first-slice):** {self._count_blockers(all_required)***REMOVED*** [observation***REMOVED***")
-        lines.append(f"**Режим registry:** {'injected (DI)' if self.registry is not None else '(автономный, registry=None)'***REMOVED*** [observation***REMOVED***")
+        lines.append(f"**Всего секций проанализировано:** {len(sections)} [observation]")
+        lines.append(f"**Уникальных требуемых capabilities:** {len(all_required)} [observation]")
+        lines.append(f"**Блокеров (first-slice):** {self._count_blockers(all_required)} [observation]")
+        lines.append(f"**Режим registry:** {'injected (DI)' if self.registry is not None else '(автономный, registry=None)'} [observation]")
         lines.append("")
 
         # ── 3. Сводная таблица ────────────────────────────────────────
@@ -319,13 +319,13 @@ class CapabilityGapReporter:
         lines.append("")
         lines.append("| Capability | В MissingRegistry? | Статус | kind | factory | Описание |")
         lines.append("|------------|--------------------|--------|------|---------|----------|")
-        sorted_items = sorted(all_required.items(), key=lambda kv: kv[0***REMOVED***)
+        sorted_items = sorted(all_required.items(), key=lambda kv: kv[0])
         for item_id, (kind, factory, description) in sorted_items:
             status_label, in_mr = self._lookup(item_id)
             in_label = "да" if in_mr else "нет"
             lines.append(
-                f"| `{item_id***REMOVED***` | {in_label***REMOVED*** | `{status_label***REMOVED***` | `{kind***REMOVED***` | "
-                f"`{factory or '-'***REMOVED***` | {description***REMOVED*** |"
+                f"| `{item_id}` | {in_label} | `{status_label}` | `{kind}` | "
+                f"`{factory or '-'}` | {description} |"
             )
         lines.append("")
 
@@ -339,13 +339,13 @@ class CapabilityGapReporter:
             lines.append("## 2. LLM-extracted capabilities (flat list)")
             lines.append("")
             lines.append(
-                f"- [methodology***REMOVED*** Извлечено через `CapabilityGapLlmExecutor` "
-                f"(role_id=`{LLM_ROLE_ID***REMOVED***`); единый список из {len(all_required)***REMOVED*** capabilities "
+                f"- [methodology] Извлечено через `CapabilityGapLlmExecutor` "
+                f"(role_id=`{LLM_ROLE_ID}`); единый список из {len(all_required)} capabilities "
                 f"(per-section breakdown skip — LLM extracted глобально, не per-section)."
             )
             lines.append("")
             for item_id, (kind, factory, description) in sorted(
-                all_required.items(), key=lambda kv: kv[0***REMOVED***,
+                all_required.items(), key=lambda kv: kv[0],
             ):
                 status_label, in_mr = self._lookup(item_id)
                 if in_mr and status_label == _IMPLEMENTED_STATUS:
@@ -358,8 +358,8 @@ class CapabilityGapReporter:
                     marker = "\u274c"    # ❌ absent (valid BMP char; избегаем surrogate pair)
                     marker_text = "отсутствует в реестре"
                 lines.append(
-                    f"- {marker***REMOVED*** `{item_id***REMOVED***` (kind=`{kind***REMOVED***`, factory=`{factory or '-'***REMOVED***`) — "
-                    f"{description***REMOVED*** → {marker_text***REMOVED*** [{status_label***REMOVED******REMOVED***"
+                    f"- {marker} `{item_id}` (kind=`{kind}`, factory=`{factory or '-'}`) — "
+                    f"{description} → {marker_text} [{status_label}]"
                 )
             lines.append("")
         else:
@@ -368,13 +368,13 @@ class CapabilityGapReporter:
             lines.append("## 2. Детализация по секциям")
             lines.append("")
             for heading, entries in per_section:
-                display_heading = (heading or "(без заголовка)")[:120***REMOVED***
+                display_heading = (heading or "(без заголовка)")[:120]
                 if not entries:
-                    lines.append(f"### {display_heading***REMOVED***")
+                    lines.append(f"### {display_heading}")
                     lines.append("- Не требует новой capability (preamble/quality/conf/Q&A).")
                     lines.append("")
                     continue
-                lines.append(f"### {display_heading***REMOVED***")
+                lines.append(f"### {display_heading}")
                 for item_id, kind, factory, description in entries:
                     status_label, in_mr = self._lookup(item_id)
                     if in_mr and status_label == _IMPLEMENTED_STATUS:
@@ -387,8 +387,8 @@ class CapabilityGapReporter:
                         marker = "\u274c"    # ❌ absent (valid BMP char; избегаем surrogate pair U+D83D+U+DD34)
                         marker_text = "отсутствует в реестре"
                     lines.append(
-                        f"- {marker***REMOVED*** `{item_id***REMOVED***` (kind=`{kind***REMOVED***`, factory=`{factory or '-'***REMOVED***`) — "
-                        f"{description***REMOVED*** → {marker_text***REMOVED*** [{status_label***REMOVED******REMOVED***"
+                        f"- {marker} `{item_id}` (kind=`{kind}`, factory=`{factory or '-'}`) — "
+                        f"{description} → {marker_text} [{status_label}]"
                     )
                 lines.append("")
 
@@ -406,13 +406,13 @@ class CapabilityGapReporter:
             lines.append("")
         else:
             lines.append("Все требуемые capabilities уже есть в MissingRegistry или реализованы.")
-            lines.append("Регистрация не требуется — исполняйте исходный промт напрямую. [observation***REMOVED***")
+            lines.append("Регистрация не требуется — исполняйте исходный промт напрямую. [observation)")
             lines.append("")
 
         # ── 6. First-slice recommendation ─────────────────────────────
         lines.append("## 4. First-slice (блокеры исполнения)")
         lines.append("")
-        lines.append("- [conclusion***REMOVED*** Ниже — рекомендуемый порядок реализации недостающих сущностей.")
+        lines.append("- [conclusion) Ниже — рекомендуемый порядок реализации недостающих сущностей.")
         lines.append("- Правило: сначала absent (0) → registered (1) → design_ready (2) → prompt_written (3).")
         lines.append("- Первые 3 — **минимально необходимый** набор для запуска исходной задачи.")
         lines.append("- Если среди блокеров есть `corpus_persistence` или `claim_source_tracker` → это особенно критично.")
@@ -420,32 +420,32 @@ class CapabilityGapReporter:
         first_slice = self._first_slice(all_required)
         if first_slice:
             for idx, item_id in enumerate(first_slice, 1):
-                kind, factory, description = all_required[item_id***REMOVED***
+                kind, factory, description = all_required[item_id]
                 status_label, _ = self._lookup(item_id)
-                lines.append(f"{idx***REMOVED***. `{item_id***REMOVED***` (kind=`{kind***REMOVED***`, factory=`{factory or '-'***REMOVED***`) — статус: `{status_label***REMOVED***`")
+                lines.append(f"{idx}. `{item_id}` (kind=`{kind}`, factory=`{factory or '-'}`) — статус: `{status_label}`")
             lines.append("")
             lines.append("После реализации блокеров в порядке 1→2→3, вернитесь к исходному промту.")
         else:
-            lines.append("Все блокеры закрыты (или задача требует только уже реализованные capabilities). [observation***REMOVED***")
+            lines.append("Все блокеры закрыты (или задача требует только уже реализованные capabilities). [observation)")
         lines.append("")
 
         # ── 7. Дисклеймеры (per §24 Code Quality Standard) ────────────
         lines.append("## 5. Дисклеймеры (per Code Quality Standard §24)")
         lines.append("")
-        lines.append("- **Детермин vs LLM:** это детерминированный keyword-анализ по курируемой таксономии. [methodology***REMOVED***")
+        lines.append("- **Детермин vs LLM:** это детерминированный keyword-анализ по курируемой таксономии. [methodology)")
         lines.append("  LLM-вариант может извлечь больше неочевидных зависимостей, но требует подключённой модели и стоимости.")
-        lines.append("- **Tagging:** каждое утверждение явно отмечено `[observation***REMOVED***`/`[conclusion***REMOVED***`/`[methodology***REMOVED***`")
+        lines.append("- **Tagging:** каждое утверждение явно отмечено `[observation)`/`[conclusion]`/`[methodology]`")
         lines.append("  (закрывает ANTI-6b/vocabulary defense + §24 «факт/наблюдение/вывод/гипотеза»).")
         lines.append("- **No side-effects:** этот executor НЕ вызывает `MissingRegistry.register_missing()` напрямую.")
         lines.append("  Все команды — paste-friendly для оператора; регистрация остаётся человеку или supervised-агенту.")
-        lines.append("- **Audit trail:** отчёт — `capability_gap_report.md` в `project.root` (logged via `execute() -> List[str***REMOVED***`).")
+        lines.append("- **Audit trail:** отчёт — `capability_gap_report.md` в `project.root` (logged via `execute() -> List[str)`).")
         lines.append("- **Testability:** таксономия детерминирована, тесты инжектят `MissingRegistry` через конструктор — без сети и диска.")
         lines.append("")
         return "\n".join(lines)
 
     # ── helpers ─────────────────────────────────────────────────────────
 
-    def _lookup(self, item_id: str) -> Tuple[str, bool***REMOVED***:
+    def _lookup(self, item_id: str) -> Tuple[str, bool]:
         """Возвращает (status_label, in_mr). Если registry=None — ('(registry=None)', False)."""
         if self.registry is None:
             return ("(registry=None)", False)
@@ -467,20 +467,20 @@ class CapabilityGapReporter:
         Защита от dead-branch удалена в v1 (per code-reviewer review).
         """
         if not item_id or not kind:
-            return f"# SKIP: invalid entry {item_id!r***REMOVED***/{kind!r***REMOVED***"
+            return f"# SKIP: invalid entry {item_id!r}/{kind!r}"
         # Безопасное shell-quoting (защита от injection в description).
         desc_quoted = shlex.quote(description or item_id)
         cmd = (
-            f"python -m core_02.missing_registry register {shlex.quote(item_id)***REMOVED*** "
-            f"--kind {shlex.quote(kind)***REMOVED***"
+            f"python -m core_02.missing_registry register {shlex.quote(item_id)} "
+            f"--kind {shlex.quote(kind)}"
         )
         if factory:
-            cmd += f" --factory {shlex.quote(factory)***REMOVED***"
-        cmd += f" --description {desc_quoted***REMOVED***"
+            cmd += f" --factory {shlex.quote(factory)}"
+        cmd += f" --description {desc_quoted}"
         return cmd
 
-    def _register_commands(self, all_required: Dict[str, Tuple[str, str, str***REMOVED******REMOVED***) -> List[str***REMOVED***:
-        out: List[str***REMOVED*** = [***REMOVED***
+    def _register_commands(self, all_required: Dict[str, Tuple[str, str, str]]) -> List[str]:
+        out: List[str] = []
         for item_id, (kind, factory, description) in sorted(all_required.items()):
             status_label, in_mr = self._lookup(item_id)
             if in_mr and status_label == _IMPLEMENTED_STATUS:
@@ -488,21 +488,21 @@ class CapabilityGapReporter:
             out.append(self._register_command(item_id, kind, factory, description))
         return out
 
-    def _first_slice(self, all_required: Dict[str, Tuple[str, str, str***REMOVED******REMOVED***) -> List[str***REMOVED***:
-        candidates: List[Tuple[int, str***REMOVED******REMOVED*** = [***REMOVED***
+    def _first_slice(self, all_required: Dict[str, Tuple[str, str, str]]) -> List[str]:
+        candidates: List[Tuple[int, str]] = []
         for item_id in all_required:
             status_label, _ = self._lookup(item_id)
             rank = _BLOCKER_PRIORITY.get(status_label, _IMPLEMENTED_RANK)
             if rank < _IMPLEMENTED_RANK:   # magic-number fix (per code-reviewer v2)
                 candidates.append((rank, item_id))
-        candidates.sort(key=lambda t: (t[0***REMOVED***, t[1***REMOVED***))
-        return [item_id for _, item_id in candidates[:3***REMOVED******REMOVED***
+        candidates.sort(key=lambda t: (t[0], t[1]))
+        return [item_id for _, item_id in candidates[:3]]
 
-    def _count_blockers(self, all_required: Dict[str, Tuple[str, str, str***REMOVED******REMOVED***) -> int:
+    def _count_blockers(self, all_required: Dict[str, Tuple[str, str, str]]) -> int:
         return sum(
             1
             for item_id in all_required
-            if (self._lookup(item_id)[0***REMOVED*** in _BLOCKER_STATUSES)
+            if (self._lookup(item_id)[0] in _BLOCKER_STATUSES)
         )
 
 
@@ -512,7 +512,7 @@ class CapabilityGapReporter:
 
 
 # Кандидаты входных файлов (по приоритету — первый существующий + непустой).
-DEFAULT_TASK_CANDIDATES: tuple[str, ...***REMOVED*** = (
+DEFAULT_TASK_CANDIDATES: tuple[str, ...] = (
     "задача.md",
     "task.md",
     "promt1.md",
@@ -532,16 +532,16 @@ class CapabilityGapAuditorExecutor(BaseRoleExecutor):
     платформенным capability, paste-friendly bash-блоком для
     ``missing_registry register`` и first-slice рекомендацией.
 
-    ADR-016 fail-safe: любое исключение → ``[***REMOVED***``.
+    ADR-016 fail-safe: любое исключение → ``[]``.
     """
 
     role_id = "capability_gap_auditor"
 
-    def __init__(self, registry: Optional["MissingRegistry"***REMOVED*** = None) -> None:
+    def __init__(self, registry: Optional["MissingRegistry"] = None) -> None:
         self._registry = registry  # DI для тестов (in-memory fixture без диска)
 
-    def execute(self, project: Project, role_id: str, **kwargs) -> List[str***REMOVED***:
-        """Генерирует capability_gap_report.md. Возвращает [REPORT_FILE***REMOVED*** или [***REMOVED*** (fail-safe)."""
+    def execute(self, project: Project, role_id: str, **kwargs) -> List[str]:
+        """Генерирует capability_gap_report.md. Возвращает [REPORT_FILE] или [] (fail-safe)."""
         try:
             text = self._read_task(project)
             if text is None:
@@ -550,38 +550,38 @@ class CapabilityGapAuditorExecutor(BaseRoleExecutor):
                     "(кандидаты: %s) — отчёт не сгенерирован",
                     project.root, DEFAULT_TASK_CANDIDATES,
                 )
-                return [***REMOVED***
+                return []
             if len(text.strip()) < _MIN_BODY_LEN:
                 logger.info(
                     "CapabilityGapAuditorExecutor: task-файл найден, но слишком короткий (<%d)",
                     _MIN_BODY_LEN,
                 )
-                return [***REMOVED***
+                return []
             sections = _split_sections(text)
             if not sections:
-                return [***REMOVED***
+                return []
             reporter = CapabilityGapReporter(registry=self._registry)
             report_md = reporter.render(sections)
             # Записываем в project.root, не трогая project-контейнер (ADR-016).
             out = project.root / REPORT_FILE
             out.parent.mkdir(parents=True, exist_ok=True)
             out.write_text(report_md + "\n", encoding="utf-8")
-            return [REPORT_FILE***REMOVED*** if out.is_file() else [***REMOVED***
+            return [REPORT_FILE] if out.is_file() else []
         except Exception as exc:  # noqa: BLE001 — ADR-016 fail-safe
             logger.warning("CapabilityGapAuditorExecutor failed: %s", exc)
-            return [***REMOVED***
+            return []
 
     # ── входной файл (по приоритету) ──────────────────────────────────
 
-    def _read_task(self, project: Project) -> Optional[str***REMOVED***:
+    def _read_task(self, project: Project) -> Optional[str]:
         for name in DEFAULT_TASK_CANDIDATES:
             # glob-match для «promtNN.md» / «pompts_11/promt*.md»: первый существующий.
             if "promt" in name and "*" not in name:
                 # попробуем общий glob: «promt*.md» в корне и в pompts_11/
-                ***REMOVED***
+                }
                     project.root.glob("promt*.md"),
                     project.root.glob("pomts_11/promt*.md"),
-                ***REMOVED***
+                }
                 for pat in patterns:
                     candidates = sorted(pat)
                     for c in candidates:
@@ -596,7 +596,7 @@ class CapabilityGapAuditorExecutor(BaseRoleExecutor):
         return None
 
     @staticmethod
-    def _safe_read(p: Path) -> Optional[str***REMOVED***:
+    def _safe_read(p: Path) -> Optional[str]:
         if not p.is_file():
             return None
         try:
@@ -612,7 +612,7 @@ class CapabilityGapAuditorExecutor(BaseRoleExecutor):
 
 
 def capability_audit_executor_registry(
-    registry: Optional["MissingRegistry"***REMOVED*** = None,
+    registry: Optional["MissingRegistry"] = None,
 ) -> RoleExecutorRegistry:
     """Возвращает ``RoleExecutorRegistry`` с одним ``CapabilityGapAuditorExecutor``.
 
@@ -620,7 +620,7 @@ def capability_audit_executor_registry(
     параметр ``executor_registry`` (ADR-016) — тогда MISSING-стадия
     ``capability_gap_auditor`` материализуется автоматически.
     """
-    return RoleExecutorRegistry([CapabilityGapAuditorExecutor(registry=registry)***REMOVED***)
+    return RoleExecutorRegistry([CapabilityGapAuditorExecutor(registry=registry)])
 
 
 # ══════════════════════════════════════════════════════════════════════
@@ -637,7 +637,7 @@ def capability_audit_executor_registry(
 #     gw = build_gateway()  # любая ModelGateway-совместимая обёртка
 #     executor = CapabilityGapLlmExecutor(gateway=gw)
 #     created = executor.execute(project, "capability_gap_auditor_llm")
-#     # -> ["capability_gap_report_llm.md"***REMOVED***
+#     # -> ["capability_gap_report_llm.md"]
 #
 # Качественный баръер (per user): тот же VOCAL_TASK_FRAGMENT должен дать ≥18 capabilities
 # vs 15 у детерминированного — т.е. LLM находит +3+ неочевидные (meta-skills, infra,
@@ -678,7 +678,7 @@ LLM_USER_PROMPT_TEMPLATE = """\
 Ниже — текст задачи. Выдай JSON-массив требуемых платформенных capabilities.
 
 === TASK START ===
-{task_text***REMOVED***
+{task_text}
 === TASK END ===
 
 Требования к выходу:
@@ -687,40 +687,40 @@ LLM_USER_PROMPT_TEMPLATE = """\
 - explicit=true ТОЛЬКО если concept прямо упомянут в тексте задачи.
 - Если не уверен в нужности — confidence < 0.7, но всё равно включай
   (false negative блокирует выполнение, false positive только раздувает отчёт).
-- Верни ТОЛЬКО ```json [...***REMOVED*** ``` блок, ничего вне.
+- Верни ТОЛЬКО ```json [...] ``` блок, ничего вне.
 """
 
 
-def _parse_llm_response(content: str) -> List[Dict[str, Any***REMOVED******REMOVED***:
+def _parse_llm_response(content: str) -> List[Dict[str, Any]]:
     """Извлекает JSON-массив capabilities из ответа LLM.
 
     Стратегия (per thinker design v5.189.55):
 
     1. Ищем fenced ````json ...`````` блок (re.DOTALL для многострочных массивов).
-    2. Fallback: первое вхождение ``[`` ... последнее ``***REMOVED***``.
+    2. Fallback: первое вхождение ``[`` ... последнее ``]``.
     3. Парсим через ``json.loads``.
     4. Валидация: item должен содержать ``item_id``/``kind``/``description``.
        Невалидные тихо отбрасываются (ADR-016 fail-safe: 1 bad item не валит batch).
-    5. Возвращает ``List[Dict***REMOVED***`` (Reporter.render-convertible). Пустой список при любой ошибке.
+    5. Возвращает ``List[Dict]`` (Reporter.render-convertible). Пустой список при любой ошибке.
     """
     if not content or not isinstance(content, str):
-        return [***REMOVED***
-    fenced = re.search(r"```json\s*(\[.*?\***REMOVED***)\s*```", content, re.DOTALL)
+        return []
+    fenced = re.search(r"```json\s*(\[.*?\*))\s*```", content, re.DOTALL)
     if fenced:
         candidate = fenced.group(1)
     else:
         bracket_start = content.find("[")
-        bracket_end = content.rfind("***REMOVED***")
+        bracket_end = content.rfind(")")
         if bracket_start < 0 or bracket_end <= bracket_start:
-            return [***REMOVED***
-        candidate = content[bracket_start:bracket_end + 1***REMOVED***
+            return []
+        candidate = content[bracket_start:bracket_end + 1]
     try:
         data = json.loads(candidate)
     except (json.JSONDecodeError, ValueError):
-        return [***REMOVED***
+        return []
     if not isinstance(data, list):
-        return [***REMOVED***
-    out: List[Dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+        return []
+    out: List[Dict[str, Any]] = []
     for item in data:
         if not isinstance(item, dict):
             continue
@@ -739,11 +739,11 @@ def _parse_llm_response(content: str) -> List[Dict[str, Any***REMOVED******REMOV
             "factory": str(item.get("factory", "") or ""),
             "description": description,
             "confidence": (
-                float(item["confidence"***REMOVED***)
+                float(item["confidence"])
                 if isinstance(item.get("confidence"), (int, float)) else 0.5
             ),
             "explicit": bool(item.get("explicit", False)),
-        ***REMOVED***)
+        ])
     return out
 
 
@@ -757,9 +757,9 @@ class CapabilityGapLlmExecutor(BaseRoleExecutor):
 
     Контракт:
     - DI ModelGateway через constructor (``gateway=...``). Должен предоставлять
-      ``gateway.generate_by_capabilities(capabilities: List[str***REMOVED***, messages: List[dict***REMOVED***)``
+      ``gateway.generate_by_capabilities(capabilities: List[str], messages: List[dict])``
       возвращающий объект с ``.content`` (str).
-    - При любой ошибке (нет gateway, LLM crash, битый JSON) → ``[***REMOVED***`` (ADR-016).
+    - При любой ошибке (нет gateway, LLM crash, битый JSON) → ``[]`` (ADR-016).
     - NO global mutation (НЕ вызывает ``MissingRegistry.register_missing()`` напрямую).
     """
 
@@ -771,10 +771,10 @@ class CapabilityGapLlmExecutor(BaseRoleExecutor):
 
     def __init__(
         self,
-        gateway: Optional[Any***REMOVED*** = None,
-        registry: Optional["MissingRegistry"***REMOVED*** = None,
+        gateway: Optional[Any] = None,
+        registry: Optional["MissingRegistry"] = None,
         *,
-        corpus_root: Optional[Path***REMOVED*** = None,
+        corpus_root: Optional[Path] = None,
         corpus_context_enabled: bool = True,
     ) -> None:
         self._gateway = gateway
@@ -782,8 +782,8 @@ class CapabilityGapLlmExecutor(BaseRoleExecutor):
         self._corpus_root = corpus_root
         self._corpus_context_enabled = corpus_context_enabled
 
-    def execute(self, project: Project, role_id: str, **kwargs) -> List[str***REMOVED***:
-        """Генерирует capability_gap_report_llm.md. Возвращает [LLM_REPORT_FILE***REMOVED*** или [***REMOVED***."""
+    def execute(self, project: Project, role_id: str, **kwargs) -> List[str]:
+        """Генерирует capability_gap_report_llm.md. Возвращает [LLM_REPORT_FILE] или []."""
         try:
             # Reuse: детерминированный исполнитель имеет единую точку чтения
             # task-файла; соблазн дублировать ничтожен.
@@ -792,37 +792,37 @@ class CapabilityGapLlmExecutor(BaseRoleExecutor):
                 logger.info(
                     "CapabilityGapLlmExecutor: нет task-файла в %s ", project.root,
                 )
-                return [***REMOVED***
+                return []
             if len(text.strip()) < _MIN_BODY_LEN:
-                return [***REMOVED***
+                return []
             entries = self._extract_via_llm(text)
             if not entries:
                 logger.info("CapabilityGapLlmExecutor: LLM не вернул валидных entries")
-                return [***REMOVED***
+                return []
             reporter = CapabilityGapReporter(
                 registry=self._registry,
                 pre_extracted_entries=entries,
             )
             # Единая synthetic-секция: Reporter не детализирует per-section для LLM-пути
             # (его дизайн — один плоский список).
-            report_md = reporter.render([("(LLM-extracted capabilities)", text)***REMOVED***)
+            report_md = reporter.render([("(LLM-extracted capabilities)", text)])
             out = project.root / LLM_REPORT_FILE
             out.parent.mkdir(parents=True, exist_ok=True)
             out.write_text(report_md + "\n", encoding="utf-8")
-            return [LLM_REPORT_FILE***REMOVED*** if out.is_file() else [***REMOVED***
+            return [LLM_REPORT_FILE] if out.is_file() else []
         except Exception as exc:  # noqa: BLE001 — ADR-016 fail-safe
             logger.warning("CapabilityGapLlmExecutor failed: %s", exc)
-            return [***REMOVED***
+            return []
 
     # ── helpers ──────────────────────────────────────────────────────
 
-    def _extract_via_llm(self, text: str) -> Dict[str, Tuple[str, str, str***REMOVED******REMOVED***:
+    def _extract_via_llm(self, text: str) -> Dict[str, Tuple[str, str, str]]:
         """Шлёт текст в ModelGateway → парсит JSON → возвращает map ``item_id → (kind, factory, desc)``."""
         if self._gateway is None:
             logger.warning(
                 "CapabilityGapLlmExecutor: ModelGateway не инжектирован, пропускаем",
             )
-            return {***REMOVED***
+            return {}
         # ── Corpus context injection (default ON; ADR-016 fail-safe).
         # Top-5 recent URLов из corpus_persistence.lookup_by_source(role_id)
         # добавляются в user message как memory hint, с явным framing
@@ -833,7 +833,7 @@ class CapabilityGapLlmExecutor(BaseRoleExecutor):
         # (Option X per designer: НЕ загромождать prompt пустой фразой).
         context_block = ""
         if self._corpus_context_enabled:
-            raw_entries: list = [***REMOVED***  # defensive init (UnboundLocalError-safety)
+            raw_entries: list = []  # defensive init (UnboundLocalError-safety)
             try:
                 from scripts_01.corpus_persistence import (
                     lookup_by_source, CorpusEntry,
@@ -845,23 +845,23 @@ class CapabilityGapLlmExecutor(BaseRoleExecutor):
                 logger.warning(
                     "CapabilityGapLlmExecutor: corpus lookup failed: %s", exc,
                 )
-                raw_entries = [***REMOVED***
+                raw_entries = []
             if raw_entries:
                 # Dedup by URL (keep newest timestamp per URL) — код-reviewer
                 # post-fix v5.189.57: multiple sources могли persist тот же URL;
                 # dedup гарантирует что top-5 не забит дубликатами.
-                seen: Dict[str, CorpusEntry***REMOVED*** = {***REMOVED***
+                seen: Dict[str, CorpusEntry] = {}
                 for e in raw_entries:
-                    if e.url not in seen or e.timestamp > seen[e.url***REMOVED***.timestamp:
-                        seen[e.url***REMOVED*** = e
+                    if e.url not in seen or e.timestamp > seen[e.url].timestamp:
+                        seen[e.url] = e
                 entries_sorted = sorted(
                     seen.values(), key=lambda e: e.timestamp, reverse=True,
                 )
-                top = entries_sorted[:_CORPUS_CONTEXT_TOP_K***REMOVED***  # ANTI-6b: magic-number → module const
+                top = entries_sorted[:_CORPUS_CONTEXT_TOP_K]  # ANTI-6b: magic-number → module const
                 lines = [
-                    f"[{i+1***REMOVED******REMOVED*** {e.url***REMOVED***" + (f" — {e.title***REMOVED***" if e.title else "")
+                    f"[{i+1}] {e.url}" + (f" — {e.title}" if e.title else "")
                     for i, e in enumerate(top)
-                ***REMOVED***
+                ]
                 # Stronger anti-anchoring framing per code-reviewer v5.189.57:
                 # imperative «IGNORE these URLs when assessing» вместо
                 # purely advisory «memory, NOT a constraint».
@@ -872,9 +872,9 @@ class CapabilityGapLlmExecutor(BaseRoleExecutor):
                     + "\n".join(lines) + "\n\n"
                 )
         messages = [
-            {"role": "system", "content": LLM_SYSTEM_PROMPT***REMOVED***,
-            {"role": "user", "content": context_block + LLM_USER_PROMPT_TEMPLATE.format(task_text=text)***REMOVED***,
-        ***REMOVED***
+            {"role": "system", "content": LLM_SYSTEM_PROMPT},
+            {"role": "user", "content": context_block + LLM_USER_PROMPT_TEMPLATE.format(task_text=text)},
+        ]
         try:
             response = self._gateway.generate_by_capabilities(
                 list(self.DEFAULT_CAPABILITIES), messages,
@@ -883,18 +883,18 @@ class CapabilityGapLlmExecutor(BaseRoleExecutor):
             logger.warning(
                 "CapabilityGapLlmExecutor: gateway.generate_by_capabilities failed: %s", exc,
             )
-            return {***REMOVED***
+            return {}
         content = getattr(response, "content", None) if response is not None else None
         parsed = _parse_llm_response(content or "")
         return {
-            item["item_id"***REMOVED***: (item["kind"***REMOVED***, item.get("factory", ""), item["description"***REMOVED***)
+            item["item_id"]: (item["kind"], item.get("factory", ""), item["description"])
             for item in parsed
-        ***REMOVED***
+        }
 
 
 def capability_audit_llm_executor_registry(
-    gateway: Optional[Any***REMOVED*** = None,
-    registry: Optional["MissingRegistry"***REMOVED*** = None,
+    gateway: Optional[Any] = None,
+    registry: Optional["MissingRegistry"] = None,
 ) -> RoleExecutorRegistry:
     """Возвращает ``RoleExecutorRegistry`` с одним ``CapabilityGapLlmExecutor``.
 
@@ -902,7 +902,7 @@ def capability_audit_llm_executor_registry(
     ``executor_registry`` — тогда MISSING-стадия ``capability_gap_auditor_llm``
     материализуется автоматически.
     """
-    return RoleExecutorRegistry([CapabilityGapLlmExecutor(gateway=gateway, registry=registry)***REMOVED***)
+    return RoleExecutorRegistry([CapabilityGapLlmExecutor(gateway=gateway, registry=registry)])
 
 
 # ════════════════════════════════════════════════════════════════════════
@@ -910,18 +910,18 @@ def capability_audit_llm_executor_registry(
 # ════════════════════════════════════════════════════════════════════════
 
 
-def _print_json(payload: Dict[str, Any***REMOVED***) -> None:
+def _print_json(payload: Dict[str, Any]) -> None:
     sys.stdout.write(json.dumps(payload, ensure_ascii=False, indent=2))
     sys.stdout.write("\n")
 
 
-def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
+def main(argv: Optional[List[str]] = None) -> int:
     """CLI entry point.
 
     Usage::
 
         python -m core_02.capability_gap_auditor audit <project_root>
-            [--registry PATH***REMOVED*** [--json***REMOVED*** [--no-write***REMOVED***
+            [--registry PATH] [--json] [--no-write]
 
     ``--no-write`` — печатает отчёт в stdout/stderr, не пишет файл (для тестов и превью).
     """
@@ -959,12 +959,12 @@ def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
     args = parser.parse_args(argv)
 
     if args.cmd != "audit":
-        parser.error(f"unsupported command {args.cmd!r***REMOVED***")
+        parser.error(f"unsupported command {args.cmd!r}")
         return 2  # pragma: no cover
 
     root = Path(args.project_root)
     if not root.is_dir():
-        sys.stderr.write(f"error: project_root {root***REMOVED*** не существует или не директория\n")
+        sys.stderr.write(f"error: project_root {root} не существует или не директория\n")
         return 2
 
     # Lazy import Project для CLI (избегаем circular на module-load).
@@ -974,7 +974,7 @@ def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
     try:
         registry = _MissingRegistryCls(args.registry) if args.registry else _MissingRegistryCls()
     except Exception as exc:  # noqa: BLE001
-        sys.stderr.write(f"error: не удалось открыть MissingRegistry: {exc***REMOVED***\n")
+        sys.stderr.write(f"error: не удалось открыть MissingRegistry: {exc}\n")
         return 2
 
     project = Project.load(root)
@@ -983,7 +983,7 @@ def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
     try:
         text = executor._read_task(project)
     except Exception as exc:  # noqa: BLE001
-        sys.stderr.write(f"error: чтение task-файла: {exc***REMOVED***\n")
+        sys.stderr.write(f"error: чтение task-файла: {exc}\n")
         return 1
 
     if text is None or len(text.strip()) < _MIN_BODY_LEN:
@@ -1001,7 +1001,7 @@ def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
                 "report_file": REPORT_FILE,
                 "no_write": True,
                 "sections": len(sections),
-            ***REMOVED***)
+            ])
         else:
             sys.stdout.write(report_md + "\n")
         return 0
@@ -1016,10 +1016,10 @@ def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
             "report_file": str(out_path.relative_to(root)) if out_path.is_relative_to(root) else str(out_path),
             "sections": len(sections),
             "report_bytes": len(report_md.encode("utf-8")),
-        ***REMOVED***)
+        ])
     else:
-        sys.stdout.write(f"\u2705 {REPORT_FILE***REMOVED*** written ({len(report_md)***REMOVED*** chars, {len(sections)***REMOVED*** sections)\n")
-        sys.stdout.write(f"   path: {out_path***REMOVED***\n")
+        sys.stdout.write(f"\u2705 {REPORT_FILE} written ({len(report_md)} chars, {len(sections)} sections)\n")
+        sys.stdout.write(f"   path: {out_path}\n")
     return 0
 
 

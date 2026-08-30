@@ -27,7 +27,7 @@ v5.79.0+: multi-turn (interactive) режим.
   - `.freebuff_result.pending_task` (string field) сигнализирует продолжение цикла.
   - `max_iterations` cap per-task (default 3); at limit, force-failed.
   - Итерация body накапливается через `append_iteration` (не теряется между тиками).
-  - TG badge `[Multi-turn N/M***REMOVED***` на каждой итерации.
+  - TG badge `[Multi-turn N/M]` на каждой итерации.
   - `running-resumable` status (для future `/answer` TG command) — зарезервирован,
     пока нигде не устанавливается (см. followup).
 """
@@ -41,7 +41,7 @@ import json
 import logging
 import subprocess
 import sys
-***REMOVED***
+}
 from typing import Any, Callable, Dict, List, Optional
 
 # WORKSPACE в sys.path ДО импорта prompt_queue (прямой запуск `python scripts_01/...`).
@@ -69,7 +69,7 @@ logger = logging.getLogger("prompt_dispatcher")
 if not logger.handlers:
     h = logging.StreamHandler()
     h.setFormatter(
-        logging.Formatter("[prompt_dispatcher***REMOVED*** %(asctime)s %(levelname)s %(message)s")
+        logging.Formatter("[prompt_dispatcher) %(asctime)s %(levelname)s %(message)s")
     )
     logger.addHandler(h)
     logger.setLevel(logging.INFO)
@@ -83,7 +83,7 @@ if not logger.handlers:
 # пользователя в TG. Используется TG handler `cmd_answer`.
 
 
-def process_answer(task_id: str, answer_text: str) -> Dict[str, Any***REMOVED***:
+def process_answer(task_id: str, answer_text: str) -> Dict[str, Any]:
     """Task 1 (promt 61): резюм running-resumable задачи после user answer.
 
     Flow:
@@ -96,12 +96,12 @@ def process_answer(task_id: str, answer_text: str) -> Dict[str, Any***REMOVED***
 
     Returns:
       - {"ok": True, "task_id", "old_status", "new_status", "old_iteration",
-        "new_iteration", "path"***REMOVED*** при успехе
-      - {"ok": False, "error": "task_id ... not found in running/", ...***REMOVED***
-      - {"ok": False, "error": "task_id ... not awaiting answer (status=...)", ...***REMOVED***
+        "new_iteration", "path"] при успехе
+      - {"ok": False, "error": "task_id ... not found in running/", ...}
+      - {"ok": False, "error": "task_id ... not awaiting answer (status=...)", ...}
     """
     # 1. Find file в running/
-    matching = [***REMOVED***
+    matching = []
     running_root = prompts_dir() / "running"
     in_progress = running_root / ".in_progress"
     for p in sorted(running_root.glob("*.md")):
@@ -114,21 +114,21 @@ def process_answer(task_id: str, answer_text: str) -> Dict[str, Any***REMOVED***
     if not matching:
         return {
             "ok": False,
-            "error": f"task_id {task_id***REMOVED*** not found in running/",
+            "error": f"task_id {task_id} not found in running/",
             "task_id": task_id,
-        ***REMOVED***
+        }
 
-    meta = matching[0***REMOVED***
+    meta = matching[0]
     if meta.status != "running-resumable":
         return {
             "ok": False,
             "error": (
-                f"task_id {task_id***REMOVED*** not awaiting answer "
-                f"(current status={meta.status***REMOVED***)"
+                f"task_id {task_id} not awaiting answer "
+                f"(current status={meta.status})"
             ),
             "task_id": task_id,
             "current_status": meta.status,
-        ***REMOVED***
+        }
 
     # 2-4. Update headers (use existing update_meta_value helper)
     new_iter = meta.iteration + 1
@@ -139,15 +139,15 @@ def process_answer(task_id: str, answer_text: str) -> Dict[str, Any***REMOVED***
     # 5. Append answer block (видим в следующей итерации Buffalo как часть body)
     timestamp = _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="seconds")
     answer_block = (
-        f"\n--- Answer received ({timestamp***REMOVED***) ---\n"
-        f"**User answer:** {answer_text.strip()***REMOVED***\n"
+        f"\n--- Answer received ({timestamp}) ---\n"
+        f"**User answer:** {answer_text.strip()}\n"
     )
     text = meta.path.read_text(encoding="utf-8")
     if "## Отчёт" in text:
         head, _, tail = text.partition("## Отчёт")
-        text = f"{head***REMOVED***{answer_block***REMOVED***\n## Отчёт\n{tail***REMOVED***"
+        text = f"{head}{answer_block}\n## Отчёт\n{tail}"
     else:
-        text = f"{text***REMOVED***{answer_block***REMOVED***\n"
+        text = f"{text}{answer_block}\n"
     meta.path.write_text(text, encoding="utf-8")
 
     logger.info(
@@ -163,7 +163,7 @@ def process_answer(task_id: str, answer_text: str) -> Dict[str, Any***REMOVED***
         "old_iteration": meta.iteration,
         "new_iteration": new_iter,
         "path": str(meta.path),
-    ***REMOVED***
+    }
 
 
 # v5.88.0 ввёл deferral (blocked_single_instance → возврат в user/ вместо
@@ -196,7 +196,7 @@ def _live_instance_busy() -> bool:
     """
     try:
         r = subprocess.run(
-            ["pgrep", "-f", _LIVE_INSTANCE_PGREP_PATTERN***REMOVED***,
+            ["pgrep", "-f", _LIVE_INSTANCE_PGREP_PATTERN],
             capture_output=True, text=True, timeout=5,
         )
         return r.returncode == 0
@@ -230,8 +230,8 @@ def _bump_backoff_streak(meta: PromptMeta, threshold: int, send_tg: bool) -> Non
             update_meta_value(meta.path, "Backoff Notified", "true")
             _send_tg_report(
                 meta,
-                f"⏳ Очередь ждёт: инстанс freebuff занят {new_streak***REMOVED*** тиков "
-                f"подряд (~{new_streak * 5***REMOVED*** мин). Задача `{meta.task_id***REMOVED***` "
+                f"⏳ Очередь ждёт: инстанс freebuff занят {new_streak} тиков "
+                f"подряд (~{new_streak * 5} мин). Задача `{meta.task_id}` "
                 f"выполнится автоматически после закрытия живой сессии "
                 f"(CON-35, уведомление один раз).",
             )
@@ -262,7 +262,7 @@ def _reset_backoff_streak(meta: PromptMeta) -> None:
 
 def _default_launcher(
     prompt: str, cwd: str, timeout: int, model: str = "auto"
-) -> Dict[str, Any***REMOVED***:
+) -> Dict[str, Any]:
     """Реальный запуск Баффи через wrapper — phase-based (анти-OOM для cron).
 
     wrapper.launch_and_wait = launch() + опрос .freebuff_result: Python
@@ -283,7 +283,7 @@ def _default_launcher(
     )
 
 
-LauncherFn = Callable[[str, str, int, str***REMOVED***, Dict[str, Any***REMOVED******REMOVED***
+LauncherFn = Callable[[str, str, int, str], Dict[str, Any]]
 
 
 # ── Atomic lock helpers (multi-turn): running/.in_progress/ ───────
@@ -316,12 +316,12 @@ def _release_from_lock(lock_path: Path, target_status: str) -> Path:
 
 # ── pending_task extraction (multi-turn signal) ────────────────────
 
-def _extract_pending_task(result: Dict[str, Any***REMOVED***) -> Optional[tuple[str, str***REMOVED******REMOVED***:
+def _extract_pending_task(result: Dict[str, Any]) -> Optional[tuple[str, str]]:
     """Парсит `.freebuff_result` → discriminated tuple `(kind, text)` или None.
 
     Task 2 (promt 61): поддержка двух форматов `pending_task`:
       - Legacy `string`: backwards-compat → (`"work"`, pt_text)
-      - New dict `{type, text***REMOVED***`: kind = `"work"` | `"clarification"`
+      - New dict `{type, text}`: kind = `"work"` | `"clarification"`
 
     Returns:
       - None если malformed JSON / пустой pending_task
@@ -362,14 +362,14 @@ def _extract_pending_task(result: Dict[str, Any***REMOVED***) -> Optional[tuple[
 
 def _format_report(
     meta: PromptMeta,
-    result: Dict[str, Any***REMOVED***,
-    multi_turn_badge: Optional[str***REMOVED*** = None,
+    result: Dict[str, Any],
+    multi_turn_badge: Optional[str] = None,
 ) -> str:
     """Форматирует отчёт для файла и TG.
 
     multi_turn_badge:
       - None   → обычный single-turn отчёт
-      - str    → '[Multi-turn N/M***REMOVED***' префикс в Статусе; полезно при итерациях
+      - str    → '[Multi-turn N/M]' префикс в Статусе; полезно при итерациях
     """
     duration = result.get("duration")
     if result.get("success"):
@@ -377,26 +377,26 @@ def _format_report(
     else:
         head = "❌ Не выполнено"
     if multi_turn_badge:
-        head = f"{head***REMOVED*** ({multi_turn_badge***REMOVED***)"
+        head = f"{head} ({multi_turn_badge})"
     lines = [
-        f"**Статус:** {head***REMOVED***",
-        f"**Задача:** {meta.title***REMOVED***",
-        f"**Task ID:** {meta.task_id***REMOVED***",
-    ***REMOVED***
+        f"**Статус:** {head}",
+        f"**Задача:** {meta.title}",
+        f"**Task ID:** {meta.task_id}",
+    ]
     if multi_turn_badge:
-        lines.append(f"**Итерация:** {meta.iteration***REMOVED***/{meta.max_iterations***REMOVED***")
+        lines.append(f"**Итерация:** {meta.iteration}/{meta.max_iterations}")
     if duration is not None:
-        lines.append(f"**Длительность:** {duration***REMOVED***s")
+        lines.append(f"**Длительность:** {duration}s")
     output = result.get("output") or result.get("result") or ""
     if output:
-        lines.append("\n**Вывод:**\n```\n" + output.strip()[:2000***REMOVED*** + "\n```")
+        lines.append("\n**Вывод:**\n```\n" + output.strip()[:2000] + "\n```")
     err = result.get("error")
     if err:
-        lines.append(f"\n**Ошибка:** {err***REMOVED***")
+        lines.append(f"\n**Ошибка:** {err}")
     return "\n".join(lines)
 
 
-def _send_to_chat(chat_id: int, text: str) -> Optional[int***REMOVED***:
+def _send_to_chat(chat_id: int, text: str) -> Optional[int]:
     """Отправка произвольному chat_id через telegram_contract (CON-19).
 
     Единственный chokepoint отправки — public `send_to_chat` в
@@ -413,19 +413,19 @@ def _send_to_chat(chat_id: int, text: str) -> Optional[int***REMOVED***:
         return None
 
 
-def _send_tg_report(meta: PromptMeta, report_text: str) -> Optional[int***REMOVED***:
+def _send_tg_report(meta: PromptMeta, report_text: str) -> Optional[int]:
     """Best-effort TG-отправка: в Избранное + reply в исходный чат.
 
     report_to_saved_messages — async, поэтому asyncio.run (диспетчер — sync CLI).
     None-safe (CAN-14): TG-недоступность не роняет диспетчер.
     """
-    saved_id: Optional[int***REMOVED*** = None
+    saved_id: Optional[int] = None
     try:
-        from core_02.telegram_contract ***REMOVED***port_to_saved_messages
+        from core_02.telegram_contract ]port_to_saved_messages
 
         saved_id = asyncio.run(
             report_to_saved_messages(
-                f"📨 [prompt dispatcher***REMOVED*** Задача `{meta.task_id***REMOVED***`\n\n{report_text***REMOVED***"
+                f"📨 [prompt dispatcher] Задача `{meta.task_id}`\n\n{report_text}"
             )
         )
     except Exception as e:
@@ -442,7 +442,7 @@ def _dispatch_multi_turn_iteration(
     launcher: LauncherFn,
     timeout: int,
     send_tg: bool,
-) -> Dict[str, Any***REMOVED***:
+) -> Dict[str, Any]:
     """Multi-turn BRANCH: process one iteration of a resumable task.
 
     Flow:
@@ -475,14 +475,14 @@ def _dispatch_multi_turn_iteration(
             "handled": False,
             "task_id": meta.task_id,
             "status": "skipped_locked",
-        ***REMOVED***
+        }
 
     # 2. Launch с полной body (включает transcript прошлых итераций)
     try:
         result = launcher(meta.body, str(WORKSPACE), timeout, meta.model)
     except Exception as e:
         logger.exception("Multi-turn launch failed for %s", meta.task_id)
-        result = {"success": False, "error": str(e), "output": ""***REMOVED***
+        result = {"success": False, "error": str(e), "output": ""}
 
     # 2b. Single-instance blocker (v5.88.0): та же deferral-логика что в
     # dispatch_one. Живая сессия занимает единственный инстанс → spawned
@@ -494,11 +494,11 @@ def _dispatch_multi_turn_iteration(
         release = _release_from_lock(locked_path, "running")
         report_text = (
             f"**Статус:** ⏸ Отложено (инстанс freebuff занят живой сессией)\n"
-            f"**Задача:** {meta.title***REMOVED***\n"
-            f"**Task ID:** {meta.task_id***REMOVED***\n\n"
+            f"**Задача:** {meta.title}\n"
+            f"**Task ID:** {meta.task_id}\n\n"
             f"freebuff допускает только один запущенный инстанс; сейчас его "
-            f"занимает живая (интерактивная) сессия. Итерация {meta.iteration***REMOVED***/"
-            f"{meta.max_iterations***REMOVED*** возвращена в `running/` и будет повторена "
+            f"занимает живая (интерактивная) сессия. Итерация {meta.iteration}/"
+            f"{meta.max_iterations} возвращена в `running/` и будет повторена "
             f"следующим тиком cron после закрытия живой сессии."
         )
         logger.info(
@@ -514,7 +514,7 @@ def _dispatch_multi_turn_iteration(
             "iteration": meta.iteration,
             "max_iterations": meta.max_iterations,
             "path": str(release),
-        ***REMOVED***
+        }
 
     # 3. Парсим .freebuff_result на pending_task (Task 2 promt 61: discriminated).
     pending = _extract_pending_task(result)
@@ -533,15 +533,15 @@ def _dispatch_multi_turn_iteration(
                     meta.task_id,
                     meta.clarification_count,
                     meta.max_clarifications,
-                    pt_text[:100***REMOVED***,
+                    pt_text[:100],
                 )
                 release = _release_from_lock(locked_path, "failed")
-                badge = f"Multi-turn clarification {meta.clarification_count***REMOVED***/{meta.max_clarifications***REMOVED*** MAX-reached"
+                badge = f"Multi-turn clarification {meta.clarification_count}/{meta.max_clarifications} MAX-reached"
                 report_text = _format_report(meta, result, multi_turn_badge=badge)
                 report_text += (
                     f"\n\n**Reason:** max_clarifications_reached "
-                    f"(work iteration {meta.iteration***REMOVED***/{meta.max_iterations***REMOVED*** preserved)\n"
-                    f"**Последний pending_task:** {pt_text***REMOVED***\n"
+                    f"(work iteration {meta.iteration}/{meta.max_iterations} preserved)\n"
+                    f"**Последний pending_task:** {pt_text}\n"
                 )
                 final = set_report(release, "failed", report_text)
                 if send_tg:
@@ -557,7 +557,7 @@ def _dispatch_multi_turn_iteration(
                     "reason": "max_clarifications_reached",
                     "pending_task": pt_text,
                     "path": str(final),
-                ***REMOVED***
+                }
             # Continue cycle — append clarification, set status to resumable (paused, awaits TG /answer).
             append_iteration(
                 locked_path,
@@ -567,11 +567,11 @@ def _dispatch_multi_turn_iteration(
             )
             update_meta_value(locked_path, "Clarification Count", str(next_cc))
             release = _release_from_lock(locked_path, "running")
-            badge = f"Multi-turn clarification {next_cc***REMOVED***/{meta.max_clarifications***REMOVED***"
+            badge = f"Multi-turn clarification {next_cc}/{meta.max_clarifications}"
             report_text = _format_report(meta, result, multi_turn_badge=badge)
             report_text += (
-                f"\n\n**Следующий pending_task:** {pt_text***REMOVED***\n"
-                f"**Work iter:** {meta.iteration***REMOVED***/{meta.max_iterations***REMOVED*** (не изменился)\n"
+                f"\n\n**Следующий pending_task:** {pt_text}\n"
+                f"**Work iter:** {meta.iteration}/{meta.max_iterations} (не изменился)\n"
             )
             if send_tg:
                 _send_tg_report(meta, report_text)
@@ -593,7 +593,7 @@ def _dispatch_multi_turn_iteration(
                 "max_clarifications": meta.max_clarifications,
                 "pending_task": pt_text,
                 "path": str(release),
-            ***REMOVED***
+            }
 
         # ── Work iteration routing (legacy default, unchanged behaviour) ──
         # Consumption: iteration++; budget: max_iterations (default 3).
@@ -605,15 +605,15 @@ def _dispatch_multi_turn_iteration(
                 meta.task_id,
                 meta.iteration,
                 meta.max_iterations,
-                pt_text[:100***REMOVED***,
+                pt_text[:100],
             )
             release = _release_from_lock(locked_path, "failed")
-            badge = f"Multi-turn {meta.iteration***REMOVED***/{meta.max_iterations***REMOVED*** MAX-reached"
+            badge = f"Multi-turn {meta.iteration}/{meta.max_iterations} MAX-reached"
             report_text = _format_report(meta, result, multi_turn_badge=badge)
             report_text += (
                 f"\n\n**Reason:** max_iterations_reached "
-                f"(clarification count {meta.clarification_count***REMOVED***/{meta.max_clarifications***REMOVED*** preserved)\n"
-                f"**Последний pending_task:** {pt_text***REMOVED***\n"
+                f"(clarification count {meta.clarification_count}/{meta.max_clarifications} preserved)\n"
+                f"**Последний pending_task:** {pt_text}\n"
             )
             final = set_report(release, "failed", report_text)
             if send_tg:
@@ -627,7 +627,7 @@ def _dispatch_multi_turn_iteration(
                 "reason": "max_iterations_reached",
                 "pending_task": pt_text,
                 "path": str(final),
-            ***REMOVED***
+            }
         else:
             # 4a-continue. Append iteration + release back to running/ as running-pending.
             append_iteration(
@@ -637,9 +637,9 @@ def _dispatch_multi_turn_iteration(
                 new_status="running-pending",
             )
             release = _release_from_lock(locked_path, "running")
-            badge = f"Multi-turn {meta.iteration***REMOVED***/{meta.max_iterations***REMOVED*** pending next"
+            badge = f"Multi-turn {meta.iteration}/{meta.max_iterations} pending next"
             report_text = _format_report(meta, result, multi_turn_badge=badge)
-            report_text += f"\n\n**Следующий pending_task:** {pt_text***REMOVED***\n"
+            report_text += f"\n\n**Следующий pending_task:** {pt_text}\n"
             if send_tg:
                 _send_tg_report(meta, report_text)
             logger.info(
@@ -656,10 +656,10 @@ def _dispatch_multi_turn_iteration(
                 "max_iterations": meta.max_iterations,
                 "pending_task": pt_text,
                 "path": str(release),
-            ***REMOVED***
+            }
 
     # 4c. NO pending_task: terminal behavior (done / failed)
-    badge = f"Multi-turn {meta.iteration***REMOVED***/{meta.max_iterations***REMOVED*** done"
+    badge = f"Multi-turn {meta.iteration}/{meta.max_iterations} done"
     report_text = _format_report(meta, result, multi_turn_badge=badge)
     if result.get("success"):
         final = set_report(locked_path, "done", report_text)
@@ -683,7 +683,7 @@ def _dispatch_multi_turn_iteration(
         "iteration": meta.iteration,
         "max_iterations": meta.max_iterations,
         "path": str(final),
-    ***REMOVED***
+    }
 
 
 def dispatch_one(
@@ -693,7 +693,7 @@ def dispatch_one(
     skip_busy_precheck: bool = False,
     backoff_notify: int = BACKOFF_NOTIFY_TICKS,
     resumable_only: bool = False,  # Task 3 (promt 61): skip user/ queue, only running/-resumable
-) -> Dict[str, Any***REMOVED***:
+) -> Dict[str, Any]:
     """Multi-turn-aware (v5.79.0): сначала resumable running/, потом pending user/.
 
     CON-33 (v5.89.0): если единственный инстанс freebuff занят живой сессией,
@@ -709,13 +709,13 @@ def dispatch_one(
     успешного launch занятость — это наш собственный инстанс, не внешний).
 
     Returns:
-      - {"handled": False, "status": "noop"***REMOVED***       — оба списка пусты
-      - {"handled": False, "status": "deferred_single_instance_backoff"***REMOVED*** — инстанс занят (CON-33)
-      - {"handled": True, "task_id": ..., "status": "multi-turn-pending" | "failed-multi-turn-max" | "done" | "failed", ...***REMOVED***
+      - {"handled": False, "status": "noop"}       — оба списка пусты
+      - {"handled": False, "status": "deferred_single_instance_backoff"} — инстанс занят (CON-33)
+      - {"handled": True, "task_id": ..., "status": "multi-turn-pending" | "failed-multi-turn-max" | "done" | "failed", ...}
     """
     resumable = scan_resumable()
     # Task 3: --resumable-only → skip user/ queue entirely (только running/-resumable)
-    pending = [***REMOVED*** if resumable_only else scan_pending()
+    pending = [] if resumable_only else scan_pending()
 
     # ── CON-33 pre-check: инстанс занят → backoff без spawn ──
     # Порядок: дешёвая проверка очереди ПЕРЕД pgrep (не гоняем pgrep на пустой
@@ -723,7 +723,7 @@ def dispatch_one(
     # по-прежнему ловит wrapper (`blocked_single_instance` → deferral).
     if not skip_busy_precheck and (resumable or pending) and _live_instance_busy():
         # CON-35: инкремент счётчика backoff-тиков; TG один раз при пороге.
-        target = (resumable or pending)[0***REMOVED***
+        target = (resumable or pending)[0]
         _bump_backoff_streak(target, backoff_notify, send_tg)
         logger.info(
             "Single-instance busy (CON-33 pre-check) → backoff: не спавним tmux; "
@@ -733,21 +733,21 @@ def dispatch_one(
             "handled": False,
             "status": "deferred_single_instance_backoff",
             "task_id": target.task_id,
-        ***REMOVED***
+        }
 
     # ── MULTI-TURN: сначала resumable running/ ────────────────
     if resumable:
-        _reset_backoff_streak(resumable[0***REMOVED***)
+        _reset_backoff_streak(resumable[0])
         return _dispatch_multi_turn_iteration(
-            resumable[0***REMOVED***, launcher, timeout, send_tg
+            resumable[0], launcher, timeout, send_tg
         )
 
     # ── SINGLE-TURN: existing pending behavior ────────────────
     if not pending:
         logger.info("Очередь пуста — нет промтов в user/")
-        return {"handled": False, "status": "noop"***REMOVED***
+        return {"handled": False, "status": "noop"}
 
-    meta = pending[0***REMOVED***
+    meta = pending[0]
     _reset_backoff_streak(meta)
     logger.info("Обработка промта %s: %s", meta.task_id, meta.title)
 
@@ -766,7 +766,7 @@ def dispatch_one(
             "handled": False,
             "status": "skipped_locked",
             "task_id": meta.task_id,
-        ***REMOVED***
+        }
     report_text = ""
 
     # 2. Запуск Баффи
@@ -774,7 +774,7 @@ def dispatch_one(
         result = launcher(meta.body, str(WORKSPACE), timeout, meta.model)
     except Exception as e:
         logger.exception("launch failed for %s", meta.task_id)
-        result = {"success": False, "error": str(e), "output": ""***REMOVED***
+        result = {"success": False, "error": str(e), "output": ""}
 
     # 2b. Single-instance blocker (v5.88.0): живая сессия пользователя занимает
     # единственный инстанс freebuff → spawned-экземпляр видит 'already running'
@@ -788,8 +788,8 @@ def dispatch_one(
         deferred_path = move_to_status(running_path, "user")
         report_text = (
             f"**Статус:** ⏸ Отложено (инстанс freebuff занят живой сессией)\n"
-            f"**Задача:** {meta.title***REMOVED***\n"
-            f"**Task ID:** {meta.task_id***REMOVED***\n\n"
+            f"**Задача:** {meta.title}\n"
+            f"**Task ID:** {meta.task_id}\n\n"
             f"freebuff допускает только один запущенный инстанс; сейчас его "
             f"занимает живая (интерактивная) сессия. Задача возвращена в "
             f"очередь `user/` и будет обработана следующим тиком cron после "
@@ -806,7 +806,7 @@ def dispatch_one(
             "task_id": meta.task_id,
             "status": "deferred_single_instance",
             "path": str(deferred_path),
-        ***REMOVED***
+        }
 
     # 3. Detect multi-turn signal (v5.79.0 + Task 2 promt 61 discriminated).
     # Первый dispatch из user/ может получить pending_task — если kind=='clarification'
@@ -826,14 +826,14 @@ def dispatch_one(
                     meta.task_id,
                     meta.clarification_count,
                     meta.max_clarifications,
-                    pt_text[:100***REMOVED***,
+                    pt_text[:100],
                 )
-                badge = f"Multi-turn clarification {meta.clarification_count***REMOVED***/{meta.max_clarifications***REMOVED*** MAX-reached"
+                badge = f"Multi-turn clarification {meta.clarification_count}/{meta.max_clarifications} MAX-reached"
                 report_text = _format_report(meta, result, multi_turn_badge=badge)
                 report_text += (
                     f"\n\n**Reason:** max_clarifications_reached "
-                    f"(work iteration {meta.iteration***REMOVED***/{meta.max_iterations***REMOVED*** preserved)\n"
-                    f"**Последний pending_task:** {pt_text***REMOVED***\n"
+                    f"(work iteration {meta.iteration}/{meta.max_iterations} preserved)\n"
+                    f"**Последний pending_task:** {pt_text}\n"
                 )
                 final = set_report(running_path, "failed", report_text)
                 if send_tg:
@@ -849,7 +849,7 @@ def dispatch_one(
                     "reason": "max_clarifications_reached",
                     "pending_task": pt_text,
                     "path": str(final),
-                ***REMOVED***
+                }
             # Append clarification, set status to resumable (paused, awaits TG /answer).
             append_iteration(
                 running_path,
@@ -858,11 +858,11 @@ def dispatch_one(
                 new_status="running-resumable",  # Task 1: paused, awaiting TG /answer
             )
             update_meta_value(running_path, "Clarification Count", str(next_cc))
-            badge = f"Multi-turn clarification {next_cc***REMOVED***/{meta.max_clarifications***REMOVED***"
+            badge = f"Multi-turn clarification {next_cc}/{meta.max_clarifications}"
             report_text = _format_report(meta, result, multi_turn_badge=badge)
             report_text += (
-                f"\n\n**Следующий pending_task:** {pt_text***REMOVED***\n"
-                f"**Work iter:** {meta.iteration***REMOVED***/{meta.max_iterations***REMOVED*** (не изменился)\n"
+                f"\n\n**Следующий pending_task:** {pt_text}\n"
+                f"**Work iter:** {meta.iteration}/{meta.max_iterations} (не изменился)\n"
             )
             if send_tg:
                 _send_tg_report(meta, report_text)
@@ -876,7 +876,7 @@ def dispatch_one(
                 "max_clarifications": meta.max_clarifications,
                 "pending_task": pt_text,
                 "path": str(running_path),
-            ***REMOVED***
+            }
 
         # ── Work iteration routing (legacy default, unchanged) ────────
         next_iter = meta.iteration + 1  # =2 обычно
@@ -887,14 +887,14 @@ def dispatch_one(
                 meta.task_id,
                 meta.iteration,
                 meta.max_iterations,
-                pt_text[:100***REMOVED***,
+                pt_text[:100],
             )
-            badge = f"Multi-turn {meta.iteration***REMOVED***/{meta.max_iterations***REMOVED*** MAX-reached"
+            badge = f"Multi-turn {meta.iteration}/{meta.max_iterations} MAX-reached"
             report_text = _format_report(meta, result, multi_turn_badge=badge)
             report_text += (
                 f"\n\n**Reason:** max_iterations_reached "
-                f"(clarification count {meta.clarification_count***REMOVED***/{meta.max_clarifications***REMOVED*** preserved)\n"
-                f"**Последний pending_task:** {pt_text***REMOVED***\n"
+                f"(clarification count {meta.clarification_count}/{meta.max_clarifications} preserved)\n"
+                f"**Последний pending_task:** {pt_text}\n"
             )
             final = set_report(running_path, "failed", report_text)
             if send_tg:
@@ -908,7 +908,7 @@ def dispatch_one(
                 "reason": "max_iterations_reached",
                 "pending_task": pt_text,
                 "path": str(final),
-            ***REMOVED***
+            }
         else:
             # Multi-turn init: append + keep in running/ as running-pending
             append_iteration(
@@ -917,9 +917,9 @@ def dispatch_one(
                 pt_text,
                 new_status="running-pending",
             )
-            badge = f"Multi-turn {meta.iteration***REMOVED***/{meta.max_iterations***REMOVED*** pending next"
+            badge = f"Multi-turn {meta.iteration}/{meta.max_iterations} pending next"
             report_text = _format_report(meta, result, multi_turn_badge=badge)
-            report_text += f"\n\n**Следующий pending_task:** {pt_text***REMOVED***\n"
+            report_text += f"\n\n**Следующий pending_task:** {pt_text}\n"
             logger.info(
                 "Промт %s → multi-turn pending next (iter %s/%s, kept in running/)",
                 meta.task_id,
@@ -936,7 +936,7 @@ def dispatch_one(
                 "max_iterations": meta.max_iterations,
                 "pending_task": pt_text,
                 "path": str(running_path),
-            ***REMOVED***
+            }
 
     # 4. Terminal behavior (single-turn done / failed, NO multi-turn signal)
     report_text = _format_report(meta, result)
@@ -957,7 +957,7 @@ def dispatch_one(
             "handled": False,
             "status": "skipped_locked",
             "task_id": meta.task_id,
-        ***REMOVED***
+        }
 
     logger.info(
         "Промт %s → %s (файл: %s)",
@@ -976,17 +976,17 @@ def dispatch_one(
         "status": status,
         "report": report_text,
         "path": str(final),
-    ***REMOVED***
+    }
 
 
 def dispatch_all(
     launcher: LauncherFn = _default_launcher,
     timeout: int = 300,
     send_tg: bool = True,
-    max_tasks: Optional[int***REMOVED*** = None,
+    max_tasks: Optional[int] = None,
     backoff_notify: int = BACKOFF_NOTIFY_TICKS,
     resumable_only: bool = False,  # Task 3 (promt 61): see dispatch_one
-) -> List[Dict[str, Any***REMOVED******REMOVED***:
+) -> List[Dict[str, Any]]:
     """Обрабатывает все ожидающие промты (поочерёдно).
 
     CON-33: первый вызов dispatch_one идёт с pre-check'ом живого инстанса; если
@@ -995,11 +995,11 @@ def dispatch_all(
     идут с skip_busy_precheck=True — после первого успешного launch занятость
     это наш собственный инстанс, повторный pgrep дал бы ложный backoff.
     """
-    results: List[Dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    results: List[Dict[str, Any]] = []
     first = True
     while True:
         # Task 3: --resumable-only → skip user/ queue entirely (только running/-resumable)
-        pending = [***REMOVED*** if resumable_only else scan_pending()
+        pending = [] if resumable_only else scan_pending()
         if not pending:
             break
         if max_tasks is not None and len(results) >= max_tasks:
@@ -1025,25 +1025,25 @@ def dispatch_all(
     return results
 
 
-def _dry_run(resumable_only: bool = False) -> Dict[str, Any***REMOVED***:
+def _dry_run(resumable_only: bool = False) -> Dict[str, Any]:
     # Task 3: --resumable-only → report running/-resumable count (NOT user/ pending)
     if resumable_only:
         resumable = scan_resumable()
         return {
             "pending_count": 0,
-            "tasks": [***REMOVED***,
+            "tasks": [],
             "resumable_count": len(resumable),
-            "resumable_tasks": [m.task_id for m in resumable***REMOVED***,
+            "resumable_tasks": [m.task_id for m in resumable],
             "counts": queue_counts(),
             "mode": "resumable-only",
-        ***REMOVED***
+        }
     pending = scan_pending()
     return {
         "pending_count": len(pending),
-        "tasks": [m.task_id for m in pending***REMOVED***,
+        "tasks": [m.task_id for m in pending],
         "counts": queue_counts(),
         "mode": "full",
-    ***REMOVED***
+    }
 
 
 
@@ -1060,7 +1060,7 @@ def main() -> int:
         default=BACKOFF_NOTIFY_TICKS,
         help=(
             "CON-35: TG-уведомление один раз, если инстанс занят N+ тиков подряд "
-            f"(default {BACKOFF_NOTIFY_TICKS***REMOVED*** = ~30 мин при cron 5 мин; 0 = выключено)"
+            f"(default {BACKOFF_NOTIFY_TICKS} = ~30 мин при cron 5 мин; 0 = выключено)"
         ),
     )
     parser.add_argument(
@@ -1088,23 +1088,23 @@ def main() -> int:
     if args.recover:
         recovered = recover_stale_running(max_age_s=args.recover_age)
         if recovered:
-            print(f"♻️ Восстановлено из running/ → user/: {len(recovered)***REMOVED***")
+            print(f"♻️ Восстановлено из running/ → user/: {len(recovered)}")
             for name in recovered:
-                print(f"  • {name***REMOVED***")
+                print(f"  • {name}")
         else:
             print("♻️ Зависших промтов в running/ нет.")
 
     if args.dry_run:
         info = _dry_run(resumable_only=args.resumable_only)
-        if info["mode"***REMOVED*** == "resumable-only":
-            print(f"Resumable задач (--resumable-only): {info['resumable_count'***REMOVED******REMOVED***")
-            for tid in info["resumable_tasks"***REMOVED***:
-                print(f"  • {tid***REMOVED***")
+        if info["mode"] == "resumable-only":
+            print(f"Resumable задач (--resumable-only): {info['resumable_count']}")
+            for tid in info["resumable_tasks"]:
+                print(f"  • {tid}")
         else:
-            print(f"Ожидающих промтов (user/): {info['pending_count'***REMOVED******REMOVED***")
-            for tid in info["tasks"***REMOVED***:
-                print(f"  • {tid***REMOVED***")
-        print(f"Папки: {info['counts'***REMOVED******REMOVED***")
+            print(f"Ожидающих промтов (user/): {info['pending_count']}")
+            for tid in info["tasks"]:
+                print(f"  • {tid}")
+        print(f"Папки: {info['counts']}")
         return 0
 
     if args.all:
@@ -1122,7 +1122,7 @@ def main() -> int:
                 backoff_notify=args.backoff_notify,
                 resumable_only=args.resumable_only,
             )
-        ***REMOVED***
+        ]
 
     done = sum(1 for r in results if r.get("status") == "done")
     failed = sum(1 for r in results if r.get("status") == "failed")
@@ -1133,8 +1133,8 @@ def main() -> int:
         if r.get("status") in ("deferred_single_instance_backoff", "deferred_single_instance")
     )
     print(
-        f"✅ done: {done***REMOVED*** | ❌ failed: {failed***REMOVED*** | ⏸ noop: {noop***REMOVED*** | "
-        f"⏳ backoff (инстанс занят): {deferred***REMOVED***"
+        f"✅ done: {done} | ❌ failed: {failed} | ⏸ noop: {noop} | "
+        f"⏳ backoff (инстанс занят): {deferred}"
     )
     return 0 if failed == 0 else 1
 

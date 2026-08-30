@@ -42,7 +42,7 @@ class ReviewScore:
             "overall": self.overall,
             "confidence": self.confidence,
             "recommendations": self.recommendations,
-        ***REMOVED***
+        }
 
 
 class DIRSReviewer:
@@ -56,7 +56,7 @@ class DIRSReviewer:
         "additivity": 0.15,
         "debt_risk": 0.15,
         "evolution_fit": 0.10,
-    ***REMOVED***
+    }
 
     def review(self, document_text):
         """Score document on 7 criteria. Returns ReviewScore."""
@@ -68,17 +68,17 @@ class DIRSReviewer:
         debt_risk = self.score_debt_risk(document_text)
         evolution_fit = self.score_evolution_fit(document_text)
         overall = (
-            consistency * self.WEIGHTS["consistency"***REMOVED*** +
-            completeness * self.WEIGHTS["completeness"***REMOVED*** +
-            scalability * self.WEIGHTS["scalability"***REMOVED*** +
-            coupling * self.WEIGHTS["coupling"***REMOVED*** +
-            additivity * self.WEIGHTS["additivity"***REMOVED*** +
-            debt_risk * self.WEIGHTS["debt_risk"***REMOVED*** +
-            evolution_fit * self.WEIGHTS["evolution_fit"***REMOVED***
+            consistency * self.WEIGHTS["consistency"] +
+            completeness * self.WEIGHTS["completeness"] +
+            scalability * self.WEIGHTS["scalability"] +
+            coupling * self.WEIGHTS["coupling"] +
+            additivity * self.WEIGHTS["additivity"] +
+            debt_risk * self.WEIGHTS["debt_risk"] +
+            evolution_fit * self.WEIGHTS["evolution_fit"]
         )
         # Confidence proportional to document length (longer = more confidence)
         confidence = min(1.0, len(document_text) / 5000.0)
-        recommendations = [***REMOVED***
+        recommendations = []
         if overall < 5.0:
             recommendations.append("REQUIRES_RESUBMISSION")
         elif overall < 7.0:
@@ -110,7 +110,7 @@ class DIRSReviewer:
     def score_completeness(self, doc):
         # Heuristic: section coverage
         score = 5.0
-        for header in ["Назначение", "Архитектура", "Границы", "Принципы", "Реализация"***REMOVED***:
+        for header in ["Назначение", "Архитектура", "Границы", "Принципы", "Реализация"]:
             if header.lower() in doc.lower():
                 score += 1.0
         return min(10.0, score)
@@ -155,11 +155,11 @@ class ConflictAnalyzer:
         words = doc.lower().split()
         from collections import Counter
         counts = Counter(w for w in words if len(w) > 5)
-        return [(term, c) for term, c in counts.most_common(10) if c >= 3***REMOVED***
+        return [(term, c) for term, c in counts.most_common(10) if c >= 3]
 
     def analyze(self, doc):
         duplicates = self.detect_duplicates(doc)
-        return {"duplicates_found": len(duplicates), "details": duplicates***REMOVED***
+        return {"duplicates_found": len(duplicates), "details": duplicates}
 
 
 class TechnicalDebtAnalyzer:
@@ -170,13 +170,13 @@ class TechnicalDebtAnalyzer:
         ("single-entity design", "single-entity", "high"),
         ("god component", "god component", "medium"),
         ("missing abstraction", "no abstract", "medium"),
-    ***REMOVED***
+    ]
 
     def predict_debt(self, doc):
-        hits = [***REMOVED***
+        hits = []
         for label, keyword, severity in self.DEBT_PATTERNS:
             if keyword in doc.lower():
-                hits.append({"pattern": label, "severity": severity***REMOVED***)
+                hits.append({"pattern": label, "severity": severity})
         return hits
 
 
@@ -184,24 +184,24 @@ class PolicyChecker:
     """Policy Checker (PC) per RFC_DIS §4.4. Enforces mandatory/blocking rules."""
 
     DEFAULT_RULES = [
-        {"rule": "all stages use atomic_write", "severity": "mandatory"***REMOVED***,
-        {"rule": "no /tmp hardcoded paths", "severity": "mandatory"***REMOVED***,
-        {"rule": "ADR-11 PRE-EXECUTION CHECKPOINT enforced", "severity": "blocking"***REMOVED***,
-        {"rule": "ADDITIVE architecture (CAN-16)", "severity": "advisory"***REMOVED***,
-    ***REMOVED***
+        {"rule": "all stages use atomic_write", "severity": "mandatory"},
+        {"rule": "no /tmp hardcoded paths", "severity": "mandatory"},
+        {"rule": "ADR-11 PRE-EXECUTION CHECKPOINT enforced", "severity": "blocking"},
+        {"rule": "ADDITIVE architecture (CAN-16)", "severity": "advisory"},
+    ]
 
     def enforce(self, doc, rules=None):
         if rules is None:
             rules = self.DEFAULT_RULES
-        violations = [***REMOVED***
+        violations = []
         for entry in rules:
-            rule = entry["rule"***REMOVED***
-            severity = entry["severity"***REMOVED***
+            rule = entry["rule"]
+            severity = entry["severity"]
             # Heuristic: rule keyword absence = violation
-            keyword = rule.split()[0***REMOVED***  # First token as search keyword
+            keyword = rule.split()[0]  # First token as search keyword
             if keyword.lower() not in doc.lower() and severity in ("mandatory", "blocking"):
-                violations.append({"rule": rule, "severity": severity***REMOVED***)
-        return {"violations": violations, "passed": len(violations) == 0***REMOVED***
+                violations.append({"rule": rule, "severity": severity})
+        return {"violations": violations, "passed": len(violations) == 0}
 
 
 def cli_review(path):
@@ -222,13 +222,13 @@ def cli_review(path):
         "conflicts": conflicts,
         "debt": debt,
         "policies": policies,
-    ***REMOVED***
+    }
 
 
 if __name__ == "__main__":
     import json as _json, sys
-    if len(sys.argv) >= 3 and sys.argv[1***REMOVED*** == "--review":
-        result = cli_review(sys.argv[2***REMOVED***)
+    if len(sys.argv) >= 3 and sys.argv[1] == "--review":
+        result = cli_review(sys.argv[2])
         print(_json.dumps(result, indent=2, ensure_ascii=False))
     else:
         print("DIS v0.2: use --review <path> to score a document")

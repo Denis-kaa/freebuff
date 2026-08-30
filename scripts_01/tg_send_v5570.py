@@ -1,10 +1,10 @@
 """TG-send helper для v5.57.0 release.
 
-Format: см. [docs_10/core/TG_HUMAN_FORMAT.md***REMOVED***(../../docs_10/core/TG_HUMAN_FORMAT.md) —
+Format: см. [docs_10/core/TG_HUMAN_FORMAT.md](../../docs_10/core/TG_HUMAN_FORMAT.md) —
 человеческий язык, без Block-A/CON-X/CAN-X/ANTI-X jargon, без raw version numbers
 в user-facing section, формат «Что сделали / Что осталось / Прогресс X/Y».
 
-TG транспорт: [core_02/telegram_contract.py***REMOVED***(../../core_02/telegram_contract.py)
+TG транспорт: [core_02/telegram_contract.py](../../core_02/telegram_contract.py)
 (report_to_saved_messages + report_to_alex_litvinov).
 Round-trip verify: TGClient.get_messages(chat_id, ids=msg_id).
 """
@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
-***REMOVED***
+}
 
 # This script lives at /storage/.../freebuff/scripts_01/tg_send_v5570.py — NOT in
 # sibling-project scripts/. So `_freebuff_locator` (which lives at
@@ -68,14 +68,14 @@ async def round_trip_verify(saved_msg_id: int, lit_msg_id: int) -> dict:
 
     client = TGClient()
     if not await client.connect():
-        return {"saved": None, "litvinov": None, "connected": False***REMOVED***
-    out = {"connected": True***REMOVED***
+        return {"saved": None, "litvinov": None, "connected": False}
+    out = {"connected": True}
     if saved_msg_id is not None:
-        msgs = await client.get_messages(tc.SAVED_MESSAGES_CHAT_ID, ids=[saved_msg_id***REMOVED***)
-        out["saved"***REMOVED*** = bool(msgs and msgs[0***REMOVED*** and getattr(msgs[0***REMOVED***, "text", None))
+        msgs = await client.get_messages(tc.SAVED_MESSAGES_CHAT_ID, ids=[saved_msg_id])
+        out["saved"] = bool(msgs and msgs[0] and getattr(msgs[0], "text", None))
     if lit_msg_id is not None:
-        msgs = await client.get_messages(tc.LITVINOV_CHAT_ID, ids=[lit_msg_id***REMOVED***)
-        out["litvinov"***REMOVED*** = bool(msgs and msgs[0***REMOVED*** and getattr(msgs[0***REMOVED***, "text", None))
+        msgs = await client.get_messages(tc.LITVINOV_CHAT_ID, ids=[lit_msg_id])
+        out["litvinov"] = bool(msgs and msgs[0] and getattr(msgs[0], "text", None))
     await client.disconnect()
     return out
 
@@ -83,15 +83,15 @@ async def round_trip_verify(saved_msg_id: int, lit_msg_id: int) -> dict:
 def main() -> int:
     print("=== tg_send_v5570.py \u2014 sending human message via TG ===\n")
     saved_id = send_to_saved_messages()
-    print(f"Saved Messages msg_id = {saved_id***REMOVED***")
+    print(f"Saved Messages msg_id = {saved_id}")
     lit_id = send_to_litvinov()
-    print(f"\u041b\u0438\u0442\u0432\u0438\u043d\u043e\u0432 msg_id = {lit_id***REMOVED***")
+    print(f"\u041b\u0438\u0442\u0432\u0438\u043d\u043e\u0432 msg_id = {lit_id}")
     print()
     verify = asyncio.run(round_trip_verify(saved_id, lit_id))
     print(f"Round-trip verify (TGClient.get_messages read-back):")
-    print(f"  connected = {verify.get('connected')***REMOVED***")
-    print(f"  saved text non-empty = {verify.get('saved')***REMOVED***")
-    print(f"  litvinov text non-empty = {verify.get('litvinov')***REMOVED***")
+    print(f"  connected = {verify.get('connected')}")
+    print(f"  saved text non-empty = {verify.get('saved')}")
+    print(f"  litvinov text non-empty = {verify.get('litvinov')}")
     if verify.get("connected") and verify.get("saved") and verify.get("litvinov"):
         print("\n=== TG-send complete \u2705 ===")
         return 0

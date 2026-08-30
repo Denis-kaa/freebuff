@@ -26,7 +26,7 @@ import asyncio
 import sys
 import time
 import uuid
-***REMOVED***
+}
 
 FB_ROOT = Path(__file__).resolve().parent.parent
 if str(FB_ROOT) not in sys.path:
@@ -35,16 +35,16 @@ if str(FB_ROOT) not in sys.path:
 import core_02.telegram_contract as tc  # noqa: E402
 
 MESSAGE_TEXT = (
-    "🧪 v5.87.0 live TG round-trip {run_tag***REMOVED***\n\n"
+    "🧪 v5.87.0 live TG round-trip {run_tag]\n\n"
     "Лёгкий путь без Buffy-spawn (OOM-safe): Telegram-contract send + "
-    "TGClient.get_messages read-back. Run-tag: {run_tag***REMOVED***"
+    "TGClient.get_messages read-back. Run-tag: {run_tag]"
 )
 
 
 def _unique_search_head(text: str, run_tag: str) -> str:
     """Unique-per-run search substring — run_tag is in the FIRST LINE so
     read-back cannot false-positive on an older run with the same prefix."""
-    return text.splitlines()[0***REMOVED***[:60***REMOVED*** if run_tag in text.splitlines()[0***REMOVED*** else run_tag
+    return text.splitlines()[0][:60] if run_tag in text.splitlines()[0] else run_tag
 
 
 def _round_trip(chat_id: int, search_text: str, client_factory=None) -> "int | None":
@@ -63,7 +63,7 @@ def _round_trip(chat_id: int, search_text: str, client_factory=None) -> "int | N
         try:
             ok = await client.connect()
             if not ok:
-                print(f"  warn not authorized for chat {chat_id***REMOVED***")
+                print(f"  warn not authorized for chat {chat_id}")
                 return None
             msgs = await client.get_messages(chat_id, limit=100)
             for m in msgs:
@@ -96,7 +96,7 @@ def _append_audit_trail(
     if md_path is None:
         md_path = FB_ROOT / "docs_10/e2e_logs" / "promt47_run.md"
     if not md_path.exists():
-        print(f"  warn audit trail file missing: {md_path***REMOVED***")
+        print(f"  warn audit trail file missing: {md_path}")
         return
     src = md_path.read_text(encoding="utf-8")
     marker = "## Historical Verification Runs"
@@ -111,19 +111,19 @@ def _append_audit_trail(
             insert_at = i + 1
             break
     new_row = (
-        f"| {time.strftime('%Y-%m-%d %H:%M:%S')***REMOVED*** | `{task_id***REMOVED***` | "
-        f"{saved_msg_id or chr(0x2014)***REMOVED*** | {lit_msg_id or chr(0x2014)***REMOVED*** | "
-        f"{latency:.2f***REMOVED***s | {run_tag***REMOVED*** |"
+        f"| {time.strftime('%Y-%m-%d %H:%M:%S')} | `{task_id}` | "
+        f"{saved_msg_id or chr(0x2014)} | {lit_msg_id or chr(0x2014)} | "
+        f"{latency:.2f}s | {run_tag} |"
     )
     lines.insert(insert_at, new_row)
     new_tail = "\n".join(lines)
     md_path.write_text(head + sep + new_tail + "\n", encoding="utf-8")
-    print(f"  ok audit row prepended → {md_path.name***REMOVED***")
+    print(f"  ok audit row prepended → {md_path.name}")
 
 
 def main() -> int:
     p = argparse.ArgumentParser(description="v5.87.0 live TG round-trip verifier (OOM-safe)")
-    p.add_argument("--run-tag", type=str, default=f"v5.87.0_rt_{uuid.uuid4().hex[:6***REMOVED******REMOVED***")
+    p.add_argument("--run-tag", type=str, default=f"v5.87.0_rt_{uuid.uuid4().hex[:6]}")
     p.add_argument("--text", type=str, default="")
     args = p.parse_args()
 
@@ -132,28 +132,28 @@ def main() -> int:
     # which would make _unique_search_head fall back to run_tag and the read-back
     # always miss (false negative) even on successful send. Force-append if absent.
     if args.run_tag not in text:
-        text = f"{text***REMOVED***\nRun-tag: {args.run_tag***REMOVED***"
-    print(f"=== v5.87.0 live TG round-trip TAG={args.run_tag***REMOVED*** ===")
-    print(f"  text head: {text.splitlines()[0***REMOVED******REMOVED***")
+        text = f"{text}\nRun-tag: {args.run_tag}"
+    print(f"=== v5.87.0 live TG round-trip TAG={args.run_tag} ===")
+    print(f"  text head: {text.splitlines()[0]}")
 
     t0 = time.time()
     saved_id = asyncio.run(tc.report_to_saved_messages(text))
-    print(f"  Saved Messages msg_id = {saved_id***REMOVED***")
+    print(f"  Saved Messages msg_id = {saved_id}")
     lit_id = asyncio.run(tc.report_to_alex_litvinov(text))
-    print(f"  Литвинов msg_id = {lit_id***REMOVED***")
+    print(f"  Литвинов msg_id = {lit_id}")
     latency = time.time() - t0
 
     print("\n--- round-trip read-back ---")
     search_head = _unique_search_head(text, args.run_tag)
     saved_rt = _round_trip(tc.SAVED_MESSAGES_CHAT_ID, search_head) if saved_id else None
-    print(f"  saved round-trip msg_id = {saved_rt***REMOVED***")
+    print(f"  saved round-trip msg_id = {saved_rt}")
     lit_rt = _round_trip(tc.LITVINOV_CHAT_ID, search_head) if lit_id else None
-    print(f"  litvinov round-trip msg_id = {lit_rt***REMOVED***")
+    print(f"  litvinov round-trip msg_id = {lit_rt}")
 
     # CAN-9 honesty (code-reviewer v5.87.0): audit row records ROUND-TRIP-CONFIRMED
     # ids only — never the raw send return (which would claim verification it lacks).
     # Em-dash cells = unverified (process already exits 1 on failure).
-    task_id = f"task_{args.run_tag[:18***REMOVED******REMOVED***"
+    task_id = f"task_{args.run_tag[:18]}"
     _append_audit_trail(
         run_tag=args.run_tag,
         task_id=task_id,
@@ -163,7 +163,7 @@ def main() -> int:
     )
 
     if saved_rt and lit_rt:
-        print(f"\n=== TG round-trip POSITIVE: Saved={saved_rt***REMOVED***, Литвинов={lit_rt***REMOVED*** (latency {latency:.2f***REMOVED***s) ===")
+        print(f"\n=== TG round-trip POSITIVE: Saved={saved_rt}, Литвинов={lit_rt} (latency {latency:.2f}s) ===")
         return 0
     print("\n=== TG round-trip INCOMPLETE — see warnings above ===")
     return 1

@@ -21,7 +21,7 @@ import subprocess
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Callable, Dict, List, Optional
 
 from core_02.workspace import Project
@@ -39,31 +39,31 @@ class StageResult:
 class PipelineRun:
     project_name: str
     project_root: str
-    stages: List[StageResult***REMOVED*** = field(default_factory=list)
+    stages: List[StageResult] = field(default_factory=list)
     started_at: str = ""
     finished_at: str = ""
     overall: str = "pending"
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "project_name": self.project_name,
             "project_root": self.project_root,
-            "stages": [vars(s) for s in self.stages***REMOVED***,
+            "stages": [vars(s) for s in self.stages],
             "started_at": self.started_at,
             "finished_at": self.finished_at,
             "overall": self.overall,
-        ***REMOVED***
+        }
 
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
-def _run_cmd(cmd: List[str***REMOVED***, cwd: Path, timeout: int = 120) -> tuple[int, str***REMOVED***:
+def _run_cmd(cmd: List[str], cwd: Path, timeout: int = 120) -> tuple[int, str]:
     try:
         proc = subprocess.run(
             cmd, cwd=str(cwd), capture_output=True, text=True,
-            timeout=timeout, env={**os.environ, "PYTHONUNBUFFERED": "1"***REMOVED***,
+            timeout=timeout, env={**os.environ, "PYTHONUNBUFFERED": "1"},
         )
         output = (proc.stdout or "") + ("\n" + proc.stderr if proc.stderr else "")
         return proc.returncode, output.strip()
@@ -82,7 +82,7 @@ class ForgePipeline:
         self,
         project: Project,
         dry_run: bool = False,
-        hooks: Optional[Dict[str, Callable[[Project, "PipelineRun"***REMOVED***, None***REMOVED******REMOVED******REMOVED*** = None,
+        hooks: Optional[Dict[str, Callable[[Project, "PipelineRun"], None]]] = None,
         workspace_steps_policy: str = "optional",
         project_read_only: bool = False,
     ):
@@ -98,10 +98,10 @@ class ForgePipeline:
         """
         self.project = project
         self.dry_run = dry_run
-        self.hooks = hooks or {***REMOVED***
+        self.hooks = hooks or {}
         self.workspace_steps_policy = workspace_steps_policy
         self.project_read_only = project_read_only
-        self.run_summary: Optional[PipelineRun***REMOVED*** = None
+        self.run_summary: Optional[PipelineRun] = None
 
     def stage_forge(self) -> StageResult:
         name = "FORGE"
@@ -113,7 +113,7 @@ class ForgePipeline:
             if missing:
                 return StageResult(
                     name=name, status="failed",
-                    details=f"read-only (B2): артефакты не создаются; отсутствуют: {', '.join(missing)***REMOVED***",
+                    details=f"read-only (B2): артефакты не создаются; отсутствуют: {', '.join(missing)}",
                 )
             return StageResult(
                 name=name, status="ok",
@@ -123,7 +123,7 @@ class ForgePipeline:
             created = self._ensure_artifacts()
             return StageResult(
                 name=name, status="ok",
-                details=f"артефакты: {', '.join(created) if created else 'все на месте'***REMOVED***",
+                details=f"артефакты: {', '.join(created) if created else 'все на месте'}",
             )
         except Exception as exc:
             return StageResult(name=name, status="failed", details=str(exc))
@@ -135,13 +135,13 @@ class ForgePipeline:
             # Проброс политики: workspace_steps_policy идёт в get_requirements,
             # при наличии project.requirements_steps он перебивает.
             req = self.project.get_requirements(steps_policy=self.workspace_steps_policy)
-            parts = [***REMOVED***
+            parts = []
             if diag.blockers:
-                parts.append(f"blockers: {len(diag.blockers)***REMOVED***")
+                parts.append(f"blockers: {len(diag.blockers)}")
             if diag.warnings:
-                parts.append(f"warnings: {len(diag.warnings)***REMOVED***")
+                parts.append(f"warnings: {len(diag.warnings)}")
             if req.missing:
-                parts.append(f"missing artifacts: {', '.join(req.missing)***REMOVED***")
+                parts.append(f"missing artifacts: {', '.join(req.missing)}")
             if self.dry_run:
                 return StageResult(name=name, status="skipped",
                                    details="dry-run; " + "; ".join(parts))
@@ -153,7 +153,7 @@ class ForgePipeline:
         except Exception as exc:
             return StageResult(name=name, status="failed", details=str(exc))
 
-    def stage_build(self, build_cmd: Optional[List[str***REMOVED******REMOVED*** = None) -> StageResult:
+    def stage_build(self, build_cmd: Optional[List[str]] = None) -> StageResult:
         name = "BUILD"
         if self.dry_run:
             return StageResult(name=name, status="skipped", details="dry-run")
@@ -164,10 +164,10 @@ class ForgePipeline:
         code, output = _run_cmd(cmd, self.project.root)
         if code != 0:
             return StageResult(name=name, status="failed",
-                               details=f"exit={code***REMOVED***: {output[:300***REMOVED******REMOVED***")
-        return StageResult(name=name, status="ok", details=f"exit=0 ({cmd[0***REMOVED******REMOVED***)")
+                               details=f"exit={code}: {output[:300]}")
+        return StageResult(name=name, status="ok", details=f"exit=0 ({cmd[0]})")
 
-    def stage_test(self, test_cmd: Optional[List[str***REMOVED******REMOVED*** = None) -> StageResult:
+    def stage_test(self, test_cmd: Optional[List[str]] = None) -> StageResult:
         name = "TEST"
         if self.dry_run:
             return StageResult(name=name, status="skipped", details="dry-run")
@@ -177,7 +177,7 @@ class ForgePipeline:
         code, output = _run_cmd(cmd, self.project.root, timeout=300)
         if code != 0:
             return StageResult(name=name, status="failed",
-                               details=f"exit={code***REMOVED***: {output[:300***REMOVED******REMOVED***")
+                               details=f"exit={code}: {output[:300]}")
         return StageResult(name=name, status="ok", details="tests passed")
 
     def stage_deploy(self) -> StageResult:
@@ -191,7 +191,7 @@ class ForgePipeline:
         bundles = list(dist.glob("bundle.js")) or list(dist.iterdir())
         if bundles:
             return StageResult(name=name, status="ok",
-                               details=f"dist/ готов ({len(bundles)***REMOVED*** файлов)")
+                               details=f"dist/ готов ({len(bundles)} файлов)")
         return StageResult(name=name, status="ok", details="dist/ существует")
 
     def stage_report(self) -> StageResult:
@@ -203,7 +203,7 @@ class ForgePipeline:
         try:
             stats = self.project.get_steps_stats()
         except Exception as exc:  # pragma: no cover — defensive
-            stats_summary = f"STEPS: <stat error: {exc***REMOVED***>"
+            stats_summary = f"STEPS: <stat error: {exc}>"
         else:
             stats_summary = stats.to_line()
         if hook:
@@ -212,19 +212,19 @@ class ForgePipeline:
                 # Statistics in details always — даже если хук отключён в логе.
                 return StageResult(
                     name=name, status="ok",
-                    details=f"отчёт отправлен; {stats_summary***REMOVED***",
+                    details=f"отчёт отправлен; {stats_summary}",
                 )
             except Exception as exc:
                 return StageResult(
                     name=name, status="failed",
-                    details=f"{exc***REMOVED***; {stats_summary***REMOVED***",
+                    details=f"{exc}; {stats_summary}",
                 )
         return StageResult(
             name=name, status="skipped",
-            details=f"нет on_report хука; {stats_summary***REMOVED***",
+            details=f"нет on_report хука; {stats_summary}",
         )
 
-    def run(self, skip: Optional[set***REMOVED*** = None) -> PipelineRun:
+    def run(self, skip: Optional[set] = None) -> PipelineRun:
         skip = skip or set()
         run = PipelineRun(
             project_name=self.project.name,
@@ -256,38 +256,38 @@ class ForgePipeline:
         self.run_summary = run
         return run
 
-    def _missing_artifacts(self) -> List[str***REMOVED***:
+    def _missing_artifacts(self) -> List[str]:
         """B2 (R-124): какие обязательные артефакты отсутствуют (read-only проверка)."""
-        missing = [***REMOVED***
+        missing = []
         for fname in ("RUNNABLE.md", "CHECKLIST.md"):
             if not (self.project.root / fname).exists():
                 missing.append(fname)
         return missing
 
-    def _ensure_artifacts(self) -> List[str***REMOVED***:
-        created: List[str***REMOVED*** = [***REMOVED***
+    def _ensure_artifacts(self) -> List[str]:
+        created: List[str] = []
         runnable = self.project.root / "RUNNABLE.md"
         if not runnable.exists():
             runnable.write_text(
-                f"# RUNNABLE — {self.project.name***REMOVED***\n\n"
+                f"# RUNNABLE — {self.project.name}\n\n"
                 f"## Требования\n- Node.js 18+, Python 3.10+\n"
-                f"## Быстрый старт\n```bash\ncd {self.project.root.name***REMOVED***\n```\n",
+                f"## Быстрый старт\n```bash\ncd {self.project.root.name}\n```\n",
                 encoding="utf-8",
             )
             created.append("RUNNABLE.md")
         checklist = self.project.root / "CHECKLIST.md"
         if not checklist.exists():
             checklist.write_text(
-                f"# CHECKLIST — {self.project.name***REMOVED***\n\n"
-                "- [ ***REMOVED*** Env Doctor: блокеров нет\n"
-                "- [ ***REMOVED*** README.md присутствует\n"
-                "- [ ***REMOVED*** Зависимости установлены\n",
+                f"# CHECKLIST — {self.project.name}\n\n"
+                "- [ ] Env Doctor: блокеров нет\n"
+                "- [ ] README.md присутствует\n"
+                "- [ ] Зависимости установлены\n",
                 encoding="utf-8",
             )
             created.append("CHECKLIST.md")
         return created
 
-    def _default_build_cmd(self) -> Optional[List[str***REMOVED******REMOVED***:
+    def _default_build_cmd(self) -> Optional[List[str]]:
         if self.project.type == "web":
             esbuild = self.project.root / "node_modules/esbuild-wasm/bin/esbuild"
             index = self.project.root / "src/index.tsx"
@@ -300,21 +300,21 @@ class ForgePipeline:
                     "--define:global=window",
                     "--format=iife", "--loader:.tsx=tsx", "--loader:.ts=ts",
                     "--platform=browser",
-                ***REMOVED***
+                ]
             if (self.project.root / "package.json").exists():
-                return ["npm", "run", "build"***REMOVED***
+                return ["npm", "run", "build"]
             return None
         if (self.project.root / "package.json").exists():
-            return ["npm", "run", "build"***REMOVED***
+            return ["npm", "run", "build"]
         if (self.project.root / "pyproject.toml").exists():
-            return [sys.executable, "-m", "build"***REMOVED***
+            return [sys.executable, "-m", "build"]
         return None
 
-    def _default_test_cmd(self) -> Optional[List[str***REMOVED******REMOVED***:
+    def _default_test_cmd(self) -> Optional[List[str]]:
         if (self.project.root / "package.json").exists():
-            return ["npm", "test"***REMOVED***
+            return ["npm", "test"]
         if list(self.project.root.glob("test_*.py")) or (self.project.root / "tests").exists():
-            return [sys.executable, "-m", "pytest", "-q"***REMOVED***
+            return [sys.executable, "-m", "pytest", "-q"]
         return None
 
 
@@ -340,21 +340,21 @@ def exec_stage_commit(project_id: str, stage_id: str):
         _set_status_flag(project_id, stage_id, flag_status)
         publish_event(
             "exec.start",
-            {"project_id": project_id, "stage_id": stage_id, "status": flag_status***REMOVED***,
+            {"project_id": project_id, "stage_id": stage_id, "status": flag_status},
         )
-        yield {"project_id": project_id, "stage_id": stage_id, "status": flag_status***REMOVED***
+        yield {"project_id": project_id, "stage_id": stage_id, "status": flag_status}
         # Phase 3: success publish
         _set_status_flag(project_id, stage_id, "DONE")
         publish_event(
             "exec.done",
-            {"project_id": project_id, "stage_id": stage_id, "status": "DONE"***REMOVED***,
+            {"project_id": project_id, "stage_id": stage_id, "status": "DONE"},
         )
     except Exception as e:
         # Failure: roll back to UNFORGED (no partial state)
         _set_status_flag(project_id, stage_id, "UNFORGED")
         publish_event(
             "exec.failed",
-            {"project_id": project_id, "stage_id": stage_id, "error": str(e)***REMOVED***,
+            {"project_id": project_id, "stage_id": stage_id, "error": str(e)},
         )
         raise
 
@@ -366,11 +366,11 @@ def _set_status_flag(project_id: str, stage_id: str, status: str):
     if not os.path.exists(reg_path):
         return  # forge_registry.yaml can be created lazily
     with open(reg_path, "r", encoding="utf-8") as f:
-        reg = yaml.safe_load(f) or {***REMOVED***
-    projects = reg.setdefault("projects", {***REMOVED***)
-    proj = projects.setdefault(project_id, {***REMOVED***)
-    stages = proj.setdefault("stages", {***REMOVED***)
-    stages[stage_id***REMOVED*** = status
+        reg = yaml.safe_load(f) or {}
+    projects = reg.setdefault("projects", {})
+    proj = projects.setdefault(project_id, {})
+    stages = proj.setdefault("stages", {})
+    stages[stage_id] = status
     with open(reg_path, "w", encoding="utf-8") as f:
         yaml.safe_dump(reg, f, default_flow_style=False, sort_keys=True)
 
@@ -391,7 +391,7 @@ def stage_policy_check(project_id, doc_text=None, rules=None):
         doc_text = "all stages use atomic_write; no /tmp hardcoded paths; ADR-11 enforced; ADDITIVE architecture"
     pc = PolicyChecker()
     result = pc.enforce(doc_text, rules=rules)
-    return result["passed"***REMOVED***, result["violations"***REMOVED***
+    return result["passed"], result["violations"]
 
 
 def review_rfc(rfc_path):

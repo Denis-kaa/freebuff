@@ -8,9 +8,9 @@ Sibling: scripts_01/corpus_persistence.py (storage layer; this module is the rea
 + safe-cleanup surface).
 
 Use cases:
-    python -m scripts_01.corpus_inspector stats [--json***REMOVED*** [--root DIR***REMOVED***
-    python -m scripts_01.corpus_inspector dedup [--json***REMOVED*** [--root DIR***REMOVED***
-    python -m scripts_01.corpus_inspector evict --older-than-days N [--apply***REMOVED*** [--json***REMOVED*** [--root DIR***REMOVED***
+    python -m scripts_01.corpus_inspector stats [--json] [--root DIR]
+    python -m scripts_01.corpus_inspector dedup [--json] [--root DIR]
+    python -m scripts_01.corpus_inspector evict --older-than-days N [--apply] [--json] [--root DIR]
 
 Design invariants (per thinker v5.189.58):
 - URL-variant detection: Strategy C (hybrid canonicalization) — strip fragment,
@@ -32,7 +32,7 @@ import json
 import os
 import sys
 from dataclasses import dataclass, field
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlsplit, urlunsplit
 
@@ -56,7 +56,7 @@ __all__ = [
     "dedup",
     "evict",
     "main",
-***REMOVED***
+]
 
 # ─── constants ──────────────────────────────────────────────────────────────
 
@@ -67,12 +67,12 @@ TRACKING_PARAMS: frozenset = frozenset({
     "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
     "fbclid", "gclid", "msclkid", "mc_eid", "mc_cid",
     "_ga", "ref", "igshid", "si", "feature", "mibextid",
-***REMOVED***)
+])
 
 # Standard age buckets для corpus_intelligence phases (active / warming / stale / archival).
-AGE_BUCKETS: Tuple[str, ...***REMOVED*** = ("<7d", "7-30d", "30-90d", ">90d")
+AGE_BUCKETS: Tuple[str, ...] = ("<7d", "7-30d", "30-90d", ">90d")
 # Bucket boundaries in days (ILL == "7", "30", "90"-inclusive on lower edge).
-_AGE_BOUNDARIES_DAYS: Tuple[int, ...***REMOVED*** = (7, 30, 90)
+_AGE_BOUNDARIES_DAYS: Tuple[int, ...] = (7, 30, 90)
 
 # Version string (--version flag).
 __version__: str = "1.0.0 (corpus_inspector, v5.189.58)"
@@ -95,7 +95,7 @@ class VariantGroup:
         occurrences: total source-occurrences across all variants (entry count).
     """
     canonical: str
-    variants: List[str***REMOVED***
+    variants: List[str]
     count: int
     occurrences: int
 
@@ -115,7 +115,7 @@ def _now_utc() -> _dt.datetime:
     return _dt.datetime.now(_dt.timezone.utc)
 
 
-def _safe_parse_timestamp(ts: str) -> Optional[_dt.datetime***REMOVED***:
+def _safe_parse_timestamp(ts: str) -> Optional[_dt.datetime]:
     """Parse ISO 8601 UTC формат ``YYYY-MM-DDTHH:MM:SSZ`` / ``+00:00``.
 
     Fail-safe: returns ``None`` если input malformed. Не raise.
@@ -125,7 +125,7 @@ def _safe_parse_timestamp(ts: str) -> Optional[_dt.datetime***REMOVED***:
     # Normalize: corpus_persistence гарантирует ``Z`` суффикс, но поддержим +00:00 тоже.
     ts = ts.strip()
     if ts.endswith("Z"):
-        ts_norm = ts[:-1***REMOVED*** + "+00:00"
+        ts_norm = ts[:-1] + "+00:00"
     else:
         ts_norm = ts
     try:
@@ -138,13 +138,13 @@ def _safe_parse_timestamp(ts: str) -> Optional[_dt.datetime***REMOVED***:
 def _age_bucket(now: _dt.datetime, ts: _dt.datetime) -> str:
     """Bucket label для age. Caller ensured ``ts`` is valid."""
     delta_days = (now - ts).days
-    if delta_days < _AGE_BOUNDARIES_DAYS[0***REMOVED***:
-        return AGE_BUCKETS[0***REMOVED***          # "<7d"
-    if delta_days < _AGE_BOUNDARIES_DAYS[1***REMOVED***:
-        return AGE_BUCKETS[1***REMOVED***          # "7-30d"
-    if delta_days < _AGE_BOUNDARIES_DAYS[2***REMOVED***:
-        return AGE_BUCKETS[2***REMOVED***          # "30-90d"
-    return AGE_BUCKETS[3***REMOVED***              # ">90d"
+    if delta_days < _AGE_BOUNDARIES_DAYS[0]:
+        return AGE_BUCKETS[0]          # "<7d"
+    if delta_days < _AGE_BOUNDARIES_DAYS[1]:
+        return AGE_BUCKETS[1]          # "7-30d"
+    if delta_days < _AGE_BOUNDARIES_DAYS[2]:
+        return AGE_BUCKETS[2]          # "30-90d"
+    return AGE_BUCKETS[3]              # ">90d"
 
 
 def _canonicalize_url(url: str) -> str:
@@ -174,7 +174,7 @@ def _canonicalize_url(url: str) -> str:
     if path != "/" and path.endswith("/"):
         path = path.rstrip("/")
     # query: drop tracking params, sort remaining.
-    query_pairs: List[Tuple[str, str***REMOVED******REMOVED*** = [***REMOVED***
+    query_pairs: List[Tuple[str, str]] = []
     if parts.query:
         for kv in parts.query.split("&"):
             if "=" not in kv:
@@ -186,8 +186,8 @@ def _canonicalize_url(url: str) -> str:
             if k in TRACKING_PARAMS:
                 continue
             query_pairs.append((k, v))
-    query_pairs.sort(key=lambda kv: kv[0***REMOVED***)
-    query = "&".join(f"{k***REMOVED***={v***REMOVED***" if v else k for k, v in query_pairs)
+    query_pairs.sort(key=lambda kv: kv[0])
+    query = "&".join(f"{k}={v}" if v else k for k, v in query_pairs)
     return urlunsplit((scheme, netloc, path, query, ""))  # empty fragment
 
 
@@ -200,7 +200,7 @@ def _domain_of(url: str) -> str:
     return (parts.netloc or "").lower()
 
 
-def _group_variants(entries: List[CorpusEntry***REMOVED***) -> List[VariantGroup***REMOVED***:
+def _group_variants(entries: List[CorpusEntry]) -> List[VariantGroup]:
     """Group entries by canonical URL → VariantGroup list.
 
     Notes:
@@ -208,20 +208,20 @@ def _group_variants(entries: List[CorpusEntry***REMOVED***) -> List[VariantGroup
         - occurrences = total source-occurrences across all variants (counts in
           CorpusEntry occurrences, not dedup-by-source).
     """
-    canon_to_variants: Dict[str, List[str***REMOVED******REMOVED*** = {***REMOVED***  # canonical → ordered uniques
-    canon_to_occurrences: Dict[str, int***REMOVED*** = {***REMOVED***
+    canon_to_variants: Dict[str, List[str]] = {}  # canonical → ordered uniques
+    canon_to_occurrences: Dict[str, int] = {}
     for e in entries:
         canon = _canonicalize_url(e.url)
         if canon not in canon_to_variants:
-            canon_to_variants[canon***REMOVED*** = [***REMOVED***
-            canon_to_occurrences[canon***REMOVED*** = 0
-        if e.url not in canon_to_variants[canon***REMOVED***:
-            canon_to_variants[canon***REMOVED***.append(e.url)
-        canon_to_occurrences[canon***REMOVED*** += 1
-    groups: List[VariantGroup***REMOVED*** = [***REMOVED***
+            canon_to_variants[canon] = []
+            canon_to_occurrences[canon] = 0
+        if e.url not in canon_to_variants[canon]:
+            canon_to_variants[canon].append(e.url)
+        canon_to_occurrences[canon] += 1
+    groups: List[VariantGroup] = []
     # Stable order: by canonical URL (deterministic on repeated runs).
     for canon in sorted(canon_to_variants):
-        variants = canon_to_variants[canon***REMOVED***
+        variants = canon_to_variants[canon]
         if len(variants) <= 1:
             # Skip singletons — variant report requires multi-variant clusters
             # (otherwise dedup report bloats with `count=1` trivial entries).
@@ -230,21 +230,21 @@ def _group_variants(entries: List[CorpusEntry***REMOVED***) -> List[VariantGroup
             canonical=canon,
             variants=variants,
             count=len(variants),
-            occurrences=canon_to_occurrences[canon***REMOVED***,
+            occurrences=canon_to_occurrences[canon],
         ))
     return groups
 
 
-def _group_by_domain(entries: List[CorpusEntry***REMOVED***) -> List[DomainStat***REMOVED***:
+def _group_by_domain(entries: List[CorpusEntry]) -> List[DomainStat]:
     """Top domains sorted by URL count desc. Tie-breaker: domain name asc."""
-    counts: Dict[str, int***REMOVED*** = {***REMOVED***
+    counts: Dict[str, int] = {}
     for e in entries:
         d = _domain_of(e.url)
         if not d:
             continue
-        counts[d***REMOVED*** = counts.get(d, 0) + 1
+        counts[d] = counts.get(d, 0) + 1
     return sorted(
-        [DomainStat(domain=d, count=c) for d, c in counts.items()***REMOVED***,
+        [DomainStat(domain=d, count=c) for d, c in counts.items()],
         key=lambda ds: (-ds.count, ds.domain),
     )
 
@@ -253,24 +253,24 @@ def _group_by_domain(entries: List[CorpusEntry***REMOVED***) -> List[DomainStat*
 
 
 def stats(
-    *, root: Optional[Path***REMOVED*** = None, top_domains_limit: int = 10,
-) -> Dict[str, Any***REMOVED***:
+    *, root: Optional[Path] = None, top_domains_limit: int = 10,
+) -> Dict[str, Any]:
     """Aggregate corpus stats.
 
     Returns dict:
-        ``by_source``: ``{source: count***REMOVED***``
+        ``by_source``: ``{source: count}``
         ``total``: int (sum)
-        ``by_age_bucket``: ``{<7d: N, 7-30d: N, 30-90d: N, >90d: N***REMOVED***``
-        ``top_domains``: ``[{domain, count***REMOVED***, ...***REMOVED***`` (top-10 by URL count)
+        ``by_age_bucket``: ``{<7d: N, 7-30d: N, 30-90d: N, >90d: N}``
+        ``top_domains``: ``[{domain, count}, ...]`` (top-10 by URL count)
         ``invalid_timestamp_count``: int (entries с malformed timestamps)
     """
     entries = list_all(root=root)
-    by_source: Dict[str, int***REMOVED*** = {***REMOVED***
-    by_age: Dict[str, int***REMOVED*** = {bucket: 0 for bucket in AGE_BUCKETS***REMOVED***
+    by_source: Dict[str, int] = {}
+    by_age: Dict[str, int] = {bucket: 0 for bucket in AGE_BUCKETS}
     invalid_count = 0
     now = _now_utc()
     for e in entries:
-        by_source[e.source***REMOVED*** = by_source.get(e.source, 0) + 1
+        by_source[e.source] = by_source.get(e.source, 0) + 1
         parsed = _safe_parse_timestamp(e.timestamp)
         if parsed is None:
             invalid_count += 1
@@ -283,20 +283,20 @@ def stats(
         except Exception:
             invalid_count += 1
             continue
-        by_age[bucket***REMOVED*** += 1
+        by_age[bucket] += 1
     return {
         "by_source": dict(sorted(by_source.items())),
         "total": sum(by_source.values()),
         "by_age_bucket": by_age,
         "top_domains": [
-            {"domain": d.domain, "count": d.count***REMOVED***
-            for d in _group_by_domain(entries)[:top_domains_limit***REMOVED***
-        ***REMOVED***,
+            {"domain": d.domain, "count": d.count}
+            for d in _group_by_domain(entries)[:top_domains_limit]
+        ],
         "invalid_timestamp_count": invalid_count,
-    ***REMOVED***
+    }
 
 
-def dedup(*, root: Optional[Path***REMOVED*** = None) -> List[VariantGroup***REMOVED***:
+def dedup(*, root: Optional[Path] = None) -> List[VariantGroup]:
     """Find URL-variant clusters (multi-variant groups only).
 
     Returns list of ``VariantGroup`` (length 1+ clusters; singletons excluded).
@@ -305,12 +305,12 @@ def dedup(*, root: Optional[Path***REMOVED*** = None) -> List[VariantGroup***REM
 
 
 def evict(
-    older_than_days: int, *, apply: bool = False, root: Optional[Path***REMOVED*** = None,
-) -> Dict[str, Any***REMOVED***:
+    older_than_days: int, *, apply: bool = False, root: Optional[Path] = None,
+) -> Dict[str, Any]:
     """TTL eviction. Returns report dict (для --json output и dry-run preview).
 
     Dry-run semantics (default):
-        - ``apply=False`` → NO mutation; returns ``{"mode": "dry-run", ...***REMOVED***``.
+        - ``apply=False`` → NO mutation; returns ``{"mode": "dry-run", ...}``.
         - ``apply=True`` → EVICT applied atomically (per-file).
 
     Strategy (per-file, in sorted order):
@@ -321,11 +321,11 @@ def evict(
 
     Returns:
         ``{"mode": "dry-run"|"apply", "removed_files": N, "removed_entries": M,
-          "kept_entries": K, "considered_files": N, "warnings": [...***REMOVED******REMOVED***``.
+          "kept_entries": K, "considered_files": N, "warnings": [...]]``.
     """
     if older_than_days < 0:
         raise ValueError(
-            f"older_than_days must be non-negative, got {older_than_days***REMOVED***"
+            f"older_than_days must be non-negative, got {older_than_days}"
         )
 
     base = root if root is not None else DEFAULT_CORPUS_DIR
@@ -336,15 +336,15 @@ def evict(
             "removed_entries": 0,
             "kept_entries": 0,
             "considered_files": 0,
-            "warnings": [***REMOVED***,
-        ***REMOVED***
+            "warnings": [],
+        }
 
     cutoff = _now_utc() - _dt.timedelta(days=older_than_days)
     considered = 0
     removed_files = 0
     removed_entries = 0
     kept_entries = 0
-    warnings: List[str***REMOVED*** = [***REMOVED***
+    warnings: List[str] = []
 
     # Lock globally to avoid race with concurrent persist calls (competing writes
     # to the same .jsonl files). FILE_LOCK shared с corpus_persistence module.
@@ -360,15 +360,15 @@ def evict(
                         removed_files += 1
                     except OSError as exc:
                         warnings.append(
-                            f"evict: unlink {jsonl***REMOVED*** failed: {exc***REMOVED***"
+                            f"evict: unlink {jsonl} failed: {exc}"
                         )
                 else:
                     removed_files += 1  # dry-run preview count
                 continue
 
             # Stratify records by age.
-            kept: List[Dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
-            to_drop: List[Dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+            kept: List[Dict[str, Any]] = []
+            to_drop: List[Dict[str, Any]] = []
             for r in raw_records:
                 ts = r.get("timestamp", "")
                 parsed = _safe_parse_timestamp(ts)
@@ -392,7 +392,7 @@ def evict(
                         removed_entries += len(to_drop)
                     except OSError as exc:
                         warnings.append(
-                            f"evict: unlink {jsonl***REMOVED*** failed: {exc***REMOVED***"
+                            f"evict: unlink {jsonl} failed: {exc}"
                         )
                 else:
                     removed_files += 1
@@ -416,7 +416,7 @@ def evict(
                 kept_entries += len(kept)
             except Exception as exc:
                 warnings.append(
-                    f"evict: partial-evict {jsonl***REMOVED*** failed: {exc***REMOVED***; file left untouched"
+                    f"evict: partial-evict {jsonl} failed: {exc}; file left untouched"
                 )
 
     return {
@@ -426,18 +426,18 @@ def evict(
         "kept_entries": kept_entries,
         "considered_files": considered,
         "warnings": warnings,
-    ***REMOVED***
+    }
 
 
 # ─── low-level helpers (depend on corpus_persistence internals through
 #     safe rewrite-strategy mirror) ──────────────────────────────────────────
 
 
-def _read_jsonl_safely(path: Path) -> List[Dict[str, Any***REMOVED******REMOVED***:
+def _read_jsonl_safely(path: Path) -> List[Dict[str, Any]]:
     """Прочитать JSONL с corrupt-line recovery. Same pattern as corpus_persistence."""
     if not path.is_file():
-        return [***REMOVED***
-    out: List[Dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+        return []
+    out: List[Dict[str, Any]] = []
     try:
         with path.open("r", encoding="utf-8") as f:
             for line_num, line in enumerate(f, start=1):
@@ -448,15 +448,15 @@ def _read_jsonl_safely(path: Path) -> List[Dict[str, Any***REMOVED******REMOVED*
                     out.append(json.loads(line))
                 except json.JSONDecodeError as exc:
                     sys.stderr.write(
-                        f"corpus_inspector: corrupt JSONL at {path***REMOVED***:{line_num***REMOVED***: "
-                        f"{exc***REMOVED***; line skipped\n"
+                        f"corpus_inspector: corrupt JSONL at {path}:{line_num}: "
+                        f"{exc}; line skipped\n"
                     )
     except OSError as exc:
-        sys.stderr.write(f"corpus_inspector: read {path***REMOVED***: {exc***REMOVED***\n")
+        sys.stderr.write(f"corpus_inspector: read {path}: {exc}\n")
     return out
 
 
-def _atomic_write_jsonl(path: Path, records: List[Dict[str, Any***REMOVED******REMOVED***) -> None:
+def _atomic_write_jsonl(path: Path, records: List[Dict[str, Any]]) -> None:
     """Atomic write-tmp + fsync + rename. Mirror of corpus_persistence.persist pattern.
 
     Cleanup ``.tmp`` on exception (no leakage).
@@ -493,23 +493,23 @@ def _cli_stats(args: argparse.Namespace) -> int:
     if args.json:
         _print_json(payload)
         return 0
-    if payload["total"***REMOVED*** == 0:
+    if payload["total"] == 0:
         sys.stdout.write("(empty corpus)\n")
         return 0
     sys.stdout.write("### corpus stats\n")
     sys.stdout.write(f"by source:\n")
-    for src, count in payload["by_source"***REMOVED***.items():
-        sys.stdout.write(f"  - {src***REMOVED***: {count***REMOVED***\n")
-    sys.stdout.write(f"total: {payload['total'***REMOVED******REMOVED***\n")
+    for src, count in payload["by_source"].items():
+        sys.stdout.write(f"  - {src}: {count}\n")
+    sys.stdout.write(f"total: {payload['total']}\n")
     sys.stdout.write("by age bucket:\n")
-    for bucket, count in payload["by_age_bucket"***REMOVED***.items():
-        sys.stdout.write(f"  - {bucket***REMOVED***: {count***REMOVED***\n")
+    for bucket, count in payload["by_age_bucket"].items():
+        sys.stdout.write(f"  - {bucket}: {count}\n")
     sys.stdout.write("top domains:\n")
-    for d in payload["top_domains"***REMOVED***:
-        sys.stdout.write(f"  - {d['domain'***REMOVED******REMOVED***: {d['count'***REMOVED******REMOVED***\n")
-    if payload["invalid_timestamp_count"***REMOVED*** > 0:
+    for d in payload["top_domains"]:
+        sys.stdout.write(f"  - {d['domain']}: {d['count']}\n")
+    if payload["invalid_timestamp_count"] > 0:
         sys.stdout.write(
-            f"WARNING: {payload['invalid_timestamp_count'***REMOVED******REMOVED*** entries with "
+            f"WARNING: {payload['invalid_timestamp_count']} entries with "
             f"invalid timestamps (excluded from age buckets)\n"
         )
     return 0
@@ -524,26 +524,26 @@ def _cli_dedup(args: argparse.Namespace) -> int:
                 "variants": g.variants,
                 "count": g.count,
                 "occurrences": g.occurrences,
-            ***REMOVED***
+            }
             for g in groups
-        ***REMOVED***)
+        ])
         return 0
     if not groups:
         sys.stdout.write("(no variant clusters found)\n")
         return 0
     sys.stdout.write(
-        f"### URL-variant clusters ({len(groups)***REMOVED*** groups)\n"
+        f"### URL-variant clusters ({len(groups)} groups)\n"
     )
     sys.stdout.write(
         "Each canonical has 2+ variants. This usually indicates tracking-param\n"
         "duplication across fetches. Consider merging or evicting duplicates.\n\n"
     )
     for g in groups:
-        sys.stdout.write(f"Canonical: {g.canonical***REMOVED***\n")
-        sys.stdout.write(f"  variants ({g.count***REMOVED***):\n")
+        sys.stdout.write(f"Canonical: {g.canonical}\n")
+        sys.stdout.write(f"  variants ({g.count}):\n")
         for v in g.variants:
-            sys.stdout.write(f"    - {v***REMOVED***\n")
-        sys.stdout.write(f"  total occurrences: {g.occurrences***REMOVED***\n\n")
+            sys.stdout.write(f"    - {v}\n")
+        sys.stdout.write(f"  total occurrences: {g.occurrences}\n\n")
     return 0
 
 
@@ -553,11 +553,11 @@ def _positive_int(value: str) -> int:
         n = int(value)
     except ValueError:
         raise argparse.ArgumentTypeError(
-            f"older-than-days must be int, got {value!r***REMOVED***"
+            f"older-than-days must be int, got {value!r}"
         )
     if n < 0:
         raise argparse.ArgumentTypeError(
-            f"older-than-days must be non-negative, got {n***REMOVED***"
+            f"older-than-days must be non-negative, got {n}"
         )
     return n
 
@@ -570,34 +570,34 @@ def _cli_evict(args: argparse.Namespace) -> int:
             root=args.root,
         )
     except ValueError as exc:
-        sys.stderr.write(f"error: {exc***REMOVED***\n")
+        sys.stderr.write(f"error: {exc}\n")
         return 2
     if args.json:
         _print_json(report)
         return 0
     sys.stdout.write(
-        f"### evict [{report['mode'***REMOVED******REMOVED******REMOVED*** "
-        f"(older-than-days={args.older_than_days***REMOVED***)\n"
+        f"### evict [{report['mode']}] "
+        f"(older-than-days={args.older_than_days})\n"
     )
     sys.stdout.write(
-        f"considered files: {report['considered_files'***REMOVED******REMOVED***\n"
+        f"considered files: {report['considered_files']}\n"
     )
     sys.stdout.write(
-        f"removed files: {report['removed_files'***REMOVED******REMOVED***\n"
+        f"removed files: {report['removed_files']}\n"
     )
     sys.stdout.write(
-        f"removed entries: {report['removed_entries'***REMOVED******REMOVED***\n"
+        f"removed entries: {report['removed_entries']}\n"
     )
     sys.stdout.write(
-        f"kept entries: {report['kept_entries'***REMOVED******REMOVED***\n"
+        f"kept entries: {report['kept_entries']}\n"
     )
-    if report["warnings"***REMOVED***:
+    if report["warnings"]:
         sys.stdout.write(
-            f"WARNINGS ({len(report['warnings'***REMOVED***)***REMOVED***):\n"
+            f"WARNINGS ({len(report['warnings'])}):\n"
         )
-        for w in report["warnings"***REMOVED***:
-            sys.stdout.write(f"  - {w***REMOVED***\n")
-    if report["mode"***REMOVED*** == "dry-run":
+        for w in report["warnings"]:
+            sys.stdout.write(f"  - {w}\n")
+    if report["mode"] == "dry-run":
         sys.stdout.write(
             "\n(dry-run: no files removed; pass --apply to evict)\n"
         )
@@ -670,19 +670,19 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
+def main(argv: Optional[List[str]] = None) -> int:
     """CLI entry point.
 
     Usage::
 
-        python -m scripts_01.corpus_inspector stats [--json***REMOVED*** [--root DIR***REMOVED***
-        python -m scripts_01.corpus_inspector dedup [--json***REMOVED*** [--root DIR***REMOVED***
-        python -m scripts_01.corpus_inspector evict --older-than-days N [--apply***REMOVED*** [--json***REMOVED*** [--root DIR***REMOVED***
+        python -m scripts_01.corpus_inspector stats [--json] [--root DIR]
+        python -m scripts_01.corpus_inspector dedup [--json] [--root DIR]
+        python -m scripts_01.corpus_inspector evict --older-than-days N [--apply] [--json] [--root DIR]
     """
     parser = _build_parser()
     args = parser.parse_args(argv)
     func = args.func
-    return func(args)  # type: ignore[no-any-return***REMOVED***
+    return func(args)  # type: ignore[no-any-return]
 
 
 if __name__ == "__main__":

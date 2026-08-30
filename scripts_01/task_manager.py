@@ -27,12 +27,12 @@ Schema (`tasks` в `data_13/context.db`):
 Использование (CLI):
 
     python scripts_01/task_manager.py create <project_id> "Title" \\
-        [--type digital|meeting|document***REMOVED*** [--description "..."***REMOVED*** [--priority P***REMOVED*** \\
-        [--time "2026-08-02T14:00"***REMOVED*** [--location "..."***REMOVED*** [--participants '["a","b"***REMOVED***'***REMOVED***
-    python scripts_01/task_manager.py list <project_id> [--type T***REMOVED*** [--status S***REMOVED***
+        [--type digital|meeting|document] [--description "..."] [--priority P] \\
+        [--time "2026-08-02T14:00"] [--location "..."] [--participants '["a","b"]']
+    python scripts_01/task_manager.py list <project_id> [--type T] [--status S]
     python scripts_01/task_manager.py show <task_id>
-    python scripts_01/task_manager.py update <task_id> [--title T***REMOVED*** [--status S***REMOVED*** \\
-        [--priority P***REMOVED*** [--time "..."***REMOVED*** [--location "..."***REMOVED***
+    python scripts_01/task_manager.py update <task_id> [--title T] [--status S] \\
+        [--priority P] [--time "..."] [--location "..."]
     python scripts_01/task_manager.py delete <task_id>
     python scripts_01/task_manager.py briefing <task_id>
 """
@@ -45,7 +45,7 @@ import sqlite3
 import sys
 import uuid
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any
 
 WORKSPACE = Path(__file__).resolve().parent.parent
@@ -53,9 +53,9 @@ sys.path.insert(0, str(WORKSPACE))
 
 DB_PATH = WORKSPACE / "data_13" / "context.db"
 
-VALID_TASK_TYPES = frozenset({"digital", "meeting", "document"***REMOVED***)
-VALID_STATUSES = frozenset({"pending", "in_progress", "done", "cancelled"***REMOVED***)
-VALID_PRIORITIES = frozenset({"low", "normal", "high", "critical"***REMOVED***)
+VALID_TASK_TYPES = frozenset({"digital", "meeting", "document"})
+VALID_STATUSES = frozenset({"pending", "in_progress", "done", "cancelled"})
+VALID_PRIORITIES = frozenset({"low", "normal", "high", "critical"})
 
 # Поля, которые можно обновлять через update_task().
 _UPDATABLE_FIELDS = frozenset({
@@ -67,7 +67,7 @@ _UPDATABLE_FIELDS = frozenset({
     "meeting_time",
     "location",
     "participants",
-***REMOVED***)
+])
 
 
 def _now() -> str:
@@ -77,7 +77,7 @@ def _now() -> str:
 
 def _new_id() -> str:
     """Короткий стабильный id задачи: `tm-<8 hex>`."""
-    return f"tm-{uuid.uuid4().hex[:8***REMOVED******REMOVED***"
+    return f"tm-{uuid.uuid4().hex[:8]}"
 
 
 def init_db(db_path: Path | str | None = None) -> sqlite3.Connection:
@@ -115,7 +115,7 @@ def init_db(db_path: Path | str | None = None) -> sqlite3.Connection:
             priority TEXT NOT NULL DEFAULT 'normal',
             meeting_time TEXT DEFAULT NULL,
             location TEXT DEFAULT NULL,
-            participants TEXT NOT NULL DEFAULT '[***REMOVED***',
+            participants TEXT NOT NULL DEFAULT '[]',
             briefing_generated INTEGER NOT NULL DEFAULT 0,
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL,
@@ -137,7 +137,7 @@ def init_db(db_path: Path | str | None = None) -> sqlite3.Connection:
 
 def _check_duplicates(
     project_id: str, title: str, conn: sqlite3.Connection
-) -> list[dict[str, Any***REMOVED******REMOVED***:
+) -> list[dict[str, Any]]:
     """Hook под Context-Aware Task Routing (правило 8, promt36/37).
 
     Возвращает существующие задачи того же проекта с тем же title
@@ -153,9 +153,9 @@ def _check_duplicates(
         (project_id.strip(), title.strip()),
     ).fetchall()
     return [
-        {"id": r[0***REMOVED***, "title": r[1***REMOVED***, "task_type": r[2***REMOVED***, "status": r[3***REMOVED******REMOVED***
+        {"id": r[0], "title": r[1], "task_type": r[2], "status": r[3]}
         for r in rows
-    ***REMOVED***
+    ]
 
 
 def create_task(
@@ -167,9 +167,9 @@ def create_task(
     priority: str = "normal",
     meeting_time: str | None = None,
     location: str | None = None,
-    participants: list[str***REMOVED*** | None = None,
+    participants: list[str] | None = None,
     db_path: Path | str | None = None,
-) -> dict[str, Any***REMOVED***:
+) -> dict[str, Any]:
     """Создаёт задачу, возвращает созданный dict (с id и timestamps)."""
     project_id = project_id.strip()
     title = title.strip()
@@ -180,14 +180,14 @@ def create_task(
     task_type = task_type.strip().lower()
     if task_type not in VALID_TASK_TYPES:
         raise ValueError(
-            f"task_type должен быть одним из {sorted(VALID_TASK_TYPES)***REMOVED***, "
-            f"получено: {task_type!r***REMOVED***"
+            f"task_type должен быть одним из {sorted(VALID_TASK_TYPES)}, "
+            f"получено: {task_type!r}"
         )
     priority = priority.strip().lower()
     if priority not in VALID_PRIORITIES:
         raise ValueError(
-            f"priority должен быть одним из {sorted(VALID_PRIORITIES)***REMOVED***, "
-            f"получено: {priority!r***REMOVED***"
+            f"priority должен быть одним из {sorted(VALID_PRIORITIES)}, "
+            f"получено: {priority!r}"
         )
 
     # Правило 8 (Context-Aware Routing, promt36_037): meeting-атрибуты
@@ -205,18 +205,18 @@ def create_task(
                 "location допустим только для task_type='meeting' "
                 "(правило 8: Context-Aware Routing)"
             )
-        if participants is not None and participants != [***REMOVED***:
+        if participants is not None and participants != []:
             raise ValueError(
                 "participants допустим только для task_type='meeting' "
                 "(правило 8: Context-Aware Routing)"
             )
 
     if participants is None:
-        participants = [***REMOVED***
+        participants = []
     if not isinstance(participants, list) or not all(
         isinstance(p, str) for p in participants
     ):
-        raise ValueError("participants должен быть list[str***REMOVED***")
+        raise ValueError("participants должен быть list[str)")
 
     now = _now()
     task_id = _new_id()
@@ -261,7 +261,7 @@ def create_task(
         "briefing_generated": False,
         "created_at": now,
         "updated_at": now,
-    ***REMOVED***
+    }
 
 
 def get_tasks(
@@ -269,7 +269,7 @@ def get_tasks(
     task_type: str | None = None,
     status: str | None = None,
     db_path: Path | str | None = None,
-) -> list[dict[str, Any***REMOVED******REMOVED***:
+) -> list[dict[str, Any]]:
     """Возвращает задачи проекта (опц. фильтр по task_type и/или status).
 
     Сортировка: created_at DESC (новые сверху) — это обычный UX-дефолт.
@@ -278,14 +278,14 @@ def get_tasks(
     if not project_id:
         raise ValueError("project_id обязателен")
 
-    where: list[str***REMOVED*** = ["project_id = ?"***REMOVED***
-    args: list[Any***REMOVED*** = [project_id***REMOVED***
+    where: list[str] = ["project_id = ?"]
+    args: list[Any] = [project_id]
     if task_type is not None:
         task_type = task_type.strip().lower()
         if task_type not in VALID_TASK_TYPES:
             raise ValueError(
-                f"task_type должен быть одним из {sorted(VALID_TASK_TYPES)***REMOVED***, "
-                f"получено: {task_type!r***REMOVED***"
+                f"task_type должен быть одним из {sorted(VALID_TASK_TYPES)}, "
+                f"получено: {task_type!r}"
             )
         where.append("task_type = ?")
         args.append(task_type)
@@ -293,8 +293,8 @@ def get_tasks(
         status = status.strip().lower()
         if status not in VALID_STATUSES:
             raise ValueError(
-                f"status должен быть одним из {sorted(VALID_STATUSES)***REMOVED***, "
-                f"получено: {status!r***REMOVED***"
+                f"status должен быть одним из {sorted(VALID_STATUSES)}, "
+                f"получено: {status!r}"
             )
         where.append("status = ?")
         args.append(status)
@@ -324,10 +324,10 @@ def get_tasks(
     finally:
         conn.close()
 
-    return [_row_to_dict(r) for r in rows***REMOVED***
+    return [_row_to_dict(r) for r in rows]
 
 
-def show_task(task_id: str, db_path: Path | str | None = None) -> dict[str, Any***REMOVED*** | None:
+def show_task(task_id: str, db_path: Path | str | None = None) -> dict[str, Any] | None:
     """Возвращает одну задачу по id или None, если не найдена."""
     conn = init_db(db_path)
     try:
@@ -348,48 +348,48 @@ def update_task(
     *,
     db_path: Path | str | None = None,
     **fields: Any,
-) -> dict[str, Any***REMOVED*** | None:
+) -> dict[str, Any] | None:
     """Частичное обновление задачи. Возвращает обновлённый dict или None.
 
     Поддерживаемые поля (см. `_UPDATABLE_FIELDS`): title, description,
     task_type, status, priority, meeting_time, location, participants
-    (list[str***REMOVED***). Возвращает None, если задача не найдена — идемпотентность.
+    (list[str]). Возвращает None, если задача не найдена — идемпотентность.
     """
-    clean_fields: dict[str, Any***REMOVED*** = {***REMOVED***
+    clean_fields: dict[str, Any] = {}
     for key, value in fields.items():
         if key not in _UPDATABLE_FIELDS:
             raise ValueError(
-                f"поле {key!r***REMOVED*** нельзя обновлять через update_task(); "
-                f"разрешены: {sorted(_UPDATABLE_FIELDS)***REMOVED***"
+                f"поле {key!r} нельзя обновлять через update_task(); "
+                f"разрешены: {sorted(_UPDATABLE_FIELDS)}"
             )
         if key == "task_type":
             value = str(value).strip().lower()
             if value not in VALID_TASK_TYPES:
                 raise ValueError(
-                    f"task_type должен быть одним из {sorted(VALID_TASK_TYPES)***REMOVED***, "
-                    f"получено: {value!r***REMOVED***"
+                    f"task_type должен быть одним из {sorted(VALID_TASK_TYPES)}, "
+                    f"получено: {value!r}"
                 )
         elif key == "status":
             value = str(value).strip().lower()
             if value not in VALID_STATUSES:
                 raise ValueError(
-                    f"status должен быть одним из {sorted(VALID_STATUSES)***REMOVED***, "
-                    f"получено: {value!r***REMOVED***"
+                    f"status должен быть одним из {sorted(VALID_STATUSES)}, "
+                    f"получено: {value!r}"
                 )
         elif key == "priority":
             value = str(value).strip().lower()
             if value not in VALID_PRIORITIES:
                 raise ValueError(
-                    f"priority должен быть одним из {sorted(VALID_PRIORITIES)***REMOVED***, "
-                    f"получено: {value!r***REMOVED***"
+                    f"priority должен быть одним из {sorted(VALID_PRIORITIES)}, "
+                    f"получено: {value!r}"
                 )
         elif key == "participants":
             if value is None:
-                value = [***REMOVED***
+                value = []
             if not isinstance(value, list) or not all(
                 isinstance(p, str) for p in value
             ):
-                raise ValueError("participants должен быть list[str***REMOVED***")
+                raise ValueError("participants должен быть list[str)")
             value = json.dumps(value, ensure_ascii=False)
         elif key == "meeting_time":
             # meeting_time может стать NULL (сброс), пропускаем как есть
@@ -399,19 +399,19 @@ def update_task(
 
         # ⚠️ ВАЖНО: после coerce присваиваем в clean_fields, иначе UPDATE
         # получит пустой set_clause и пропустит.
-        clean_fields[key***REMOVED*** = value
+        clean_fields[key] = value
 
     if not clean_fields:
         return show_task(task_id, db_path)
 
     now = _now()
-    set_clause = ", ".join(f"{k***REMOVED*** = ?" for k in clean_fields.keys())
-    args: list[Any***REMOVED*** = list(clean_fields.values()) + [now, task_id.strip()***REMOVED***
+    set_clause = ", ".join(f"{k} = ?" for k in clean_fields.keys())
+    args: list[Any] = list(clean_fields.values()) + [now, task_id.strip()]
 
     conn = init_db(db_path)
     try:
         cur = conn.execute(
-            f"UPDATE tasks SET {set_clause***REMOVED***, updated_at = ? WHERE id = ?",
+            f"UPDATE tasks SET {set_clause}, updated_at = ? WHERE id = ?",
             args,
         )
         conn.commit()
@@ -445,14 +445,14 @@ def delete_task(task_id: str, db_path: Path | str | None = None) -> bool:
 #        - project_meta         (projects table)
 #        - linked_resources     (work_area_view.resources_for_project)
 #        - recent_tasks         (get_tasks по тому же проекту)
-#        - knowledge_hits       (KnowledgeEngine.search query={project_id***REMOVED***+title)
+#        - knowledge_hits       (KnowledgeEngine.search query={project_id}+title)
 #   3. Опциональная LLM-синтез (ModelGateway.generate_by_capabilities
 #      с capability='meeting_brief'). При любой ошибке / бypass env
 #      FREEBUFF_NO_LLM=1 — deterministic fallback.
 #   4. Compose markdown + briefing_generated=1 + updated_at.
 #
 # Все обёртки в try/except — одна просадка не блокирует, а даёт short-circuit
-# к [***REMOVED*** или {***REMOVED*** (graceful degradation, по [Knowledge as a Byproduct***REMOVED***, promt36
+# к [] или {} (graceful degradation, по [Knowledge as a Byproduct], promt36
 # правило 10).
 
 
@@ -467,10 +467,10 @@ _BRIEF_LLM_TIMEOUT = 10         # секунд (защита от зависан
 
 def _gather_project_meta(
     project_id: str, conn: sqlite3.Connection
-) -> dict[str, str***REMOVED***:
-    """projects table → {name, description, status, last_scanned***REMOVED***.
+) -> dict[str, str]:
+    """projects table → {name, description, status, last_scanned].
 
-    Graceful fallback к {***REMOVED*** если таблицы projects нет или запрос упал
+    Graceful fallback к {} если таблицы projects нет или запрос упал
     — нормально в чистой БД до scan_projects или при unit-тестах.
     """
     try:
@@ -479,27 +479,27 @@ def _gather_project_meta(
             "WHERE type='table' AND name='projects'"
         ).fetchone() is not None
         if not has:
-            return {***REMOVED***
+            return {}
         row = conn.execute(
             "SELECT name, description, status, last_scanned "
             "FROM projects WHERE name = ?",
             (project_id,),
         ).fetchone()
     except sqlite3.OperationalError:
-        return {***REMOVED***
+        return {}
     if row is None:
-        return {***REMOVED***
+        return {}
     return {
-        "name": row[0***REMOVED*** or project_id,
-        "description": row[1***REMOVED*** or "",
-        "status": row[2***REMOVED*** or "",
-        "last_scanned": row[3***REMOVED*** or "",
-    ***REMOVED***
+        "name": row[0] or project_id,
+        "description": row[1] or "",
+        "status": row[2] or "",
+        "last_scanned": row[3] or "",
+    }
 
 
 def _gather_linked_resources(
     project_id: str, db_path: Path | str | None
-) -> list[dict[str, str***REMOVED******REMOVED***:
+) -> list[dict[str, str]]:
     """Work Area as View: ресурсы проекта из project_resources.
 
     Top-N по created_at DESC. Использует существующий модуль — reuse first.
@@ -510,31 +510,31 @@ def _gather_linked_resources(
         )
         rows = _wav_resources(project_id, db_path=db_path)
     except Exception:
-        return [***REMOVED***
+        return []
     rows_sorted = sorted(
         rows, key=lambda r: r.get("created_at", ""), reverse=True,
-    )[:_BRIEF_MAX_RESOURCES***REMOVED***
+    )[:_BRIEF_MAX_RESOURCES]
     return rows_sorted
 
 
 def _gather_recent_tasks(
     project_id: str, exclude_task_id: str, db_path: Path | str | None,
-) -> list[dict[str, Any***REMOVED******REMOVED***:
+) -> list[dict[str, Any]]:
     """Top-N последних задач проекта (без текущей) — соседний activity."""
     try:
         rows = get_tasks(project_id, db_path=db_path)
     except Exception:
-        return [***REMOVED***
+        return []
     return [
         r for r in rows
-        if r["id"***REMOVED*** != exclude_task_id
-    ***REMOVED***[:_BRIEF_MAX_RECENT_TASKS***REMOVED***
+        if r["id"] != exclude_task_id
+    ][:_BRIEF_MAX_RECENT_TASKS]
 
 
-def _gather_knowledge_hits(query: str) -> list[dict[str, Any***REMOVED******REMOVED***:
+def _gather_knowledge_hits(query: str) -> list[dict[str, Any]]:
     """KnowledgeEngine.search(query, top_k=3, mode='hybrid').
 
-    Lazy import + проверка наличия индекса. Любые ошибки → [***REMOVED*** (нельзя
+    Lazy import + проверка наличия индекса. Любые ошибки → [] (нельзя
     брифинг сломать отсутствием knowledge).
     """
     try:
@@ -545,32 +545,32 @@ def _gather_knowledge_hits(query: str) -> list[dict[str, Any***REMOVED******REMO
         if not index_db.is_absolute():
             index_db = WORKSPACE / DEFAULT_DB_PATH
         if not index_db.exists():
-            return [***REMOVED***
+            return []
         ke = KnowledgeEngine(workspace_root=str(WORKSPACE))
         results = ke.search(
             query, top_k=_BRIEF_MAX_KNOWLEDGE_HITS, mode="hybrid",
         )
     except Exception:
-        return [***REMOVED***
-    out: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
-    for r in results or [***REMOVED***:
+        return []
+    out: list[dict[str, Any]] = []
+    for r in results or []:
         out.append({
             "doc_id": r.doc_id,
             "score": round(float(r.score or 0.0), 4),
-            "snippet": (r.snippet or "")[:_BRIEF_SNIPPET_CHARS***REMOVED***,
-            "title": (r.metadata or {***REMOVED***).get("title", ""),
-            "source": (r.metadata or {***REMOVED***).get("source", ""),
-            "matched_terms": list(r.matched_terms or [***REMOVED***)[:6***REMOVED***,
-        ***REMOVED***)
+            "snippet": (r.snippet or "")[:_BRIEF_SNIPPET_CHARS],
+            "title": (r.metadata or {}).get("title", ""),
+            "source": (r.metadata or {}).get("source", ""),
+            "matched_terms": list(r.matched_terms or [])[:6],
+        ])
     return out
 
 
 def _generate_llm_synthesis(
-    task: dict[str, Any***REMOVED***,
-    proj_meta: dict[str, str***REMOVED***,
-    resources: list[dict[str, str***REMOVED******REMOVED***,
-    recent_tasks: list[dict[str, Any***REMOVED******REMOVED***,
-    knowledge: list[dict[str, Any***REMOVED******REMOVED***,
+    task: dict[str, Any],
+    proj_meta: dict[str, str],
+    resources: list[dict[str, str]],
+    recent_tasks: list[dict[str, Any]],
+    knowledge: list[dict[str, Any]],
 ) -> str | None:
     """Опциональная LLM-синтез брифинга через ModelGateway.
 
@@ -586,8 +586,8 @@ def _generate_llm_synthesis(
         )
         gw = ModelGateway()
         resp = gw.generate_by_capabilities(
-            capabilities=["meeting_brief"***REMOVED***,
-            messages=[{"role": "user", "content": prompt***REMOVED******REMOVED***,
+            capabilities=["meeting_brief"],
+            messages=[{"role": "user", "content": prompt}],
             temperature=0.3,
             max_tokens=_BRIEF_LLM_BUDGET,
             timeout=_BRIEF_LLM_TIMEOUT,
@@ -601,45 +601,45 @@ def _generate_llm_synthesis(
 
 
 def _compose_llm_prompt(
-    task: dict[str, Any***REMOVED***,
-    proj_meta: dict[str, str***REMOVED***,
-    resources: list[dict[str, str***REMOVED******REMOVED***,
-    recent_tasks: list[dict[str, Any***REMOVED******REMOVED***,
-    knowledge: list[dict[str, Any***REMOVED******REMOVED***,
+    task: dict[str, Any],
+    proj_meta: dict[str, str],
+    resources: list[dict[str, str]],
+    recent_tasks: list[dict[str, Any]],
+    knowledge: list[dict[str, Any]],
 ) -> str:
     """Собирает контекст для LLM-промпта (markdown)."""
-    parts: list[str***REMOVED*** = [***REMOVED***
-    parts.append(f"# Задача: {task.get('title', '')***REMOVED***")
+    parts: list[str] = []
+    parts.append(f"# Задача: {task.get('title', '')}")
     project_name = proj_meta.get("name") or task.get("project_id", "")
-    parts.append(f"**Проект:** {project_name***REMOVED***")
+    parts.append(f"**Проект:** {project_name}")
     if proj_meta.get("description"):
-        parts.append(f"**Описание проекта:** {proj_meta['description'***REMOVED******REMOVED***")
-    parts.append(f"**Время:** {task.get('meeting_time') or '(не указано)'***REMOVED***")
-    parts.append(f"**Место:** {task.get('location') or '(не указано)'***REMOVED***")
-    participants = task.get("participants") or [***REMOVED***
+        parts.append(f"**Описание проекта:** {proj_meta['description']}")
+    parts.append(f"**Время:** {task.get('meeting_time') or '(не указано)'}")
+    parts.append(f"**Место:** {task.get('location') or '(не указано)'}")
+    participants = task.get("participants") or []
     parts.append(
         f"**Участники:** "
-        f"{', '.join(participants) if participants else '(не указаны)'***REMOVED***"
+        f"{', '.join(participants) if participants else '(не указаны)'}"
     )
 
     if resources:
         parts.append("\n## Связанные ресурсы проекта (Work Area as View)")
         for r in resources:
-            parts.append(f"- {r['resource_id'***REMOVED******REMOVED***")
+            parts.append(f"- {r['resource_id']}")
 
     if recent_tasks:
         parts.append("\n## Последние задачи проекта")
         for r in recent_tasks:
             parts.append(
-                f"- [{r['task_type'***REMOVED******REMOVED***/{r['status'***REMOVED******REMOVED***/{r['priority'***REMOVED******REMOVED******REMOVED*** "
-                f"{r['title'***REMOVED******REMOVED***"
+                f"- [{r['task_type']}/{r['status']}/{r['priority']}] "
+                f"{r['title']}"
             )
 
     if knowledge:
         parts.append("\n## Связанные документы (Knowledge Engine)")
         for h in knowledge:
-            title = h.get("title") or h["doc_id"***REMOVED***
-            parts.append(f"- [{title***REMOVED******REMOVED*** (score={h['score'***REMOVED******REMOVED***): {h['snippet'***REMOVED******REMOVED***")
+            title = h.get("title") or h["doc_id"]
+            parts.append(f"- [{title}] (score={h['score']}): {h['snippet']}")
 
     parts.append(
         "\n## Задание\n"
@@ -653,11 +653,11 @@ def _compose_llm_prompt(
 
 
 def _compose_briefing_markdown(
-    task: dict[str, Any***REMOVED***,
-    proj_meta: dict[str, str***REMOVED***,
-    resources: list[dict[str, str***REMOVED******REMOVED***,
-    recent_tasks: list[dict[str, Any***REMOVED******REMOVED***,
-    knowledge: list[dict[str, Any***REMOVED******REMOVED***,
+    task: dict[str, Any],
+    proj_meta: dict[str, str],
+    resources: list[dict[str, str]],
+    recent_tasks: list[dict[str, Any]],
+    knowledge: list[dict[str, Any]],
     llm_synthesis: str | None,
 ) -> str:
     """Compose финального markdown-брифинга.
@@ -666,51 +666,51 @@ def _compose_briefing_markdown(
       Title → Meta → Project → Linked resources → Recent tasks →
       Knowledge hits → LLM synthesis (или fallback note) → Footer.
     """
-    lines: list[str***REMOVED*** = [***REMOVED***
+    lines: list[str] = []
     project_name = proj_meta.get("name") or task.get("project_id", "")
-    lines.append(f"# Брифинг встречи: {task['title'***REMOVED******REMOVED***")
+    lines.append(f"# Брифинг встречи: {task['title']}")
     lines.append("")
     lines.append("## Мета")
-    lines.append(f"- **Проект:** {project_name***REMOVED***")
-    lines.append(f"- **Задача:** {task['id'***REMOVED******REMOVED***")
-    lines.append(f"- **Время:** {task.get('meeting_time') or '(не указано)'***REMOVED***")
-    lines.append(f"- **Место:** {task.get('location') or '(не указано)'***REMOVED***")
-    participants = task.get("participants") or [***REMOVED***
+    lines.append(f"- **Проект:** {project_name}")
+    lines.append(f"- **Задача:** {task['id']}")
+    lines.append(f"- **Время:** {task.get('meeting_time') or '(не указано)'}")
+    lines.append(f"- **Место:** {task.get('location') or '(не указано)'}")
+    participants = task.get("participants") or []
     lines.append(
         f"- **Участники:** "
-        f"{', '.join(participants) if participants else '(не указаны)'***REMOVED***"
+        f"{', '.join(participants) if participants else '(не указаны)'}"
     )
 
     if proj_meta.get("description") or proj_meta.get("status"):
         lines.append("")
         lines.append("## Проект")
         if proj_meta.get("description"):
-            lines.append(f"- Описание: {proj_meta['description'***REMOVED******REMOVED***")
+            lines.append(f"- Описание: {proj_meta['description']}")
         if proj_meta.get("status"):
-            lines.append(f"- Статус: `{proj_meta['status'***REMOVED******REMOVED***`")
+            lines.append(f"- Статус: `{proj_meta['status']}`")
 
     if resources:
         lines.append("")
-        lines.append(f"## Связанные ресурсы ({len(resources)***REMOVED***)")
+        lines.append(f"## Связанные ресурсы ({len(resources)})")
         for r in resources:
-            lines.append(f"- {r['resource_id'***REMOVED******REMOVED***")
+            lines.append(f"- {r['resource_id']}")
 
     if recent_tasks:
         lines.append("")
-        lines.append(f"## Контекст задач проекта ({len(recent_tasks)***REMOVED***)")
+        lines.append(f"## Контекст задач проекта ({len(recent_tasks)})")
         for r in recent_tasks:
             lines.append(
-                f"- [{r['task_type'***REMOVED******REMOVED***/{r['status'***REMOVED******REMOVED***/{r['priority'***REMOVED******REMOVED******REMOVED*** "
-                f"{r['title'***REMOVED******REMOVED***"
+                f"- [{r['task_type']}/{r['status']}/{r['priority']}] "
+                f"{r['title']}"
             )
 
     if knowledge:
         lines.append("")
-        lines.append(f"## Заметки из Knowledge Engine ({len(knowledge)***REMOVED***)")
+        lines.append(f"## Заметки из Knowledge Engine ({len(knowledge)})")
         for h in knowledge:
-            title = h.get("title") or h["doc_id"***REMOVED***
+            title = h.get("title") or h["doc_id"]
             lines.append(
-                f"- **{title***REMOVED***** (score={h['score'***REMOVED******REMOVED***): {h['snippet'***REMOVED******REMOVED***"
+                f"- **{title}** (score={h['score']}): {h['snippet']}"
             )
 
     lines.append("")
@@ -727,7 +727,7 @@ def _compose_briefing_markdown(
         )
 
     lines.append("")
-    lines.append(f"_Сгенерировано: {_now()***REMOVED***_")
+    lines.append(f"_Сгенерировано: {_now()}_")
     return "\n".join(lines)
 
 
@@ -741,7 +741,7 @@ def generate_meeting_briefing(
       2. Собрать evidence: project_meta + linked_resources +
          recent_tasks + knowledge_hits (каждый шаг защищён try/except)
       3. Опциональная LLM-синтез через `ModelGateway.generate_by_capabilities`
-         ([meeting_brief***REMOVED***). При ошибке — deterministic fallback.
+         ([meeting_brief]). При ошибке — deterministic fallback.
       4. Compose markdown + briefing_generated=1 + updated_at.
 
     Возвращает текст или None (задача не найдена / не meeting).
@@ -758,30 +758,30 @@ def generate_meeting_briefing(
             ).fetchone()
         except sqlite3.OperationalError:
             return None
-        if row is None or row[4***REMOVED*** != "meeting":
+        if row is None or row[4] != "meeting":
             return None
-        participants_raw = row[7***REMOVED*** or "[***REMOVED***"
+        participants_raw = row[7] or "[]"
         try:
             participants = json.loads(participants_raw)
         except (ValueError, TypeError):
-            participants = [***REMOVED***
-        task: dict[str, Any***REMOVED*** = {
-            "id": row[0***REMOVED***,
-            "project_id": row[1***REMOVED***,
-            "title": row[2***REMOVED***,
-            "description": row[3***REMOVED*** or "",
-            "task_type": row[4***REMOVED***,
-            "meeting_time": row[5***REMOVED***,
-            "location": row[6***REMOVED***,
+            participants = []
+        task: dict[str, Any] = {
+            "id": row[0],
+            "project_id": row[1],
+            "title": row[2],
+            "description": row[3] or "",
+            "task_type": row[4],
+            "meeting_time": row[5],
+            "location": row[6],
             "participants": participants,
-        ***REMOVED***
-        proj_meta = _gather_project_meta(task["project_id"***REMOVED***, conn)
-        resources = _gather_linked_resources(task["project_id"***REMOVED***, db_path)
+        }
+        proj_meta = _gather_project_meta(task["project_id"], conn)
+        resources = _gather_linked_resources(task["project_id"], db_path)
         recent_tasks = _gather_recent_tasks(
-            task["project_id"***REMOVED***, task["id"***REMOVED***, db_path,
+            task["project_id"], task["id"], db_path,
         )
         knowledge = _gather_knowledge_hits(
-            f"{task['project_id'***REMOVED******REMOVED*** {task['title'***REMOVED******REMOVED***"
+            f"{task['project_id']} {task['title']}"
         )
         try:
             llm_synthesis = _generate_llm_synthesis(
@@ -812,30 +812,30 @@ def generate_meeting_briefing(
 # ═══════════════════════════════════════════════════════════════
 
 
-def _row_to_dict(row: sqlite3.Row | tuple[Any, ...***REMOVED***) -> dict[str, Any***REMOVED***:
+def _row_to_dict(row: sqlite3.Row | tuple[Any, ...]) -> dict[str, Any]:
     """Преобразует SELECT-строку в канонический dict (с парсингом JSON)."""
     if row is None:
-        return {***REMOVED***
-    participants_raw = row[9***REMOVED*** if len(row) > 9 else "[***REMOVED***"
+        return {}
+    participants_raw = row[9] if len(row) > 9 else "[]"
     try:
-        participants = json.loads(participants_raw) if participants_raw else [***REMOVED***
+        participants = json.loads(participants_raw) if participants_raw else []
     except (ValueError, TypeError):
-        participants = [***REMOVED***
+        participants = []
     return {
-        "id": row[0***REMOVED***,
-        "project_id": row[1***REMOVED***,
-        "title": row[2***REMOVED***,
-        "description": row[3***REMOVED***,
-        "task_type": row[4***REMOVED***,
-        "status": row[5***REMOVED***,
-        "priority": row[6***REMOVED***,
-        "meeting_time": row[7***REMOVED***,
-        "location": row[8***REMOVED***,
+        "id": row[0],
+        "project_id": row[1],
+        "title": row[2],
+        "description": row[3],
+        "task_type": row[4],
+        "status": row[5],
+        "priority": row[6],
+        "meeting_time": row[7],
+        "location": row[8],
         "participants": participants,
-        "briefing_generated": bool(row[10***REMOVED***),
-        "created_at": row[11***REMOVED***,
-        "updated_at": row[12***REMOVED***,
-    ***REMOVED***
+        "briefing_generated": bool(row[10]),
+        "created_at": row[11],
+        "updated_at": row[12],
+    }
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -843,16 +843,16 @@ def _row_to_dict(row: sqlite3.Row | tuple[Any, ...***REMOVED***) -> dict[str, An
 # ═══════════════════════════════════════════════════════════════
 
 
-def _print_task(t: dict[str, Any***REMOVED***) -> None:
+def _print_task(t: dict[str, Any]) -> None:
     """Печатает одну задачу в human-friendly формате."""
-    print(f"- {t['id'***REMOVED******REMOVED***  [{t['task_type'***REMOVED******REMOVED***/{t['status'***REMOVED******REMOVED***/{t['priority'***REMOVED******REMOVED******REMOVED*** "
-          f"{t['title'***REMOVED******REMOVED***")
+    print(f"- {t['id']}  [{t['task_type']}/{t['status']}/{t['priority']}] "
+          f"{t['title']}")
     if t.get("description"):
-        print(f"  desc: {t['description'***REMOVED******REMOVED***")
+        print(f"  desc: {t['description']}")
     if t.get("meeting_time") or t.get("location") or t.get("participants"):
-        print(f"  meeting: time={t.get('meeting_time') or '-'***REMOVED*** "
-              f"location={t.get('location') or '-'***REMOVED*** "
-              f"participants={t.get('participants') or [***REMOVED******REMOVED***")
+        print(f"  meeting: time={t.get('meeting_time') or '-'} "
+              f"location={t.get('location') or '-'} "
+              f"participants={t.get('participants') or []}")
     if t.get("briefing_generated"):
         print("  briefing: ✅ generated")
 
@@ -882,7 +882,7 @@ def main() -> int:
     p_create.add_argument("--location", default=None,
                           help="для meeting: место")
     p_create.add_argument("--participants", default=None,
-                          help='для meeting: JSON-список, например \'["a","b"***REMOVED***\'')
+                          help='для meeting: JSON-список, например \'["a","b"]\'')
 
     # ── list ──
     p_list = sub.add_parser("list", help="Список задач проекта")
@@ -907,7 +907,7 @@ def main() -> int:
     p_update.add_argument("--time", dest="meeting_time")
     p_update.add_argument("--location")
     p_update.add_argument("--participants",
-                          help='JSON-список, например \'["a","b"***REMOVED***\'')
+                          help='JSON-список, например \'["a","b"]\'')
 
     # ── delete ──
     p_delete = sub.add_parser("delete", help="Удалить задачу")
@@ -926,7 +926,7 @@ def main() -> int:
             try:
                 participants = json.loads(args.participants)
             except json.JSONDecodeError as e:
-                print(f"❌ --participants: невалидный JSON: {e***REMOVED***", file=sys.stderr)
+                print(f"❌ --participants: невалидный JSON: {e}", file=sys.stderr)
                 return 2
             if not isinstance(participants, list):
                 print("❌ --participants: ожидается JSON-список", file=sys.stderr)
@@ -941,12 +941,12 @@ def main() -> int:
             location=args.location,
             participants=participants,
         )
-        print(f"✅ Создана задача {task['id'***REMOVED******REMOVED***: {task['title'***REMOVED******REMOVED*** "
-              f"[{task['task_type'***REMOVED******REMOVED***/{task['priority'***REMOVED******REMOVED******REMOVED***")
+        print(f"✅ Создана задача {task['id']}: {task['title']} "
+              f"[{task['task_type']}/{task['priority']}]")
 
     elif args.command == "list":
         tasks = get_tasks(args.project_id, args.task_type, args.status)
-        print(f"Задачи проекта {args.project_id***REMOVED*** ({len(tasks)***REMOVED***):")
+        print(f"Задачи проекта {args.project_id} ({len(tasks)}):")
         if not tasks:
             print("  (нет задач)")
         for t in tasks:
@@ -955,48 +955,48 @@ def main() -> int:
     elif args.command == "show":
         t = show_task(args.task_id)
         if t is None:
-            print(f"❌ Задача {args.task_id***REMOVED*** не найдена", file=sys.stderr)
+            print(f"❌ Задача {args.task_id} не найдена", file=sys.stderr)
             return 1
         _print_task(t)
 
     elif args.command == "update":
-        kwargs: dict[str, Any***REMOVED*** = {***REMOVED***
+        kwargs: dict[str, Any] = {}
         for field in (
             "title", "description", "task_type", "status",
             "priority", "meeting_time", "location",
         ):
             value = getattr(args, field, None)
             if value is not None:
-                kwargs[field***REMOVED*** = value
+                kwargs[field] = value
         if getattr(args, "participants", None) is not None:
             try:
-                kwargs["participants"***REMOVED*** = json.loads(args.participants)
+                kwargs["participants"] = json.loads(args.participants)
             except json.JSONDecodeError as e:
-                print(f"❌ --participants: невалидный JSON: {e***REMOVED***", file=sys.stderr)
+                print(f"❌ --participants: невалидный JSON: {e}", file=sys.stderr)
                 return 2
         result = update_task(args.task_id, **kwargs)
         if result is None:
-            print(f"❌ Задача {args.task_id***REMOVED*** не найдена", file=sys.stderr)
+            print(f"❌ Задача {args.task_id} не найдена", file=sys.stderr)
             return 1
-        print(f"✅ Обновлена задача {result['id'***REMOVED******REMOVED***")
+        print(f"✅ Обновлена задача {result['id']}")
         _print_task(result)
 
     elif args.command == "delete":
         removed = delete_task(args.task_id)
         if removed:
-            print(f"🗑 Удалена задача {args.task_id***REMOVED***")
+            print(f"🗑 Удалена задача {args.task_id}")
         else:
-            print(f"❌ Задача {args.task_id***REMOVED*** не найдена (нечего удалять)")
+            print(f"❌ Задача {args.task_id} не найдена (нечего удалять)")
 
     elif args.command == "briefing":
         text = generate_meeting_briefing(args.task_id)
         if text is None:
             t = show_task(args.task_id)
             if t is None:
-                print(f"❌ Задача {args.task_id***REMOVED*** не найдена", file=sys.stderr)
+                print(f"❌ Задача {args.task_id} не найдена", file=sys.stderr)
                 return 1
             print(f"❌ Брифинг только для task_type='meeting', "
-                  f"получено: {t['task_type'***REMOVED***!r***REMOVED***", file=sys.stderr)
+                  f"получено: {t['task_type']!r}", file=sys.stderr)
             return 1
         print(text)
 

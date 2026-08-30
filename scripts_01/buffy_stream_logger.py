@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-***REMOVED***
+}
 
 WORKSPACE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(WORKSPACE))
@@ -61,7 +61,7 @@ def main() -> None:
     parser.add_argument("text", nargs="?", help="Message text (or read from stdin)")
     parser.add_argument(
         "--role",
-        choices=["user", "assistant", "system"***REMOVED***,
+        choices=["user", "assistant", "system"],
         default="assistant",
         help="Role of the message (default: assistant)",
     )
@@ -95,7 +95,7 @@ def main() -> None:
     else:
         bridge.log_assistant(text)
 
-    print(f"✅ Logged {args.role***REMOVED*** message ({len(text)***REMOVED*** chars)")
+    print(f"✅ Logged {args.role} message ({len(text)} chars)")
 
 
 if __name__ == "__main__":

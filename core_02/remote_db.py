@@ -26,7 +26,7 @@ import logging
 import sqlite3
 import urllib.error
 import urllib.request
-***REMOVED***
+}
 from typing import Any, Sequence
 
 logger = logging.getLogger(__name__)
@@ -37,16 +37,16 @@ class RemoteDBError(Exception):
 
 
 class _FakeRow(dict):
-    """Dict that supports ``row["col"***REMOVED***`` and ``row[col_idx***REMOVED***`` like sqlite3.Row."""
+    """Dict that supports ``row["col"]`` and ``row[col_idx]`` like sqlite3.Row."""
 
-    def __init__(self, columns: list[str***REMOVED***, values: list[Any***REMOVED***) -> None:
+    def __init__(self, columns: list[str], values: list[Any]) -> None:
         super().__init__(zip(columns, values))
         self._columns = columns
         self._values = values
 
-    def __getitem__(self, key: int | str) -> Any:  # type: ignore[override***REMOVED***
+    def __getitem__(self, key: int | str) -> Any:  # type: ignore[override]
         if isinstance(key, int):
-            return self._values[key***REMOVED***
+            return self._values[key]
         return super().__getitem__(key)
 
 
@@ -87,7 +87,7 @@ class RemoteDB:
         """Execute multiple SQL statements (schema setup)."""
         if self._try_remote():
             # rqlite handles multiple statements via array
-            stmts = [s.strip() for s in script.split(";") if s.strip()***REMOVED***
+            stmts = [s.strip() for s in script.split(";") if s.strip()]
             self._remote_execute_batch(stmts)
         else:
             self._ensure_local()
@@ -96,8 +96,8 @@ class RemoteDB:
             self._local_conn.commit()
 
     def execute(
-        self, sql: str, params: Sequence[Any***REMOVED*** = ()
-    ) -> list[_FakeRow***REMOVED***:
+        self, sql: str, params: Sequence[Any] = ()
+    ) -> list[_FakeRow]:
         """Execute a SQL statement with parameters. Returns rows for SELECT."""
         if self._try_remote():
             return self._remote_execute(sql, params)
@@ -108,24 +108,24 @@ class RemoteDB:
             self._local_conn.commit()
             return [
                 _FakeRow(
-                    [d[0***REMOVED*** for d in cur.description***REMOVED*** if cur.description else [***REMOVED***,
+                    [d[0] for d in cur.description] if cur.description else [],
                     list(row),
                 )
                 for row in cur.fetchall()
-            ***REMOVED***
+            ]
 
     def fetchall(
-        self, sql: str, params: Sequence[Any***REMOVED*** = ()
-    ) -> list[_FakeRow***REMOVED***:
+        self, sql: str, params: Sequence[Any] = ()
+    ) -> list[_FakeRow]:
         """Execute a SELECT and return all rows."""
         return self.execute(sql, params)
 
     def fetchone(
-        self, sql: str, params: Sequence[Any***REMOVED*** = ()
+        self, sql: str, params: Sequence[Any] = ()
     ) -> _FakeRow | None:
         """Execute a SELECT and return one row or None."""
         rows = self.fetchall(sql, params)
-        return rows[0***REMOVED*** if rows else None
+        return rows[0] if rows else None
 
     def commit(self) -> None:
         """Commit (no-op for rqlite, explicit for local)."""
@@ -154,20 +154,20 @@ class RemoteDB:
         """True if currently using local SQLite fallback."""
         return self._remote_ok is False or self.remote_url is None
 
-    def health(self) -> dict[str, Any***REMOVED***:
+    def health(self) -> dict[str, Any]:
         """Return health info about the connection."""
-        info: dict[str, Any***REMOVED*** = {
+        info: dict[str, Any] = {
             "remote_url": self.remote_url,
             "local_path": str(self.local_path),
             "mode": "remote" if self.is_remote else "local",
-        ***REMOVED***
+        }
         if self.remote_url:
             try:
-                req = urllib.request.Request(f"{self.remote_url***REMOVED***/status?pretty=false")
+                req = urllib.request.Request(f"{self.remote_url}/status?pretty=false")
                 urllib.request.urlopen(req, timeout=self.timeout)
-                info["remote_ready"***REMOVED*** = True
+                info["remote_ready"] = True
             except Exception:
-                info["remote_ready"***REMOVED*** = False
+                info["remote_ready"] = False
         return info
 
     # ── private: remote rqlite ───────────────────────────────────────
@@ -182,7 +182,7 @@ class RemoteDB:
         # Lazy test
         if self._remote_ok is None:
             try:
-                req = urllib.request.Request(f"{self.remote_url***REMOVED***/status?pretty=false")
+                req = urllib.request.Request(f"{self.remote_url}/status?pretty=false")
                 urllib.request.urlopen(req, timeout=self.timeout)
                 self._remote_ok = True
                 logger.info("RemoteDB: connected to rqlite at %s", self.remote_url)
@@ -192,8 +192,8 @@ class RemoteDB:
         return self._remote_ok
 
     def _remote_execute(
-        self, sql: str, params: Sequence[Any***REMOVED*** = ()
-    ) -> list[_FakeRow***REMOVED***:
+        self, sql: str, params: Sequence[Any] = ()
+    ) -> list[_FakeRow]:
         """Send SQL to rqlite via GET /db/query or POST /db/execute."""
         import urllib.parse
 
@@ -202,40 +202,40 @@ class RemoteDB:
 
         if is_select:
             # rqlite v10: GET /db/query?q=SELECT...
-            qs = urllib.parse.urlencode({"q": full_sql***REMOVED***)
-            url = f"{self.remote_url***REMOVED***/db/query?{qs***REMOVED***"
-            req = urllib.request.Request(url, headers={"Content-Type": "application/json"***REMOVED***)
+            qs = urllib.parse.urlencode({"q": full_sql})
+            url = f"{self.remote_url}/db/query?{qs}"
+            req = urllib.request.Request(url, headers={"Content-Type": "application/json"})
             resp = urllib.request.urlopen(req, timeout=self.timeout)
             result = json.loads(resp.read())
-            res = result.get("results", [{***REMOVED******REMOVED***)
+            res = result.get("results", [{}])
             if not res:
-                return [***REMOVED***
-            columns = res[0***REMOVED***.get("columns", [***REMOVED***)
-            values_list = res[0***REMOVED***.get("values", [***REMOVED***)
-            return [_FakeRow(columns, list(v)) for v in values_list***REMOVED***
+                return []
+            columns = res[0].get("columns", [])
+            values_list = res[0].get("values", [])
+            return [_FakeRow(columns, list(v)) for v in values_list]
         else:
             # rqlite v10: POST /db/execute with JSON array
-            data = json.dumps([full_sql***REMOVED***).encode()
+            data = json.dumps([full_sql]).encode()
             req = urllib.request.Request(
-                f"{self.remote_url***REMOVED***/db/execute",
+                f"{self.remote_url}/db/execute",
                 data=data,
-                headers={"Content-Type": "application/json"***REMOVED***,
+                headers={"Content-Type": "application/json"},
             )
             urllib.request.urlopen(req, timeout=self.timeout)
-            return [***REMOVED***
+            return []
 
-    def _remote_execute_batch(self, stmts: list[str***REMOVED***) -> None:
+    def _remote_execute_batch(self, stmts: list[str]) -> None:
         """Send multiple statements as a batch."""
         data = json.dumps(stmts).encode()
         req = urllib.request.Request(
-            f"{self.remote_url***REMOVED***/db/execute",
+            f"{self.remote_url}/db/execute",
             data=data,
-            headers={"Content-Type": "application/json"***REMOVED***,
+            headers={"Content-Type": "application/json"},
         )
         urllib.request.urlopen(req, timeout=self.timeout)
 
     @staticmethod
-    def _interpolate(sql: str, params: Sequence[Any***REMOVED***) -> str:
+    def _interpolate(sql: str, params: Sequence[Any]) -> str:
         """Replace ``?`` placeholders with properly escaped values.
 
         This is needed because rqlite's array-of-strings format doesn't
@@ -244,16 +244,16 @@ class RemoteDB:
         if not params:
             return sql
 
-        parts: list[str***REMOVED*** = [***REMOVED***
+        parts: list[str] = []
         param_idx = 0
         i = 0
         while i < len(sql):
-            if sql[i***REMOVED*** == "?" and param_idx < len(params):
-                parts.append(RemoteDB._escape(params[param_idx***REMOVED***))
+            if sql[i] == "?" and param_idx < len(params):
+                parts.append(RemoteDB._escape(params[param_idx]))
                 param_idx += 1
                 i += 1
             else:
-                parts.append(sql[i***REMOVED***)
+                parts.append(sql[i])
                 i += 1
         return "".join(parts)
 
@@ -268,7 +268,7 @@ class RemoteDB:
             return str(value)
         # String: single-quote escape
         escaped = str(value).replace("'", "''")
-        return f"'{escaped***REMOVED***'"
+        return f"'{escaped}'"
 
     # ── private: local fallback ──────────────────────────────────────
 

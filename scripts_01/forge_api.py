@@ -8,10 +8,10 @@ Endpoints (versioned under /api/v1):
   GET /                              landing page (JSON platform info)
   GET /health                        liveness check (registry + cost-json reachable)
   GET /api/v1/projects               list registered projects from registry
-  GET /api/v1/projects/{slug***REMOVED***        project detail (registry status + last_pipeline)
-  GET /api/v1/projects/{slug***REMOVED***/chain  ChainRun JSON (9-key schema, v5.164.0)
+  GET /api/v1/projects/{slug}        project detail (registry status + last_pipeline)
+  GET /api/v1/projects/{slug}/chain  ChainRun JSON (9-key schema, v5.164.0)
   GET /api/v1/metrics                v5.179.0 cost campaign (mean/median/p95 per project)
-  GET /static/{path:path***REMOVED***            serve prototype HTML/CSS/JS from prototype_22/
+  GET /static/{path:path}            serve prototype HTML/CSS/JS from prototype_22/
   GET /prototype                     shortcut → prototype_22/index.html
 
 History:
@@ -44,7 +44,7 @@ import json
 import os
 import sys
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, List, Optional
 
 from fastapi import FastAPI, HTTPException, Request
@@ -108,11 +108,11 @@ app = FastAPI(
 # origin. Wide-open is acceptable for a local prototype; tighten for prod.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"***REMOVED***,
+    allow_origins=["*"],
     # GET for prototype static + read-only dashboard; POST for interactive
     # bridge (project create + chain-run invoke). OPTIONS for CORS preflight.
-    allow_methods=["GET", "POST", "OPTIONS"***REMOVED***,
-    allow_headers=["*"***REMOVED***,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
 )
 
 # ─── Interactive bridge mount (v5.187.0) — MUST be AFTER app = FastAPI() ──
@@ -124,7 +124,7 @@ app.include_router(interactive_router)
 
 
 # ─── Helpers ───────────────────────────────────────────────────────────────
-def _read_registry() -> dict[str, Any***REMOVED***:
+def _read_registry() -> dict[str, Any]:
     """Load data_13/forge_registry.yaml via real ForgeRegistry public API.
 
     Uses ForgeRegistry (B10 invariant validation + R-127 schema enforcement)
@@ -138,9 +138,9 @@ def _read_registry() -> dict[str, Any***REMOVED***:
         return {
             "reg": None,
             "exists": False,
-            "violations": [***REMOVED***,
+            "violations": [],
             "load_error": "registry file does not exist",
-        ***REMOVED***
+        }
     try:
         reg = ForgeRegistry(REGISTRY_PATH)
         return {
@@ -148,32 +148,32 @@ def _read_registry() -> dict[str, Any***REMOVED***:
             "exists": True,
             "violations": reg.schema_violations,  # public @property (line 165)
             "load_error": getattr(reg, "_load_error", None),  # private but informational only
-        ***REMOVED***
+        }
     except Exception as exc:  # noqa: BLE001 — defensive: any registry error is degraded
         return {
             "reg": None,
             "exists": True,
-            "violations": [***REMOVED***,
+            "violations": [],
             "load_error": repr(exc),
-        ***REMOVED***
+        }
 
 
-def _read_cost_metrics() -> dict[str, Any***REMOVED***:
+def _read_cost_metrics() -> dict[str, Any]:
     """Load /tmp/forge_chain_chaos_cost.json (v5.179.0 campaign output)."""
     if not COST_JSON.exists():
-        return {***REMOVED***
+        return {}
     try:
         return json.loads(COST_JSON.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        return {"_error": f"JSON parse failed: {exc!r***REMOVED***"***REMOVED***
+        return {"_error": f"JSON parse failed: {exc!r}"}
 
 
-def _project_slug_to_dir(slug: str) -> Optional[Path***REMOVED***:
+def _project_slug_to_dir(slug: str) -> Optional[Path]:
     """Resolve project_id (slug-form or underscore-form) to demo project directory."""
     candidates = [
         REPO_ROOT / "projects_17" / slug,
         REPO_ROOT / "projects_17" / slug.replace("-", "_"),
-    ***REMOVED***
+    ]
     for c in candidates:
         if c.exists() and c.is_dir():
             return c
@@ -196,7 +196,7 @@ def _classify_role(role: str) -> str:
     return "unknown_mode"  # defensive — list PIPELINE_CHAIN explicitly for traceability
 
 
-def _mock_chain_run(slug: str, registered: bool = False) -> dict[str, Any***REMOVED***:
+def _mock_chain_run(slug: str, registered: bool = False) -> dict[str, Any]:
     """Build deterministic mock ChainRun JSON matching v5.164.0 9-key schema.
 
     Always returns ``_mock: True`` so consumers can distinguish synthetic fixtures
@@ -204,11 +204,11 @@ def _mock_chain_run(slug: str, registered: bool = False) -> dict[str, Any***REMO
     surface, not real-time executor. Mock fixture reflects v5.179.0 measurements
     per project (mean/p95).
     """
-    row = _read_cost_metrics().get("projects", {***REMOVED***).get(slug, {***REMOVED***)
+    row = _read_cost_metrics().get("projects", {}).get(slug, {})
     mean_s = row.get("mean_s", 0.0)
-    overall = row.get("overalls", ["degraded"***REMOVED***)[0***REMOVED*** if row.get("overalls") else "degraded"
+    overall = row.get("overalls", ["degraded"])[0] if row.get("overalls") else "degraded"
     reg_status = row.get("validation_registry_status", "missing")
-    chain = [***REMOVED***
+    chain = []
     for role in PIPELINE_CHAIN:
         mode = _classify_role(role)
         # frontend is conditional in mock: status reflects registration state
@@ -230,7 +230,7 @@ def _mock_chain_run(slug: str, registered: bool = False) -> dict[str, Any***REMO
             "status": stage_status,
             "details": role,
             "duration_s": round(mean_s / 14.0, 4),
-        ***REMOVED***)
+        ])
     return {
         "_mock": True,
         "project_id": slug.replace("_", "-"),
@@ -242,10 +242,10 @@ def _mock_chain_run(slug: str, registered: bool = False) -> dict[str, Any***REMO
         "validation_registry_status": reg_status,
         "validation_summary": (
             None if reg_status == "missing"
-            else {"overall": "ok", "base_check_status": "ok"***REMOVED***
+            else {"overall": "ok", "base_check_status": "ok"}
         ),
         "chain": chain,
-    ***REMOVED***
+    }
 
 
 # ─── Routes ────────────────────────────────────────────────────────────────
@@ -268,7 +268,7 @@ def root(request: Request) -> Any:
             return FileResponse(
                 idx,
                 media_type="text/html",
-                headers={"Cache-Control": "no-cache"***REMOVED***,
+                headers={"Cache-Control": "no-cache"},
             )
     return {
         "name": "Freebuff Forge API",
@@ -281,17 +281,17 @@ def root(request: Request) -> Any:
         "endpoints": {
             "health": "/health",
             "projects": "/api/v1/projects",
-            "project_detail": "/api/v1/projects/{slug***REMOVED***",
-            "chain_json": "/api/v1/projects/{slug***REMOVED***/chain",
+            "project_detail": "/api/v1/projects/{slug]",
+            "chain_json": "/api/v1/projects/{slug]/chain",
             "metrics": "/api/v1/metrics",
             "static": "/static/",
-        ***REMOVED***,
+        },
         "docs": "https://freebuff.local/docs (pending — local prototype)",
-    ***REMOVED***
+    }
 
 
 @app.get("/health")
-def health() -> dict[str, Any***REMOVED***:
+def health() -> dict[str, Any]:
     """Liveness — registry + cost-json reachable + schema violations count."""
     reg_data = _read_registry()
     cost_data = _read_cost_metrics()
@@ -302,7 +302,7 @@ def health() -> dict[str, Any***REMOVED***:
             else "degraded"
         ),
         "registry_present": reg_data.get("exists", False),
-        "registry_violations": len(reg_data.get("violations", [***REMOVED***)),
+        "registry_violations": len(reg_data.get("violations", [])),
         "registry_load_error": reg_data.get("_error"),
         "cost_metrics_present": bool(cost_data) and cost_data.get("_error") is None,
         "registry_path": str(REGISTRY_PATH),
@@ -310,22 +310,22 @@ def health() -> dict[str, Any***REMOVED***:
         "app_version": APP_VERSION,
         "python": sys.version,
         "timestamp": datetime.now(timezone.utc).isoformat(),
-    ***REMOVED***
+    }
 
 
 @app.get("/api/v1/projects")
-def list_projects() -> dict[str, Any***REMOVED***:
+def list_projects() -> dict[str, Any]:
     """List registered projects from data_13/forge_registry.yaml.
 
     Uses public ``ForgeRegistry.list_projects_by_status()`` (no filter → all).
     """
     reg_data = _read_registry()
     reg = reg_data.get("reg")
-    items: List[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    items: List[dict[str, Any]] = []
     if reg is not None:
         statuses = reg.list_projects_by_status()  # public method, returns ForgeStatus list
         for s in statuses:
-            last = s.last_pipeline or {***REMOVED***
+            last = s.last_pipeline or {}
             items.append({
                 "project_id": s.project_id,
                 "name": s.name,
@@ -334,17 +334,17 @@ def list_projects() -> dict[str, Any***REMOVED***:
                 "last_run_at": s.last_run_at,
                 "last_overall": last.get("overall"),
                 "last_stage_count": last.get("stage_count"),
-                "last_chain_len": len(last.get("chain") or [***REMOVED***),
-            ***REMOVED***)
+                "last_chain_len": len(last.get("chain") or []),
+            ])
     return {
         "count": len(items),
-        "schema_violations": reg_data.get("violations", [***REMOVED***),
+        "schema_violations": reg_data.get("violations", []),
         "load_error": reg_data.get("load_error"),
         "projects": items,
-    ***REMOVED***
+    }
 
 
-def _project_status_or_none(reg: Optional[ForgeRegistry***REMOVED***, slug: str) -> tuple[Optional[ForgeStatus***REMOVED***, Optional[str***REMOVED******REMOVED***:
+def _project_status_or_none(reg: Optional[ForgeRegistry], slug: str) -> tuple[Optional[ForgeStatus], Optional[str]]:
     """Resolve slug (canonical or hyphenated) to its ForgeStatus (or None).
 
     Returns (status, matched_key).
@@ -358,8 +358,8 @@ def _project_status_or_none(reg: Optional[ForgeRegistry***REMOVED***, slug: str)
     return None, None
 
 
-@app.get("/api/v1/projects/{slug***REMOVED***")
-def project_detail(slug: str) -> dict[str, Any***REMOVED***:
+@app.get("/api/v1/projects/{slug)")
+def project_detail(slug: str) -> dict[str, Any]:
     """Single project detail from registry (real ForgeRegistry lookup + fallback for unregistered)."""
     reg_data = _read_registry()
     reg = reg_data.get("reg")
@@ -368,7 +368,7 @@ def project_detail(slug: str) -> dict[str, Any***REMOVED***:
     if status is None:
         d = _project_slug_to_dir(slug)
         if d is None:
-            raise HTTPException(status_code=404, detail=f"project not found: {slug***REMOVED***")
+            raise HTTPException(status_code=404, detail=f"project not found: {slug}")
         return {
             "_mock": True,
             "matched_as": slug,
@@ -380,17 +380,17 @@ def project_detail(slug: str) -> dict[str, Any***REMOVED***:
             "last_run_at": None,
             "last_pipeline_overall": None,
             "last_pipeline_stage_count": None,
-            "last_chain": [***REMOVED***,
-            "project_files_sample": [***REMOVED***,
-        ***REMOVED***
-    last = status.last_pipeline or {***REMOVED***
+            "last_chain": [],
+            "project_files_sample": [],
+        }
+    last = status.last_pipeline or {}
     proj_dir = Path(status.root or _project_slug_to_dir(slug) or REPO_ROOT)
-    files_sample: List[str***REMOVED*** = [***REMOVED***
+    files_sample: List[str] = []
     if proj_dir.is_dir():
         try:
-            files_sample = [str(p) for p in sorted(proj_dir.iterdir())[:5***REMOVED******REMOVED***
+            files_sample = [str(p) for p in sorted(proj_dir.iterdir())[:5]]
         except (PermissionError, OSError):
-            files_sample = [***REMOVED***
+            files_sample = []
     return {
         "_mock": False,
         "matched_as": matched,
@@ -402,13 +402,13 @@ def project_detail(slug: str) -> dict[str, Any***REMOVED***:
         "last_run_at": status.last_run_at,
         "last_pipeline_overall": last.get("overall"),
         "last_pipeline_stage_count": last.get("stage_count"),
-        "last_chain": last.get("chain") or [***REMOVED***,
+        "last_chain": last.get("chain") or [],
         "project_files_sample": files_sample,
-    ***REMOVED***
+    }
 
 
-@app.get("/api/v1/projects/{slug***REMOVED***/chain")
-def project_chain(slug: str) -> dict[str, Any***REMOVED***:
+@app.get("/api/v1/projects/{slug)/chain")
+def project_chain(slug: str) -> dict[str, Any]:
     """ChainRun 9-key JSON for a single project (matches v5.164.0 canonical schema).
 
     If ``registry.last_pipeline.chain`` is real → return it (with ``_mock: False``).
@@ -417,7 +417,7 @@ def project_chain(slug: str) -> dict[str, Any***REMOVED***:
     reg_data = _read_registry()
     reg = reg_data.get("reg")
     status, matched = _project_status_or_none(reg, slug)
-    last = (status.last_pipeline if status else None) or {***REMOVED***
+    last = (status.last_pipeline if status else None) or {}
 
     if status is not None and last.get("chain"):
         return {
@@ -425,30 +425,30 @@ def project_chain(slug: str) -> dict[str, Any***REMOVED***:
             "project_id": matched,
             "project_root": status.root,
             "stage_count": last.get("stage_count"),
-            "chain": last.get("chain") or [***REMOVED***,
+            "chain": last.get("chain") or [],
             "overall": last.get("overall"),
             "started_at": last.get("started_at"),
             "finished_at": last.get("finished_at"),
             "validation_registry_status": last.get("validation_registry_status"),
             "validation_summary": last.get("validation_summary"),
-        ***REMOVED***
+        }
 
     # Fallback to mock (demo project or unregistered; reflect registry state)
     registered = status is not None
     mock = _mock_chain_run(slug, registered=registered)
     if matched:
-        mock["project_id"***REMOVED*** = matched
+        mock["project_id"] = matched
         if status is not None:
-            mock["project_root"***REMOVED*** = status.root or mock["project_root"***REMOVED***
+            mock["project_root"] = status.root or mock["project_root"]
     return mock
 
 
 @app.get("/api/v1/metrics")
-def metrics() -> dict[str, Any***REMOVED***:
+def metrics() -> dict[str, Any]:
     """v5.179.0 cost campaign metrics — measured mean/median/p95 per demo project."""
     cost = _read_cost_metrics()
     if not cost:
-        return {"available": False, "reason": "cost JSON missing or unreadable"***REMOVED***
+        return {"available": False, "reason": "cost JSON missing or unreadable"}
     return {
         "available": True,
         "campaign_timestamp": cost.get("campaign_timestamp"),
@@ -457,7 +457,7 @@ def metrics() -> dict[str, Any***REMOVED***:
         "env": cost.get("env"),
         "projects": cost.get("projects"),
         "summary": cost.get("summary"),
-    ***REMOVED***
+    }
 
 
 # ─── Static prototype mount (if prototype_22/ exists) ──────────────────────
@@ -473,7 +473,7 @@ if PROTOTYPE_DIR.exists():
         return FileResponse(
             idx,
             media_type="text/html",
-            headers={"Cache-Control": "no-cache"***REMOVED***,  # symmetric with root (CR v5.187.2)
+            headers={"Cache-Control": "no-cache"},  # symmetric with root (CR v5.187.2)
         )
 else:
     @app.get("/prototype")
@@ -481,7 +481,7 @@ else:
         return JSONResponse(
             status_code=404,
             content={"error": "prototype_22/ directory not yet created",
-                     "hint": "create prototype_22/{index.html,style.css,app.js***REMOVED***"***REMOVED***,
+                     "hint": "create prototype_22/{index.html,style.css,app.js]"],
         )
 
 
@@ -490,8 +490,8 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", "8765"))
     host = os.environ.get("HOST", "127.0.0.1")
-    print(f"[forge_api***REMOVED*** starting on http://{host***REMOVED***:{port***REMOVED*** (version {APP_VERSION***REMOVED***)", flush=True)
-    print(f"[forge_api***REMOVED*** routes: /, /health, /api/v1/projects, /api/v1/metrics", flush=True)
-    print(f"[forge_api***REMOVED*** static mount: {'/static/ → ' + str(PROTOTYPE_DIR) if PROTOTYPE_DIR.exists() else 'prototype not found'***REMOVED***", flush=True)
+    print(f"[forge_api] starting on http://{host}:{port} (version {APP_VERSION})", flush=True)
+    print(f"[forge_api] routes: /, /health, /api/v1/projects, /api/v1/metrics", flush=True)
+    print(f"[forge_api] static mount: {'/static/ → ' + str(PROTOTYPE_DIR) if PROTOTYPE_DIR.exists() else 'prototype not found'}", flush=True)
     # Direct invocation (not string path) — avoids uvicorn re-importing the module.
     uvicorn.run(app, host=host, port=port, log_level="info")

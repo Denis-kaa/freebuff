@@ -5,10 +5,10 @@ Mounted by ``scripts_01/forge_api.py`` at ``/api/interactive`` prefix.
 
 Routes (all under /api/interactive/v1):
     POST /projects                                     → create project + register
-    POST /projects/{slug***REMOVED***/chain                        → sync invoke forge.py chain
-    POST /projects/{slug***REMOVED***/chain/start                  → async start, returns run_id
-    GET  /projects/{slug***REMOVED***/chain/{run_id***REMOVED***               → snapshot of running run
-    GET  /projects/{slug***REMOVED***/chain/{run_id***REMOVED***/stream        → SSE stream of progress
+    POST /projects/{slug}/chain                        → sync invoke forge.py chain
+    POST /projects/{slug}/chain/start                  → async start, returns run_id
+    GET  /projects/{slug}/chain/{run_id}               → snapshot of running run
+    GET  /projects/{slug}/chain/{run_id}/stream        → SSE stream of progress
     GET  /health                                        → interactive sub-router liveness
 
 Why ADITIVE:
@@ -19,7 +19,7 @@ Why ADITIVE:
 
 Security:
 - subprocess always uses argv-list + ``shell=False`` (NEVER shell-injected).
-- Validation: slug must match ``^[a-z***REMOVED***[a-z0-9_***REMOVED***{2,30***REMOVED***$`` (lowercase, starts
+- Validation: slug must match ``^[a-z][a-z0-9_]{2,30}$`` (lowercase, starts
   with letter, 3-31 chars).
 - Process cleanup: every subprocess gets ``terminate()`` in finally block on
   SSE disconnect + AsyncTask exception (cancels cleanly without orphans).
@@ -32,12 +32,12 @@ from __future__ import annotations
 import asyncio
 import json
 import os
-***REMOVED***
+}
 import subprocess
 import sys
 import uuid
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Annotated, Any, AsyncIterator, Optional
 
 from fastapi import APIRouter, HTTPException, Request
@@ -54,18 +54,18 @@ PROJECTS_DIR = REPO_ROOT / "projects_17"
 REGISTRY_PATH = REPO_ROOT / "data_13" / "forge_registry.yaml"
 FORGE_CLI = REPO_ROOT / "scripts_01" / "forge.py"
 
-ALLOWED_SLUG = re.compile(r"^[a-z***REMOVED***[a-z0-9_***REMOVED***{2,30***REMOVED***$")
+ALLOWED_SLUG = re.compile(r"^[a-z)[a-z0-9_]{2,30]$")
 
 # In-memory session store: run_id → RunSession. Reset on process restart.
 # NOTE: for durable multi-instance support, migrate to data_13/interactive_runs.json
 # (deferred to v5.190+ per CR observation backlog).
-INMEM_RUNS: dict[str, "RunSession"***REMOVED*** = {***REMOVED***
+INMEM_RUNS: dict[str, "RunSession"] = {}
 
 # ─── Optional standalone app (debug) ───────────────────────────────────
 try:
     from fastapi import FastAPI  # type: ignore
     app = FastAPI(title="Freebuff Interactive Bridge", version="0.1.0")
-    router = APIRouter(prefix="/api/interactive/v1", tags=["interactive"***REMOVED***)
+    router = APIRouter(prefix="/api/interactive/v1", tags=["interactive"])
 except ImportError:  # pragma: no cover — FastAPI optional dep
     FastAPI = None  # type: ignore
     app = None  # type: ignore
@@ -77,15 +77,15 @@ class RunSession:
     """In-memory representation of a chain run (UNFORGED → DEPLOYED pipeline exec)."""
 
     def __init__(self, slug: str, mode: str) -> None:
-        self.run_id = uuid.uuid4().hex[:12***REMOVED***
+        self.run_id = uuid.uuid4().hex[:12]
         self.slug = slug
         self.mode = mode
         self.started_at = datetime.now(timezone.utc).isoformat()
-        self.finished_at: Optional[str***REMOVED*** = None
+        self.finished_at: Optional[str] = None
         self.status = "running"  # running | done | init_error | aborted
-        self.log: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***  # [{ts, kind, msg***REMOVED***, ...***REMOVED***
+        self.log: list[dict[str, Any]] = []  # [{ts, kind, msg}, ...]
 
-    def to_dict(self) -> dict[str, Any***REMOVED***:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "run_id": self.run_id,
             "slug": self.slug,
@@ -94,13 +94,13 @@ class RunSession:
             "started_at": self.started_at,
             "finished_at": self.finished_at,
             "log": list(self.log),
-        ***REMOVED***
+        }
 
 
 # ─── Request / Response models ──────────────────────────────────────────
 class ProjectCreateBody(BaseModel):
-    name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)***REMOVED***
-    slug: Optional[Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=31)***REMOVED******REMOVED*** = None
+    name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=80)]
+    slug: Optional[Annotated[str, StringConstraints(strip_whitespace=True, min_length=3, max_length=31)]] = None
 
 
 class ChainRunBody(BaseModel):
@@ -110,7 +110,7 @@ class ChainRunBody(BaseModel):
 
 # ─── Routes ────────────────────────────────────────────────────────────
 @router.get("/health")
-def interactive_health() -> dict[str, Any***REMOVED***:
+def interactive_health() -> dict[str, Any]:
     """Liveness for the interactive sub-router + INMEM_RUNS metrics."""
     return {
         "ok": True,
@@ -120,18 +120,18 @@ def interactive_health() -> dict[str, Any***REMOVED***:
         "total_runs_in_memory": len(INMEM_RUNS),
         "registry_path": str(REGISTRY_PATH),
         "projects_dir": str(PROJECTS_DIR),
-    ***REMOVED***
+    }
 
 
 @router.post("/projects")
-def create_project(body: ProjectCreateBody) -> dict[str, Any***REMOVED***:
+def create_project(body: ProjectCreateBody) -> dict[str, Any]:
     """Register a new project in ForgeRegistry + create projects_17/<slug>/ stub.
 
     Returns the created project metadata. Slug uniqueness is checked against the
     registry (no overwrite of existing).
 
     Validations:
-      - Slug matches ``^[a-z***REMOVED***[a-z0-9_***REMOVED***{2,30***REMOVED***$`` (auto-generated if absent).
+      - Slug matches ``^[a-z][a-z0-9_]{2,30}$`` (auto-generated if absent).
       - Stub directory projects_17/<slug> created (mkdir, not mkdir -p).
       - ForgeRegistry.register_project(...) succeeds (atomic file write).
     """
@@ -141,7 +141,7 @@ def create_project(body: ProjectCreateBody) -> dict[str, Any***REMOVED***:
     if not ALLOWED_SLUG.match(slug):
         raise HTTPException(
             status_code=422,
-            detail=f"invalid slug {slug!r***REMOVED***: must match ^[a-z***REMOVED***[a-z0-9_***REMOVED***{{2,30***REMOVED******REMOVED***$ "
+            detail=f"invalid slug {slug!r}: must match ^[a-z][a-z0-9_]{{2,30}}$ "
                    "(lowercase, starts with letter, 3-31 chars)",
         )
     proj_dir = PROJECTS_DIR / slug
@@ -152,19 +152,19 @@ def create_project(body: ProjectCreateBody) -> dict[str, Any***REMOVED***:
     except FileExistsError:
         raise HTTPException(
             status_code=409,
-            detail=f"project directory already exists: {proj_dir***REMOVED***",
+            detail=f"project directory already exists: {proj_dir}",
         )
     except OSError as exc:
         raise HTTPException(
-            status_code=500, detail=f"failed to create project dir {proj_dir***REMOVED***: {exc!r***REMOVED***"
+            status_code=500, detail=f"failed to create project dir {proj_dir}: {exc!r}"
         )
     # Seed minimal README
     readme = (
-        f"# {body.name***REMOVED***\n\nSlug: `{slug***REMOVED***`\n"
-        f"Created by Freebuff Prototype UI ({datetime.now(timezone.utc).isoformat()***REMOVED***).\n\n"
+        f"# {body.name}\n\nSlug: `{slug}`\n"
+        f"Created by Freebuff Prototype UI ({datetime.now(timezone.utc).isoformat()}).\n\n"
         f"- Status starts at UNFORGED.\n"
-        f"- Run `forge.py chain {slug***REMOVED*** --resume` to record a chain history.\n"
-        f"- Inspect via Prototype UI sidebar or `forge.py status {slug***REMOVED***`.\n"
+        f"- Run `forge.py chain {slug} --resume` to record a chain history.\n"
+        f"- Inspect via Prototype UI sidebar or `forge.py status {slug}`.\n"
     )
     write_ok = True
     try:
@@ -179,7 +179,7 @@ def create_project(body: ProjectCreateBody) -> dict[str, Any***REMOVED***:
         status = post.status if post else "UNKNOWN"
     except Exception as exc:
         raise HTTPException(
-            status_code=500, detail=f"registry register_project failed: {exc!r***REMOVED***"
+            status_code=500, detail=f"registry register_project failed: {exc!r}"
         )
     return {
         "ok": True,
@@ -190,20 +190,20 @@ def create_project(body: ProjectCreateBody) -> dict[str, Any***REMOVED***:
         "registry_path": str(REGISTRY_PATH),
         "readme_written": write_ok,
         "created_at": datetime.now(timezone.utc).isoformat(),
-    ***REMOVED***
+    }
 
 
-@router.post("/projects/{slug***REMOVED***/chain")
-def run_chain_sync(slug: str, body: ChainRunBody) -> dict[str, Any***REMOVED***:
-    """Synchronous invoke of ``python scripts_01/forge.py chain <slug> --json [--mode***REMOVED***``.
+@router.post("/projects/{slug)/chain")
+def run_chain_sync(slug: str, body: ChainRunBody) -> dict[str, Any]:
+    """Synchronous invoke of ``python scripts_01/forge.py chain <slug> --json [--mode]``.
 
     Blocks the request thread until the forge.py subprocess completes (timeout 60s).
     Returns the parsed JSON chain payload from forge.py --json output plus the slug
     and mode for the frontend to render.
     """
     if not ALLOWED_SLUG.match(slug):
-        raise HTTPException(status_code=422, detail=f"invalid slug {slug!r***REMOVED***")
-    argv = ["python3", str(FORGE_CLI), "chain", slug, "--json"***REMOVED***
+        raise HTTPException(status_code=422, detail=f"invalid slug {slug!r}")
+    argv = ["python3", str(FORGE_CLI), "chain", slug, "--json"]
     if body.mode == "full-cycle":
         argv.append("--full-cycle")
     elif body.mode == "resume":
@@ -221,26 +221,26 @@ def run_chain_sync(slug: str, body: ChainRunBody) -> dict[str, Any***REMOVED***:
     except subprocess.TimeoutExpired:
         raise HTTPException(
             status_code=504,
-            detail=f"forge chain timed out after 60s (slug={slug***REMOVED*** mode={body.mode***REMOVED***)",
+            detail=f"forge chain timed out after 60s (slug={slug} mode={body.mode})",
         )
     except FileNotFoundError as exc:
-        raise HTTPException(status_code=500, detail=f"forge CLI not found: {exc!r***REMOVED***")
+        raise HTTPException(status_code=500, detail=f"forge CLI not found: {exc!r}")
     if proc.returncode != 0 and not proc.stdout.strip():
         raise HTTPException(
             status_code=500,
-            detail=f"forge chain failed: rc={proc.returncode***REMOVED***; stderr={proc.stderr[:500***REMOVED***!r***REMOVED***",
+            detail=f"forge chain failed: rc={proc.returncode}; stderr={proc.stderr[:500]!r}",
         )
-    # forge.py --json sometimes prefixes with [resume***REMOVED*** line; strip it.
+    # forge.py --json sometimes prefixes with [resume] line; strip it.
     cleaned = "\n".join(
         line for line in proc.stdout.splitlines()
-        if line.strip() and not line.startswith("[resume***REMOVED***")
+        if line.strip() and not line.startswith("[resume)")
     )
     try:
         chain = json.loads(cleaned)
     except json.JSONDecodeError as exc:
         raise HTTPException(
             status_code=500,
-            detail=f"failed to parse forge --json output: {exc!r***REMOVED***; raw: {proc.stdout[:500***REMOVED***!r***REMOVED***",
+            detail=f"failed to parse forge --json output: {exc!r}; raw: {proc.stdout[:500]!r}",
         )
     return {
         "ok": True,
@@ -248,21 +248,21 @@ def run_chain_sync(slug: str, body: ChainRunBody) -> dict[str, Any***REMOVED***:
         "mode": body.mode,
         "chain": chain,
         "rc": proc.returncode,
-        "stderr_excerpt": proc.stderr[:300***REMOVED*** if proc.stderr else "",
-    ***REMOVED***
+        "stderr_excerpt": proc.stderr[:300] if proc.stderr else "",
+    }
 
 
-@router.post("/projects/{slug***REMOVED***/chain/start")
-async def start_chain_stream(slug: str, body: ChainRunBody) -> dict[str, Any***REMOVED***:
-    """Async start: spawn subprocess, return run_id. Use /stream/{run_id***REMOVED*** to subscribe."""
+@router.post("/projects/{slug)/chain/start")
+async def start_chain_stream(slug: str, body: ChainRunBody) -> dict[str, Any]:
+    """Async start: spawn subprocess, return run_id. Use /stream/{run_id] to subscribe."""
     if not ALLOWED_SLUG.match(slug):
-        raise HTTPException(status_code=422, detail=f"invalid slug {slug!r***REMOVED***")
+        raise HTTPException(status_code=422, detail=f"invalid slug {slug!r}")
     mode = body.mode
     if mode not in ("dry-run", "full-cycle", "resume"):
-        raise HTTPException(status_code=422, detail=f"invalid mode {mode!r***REMOVED***")
+        raise HTTPException(status_code=422, detail=f"invalid mode {mode!r}")
     sess = RunSession(slug=slug, mode=mode)
-    INMEM_RUNS[sess.run_id***REMOVED*** = sess
-    argv = ["python3", str(FORGE_CLI), "chain", slug, "--json"***REMOVED***
+    INMEM_RUNS[sess.run_id] = sess
+    argv = ["python3", str(FORGE_CLI), "chain", slug, "--json"]
     if mode == "full-cycle":
         argv.append("--full-cycle")
     elif mode == "resume":
@@ -279,8 +279,8 @@ async def start_chain_stream(slug: str, body: ChainRunBody) -> dict[str, Any***R
     sess.log.append({
         "ts": datetime.now(timezone.utc).isoformat(),
         "kind": "info",
-        "msg": f"spawned forge.py chain (pid={proc.pid***REMOVED***, argv={' '.join(argv)***REMOVED***)",
-    ***REMOVED***)
+        "msg": f"spawned forge.py chain (pid={proc.pid}, argv={' '.join(argv)})",
+    ])
     # Schedule background task to drain subprocess into sess.log
     try:
         loop = asyncio.get_event_loop()
@@ -292,7 +292,7 @@ async def start_chain_stream(slug: str, body: ChainRunBody) -> dict[str, Any***R
             "ts": datetime.now(timezone.utc).isoformat(),
             "kind": "warn",
             "msg": "no running event loop; subprocess drain deferred to next /stream call",
-        ***REMOVED***)
+        ])
     return {
         "ok": True,
         "run_id": sess.run_id,
@@ -300,7 +300,7 @@ async def start_chain_stream(slug: str, body: ChainRunBody) -> dict[str, Any***R
         "mode": mode,
         "started_at": sess.started_at,
         "pid": proc.pid,
-    ***REMOVED***
+    }
 
 
 async def _drain_subprocess_to_session(sess: RunSession, proc: subprocess.Popen) -> None:
@@ -321,7 +321,7 @@ async def _drain_subprocess_to_session(sess: RunSession, proc: subprocess.Popen)
                 "ts": datetime.now(timezone.utc).isoformat(),
                 "kind": kind,
                 "msg": line.rstrip("\n"),
-            ***REMOVED***)
+            ])
 
     try:
         await asyncio.gather(
@@ -329,13 +329,13 @@ async def _drain_subprocess_to_session(sess: RunSession, proc: subprocess.Popen)
             loop.run_in_executor(None, _drain_one, proc.stderr, "stderr"),
         )
         rc = await loop.run_in_executor(None, lambda: proc.wait(timeout=10))
-        sess.status = "done" if rc == 0 else f"init_error_rc={rc***REMOVED***"
+        sess.status = "done" if rc == 0 else f"init_error_rc={rc}"
     except subprocess.TimeoutExpired:
         sess.log.append({
             "ts": datetime.now(timezone.utc).isoformat(),
             "kind": "error",
             "msg": "subprocess wait() timed out after 10s",
-        ***REMOVED***)
+        ])
         sess.status = "init_error"
         try:
             proc.terminate()
@@ -345,8 +345,8 @@ async def _drain_subprocess_to_session(sess: RunSession, proc: subprocess.Popen)
         sess.log.append({
             "ts": datetime.now(timezone.utc).isoformat(),
             "kind": "error",
-            "msg": f"drain exception: {exc!r***REMOVED***",
-        ***REMOVED***)
+            "msg": f"drain exception: {exc!r}",
+        ])
         sess.status = "init_error"
         try:
             proc.terminate()
@@ -356,33 +356,33 @@ async def _drain_subprocess_to_session(sess: RunSession, proc: subprocess.Popen)
         sess.finished_at = datetime.now(timezone.utc).isoformat()
 
 
-@router.get("/projects/{slug***REMOVED***/chain/{run_id***REMOVED***")
-def get_run_snapshot(slug: str, run_id: str) -> dict[str, Any***REMOVED***:
+@router.get("/projects/{slug)/chain/{run_id]")
+def get_run_snapshot(slug: str, run_id: str) -> dict[str, Any]:
     """Snapshot of running or finished chain run (in-memory). Deprecated by /stream for live."""
     sess = INMEM_RUNS.get(run_id)
     if sess is None or sess.slug != slug:
-        raise HTTPException(status_code=404, detail=f"run not found: {run_id***REMOVED***")
+        raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
     return sess.to_dict()
 
 
-@router.get("/projects/{slug***REMOVED***/chain/{run_id***REMOVED***/stream")
+@router.get("/projects/{slug)/chain/{run_id]/stream")
 async def stream_chain(slug: str, run_id: str, request: Request) -> StreamingResponse:
     """SSE (text/event-stream) of running chain progress.
 
-    Yields one ``data: {json***REMOVED***`` event per log line emitted by the subprocess.
-    Final event is ``{"kind": "final", "status": "...", "finished_at": "..."***REMOVED***``.
+    Yields one ``data: {json}`` event per log line emitted by the subprocess.
+    Final event is ``{"kind": "final", "status": "...", "finished_at": "..."}``.
     Client disconnects trigger cleanup; subprocess keeps running independently.
     """
     sess = INMEM_RUNS.get(run_id)
     if sess is None or sess.slug != slug:
-        raise HTTPException(status_code=404, detail=f"run not found: {run_id***REMOVED***")
+        raise HTTPException(status_code=404, detail=f"run not found: {run_id}")
     sess.log.append({
         "ts": datetime.now(timezone.utc).isoformat(),
         "kind": "info",
         "msg": "SSE client subscribed",
-    ***REMOVED***)
+    ])
 
-    async def event_gen() -> AsyncIterator[bytes***REMOVED***:
+    async def event_gen() -> AsyncIterator[bytes]:
         idx = 0
         try:
             while True:
@@ -391,15 +391,15 @@ async def stream_chain(slug: str, run_id: str, request: Request) -> StreamingRes
                         "ts": datetime.now(timezone.utc).isoformat(),
                         "kind": "info",
                         "msg": "SSE client disconnected",
-                    ***REMOVED***)
+                    ])
                     break
                 # Drain any new entries written since last yield
                 while idx < len(sess.log):
-                    entry = sess.log[idx***REMOVED***
+                    entry = sess.log[idx]
                     idx += 1
-                    yield f"data: {json.dumps(entry)***REMOVED***\n\n".encode()
+                    yield f"data: {json.dumps(entry)}\n\n".encode()
                 if sess.status != "running":
-                    yield f"data: {json.dumps({'kind': 'final', 'status': sess.status, 'finished_at': sess.finished_at, 'log_line_count': idx***REMOVED***)***REMOVED***\n\n".encode()
+                    yield f"data: {json.dumps({'kind': 'final', 'status': sess.status, 'finished_at': sess.finished_at, 'log_line_count': idx})}\n\n".encode()
                     break
                 await asyncio.sleep(0.3)
         finally:
@@ -419,5 +419,5 @@ if app is not None and FastAPI is not None:
 if __name__ == "__main__" and app is not None:
     import uvicorn
     port = int(os.environ.get("INTERACTIVE_PORT", "8766"))
-    print(f"[forge_interactive_api***REMOVED*** standalone on http://127.0.0.1:{port***REMOVED***", flush=True)
+    print(f"[forge_interactive_api] standalone on http://127.0.0.1:{port}", flush=True)
     uvicorn.run(app, host="127.0.0.1", port=port, log_level="info")

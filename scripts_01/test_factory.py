@@ -13,14 +13,14 @@ test-специфичные поля (requested_code/assertion/expected_outcome/
 - Capability: "code" (Missing Cap #0 Blueprint).
 
 CLI:
-    test_factory resolve <opportunity_id> [--json***REMOVED***
-    test_factory run <opportunity_id> [--dry-run***REMOVED*** [--project-root PATH***REMOVED*** [--json***REMOVED***
+    test_factory resolve <opportunity_id> [--json]
+    test_factory run <opportunity_id> [--dry-run] [--project-root PATH] [--json]
 """
 
 from __future__ import annotations
 
 import sys
-***REMOVED***
+}
 from typing import Any, Dict
 
 from core_02.factory_base import BaseFactory, ExecutionRequest
@@ -42,16 +42,16 @@ class TestFactory(BaseFactory):
     PROG = "test_factory"
     FACTORY_ID = "test"
 
-    def normalize_input(self, opp: Any) -> Dict[str, Any***REMOVED***:
+    def normalize_input(self, opp: Any) -> Dict[str, Any]:
         """Opportunity → нормализованный test-вход (requested_code/assertion/context).
 
         Извлекает test-специфичные поля, дефолтит на title/description как
         fallback. Все существующие поля Opportunity — базово.
         """
-        prov = dict(getattr(opp, "provenance", {***REMOVED***) or {***REMOVED***)
+        prov = dict(getattr(opp, "provenance", {}) or {})
         test_block = prov.get("test") if isinstance(prov, dict) else None
         if not isinstance(test_block, dict):
-            test_block = getattr(opp, "test", {***REMOVED***) or {***REMOVED***
+            test_block = getattr(opp, "test", {}) or {}
         return {
             "title": getattr(opp, "title", "") or "",
             "description": getattr(opp, "description", "") or "",
@@ -59,7 +59,7 @@ class TestFactory(BaseFactory):
             "source_path": getattr(opp, "source_path", "") or "",
             "evidence_path": getattr(opp, "evidence_path", "") or "",
             "provenance": prov,
-            "related_whims": list(getattr(opp, "related_whims", None) or [***REMOVED***),
+            "related_whims": list(getattr(opp, "related_whims", None) or []),
             # Test-specific
             "requested_code": (
                 test_block.get("requested_code")
@@ -83,7 +83,7 @@ class TestFactory(BaseFactory):
                 or getattr(opp, "description", "")
                 or ""
             ),
-        ***REMOVED***
+        }
 
 
 # ─── Backward-compat module-level aliases ───
@@ -93,7 +93,7 @@ __all__ = [
     "ExecutionRequest",
     "TEST_CAPABILITIES",
     "TEST_ROLE_IDS",
-***REMOVED***
+]
 
 TEST_CAPABILITIES: tuple = TestFactory.CAPABILITIES
 TEST_ROLE_IDS: tuple = TestFactory.ROLE_IDS

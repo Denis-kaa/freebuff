@@ -22,7 +22,7 @@ import json
 import os
 import sys
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Dict, List, Optional, Any
 
 WORKSPACE = Path(__file__).resolve().parent.parent
@@ -54,10 +54,10 @@ class ContextBuilder:
         self._workspace = ws
         self._memory = MemoryEngine(workspace_root=str(ws))
         self._max_tokens = max_tokens
-        self._bridge: Optional[StreamBridge***REMOVED*** = None
+        self._bridge: Optional[StreamBridge] = None
 
     @property
-    def bridge(self) -> Optional[StreamBridge***REMOVED***:
+    def bridge(self) -> Optional[StreamBridge]:
         if self._bridge is None:
             try:
                 self._bridge = StreamBridge(auto_bootstrap=True, run_gc=False)
@@ -69,7 +69,7 @@ class ContextBuilder:
 
     def build(
         self,
-        levels: Optional[List[str***REMOVED******REMOVED*** = None,
+        levels: Optional[List[str]] = None,
         include_task: bool = True,
         include_changelog: bool = True,
         include_session: bool = True,
@@ -86,7 +86,7 @@ class ContextBuilder:
         Returns:
             Unified Context — строка для инжекта в начало промпта.
         """
-        sections: List[str***REMOVED*** = [***REMOVED***
+        sections: List[str] = []
         estimated_tokens = 0
         budget = self._max_tokens
 
@@ -134,7 +134,7 @@ class ContextBuilder:
         header = (
             "╔══════════════════════════════════════════════════════╗\n"
             "║          UNIFIED CONTEXT — BUFFY PROJECT           ║\n"
-            f"║  Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC'):>37***REMOVED*** ║\n"
+            f"║  Generated: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC'):>37} ║\n"
             "╚══════════════════════════════════════════════════════╝\n\n"
         )
 
@@ -143,16 +143,16 @@ class ContextBuilder:
     # ── Источники ───────────────────────────────────────────
 
     def _parse_levels(
-        self, levels: Optional[List[str***REMOVED******REMOVED***
-    ) -> List[MemoryLevel***REMOVED***:
+        self, levels: Optional[List[str]]
+    ) -> List[MemoryLevel]:
         if levels:
-            return [MemoryLevel(l) for l in levels***REMOVED***
+            return [MemoryLevel(l) for l in levels]
         return [
             MemoryLevel.WORKING,
             MemoryLevel.PROJECT,
             MemoryLevel.KNOWLEDGE,
             MemoryLevel.PERSONAL,
-        ***REMOVED***
+        ]
 
     def _read_file(self, path: Path, max_lines: int = 100) -> str:
         """Читает файл и возвращает содержимое (первые max_lines строк)."""
@@ -160,7 +160,7 @@ class ContextBuilder:
             return ""
         try:
             lines = path.read_text(encoding="utf-8").splitlines()
-            return "\n".join(lines[:max_lines***REMOVED***)
+            return "\n".join(lines[:max_lines])
         except Exception:
             return ""
 
@@ -174,7 +174,7 @@ class ContextBuilder:
             return ""
         return (
             "## 📋 TASK — текущая задача\n\n"
-            f"{content***REMOVED***\n"
+            f"{content}\n"
         )
 
     def _read_changelog(self) -> str:
@@ -186,13 +186,13 @@ class ContextBuilder:
             content = changelog_path.read_text(encoding="utf-8")
             # Берём последние 3 версии (разделитель ---)
             versions = content.split("\n\n---\n\n")
-            last_three = versions[-3:***REMOVED*** if len(versions) >= 3 else versions
+            last_three = versions[-3:] if len(versions) >= 3 else versions
             result = "\n\n---\n\n".join(last_three)
             if len(result) > 4000:
-                result = result[:4000***REMOVED*** + "\n\n... (truncated)"
+                result = result[:4000] + "\n\n... (truncated)"
             return (
                 "## 📝 CHANGELOG — последние изменения\n\n"
-                f"{result***REMOVED***\n"
+                f"{result}\n"
             )
         except Exception:
             return ""
@@ -203,10 +203,10 @@ class ContextBuilder:
             conspect = self.bridge.get_context_resume()
             if conspect and len(conspect) > 50:
                 if len(conspect) > 2000:
-                    conspect = conspect[:2000***REMOVED*** + "\n\n... (truncated)"
+                    conspect = conspect[:2000] + "\n\n... (truncated)"
                 return (
                     "## 📡 SESSION CONTEXT — последняя сессия\n\n"
-                    f"{conspect***REMOVED***\n"
+                    f"{conspect}\n"
                 )
         except Exception:
             return ""
@@ -214,7 +214,7 @@ class ContextBuilder:
 
     # ── Статус ──────────────────────────────────────────────
 
-    def get_status(self) -> Dict[str, Any***REMOVED***:
+    def get_status(self) -> Dict[str, Any]:
         """Статистика контекста."""
         mem_stats = self._memory.get_stats()
         task_exists = (self._workspace / "TASK.md").exists()
@@ -225,12 +225,12 @@ class ContextBuilder:
             "task_exists": task_exists,
             "changelog_exists": changelog_exists,
             "sources": {
-                "memory_levels": [l.value for l in self._parse_levels(None)***REMOVED***,
+                "memory_levels": [l.value for l in self._parse_levels(None)],
                 "task": "TASK.md" if task_exists else None,
                 "changelog": "CHANGELOG.md" if changelog_exists else None,
                 "session": "StreamBridge" if self._bridge else None,
-            ***REMOVED***,
-        ***REMOVED***
+            },
+        }
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -293,7 +293,7 @@ def main():
     # Парсим уровни
     levels = None
     if args.levels:
-        levels = [l.strip() for l in args.levels.split(",") if l.strip()***REMOVED***
+        levels = [l.strip() for l in args.levels.split(",") if l.strip()]
 
     # Собираем контекст
     ctx = builder.build(
@@ -312,8 +312,8 @@ def main():
         save_path = Path(args.save)
         save_path.write_text(ctx, encoding="utf-8")
         tokens = len(ctx) // 4
-        print(f"✅ Unified Context saved: {save_path***REMOVED***")
-        print(f"   Size: {len(ctx)***REMOVED*** chars, ~{tokens***REMOVED*** tokens")
+        print(f"✅ Unified Context saved: {save_path}")
+        print(f"   Size: {len(ctx)} chars, ~{tokens} tokens")
     else:
         print(ctx)
 

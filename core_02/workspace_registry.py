@@ -31,7 +31,7 @@ import logging
 import sqlite3
 import time
 from dataclasses import dataclass, field, field
-***REMOVED***
+}
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -47,13 +47,13 @@ class PrivacyViolationError(Exception):
         self.expected_slug = expected_slug
         self.actual_slug = actual_slug
         msg = (
-            f"Privacy violation: path '{path***REMOVED***' expected to be in workspace "
-            f"'{expected_slug***REMOVED***' but"
+            f"Privacy violation: path '{path}' expected to be in workspace "
+            f"'{expected_slug}' but"
         )
         if actual_slug is None:
             msg += " is NOT registered to any workspace."
         else:
-            msg += f" is registered to workspace '{actual_slug***REMOVED***'."
+            msg += f" is registered to workspace '{actual_slug}'."
         super().__init__(msg)
 
 
@@ -64,7 +64,7 @@ class PrivacyViolationError(Exception):
 class Workspace:
     name: str
     slug: str
-    project_paths: list[str***REMOVED*** = field(default_factory=list)
+    project_paths: list[str] = field(default_factory=list)
     created_at: float = 0.0
     status: str = "active"
     description: str = ""
@@ -87,11 +87,11 @@ class SyncReport:
       - conflicts: (path, current_slug, expected_slug) tuples — privacy conflict.
     """
 
-    created_workspaces: list[str***REMOVED*** = field(default_factory=list)
-    created_projects: list[str***REMOVED*** = field(default_factory=list)
-    skipped_workspaces: list[str***REMOVED*** = field(default_factory=list)
-    skipped_projects: list[str***REMOVED*** = field(default_factory=list)
-    conflicts: list[tuple[str, str, str***REMOVED******REMOVED*** = field(default_factory=list)
+    created_workspaces: list[str] = field(default_factory=list)
+    created_projects: list[str] = field(default_factory=list)
+    skipped_workspaces: list[str] = field(default_factory=list)
+    skipped_projects: list[str] = field(default_factory=list)
+    conflicts: list[tuple[str, str, str]] = field(default_factory=list)
 
 
 @dataclass
@@ -109,7 +109,7 @@ class SeedResult:
     """
 
     created: int = 0
-    missing: list[str***REMOVED*** = field(default_factory=list)
+    missing: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -140,7 +140,7 @@ _SLUG_TRANSLIT = {
     "\u044e": "yu", "\u044f": "ya",
     "\u0451": "yo", "\u0401": "Yo",
     " ": "_", "-": "_", ".": "_", "/": "_", "\\": "_",
-***REMOVED***
+}
 
 
 def _slugify_name(name: str) -> str:
@@ -150,7 +150,7 @@ def _slugify_name(name: str) -> str:
     содержит U/U+ для заглавных кириллических букв; без .lower() slug был бы
     'Uchyoba' а не 'uchyoba' — ломал сравнение в PrivacyViolationError).
     """
-    out = [***REMOVED***
+    out = []
     for ch in name:
         out.append(_SLUG_TRANSLIT.get(ch, ch.lower() if ch.isalpha() else ch))
     slug = "".join(out).strip("_").lower()
@@ -162,23 +162,23 @@ def _slugify_name(name: str) -> str:
 
 # ── three default implicit workspaces (Phase 5.4 user-spec) ──
 
-DEFAULT_WORKSPACES: list[tuple[str, list[str***REMOVED***, str***REMOVED******REMOVED*** = [
+DEFAULT_WORKSPACES: list[tuple[str, list[str], str]] = [
     (
         "Работа",
-        ["projects_17/interior_planner", "projects_17/tg_terminal_messenger"***REMOVED***,
+        ["projects_17/interior_planner", "projects_17/tg_terminal_messenger"],
         "Рабочие проекты: interior_planner + tg_terminal_messenger",
     ),
     (
         "Учёба",
-        ["projects_17/buffy-playground_19"***REMOVED***,
+        ["projects_17/buffy-playground_19"],
         "Учебные проекты: buffy-playground_19 (Vite/React playground)",
     ),
     (
         "Хобби",
-        ["projects_17/freebuff_flutter_app", "projects_17/diet_platform"***REMOVED***,
+        ["projects_17/freebuff_flutter_app", "projects_17/diet_platform"],
         "Хобби-проекты: Flutter app + diet platform",
     ),
-***REMOVED***
+]
 
 
 # ── WorkspaceRegistry ──
@@ -191,8 +191,8 @@ class WorkspaceRegistry:
         seed_defaults() → int
         create_workspace(name, project_paths) → Workspace
         add_project(workspace_slug, project_path) → None
-        list_workspaces() → list[Workspace***REMOVED***
-        list_projects(workspace_slug) → list[str***REMOVED***
+        list_workspaces() → list[Workspace]
+        list_projects(workspace_slug) → list[str]
         find_workspace_for_project(project_path) → Workspace | None
         assert_path_privacy(project_path, expected_workspace_slug) → None
     """
@@ -274,7 +274,7 @@ class WorkspaceRegistry:
             # → .parent = core_02/, .parent.parent = <freebuff>/ (correct anchor)
             workspace_root = Path(__file__).resolve().parent.parent
         seeded = 0
-        missing_paths: list[str***REMOVED*** = [***REMOVED***
+        missing_paths: list[str] = []
         now = time.time()
         with self._connect() as conn:
             for name, paths, desc in DEFAULT_WORKSPACES:
@@ -307,7 +307,7 @@ class WorkspaceRegistry:
                             slug,
                             exc,
                         )
-                registered_paths: list[str***REMOVED*** = [***REMOVED***
+                registered_paths: list[str] = []
                 for p in paths:
                     full_path = (workspace_root / p).resolve()
                     if not full_path.exists():
@@ -367,12 +367,12 @@ class WorkspaceRegistry:
         import yaml as _yaml
 
         cfg_path = root / "workspace.yaml"
-        cfg: dict = {***REMOVED***
+        cfg: dict = {}
         if cfg_path.exists():
             try:
-                cfg = _yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {***REMOVED***
+                cfg = _yaml.safe_load(cfg_path.read_text(encoding="utf-8")) or {}
             except Exception:
-                cfg = {***REMOVED***
+                cfg = {}
 
         report = SyncReport()
         now = time.time()
@@ -397,12 +397,12 @@ class WorkspaceRegistry:
                     logger.warning("sync_from_config: workspace %s already inserted (race): %s", ws_slug, exc)
                     report.skipped_workspaces.append(ws_slug)
 
-            configured = [str(p) for p in cfg.get("projects", [***REMOVED***)***REMOVED***
+            configured = [str(p) for p in cfg.get("projects", [])]
             scan_targets = configured or [
                 d.name for d in root.iterdir()
                 if d.is_dir() and not d.name.startswith(".")
                 and ((d / "project.yaml").exists() or (d / "README.md").exists())
-            ***REMOVED***
+            ]
 
             for name in scan_targets:
                 p = root / name
@@ -414,7 +414,7 @@ class WorkspaceRegistry:
                     (abs_path,),
                 ).fetchone()
                 if row:
-                    current_slug = row["workspace_slug"***REMOVED***
+                    current_slug = row["workspace_slug"]
                     if current_slug != ws_slug:
                         report.conflicts.append((abs_path, current_slug, ws_slug))
                         logger.warning(
@@ -442,7 +442,7 @@ class WorkspaceRegistry:
     def create_workspace(
         self,
         name: str,
-        project_paths: list[str***REMOVED*** | None = None,
+        project_paths: list[str] | None = None,
         description: str = "",
         owner_chat_id: int = 0,
         *,
@@ -451,7 +451,7 @@ class WorkspaceRegistry:
         slug = _slugify_name(name)
         if not slug or len(name) > self.MAX_NAME_LEN:
             raise ValueError(
-                f"workspace name must be 1-{self.MAX_NAME_LEN***REMOVED*** chars; got {name!r***REMOVED***"
+                f"workspace name must be 1-{self.MAX_NAME_LEN} chars; got {name!r}"
             )
         # Pre-validate (CAN-14 strict mode — fix #3 polish): if ANY path is missing
         # on FS and strict=True, raise FileNotFoundError BEFORE inserting workspace.
@@ -468,7 +468,7 @@ class WorkspaceRegistry:
                 if not full.exists():
                     raise FileNotFoundError(
                         f"WorkspaceRegistry.create_workspace(strict=True):"
-                        f" path not found on FS: {full***REMOVED***."
+                        f" path not found on FS: {full}."
                         f" Switch to strict=False for warn-and-skip behavior,"
                         f" or create the path first."
                     )
@@ -486,11 +486,11 @@ class WorkspaceRegistry:
                 conn.commit()
             except sqlite3.IntegrityError as exc:
                 raise ValueError(
-                    f"workspace with slug {slug!r***REMOVED*** already exists: {exc***REMOVED***"
+                    f"workspace with slug {slug!r} already exists: {exc}"
                 ) from exc
         # add_project loop FIRST so self.list_projects(slug) sees post-insert DB state
         # (the ghost paths warned-and-skipped during the loop will be EXCLUDED in Workspace.project_paths)
-        for p in project_paths or [***REMOVED***:
+        for p in project_paths or []:
             self.add_project(slug, p, strict=strict)
         ws = Workspace(
             name=name,
@@ -528,7 +528,7 @@ class WorkspaceRegistry:
             if strict:
                 # RTX-style fail-loud: opt-in via strict=True.
                 raise FileNotFoundError(
-                    f"WorkspaceRegistry.add_project(strict=True): path not found on FS: {full***REMOVED***. "
+                    f"WorkspaceRegistry.add_project(strict=True): path not found on FS: {full}. "
                     f"Switch to strict=False for warn-and-skip behavior."
                 )
             logger.warning(
@@ -547,13 +547,13 @@ class WorkspaceRegistry:
                     "SELECT workspace_slug FROM workspace_projects WHERE path = ?",
                     (abs_path,),
                 ).fetchone()
-                if existing and existing["workspace_slug"***REMOVED*** != workspace_slug:
+                if existing and existing["workspace_slug"] != workspace_slug:
                     raise PrivacyViolationError(
                         path=abs_path,
                         expected_slug=workspace_slug,
-                        actual_slug=existing["workspace_slug"***REMOVED***,
+                        actual_slug=existing["workspace_slug"],
                     )
-                if existing and existing["workspace_slug"***REMOVED*** == workspace_slug:
+                if existing and existing["workspace_slug"] == workspace_slug:
                     # already in same workspace: idempotent no-op
                     conn.commit()
                     return True
@@ -578,7 +578,7 @@ class WorkspaceRegistry:
             except Exception:
                 conn.rollback()
                 raise
-    def list_workspaces(self) -> list[Workspace***REMOVED***:
+    def list_workspaces(self) -> list[Workspace]:
         """Returns all workspaces with their joined project_paths."""
         with self._connect() as conn:
             ws_rows = conn.execute(
@@ -588,23 +588,23 @@ class WorkspaceRegistry:
             proj_rows = conn.execute(
                 "SELECT path, workspace_slug FROM workspace_projects ORDER BY created_at"
             ).fetchall()
-        paths_by_slug: dict[str, list[str***REMOVED******REMOVED*** = {***REMOVED***
+        paths_by_slug: dict[str, list[str]] = {}
         for r in proj_rows:
-            paths_by_slug.setdefault(r["workspace_slug"***REMOVED***, [***REMOVED***).append(r["path"***REMOVED***)
+            paths_by_slug.setdefault(r["workspace_slug"], []).append(r["path"])
         return [
             Workspace(
-                name=r["name"***REMOVED***,
-                slug=r["slug"***REMOVED***,
-                project_paths=paths_by_slug.get(r["slug"***REMOVED***, [***REMOVED***),
-                created_at=r["created_at"***REMOVED***,
-                status=r["status"***REMOVED***,
-                description=r["description"***REMOVED***,
-                owner_chat_id=r["owner_chat_id"***REMOVED***,
+                name=r["name"],
+                slug=r["slug"],
+                project_paths=paths_by_slug.get(r["slug"], []),
+                created_at=r["created_at"],
+                status=r["status"],
+                description=r["description"],
+                owner_chat_id=r["owner_chat_id"],
             )
             for r in ws_rows
-        ***REMOVED***
+        ]
 
-    def list_projects(self, workspace_slug: str) -> list[str***REMOVED***:
+    def list_projects(self, workspace_slug: str) -> list[str]:
         """Returns ONLY paths for the given workspace (isolation guarantee)."""
         with self._connect() as conn:
             rows = conn.execute(
@@ -612,7 +612,7 @@ class WorkspaceRegistry:
                 " WHERE workspace_slug = ? ORDER BY created_at",
                 (workspace_slug,),
             ).fetchall()
-        return [r["path"***REMOVED*** for r in rows***REMOVED***
+        return [r["path"] for r in rows]
 
     def find_workspace_for_project(self, project_path: str) -> Workspace | None:
         """Returns the single owning Workspace for the path, or None if unregistered."""
@@ -623,7 +623,7 @@ class WorkspaceRegistry:
             ).fetchone()
         if not row:
             return None
-        slug = row["workspace_slug"***REMOVED***
+        slug = row["workspace_slug"]
         for ws in self.list_workspaces():
             if ws.slug == slug:
                 return ws
@@ -663,4 +663,4 @@ __all__ = [
     "WorkspaceRegistry",
     "_slugify_name",
     "get_default_registry",
-***REMOVED***
+]

@@ -2,7 +2,7 @@
 """
 phone_control_mcp.py — Thin MCP tool-server wrapper for phone control.
 
-Первый slicе pomt45_05 ([pompts_11/045_05_mcp_cloudflare_phone_control.md***REMOVED***(pompts_11/045_05_mcp_cloudflare_phone_control.md)):
+Первый slicе pomt45_05 ([pompts_11/045_05_mcp_cloudflare_phone_control.md](pompts_11/045_05_mcp_cloudflare_phone_control.md)):
 MCP-сервер c тремя инструментами для локального API на телефоне
 (`/send-sms`, `/get-contacts`, `/play-music`) + TunnelManager для
 экспонирования API наружу через Cloudflare Tunnel (с fallback на
@@ -32,7 +32,7 @@ ngrok, если cloudflared недоступен).
 Использование:
     python scripts_01/phone_control_mcp.py serve --port 8765 --tunnel
     python scripts_01/phone_control_mcp.py tools-list
-    python scripts_01/phone_control_mcp.py tools-call send_sms '{"to":"+1234","body":"hi"***REMOVED***'
+    python scripts_01/phone_control_mcp.py tools-call send_sms '{"to":"+1234","body":"hi"]'
 """
 from __future__ import annotations
 
@@ -41,14 +41,14 @@ import atexit
 import hmac
 import json
 import os
-***REMOVED***
+}
 import subprocess
 import sys
 import threading
 import time
 from dataclasses import dataclass, field
 from typing import Any, Callable, Optional
-from urllib ***REMOVED***quest as urlrequest
+from urllib ]quest as urlrequest
 from urllib.error import HTTPError, URLError
 
 
@@ -78,8 +78,8 @@ PHONE_HTTP_TIMEOUT_S = float(_env("FREEBUFF_PHONE_HTTP_TIMEOUT_S", "2.0"))
 PHONE_TUNNEL_READY_S = float(_env("FREEBUFF_PHONE_TUNNEL_READY_S", "15.0"))
 
 
-_CLOUDFLARE_URL_RE = re.compile(r"https?://[a-z0-9-***REMOVED***+\.trycloudflare\.com/?", re.IGNORECASE)
-_NGROK_URL_RE = re.compile(r"https?://[a-z0-9-***REMOVED***+\.ngrok(?:-free)?\.app/?", re.IGNORECASE)
+_CLOUDFLARE_URL_RE = re.compile(r"https?://[a-z0-9-)+\.trycloudflare\.com/?", re.IGNORECASE)
+_NGROK_URL_RE = re.compile(r"https?://[a-z0-9-)+\.ngrok(?:-free)?\.app/?", re.IGNORECASE)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -105,17 +105,17 @@ class TunnelManager:
     stop() — terminate() + wait(timeout).
     """
 
-    def __init__(self, tunnel_bin: Optional[str***REMOVED*** = None, ready_timeout: Optional[float***REMOVED*** = None) -> None:
+    def __init__(self, tunnel_bin: Optional[str] = None, ready_timeout: Optional[float] = None) -> None:
         self._bin = tunnel_bin or PHONE_TUNNEL_BIN
         self._ready_timeout = ready_timeout if ready_timeout is not None else PHONE_TUNNEL_READY_S
-        self._spec: Optional[TunnelSpec***REMOVED*** = None
-        self._reader_thread: Optional[threading.Thread***REMOVED*** = None
+        self._spec: Optional[TunnelSpec] = None
+        self._reader_thread: Optional[threading.Thread] = None
         # threading.Lock сериализует start()/stop() — закрывает race между
         # concurrent tunnel_up callers (reviewer hardening #1).
         self._lock = threading.Lock()
 
     @property
-    def spec(self) -> Optional[TunnelSpec***REMOVED***:
+    def spec(self) -> Optional[TunnelSpec]:
         return self._spec
 
     @property
@@ -134,15 +134,15 @@ class TunnelManager:
                 raise RuntimeError("tunnel already active — call stop() first")
             # Пробуем cloudflared argv-list.
             try:
-                return self._spawn(self._bin, ["tunnel", "--url", f"http://localhost:{port***REMOVED***"***REMOVED***, port, "cloudflared")
+                return self._spawn(self._bin, ["tunnel", "--url", f"http://localhost:{port}"], port, "cloudflared")
             except FileNotFoundError:
                 # Fallback на ngrok (только если явно указан PHONE_NGROK_BIN).
                 ngrok_bin = _env("FREEBUFF_PHONE_NGROK_BIN", "")
                 if not ngrok_bin:
                     raise
-                return self._spawn(ngrok_bin, ["http", str(port)***REMOVED***, port, "ngrok")
+                return self._spawn(ngrok_bin, ["http", str(port)], port, "ngrok")
 
-    def _spawn(self, binary: str, argv: list[str***REMOVED***, port: int, kind: str) -> TunnelSpec:
+    def _spawn(self, binary: str, argv: list[str], port: int, kind: str) -> TunnelSpec:
         """Безопасный subprocess-старт (argv-list, NO shell=True).
 
         Также `start_new_session=True` (Linux: создаёт новый session via os.setsid)
@@ -150,7 +150,7 @@ class TunnelManager:
         SIGKILL — subprocess переживёт (нужен отдельный cleanup-hook на уровне
         обёртки, например через mcp_fastapi lifecycle). hardening #2.
         """
-        full_argv = [binary***REMOVED*** + argv
+        full_argv = [binary] + argv
         # Subprocess с stdout=None / stderr=PIPE → читатель stderr в daemon-thread.
         # NB: shell=False — единственный безопасный путь; см. test_subprocess_argv_no_shell.
         # NB: start_new_session=True → см. test_popen_uses_start_new_session (regression).
@@ -163,7 +163,7 @@ class TunnelManager:
             text=True,
             bufsize=1,
         )
-        captured_url: dict[str, Optional[str***REMOVED******REMOVED*** = {"url": None***REMOVED***
+        captured_url: dict[str, Optional[str]] = {"url": None}
         url_re = _NGROK_URL_RE if kind == "ngrok" else _CLOUDFLARE_URL_RE
 
         def _reader() -> None:
@@ -177,34 +177,34 @@ class TunnelManager:
             assert proc.stderr is not None
             for line in proc.stderr:
                 m = url_re.search(line)
-                if m and captured_url["url"***REMOVED*** is None:
-                    captured_url["url"***REMOVED*** = m.group(0).rstrip("/")
+                if m and captured_url["url"] is None:
+                    captured_url["url"] = m.group(0).rstrip("/")
                     # Закрываем stderr-reader; parent main-loop увидит URL.
                     return
             # Если URL never matched — просто выходим, parent main-loop увидит timeout/poll().
 
-        self._reader_thread = threading.Thread(target=_reader, name=f"tunnel-reader-{kind***REMOVED***", daemon=True)
+        self._reader_thread = threading.Thread(target=_reader, name=f"tunnel-reader-{kind}", daemon=True)
         self._reader_thread.start()
 
         # Ждём готовности URL с таймаутом.
         deadline = time.monotonic() + self._ready_timeout
         while time.monotonic() < deadline:
-            if captured_url["url"***REMOVED*** is not None:
+            if captured_url["url"] is not None:
                 break
             if proc.poll() is not None:
                 # Процесс умер до того как успели поймать URL.
-                raise RuntimeError(f"tunnel process {binary***REMOVED*** exited prematurely (code={proc.returncode***REMOVED***)")
+                raise RuntimeError(f"tunnel process {binary} exited prematurely (code={proc.returncode})")
             time.sleep(0.1)
 
-        if captured_url["url"***REMOVED*** is None:
+        if captured_url["url"] is None:
             proc.terminate()
             try:
                 proc.wait(timeout=3)
             except subprocess.TimeoutExpired:
                 proc.kill()
-            raise TimeoutError(f"tunnel URL not captured within {self._ready_timeout***REMOVED***s")
+            raise TimeoutError(f"tunnel URL not captured within {self._ready_timeout}s")
 
-        spec = TunnelSpec(url=captured_url["url"***REMOVED***, port=port, binary=binary, process=proc, kind=kind)
+        spec = TunnelSpec(url=captured_url["url"], port=port, binary=binary, process=proc, kind=kind)
         self._spec = spec
         atexit.register(self._atexit_cleanup)
         return spec
@@ -253,41 +253,41 @@ class PhoneAPIClient:
 
     def __init__(
         self,
-        base_url: Optional[str***REMOVED*** = None,
-        token: Optional[str***REMOVED*** = None,
-        timeout: Optional[float***REMOVED*** = None,
+        base_url: Optional[str] = None,
+        token: Optional[str] = None,
+        timeout: Optional[float] = None,
     ) -> None:
         self.base_url = (base_url or PHONE_API_BASE).rstrip("/")
         self.token = token if token is not None else PHONE_API_TOKEN
         self.timeout = timeout if timeout is not None else PHONE_HTTP_TIMEOUT_S
 
     def _request(
-        self, method: str, path: str, payload: Optional[dict[str, Any***REMOVED******REMOVED*** = None
-    ) -> dict[str, Any***REMOVED***:
-        url = f"{self.base_url***REMOVED***{path***REMOVED***"
-        data: Optional[bytes***REMOVED*** = None
-        headers = {"Accept": "application/json"***REMOVED***
+        self, method: str, path: str, payload: Optional[dict[str, Any]] = None
+    ) -> dict[str, Any]:
+        url = f"{self.base_url}{path}"
+        data: Optional[bytes] = None
+        headers = {"Accept": "application/json"}
         if payload is not None:
             data = json.dumps(payload).encode("utf-8")
-            headers["Content-Type"***REMOVED*** = "application/json"
+            headers["Content-Type"] = "application/json"
         if self.token:
-            headers["Authorization"***REMOVED*** = f"Bearer {self.token***REMOVED***"
+            headers["Authorization"] = f"Bearer {self.token}"
         req = urlrequest.Request(url, data=data, method=method, headers=headers)
         try:
             with urlrequest.urlopen(req, timeout=self.timeout) as resp:
                 body = resp.read().decode("utf-8")
-                return {"status": resp.status, "body": json.loads(body) if body else {***REMOVED******REMOVED***
+                return {"status": resp.status, "body": json.loads(body) if body else {}}
         except HTTPError as e:
-            return {"status": e.code, "error": f"HTTP {e.code***REMOVED*** from phone API: {e.reason***REMOVED***"***REMOVED***
+            return {"status": e.code, "error": f"HTTP {e.code} from phone API: {e.reason}"}
         except URLError as e:
-            return {"status": 0, "error": f"phone API unreachable: {e.reason***REMOVED***"***REMOVED***
+            return {"status": 0, "error": f"phone API unreachable: {e.reason}"}
         except json.JSONDecodeError as e:
-            return {"status": 0, "error": f"phone API returned invalid JSON: {e***REMOVED***"***REMOVED***
+            return {"status": 0, "error": f"phone API returned invalid JSON: {e}"}
 
-    def get(self, path: str) -> dict[str, Any***REMOVED***:
+    def get(self, path: str) -> dict[str, Any]:
         return self._request("GET", path)
 
-    def post(self, path: str, payload: dict[str, Any***REMOVED***) -> dict[str, Any***REMOVED***:
+    def post(self, path: str, payload: dict[str, Any]) -> dict[str, Any]:
         return self._request("POST", path, payload)
 
 
@@ -316,20 +316,20 @@ class BaseTool:
 
     name: str = ""
     description: str = ""
-    _required: tuple[str, ...***REMOVED*** = ()
-    _properties: dict[str, str***REMOVED*** = {***REMOVED***  # param_name → "string" | "integer"
+    _required: tuple[str, ...] = ()
+    _properties: dict[str, str] = {}  # param_name → "string" | "integer"
 
-    def input_schema(self) -> dict[str, Any***REMOVED***:
+    def input_schema(self) -> dict[str, Any]:
         return {
             "type": "object",
             "required": list(self._required),
             "properties": {
-                k: {"type": v, "description": f"Parameter `{k***REMOVED***` of type {v***REMOVED***"***REMOVED***
+                k: {"type": v, "description": f"Parameter `{k}` of type {v}"}
                 for k, v in self._properties.items()
-            ***REMOVED***,
-        ***REMOVED***
+            },
+        }
 
-    def validate(self, kwargs: dict[str, Any***REMOVED***) -> None:
+    def validate(self, kwargs: dict[str, Any]) -> None:
         """Lightweight schema validation — required fields + isinstance types + reject extras.
 
         Блокирует silent passthrough of unexpected kwargs (reviewer finding #2):
@@ -339,42 +339,42 @@ class BaseTool:
         # 1. Required fields.
         for required in self._required:
             if required not in kwargs:
-                raise ToolError(f"missing required parameter: {required!r***REMOVED***")
+                raise ToolError(f"missing required parameter: {required!r}")
         # 2. Type checks for declared fields (single truth-check, no double logic).
         for param_name, expected_type in self._properties.items():
             if param_name not in kwargs:
                 continue
-            value = kwargs[param_name***REMOVED***
+            value = kwargs[param_name]
             if expected_type == "string":
                 if not isinstance(value, str):
                     raise ToolError(
-                        f"parameter {param_name!r***REMOVED*** must be string, got {type(value).__name__***REMOVED***"
+                        f"parameter {param_name!r} must be string, got {type(value).__name__}"
                     )
             elif expected_type == "integer":
                 # bool is a subclass of int в Python, поэтому нужжно отделять явно.
                 if isinstance(value, bool) or not isinstance(value, int):
                     raise ToolError(
-                        f"parameter {param_name!r***REMOVED*** must be integer, got {type(value).__name__***REMOVED***"
+                        f"parameter {param_name!r} must be integer, got {type(value).__name__}"
                     )
         # 3. Reject unknown fields (no silent passthrough).
         allowed = set(self._required) | set(self._properties.keys())
         extras = set(kwargs.keys()) - allowed
         if extras:
             raise ToolError(
-                f"unknown parameter(s): {sorted(extras)***REMOVED***. "
-                f"allowed: {sorted(allowed)***REMOVED***"
+                f"unknown parameter(s): {sorted(extras)}. "
+                f"allowed: {sorted(allowed)}"
             )
 
-    def execute(self, api_client: PhoneAPIClient, kwargs: dict[str, Any***REMOVED***) -> dict[str, Any***REMOVED***:
+    def execute(self, api_client: PhoneAPIClient, kwargs: dict[str, Any]) -> dict[str, Any]:
         """MCP-facing entrypoint: validate → call → return raw body."""
         self.validate(kwargs)
         try:
             return self._call(api_client, **kwargs)
         except Exception as e:
             # Безопасный envelope: caller получает explicit error в MCP result.
-            raise ToolError(f"tool {self.name***REMOVED*** failed: {e***REMOVED***") from e
+            raise ToolError(f"tool {self.name} failed: {e}") from e
 
-    def _call(self, api_client: PhoneAPIClient, **kwargs: Any) -> dict[str, Any***REMOVED***:
+    def _call(self, api_client: PhoneAPIClient, **kwargs: Any) -> dict[str, Any]:
         raise NotImplementedError
 
 
@@ -384,13 +384,13 @@ class SendSmsTool(BaseTool):
     name = "send_sms"
     description = "Send an SMS message via the local phone API. Returns delivery confirmation."
     _required = ("to", "body")
-    _properties = {"to": "string", "body": "string"***REMOVED***
+    _properties = {"to": "string", "body": "string"}
 
-    def _call(self, api_client: PhoneAPIClient, **kwargs: Any) -> dict[str, Any***REMOVED***:
+    def _call(self, api_client: PhoneAPIClient, **kwargs: Any) -> dict[str, Any]:
         resp = api_client.post("/send-sms", kwargs)
         if resp.get("status", 0) != 200:
             raise ToolError(resp.get("error", "send-sms failed"))
-        return {"delivered": True, "to": kwargs["to"***REMOVED***, "status": resp.get("status")***REMOVED***
+        return {"delivered": True, "to": kwargs["to"], "status": resp.get("status")}
 
 
 class GetContactsTool(BaseTool):
@@ -399,14 +399,14 @@ class GetContactsTool(BaseTool):
     name = "get_contacts"
     description = "Fetch the contact list from the phone's address book."
     _required = ()                # все параметры опциональны
-    _properties = {"limit": "integer"***REMOVED***
+    _properties = {"limit": "integer"}
 
-    def _call(self, api_client: PhoneAPIClient, **kwargs: Any) -> dict[str, Any***REMOVED***:
+    def _call(self, api_client: PhoneAPIClient, **kwargs: Any) -> dict[str, Any]:
         limit = kwargs.get("limit", 50)
-        resp = api_client.get(f"/get-contacts?limit={limit***REMOVED***")
+        resp = api_client.get(f"/get-contacts?limit={limit}")
         if resp.get("status", 0) != 200:
             raise ToolError(resp.get("error", "get-contacts failed"))
-        return {"contacts": resp.get("body", {***REMOVED***).get("contacts", [***REMOVED***), "count": limit***REMOVED***
+        return {"contacts": resp.get("body", {}).get("contacts", []), "count": limit}
 
 
 class PlayMusicTool(BaseTool):
@@ -415,20 +415,20 @@ class PlayMusicTool(BaseTool):
     name = "play_music"
     description = "Play a music track identified by artist and track name on the phone."
     _required = ("artist", "track")
-    _properties = {"artist": "string", "track": "string"***REMOVED***
+    _properties = {"artist": "string", "track": "string"}
 
-    def _call(self, api_client: PhoneAPIClient, **kwargs: Any) -> dict[str, Any***REMOVED***:
+    def _call(self, api_client: PhoneAPIClient, **kwargs: Any) -> dict[str, Any]:
         resp = api_client.post("/play-music", kwargs)
         if resp.get("status", 0) != 200:
             raise ToolError(resp.get("error", "play-music failed"))
-        return {"playing": True, "track": kwargs["track"***REMOVED***, "artist": kwargs["artist"***REMOVED******REMOVED***
+        return {"playing": True, "track": kwargs["track"], "artist": kwargs["artist"]}
 
 
-def default_tool_registry() -> dict[str, BaseTool***REMOVED***:
+def default_tool_registry() -> dict[str, BaseTool]:
     """Реестр инструментов по умолчанию (все 3)."""
     return {
         t.name: t() for t in (SendSmsTool, GetContactsTool, PlayMusicTool)
-    ***REMOVED***
+    }
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -436,7 +436,7 @@ def default_tool_registry() -> dict[str, BaseTool***REMOVED***:
 # ═══════════════════════════════════════════════════════════════
 
 
-def check_bearer(provided: Optional[str***REMOVED***, expected: str) -> bool:
+def check_bearer(provided: Optional[str], expected: str) -> bool:
     """Bearer-token gate с constant-time compare (anti-timing-attack)."""
     if not provided:
         return False
@@ -445,7 +445,7 @@ def check_bearer(provided: Optional[str***REMOVED***, expected: str) -> bool:
     return hmac.compare_digest(provided, expected)
 
 
-def check_origin(origin: Optional[str***REMOVED***, allowlist: tuple[str, ...***REMOVED***) -> bool:
+def check_origin(origin: Optional[str], allowlist: tuple[str, ...]) -> bool:
     """Origin allowlist; '*' = allow all (для local dev)."""
     if not allowlist:
         return False
@@ -461,11 +461,11 @@ class PhoneControlMCP:
 
     def __init__(
         self,
-        token: Optional[str***REMOVED*** = None,
-        origins: Optional[tuple[str, ...***REMOVED******REMOVED*** = None,
-        tools: Optional[dict[str, BaseTool***REMOVED******REMOVED*** = None,
-        api_client: Optional[PhoneAPIClient***REMOVED*** = None,
-        tunnel_manager: Optional[TunnelManager***REMOVED*** = None,
+        token: Optional[str] = None,
+        origins: Optional[tuple[str, ...]] = None,
+        tools: Optional[dict[str, BaseTool]] = None,
+        api_client: Optional[PhoneAPIClient] = None,
+        tunnel_manager: Optional[TunnelManager] = None,
     ) -> None:
         self.token = token if token is not None else PHONE_MCP_TOKEN
         self.origins = origins if origins is not None else PHONE_ORIGINS
@@ -474,11 +474,11 @@ class PhoneControlMCP:
         self.tunnel = tunnel_manager or TunnelManager()
 
     # ── Tools/list ─────────────────────────────────────────
-    def list_tools(self, *, bearer: Optional[str***REMOVED*** = None, origin: Optional[str***REMOVED*** = None) -> dict[str, Any***REMOVED***:
+    def list_tools(self, *, bearer: Optional[str] = None, origin: Optional[str] = None) -> dict[str, Any]:
         if not check_bearer(bearer, self.token):
-            return {"success": False, "error": "unauthorized", "status": 401***REMOVED***
+            return {"success": False, "error": "unauthorized", "status": 401}
         if not check_origin(origin, self.origins):
-            return {"success": False, "error": "origin not allowed", "status": 403***REMOVED***
+            return {"success": False, "error": "origin not allowed", "status": 403}
         return {
             "success": True,
             "data": {
@@ -487,57 +487,57 @@ class PhoneControlMCP:
                         "name": tool.name,
                         "description": tool.description,
                         "inputSchema": tool.input_schema(),
-                    ***REMOVED***
+                    }
                     for tool in self.tools.values()
-                ***REMOVED***
-            ***REMOVED***,
-        ***REMOVED***
+                ]
+            },
+        }
 
     # ── Tools/call ─────────────────────────────────────────
     def call_tool(
         self,
         tool_name: str,
-        kwargs: dict[str, Any***REMOVED***,
+        kwargs: dict[str, Any],
         *,
-        bearer: Optional[str***REMOVED*** = None,
-        origin: Optional[str***REMOVED*** = None,
-    ) -> dict[str, Any***REMOVED***:
+        bearer: Optional[str] = None,
+        origin: Optional[str] = None,
+    ) -> dict[str, Any]:
         if not check_bearer(bearer, self.token):
-            return {"success": False, "error": "unauthorized", "status": 401***REMOVED***
+            return {"success": False, "error": "unauthorized", "status": 401}
         if not check_origin(origin, self.origins):
-            return {"success": False, "error": "origin not allowed", "status": 403***REMOVED***
+            return {"success": False, "error": "origin not allowed", "status": 403}
         if tool_name not in self.tools:
             return {
                 "success": False,
-                "error": f"unknown tool: {tool_name!r***REMOVED***",
+                "error": f"unknown tool: {tool_name!r}",
                 "available": sorted(self.tools.keys()),
                 "status": 404,
-            ***REMOVED***
-        tool = self.tools[tool_name***REMOVED***
+            }
+        tool = self.tools[tool_name]
         try:
             raw = tool.execute(self.api_client, kwargs)
-            return {"success": True, "data": raw***REMOVED***
+            return {"success": True, "data": raw}
         except ToolError as e:
-            return {"success": False, "error": str(e), "status": 400***REMOVED***
+            return {"success": False, "error": str(e), "status": 400}
 
     # ── Tunnel API ─────────────────────────────────────────
-    def tunnel_up(self, port: int) -> dict[str, Any***REMOVED***:
+    def tunnel_up(self, port: int) -> dict[str, Any]:
         try:
             spec = self.tunnel.start(port)
-            return {"success": True, "data": {"url": spec.url, "kind": spec.kind, "port": spec.port***REMOVED******REMOVED***
+            return {"success": True, "data": {"url": spec.url, "kind": spec.kind, "port": spec.port}}
         except (FileNotFoundError, RuntimeError, TimeoutError) as e:
-            return {"success": False, "error": str(e), "status": 503***REMOVED***
+            return {"success": False, "error": str(e), "status": 503}
 
-    def tunnel_down(self) -> dict[str, Any***REMOVED***:
+    def tunnel_down(self) -> dict[str, Any]:
         try:
             self.tunnel.stop()
-            return {"success": True, "data": {"stopped": True***REMOVED******REMOVED***
+            return {"success": True, "data": {"stopped": True}}
         except Exception as e:
-            return {"success": False, "error": str(e), "status": 500***REMOVED***
+            return {"success": False, "error": str(e), "status": 500}
 
-    def tunnel_status(self) -> dict[str, Any***REMOVED***:
+    def tunnel_status(self) -> dict[str, Any]:
         if not self.tunnel.is_active:
-            return {"success": True, "data": {"active": False***REMOVED******REMOVED***
+            return {"success": True, "data": {"active": False}}
         spec = self.tunnel.spec
         assert spec is not None
         return {
@@ -548,8 +548,8 @@ class PhoneControlMCP:
                 "kind": spec.kind,
                 "port": spec.port,
                 "uptime_s": round(time.monotonic() - spec.started_at, 1),
-            ***REMOVED***,
-        ***REMOVED***
+            },
+        }
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -574,7 +574,7 @@ def main() -> int:
     p_tools_call.add_argument("--origin", default=None)
 
     p_tunnel = sub.add_parser("tunnel", help="Manage Cloudflare tunnel")
-    p_tunnel.add_argument("action", choices=["up", "down", "status"***REMOVED***)
+    p_tunnel.add_argument("action", choices=["up", "down", "status"])
     p_tunnel.add_argument("--port", type=int, default=8765)
 
     args = parser.parse_args()
@@ -586,7 +586,7 @@ def main() -> int:
         try:
             parsed_kwargs = json.loads(args.args)
         except json.JSONDecodeError as e:
-            print(f"INVALID JSON: {e***REMOVED***", file=sys.stderr)
+            print(f"INVALID JSON: {e}", file=sys.stderr)
             return 2
         out = mcp.call_tool(args.tool, parsed_kwargs, bearer=args.bearer, origin=args.origin)
     elif args.cmd == "tunnel":

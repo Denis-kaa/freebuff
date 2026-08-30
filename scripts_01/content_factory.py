@@ -15,14 +15,14 @@ from imports + __all__ — consumers must use ``inst._import_warnings`` instead.
 - ScenarioIntelligence НЕ знает о существовании ContentFactory.
 
 CLI:
-    content_factory resolve <opportunity_id> [--json***REMOVED***
-    content_factory run <opportunity_id> [--dry-run***REMOVED*** [--project-root PATH***REMOVED*** [--json***REMOVED***
+    content_factory resolve <opportunity_id> [--json]
+    content_factory run <opportunity_id> [--dry-run] [--project-root PATH] [--json]
 """
 
 from __future__ import annotations
 
 import sys
-***REMOVED***
+}
 from typing import Any, Dict, Optional
 
 from core_02.factory_base import BaseFactory, ExecutionRequest
@@ -44,7 +44,7 @@ class ContentFactory(BaseFactory):
     PROG = "content_factory"
     FACTORY_ID = "content"
 
-    def normalize_input(self, opp: Any) -> Dict[str, Any***REMOVED***:
+    def normalize_input(self, opp: Any) -> Dict[str, Any]:
         """Opportunity → нормализованный контентный вход (title/desc/sources).
 
         Только общие поля Opportunity (24-полевой контракт §E) — никаких новых
@@ -56,9 +56,9 @@ class ContentFactory(BaseFactory):
             "source": getattr(opp, "source", "") or "",
             "source_path": getattr(opp, "source_path", "") or "",
             "evidence_path": getattr(opp, "evidence_path", "") or "",
-            "provenance": dict(getattr(opp, "provenance", {***REMOVED***) or {***REMOVED***),
-            "related_whims": list(getattr(opp, "related_whims", None) or [***REMOVED***),
-        ***REMOVED***
+            "provenance": dict(getattr(opp, "provenance", {}) or {}),
+            "related_whims": list(getattr(opp, "related_whims", None) or []),
+        }
 
 
 # ─── Backward-compat module-level aliases (Phase 9 tests reference these) ───
@@ -69,7 +69,7 @@ __all__ = [
     "ExecutionRequest",
     "CONTENT_CAPABILITIES",
     "CONTENT_ROLE_IDS",
-***REMOVED***
+]
 
 CONTENT_CAPABILITIES: tuple = ContentFactory.CAPABILITIES
 CONTENT_ROLE_IDS: tuple = ContentFactory.ROLE_IDS

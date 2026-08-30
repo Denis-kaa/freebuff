@@ -24,7 +24,7 @@ import argparse
 import json
 import os
 import sys
-***REMOVED***
+}
 
 WORKSPACE = Path(__file__).resolve().parent.parent
 SID_FILE = Path("/tmp/buffy_stream.sid")
@@ -42,7 +42,7 @@ def _get_bridge():
         from scripts_01.stream_bridge import StreamBridge
         return StreamBridge(auto_bootstrap=True, run_gc=True)
     except ImportError as e:
-        print(f"❌ StreamBridge не загружен: {e***REMOVED***", file=sys.stderr)
+        print(f"❌ StreamBridge не загружен: {e}", file=sys.stderr)
         return None
 
 
@@ -65,8 +65,8 @@ def cmd_start(topic: str, project: str = "freebuff") -> str:
 
     # Проверяем, может уже есть активная (bootstrap)
     if b.session_id:
-        sid = b.session_id[:8***REMOVED***
-        print(f"🔄 Уже активна сессия: {sid***REMOVED***")
+        sid = b.session_id[:8]
+        print(f"🔄 Уже активна сессия: {sid}")
         return sid
 
     # Стартуем новую
@@ -74,8 +74,8 @@ def cmd_start(topic: str, project: str = "freebuff") -> str:
     sid_file = SID_FILE
     if b.session_id:
         sid_file.write_text(b.session_id)
-        sid = b.session_id[:8***REMOVED***
-        print(f"✅ Сессия начата: {sid***REMOVED*** | тема: {topic***REMOVED***")
+        sid = b.session_id[:8]
+        print(f"✅ Сессия начата: {sid} | тема: {topic}")
         print(f"   Для остановки: python scripts_01/auto_save.py --end")
         return sid
     else:
@@ -109,7 +109,7 @@ def cmd_save(role: str, text: str | None = None) -> bool:
     elif role == "system":
         result = b.log_system(text)
     else:
-        print(f"❌ Неизвестная роль: {role***REMOVED***", file=sys.stderr)
+        print(f"❌ Неизвестная роль: {role}", file=sys.stderr)
         return False
 
     if result is not None:
@@ -120,7 +120,7 @@ def cmd_save(role: str, text: str | None = None) -> bool:
                 "msg_num": result,
                 "role": role,
                 "chars": len(text),
-            ***REMOVED***))
+            ]))
         return True
     else:
         print("❌ Нет активной сессии. Сначала: --start", file=sys.stderr)
@@ -137,7 +137,7 @@ def cmd_end(do_conspect: bool = True) -> str:
     if SID_FILE.exists():
         SID_FILE.unlink()
     if path:
-        print(f"✅ Сессия завершена. Конспект: {path***REMOVED***")
+        print(f"✅ Сессия завершена. Конспект: {path}")
     else:
         print("✅ Сессия завершена.")
     return path
@@ -147,7 +147,7 @@ def cmd_status() -> dict:
     """Статус текущей сессии."""
     b = get_bridge()
     if b is None:
-        return {"status": "no_bridge"***REMOVED***
+        return {"status": "no_bridge"}
 
     status = b.get_status()
     print(json.dumps(status, ensure_ascii=False, indent=2))

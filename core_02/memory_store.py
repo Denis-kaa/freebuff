@@ -11,13 +11,13 @@
 API:
     store_knowledge(...)          -> knowledge_id
     link_knowledge(source, target, rel_type, weight=1.0)
-    query_by_type(kind)           -> list[dict***REMOVED***
+    query_by_type(kind)           -> list[dict]
     record_learning_event(...)    -> event_id
     get_analytics(metric, ...)    -> float | None
     get_confidence, update_feedback (Learning Loop §7)
-    find_related(id, rel_types, max_depth=2) -> list[dict***REMOVED***
-    find_patterns()               -> list[dict***REMOVED***
-    shortest_path(from_id, to_id) -> list[dict***REMOVED***
+    find_related(id, rel_types, max_depth=2) -> list[dict]
+    find_patterns()               -> list[dict]
+    shortest_path(from_id, to_id) -> list[dict]
 """
 
 from __future__ import annotations
@@ -28,7 +28,7 @@ import sqlite3
 import uuid
 from collections import deque
 from datetime import datetime, timedelta, timezone
-***REMOVED***
+}
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -39,27 +39,27 @@ logger = logging.getLogger(__name__)
 # ─── Константы ────────────────────────────────────────────────────────────
 
 # 10 типов Knowledge Objects (RFC §3.1)
-KNOWLEDGE_KINDS: Tuple[str, ...***REMOVED*** = (
+KNOWLEDGE_KINDS: Tuple[str, ...] = (
     "adr", "lesson", "pattern", "rule", "observation",
     "candidate", "checklist", "guideline", "faq", "workflow",
 )
 
 # 9 rel_types Organizational Memory (RFC §5) — расширение базовых из graph_index
-ORG_REL_TYPES: Tuple[str, ...***REMOVED*** = (
+ORG_REL_TYPES: Tuple[str, ...] = (
     "supports", "contradicts", "duplicates", "supersedes",
     "derived_from", "caused_by", "resolved_by", "generalizes", "specializes",
 )
 
 # Базовые rel_types из scripts_01/graph_index.py (совместимость)
-BASE_REL_TYPES: Tuple[str, ...***REMOVED*** = (
+BASE_REL_TYPES: Tuple[str, ...] = (
     "child", "contains", "depends", "parent", "references", "related", "tagged",
 )
 
 # Полный реестр допустимых типов связей
-REL_TYPES: Tuple[str, ...***REMOVED*** = ORG_REL_TYPES + BASE_REL_TYPES
+REL_TYPES: Tuple[str, ...] = ORG_REL_TYPES + BASE_REL_TYPES
 
 # Стадии жизненного цикла Knowledge Object
-LIFECYCLE_STAGES: Tuple[str, ...***REMOVED*** = ("raw", "candidate", "validated", "review", "superseded", "archived")
+LIFECYCLE_STAGES: Tuple[str, ...] = ("raw", "candidate", "validated", "review", "superseded", "archived")
 
 # Пороги confidence (RFC §7)
 REVIEW_CONFIDENCE = 0.3
@@ -75,18 +75,18 @@ def _now() -> str:
 
 
 def _new_id(prefix: str = "ko") -> str:
-    return f"{prefix***REMOVED***-{uuid.uuid4().hex[:12***REMOVED******REMOVED***"
+    return f"{prefix}-{uuid.uuid4().hex[:12]}"
 
 
-def _row_to_dict(row: sqlite3.Row | Any) -> Dict[str, Any***REMOVED***:
+def _row_to_dict(row: sqlite3.Row | Any) -> Dict[str, Any]:
     """Преобразовать строку (sqlite3.Row или _FakeRow) в словарь."""
     d = dict(row)
     for key in ("tags", "sources", "metadata_json"):
         if key in d and isinstance(d.get(key), str):
             try:
-                d[key***REMOVED*** = json.loads(d[key***REMOVED***)
+                d[key] = json.loads(d[key])
             except (json.JSONDecodeError, TypeError):
-                d[key***REMOVED*** = None
+                d[key] = None
     return d
 
 
@@ -178,7 +178,7 @@ class MemoryStore:
     CREATE TABLE IF NOT EXISTS learning_events (
         id               TEXT PRIMARY KEY,
         trigger_id       TEXT,
-        context_snapshot TEXT NOT NULL DEFAULT '{***REMOVED***',
+        context_snapshot TEXT NOT NULL DEFAULT '{}',
         outcome          TEXT NOT NULL DEFAULT 'neutral',
         lesson_id        TEXT,
         created_at       TEXT NOT NULL
@@ -248,7 +248,7 @@ class MemoryStore:
     def __exit__(self, *exc: Any) -> None:
         self.close()
 
-    def _execute(self, sql: str, params: Sequence[Any***REMOVED*** = ()) -> Any:
+    def _execute(self, sql: str, params: Sequence[Any] = ()) -> Any:
         """Выполнить SQL. В remote-режиме возвращает список _FakeRow,
         в локальном — sqlite3.Cursor."""
         if self._remote_db:
@@ -260,7 +260,7 @@ class MemoryStore:
         self._conn.commit()
         return cur
 
-    def _fetchall(self, sql: str, params: Sequence[Any***REMOVED*** = ()) -> list:
+    def _fetchall(self, sql: str, params: Sequence[Any] = ()) -> list:
         """Выполнить SELECT и вернуть список строк (sqlite3.Row или _FakeRow)."""
         if self._remote_db:
             return self._remote_db.fetchall(sql, params)
@@ -274,23 +274,23 @@ class MemoryStore:
         content: str = "",
         title: str = "",
         summary: str = "",
-        tags: Iterable[str***REMOVED*** = (),
-        sources: Iterable[Dict[str, Any***REMOVED******REMOVED*** = (),
-        references: Iterable[Dict[str, Any***REMOVED******REMOVED*** = (),
+        tags: Iterable[str] = (),
+        sources: Iterable[Dict[str, Any]] = (),
+        references: Iterable[Dict[str, Any]] = (),
         lifecycle_stage: str = "raw",
         status: str = "draft",
         confidence_score: float = 0.5,
-        source_event_id: Optional[str***REMOVED*** = None,
-        knowledge_id: Optional[str***REMOVED*** = None,
-        superseded_by: Optional[str***REMOVED*** = None,
+        source_event_id: Optional[str] = None,
+        knowledge_id: Optional[str] = None,
+        superseded_by: Optional[str] = None,
     ) -> str:
         """Создать Knowledge Object (RFC §3.2). Возвращает knowledge_id."""
         if kind not in KNOWLEDGE_KINDS:
             raise MemoryStoreError(
-                f"Неизвестный kind '{kind***REMOVED***'. Допустимые: {', '.join(KNOWLEDGE_KINDS)***REMOVED***"
+                f"Неизвестный kind '{kind}'. Допустимые: {', '.join(KNOWLEDGE_KINDS)}"
             )
         if lifecycle_stage not in LIFECYCLE_STAGES:
-            raise MemoryStoreError(f"Неизвестная стадия '{lifecycle_stage***REMOVED***'")
+            raise MemoryStoreError(f"Неизвестная стадия '{lifecycle_stage}'")
         kid = knowledge_id or _new_id("ko")
         now = _now()
         self._execute(
@@ -323,50 +323,50 @@ class MemoryStore:
     def update_knowledge(self, knowledge_id: str, **fields: Any) -> bool:
         """Обновить поля Knowledge Object. Возвращает True если объект найден."""
         allowed = {"title", "summary", "content", "status", "lifecycle_stage",
-                   "confidence_score", "superseded_by"***REMOVED***
+                   "confidence_score", "superseded_by"]
         # None = «не менять» (позволяет обновлять subset полей без знания остальных)
-        updates = {k: v for k, v in fields.items() if k in allowed and v is not None***REMOVED***
+        updates = {k: v for k, v in fields.items() if k in allowed and v is not None}
         if not updates:
             return self.get_knowledge(knowledge_id) is not None
-        updates["updated_at"***REMOVED*** = _now()
-        cols = ", ".join(f"{k***REMOVED***=?" for k in updates)
+        updates["updated_at"] = _now()
+        cols = ", ".join(f"{k}=?" for k in updates)
         cur = self._execute(
-            f"UPDATE knowledge_objects SET {cols***REMOVED*** WHERE id=?",
+            f"UPDATE knowledge_objects SET {cols} WHERE id=?",
             (*updates.values(), knowledge_id),
         )
         return cur.rowcount > 0
 
-    def get_knowledge(self, knowledge_id: str) -> Optional[Dict[str, Any***REMOVED******REMOVED***:
+    def get_knowledge(self, knowledge_id: str) -> Optional[Dict[str, Any]]:
         row = self._fetchall(
             "SELECT * FROM knowledge_objects WHERE id=?", (knowledge_id,)
         )
         if not row:
             return None
-        ko = _row_to_dict(row[0***REMOVED***)
-        ko["tags"***REMOVED*** = [r["tag"***REMOVED*** for r in self._fetchall(
-            "SELECT tag FROM knowledge_tags WHERE knowledge_id=?", (knowledge_id,))***REMOVED***
+        ko = _row_to_dict(row[0])
+        ko["tags"] = [r["tag"] for r in self._fetchall(
+            "SELECT tag FROM knowledge_tags WHERE knowledge_id=?", (knowledge_id,))]
         return ko
 
-    def query_by_type(self, kind: str, limit: int = 100) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    def query_by_type(self, kind: str, limit: int = 100) -> List[Dict[str, Any]]:
         """Поиск Knowledge Objects по kind (RFC §3.1)."""
         rows = self._fetchall(
             "SELECT * FROM knowledge_objects WHERE kind=? ORDER BY updated_at DESC LIMIT ?",
             (kind, limit),
         )
-        return [_row_to_dict(r) for r in rows***REMOVED***
+        return [_row_to_dict(r) for r in rows]
 
-    def query_all(self, limit: int = 500) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    def query_all(self, limit: int = 500) -> List[Dict[str, Any]]:
         rows = self._fetchall(
             "SELECT * FROM knowledge_objects ORDER BY updated_at DESC LIMIT ?", (limit,)
         )
-        return [_row_to_dict(r) for r in rows***REMOVED***
+        return [_row_to_dict(r) for r in rows]
 
-    def count_objects(self, kind: Optional[str***REMOVED*** = None) -> int:
+    def count_objects(self, kind: Optional[str] = None) -> int:
         if kind:
             return self._fetchall(
                 "SELECT COUNT(*) AS c FROM knowledge_objects WHERE kind=?", (kind,)
-            )[0***REMOVED***["c"***REMOVED***
-        return self._fetchall("SELECT COUNT(*) AS c FROM knowledge_objects")[0***REMOVED***["c"***REMOVED***
+            )[0]["c"]
+        return self._fetchall("SELECT COUNT(*) AS c FROM knowledge_objects")[0]["c"]
 
     def delete_knowledge(self, knowledge_id: str) -> bool:
         cur = self._execute("DELETE FROM knowledge_objects WHERE id=?", (knowledge_id,))
@@ -383,7 +383,7 @@ class MemoryStore:
         """Создать ребро графа. rel_type — из REL_TYPES."""
         if rel_type not in REL_TYPES:
             raise MemoryStoreError(
-                f"Неизвестный rel_type '{rel_type***REMOVED***'. Допустимые: {', '.join(REL_TYPES)***REMOVED***"
+                f"Неизвестный rel_type '{rel_type}'. Допустимые: {', '.join(REL_TYPES)}"
             )
         self._execute(
             """INSERT OR REPLACE INTO knowledge_links
@@ -395,16 +395,16 @@ class MemoryStore:
     def find_related(
         self,
         knowledge_id: str,
-        rel_types: Optional[Iterable[str***REMOVED******REMOVED*** = None,
+        rel_types: Optional[Iterable[str]] = None,
         max_depth: int = 2,
-    ) -> List[Dict[str, Any***REMOVED******REMOVED***:
-        """BFS по графу связей до max_depth. Возвращает [{knowledge, rel_type, depth, weight***REMOVED******REMOVED***."""
+    ) -> List[Dict[str, Any]]:
+        """BFS по графу связей до max_depth. Возвращает [{knowledge, rel_type, depth, weight]]."""
         if max_depth < 1:
-            return [***REMOVED***
+            return []
         rel_filter = set(rel_types) if rel_types else set(REL_TYPES)
-        visited = {knowledge_id***REMOVED***
-        queue: deque[Tuple[str, int***REMOVED******REMOVED*** = deque([(knowledge_id, 0)***REMOVED***)
-        results: List[Dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+        visited = {knowledge_id}
+        queue: deque[Tuple[str, int]] = deque([(knowledge_id, 0)])
+        results: List[Dict[str, Any]] = []
         while queue:
             node, depth = queue.popleft()
             if depth >= max_depth:
@@ -415,9 +415,9 @@ class MemoryStore:
                 (node, node),
             )
             for r in rows:
-                if r["rel_type"***REMOVED*** not in rel_filter:
+                if r["rel_type"] not in rel_filter:
                     continue
-                neighbor = r["target_id"***REMOVED*** if r["source_id"***REMOVED*** == node else r["source_id"***REMOVED***
+                neighbor = r["target_id"] if r["source_id"] == node else r["source_id"]
                 if neighbor in visited:
                     continue
                 visited.add(neighbor)
@@ -425,21 +425,21 @@ class MemoryStore:
                 if ko:
                     results.append({
                         "knowledge": ko,
-                        "rel_type": r["rel_type"***REMOVED***,
+                        "rel_type": r["rel_type"],
                         "depth": depth + 1,
-                        "weight": r["weight"***REMOVED***,
-                    ***REMOVED***)
+                        "weight": r["weight"],
+                    ])
                 queue.append((neighbor, depth + 1))
-        results.sort(key=lambda x: (x["depth"***REMOVED***, -x["weight"***REMOVED***))
+        results.sort(key=lambda x: (x["depth"], -x["weight"]))
         return results
 
-    def shortest_path(self, from_id: str, to_id: str) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    def shortest_path(self, from_id: str, to_id: str) -> List[Dict[str, Any]]:
         """Кратчайший путь между двумя Knowledge Objects (BFS). Пустой список = пути нет."""
         if from_id == to_id:
-            return [***REMOVED***
-        visited = {from_id***REMOVED***
-        parent: Dict[str, Tuple[str, str, float***REMOVED******REMOVED*** = {***REMOVED***  # node -> (prev, rel_type, weight)
-        queue: deque[str***REMOVED*** = deque([from_id***REMOVED***)
+            return []
+        visited = {from_id}
+        parent: Dict[str, Tuple[str, str, float]] = {}  # node -> (prev, rel_type, weight)
+        queue: deque[str] = deque([from_id])
         while queue:
             node = queue.popleft()
             rows = self._fetchall(
@@ -448,62 +448,62 @@ class MemoryStore:
                 (node, node),
             )
             for r in rows:
-                neighbor = r["target_id"***REMOVED*** if r["source_id"***REMOVED*** == node else r["source_id"***REMOVED***
+                neighbor = r["target_id"] if r["source_id"] == node else r["source_id"]
                 if neighbor in visited:
                     continue
                 visited.add(neighbor)
-                parent[neighbor***REMOVED*** = (node, r["rel_type"***REMOVED***, r["weight"***REMOVED***)
+                parent[neighbor] = (node, r["rel_type"], r["weight"])
                 if neighbor == to_id:
                     # восстанавливаем путь
-                    path: List[Dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+                    path: List[Dict[str, Any]] = []
                     cur = to_id
                     while cur != from_id:
-                        prev, rel, w = parent[cur***REMOVED***
-                        path.append({"from": prev, "to": cur, "rel_type": rel, "weight": w***REMOVED***)
+                        prev, rel, w = parent[cur]
+                        path.append({"from": prev, "to": cur, "rel_type": rel, "weight": w})
                         cur = prev
                     path.reverse()
                     return path
                 queue.append(neighbor)
-        return [***REMOVED***
+        return []
 
-    def find_patterns(self, min_occurrences: int = 2) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    def find_patterns(self, min_occurrences: int = 2) -> List[Dict[str, Any]]:
         """Паттерн-детекция: повторяющиеся тройки A--rel1-->B--rel2-->C.
 
-        Возвращает [{pattern, occurrences, examples:[(a,b,c)***REMOVED******REMOVED******REMOVED***.
+        Возвращает [{pattern, occurrences, examples:[(a,b,c)]}].
         """
         rows = self._fetchall(
             """SELECT source_id, target_id, rel_type FROM knowledge_links"""
         )
         # строим граф смежности
-        adj: Dict[str, List[Tuple[str, str***REMOVED******REMOVED******REMOVED*** = {***REMOVED***
+        adj: Dict[str, List[Tuple[str, str]]] = {}
         for r in rows:
-            adj.setdefault(r["source_id"***REMOVED***, [***REMOVED***).append((r["target_id"***REMOVED***, r["rel_type"***REMOVED***))
-        patterns: Dict[Tuple[str, str***REMOVED***, List[Tuple[str, str, str***REMOVED******REMOVED******REMOVED*** = {***REMOVED***
+            adj.setdefault(r["source_id"], []).append((r["target_id"], r["rel_type"]))
+        patterns: Dict[Tuple[str, str], List[Tuple[str, str, str]]] = {}
         for a, edges in adj.items():
             for b, r1 in edges:
-                for c, r2 in adj.get(b, [***REMOVED***):
+                for c, r2 in adj.get(b, []):
                     key = (r1, r2)
-                    patterns.setdefault(key, [***REMOVED***).append((a, b, c))
-        result = [***REMOVED***
+                    patterns.setdefault(key, []).append((a, b, c))
+        result = []
         for (r1, r2), examples in patterns.items():
             # дедупликация троек
             uniq = list(dict.fromkeys(examples))
             if len(uniq) >= min_occurrences:
                 result.append({
-                    "pattern": f"{r1***REMOVED*** → {r2***REMOVED***",
+                    "pattern": f"{r1} → {r2}",
                     "occurrences": len(uniq),
                     "examples": uniq,
-                ***REMOVED***)
-        result.sort(key=lambda x: -x["occurrences"***REMOVED***)
+                ])
+        result.sort(key=lambda x: -x["occurrences"])
         return result
 
     # ── Learning Events (RFC §7) ─────────────────────────────────────
     def record_learning_event(
         self,
         trigger_id: str,
-        context_snapshot: Dict[str, Any***REMOVED***,
+        context_snapshot: Dict[str, Any],
         outcome: str = "neutral",
-        lesson_id: Optional[str***REMOVED*** = None,
+        lesson_id: Optional[str] = None,
     ) -> str:
         """Зафиксировать событие обучения (AFC: trigger → feedback)."""
         if outcome not in ("success", "failure", "neutral"):
@@ -518,14 +518,14 @@ class MemoryStore:
         )
         return eid
 
-    def list_learning_events(self, limit: int = 100) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    def list_learning_events(self, limit: int = 100) -> List[Dict[str, Any]]:
         rows = self._fetchall(
             "SELECT * FROM learning_events ORDER BY created_at DESC LIMIT ?", (limit,)
         )
-        return [_row_to_dict(r) for r in rows***REMOVED***
+        return [_row_to_dict(r) for r in rows]
 
     # ── Feedback & Confidence (§7) ───────────────────────────────────
-    def update_feedback(self, knowledge_id: str, outcome: str) -> Optional[float***REMOVED***:
+    def update_feedback(self, knowledge_id: str, outcome: str) -> Optional[float]:
         """Обновить usage/success/failure и пересчитать confidence_score.
 
         RFC §7: confidence = success / (success + failure). Пороги:
@@ -535,15 +535,15 @@ class MemoryStore:
         ko = self.get_knowledge(knowledge_id)
         if not ko:
             return None
-        usage = ko["usage_count"***REMOVED*** + 1
-        success = ko["success_count"***REMOVED*** + (1 if outcome == "success" else 0)
-        failure = ko["failure_count"***REMOVED*** + (1 if outcome == "failure" else 0)
+        usage = ko["usage_count"] + 1
+        success = ko["success_count"] + (1 if outcome == "success" else 0)
+        failure = ko["failure_count"] + (1 if outcome == "failure" else 0)
         evidence = success + failure
-        confidence = success / evidence if evidence else ko["confidence_score"***REMOVED***
+        confidence = success / evidence if evidence else ko["confidence_score"]
         # затухание при неиспользовании 90+ дней (RFC §7)
         if ko.get("last_used_at"):
             try:
-                last = datetime.fromisoformat(ko["last_used_at"***REMOVED***)
+                last = datetime.fromisoformat(ko["last_used_at"])
                 if (datetime.now(timezone.utc) - last).days > DECAY_AFTER_DAYS:
                     confidence *= 0.5
             except (ValueError, TypeError):
@@ -553,7 +553,7 @@ class MemoryStore:
         elif confidence > VALIDATED_CONFIDENCE and evidence >= VALIDATED_MIN_EVIDENCE:
             status = "validated"
         else:
-            status = ko["status"***REMOVED***
+            status = ko["status"]
         now = _now()
         self._execute(
             """UPDATE knowledge_objects
@@ -563,7 +563,7 @@ class MemoryStore:
                    updated_at=?
                WHERE id=?""",
             (usage, success, failure, evidence, confidence, status, now,
-             status, status, ko["status"***REMOVED***, now, now, knowledge_id),
+             status, status, ko["status"], now, now, knowledge_id),
         )
         self.record_analytics("confidence", confidence, dimension=knowledge_id)
         return confidence
@@ -581,7 +581,7 @@ class MemoryStore:
         metric_name: str,
         dimension: str = "global",
         days: int = 30,
-    ) -> Optional[float***REMOVED***:
+    ) -> Optional[float]:
         """Среднее значение метрики за последние N дней (RFC §8)."""
         since = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
         rows = self._fetchall(
@@ -589,10 +589,10 @@ class MemoryStore:
                WHERE metric_name=? AND dimension=? AND recorded_at >= ?""",
             (metric_name, dimension, since),
         )
-        val = rows[0***REMOVED***["avg_val"***REMOVED*** if rows else None
+        val = rows[0]["avg_val"] if rows else None
         return float(val) if val is not None else None
 
-    def analytics_report(self, days: int = 30) -> Dict[str, Any***REMOVED***:
+    def analytics_report(self, days: int = 30) -> Dict[str, Any]:
         """Отчёт по метрикам (RFC §8)."""
         metrics = self._fetchall(
             """SELECT metric_name, COUNT(*) AS n, AVG(metric_value) AS avg_val,
@@ -604,10 +604,10 @@ class MemoryStore:
         )
         return {
             "days": days,
-            "metrics": [dict(r) for r in metrics***REMOVED***,
+            "metrics": [dict(r) for r in metrics],
             "total_events": self.count_learning_events(),
             "total_objects": self.count_objects(),
-        ***REMOVED***
+        }
 
     def count_learning_events(self) -> int:
-        return self._fetchall("SELECT COUNT(*) AS c FROM learning_events")[0***REMOVED***["c"***REMOVED***
+        return self._fetchall("SELECT COUNT(*) AS c FROM learning_events")[0]["c"]

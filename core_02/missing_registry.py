@@ -17,8 +17,8 @@ dataclass MissingItem + validate_schema с B10/R-127 машинными инва
                          prompt_path="pompts_11/075_04_research_web_capability.md")
     reg.get("research_web")                       # -> MissingItem
     reg.mark_implemented("research_web")          # -> status: implemented
-    reg.list_by_status("prompt_written")          # -> [MissingItem, ...***REMOVED***
-    reg.validate_schema()                         # -> list[str***REMOVED*** ([***REMOVED*** = валиден)
+    reg.list_by_status("prompt_written")          # -> [MissingItem, ...]
+    reg.validate_schema()                         # -> list[str] ([] = валиден)
 
 Статусы: registered → prompt_written → implemented (фиксированный lifecycle).
 """
@@ -29,7 +29,7 @@ import json
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional
 
 try:
@@ -46,12 +46,12 @@ IMPLEMENTED = "implemented"      # реализован (код + тесты + �
 STATUSES = (REGISTERED, DESIGN_READY, PROMPT_WRITTEN, IMPLEMENTED)
 
 # Ранг lifecycle для forward-only перехода (lifecycle не откатывается).
-_STATUS_RANK: Dict[str, int***REMOVED*** = {
+_STATUS_RANK: Dict[str, int] = {
     REGISTERED: 0,
     DESIGN_READY: 1,
     PROMPT_WRITTEN: 2,
     IMPLEMENTED: 3,
-***REMOVED***
+}
 
 
 def status_rank(status: str) -> int:
@@ -87,14 +87,14 @@ class MissingItem:
     factory: str = ""            # Research / Code / Architecture / ... ("" = вне Factory)
     description: str = ""        # что за элемент и где нужен
     prompt_path: str = ""        # pompts_11/promtNN.md — primary/implementation промт
-    related_prompts: List[str***REMOVED*** = field(default_factory=list)  # multi-prompt (promt 087):
+    related_prompts: List[str] = field(default_factory=list)  # multi-prompt (promt 087):
                                  # forensics/design/supporting промты; prompt_path остаётся primary
     implementation: str = ""     # scripts_01/*.py / core_02/*.py (после реализации)
     registered_at: str = ""
     updated_at: str = ""
     backfill: bool = False       # True = зарегистрирован задним числом (минуя lifecycle)
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "item_id": self.item_id,
             "kind": self.kind,
@@ -107,10 +107,10 @@ class MissingItem:
             "registered_at": self.registered_at,
             "updated_at": self.updated_at,
             "backfill": bool(self.backfill),
-        ***REMOVED***
+        }
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any***REMOVED***) -> "MissingItem":
+    def from_dict(cls, data: Dict[str, Any]) -> "MissingItem":
         """Построить из YAML-записи, игнорируя неизвестные/лишние ключи.
 
         Устойчивость к ручной правке YAML (лишний ключ не роняет реестр) —
@@ -120,8 +120,8 @@ class MissingItem:
             "item_id", "kind", "status", "factory", "description",
             "prompt_path", "related_prompts", "implementation",
             "registered_at", "updated_at", "backfill",
-        ***REMOVED***
-        return cls(**{k: v for k, v in data.items() if k in known***REMOVED***)
+        }
+        return cls(**{k: v for k, v in data.items() if k in known})
 
 
 class MissingRegistry:
@@ -130,28 +130,28 @@ class MissingRegistry:
     def __init__(self, path: str | Path = DEFAULT_PATH):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self._data: Dict[str, Dict[str, Any***REMOVED******REMOVED*** = self._load()
-        self._schema_violations: List[str***REMOVED*** = self.validate_schema()
+        self._data: Dict[str, Dict[str, Any]] = self._load()
+        self._schema_violations: List[str] = self.validate_schema()
 
     # ── persistence ─────────────────────────────────────────────────────
-    def _load(self) -> Dict[str, Dict[str, Any***REMOVED******REMOVED***:
-        """Загрузить реестр. При ошибке чтения/парсинга — {***REMOVED*** + фиксируем факт."""
-        self._load_error: Optional[str***REMOVED*** = None
+    def _load(self) -> Dict[str, Dict[str, Any]]:
+        """Загрузить реестр. При ошибке чтения/парсинга — {] + фиксируем факт."""
+        self._load_error: Optional[str] = None
         if not self.path.exists():
-            return {***REMOVED***
+            return {}
         try:
             text = self.path.read_text(encoding="utf-8")
             if yaml is not None:
-                data = yaml.safe_load(text) or {***REMOVED***
+                data = yaml.safe_load(text) or {}
             else:  # pragma: no cover
                 data = json.loads(text)
-            return {k: dict(v) for k, v in data.items()***REMOVED*** if isinstance(data, dict) else {***REMOVED***
+            return {k: dict(v) for k, v in data.items()} if isinstance(data, dict) else {}
         except Exception as exc:
             self._load_error = str(exc)
-            return {***REMOVED***
+            return {}
 
     def _save(self) -> None:
-        payload = {k: v for k, v in self._data.items()***REMOVED***
+        payload = {k: v for k, v in self._data.items()}
         if yaml is not None:
             self.path.write_text(
                 yaml.safe_dump(payload, allow_unicode=True, sort_keys=False),
@@ -163,7 +163,7 @@ class MissingRegistry:
         self._load_error = None
 
     # ── B10 schema validation (R-127) ────────────────────────────────────
-    def validate_schema(self) -> List[str***REMOVED***:
+    def validate_schema(self) -> List[str]:
         """Машинные инварианты реестра (B10/R-127). Возвращает список нарушений.
 
         - обязательные поля: item_id, kind, status;
@@ -173,58 +173,58 @@ class MissingRegistry:
         - status == prompt_written ⇒ prompt_path непустой;
         - нечитаемый файл — нарушение integrity.
         """
-        violations: List[str***REMOVED*** = [***REMOVED***
+        violations: List[str] = []
         load_error = getattr(self, "_load_error", None)
         if load_error:
-            violations.append(f"registry: unreadable YAML ({load_error***REMOVED***)")
+            violations.append(f"registry: unreadable YAML ({load_error})")
         for item_id, entry in self._data.items():
             for f in REQUIRED_FIELDS:
                 if f not in entry:
-                    violations.append(f"{item_id***REMOVED***: missing required field {f!r***REMOVED***")
+                    violations.append(f"{item_id}: missing required field {f!r}")
             kind = entry.get("kind")
             if kind is not None and kind not in KINDS:
-                violations.append(f"{item_id***REMOVED***: invalid kind {kind!r***REMOVED*** (allowed: {KINDS***REMOVED***)")
+                violations.append(f"{item_id}: invalid kind {kind!r} (allowed: {KINDS})")
             status = entry.get("status")
             if status is not None and status not in STATUSES:
-                violations.append(f"{item_id***REMOVED***: invalid status {status!r***REMOVED*** (allowed: {STATUSES***REMOVED***)")
+                violations.append(f"{item_id}: invalid status {status!r} (allowed: {STATUSES})")
             if status == IMPLEMENTED and not entry.get("implementation"):
                 violations.append(
-                    f"{item_id***REMOVED***: status 'implemented' but implementation empty "
+                    f"{item_id}: status 'implemented' but implementation empty "
                     "(implemented ⇒ есть код/файл реализации)"
                 )
             if status == PROMPT_WRITTEN and not entry.get("prompt_path"):
                 violations.append(
-                    f"{item_id***REMOVED***: status 'prompt_written' but prompt_path empty "
+                    f"{item_id}: status 'prompt_written' but prompt_path empty "
                     "(prompt_written ⇒ промт на реализацию существует)"
                 )
             related = entry.get("related_prompts")
             if related is not None:
                 if not isinstance(related, list):
                     violations.append(
-                        f"{item_id***REMOVED***: related_prompts must be a list "
-                        f"(got {type(related).__name__***REMOVED***)"
+                        f"{item_id}: related_prompts must be a list "
+                        f"(got {type(related).__name__})"
                     )
                 else:
                     for rp in related:
                         if not isinstance(rp, str) or not rp.strip():
                             violations.append(
-                                f"{item_id***REMOVED***: related_prompts entries must be non-empty strings"
+                                f"{item_id}: related_prompts entries must be non-empty strings"
                             )
             backfill = entry.get("backfill")
             if backfill is not None and not isinstance(backfill, bool):
                 violations.append(
-                    f"{item_id***REMOVED***: backfill must be a bool "
-                    f"(got {type(backfill).__name__***REMOVED***)"
+                    f"{item_id}: backfill must be a bool "
+                    f"(got {type(backfill).__name__})"
                 )
             if backfill is True and status != IMPLEMENTED:
                 violations.append(
-                    f"{item_id***REMOVED***: backfill=true but status != 'implemented' "
+                    f"{item_id}: backfill=true but status != 'implemented' "
                     "(backfill = регистрация задним числом уже реализованного элемента)"
                 )
         return violations
 
     @property
-    def schema_violations(self) -> List[str***REMOVED***:
+    def schema_violations(self) -> List[str]:
         return list(self._schema_violations)
 
     # ── API (register-first) ─────────────────────────────────────────────
@@ -235,7 +235,7 @@ class MissingRegistry:
         factory: str = "",
         description: str = "",
         prompt_path: str = "",
-        related_prompts: Optional[List[str***REMOVED******REMOVED*** = None,
+        related_prompts: Optional[List[str]] = None,
         implementation: str = "",
         status: str = REGISTERED,
         backfill: bool = False,
@@ -249,12 +249,12 @@ class MissingRegistry:
         if not item_id:
             raise ValueError("item_id не может быть пустым")
         if kind not in KINDS:
-            raise ValueError(f"kind {kind!r***REMOVED*** не из списка {KINDS***REMOVED***")
+            raise ValueError(f"kind {kind!r} не из списка {KINDS}")
         if status not in STATUSES:
-            raise ValueError(f"status {status!r***REMOVED*** не из списка {STATUSES***REMOVED***")
+            raise ValueError(f"status {status!r} не из списка {STATUSES}")
         if backfill and status != IMPLEMENTED:
             raise ValueError(
-                f"backfill=True requires status='implemented' (got {status!r***REMOVED***) "
+                f"backfill=True requires status='implemented' (got {status!r}) "
                 "— backfill = регистрация задним числом уже реализованного элемента"
             )
 
@@ -263,7 +263,7 @@ class MissingRegistry:
         if existing is not None:
             # Lifecycle не откатывается: registered→design_ready→prompt_written→implemented.
             existing_status = existing.get("status")
-            if existing_status in _STATUS_RANK and _STATUS_RANK.get(status, 0) < _STATUS_RANK[existing_status***REMOVED***:
+            if existing_status in _STATUS_RANK and _STATUS_RANK.get(status, 0) < _STATUS_RANK[existing_status]:
                 status = existing_status
             existing.update({
                 "kind": kind,
@@ -271,13 +271,13 @@ class MissingRegistry:
                 "description": description or existing.get("description", ""),
                 "prompt_path": prompt_path or existing.get("prompt_path", ""),
                 "related_prompts": related_prompts if related_prompts is not None
-                                   else existing.get("related_prompts", [***REMOVED***),
+                                   else existing.get("related_prompts", []),
                 "implementation": implementation or existing.get("implementation", ""),
                 "status": status,
                 "updated_at": now,
                 # backfill — факт регистрации, не откатывается (как lifecycle).
                 "backfill": bool(backfill or existing.get("backfill", False)),
-            ***REMOVED***)
+            ])
             self._save()
             return item_id
 
@@ -288,17 +288,17 @@ class MissingRegistry:
             "factory": factory,
             "description": description,
             "prompt_path": prompt_path,
-            "related_prompts": list(related_prompts or [***REMOVED***),
+            "related_prompts": list(related_prompts or []),
             "implementation": implementation,
             "registered_at": now,
             "updated_at": now,
             "backfill": bool(backfill),
-        ***REMOVED***
-        self._data[item_id***REMOVED*** = entry
+        }
+        self._data[item_id] = entry
         self._save()
         return item_id
 
-    def get(self, item_id: str) -> Optional[MissingItem***REMOVED***:
+    def get(self, item_id: str) -> Optional[MissingItem]:
         entry = self._data.get(item_id)
         if entry is None:
             return None
@@ -307,20 +307,20 @@ class MissingRegistry:
     def has(self, item_id: str) -> bool:
         return item_id in self._data
 
-    def list_all(self) -> List[MissingItem***REMOVED***:
-        out = [MissingItem.from_dict(e) for e in self._data.values()***REMOVED***
+    def list_all(self) -> List[MissingItem]:
+        out = [MissingItem.from_dict(e) for e in self._data.values()]
         out.sort(key=lambda i: i.item_id)
         return out
 
-    def list_by_status(self, status_filter: Optional[str***REMOVED*** = None) -> List[MissingItem***REMOVED***:
+    def list_by_status(self, status_filter: Optional[str] = None) -> List[MissingItem]:
         out = [MissingItem.from_dict(e) for e in self._data.values()
-               if status_filter is None or e.get("status") == status_filter***REMOVED***
+               if status_filter is None or e.get("status") == status_filter]
         out.sort(key=lambda i: i.item_id)
         return out
 
-    def list_by_factory(self, factory: str) -> List[MissingItem***REMOVED***:
+    def list_by_factory(self, factory: str) -> List[MissingItem]:
         out = [MissingItem.from_dict(e) for e in self._data.values()
-               if e.get("factory") == factory***REMOVED***
+               if e.get("factory") == factory]
         out.sort(key=lambda i: i.item_id)
         return out
 
@@ -330,12 +330,12 @@ class MissingRegistry:
         Lifecycle не откатывается: если элемент уже implemented — не деградирует.
         """
         if item_id not in self._data:
-            raise KeyError(f"Элемент {item_id***REMOVED*** не зарегистрирован (register-first!)")
-        entry = self._data[item_id***REMOVED***
-        if _STATUS_RANK[PROMPT_WRITTEN***REMOVED*** > _STATUS_RANK.get(entry.get("status", ""), 0):
-            entry["status"***REMOVED*** = PROMPT_WRITTEN
-        entry["prompt_path"***REMOVED*** = prompt_path
-        entry["updated_at"***REMOVED*** = _now()
+            raise KeyError(f"Элемент {item_id} не зарегистрирован (register-first!)")
+        entry = self._data[item_id]
+        if _STATUS_RANK[PROMPT_WRITTEN] > _STATUS_RANK.get(entry.get("status", ""), 0):
+            entry["status"] = PROMPT_WRITTEN
+        entry["prompt_path"] = prompt_path
+        entry["updated_at"] = _now()
         self._save()
         return MissingItem.from_dict(entry)
 
@@ -345,13 +345,13 @@ class MissingRegistry:
         Дедупликация: повторный путь не дублируется. Lifecycle не меняется.
         """
         if item_id not in self._data:
-            raise KeyError(f"Элемент {item_id***REMOVED*** не зарегистрирован (register-first!)")
-        entry = self._data[item_id***REMOVED***
-        related = list(entry.get("related_prompts") or [***REMOVED***)
+            raise KeyError(f"Элемент {item_id} не зарегистрирован (register-first!)")
+        entry = self._data[item_id]
+        related = list(entry.get("related_prompts") or [])
         if prompt_path and prompt_path not in related:
             related.append(prompt_path)
-        entry["related_prompts"***REMOVED*** = related
-        entry["updated_at"***REMOVED*** = _now()
+        entry["related_prompts"] = related
+        entry["updated_at"] = _now()
         self._save()
         return MissingItem.from_dict(entry)
 
@@ -360,19 +360,19 @@ class MissingRegistry:
         item_id: str,
         implementation: str,
         prompt_path: str = "",
-        related_prompts: Optional[List[str***REMOVED******REMOVED*** = None,
+        related_prompts: Optional[List[str]] = None,
     ) -> MissingItem:
         """Шаг 3 register-first: элемент реализован (код + тесты)."""
         if item_id not in self._data:
-            raise KeyError(f"Элемент {item_id***REMOVED*** не зарегистрирован (register-first!)")
-        entry = self._data[item_id***REMOVED***
-        entry["status"***REMOVED*** = IMPLEMENTED
-        entry["implementation"***REMOVED*** = implementation
+            raise KeyError(f"Элемент {item_id} не зарегистрирован (register-first!)")
+        entry = self._data[item_id]
+        entry["status"] = IMPLEMENTED
+        entry["implementation"] = implementation
         if prompt_path:
-            entry["prompt_path"***REMOVED*** = prompt_path
+            entry["prompt_path"] = prompt_path
         if related_prompts is not None:
-            entry["related_prompts"***REMOVED*** = list(related_prompts)
-        entry["updated_at"***REMOVED*** = _now()
+            entry["related_prompts"] = list(related_prompts)
+        entry["updated_at"] = _now()
         self._save()
         return MissingItem.from_dict(entry)
 
@@ -381,7 +381,7 @@ class MissingRegistry:
 
     def unregister(self, item_id: str) -> bool:
         if item_id in self._data:
-            del self._data[item_id***REMOVED***
+            del self._data[item_id]
             self._save()
             return True
         return False
@@ -393,38 +393,38 @@ class MissingRegistry:
 
 
 def _print_item(item: MissingItem) -> None:
-    related = item.related_prompts or [***REMOVED***
-    print(f"{item.item_id:<24***REMOVED*** {item.status:<15***REMOVED*** {item.kind:<10***REMOVED*** "
-          f"factory={item.factory or '-'***REMOVED*** prompt={item.prompt_path or '-'***REMOVED*** "
-          f"impl={item.implementation or '-'***REMOVED*** related={len(related)***REMOVED*** "
-          f"backfill={item.backfill***REMOVED***")
+    related = item.related_prompts or []
+    print(f"{item.item_id:<24} {item.status:<15} {item.kind:<10} "
+          f"factory={item.factory or '-'} prompt={item.prompt_path or '-'} "
+          f"impl={item.implementation or '-'} related={len(related)} "
+          f"backfill={item.backfill}")
     if item.description:
-        print(f"{'':<24***REMOVED*** {item.description***REMOVED***")
+        print(f"{'':<24} {item.description}")
     for rp in related:
-        print(f"{'':<24***REMOVED*** related: {rp***REMOVED***")
+        print(f"{'':<24} related: {rp}")
 
 
-def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
+def main(argv: Optional[List[str]] = None) -> int:
     """CLI для MissingRegistry (register-first).
 
     Usage:
-        python -m core_02.missing_registry list [--status STATUS***REMOVED*** [--factory FACTORY***REMOVED***
+        python -m core_02.missing_registry list [--status STATUS] [--factory FACTORY]
         python -m core_02.missing_registry list --json
         python -m core_02.missing_registry seed
-        python -m core_02.missing_registry register ITEM_ID --kind tool [--factory F***REMOVED*** \
-            [--description DESC***REMOVED*** [--prompt PATH***REMOVED*** [--status STATUS***REMOVED*** [--backfill***REMOVED***
+        python -m core_02.missing_registry register ITEM_ID --kind tool [--factory F] \
+            [--description DESC] [--prompt PATH] [--status STATUS] [--backfill]
         python -m core_02.missing_registry mark-prompt-written ITEM_ID --prompt PATH
         python -m core_02.missing_registry mark-implemented ITEM_ID --implementation PATH \
-            [--prompt PATH***REMOVED*** [--related-prompt PATH ...***REMOVED***
+            [--prompt PATH] [--related-prompt PATH ...]
         python -m core_02.missing_registry add-related-prompt ITEM_ID --prompt PATH \
-            [--prompt PATH ...***REMOVED***
+            [--prompt PATH ...]
         python -m core_02.missing_registry check   # validate_schema → exit 0/1
     """
     import argparse
 
     parser = argparse.ArgumentParser(prog="missing_registry", description=__doc__)
     parser.add_argument("--path", default=DEFAULT_PATH,
-                        help=f"путь к YAML-реестру (default {DEFAULT_PATH***REMOVED***)")
+                        help=f"путь к YAML-реестру (default {DEFAULT_PATH})")
     sub = parser.add_subparsers(dest="command", required=True)
 
     # list
@@ -475,16 +475,16 @@ def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
     try:
         reg = MissingRegistry(args.path)
     except Exception as exc:  # noqa: BLE001 — CLI fail-safe
-        print(f"error: не удалось открыть реестр {args.path***REMOVED***: {exc***REMOVED***", file=sys.stderr)
+        print(f"error: не удалось открыть реестр {args.path}: {exc}", file=sys.stderr)
         return 2
 
     cmd = args.command
     if cmd == "list":
         items = reg.list_by_factory(args.factory) if args.factory else reg.list_all()
         if args.status:
-            items = [i for i in items if i.status == args.status***REMOVED***
+            items = [i for i in items if i.status == args.status]
         if args.json:
-            print(json.dumps([i.to_dict() for i in items***REMOVED***, ensure_ascii=False, indent=2))
+            print(json.dumps([i.to_dict() for i in items], ensure_ascii=False, indent=2))
             return 0
         if not items:
             print("(пусто)")
@@ -495,7 +495,7 @@ def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
 
     if cmd == "seed":
         added = seed_defaults(reg)
-        print(f"seed: добавлено {added***REMOVED***, всего {reg.count()***REMOVED***")
+        print(f"seed: добавлено {added}, всего {reg.count()}")
         return 0
 
     if cmd == "register":
@@ -512,7 +512,7 @@ def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
             )
         except ValueError as exc:
             # Clean message + exit 1 (как KeyError в mark-* ветках), не traceback.
-            print(f"error: {exc***REMOVED***", file=sys.stderr)
+            print(f"error: {exc}", file=sys.stderr)
             return 1
         item_reg = reg.get(args.item_id)
         if item_reg is None:
@@ -525,7 +525,7 @@ def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
         try:
             item = reg.mark_prompt_written(args.item_id, args.prompt_path)
         except KeyError as exc:
-            print(f"error: {exc***REMOVED***", file=sys.stderr)
+            print(f"error: {exc}", file=sys.stderr)
             return 1
         _print_item(item)
         return 0
@@ -538,7 +538,7 @@ def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
                 related_prompts=args.related_prompts,
             )
         except KeyError as exc:
-            print(f"error: {exc***REMOVED***", file=sys.stderr)
+            print(f"error: {exc}", file=sys.stderr)
             return 1
         _print_item(item)
         return 0
@@ -549,7 +549,7 @@ def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
                 reg.add_related_prompt(args.item_id, rp)
             item_arp = reg.get(args.item_id)
         except KeyError as exc:
-            print(f"error: {exc***REMOVED***", file=sys.stderr)
+            print(f"error: {exc}", file=sys.stderr)
             return 1
         if item_arp is None:
             print("error: элемент не зарегистрирован", file=sys.stderr)
@@ -561,19 +561,19 @@ def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
         violations = reg.validate_schema()
         if violations:
             for v in violations:
-                print(f"violation: {v***REMOVED***")
+                print(f"violation: {v}")
             return 1
-        print(f"ok: реестр {args.path***REMOVED*** валиден ({reg.count()***REMOVED*** записей)")
+        print(f"ok: реестр {args.path} валиден ({reg.count()} записей)")
         return 0
 
     # unreachable — subparsers имеют required=True
-    parser.error(f"unknown command {cmd!r***REMOVED***")
+    parser.error(f"unknown command {cmd!r}")
     return 2  # pragma: no cover
 
 
 # ─── seed: записи из §20 карты v1.1 (регистрируются при первом вызове) ──────
 
-_SEED: List[Dict[str, Any***REMOVED******REMOVED*** = [
+_SEED: List[Dict[str, Any]] = [
     {
         "item_id": "factory_registry",
         "kind": "registry",
@@ -582,7 +582,7 @@ _SEED: List[Dict[str, Any***REMOVED******REMOVED*** = [
         "description": "Реестр фабрик и кузен, статусы, паспорта (Missing Capability #1) — дизайн готов",
         "prompt_path": "docs_10/engineering-memory/FORGE_PASSPORT_CODE_REPRESENTATION_V1.md",
         "implementation": "",
-    ***REMOVED***,
+    },
     {
         "item_id": "scenario_engine",
         "kind": "system",
@@ -591,7 +591,7 @@ _SEED: List[Dict[str, Any***REMOVED******REMOVED*** = [
         "description": "Исполнение сценариев-композиторов поверх Factory (Missing Capability #2) — дизайн готов",
         "prompt_path": "docs_10/engineering-memory/SCENARIO_ENGINE_DESIGN_V1.md",
         "implementation": "",
-    ***REMOVED***,
+    },
     {
         "item_id": "decision_registry",
         "kind": "registry",
@@ -600,7 +600,7 @@ _SEED: List[Dict[str, Any***REMOVED******REMOVED*** = [
         "description": "ADR-реестр как структура данных (Missing Capability #3)",
         "prompt_path": "",
         "implementation": "",
-    ***REMOVED***,
+    },
     {
         "item_id": "conformance_checker",
         "kind": "tool",
@@ -609,7 +609,7 @@ _SEED: List[Dict[str, Any***REMOVED******REMOVED*** = [
         "description": "Машиночитаемый Conformance checker (Missing Capability #4)",
         "prompt_path": "",
         "implementation": "",
-    ***REMOVED***,
+    },
     {
         "item_id": "model_diagram_autogen",
         "kind": "tool",
@@ -618,7 +618,7 @@ _SEED: List[Dict[str, Any***REMOVED******REMOVED*** = [
         "description": "Автогенерация моделей/диаграмм (Missing Capability #5)",
         "prompt_path": "",
         "implementation": "",
-    ***REMOVED***,
+    },
     {
         "item_id": "research_web",
         "kind": "tool",
@@ -627,7 +627,7 @@ _SEED: List[Dict[str, Any***REMOVED******REMOVED*** = [
         "description": "Web Research — веб-исследование (Missing Capability #6)",
         "prompt_path": "pompts_11/075_04_research_web_capability.md",
         "implementation": "scripts_01/research_web.py",
-    ***REMOVED***,
+    },
     {
         "item_id": "lisa_estimator",
         "kind": "tool",
@@ -636,8 +636,8 @@ _SEED: List[Dict[str, Any***REMOVED******REMOVED*** = [
         "description": "Estimation — оценка сложности LISA-3 (Missing Capability #7)",
         "prompt_path": "pompts_11/076_13_lisa_estimator_capability.md",
         "implementation": "scripts_01/lisa_estimator.py",
-    ***REMOVED***,
-***REMOVED***
+    },
+]
 
 
 def seed_defaults(registry: MissingRegistry) -> int:
@@ -649,7 +649,7 @@ def seed_defaults(registry: MissingRegistry) -> int:
     """
     added = 0
     for item in _SEED:
-        if not registry.has(item["item_id"***REMOVED***):
+        if not registry.has(item["item_id"]):
             registry.register_missing(**item)
             added += 1
     return added
@@ -668,7 +668,7 @@ __all__ = [
     "DEFAULT_PATH",
     "seed_defaults",
     "status_rank",
-***REMOVED***
+]
 
 
 if __name__ == "__main__":

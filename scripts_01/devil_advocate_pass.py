@@ -26,11 +26,11 @@ Use cases::
     report = devil_advocate_pass(open_hypothesis)
     if report.refuted:
         for c in report.new_candidates:
-            print(f"  new: {c.hid***REMOVED*** → {c.text[:60***REMOVED******REMOVED***")
+            print(f"  new: {c.hid} → {c.text[:60]}")
 
 CLI::
 
-    python -m scripts_01.devil_advocate_pass --hid <sha-prefix> [--root P***REMOVED*** [--json***REMOVED***
+    python -m scripts_01.devil_advocate_pass --hid <sha-prefix> [--root P] [--json]
 
 Design invariants (per thinker v5.189.66):
 - **Forward-only DAG:** original moved to REFUTED (terminal) ONLY AFTER ≥1
@@ -44,7 +44,7 @@ Design invariants (per thinker v5.189.66):
   downstream can reweight via tag_match).
 - **Tag inheritance:** parent.tags passed to children (cross-pollination;
   preserves topical lineage).
-- **Kill-criteria inheritance:** parent.kill_criteria[:3***REMOVED*** passed to children
+- **Kill-criteria inheritance:** parent.kill_criteria[:3] passed to children
   (keeps the analytical frame consistent).
 - **Idempotent:** if parent already REFUTED or KILL_CRITERIA_MET → return
   empty Report immediately (no-op, no second update_status attempt).
@@ -56,7 +56,7 @@ import argparse
 import json
 import sys
 from dataclasses import dataclass, field
-***REMOVED***
+}
 from typing import Any, Dict, List, Literal, Optional
 
 __all__ = [
@@ -64,13 +64,13 @@ __all__ = [
     "DevilAdvocateReport",
     "devil_advocate_pass",
     "main",
-***REMOVED***
+]
 
 
 # ─── types ──────────────────────────────────────────────────────────────
 
 
-Strategy = Literal["3-kill-questions", "alternative-perspective", "evidence-gap"***REMOVED***
+Strategy = Literal["3-kill-questions", "alternative-perspective", "evidence-gap"]
 
 
 @dataclass
@@ -93,10 +93,10 @@ class DevilAdvocateReport:
 
     original_hid: str
     refuted: bool
-    new_candidates: List[Any***REMOVED***  # List[HypothesisSummary***REMOVED***; Any for lazy-typing
+    new_candidates: List[Any]  # List[HypothesisSummary]; Any for lazy-typing
     strategy: Strategy
     iteration_count: int
-    warnings: List[str***REMOVED*** = field(default_factory=list)
+    warnings: List[str] = field(default_factory=list)
 
 
 # ─── helpers (deterministic, no LLM) ────────────────────────────────────
@@ -113,7 +113,7 @@ def _invert(text: str) -> str:
         return "Counter: (empty claim)"
     if " is " in clean:
         return clean.replace(" is ", " is NOT ", 1)
-    return f"Counter: {clean***REMOVED***"
+    return f"Counter: {clean}"
 
 
 def _boundary_probe(text: str) -> str:
@@ -123,7 +123,7 @@ def _boundary_probe(text: str) -> str:
     invalid" — surfaces edge-case scenarios where the original could fail.
     """
     clean = text.strip() or "empty claim"
-    return f"Edge case: Under extreme boundary conditions, '{clean***REMOVED***' is invalid."
+    return f"Edge case: Under extreme boundary conditions, '{clean}' is invalid."
 
 
 def _steel_man(text: str) -> str:
@@ -133,20 +133,20 @@ def _steel_man(text: str) -> str:
     invalidate the original claim? Forces evidence_url collection downstream.
     """
     clean = text.strip() or "empty claim"
-    return f"Evidence-gap hypothesis: Strongest counter-evidence invalidates '{clean***REMOVED***'."
+    return f"Evidence-gap hypothesis: Strongest counter-evidence invalidates '{clean}'."
 
 
-def _generate_candidates(text: str) -> List[str***REMOVED***:
+def _generate_candidates(text: str) -> List[str]:
     """Deterministic 3-candidate generator. Order: invert → boundary → steel-man."""
-    return [_invert(text), _boundary_probe(text), _steel_man(text)***REMOVED***
+    return [_invert(text), _boundary_probe(text), _steel_man(text)]
 
 
 def _warn(message: str) -> None:
     """stderr-only warning (never pollutes stdout/JSON)."""
-    sys.stderr.write(f"devil_advocate_pass: {message***REMOVED***\n")
+    sys.stderr.write(f"devil_advocate_pass: {message}\n")
 
 
-def _kc_to_dicts(kc_list: Any) -> List[Dict[str, Any***REMOVED******REMOVED***:
+def _kc_to_dicts(kc_list: Any) -> List[Dict[str, Any]]:
     """Defensively convert KillCriterion list (mixed dataclass / dict) to dict-format.
 
     hypothesis_ledger.add_hypothesis (per _validate_kill_criteria lines 282-298)
@@ -156,19 +156,19 @@ def _kc_to_dicts(kc_list: Any) -> List[Dict[str, Any***REMOVED******REMOVED***:
     and arbitrary objects (extracts .__dict__).
     Returns first 3 (engine policy: cap size to prevent injection).
     """
-    out: List[Dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
-    for kc in (kc_list or [***REMOVED***)[:3***REMOVED***:
+    out: List[Dict[str, Any]] = []
+    for kc in (kc_list or [])[:3]:
         if hasattr(kc, "to_dict") and callable(getattr(kc, "to_dict")):
             out.append(kc.to_dict())
         elif isinstance(kc, dict):
             out.append(dict(kc))
         else:
-            d = getattr(kc, "__dict__", {***REMOVED***) or {***REMOVED***
+            d = getattr(kc, "__dict__", {}) or {}
             out.append({
                 "criterion": str(d.get("criterion", "")),
                 "met": bool(d.get("met", False)),
                 "evidence_url": d.get("evidence_url"),
-            ***REMOVED***)
+            ])
     return out
 
 
@@ -178,13 +178,13 @@ def _kc_to_dicts(kc_list: Any) -> List[Dict[str, Any***REMOVED******REMOVED***:
 def devil_advocate_pass(
     hypothesis: Any,
     *,
-    root: Optional[Path***REMOVED*** = None,
+    root: Optional[Path] = None,
 ) -> DevilAdvocateReport:
     """Drive one adversarial-pass iteration on ``hypothesis``.
 
     ADR-016 fail-safe semantics:
         * hypothesis_ledger missing / ImportError → return Report(refuted=False,
-          new_candidates=[***REMOVED***, iteration_count=0) + stderr warning.
+          new_candidates=[], iteration_count=0) + stderr warning.
         * candidate registration failure (any of 3) → log warning, continue.
         * all 3 candidates fail → DO NOT refute original (fails-open;
           preserves state machine invariant: refutation requires seed).
@@ -211,10 +211,10 @@ def devil_advocate_pass(
         return DevilAdvocateReport(
             original_hid="",
             refuted=False,
-            new_candidates=[***REMOVED***,
+            new_candidates=[],
             strategy="3-kill-questions",
             iteration_count=0,
-            warnings=["hypothesis.hid missing"***REMOVED***,
+            warnings=["hypothesis.hid missing"],
         )
 
     try:
@@ -224,14 +224,14 @@ def devil_advocate_pass(
             HypothesisStatus,
         )
     except ImportError as exc:
-        _warn(f"hypothesis_ledger unavailable — passive mode: {exc***REMOVED***")
+        _warn(f"hypothesis_ledger unavailable — passive mode: {exc}")
         return DevilAdvocateReport(
             original_hid=original_hid,
             refuted=False,
-            new_candidates=[***REMOVED***,
+            new_candidates=[],
             strategy="3-kill-questions",
             iteration_count=0,
-            warnings=[f"ImportError: {exc***REMOVED***"***REMOVED***,
+            warnings=[f"ImportError: {exc}"],
         )
 
     original_status = getattr(hypothesis, "status", None)
@@ -246,25 +246,25 @@ def devil_advocate_pass(
         return DevilAdvocateReport(
             original_hid=original_hid,
             refuted=False,
-            new_candidates=[***REMOVED***,
+            new_candidates=[],
             strategy="3-kill-questions",
             iteration_count=0,
             warnings=[
-                f"already terminal: {original_status.value if original_status else 'unknown'***REMOVED***"
-            ***REMOVED***,
+                f"already terminal: {original_status.value if original_status else 'unknown'}"
+            ],
         )
 
     # Generate 3 candidates (deterministic, no LLM).
     candidate_texts = _generate_candidates(getattr(hypothesis, "text", "") or "")
-    parent_tags: List[str***REMOVED*** = list(getattr(hypothesis, "tags", [***REMOVED***) or [***REMOVED***)
-    parent_kc: List[Dict[str, Any***REMOVED******REMOVED*** = _kc_to_dicts(getattr(hypothesis, "kill_criteria", None))
+    parent_tags: List[str] = list(getattr(hypothesis, "tags", []) or [])
+    parent_kc: List[Dict[str, Any]] = _kc_to_dicts(getattr(hypothesis, "kill_criteria", None))
 
-    registered: List[Any***REMOVED*** = [***REMOVED***
-    warnings: List[str***REMOVED*** = [***REMOVED***
+    registered: List[Any] = []
+    warnings: List[str] = []
     for idx, text in enumerate(candidate_texts):
         clean_text = (text or "").strip()
         if not clean_text:
-            warnings.append(f"candidate[{idx***REMOVED******REMOVED***: empty text — skipped")
+            warnings.append(f"candidate[{idx}]: empty text — skipped")
             continue
         try:
             summary = add_hypothesis(
@@ -276,15 +276,15 @@ def devil_advocate_pass(
             )
             registered.append(summary)
         except Exception as exc:  # noqa: BLE001 — ADR-016 fail-safe
-            warnings.append(f"candidate[{idx***REMOVED******REMOVED***: add_hypothesis failed — {exc!r***REMOVED***")
+            warnings.append(f"candidate[{idx}]: add_hypothesis failed — {exc!r}")
 
     # Fails-open invariant: at least one candidate must succeed for refutation.
     if not registered:
-        _warn(f"all {len(candidate_texts)***REMOVED*** candidates failed; NOT refuting {original_hid***REMOVED***")
+        _warn(f"all {len(candidate_texts)} candidates failed; NOT refuting {original_hid}")
         return DevilAdvocateReport(
             original_hid=original_hid,
             refuted=False,
-            new_candidates=[***REMOVED***,
+            new_candidates=[],
             strategy="3-kill-questions",
             iteration_count=0,
             warnings=warnings,
@@ -296,8 +296,8 @@ def devil_advocate_pass(
     try:
         update_status(original_hid, HypothesisStatus.REFUTED, root=root)
     except Exception as exc:  # noqa: BLE001 — ADR-016 fail-safe
-        warnings.append(f"update_status(REFUTED) failed: {exc!r***REMOVED***")
-        _warn(f"candidates registered but refutation of {original_hid***REMOVED*** failed: {exc!r***REMOVED***")
+        warnings.append(f"update_status(REFUTED) failed: {exc!r}")
+        _warn(f"candidates registered but refutation of {original_hid} failed: {exc!r}")
         # Conservative: report refuted=False since original is NOT terminal.
         # Candidates remain in OPEN — next iteration can retry refutation.
         return DevilAdvocateReport(
@@ -328,19 +328,19 @@ def _format_text(report: DevilAdvocateReport) -> str:
         msg = "no-op"
         if report.warnings:
             msg += "; warnings: " + "; ".join(report.warnings)
-        return f"[{report.original_hid***REMOVED******REMOVED*** {msg***REMOVED***\n"
-    lines: List[str***REMOVED*** = [***REMOVED***
+        return f"[{report.original_hid}] {msg}\n"
+    lines: List[str] = []
     lines.append(
-        f"[{report.original_hid***REMOVED******REMOVED*** refuted={report.refuted***REMOVED***; "
-        f"new_candidates={report.iteration_count***REMOVED***; strategy={report.strategy***REMOVED***"
+        f"[{report.original_hid}] refuted={report.refuted}; "
+        f"new_candidates={report.iteration_count}; strategy={report.strategy}"
     )
     for i, c in enumerate(report.new_candidates, start=1):
         text = getattr(c, "text", "") or ""
-        lines.append(f"  {i:2d***REMOVED***. [{getattr(c, 'hid', '?')***REMOVED******REMOVED*** {text[:72***REMOVED******REMOVED***")
+        lines.append(f"  {i:2d}. [{getattr(c, 'hid', '?')}] {text[:72]}")
     if report.warnings:
         lines.append("  warnings:")
         for w in report.warnings:
-            lines.append(f"    - {w***REMOVED***")
+            lines.append(f"    - {w}")
     return "\n".join(lines) + "\n"
 
 
@@ -355,12 +355,12 @@ def _print_json(report: DevilAdvocateReport) -> None:
                 "hid": getattr(c, "hid", ""),
                 "text": getattr(c, "text", ""),
                 "confidence": getattr(c, "confidence", None),
-                "tags": list(getattr(c, "tags", [***REMOVED***) or [***REMOVED***),
-            ***REMOVED***
+                "tags": list(getattr(c, "tags", []) or []),
+            }
             for c in report.new_candidates
-        ***REMOVED***,
+        ],
         "warnings": list(report.warnings),
-    ***REMOVED***
+    }
     sys.stdout.write(json.dumps(payload, ensure_ascii=False, indent=2))
     sys.stdout.write("\n")
 
@@ -390,7 +390,7 @@ def _build_parser() -> argparse.ArgumentParser:
     return p
 
 
-def _resolve_hid(prefix: str, root: Optional[Path***REMOVED*** = None) -> Optional[Any***REMOVED***:
+def _resolve_hid(prefix: str, root: Optional[Path] = None) -> Optional[Any]:
     """Resolve short hid prefix → HypothesisSummary; None on miss OR ambiguity.
 
     CLI guard against silent ambiguity (v5.189.66 code-review audit issue #2):
@@ -405,22 +405,22 @@ def _resolve_hid(prefix: str, root: Optional[Path***REMOVED*** = None) -> Option
         summaries = list_all(root=root)
     except Exception:  # noqa: BLE001
         return None
-    matches = [s for s in summaries if (s.hid or "").startswith(prefix)***REMOVED***
+    matches = [s for s in summaries if (s.hid or "").startswith(prefix)]
     if not matches:
         return None
     if len(matches) > 1:
-        _warn(f"hid-prefix '{prefix***REMOVED***' is ambiguous ({len(matches)***REMOVED*** matches); specify more chars")
+        _warn(f"hid-prefix '{prefix}' is ambiguous ({len(matches)} matches); specify more chars")
         return None
-    return matches[0***REMOVED***
+    return matches[0]
 
 
-def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
+def main(argv: Optional[List[str]] = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
 
     summary = _resolve_hid(args.hid, root=args.root)
     if summary is None:
-        sys.stderr.write(f"devil_advocate_pass: no hypothesis matching hid-prefix '{args.hid***REMOVED***'\n")
+        sys.stderr.write(f"devil_advocate_pass: no hypothesis matching hid-prefix '{args.hid}'\n")
         return 2  # Distinct from ledger-importerror (1) — caller can retry.
 
     report = devil_advocate_pass(summary, root=args.root)

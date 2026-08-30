@@ -10,7 +10,7 @@ Design rationale lives in ``core_02/LESSONS.md`` (CON-6 et al.).
 from __future__ import annotations
 
 import json
-***REMOVED***
+}
 from typing import Any, Optional
 
 from core_02.blueprint_v3 import BlueprintCorpus
@@ -19,9 +19,9 @@ from core_02.scenario import Scenario, Role
 from core_02.scenario_registry import ScenarioRegistry
 
 
-def _strip_query(query: str) -> set[str***REMOVED***:
-    return {w.lower().strip(".,:;!\"'()[***REMOVED***{***REMOVED***") for w in query.split()
-            if w.strip(".,:;!\"'()[***REMOVED***{***REMOVED***")***REMOVED***
+def _strip_query(query: str) -> set[str]:
+    return {w.lower().strip(".,:;!\"'()[){}") for w in query.split()
+            if w.strip(".,:;!\"'()[){]")]
 
 
 def score_role_match(query: str, role_id: str, role_title: str, role_text: str) -> float:
@@ -42,13 +42,13 @@ def propose_roles(
     corpus: BlueprintCorpus,
     query: str,
     top_n: int = 3,
-) -> list[tuple[str, str, float***REMOVED******REMOVED***:
+) -> list[tuple[str, str, float]]:
     """Return top-N role candidates (``(role_id, title, score)``) sorted desc.
 
     Fails safe: if nothing matches, falls back to the first registered role with
     score 0.0 so the wizard never deadlocks on an empty list. See CAN-5.
     """
-    scored: list[tuple[str, str, float***REMOVED******REMOVED*** = [***REMOVED***
+    scored: list[tuple[str, str, float]] = []
     for role_id, _file, role_title, _type in corpus.list_roles():
         try:
             bp = corpus.load_blueprint(role_id)
@@ -56,18 +56,18 @@ def propose_roles(
             continue
         score = score_role_match(query, role_id, role_title, bp.sections.get("role", ""))
         scored.append((role_id, role_title, score))
-    scored.sort(key=lambda r: (-r[2***REMOVED***, r[0***REMOVED***))
+    scored.sort(key=lambda r: (-r[2], r[0]))
     if not scored:
         # No roles at all (registry empty).
-        return [***REMOVED***
-    if scored[0***REMOVED***[2***REMOVED*** <= 0.0:
+        return []
+    if scored[0][2] <= 0.0:
         # Insert deterministic fallback head.
-        first_fallback = corpus.list_roles()[0***REMOVED***
-        scored.insert(0, (first_fallback[0***REMOVED***, first_fallback[2***REMOVED***, 0.0))
-    return scored[:top_n***REMOVED***
+        first_fallback = corpus.list_roles()[0]
+        scored.insert(0, (first_fallback[0], first_fallback[2], 0.0))
+    return scored[:top_n]
 
 
-def build_agent_json(corpus: BlueprintCorpus, role_id: str) -> dict[str, Any***REMOVED***:
+def build_agent_json(corpus: BlueprintCorpus, role_id: str) -> dict[str, Any]:
     """Build the agent contract from a chosen role."""
     bp = corpus.load_blueprint(role_id)
     return {
@@ -77,7 +77,7 @@ def build_agent_json(corpus: BlueprintCorpus, role_id: str) -> dict[str, Any***R
         "routing_hint": corpus.routing_hint(role_id),
         "sections_known": sorted(bp.sections.keys()),
         "missing_required_sections": corpus.validate_blueprint(bp),
-    ***REMOVED***
+    }
 
 
 def build_task_json(
@@ -85,10 +85,10 @@ def build_task_json(
     role_id: str,
     goal: str,
     priority: str = "normal",
-) -> dict[str, Any***REMOVED***:
+) -> dict[str, Any]:
     """Build the task contract with ``assigned_model: "auto"`` placeholder."""
     if priority not in ("low", "normal", "high", "critical"):
-        raise ValueError(f"priority must be one of low|normal|high|critical, got {priority!r***REMOVED***")
+        raise ValueError(f"priority must be one of low|normal|high|critical, got {priority!r}")
     return {
         "goal": goal,
         "priority": priority,
@@ -96,7 +96,7 @@ def build_task_json(
         "assigned_model": "auto",  # resolved by run_wizard
         "routing_hint": corpus.routing_hint(role_id),
         "created_by": "freebuff.wizard",
-    ***REMOVED***
+    }
 
 
 def _seed_levels(
@@ -104,24 +104,24 @@ def _seed_levels(
     project_name: str,
     project_goal: str,
     workspace_mode: str,
-) -> dict[str, dict[str, Any***REMOVED******REMOVED***:
+) -> dict[str, dict[str, Any]]:
     return {
         "system": {
             "platform": "freebuff",
             "contracts_manifest": "1.0",
-            "scenarios": {"blueprint_v3_integration": "active"***REMOVED***,
-        ***REMOVED***,
+            "scenarios": {"blueprint_v3_integration": "active"},
+        },
         "workspace": {
             "root": str(workspace_path),
             "mode": workspace_mode,
-        ***REMOVED***,
+        },
         "project": {
             "name": project_name,
             "goal": project_goal,
-        ***REMOVED***,
-        "agent": {***REMOVED***,  # filled below
-        "task": {***REMOVED***,    # filled below
-    ***REMOVED***
+        },
+        "agent": {},  # filled below
+        "task": {},    # filled below
+    }
 
 
 def run_wizard(
@@ -133,7 +133,7 @@ def run_wizard(
     priority: str = "normal",
     workspace_mode: str = "single",
     force_role_id: str | None = None,
-) -> dict[str, Any***REMOVED***:
+) -> dict[str, Any]:
     """Stage the JSON-contract set + merged.json on disk.
 
     Returns keys: ``paths`` (level→Path), ``merged_path``, ``contracts``,
@@ -152,34 +152,34 @@ def run_wizard(
 
     if force_role_id:
         if force_role_id not in corpus._index:
-            raise KeyError(f"force_role_id {force_role_id!r***REMOVED*** not in registry")
+            raise KeyError(f"force_role_id {force_role_id!r} not in registry")
         role_id = force_role_id
-        role_title = corpus._index[role_id***REMOVED***.get("role", "")
+        role_title = corpus._index[role_id].get("role", "")
     else:
         scored = propose_roles(corpus, project_goal, top_n=3)
         if not scored:
             raise RuntimeError("no roles registered in corpus")
-        role_id, role_title, _score = scored[0***REMOVED***
+        role_id, role_title, _score = scored[0]
 
-    levels["agent"***REMOVED*** = build_agent_json(corpus, role_id)
-    levels["task"***REMOVED*** = build_task_json(corpus, role_id, task_goal, priority=priority)
+    levels["agent"] = build_agent_json(corpus, role_id)
+    levels["task"] = build_task_json(corpus, role_id, task_goal, priority=priority)
 
     resolved_model = resolve_assigned_model(
-        levels["task"***REMOVED***,
+        levels["task"],
         capabilities=corpus.routing_hint(role_id),
     )
-    levels["task"***REMOVED***["assigned_model"***REMOVED*** = resolved_model
+    levels["task"]["assigned_model"] = resolved_model
 
     merged = CascadeContract.merge(levels)
 
-    paths: dict[str, Path***REMOVED*** = {***REMOVED***
+    paths: dict[str, Path] = {}
     for level in CascadeContract.LEVELS:
-        path = project_dir / f"{level***REMOVED***.json"
+        path = project_dir / f"{level}.json"
         path.write_text(
-            json.dumps(levels[level***REMOVED***, ensure_ascii=False, indent=2),
+            json.dumps(levels[level], ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
-        paths[level***REMOVED*** = path
+        paths[level] = path
     merged_path = project_dir / "merged.json"
     merged_path.write_text(
         json.dumps(merged, ensure_ascii=False, indent=2),
@@ -202,14 +202,14 @@ def run_wizard(
         "merged": merged,
         "selected_role_id": role_id,
         "resolved_model": resolved_model,
-    ***REMOVED***
+    }
 
 
 def build_agent_json_for_registry(
     registry: ScenarioRegistry,
     scenario: Scenario,
     role: Role,
-) -> dict[str, Any***REMOVED***:
+) -> dict[str, Any]:
     """Build the agent contract using a registry-resolved scenario/role pair.
 
     Same shape as :func:`build_agent_json` but the scenario (not just the
@@ -222,7 +222,7 @@ def build_agent_json_for_registry(
         "role_title": role.title,
         "routing_hint": scenario.routing_hint(role.role_id),
         "missing_required_sections": scenario.validate(),
-    ***REMOVED***
+    }
 
 
 def build_task_json_for_registry(
@@ -231,13 +231,13 @@ def build_task_json_for_registry(
     role: Role,
     goal: str,
     priority: str = "normal",
-) -> dict[str, Any***REMOVED***:
+) -> dict[str, Any]:
     """Build the task contract for registry-resolved role.
 
     routing_hint comes from the scenario directly (no re-projection).
     """
     if priority not in ("low", "normal", "high", "critical"):
-        raise ValueError(f"priority must be one of low|normal|high|critical, got {priority!r***REMOVED***")
+        raise ValueError(f"priority must be one of low|normal|high|critical, got {priority!r}")
     return {
         "goal": goal,
         "priority": priority,
@@ -246,7 +246,7 @@ def build_task_json_for_registry(
         "assigned_model": "auto",  # resolved by run_wizard_with_registry
         "routing_hint": scenario.routing_hint(role.role_id),
         "created_by": "freebuff.wizard",
-    ***REMOVED***
+    }
 
 
 def _seed_levels_for_registry(
@@ -254,31 +254,31 @@ def _seed_levels_for_registry(
     project_name: str,
     project_goal: str,
     workspace_mode: str,
-) -> dict[str, dict[str, Any***REMOVED******REMOVED***:
+) -> dict[str, dict[str, Any]]:
     """Variant of :func:`_seed_levels` that uses generic 'scenarios' metadata.
 
     The legacy single-scenario version hardcodes
-    ``scenarios: {blueprint_v3_integration: active***REMOVED***``; this one writes
-    ``scenarios_registered: [scenario_ids***REMOVED***`` instead so callers can see
+    ``scenarios: {blueprint_v3_integration: active}``; this one writes
+    ``scenarios_registered: [scenario_ids]`` instead so callers can see
     cross-scenario context at a glance.
     """
     return {
         "system": {
             "platform": "freebuff",
             "contracts_manifest": "1.0",
-            "scenarios_registered": [***REMOVED***,  # filled below
-        ***REMOVED***,
+            "scenarios_registered": [],  # filled below
+        },
         "workspace": {
             "root": str(workspace_path),
             "mode": workspace_mode,
-        ***REMOVED***,
+        },
         "project": {
             "name": project_name,
             "goal": project_goal,
-        ***REMOVED***,
-        "agent": {***REMOVED***,  # filled below
-        "task": {***REMOVED***,    # filled below
-    ***REMOVED***
+        },
+        "agent": {},  # filled below
+        "task": {},    # filled below
+    }
 
 
 def run_wizard_with_registry(
@@ -290,7 +290,7 @@ def run_wizard_with_registry(
     priority: str = "normal",
     workspace_mode: str = "single",
     force_role_id: str | None = None,
-) -> dict[str, Any***REMOVED***:
+) -> dict[str, Any]:
     """Stage the JSON contracts using a multi-scenario registry.
 
     This is the **preferred** entry point for new code: it works across
@@ -311,15 +311,15 @@ def run_wizard_with_registry(
         project_goal=project_goal,
         workspace_mode=workspace_mode,
     )
-    levels["system"***REMOVED***["scenarios_registered"***REMOVED*** = [
+    levels["system"]["scenarios_registered"] = [
         sc.scenario_id for sc in registry.list_scenarios()
-    ***REMOVED***
+    ]
 
     if force_role_id:
         match = registry.find_role(force_role_id)
         if match is None:
             raise KeyError(
-                f"force_role_id {force_role_id!r***REMOVED*** not found across any scenario"
+                f"force_role_id {force_role_id!r} not found across any scenario"
             )
         scenario, role = match
     else:
@@ -329,25 +329,25 @@ def run_wizard_with_registry(
                 "no roles registered across any loaded scenario — "
                 "check FREEBUFF_SCENARIOS_DIR / runtime_05/scenarios/"
             )
-        scenario, role, _score = scored[0***REMOVED***
+        scenario, role, _score = scored[0]
 
-    levels["agent"***REMOVED*** = build_agent_json_for_registry(registry, scenario, role)
-    levels["task"***REMOVED*** = build_task_json_for_registry(registry, scenario, role, task_goal, priority=priority)
+    levels["agent"] = build_agent_json_for_registry(registry, scenario, role)
+    levels["task"] = build_task_json_for_registry(registry, scenario, role, task_goal, priority=priority)
     resolved_model = resolve_assigned_model(
-        levels["task"***REMOVED***,
+        levels["task"],
         capabilities=scenario.routing_hint(role.role_id),
     )
-    levels["task"***REMOVED***["assigned_model"***REMOVED*** = resolved_model
+    levels["task"]["assigned_model"] = resolved_model
 
     merged = CascadeContract.merge(levels)
-    paths: dict[str, Path***REMOVED*** = {***REMOVED***
+    paths: dict[str, Path] = {}
     for level in CascadeContract.LEVELS:
-        path = project_dir / f"{level***REMOVED***.json"
+        path = project_dir / f"{level}.json"
         path.write_text(
-            json.dumps(levels[level***REMOVED***, ensure_ascii=False, indent=2),
+            json.dumps(levels[level], ensure_ascii=False, indent=2),
             encoding="utf-8",
         )
-        paths[level***REMOVED*** = path
+        paths[level] = path
     merged_path = project_dir / "merged.json"
     merged_path.write_text(
         json.dumps(merged, ensure_ascii=False, indent=2),
@@ -366,7 +366,7 @@ def run_wizard_with_registry(
         "selected_scenario_id": scenario.scenario_id,
         "selected_role_id": role.role_id,
         "resolved_model": resolved_model,
-    ***REMOVED***
+    }
 
 
 __all__ = [
@@ -378,4 +378,4 @@ __all__ = [
     "build_agent_json_for_registry",
     "build_task_json_for_registry",
     "run_wizard_with_registry",
-***REMOVED*** 
+]

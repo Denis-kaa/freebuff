@@ -17,8 +17,8 @@ Usage::
     from core_02.factory_registry import FactoryRegistry
     r = FactoryRegistry()                                        # default runtime_05/factories/
     r = FactoryRegistry.from_env()                               # respects $FREEBUFF_FACTORIES_DIR
-    factories = r.list_factories()                               # ['architecture', ...***REMOVED***
-    forges   = r.list_forges("architecture")                     # [ForgePassport, ...***REMOVED***
+    factories = r.list_factories()                               # ['architecture', ...]
+    forges   = r.list_forges("architecture")                     # [ForgePassport, ...]
     forge    = r.get_forge("architecture", "review")             # ForgePassport | None
     matches  = r.find_by_capability("review")                    # crosses factories
 
@@ -31,7 +31,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-***REMOVED***
+}
 from typing import Optional, Tuple, Union
 
 from core_02.factory_passport import FactoryPassport
@@ -51,14 +51,14 @@ class FactoryRegistry:
     adding new YAML manifests at runtime (e.g. on hot-reload).
     """
 
-    def __init__(self, factories_dir: Optional[Union[str, Path***REMOVED******REMOVED*** = None):
+    def __init__(self, factories_dir: Optional[Union[str, Path]] = None):
         self.factories_dir = (
             Path(factories_dir) if factories_dir is not None else DEFAULT_FACTORIES_DIR
         )
-        self._passports: dict[str, ForgePassport***REMOVED*** = {***REMOVED***  # key: factory_id/forge_id (slash-separated)
-        self._factory_meta: dict[str, dict***REMOVED*** = {***REMOVED***        # factory_id -> factory.yaml parsed dict
-        self._factory_passports: dict[str, FactoryPassport***REMOVED*** = {***REMOVED***  # C-2: типизированные паспорта фабрик
-        self._warnings: list[str***REMOVED*** = [***REMOVED***
+        self._passports: dict[str, ForgePassport] = {}  # key: factory_id/forge_id (slash-separated)
+        self._factory_meta: dict[str, dict] = {}        # factory_id -> factory.yaml parsed dict
+        self._factory_passports: dict[str, FactoryPassport] = {}  # C-2: типизированные паспорта фабрик
+        self._warnings: list[str] = []
         self._reload()
 
     @classmethod
@@ -78,7 +78,7 @@ class FactoryRegistry:
 
         if not self.factories_dir.exists():
             self._warnings.append(
-                f"factories_dir не существует: {self.factories_dir***REMOVED***. "
+                f"factories_dir не существует: {self.factories_dir}. "
                 f"Создайте runtime_05/factories/<factory_id>/ и разместите манифесты. "
                 f"Registry пустой."
             )
@@ -86,7 +86,7 @@ class FactoryRegistry:
 
         if not self.factories_dir.is_dir():
             self._warnings.append(
-                f"factories_dir не является директорией: {self.factories_dir***REMOVED***. "
+                f"factories_dir не является директорией: {self.factories_dir}. "
                 f"Registry пустой."
             )
             return
@@ -101,41 +101,41 @@ class FactoryRegistry:
             factory_yaml = factory_dir / _FACTORY_METADATA_FILENAME
             if not factory_yaml.exists():
                 self._warnings.append(
-                    f"{factory_dir***REMOVED***: factory.yaml отсутствует. "
+                    f"{factory_dir}: factory.yaml отсутствует. "
                     f"Каждая фабрика обязана иметь factory.yaml (метаданные)."
                 )
-                self._factory_meta[factory_id_dirname***REMOVED*** = {***REMOVED***
+                self._factory_meta[factory_id_dirname] = {}
             else:
                 try:
                     import yaml
                     meta = yaml.safe_load(factory_yaml.read_text(encoding="utf-8"))
                     if not isinstance(meta, dict):
                         self._warnings.append(
-                            f"{factory_yaml***REMOVED***: не словарь YAML (получено "
-                            f"{type(meta).__name__***REMOVED***). Пропускаем метаданные."
+                            f"{factory_yaml}: не словарь YAML (получено "
+                            f"{type(meta).__name__}). Пропускаем метаданные."
                         )
                     else:
                         meta_factory_id = str(meta.get("factory_id", "")).strip()
                         if meta_factory_id and meta_factory_id != factory_id_dirname:
                             self._warnings.append(
-                                f"{factory_yaml***REMOVED***: factory_id {meta_factory_id!r***REMOVED*** != "
-                                f"имя директории {factory_id_dirname!r***REMOVED***. Cross-check защита."
+                                f"{factory_yaml}: factory_id {meta_factory_id!r} != "
+                                f"имя директории {factory_id_dirname!r}. Cross-check защита."
                             )
                         # Use directory name as canonical factory_id for the registry index.
-                        self._factory_meta[factory_id_dirname***REMOVED*** = meta
+                        self._factory_meta[factory_id_dirname] = meta
                         # C-2 (roadmap): типизированный паспорт фабрики (аддитивно).
                         # Ошибка паспорта → warning, raw meta сохраняется (fail-safe).
                         try:
-                            self._factory_passports[factory_id_dirname***REMOVED*** = \
+                            self._factory_passports[factory_id_dirname] = \
                                 FactoryPassport._from_dict(meta, source=str(factory_yaml))
                         except ValueError as exc:
                             self._warnings.append(
-                                f"{factory_yaml***REMOVED***: factory_passport невалиден ({exc***REMOVED***). "
+                                f"{factory_yaml}: factory_passport невалиден ({exc}). "
                                 f"Паспорт фабрики не зарегистрирован (raw meta сохранена)."
                             )
                 except (ValueError, OSError, yaml.YAMLError) as exc:
                     self._warnings.append(
-                        f"{factory_yaml***REMOVED***: повреждён или не читается ({exc***REMOVED***). Пропускаем."
+                        f"{factory_yaml}: повреждён или не читается ({exc}). Пропускаем."
                     )
 
             # 2) load all <forge_id>.yaml files (excluding factory.yaml itself)
@@ -157,33 +157,33 @@ class FactoryRegistry:
             passport = ForgePassport.from_yaml(path)
         except (FileNotFoundError, ValueError, OSError) as exc:
             self._warnings.append(
-                f"{path***REMOVED***: невалидный manifest ({exc***REMOVED***). Пропускаем."
+                f"{path}: невалидный manifest ({exc}). Пропускаем."
             )
             return
 
         # Cross-check: passport's factory_id field == directory name.
         if passport.factory_id != factory_id_dirname:
             self._warnings.append(
-                f"{path***REMOVED***: forge_passport.factory_id {passport.factory_id!r***REMOVED*** != "
-                f"имя директории {factory_id_dirname!r***REMOVED***. "
+                f"{path}: forge_passport.factory_id {passport.factory_id!r} != "
+                f"имя директории {factory_id_dirname!r}. "
                 f"Cross-check защита (защита от typo; registry использует "
                 f"директорное имя как canonical)."
             )
             # Still register under directory name (single-source-of-truth).
             # Operationally we trust the filesystem layout, but warn loudly.
 
-        key = f"{factory_id_dirname***REMOVED***/{passport.forge_id***REMOVED***"
+        key = f"{factory_id_dirname}/{passport.forge_id}"
         if key in self._passports:
-            existing_path = self._passports[key***REMOVED***  # for diagnostics
+            existing_path = self._passports[key]  # for diagnostics
             self._warnings.append(
-                f"{path***REMOVED***: дубликат forge_id {passport.forge_id!r***REMOVED*** в фабрике "
-                f"{factory_id_dirname!r***REMOVED*** (уже зарегистрирован: "
-                f"{getattr(existing_path, '__source__', '?')***REMOVED***). "
+                f"{path}: дубликат forge_id {passport.forge_id!r} в фабрике "
+                f"{factory_id_dirname!r} (уже зарегистрирован: "
+                f"{getattr(existing_path, '__source__', '?')}). "
                 f"First-wins (existing сохраняется; новый пропускается)."
             )
             return
 
-        self._passports[key***REMOVED*** = passport
+        self._passports[key] = passport
 
     def reload(self) -> None:
         """Re-discover from disk (call after manually adding/editing manifests)."""
@@ -191,11 +191,11 @@ class FactoryRegistry:
 
     # ─── query API ────────────────────────────────────────────────────────
 
-    def list_factories(self) -> list[str***REMOVED***:
+    def list_factories(self) -> list[str]:
         """Sorted list of factory_ids present in registry."""
         return sorted(self._factory_meta.keys())
 
-    def list_forges(self, factory_id: str) -> list[ForgePassport***REMOVED***:
+    def list_forges(self, factory_id: str) -> list[ForgePassport]:
         """Sorted list of ForgePassports for a given factory_id.
 
         Returns empty list if factory_id not in registry (no error — matches
@@ -205,17 +205,17 @@ class FactoryRegistry:
         as empty-dict placeholders (graceful-degrade per F2 fix). Their forge
         list is empty here until metadata is added.
         """
-        prefix = f"{factory_id***REMOVED***/"
+        prefix = f"{factory_id}/"
         return sorted(
             (p for k, p in self._passports.items() if k.startswith(prefix)),
             key=lambda x: x.forge_id,
         )
 
-    def get_forge(self, factory_id: str, forge_id: str) -> Optional[ForgePassport***REMOVED***:
+    def get_forge(self, factory_id: str, forge_id: str) -> Optional[ForgePassport]:
         """Lookup by (factory_id, forge_id) — returns None if missing."""
-        return self._passports.get(f"{factory_id***REMOVED***/{forge_id***REMOVED***")
+        return self._passports.get(f"{factory_id}/{forge_id}")
 
-    def find_by_capability(self, capability: str) -> list[ForgePassport***REMOVED***:
+    def find_by_capability(self, capability: str) -> list[ForgePassport]:
         """Bridge to Scenario Engine §6.2 (CapabilityRef resolution).
 
         Returns sorted list of ForgePassports whose `capabilities` tuple
@@ -226,7 +226,7 @@ class FactoryRegistry:
             key=lambda x: (x.factory_id, x.forge_id),
         )
 
-    def all_forges(self) -> list[ForgePassport***REMOVED***:
+    def all_forges(self) -> list[ForgePassport]:
         """Sorted list of all ForgePassports in registry."""
         return sorted(
             self._passports.values(),
@@ -238,16 +238,16 @@ class FactoryRegistry:
     # factory-level capability-каталог + API селекции (разблокирует Factory-путь
     # в цикле: opportunity-capability → factory → forge).
 
-    def get_factory(self, factory_id: str) -> Optional[FactoryPassport***REMOVED***:
+    def get_factory(self, factory_id: str) -> Optional[FactoryPassport]:
         """C-2: типизированный паспорт фабрики (factory.yaml). None если отсутствует/невалиден."""
         return self._factory_passports.get(factory_id)
 
-    def factory_capabilities(self, factory_id: str) -> tuple[str, ...***REMOVED***:
+    def factory_capabilities(self, factory_id: str) -> tuple[str, ...]:
         """C-2: capability-каталог фабрики = union factory.yaml capabilities + forge passports.
 
         Dedup + sorted (детерминированный порядок для traceability).
         """
-        caps: set[str***REMOVED*** = set()
+        caps: set[str] = set()
         fp = self._factory_passports.get(factory_id)
         if fp is not None:
             caps.update(fp.capabilities)
@@ -255,7 +255,7 @@ class FactoryRegistry:
             caps.update(p.capabilities)
         return tuple(sorted(caps))
 
-    def find_factories_by_capability(self, capability: str) -> list[FactoryPassport***REMOVED***:
+    def find_factories_by_capability(self, capability: str) -> list[FactoryPassport]:
         """C-2: фабрики, чей capability-каталог (union factory.yaml + forge passports) содержит токен.
 
         Использует агрегированный ``factory_capabilities()`` — фабрика находится,
@@ -272,8 +272,8 @@ class FactoryRegistry:
     def select_forge(
         self,
         capability: str,
-        prefer_status: Optional[str***REMOVED*** = None,
-    ) -> Optional[Tuple[FactoryPassport, ForgePassport***REMOVED******REMOVED***:
+        prefer_status: Optional[str] = None,
+    ) -> Optional[Tuple[FactoryPassport, ForgePassport]]:
         """C-2: лучшая (factory, forge) пара по capability — разблокирует Factory-путь.
 
         Status-priority: production(3) > material(2) > design(1) на factory затем forge.
@@ -292,10 +292,10 @@ class FactoryRegistry:
         should consult ``docs_10/engineering-memory/CANONICAL_ENGINE_ROUTING_V1.md``
         before making ``code``-related routing changes.
         """
-        _rank = {"design": 1, "material": 2, "production": 3***REMOVED***
+        _rank = {"design": 1, "material": 2, "production": 3}
         min_rank = _rank.get(prefer_status, 0) if prefer_status else 0
-        best: Optional[Tuple[FactoryPassport, ForgePassport***REMOVED******REMOVED*** = None
-        best_key: Optional[Tuple[int, int, str, str***REMOVED******REMOVED*** = None
+        best: Optional[Tuple[FactoryPassport, ForgePassport]] = None
+        best_key: Optional[Tuple[int, int, str, str]] = None
         for fp in self._factory_passports.values():
             if _rank.get(fp.status, 0) < min_rank:
                 continue
@@ -310,7 +310,7 @@ class FactoryRegistry:
     def resolve_by_policy(
         self,
         capability: str,
-    ) -> Optional["CapabilityResolutionPolicy"***REMOVED***:
+    ) -> Optional["CapabilityResolutionPolicy"]:
         """C-2 / Phase 13 G-11.6: programmatic lookup of capability routing policy.
 
         Returns the canonical factory/forge pair + workshop metadata for a
@@ -325,29 +325,29 @@ class FactoryRegistry:
         return CODE_RESOLUTION_POLICY.get(capability)
 
 
-    def capability_catalog(self) -> dict[str, list[str***REMOVED******REMOVED***:
+    def capability_catalog(self) -> dict[str, list[str]]:
         """C-2: полный каталог capability → sorted factory_ids (union factory.yaml + forge passports)."""
-        catalog: dict[str, set[str***REMOVED******REMOVED*** = {***REMOVED***
+        catalog: dict[str, set[str]] = {}
         for fp in self._factory_passports.values():
             for cap in self.factory_capabilities(fp.factory_id):
                 catalog.setdefault(cap, set()).add(fp.factory_id)
-        return {cap: sorted(fids) for cap, fids in sorted(catalog.items())***REMOVED***
+        return {cap: sorted(fids) for cap, fids in sorted(catalog.items())}
 
     # ─── validation surfaces ──────────────────────────────────────────────
 
-    def validate_all(self) -> list[str***REMOVED***:
+    def validate_all(self) -> list[str]:
         """Per-passport validate() over the whole registry.
 
         Returns flat list of violations (empty = perfectly valid). Each
         violation is prefixed with `<path>: ` for diagnostics.
         """
-        violations: list[str***REMOVED*** = [***REMOVED***
+        violations: list[str] = []
         for k, p in self._passports.items():
             for v in p.validate():
-                violations.append(f"{k***REMOVED***: {v***REMOVED***")
+                violations.append(f"{k}: {v}")
         return violations
 
-    def warnings(self) -> list[str***REMOVED***:
+    def warnings(self) -> list[str]:
         """Advisory warnings collected during _reload (manifest issues, dupes)."""
         return list(self._warnings)
 
@@ -380,7 +380,7 @@ class CapabilityResolutionPolicy:
 # Phase 13 G-11.6 (CANONICAL_ENGINE_ROUTING_V1.md §8): formal policy table.
 # Additive: docstring audit-trail remains in select_forge for historical auditors,
 # this typed struct is the programmatic single source of truth for policy lookup.
-CODE_RESOLUTION_POLICY: dict[str, CapabilityResolutionPolicy***REMOVED*** = {
+CODE_RESOLUTION_POLICY: dict[str, CapabilityResolutionPolicy] = {
     "code": CapabilityResolutionPolicy(
         capability="code",
         factory_id="test",
@@ -388,7 +388,7 @@ CODE_RESOLUTION_POLICY: dict[str, CapabilityResolutionPolicy***REMOVED*** = {
         status_min="design",
         rationale=(
             "Phase 11 TestFactory universality proof (test_15 META-TEST asserts "
-            "factories == {'content', 'research', 'test'***REMOVED*** strict set equality). "
+            "factories == {'content', 'research', 'test'] strict set equality). "
             "Status-priority tie-break (production > material > design) plus "
             "deterministic (factory_id, forge_id) tie-break yield canonical "
             "(test, verifier). Defense-in-depth via SI hard-gate."
@@ -396,7 +396,7 @@ CODE_RESOLUTION_POLICY: dict[str, CapabilityResolutionPolicy***REMOVED*** = {
         decided_by="Phase 13 G-11.6 capability resolution workshop (3-author)",
         decision_date="2026-08-18",
     ),
-***REMOVED***
+}
 
 
-__all__ = ["FactoryRegistry", "DEFAULT_FACTORIES_DIR", "CapabilityResolutionPolicy", "CODE_RESOLUTION_POLICY"***REMOVED***
+__all__ = ["FactoryRegistry", "DEFAULT_FACTORIES_DIR", "CapabilityResolutionPolicy", "CODE_RESOLUTION_POLICY"]

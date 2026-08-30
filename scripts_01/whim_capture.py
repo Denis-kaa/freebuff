@@ -35,13 +35,13 @@ for promotion step.
 
 CLI shell (always exit-0 on degraded-safe):
 
-    whim_capture capture <body> [--project-id X***REMOVED*** [--source X***REMOVED*** [--priority N***REMOVED*** [--json***REMOVED***
-    whim_capture list [--status X***REMOVED*** [--project-id X***REMOVED*** [--json***REMOVED***
-    whim_capture status <whim_id> [--json***REMOVED***
-    whim_capture triage <whim_id> [--classification KEEP|DISCARD|PROMOTE_CANDIDATE***REMOVED*** [--reason X***REMOVED*** [--json***REMOVED***
-    whim_capture promote <whim_id> [--json***REMOVED***
-    whim_capture defer <whim_id> [--reason X***REMOVED*** [--json***REMOVED***
-    whim_capture get <whim_id> [--json***REMOVED***
+    whim_capture capture <body> [--project-id X] [--source X] [--priority N] [--json]
+    whim_capture list [--status X] [--project-id X] [--json]
+    whim_capture status <whim_id> [--json]
+    whim_capture triage <whim_id> [--classification KEEP|DISCARD|PROMOTE_CANDIDATE] [--reason X] [--json]
+    whim_capture promote <whim_id> [--json]
+    whim_capture defer <whim_id> [--reason X] [--json]
+    whim_capture get <whim_id> [--json]
 
 Exit codes: 0 success/found/degraded-safe, 1 not-found/fail, 2 invalid input.
 """
@@ -55,11 +55,11 @@ import os
 import sys
 import uuid
 from dataclasses import dataclass, field, asdict
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional, Tuple
 
 # Lazy imports (additive)
-_LAZY_IMPORT_ERRORS: List[str***REMOVED*** = [***REMOVED***
+_LAZY_IMPORT_ERRORS: List[str] = []
 
 try:
     import yaml  # type: ignore
@@ -72,7 +72,7 @@ except ImportError:  # pragma: no cover
 
 DEFAULT_DATA_PATH = Path("data_13/whims.yaml")
 
-STATUSES: Tuple[str, ...***REMOVED*** = (
+STATUSES: Tuple[str, ...] = (
     "NEW",
     "TRIAGED",
     "PROMOTED_TO_OPPORTUNITY",
@@ -80,24 +80,24 @@ STATUSES: Tuple[str, ...***REMOVED*** = (
     "DEFERRED",
     "FAILED",
 )
-TERMINAL_STATUSES: Tuple[str, ...***REMOVED*** = ("PROMOTED_TO_OPPORTUNITY", "DISCARDED")
+TERMINAL_STATUSES: Tuple[str, ...] = ("PROMOTED_TO_OPPORTUNITY", "DISCARDED")
 
-_STATUS_RANK: Dict[str, int***REMOVED*** = {s: i for i, s in enumerate(STATUSES)***REMOVED***
+_STATUS_RANK: Dict[str, int] = {s: i for i, s in enumerate(STATUSES)}
 
 # Canonical state graph (allowed transitions). FAILED is retry-allowed (mirror
 # opportunity_engine pattern, per promt 080_19 §3.3).
-_TRANSITIONS: Dict[str, Tuple[str, ...***REMOVED******REMOVED*** = {
+_TRANSITIONS: Dict[str, Tuple[str, ...]] = {
     "NEW":                     ("TRIAGED", "DEFERRED", "FAILED"),
     "TRIAGED":                 ("PROMOTED_TO_OPPORTUNITY", "DISCARDED", "DEFERRED", "FAILED"),
     "PROMOTED_TO_OPPORTUNITY": (),  # terminal
     "DISCARDED":               (),  # terminal — audit trail preserved
     "DEFERRED":                ("TRIAGED", "DISCARDED", "FAILED"),
     "FAILED":                  ("NEW",),  # retry path: re-capture
-***REMOVED***
+}
 
-CLASSIFICATIONS: Tuple[str, ...***REMOVED*** = ("KEEP", "DISCARD", "PROMOTE_CANDIDATE")
+CLASSIFICATIONS: Tuple[str, ...] = ("KEEP", "DISCARD", "PROMOTE_CANDIDATE")
 
-SOURCES: Tuple[str, ...***REMOVED*** = (
+SOURCES: Tuple[str, ...] = (
     "cli",
     "hand",
     "project_pulse",
@@ -138,21 +138,21 @@ class Whim:
     priority: int = 5
     created_at: str = ""
     updated_at: str = ""
-    provenance: Dict[str, Any***REMOVED*** = field(default_factory=dict)
-    classification: Optional[str***REMOVED*** = None
-    classification_reason: Optional[str***REMOVED*** = None
-    triaged_at: Optional[str***REMOVED*** = None
-    triaged_by: Optional[str***REMOVED*** = None
-    promoted_at: Optional[str***REMOVED*** = None
-    related_opportunity_id: Optional[str***REMOVED*** = None
-    discarded_at: Optional[str***REMOVED*** = None
-    discarded_reason: Optional[str***REMOVED*** = None
-    deferred_at: Optional[str***REMOVED*** = None
-    deferred_reason: Optional[str***REMOVED*** = None
-    failed_at: Optional[str***REMOVED*** = None
-    failure_reason: Optional[str***REMOVED*** = None
+    provenance: Dict[str, Any] = field(default_factory=dict)
+    classification: Optional[str] = None
+    classification_reason: Optional[str] = None
+    triaged_at: Optional[str] = None
+    triaged_by: Optional[str] = None
+    promoted_at: Optional[str] = None
+    related_opportunity_id: Optional[str] = None
+    discarded_at: Optional[str] = None
+    discarded_reason: Optional[str] = None
+    deferred_at: Optional[str] = None
+    deferred_reason: Optional[str] = None
+    failed_at: Optional[str] = None
+    failure_reason: Optional[str] = None
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
 
@@ -161,10 +161,10 @@ def _now_iso() -> str:
 
 
 def _new_id() -> str:
-    return f"whim-{uuid.uuid4().hex[:10***REMOVED******REMOVED***"
+    return f"whim-{uuid.uuid4().hex[:10]}"
 
 
-_WHIM_FIELDS = {f for f in Whim.__dataclass_fields__***REMOVED***
+_WHIM_FIELDS = {f for f in Whim.__dataclass_fields__}
 
 
 # ─── Persistence ──────────────────────────────────────────────────────────
@@ -179,19 +179,19 @@ class WhimStore:
     def __init__(self, path: Path = DEFAULT_DATA_PATH):
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self._records: Dict[str, Dict[str, Any***REMOVED******REMOVED*** = self._load()
+        self._records: Dict[str, Dict[str, Any]] = self._load()
 
-    def _load(self) -> Dict[str, Dict[str, Any***REMOVED******REMOVED***:
+    def _load(self) -> Dict[str, Dict[str, Any]]:
         if not self.path.exists():
-            return {***REMOVED***
+            return {}
         try:
             text = self.path.read_text(encoding="utf-8")
             data = yaml.safe_load(text) if yaml is not None else json.loads(text)
             if isinstance(data, dict):
-                return {k: dict(v) for k, v in data.items() if isinstance(v, dict)***REMOVED***
-            return {***REMOVED***
+                return {k: dict(v) for k, v in data.items() if isinstance(v, dict)}
+            return {}
         except Exception:
-            return {***REMOVED***
+            return {}
 
     def _save(self) -> None:
         if yaml is not None:
@@ -206,26 +206,26 @@ class WhimStore:
         whim.updated_at = _now_iso()
         if not whim.created_at:
             whim.created_at = whim.updated_at
-        self._records[whim.id***REMOVED*** = whim.to_dict()
+        self._records[whim.id] = whim.to_dict()
         self._save()
 
-    def get(self, whim_id: str) -> Optional[Whim***REMOVED***:
+    def get(self, whim_id: str) -> Optional[Whim]:
         rec = self._records.get(whim_id)
         if rec is None:
             return None
-        return Whim(**{k: v for k, v in rec.items() if k in _WHIM_FIELDS***REMOVED***)
+        return Whim(**{k: v for k, v in rec.items() if k in _WHIM_FIELDS})
 
-    def all(self) -> List[Whim***REMOVED***:
+    def all(self) -> List[Whim]:
         return [
-            Whim(**{k: v for k, v in rec.items() if k in _WHIM_FIELDS***REMOVED***)
+            Whim(**{k: v for k, v in rec.items() if k in _WHIM_FIELDS})
             for rec in self._records.values()
-        ***REMOVED***
+        ]
 
-    def by_status(self, status: str) -> List[Whim***REMOVED***:
-        return [w for w in self.all() if w.status == status***REMOVED***
+    def by_status(self, status: str) -> List[Whim]:
+        return [w for w in self.all() if w.status == status]
 
-    def by_project(self, project_id: str) -> List[Whim***REMOVED***:
-        return [w for w in self.all() if w.project_id == project_id***REMOVED***
+    def by_project(self, project_id: str) -> List[Whim]:
+        return [w for w in self.all() if w.project_id == project_id]
 
     def count(self) -> int:
         return len(self._records)
@@ -239,18 +239,18 @@ class InvalidTransition(ValueError):
 
 def _check_transition(current: str, target: str) -> None:
     if current not in _STATUS_RANK:
-        raise InvalidTransition(f"unknown current status {current!r***REMOVED***")
+        raise InvalidTransition(f"unknown current status {current!r}")
     if target not in _STATUS_RANK:
-        raise InvalidTransition(f"unknown target status {target!r***REMOVED***")
+        raise InvalidTransition(f"unknown target status {target!r}")
     if current in TERMINAL_STATUSES:
         raise InvalidTransition(
-            f"whim is in terminal state {current!r***REMOVED***; cannot transition"
+            f"whim is in terminal state {current!r}; cannot transition"
         )
-    allowed = _TRANSITIONS[current***REMOVED***
+    allowed = _TRANSITIONS[current]
     if target not in allowed:
         raise InvalidTransition(
-            f"transition {current!r***REMOVED*** → {target!r***REMOVED*** not allowed; "
-            f"allowed from {current!r***REMOVED***: {list(allowed)***REMOVED***"
+            f"transition {current!r} → {target!r} not allowed; "
+            f"allowed from {current!r}: {list(allowed)}"
         )
 
 
@@ -318,7 +318,7 @@ def advance(whim: Whim, target: str, *, reason: str = "", event_bus: Any = None)
     # TRIAGED НЕ эмитится здесь (triage() владеет whim.classified — нет double-emit).
     if event_bus is not None and target in ("DEFERRED", "FAILED", "NEW"):
         _emit_event(
-            event_bus, f"whim.{target.lower()***REMOVED***", source="whim_capture",
+            event_bus, f"whim.{target.lower()}", source="whim_capture",
             whim_id=whim.id, project_id=whim.project_id, previous_status=prev_status,
         )
     return whim
@@ -326,7 +326,7 @@ def advance(whim: Whim, target: str, *, reason: str = "", event_bus: Any = None)
 
 # ─── Triage heuristic ────────────────────────────────────────────────────
 
-def classify_heuristic(body: str) -> Tuple[str, str***REMOVED***:
+def classify_heuristic(body: str) -> Tuple[str, str]:
     """Return (classification, reason) per heuristic — deterministic.
 
     Per promt 080_19 §3.1 #2:
@@ -337,10 +337,10 @@ def classify_heuristic(body: str) -> Tuple[str, str***REMOVED***:
     text = body.lower()
     for kw in _PROMOTE_KEYWORDS:
         if kw in text:
-            return "PROMOTE_CANDIDATE", f"matched-keyword:{kw***REMOVED***"
+            return "PROMOTE_CANDIDATE", f"matched-keyword:{kw}"
     for kw in _DISCARD_KEYWORDS:
         if kw in text:
-            return "DISCARD", f"matched-keyword:{kw***REMOVED***"
+            return "DISCARD", f"matched-keyword:{kw}"
     return "KEEP", "no-keyword-matched"
 
 
@@ -352,7 +352,7 @@ def capture(
     project_id: str,
     source: str = "cli",
     priority: int = 5,
-    store: Optional[WhimStore***REMOVED*** = None,
+    store: Optional[WhimStore] = None,
     event_bus: Any = None,
 ) -> Whim:
     """Capture a whim in NEW state.
@@ -365,7 +365,7 @@ def capture(
     if not project_id.strip():
         raise ValueError("project_id must not be empty")
     if source not in SOURCES:
-        raise ValueError(f"source {source!r***REMOVED*** not in {SOURCES***REMOVED***")
+        raise ValueError(f"source {source!r} not in {SOURCES}")
     whim = Whim(
         id=_new_id(),
         project_id=project_id,
@@ -373,7 +373,7 @@ def capture(
         source=source,
         status="NEW",
         priority=max(0, min(10, priority)),
-        provenance={"capture_mechanism": source, "runtime": "python"***REMOVED***,
+        provenance={"capture_mechanism": source, "runtime": "python"},
     )
     if store is not None:
         store.upsert(whim)
@@ -389,7 +389,7 @@ def capture(
 def triage(
     whim: Whim,
     *,
-    classification: Optional[str***REMOVED*** = None,
+    classification: Optional[str] = None,
     reason: str = "",
     override_heuristic: bool = True,
     event_bus: Any = None,
@@ -407,7 +407,7 @@ def triage(
         whim.triaged_by = "heuristic"
     else:
         if classification not in CLASSIFICATIONS:
-            raise ValueError(f"classification {classification!r***REMOVED*** not in {CLASSIFICATIONS***REMOVED***")
+            raise ValueError(f"classification {classification!r} not in {CLASSIFICATIONS}")
         whim.classification = classification
         whim.classification_reason = reason or "user-provided"
         whim.triaged_by = "user"
@@ -433,12 +433,12 @@ def promote(whim: Whim, *, store: WhimStore, event_bus: Any = None) -> Whim:
     _check_transition(whim.status, "PROMOTED_TO_OPPORTUNITY")
     if whim.classification != "PROMOTE_CANDIDATE":
         raise ValueError(
-            f"whim classification {whim.classification!r***REMOVED*** cannot promote; "
+            f"whim classification {whim.classification!r} cannot promote; "
             f"only PROMOTE_CANDIDATE may promote"
         )
 
-    opportunity_id: Optional[str***REMOVED*** = None
-    failures: List[str***REMOVED*** = [***REMOVED***
+    opportunity_id: Optional[str] = None
+    failures: List[str] = []
 
     # Lazy import opportunity_engine + its persistence
     try:
@@ -447,18 +447,18 @@ def promote(whim: Whim, *, store: WhimStore, event_bus: Any = None) -> Whim:
             DEFAULT_DATA_PATH as OPP_DEFAULT_PATH,
         )
     except ImportError as exc:
-        failures.append(f"opportunity_engine import: {exc***REMOVED***")
+        failures.append(f"opportunity_engine import: {exc}")
     else:
         try:
             opp = Opportunity(
-                id=f"opp-{uuid.uuid4().hex[:10***REMOVED******REMOVED***",
+                id=f"opp-{uuid.uuid4().hex[:10]}",
                 project_id=whim.project_id,
-                title=f"Whim-derived: {whim.body[:60***REMOVED***.strip()***REMOVED***",
+                title=f"Whim-derived: {whim.body[:60].strip()}",
                 description=(
-                    f"Auto-promoted from whim {whim.id***REMOVED*** (body: {whim.body!r***REMOVED***). "
-                    f"Source: {whim.source***REMOVED***, classification={whim.classification***REMOVED***."
+                    f"Auto-promoted from whim {whim.id} (body: {whim.body!r}). "
+                    f"Source: {whim.source}, classification={whim.classification}."
                 ),
-                source=f"whim:{whim.source***REMOVED***",
+                source=f"whim:{whim.source}",
                 priority=whim.priority,
                 provenance={
                     "origin": "whim_capture",
@@ -466,19 +466,19 @@ def promote(whim: Whim, *, store: WhimStore, event_bus: Any = None) -> Whim:
                     "classification": whim.classification,
                     "triaged_by": whim.triaged_by,
                     "promoted_at": _now_iso(),
-                ***REMOVED***,
-                related_whims=[whim.id***REMOVED***,
+                },
+                related_whims=[whim.id],
             )
             opp_advance(opp, "READY", reason="whim-promoted")
             opp_store = OpportunityStore(OPP_DEFAULT_PATH)
             opp_store.upsert(opp)
             opportunity_id = opp.id
         except Exception as exc:  # noqa: BLE001
-            failures.append(f"opportunity upsert: {exc***REMOVED***")
+            failures.append(f"opportunity upsert: {exc}")
 
     if not opportunity_id:
         reason_msg = "; ".join(failures) if failures else "unknown"
-        return advance(whim, "FAILED", reason=f"promote failed: {reason_msg***REMOVED***", event_bus=event_bus)
+        return advance(whim, "FAILED", reason=f"promote failed: {reason_msg}", event_bus=event_bus)
 
     whim.related_opportunity_id = opportunity_id
     advance(whim, "PROMOTED_TO_OPPORTUNITY")
@@ -498,7 +498,7 @@ def defer(whim: Whim, *, reason: str = "", event_bus: Any = None) -> Whim:
 
 # ─── Output discipline ───────────────────────────────────────────────────
 
-def _emit_json(payload: Dict[str, Any***REMOVED***) -> None:
+def _emit_json(payload: Dict[str, Any]) -> None:
     json.dump(payload, sys.stdout, ensure_ascii=False, indent=2, default=str)
     sys.stdout.write("\n")
     sys.stdout.flush()
@@ -524,14 +524,14 @@ def _cli_capture(args: argparse.Namespace) -> int:
             store=store,
         )
     except ValueError as exc:
-        _emit_text(f"error: {exc***REMOVED***", json_mode=json_mode)
+        _emit_text(f"error: {exc}", json_mode=json_mode)
         return 2
-    payload = {"whim_capture": "capture", "whim": whim.to_dict()***REMOVED***
+    payload = {"whim_capture": "capture", "whim": whim.to_dict()}
     if json_mode:
         _emit_json(payload)
     else:
         _emit_text(
-            f"captured: id={whim.id***REMOVED*** status={whim.status***REMOVED*** project_id={whim.project_id***REMOVED***",
+            f"captured: id={whim.id} status={whim.status} project_id={whim.project_id}",
             json_mode=False,
         )
     return 0
@@ -542,26 +542,26 @@ def _cli_list(args: argparse.Namespace) -> int:
     store = WhimStore(args.data_path)
     items = store.all()
     if args.status:
-        items = [w for w in items if w.status == args.status***REMOVED***
+        items = [w for w in items if w.status == args.status]
     if args.project_id:
-        items = [w for w in items if w.project_id == args.project_id***REMOVED***
+        items = [w for w in items if w.project_id == args.project_id]
     payload = {
         "whim_capture": "list",
         "count": len(items),
         "filter_status": args.status,
         "filter_project_id": args.project_id,
-        "items": [w.to_dict() for w in items***REMOVED***,
-    ***REMOVED***
+        "items": [w.to_dict() for w in items],
+    }
     if json_mode:
         _emit_json(payload)
     else:
-        suffix = [***REMOVED***
+        suffix = []
         if args.status:
-            suffix.append(f"status={args.status***REMOVED***")
+            suffix.append(f"status={args.status}")
         if args.project_id:
-            suffix.append(f"project_id={args.project_id***REMOVED***")
+            suffix.append(f"project_id={args.project_id}")
         suffix_str = (" " + " ".join(suffix)) if suffix else ""
-        _emit_text(f"count={len(items)***REMOVED***{suffix_str***REMOVED***", json_mode=False)
+        _emit_text(f"count={len(items)}{suffix_str}", json_mode=False)
     return 0
 
 
@@ -570,15 +570,15 @@ def _cli_status(args: argparse.Namespace) -> int:
     store = WhimStore(args.data_path)
     whim = store.get(args.whim_id)
     if whim is None:
-        _emit_text(f"error: whim_id {args.whim_id!r***REMOVED*** not found", json_mode=json_mode)
+        _emit_text(f"error: whim_id {args.whim_id!r} not found", json_mode=json_mode)
         return 1
-    payload = {"whim_capture": "status", "whim": whim.to_dict()***REMOVED***
+    payload = {"whim_capture": "status", "whim": whim.to_dict()}
     if json_mode:
         _emit_json(payload)
     else:
         _emit_text(
-            f"{whim.id***REMOVED*** status={whim.status***REMOVED*** source={whim.source***REMOVED*** "
-            f"priority={whim.priority***REMOVED*** classification={whim.classification or '-'***REMOVED***",
+            f"{whim.id} status={whim.status} source={whim.source} "
+            f"priority={whim.priority} classification={whim.classification or '-'}",
             json_mode=False,
         )
     return 0
@@ -589,7 +589,7 @@ def _cli_triage(args: argparse.Namespace) -> int:
     store = WhimStore(args.data_path)
     whim = store.get(args.whim_id)
     if whim is None:
-        _emit_text(f"error: whim_id {args.whim_id!r***REMOVED*** not found", json_mode=json_mode)
+        _emit_text(f"error: whim_id {args.whim_id!r} not found", json_mode=json_mode)
         return 1
     try:
         triage(
@@ -599,16 +599,16 @@ def _cli_triage(args: argparse.Namespace) -> int:
             override_heuristic=bool(args.classification),
         )
     except (InvalidTransition, ValueError) as exc:
-        _emit_text(f"error: {exc***REMOVED***", json_mode=json_mode)
+        _emit_text(f"error: {exc}", json_mode=json_mode)
         return 2 if isinstance(exc, ValueError) else 1
     store.upsert(whim)
-    payload = {"whim_capture": "triage", "whim": whim.to_dict()***REMOVED***
+    payload = {"whim_capture": "triage", "whim": whim.to_dict()}
     if json_mode:
         _emit_json(payload)
     else:
         _emit_text(
-            f"triaged: classification={whim.classification***REMOVED*** "
-            f"by={whim.triaged_by***REMOVED*** reason={whim.classification_reason***REMOVED***",
+            f"triaged: classification={whim.classification} "
+            f"by={whim.triaged_by} reason={whim.classification_reason}",
             json_mode=False,
         )
     return 0
@@ -619,29 +619,29 @@ def _cli_promote(args: argparse.Namespace) -> int:
     store = WhimStore(args.data_path)
     whim = store.get(args.whim_id)
     if whim is None:
-        _emit_text(f"error: whim_id {args.whim_id!r***REMOVED*** not found", json_mode=json_mode)
+        _emit_text(f"error: whim_id {args.whim_id!r} not found", json_mode=json_mode)
         return 1
     try:
         promote(whim, store=store)
     except InvalidTransition:
         _emit_text(
-            f"error: transition not allowed from status={whim.status!r***REMOVED***",
+            f"error: transition not allowed from status={whim.status!r}",
             json_mode=json_mode,
         )
         return 1
     except ValueError as exc:
-        _emit_text(f"error: {exc***REMOVED***", json_mode=json_mode)
+        _emit_text(f"error: {exc}", json_mode=json_mode)
         return 2
     # promote() may have transitioned to FAILED (when opportunity_engine unavailable).
     # In that case, status is set to FAILED but we still want to exit non-zero on FAILED.
     rc = 0 if whim.status == "PROMOTED_TO_OPPORTUNITY" else 1
     store.upsert(whim)
-    payload = {"whim_capture": "promote", "whim": whim.to_dict()***REMOVED***
+    payload = {"whim_capture": "promote", "whim": whim.to_dict()}
     if json_mode:
         _emit_json(payload)
     else:
         _emit_text(
-            f"promote: status={whim.status***REMOVED*** related_opportunity={whim.related_opportunity_id or '-'***REMOVED***",
+            f"promote: status={whim.status} related_opportunity={whim.related_opportunity_id or '-'}",
             json_mode=False,
         )
     return rc
@@ -652,22 +652,22 @@ def _cli_defer(args: argparse.Namespace) -> int:
     store = WhimStore(args.data_path)
     whim = store.get(args.whim_id)
     if whim is None:
-        _emit_text(f"error: whim_id {args.whim_id!r***REMOVED*** not found", json_mode=json_mode)
+        _emit_text(f"error: whim_id {args.whim_id!r} not found", json_mode=json_mode)
         return 1
     try:
         defer(whim, reason=args.reason or "")
     except InvalidTransition:
         _emit_text(
-            f"error: cannot defer from terminal state {whim.status!r***REMOVED***",
+            f"error: cannot defer from terminal state {whim.status!r}",
             json_mode=json_mode,
         )
         return 1
     store.upsert(whim)
-    payload = {"whim_capture": "defer", "whim": whim.to_dict()***REMOVED***
+    payload = {"whim_capture": "defer", "whim": whim.to_dict()}
     if json_mode:
         _emit_json(payload)
     else:
-        _emit_text(f"deferred: at={whim.deferred_at***REMOVED*** reason={whim.deferred_reason or '-'***REMOVED***", json_mode=False)
+        _emit_text(f"deferred: at={whim.deferred_at} reason={whim.deferred_reason or '-'}", json_mode=False)
     return 0
 
 
@@ -676,24 +676,24 @@ def _cli_get(args: argparse.Namespace) -> int:
     store = WhimStore(args.data_path)
     whim = store.get(args.whim_id)
     if whim is None:
-        _emit_text(f"error: whim_id {args.whim_id!r***REMOVED*** not found", json_mode=json_mode)
+        _emit_text(f"error: whim_id {args.whim_id!r} not found", json_mode=json_mode)
         return 1
-    payload = {"whim_capture": "get", "whim": whim.to_dict()***REMOVED***
+    payload = {"whim_capture": "get", "whim": whim.to_dict()}
     if json_mode:
         _emit_json(payload)
     else:
-        _emit_text(f"{whim.id***REMOVED*** body={whim.body!r***REMOVED*** status={whim.status***REMOVED***", json_mode=False)
+        _emit_text(f"{whim.id} body={whim.body!r} status={whim.status}", json_mode=False)
     return 0
 
 
-def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
+def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(
         prog="whim_capture",
         description="Whim Capture — Phase 1.2 vertical slice (per pomt 080_19).",
     )
     parser.add_argument(
         "--data-path", default=str(DEFAULT_DATA_PATH),
-        help=f"YAML persistence path (default {DEFAULT_DATA_PATH***REMOVED***)",
+        help=f"YAML persistence path (default {DEFAULT_DATA_PATH})",
     )
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -751,7 +751,7 @@ def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
     except KeyboardInterrupt:
         return 130
     except Exception as exc:  # noqa: BLE001 — fail-safe per spec
-        _emit_text(f"error: whim_capture unexpected failure: {exc***REMOVED***", json_mode=False)
+        _emit_text(f"error: whim_capture unexpected failure: {exc}", json_mode=False)
         return 2
 
 
@@ -769,7 +769,7 @@ __all__ = [
     "TERMINAL_STATUSES",
     "CLASSIFICATIONS",
     "SOURCES",
-***REMOVED***
+]
 
 
 if __name__ == "__main__":

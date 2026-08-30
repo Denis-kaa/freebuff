@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-***REMOVED***
+}
 
 
 @dataclass(frozen=True)
@@ -46,7 +46,7 @@ class Role:
     title: str
     role_type: str
     file: str
-    routing_hint: tuple[str, ...***REMOVED*** = ()
+    routing_hint: tuple[str, ...] = ()
     extra: dict = field(default_factory=dict)
 
 
@@ -83,7 +83,7 @@ class Scenario(ABC):
         """Human-readable label for UI."""
 
     @abstractmethod
-    def role_objects(self) -> list[Role***REMOVED***:
+    def role_objects(self) -> list[Role]:
         """Return all roles exposed by this scenario as :class:`Role` objects.
 
         Distinct from any legacy ``roles()`` / ``list_roles()`` / ``role_dicts()``
@@ -93,7 +93,7 @@ class Scenario(ABC):
         scenario roles into the uniform ``Role`` shape.
 
         Naming choice: ``role_objects()`` (not ``roles()``) to avoid collision
-        with legacy methods like ``BlueprintCorpus.roles() -> list[dict***REMOVED***``.
+        with legacy methods like ``BlueprintCorpus.roles() -> list[dict]``.
         See LESSONS ANTI-7b / PB-8 for the rationale.
         """
 
@@ -107,11 +107,11 @@ class Scenario(ABC):
         """
 
     @abstractmethod
-    def routing_hint(self, role_id: str) -> list[str***REMOVED***:
+    def routing_hint(self, role_id: str) -> list[str]:
         """Return SmartRouter capability strings for ``role_id``."""
 
     @abstractmethod
-    def validate(self) -> list[str***REMOVED***:
+    def validate(self) -> list[str]:
         """Return scenario-level validation errors (empty list = OK).
 
         Called by :class:`ScenarioRegistry.validate_all`. Subclasses should
@@ -133,7 +133,7 @@ class ScenarioManifest:
     display_name: str
     root: Path
     enabled: bool = True
-    capabilities: tuple[str, ...***REMOVED*** = ()  # scenario-level (distinct from per-role routing_hint)
+    capabilities: tuple[str, ...] = ()  # scenario-level (distinct from per-role routing_hint)
     metadata: dict = field(default_factory=dict)
 
     @classmethod
@@ -142,18 +142,18 @@ class ScenarioManifest:
 
         Required top-level keys: ``id`` (str), ``type`` (str), ``root`` (str path).
         Optional: ``display_name`` (defaults to id), ``enabled`` (defaults true),
-        ``capabilities`` (list[str***REMOVED***), ``metadata`` (dict).
+        ``capabilities`` (list[str]), ``metadata`` (dict).
         """
         import yaml  # local — missing PyYAML only fails here, not at module-import time
         raw = yaml.safe_load(path.read_text(encoding="utf-8"))
         if not isinstance(raw, dict):
-            raise ValueError(f"{path***REMOVED***: manifest must be a YAML mapping at top level")
-        missing = [k for k in ("id", "type", "root") if not raw.get(k)***REMOVED***
+            raise ValueError(f"{path}: manifest must be a YAML mapping at top level")
+        missing = [k for k in ("id", "type", "root") if not raw.get(k)]
         if missing:
-            raise ValueError(f"{path***REMOVED***: required keys missing: {missing***REMOVED***")
-        sid = str(raw["id"***REMOVED***)
-        stype = str(raw["type"***REMOVED***)
-        sroot = Path(str(raw["root"***REMOVED***)).expanduser().resolve()
+            raise ValueError(f"{path}: required keys missing: {missing}")
+        sid = str(raw["id"])
+        stype = str(raw["type"])
+        sroot = Path(str(raw["root"])).expanduser().resolve()
         return cls(
             scenario_id=sid,
             scenario_type=stype,
@@ -161,8 +161,8 @@ class ScenarioManifest:
             root=sroot,
             enabled=bool(raw.get("enabled", True)),
             capabilities=tuple(raw.get("capabilities") or ()),
-            metadata=dict(raw.get("metadata") or {***REMOVED***),
+            metadata=dict(raw.get("metadata") or {}),
         )
 
 
-__all__ = ["Role", "Scenario", "ScenarioManifest"***REMOVED***
+__all__ = ["Role", "Scenario", "ScenarioManifest"]

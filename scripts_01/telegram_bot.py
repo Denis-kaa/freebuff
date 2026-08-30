@@ -14,10 +14,10 @@ import asyncio
 import json
 import logging
 import os
-***REMOVED***
+}
 import sys
 import uuid
-***REMOVED***
+}
 from typing import Any
 
 from telegram import Update
@@ -73,19 +73,19 @@ sys.path.insert(0, str(WORKSPACE))
 try:
     from scripts_01.model_gateway import ModelGateway
 except ImportError:
-    ModelGateway = None  # type: ignore[misc, assignment***REMOVED***
+    ModelGateway = None  # type: ignore[misc, assignment]
 
 
 load_dotenv(WORKSPACE / ".env")
 
 # In production, restrict this to your own chat IDs.
-ALLOWED_CHAT_IDS: set[int***REMOVED*** = set()
+ALLOWED_CHAT_IDS: set[int] = set()
 if os.environ.get("ALLOWED_CHAT_IDS"):
     ALLOWED_CHAT_IDS = {
         int(cid.strip())
-        for cid in os.environ["ALLOWED_CHAT_IDS"***REMOVED***.split(",")
+        for cid in os.environ["ALLOWED_CHAT_IDS"].split(",")
         if cid.strip()
-    ***REMOVED***
+    }
 
 
 logging.basicConfig(
@@ -107,7 +107,7 @@ class TelegramFreebuffBot(BaseTGBot):
     def __init__(self, workspace: str | Path) -> None:
         super().__init__(workspace)
         self.cm = ContextManager(str(self.workspace))
-        self._active_session: dict[int, str***REMOVED*** = {***REMOVED***
+        self._active_session: dict[int, str] = {}
         self._model_gateway: Any | None = None
         # CON-19 single-source-of-truth: registry shared с scan_projects.py — additive
         # таблицы в data_13/context.db. Per-bot-instance lifetime (testable via tmp_path
@@ -136,19 +136,19 @@ class TelegramFreebuffBot(BaseTGBot):
 
     def _session_id(self, chat_id: int) -> str:
         # Deterministic but stable mapping from chat to session.
-        return f"telegram-{chat_id***REMOVED***"
+        return f"telegram-{chat_id}"
 
     def _get_or_create_session(self, chat_id: int) -> str:
         if chat_id in self._active_session:
-            return self._active_session[chat_id***REMOVED***
+            return self._active_session[chat_id]
         session_id = self._session_id(chat_id)
         if self.cm.get_session(session_id) is None:
             self.cm.start_session(
                 session_id=session_id,
                 project="telegram_bot",
-                topic=f"telegram chat {chat_id***REMOVED***",
+                topic=f"telegram chat {chat_id}",
             )
-        self._active_session[chat_id***REMOVED*** = session_id
+        self._active_session[chat_id] = session_id
         return session_id
 
     def _record_message(self, chat_id: int, role: str, text: str) -> None:
@@ -166,7 +166,7 @@ class TelegramFreebuffBot(BaseTGBot):
         try:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(
-                json.dumps({str(k): v for k, v in self._active_session.items()***REMOVED***),
+                json.dumps({str(k): v for k, v in self._active_session.items()}),
                 encoding="utf-8",
             )
         except Exception:
@@ -179,14 +179,14 @@ class TelegramFreebuffBot(BaseTGBot):
             if not path.exists():
                 return
             data = json.loads(path.read_text(encoding="utf-8"))
-            self._active_session = {int(k): v for k, v in data.items()***REMOVED***
+            self._active_session = {int(k): v for k, v in data.items()}
         except Exception:
             logger.exception("Failed to load active sessions")
 
     def _active_session_id(self, chat_id: int) -> str:
         """Return the currently active session ID for a chat, falling back to DB."""
         if chat_id in self._active_session:
-            return self._active_session[chat_id***REMOVED***
+            return self._active_session[chat_id]
         # Fallback to the deterministic legacy session ID.
         return self._session_id(chat_id)
 
@@ -196,11 +196,11 @@ class TelegramFreebuffBot(BaseTGBot):
         if session is None:
             return "Сессия ещё не создана. Отправь любое сообщение."
         return (
-            f"🆔 Session: `{session.session_id[:8***REMOVED******REMOVED***`\n"
-            f"📁 Project: {session.project***REMOVED***\n"
-            f"💬 Messages: {session.message_count***REMOVED***\n"
-            f" Tokens (est): {session.token_estimate***REMOVED***\n"
-            f" Updated: {session.updated_at[:19***REMOVED******REMOVED***"
+            f"🆔 Session: `{session.session_id[:8]}`\n"
+            f"📁 Project: {session.project}\n"
+            f"💬 Messages: {session.message_count}\n"
+            f" Tokens (est): {session.token_estimate}\n"
+            f" Updated: {session.updated_at[:19]}"
         )
 
     def _agent_reply(self, chat_id: int, text: str) -> str:
@@ -228,13 +228,13 @@ class TelegramFreebuffBot(BaseTGBot):
             logger.exception("ModelGateway failed for chat %s", chat_id)
             return (
                 "🤖 Buffy (Telegram mode)\n\n"
-                f"⚠️ ModelGateway error: {exc***REMOVED***\n\n"
+                f"⚠️ ModelGateway error: {exc}\n\n"
                 "Check TELEGRAM_BOT_TOKEN / model env vars, or run local Ollama."
             )
 
-    def _build_messages(self, session_id: str, text: str) -> list[dict[str, str***REMOVED******REMOVED***:
+    def _build_messages(self, session_id: str, text: str) -> list[dict[str, str]]:
         """Build OpenAI-style message history for the current session."""
-        messages: list[dict[str, str***REMOVED******REMOVED*** = [
+        messages: list[dict[str, str]] = [
             {
                 "role": "system",
                 "content": (
@@ -243,15 +243,15 @@ class TelegramFreebuffBot(BaseTGBot):
                     "Be concise, helpful, and action-oriented. If the user asks about code, "
                     "files, or architecture, reason step by step and offer concrete next steps."
                 ),
-            ***REMOVED***
-        ***REMOVED***
+            }
+        ]
         for msg in self.cm.get_messages(session_id, limit=20):
             role = msg.get("role", "user")
             content = msg.get("content", "")
             if role not in ("user", "assistant", "system"):
                 continue
-            messages.append({"role": role, "content": content***REMOVED***)
-        messages.append({"role": "user", "content": text***REMOVED***)
+            messages.append({"role": role, "content": content})
+        messages.append({"role": "user", "content": text})
         return messages
 
     def _fallback_reply(self) -> str:
@@ -281,7 +281,7 @@ async def _start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         → ASKING_WORKSPACE_NAME → CONFIRM_WORKSPACE → DONE.
     /cancel на любом шаге → reset state в NONE (не теряет user data).
     """
-    chat_id = update.effective_chat.id  # type: ignore[union-attr***REMOVED***
+    chat_id = update.effective_chat.id  # type: ignore[union-attr]
     if chat_id is None:
         return
     _bot._record_message(chat_id, "system", "/start")
@@ -291,34 +291,34 @@ async def _start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     workspaces = list_workspaces_for_chat(_bot.workspace, chat_id)
     msg = TXT_GREETING
     if workspaces:
-        ws_names = ", ".join(f"`{w.get('name', '?')***REMOVED***`" for w in workspaces)
-        msg += f"\n\n📁 У тебя уже есть workspace-ы: {ws_names***REMOVED***. Можно добавить ещё."
-    await update.effective_message.reply_text(  # type: ignore[union-attr***REMOVED***
+        ws_names = ", ".join(f"`{w.get('name', '?')}`" for w in workspaces)
+        msg += f"\n\n📁 У тебя уже есть workspace-ы: {ws_names}. Можно добавить ещё."
+    await update.effective_message.reply_text(  # type: ignore[union-attr]
         msg + "\n\n" + TXT_ASKING_PROJECT
     )
 
 
 async def _cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """`/cancel` — прервать онбординг на любом шаге (кроме NONE/DONE)."""
-    chat_id = update.effective_chat.id  # type: ignore[union-attr***REMOVED***
+    chat_id = update.effective_chat.id  # type: ignore[union-attr]
     if chat_id is None:
         return
     state = _bot.onboarding_state(chat_id)
     if state.state == STATE_NONE or state.state == STATE_DONE:
-        await update.effective_message.reply_text(  # type: ignore[union-attr***REMOVED***
+        await update.effective_message.reply_text(  # type: ignore[union-attr]
             "ℹ️ Ты сейчас не в онбординге — можно отправить задачу в свободной форме."
         )
         return
     _bot.reset_onboarding(chat_id)
-    await update.effective_message.reply_text(  # type: ignore[union-attr***REMOVED***
+    await update.effective_message.reply_text(  # type: ignore[union-attr]
         "❌ Онбординг прерван. Отправляй обычные задачи — они пойдут в свободную сессию."
     )
 
 
 async def _status(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    chat_id = update.effective_chat.id  # type: ignore[union-attr***REMOVED***
+    chat_id = update.effective_chat.id  # type: ignore[union-attr]
     text = _bot._session_status_text(chat_id)
-    await update.effective_message.reply_text(text)  # type: ignore[union-attr***REMOVED***
+    await update.effective_message.reply_text(text)  # type: ignore[union-attr]
 
 
 async def cmd_notify(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -328,31 +328,31 @@ async def cmd_notify(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     из core_02/telegram_contract.py (post CAN‑3 closure v5.40.0).
     Usage: /notify <message>
     """
-    text = " ".join(context.args or [***REMOVED***).strip()
+    text = " ".join(context.args or []).strip()
     if not text:
-        await update.effective_message.reply_text(  # type: ignore[union-attr***REMOVED***
+        await update.effective_message.reply_text(  # type: ignore[union-attr]
             "Usage: /notify <message>\n"
             "(сообщение попадёт в Избранное через TGClient send_message)"
         )
         return
 
-    wrapped = f"📨 [Freebuff admin notify***REMOVED*** (от chat_id={update.effective_chat.id***REMOVED***)\n\n{text***REMOVED***"
+    wrapped = f"📨 [Freebuff admin notify] (от chat_id={update.effective_chat.id})\n\n{text}"
     try:
         msg_id = await report_to_saved_messages(wrapped)
         if msg_id is None:
-            await update.effective_message.reply_text(  # type: ignore[union-attr***REMOVED***
+            await update.effective_message.reply_text(  # type: ignore[union-attr]
                 "⚠️ Не доставлено в Избранное — TGClient недоступен или сессия не авторизована. "
                 "Проверь `python scripts_01/tg_smoke.py` для diagnostics."
             )
             return
-        await update.effective_message.reply_text(  # type: ignore[union-attr***REMOVED***
-            f"✅ Доставлено в Избранное (chat_id={SAVED_MESSAGES_CHAT_ID***REMOVED***). "  # type: ignore[union-attr***REMOVED***
-            f"msg_id={msg_id***REMOVED***"
+        await update.effective_message.reply_text(  # type: ignore[union-attr]
+            f"✅ Доставлено в Избранное (chat_id={SAVED_MESSAGES_CHAT_ID}). "  # type: ignore[union-attr]
+            f"msg_id={msg_id}"
         )
     except Exception as exc:
         logger.exception("/notify failed")
-        await update.effective_message.reply_text(  # type: ignore[union-attr***REMOVED***
-            f"❌ Ошибка notify: {exc***REMOVED***"
+        await update.effective_message.reply_text(  # type: ignore[union-attr]
+            f"❌ Ошибка notify: {exc}"
         )
 
 
@@ -364,36 +364,36 @@ async def cmd_notify_client(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     сообщение уходит реальному клиенту @alexlitvinov.
     Usage: /notify_client <message>
     """
-    text = " ".join(context.args or [***REMOVED***).strip()
+    text = " ".join(context.args or []).strip()
     if not text:
-        await update.effective_message.reply_text(  # type: ignore[union-attr***REMOVED***
+        await update.effective_message.reply_text(  # type: ignore[union-attr]
             "Usage: /notify_client <message>\n"
             "(сообщение попадёт к клиенту — Александру Литвинову, chat_id=1063827731)"
         )
         return
 
-    wrapped = f"📨 [Freebuff notify → клиент***REMOVED*** (от admin chat_id={update.effective_chat.id***REMOVED***)\n\n{text***REMOVED***"
+    wrapped = f"📨 [Freebuff notify → клиент] (от admin chat_id={update.effective_chat.id})\n\n{text}"
     try:
         msg_id = await report_to_alex_litvinov(wrapped)
         if msg_id is None:
-            await update.effective_message.reply_text(  # type: ignore[union-attr***REMOVED***
+            await update.effective_message.reply_text(  # type: ignore[union-attr]
                 "⚠️ Не доставлено клиенту — TGClient недоступен или сессия не авторизована."
             )
             return
-        await update.effective_message.reply_text(  # type: ignore[union-attr***REMOVED***
-            f"✅ Доставлено клиенту (chat_id={LITVINOV_CHAT_ID***REMOVED***). msg_id={msg_id***REMOVED***"
+        await update.effective_message.reply_text(  # type: ignore[union-attr]
+            f"✅ Доставлено клиенту (chat_id={LITVINOV_CHAT_ID}). msg_id={msg_id}"
         )
     except Exception as exc:
         logger.exception("/notify_client failed")
-        await update.effective_message.reply_text(  # type: ignore[union-attr***REMOVED***
-            f"❌ Ошибка notify_client: {exc***REMOVED***"
+        await update.effective_message.reply_text(  # type: ignore[union-attr]
+            f"❌ Ошибка notify_client: {exc}"
         )
 
 
 # ── Module-level registry для fire-and-forget BG tasks (anti-GC, v5.83.0) ──
 # `asyncio.create_task()` создания без strong reference рискуют GC'нуться
 # до завершения. Anchorнг в `_pending_reapers` keeps the reaper alive.
-_pending_reapers: "set[asyncio.Task[None***REMOVED******REMOVED***" = set()
+_pending_reapers: "set[asyncio.Task[None]]" = set()
 
 
 async def _reap_subprocess_safe(proc: "asyncio.subprocess.Process") -> None:
@@ -435,7 +435,7 @@ async def cmd_answer(update, context) -> None:
         return
 
     # Парсим args: /answer <task_id> <text...>
-    args = context.args if context and getattr(context, "args", None) else [***REMOVED***
+    args = context.args if context and getattr(context, "args", None) else []
     if len(args) < 2:
         await update.message.reply_text(
             "❌ Использование: /answer <task_id> <текст ответа>\n"
@@ -443,28 +443,28 @@ async def cmd_answer(update, context) -> None:
         )
         return
 
-    task_id = args[0***REMOVED***
-    answer_text = " ".join(args[1:***REMOVED***)
+    task_id = args[0]
+    answer_text = " ".join(args[1:])
 
     # Lazy import (avoid cyclic / slow startup)
     try:
         from scripts_01.prompt_dispatcher import process_answer
     except Exception as e:
-        await update.message.reply_text(f"❌ Ошибка импорта: {e***REMOVED***")
+        await update.message.reply_text(f"❌ Ошибка импорта: {e}")
         return
 
     result = process_answer(task_id, answer_text)
     if result.get("ok"):
         await update.message.reply_text(
-            f"✅ Answer принят: task_id `{result['task_id'***REMOVED******REMOVED***`\n"
-            f"**{result['old_status'***REMOVED******REMOVED*** → {result['new_status'***REMOVED******REMOVED*****\n"
-            f"Iteration: {result['old_iteration'***REMOVED******REMOVED*** → {result['new_iteration'***REMOVED******REMOVED***\n"
+            f"✅ Answer принят: task_id `{result['task_id']}`\n"
+            f"**{result['old_status']} → {result['new_status']}**\n"
+            f"Iteration: {result['old_iteration']} → {result['new_iteration']}\n"
             f"Следующий cron-тик возмёт задачу и передаст answer в Buffalo.",
         )
     else:
         await update.message.reply_text(
-            f"❌ {result.get('error', 'unknown error')***REMOVED***\n"
-            f"Task id: `{result.get('task_id', '?')***REMOVED***`",
+            f"❌ {result.get('error', 'unknown error')}\n"
+            f"Task id: `{result.get('task_id', '?')}`",
         )
 
 
@@ -489,9 +489,9 @@ async def cmd_task(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
            /task model:2: <текст> — выбор модели по позиции в стартовом списке
            freebuff (0/auto = DeepSeek V4 Flash · free безлимит; 1..5 = другие)
     """
-    text = " ".join(context.args or [***REMOVED***).strip()
+    text = " ".join(context.args or []).strip()
     if not text:
-        await update.effective_message.reply_text(  # type: ignore[union-attr***REMOVED***
+        await update.effective_message.reply_text(  # type: ignore[union-attr]
             "Usage: /task <текст задачи>\n"
             "/task model:0: <текст> — модель по позиции в списке выбора freebuff\n"
             "  · 0 / auto — DeepSeek V4 Flash (free, безлимит, рекомендованная)\n"
@@ -503,7 +503,7 @@ async def cmd_task(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     # Выбор модели из префикса "model:<позиция|алиас>:" (v5.88.0)
     model = "auto"
     m_model = re.match(
-        r"^\s*model\s*:\s*([A-Za-z0-9_.-***REMOVED***+)\s*:\s*(.+)$", text, re.DOTALL | re.IGNORECASE
+        r"^\s*model\s*:\s*([A-Za-z0-9_.-]+)\s*:\s*(.+)$", text, re.DOTALL | re.IGNORECASE
     )
     if m_model:
         model = m_model.group(1).strip().lower()
@@ -514,7 +514,7 @@ async def cmd_task(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
         path = write_user_prompt(
             text,
-            chat_id=update.effective_chat.id,  # type: ignore[union-attr***REMOVED***
+            chat_id=update.effective_chat.id,  # type: ignore[union-attr]
             source="telegram",
             model=model,
         )
@@ -529,7 +529,7 @@ async def cmd_task(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             dispatcher_script = freebuff_root / "scripts_01" / "prompt_dispatcher.py"
             logs_dir = freebuff_root / "logs_14"
             logs_dir.mkdir(exist_ok=True)
-            log_path = logs_dir / f"tg_spawn_{path.stem***REMOVED***.log"
+            log_path = logs_dir / f"tg_spawn_{path.stem}.log"
             log_fd = open(log_path, "w", encoding="utf-8")  # routing diagnostic per-task
             try:
                 proc = await asyncio.create_subprocess_exec(
@@ -550,51 +550,51 @@ async def cmd_task(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             _pending_reapers.add(reaper)
         except Exception as spawn_exc:
             # spawn-failure → cron safety-net подхватит ≤5 минут (никогда не fail full).
-            spawn_status = f"deferred → cron safety-net (≤5 минут): {spawn_exc***REMOVED***"
+            spawn_status = f"deferred → cron safety-net (≤5 минут): {spawn_exc}"
 
-        log_note = f"\nДиагностика: `logs_14/{log_path.name***REMOVED***`" if log_path else ""
+        log_note = f"\nДиагностика: `logs_14/{log_path.name}`" if log_path else ""
 
-        await update.effective_message.reply_text(  # type: ignore[union-attr***REMOVED***
+        await update.effective_message.reply_text(  # type: ignore[union-attr]
             f"📥 Задача добавлена в очередь (dual-path v5.83.0).\n"
-            f"Task ID: `{path.stem***REMOVED***`\n"
-            f"Model: `{model***REMOVED***`\n"
-            f"Spawn: {spawn_status***REMOVED***\n"
-            f"Файл: `{path.name***REMOVED***`\n"
-            f"Отчёт придёт в TG (от Баффи) после `wrapper.launch_and_wait`.{log_note***REMOVED***"
+            f"Task ID: `{path.stem}`\n"
+            f"Model: `{model}`\n"
+            f"Spawn: {spawn_status}\n"
+            f"Файл: `{path.name}`\n"
+            f"Отчёт придёт в TG (от Баффи) после `wrapper.launch_and_wait`.{log_note}"
         )
     except Exception as exc:
         logger.exception("/task failed")
-        await update.effective_message.reply_text(  # type: ignore[union-attr***REMOVED***
-            f"❌ Ошибка при постановке в очередь: {exc***REMOVED***"
+        await update.effective_message.reply_text(  # type: ignore[union-attr]
+            f"❌ Ошибка при постановке в очередь: {exc}"
         )
 
 
 async def _new_session(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    chat_id = update.effective_chat.id  # type: ignore[union-attr***REMOVED***
+    chat_id = update.effective_chat.id  # type: ignore[union-attr]
     old_session_id = _bot._active_session.pop(chat_id, _bot._session_id(chat_id))
     try:
         _bot.cm.complete_session(old_session_id)
     except Exception:
         pass
     # Start a fresh session with a new unique ID.
-    new_session_id = f"telegram-{chat_id***REMOVED***-{uuid.uuid4().hex[:8***REMOVED******REMOVED***"
+    new_session_id = f"telegram-{chat_id}-{uuid.uuid4().hex[:8]}"
     _bot.cm.start_session(
         session_id=new_session_id,
         project="telegram_bot",
-        topic=f"telegram chat {chat_id***REMOVED***",
+        topic=f"telegram chat {chat_id}",
     )
-    _bot._active_session[chat_id***REMOVED*** = new_session_id
+    _bot._active_session[chat_id] = new_session_id
     _bot._persist_active_sessions()
-    await update.effective_message.reply_text(  # type: ignore[union-attr***REMOVED***
+    await update.effective_message.reply_text(  # type: ignore[union-attr]
         "🆕 Новая сессия создана.\n" + _bot._session_status_text(chat_id)
     )
 
 
 async def _session(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    chat_id = update.effective_chat.id  # type: ignore[union-attr***REMOVED***
+    chat_id = update.effective_chat.id  # type: ignore[union-attr]
     session_id = _bot._active_session_id(chat_id)
-    await update.effective_message.reply_text(  # type: ignore[union-attr***REMOVED***
-        f"Текущая сессия: `{session_id***REMOVED***`"
+    await update.effective_message.reply_text(  # type: ignore[union-attr]
+        f"Текущая сессия: `{session_id}`"
     )
 
 
@@ -635,7 +635,7 @@ async def _handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     reply = _bot._agent_reply(chat_id, user_text)
     _bot._record_message(chat_id, "assistant", reply)
 
-    await update.effective_message.reply_text(reply)  # type: ignore[union-attr***REMOVED***
+    await update.effective_message.reply_text(reply)  # type: ignore[union-attr]
 
 
 async def _route_onboarding_text(
@@ -672,7 +672,7 @@ async def _route_onboarding_text(
                 next_state = STATE_ASKING_IDEA
             else:
                 reply = render_pick_list(candidates)
-                new_candidates = [c["stem"***REMOVED*** for c in candidates***REMOVED***
+                new_candidates = [c["stem"] for c in candidates]
                 next_state = STATE_ASKING_PICK_PROJECT
         elif text in ("нет", "no", "n", "не", "нету", "неа"):
             reply = TXT_ASKING_IDEA
@@ -688,22 +688,22 @@ async def _route_onboarding_text(
         try:
             idx = int(text) - 1
             if 0 <= idx < len(new_candidates):
-                chosen_stem = new_candidates[idx***REMOVED***
-                new_source = f"pompts_11/{chosen_stem***REMOVED***"
+                chosen_stem = new_candidates[idx]
+                new_source = f"pompts_11/{chosen_stem}"
                 reply = TXT_ASKING_WORKSPACE_NAME
                 next_state = STATE_ASKING_WORKSPACE_NAME
             else:
-                error_msg = f"Номер должен быть от 1 до {len(new_candidates)***REMOVED***."
+                error_msg = f"Номер должен быть от 1 до {len(new_candidates)}."
         except ValueError:
             error_msg = "Введи номер кандидата (например, `1`)."
         if error_msg:
-            reply = f"⚠️ {error_msg***REMOVED***\n" + render_pick_list(
+            reply = f"⚠️ {error_msg}\n" + render_pick_list(
                 list_pompts_11_corpus(_bot.workspace, top_n=5)
             )
 
     elif next_state == STATE_ASKING_IDEA:
         if 1 <= len(user_text.strip()) <= 200:
-            new_source = f"idea:{user_text.strip()[:120***REMOVED******REMOVED***"
+            new_source = f"idea:{user_text.strip()[:120]}"
             reply = TXT_ASKING_WORKSPACE_NAME
             next_state = STATE_ASKING_WORKSPACE_NAME
         else:
@@ -726,16 +726,16 @@ async def _route_onboarding_text(
             existing_names = {
                 w.get("name", "")
                 for w in list_workspaces_for_chat(_bot.workspace, chat_id)
-            ***REMOVED***
+            }
             final_name = name
             counter = 2
             while final_name in existing_names and counter <= 99:
-                suffix = f" ({counter***REMOVED***)"
-                base = name if len(name) + len(suffix) <= 64 else name[: 64 - len(suffix)***REMOVED***
-                candidate = f"{base***REMOVED***{suffix***REMOVED***"
+                suffix = f" ({counter})"
+                base = name if len(name) + len(suffix) <= 64 else name[: 64 - len(suffix)]
+                candidate = f"{base}{suffix}"
                 # Жёсткий clamp: даже при счётчике 99+ держим ≤ 64 символа
                 if len(candidate) > 64:
-                    candidate = candidate[:64***REMOVED***
+                    candidate = candidate[:64]
                 final_name = candidate
                 counter += 1
             new_workspace_name = final_name
@@ -750,11 +750,11 @@ async def _route_onboarding_text(
                 # в data_13/context.db) — для cross-system queries и MCP tools.
                 # Failure mode: try/except + logger; НЕ rollback JSON успех
                 # (CON-21: Telegram UX не должна падать на registry issues).
-                project_paths = [***REMOVED***
+                project_paths = []
                 if new_source.startswith("pompts_11/"):
                     target = (_bot.workspace / new_source).resolve()
                     if target.exists():
-                        project_paths = [str(target)***REMOVED***
+                        project_paths = [str(target)]
                     else:
                         logger.warning(
                             "WorkspaceRegistry integration: pompts_11/<stem> %s "
@@ -767,7 +767,7 @@ async def _route_onboarding_text(
                         name=final_name,
                         project_paths=project_paths,
                         description=(
-                            f"Onboarded via /start в TG; source={new_source***REMOVED***"
+                            f"Onboarded via /start в TG; source={new_source}"
                         ),
                         owner_chat_id=chat_id,
                     )
@@ -784,7 +784,7 @@ async def _route_onboarding_text(
                         chat_id, exc,
                     )
                 _bot._record_message(
-                    chat_id, "system", f"workspace_created:{final_name***REMOVED***"
+                    chat_id, "system", f"workspace_created:{final_name}"
                 )
                 reply = TXT_WORKSPACE_CREATED.format(
                     name=final_name,
@@ -795,7 +795,7 @@ async def _route_onboarding_text(
             except Exception as exc:
                 logger.exception("register workspace failed")
                 reply = (
-                    f"❌ Ошибка регистрации workspace: {exc***REMOVED***\n"
+                    f"❌ Ошибка регистрации workspace: {exc}\n"
                     "Ответь ещё раз, или `/cancel`."
                 )
 
@@ -812,7 +812,7 @@ async def _route_onboarding_text(
 
 
 async def cmd_workspace(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """`/workspace [list***REMOVED***` — список workspace-ов пользователя (filter by owner_chat_id).
+    """`/workspace [list]` — список workspace-ов пользователя (filter by owner_chat_id).
 
     Формат ответа (canonical):
         📂 У тебя пока нет зарегистрированных workspace-ов.
@@ -825,28 +825,28 @@ async def cmd_workspace(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
            Создан: YYYY-MM-DD HH:MM
            (повтор для следующего workspace)
     """
-    chat_id = update.effective_chat.id  # type: ignore[union-attr***REMOVED***
+    chat_id = update.effective_chat.id  # type: ignore[union-attr]
     if chat_id is None:
         return
     try:
         workspaces = [
             ws for ws in _bot.registry.list_workspaces()
             if ws.owner_chat_id == chat_id
-        ***REMOVED***
+        ]
     except Exception as exc:
         logger.exception("WorkspaceRegistry.list_workspaces failed")
-        await update.effective_message.reply_text(  # type: ignore[union-attr***REMOVED***
-            f"❌ Ошибка чтения registry: {exc***REMOVED***"
+        await update.effective_message.reply_text(  # type: ignore[union-attr]
+            f"❌ Ошибка чтения registry: {exc}"
         )
         return
 
     if not workspaces:
-        await update.effective_message.reply_text(  # type: ignore[union-attr***REMOVED***
+        await update.effective_message.reply_text(  # type: ignore[union-attr]
             "📂 У тебя пока нет зарегистрированных workspace-ов."
         )
         return
 
-    lines = [f"📁 Твои workspace-ы ({len(workspaces)***REMOVED***):\n"***REMOVED***
+    lines = [f"📁 Твои workspace-ы ({len(workspaces)}):\n"]
     for ws in workspaces:
         try:
             created_dt = datetime.fromtimestamp(ws.created_at).strftime("%Y-%m-%d %H:%M")
@@ -856,26 +856,26 @@ async def cmd_workspace(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
         source_display = "—"
         if ws.project_paths:
             try:
-                rel = Path(ws.project_paths[0***REMOVED***).relative_to(_bot.workspace)
+                rel = Path(ws.project_paths[0]).relative_to(_bot.workspace)
                 source_display = str(rel)
             except ValueError:
-                source_display = Path(ws.project_paths[0***REMOVED***).name
-        lines.append(f"🏷 **{ws.name***REMOVED***** (slug: {ws.slug***REMOVED***)")
-        lines.append(f"   Source: {source_display***REMOVED***")
-        lines.append(f"   Статус: {ws.status***REMOVED***")
-        lines.append(f"   Создан: {created_dt***REMOVED***\n")
-    await update.effective_message.reply_text("\n".join(lines).strip())  # type: ignore[union-attr***REMOVED***
+                source_display = Path(ws.project_paths[0]).name
+        lines.append(f"🏷 **{ws.name}** (slug: {ws.slug})")
+        lines.append(f"   Source: {source_display}")
+        lines.append(f"   Статус: {ws.status}")
+        lines.append(f"   Создан: {created_dt}\n")
+    await update.effective_message.reply_text("\n".join(lines).strip())  # type: ignore[union-attr]
 
 
 async def cmd_queue(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """`/queue [state***REMOVED***` — список промтов в pompts_11/{user,running,done,failed***REMOVED***.
+    """`/queue [state]` — список промтов в pompts_11/{user,running,done,failed].
 
     Показывает все каталоги с таймстемпами (mtime файла) и статусом (из
-    `**Status:**` header). Аргумент `[state***REMOVED***` (опциональный) — фильтр на
+    `**Status:**` header). Аргумент `[state]` (опциональный) — фильтр на
     один каталог: `user|running|done|failed`. Пример:
         /queue          → все 4 каталога сводно
         /queue running  → только running/ (multi-turn resumable)
-    Reuse: scripts_01/prompt_queue.{prompts_dir, parse_prompt, queue_counts***REMOVED***.
+    Reuse: scripts_01/prompt_queue.{prompts_dir, parse_prompt, queue_counts}.
     TG сообщение truncate до 3800 символов (= safety margin от 4096 TG-limit).
     """
     from scripts_01.prompt_queue import (
@@ -885,14 +885,14 @@ async def cmd_queue(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         queue_counts,
     )
 
-    args = context.args or [***REMOVED***
+    args = context.args or []
     state_filter: str | None = None
     if args:
-        candidate = args[0***REMOVED***.strip().lower()
+        candidate = args[0].strip().lower()
         allowed = ("user", "running", "done", "failed")
         if candidate not in allowed:
-            await update.effective_message.reply_text(  # type: ignore[union-attr***REMOVED***
-                f"Usage: /queue или /queue {('|').join(allowed)***REMOVED***"
+            await update.effective_message.reply_text(  # type: ignore[union-attr]
+                f"Usage: /queue или /queue {('|').join(allowed)}"
             )
             return
         state_filter = candidate
@@ -902,8 +902,8 @@ async def cmd_queue(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         counts = queue_counts()
     except Exception as exc:
         logger.exception("/queue failed at counts")
-        await update.effective_message.reply_text(  # type: ignore[union-attr***REMOVED***
-            f"❌ Ошибка чтения очереди: {exc***REMOVED***"
+        await update.effective_message.reply_text(  # type: ignore[union-attr]
+            f"❌ Ошибка чтения очереди: {exc}"
         )
         return
 
@@ -912,19 +912,19 @@ async def cmd_queue(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         ("running", "⚙️ running (в работе / resumable)"),
         ("done", "✅ done (выполнено)"),
         ("failed", "❌ failed (ошибка)"),
-    ***REMOVED***
+    ]
 
-    sections: list[str***REMOVED*** = [
+    sections: list[str] = [
         f"📊 Очередь задач (promt 48, multi-turn v5.79.0)",
         (
-            "{u***REMOVED*** user • {r***REMOVED*** running • {d***REMOVED*** done • {f***REMOVED*** failed"
+            "{u] user • {r] running • {d] done • {f] failed"
         ).format(
             u=counts.get("pending", 0),
             r=counts.get("running", 0),
             d=counts.get("done", 0),
             f=counts.get("failed", 0),
         ),
-    ***REMOVED***
+    ]
 
     for subdir_key, label in dir_labels:
         if state_filter and subdir_key != state_filter:
@@ -933,21 +933,21 @@ async def cmd_queue(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         try:
             files = sorted(sub_dir.glob("*.md"))
         except OSError as exc:
-            sections.append(f"\n{label***REMOVED***: (не удалось прочитать — {exc***REMOVED***)")
+            sections.append(f"\n{label}: (не удалось прочитать — {exc})")
             continue
         if not files:
-            sections.append(f"\n{label***REMOVED***: (пусто)")
+            sections.append(f"\n{label}: (пусто)")
             continue
-        sections.append(f"\n{label***REMOVED***: {len(files)***REMOVED*** файл(ов)")
+        sections.append(f"\n{label}: {len(files)} файл(ов)")
         for p in files:
             meta = parse_prompt(p)
             # Status badge (multi-turn aware).
             if meta is None:
-                sections.append(f"  • `{p.name***REMOVED***` (unparseable)")
+                sections.append(f"  • `{p.name}` (unparseable)")
                 continue
             badge = meta.status or "?"
             if meta.iteration > 1:
-                badge = f"{meta.status***REMOVED*** iter {meta.iteration***REMOVED***/{meta.max_iterations***REMOVED***"
+                badge = f"{meta.status} iter {meta.iteration}/{meta.max_iterations}"
             # mtime (last filesystem touch) + Created from header.
             try:
                 mtime_dt = datetime.fromtimestamp(p.stat().st_mtime).strftime(
@@ -955,23 +955,23 @@ async def cmd_queue(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
                 )
             except OSError:
                 mtime_dt = "n/a"
-            created = meta.created[:19***REMOVED*** if meta.created else "n/a"
-            task_short = meta.task_id[:14***REMOVED*** if meta.task_id else p.stem
-            title_preview = (meta.title or "")[:48***REMOVED***
+            created = meta.created[:19] if meta.created else "n/a"
+            task_short = meta.task_id[:14] if meta.task_id else p.stem
+            title_preview = (meta.title or "")[:48]
             sections.append(
-                f"  • `{task_short***REMOVED***` [{badge***REMOVED******REMOVED***\n"
-                f"    {title_preview***REMOVED***\n"
-                f"    Created: {created***REMOVED*** · mtime: {mtime_dt***REMOVED***"
+                f"  • `{task_short}` [{badge}]\n"
+                f"    {title_preview}\n"
+                f"    Created: {created} · mtime: {mtime_dt}"
             )
 
     full = "\n".join(sections)
     # TG message limit 4096; truncate at 3800 with marker.
     if len(full) > 3800:
         full = (
-            full[:3800***REMOVED***
-            + "\n\n[… truncated — используй `/queue <state>` для фильтра …***REMOVED***"
+            full[:3800]
+            + "\n\n[… truncated — используй `/queue <state>` для фильтра …]"
         )
-    await update.effective_message.reply_text(full)  # type: ignore[union-attr***REMOVED***
+    await update.effective_message.reply_text(full)  # type: ignore[union-attr]
 
 
 async def _error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:

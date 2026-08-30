@@ -17,13 +17,13 @@ from typing import Any
 # Canonical ordering for inheritance. Earlier levels act as defaults; later
 # levels override only the keys they explicitly state. Unknown levels are
 # silently skipped when merging.
-CASCADE_LEVELS: tuple[str, ...***REMOVED*** = (
+CASCADE_LEVELS: tuple[str, ...] = (
     "system", "workspace", "project", "agent", "task",
 )
 
 # Structural minimum for a task contract: goal + assigned_role + routing_hint.
 # Wizard workflow always produces one, but a hand-written task.json might forget.
-_TASK_REQUIRED_FIELDS: tuple[str, ...***REMOVED*** = (
+_TASK_REQUIRED_FIELDS: tuple[str, ...] = (
     "goal", "assigned_role", "routing_hint",
 )
 
@@ -40,22 +40,22 @@ def deep_merge(base: dict, override: dict) -> dict:
     """
     out = dict(base)
     for k, v in override.items():
-        if k in out and isinstance(out[k***REMOVED***, dict) and isinstance(v, dict):
-            out[k***REMOVED*** = deep_merge(out[k***REMOVED***, v)
+        if k in out and isinstance(out[k], dict) and isinstance(v, dict):
+            out[k] = deep_merge(out[k], v)
         else:
-            out[k***REMOVED*** = v
+            out[k] = v
     return out
 
 
 class CascadeContract:
     """system → workspace → project → agent → task — most specific wins."""
 
-    LEVELS: tuple[str, ...***REMOVED*** = CASCADE_LEVELS
+    LEVELS: tuple[str, ...] = CASCADE_LEVELS
 
     @classmethod
-    def merge(cls, levels: dict[str, dict***REMOVED***) -> dict:
+    def merge(cls, levels: dict[str, dict]) -> dict:
         """Apply deep merge in fixed level order. Unknown levels skipped."""
-        result: dict[str, Any***REMOVED*** = {***REMOVED***
+        result: dict[str, Any] = {}
         for level in cls.LEVELS:
             payload = levels.get(level)
             if not isinstance(payload, dict):
@@ -64,7 +64,7 @@ class CascadeContract:
         return result
 
     @classmethod
-    def validate_levels(cls, levels: dict[str, dict***REMOVED***) -> list[str***REMOVED***:
+    def validate_levels(cls, levels: dict[str, dict]) -> list[str]:
         """Return list of structural errors. Empty list = OK.
 
         Blockers are reported (not raised): wizard writes a sidecar
@@ -72,32 +72,32 @@ class CascadeContract:
 
         Sidecar semantics: ``run_wizard`` only writes/overwrites
         ``validation_errors.txt`` on runs that produce errors. A clean run
-        (``errors == [***REMOVED***``) leaves any prior sidecar intact on disk —
+        (``errors == []``) leaves any prior sidecar intact on disk —
         callers should treat the file as "present ⇒ warnings exist", not
         "fresh this run". Don't rely on the sidecar as an idempotent
         refresh marker.
         """
-        errors: list[str***REMOVED*** = [***REMOVED***
+        errors: list[str] = []
         for level in cls.LEVELS:
             if level not in levels:
-                errors.append(f"missing level '{level***REMOVED***'")
+                errors.append(f"missing level '{level}'")
                 continue
-            if not isinstance(levels[level***REMOVED***, dict):
+            if not isinstance(levels[level], dict):
                 errors.append(
-                    f"level '{level***REMOVED***' must be a dict, got "
-                    f"{type(levels[level***REMOVED***).__name__***REMOVED***"
+                    f"level '{level}' must be a dict, got "
+                    f"{type(levels[level]).__name__}"
                 )
         task = levels.get("task")
         if isinstance(task, dict):
             for required in _TASK_REQUIRED_FIELDS:
                 if required not in task:
-                    errors.append(f"task.{required***REMOVED*** required")
+                    errors.append(f"task.{required} required")
         return errors
 
 
 def resolve_assigned_model(
     task: dict,
-    capabilities: list[str***REMOVED*** | None = None,
+    capabilities: list[str] | None = None,
     router=None,
 ) -> str:
     """Resolve ``task.assigned_model`` through SmartRouter if it equals ``"auto"``.
@@ -114,9 +114,9 @@ def resolve_assigned_model(
     assigned = task.get("assigned_model", "auto")
     if assigned != "auto":
         return assigned
-    hint: list[str***REMOVED*** = (
+    hint: list[str] = (
         list(capabilities) if capabilities is not None
-        else list(task.get("routing_hint", [***REMOVED***))
+        else list(task.get("routing_hint", []))
     )
     if router is None:
         router = SmartRouter(catalog=ModelCatalog.default())
@@ -129,4 +129,4 @@ __all__ = [
     "CascadeContract",
     "deep_merge",
     "resolve_assigned_model",
-***REMOVED***
+]

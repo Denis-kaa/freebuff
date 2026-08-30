@@ -32,7 +32,7 @@ import json
 import os
 import sys
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Optional
 
 WORKSPACE = Path(__file__).resolve().parent.parent
@@ -107,15 +107,15 @@ class StreamBridge:
         # Ищем активные сессии в SQLite
         active = self._context_manager.list_sessions(SessionStatus.ACTIVE)
         if active:
-            s = active[0***REMOVED***
-            sid = s["session_id"***REMOVED***
+            s = active[0]
+            sid = s["session_id"]
             # Пробуем привязать стрим
             try:
                 self._session_dir = _attach_session(sid)
                 self._sid = sid
                 self._topic = s.get("topic", "")
                 if self._session_dir:
-                    print(f"[StreamBridge***REMOVED*** Восстановлена сессия: {sid[:8***REMOVED******REMOVED*** ({s.get('topic', '')***REMOVED***)")
+                    print(f"[StreamBridge] Восстановлена сессия: {sid[:8]} ({s.get('topic', '')})")
                     return
             except Exception:
                 pass
@@ -137,20 +137,20 @@ class StreamBridge:
             sid_file = self._session_dir / ".session_id"
             if sid_file.exists():
                 self._sid = sid_file.read_text().strip()
-                return self._sid[:8***REMOVED***
+                return self._sid[:8]
         return "unknown"
 
     # ── Логирование ──────────────────────────────────────────
 
-    def log_user(self, text: str) -> Optional[int***REMOVED***:
+    def log_user(self, text: str) -> Optional[int]:
         """Сохранить сообщение пользователя."""
         return _log_message("user", text)
 
-    def log_assistant(self, text: str) -> Optional[int***REMOVED***:
+    def log_assistant(self, text: str) -> Optional[int]:
         """Сохранить ответ ассистента."""
         return _log_message("assistant", text)
 
-    def log_system(self, text: str) -> Optional[int***REMOVED***:
+    def log_system(self, text: str) -> Optional[int]:
         """Сохранить системное сообщение."""
         return _log_message("system", text)
 
@@ -182,7 +182,7 @@ class StreamBridge:
             # Финальный чекпоинт
             self._context_manager.save_checkpoint(
                 session_id=self._sid,
-                summary=f"Session '{self._topic***REMOVED***' completed",
+                summary=f"Session '{self._topic}' completed",
                 ctype=CheckpointType.POST_STEP,
             )
 
@@ -192,9 +192,9 @@ class StreamBridge:
                     auto_conspect = _import_auto_conspect()
                     filepath = auto_conspect(self._sid)
                     result = filepath
-                    print(f"[StreamBridge***REMOVED*** Конспект: {filepath***REMOVED***")
+                    print(f"[StreamBridge] Конспект: {filepath}")
                 except Exception as e:
-                    print(f"[StreamBridge***REMOVED*** Ошибка конспекта: {e***REMOVED***", file=sys.stderr)
+                    print(f"[StreamBridge] Ошибка конспекта: {e}", file=sys.stderr)
 
             # Помечаем COMPLETED
             self._context_manager.complete_session(self._sid)
@@ -220,7 +220,7 @@ class StreamBridge:
             return ""
 
         files = sorted(
-            [f for f in summaries_dir.iterdir() if f.name.endswith(".md")***REMOVED***,
+            [f for f in summaries_dir.iterdir() if f.name.endswith(".md")],
             key=lambda f: f.stat().st_mtime,
             reverse=True,
         )
@@ -229,19 +229,19 @@ class StreamBridge:
             return ""
 
         try:
-            return files[0***REMOVED***.read_text(encoding="utf-8")
+            return files[0].read_text(encoding="utf-8")
         except Exception:
             return ""
 
     def get_status(self) -> dict:
         """Возвращает статус текущей сессии."""
         if not self._sid:
-            return {"status": "no_session"***REMOVED***
+            return {"status": "no_session"}
 
         status = self._context_manager.get_context_status(self._sid)
         if self._session_dir:
-            status["stream_dir"***REMOVED*** = self._session_dir.name
-            status["msg_count"***REMOVED*** = _get_counter(self._session_dir)
+            status["stream_dir"] = self._session_dir.name
+            status["msg_count"] = _get_counter(self._session_dir)
         return status
 
     # ── Context Manager Interface ────────────────────────────
@@ -278,7 +278,7 @@ def main():
         bridge.start_session(topic=args.topic)
         bridge.log_user("Тестовый запрос пользователя")
         bridge.log_assistant("Тестовый ответ ассистента. " * 50)  # длинный текст
-        print(f"Статус: {json.dumps(bridge.get_status(), ensure_ascii=False, indent=2)***REMOVED***")
+        print(f"Статус: {json.dumps(bridge.get_status(), ensure_ascii=False, indent=2)}")
         bridge.end_session()
         print("✅ Тест завершён")
 

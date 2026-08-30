@@ -7,7 +7,7 @@
 Команды:
     forge forge <project_path>    — полный цикл FORGE→REPORT
     forge check <project_path>    — только Env Doctor + требования (вкл. STEPS.md policy)
-    forge status [status***REMOVED***         — список проектов со статусами
+    forge status [status]         — список проектов со статусами
     forge register <project_path> — зарегистрировать новый проект
     forge report <project_path>   — отчёт в TG
     forge step <project_path> <phase> <text> — добавить запись в STEPS.md
@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-***REMOVED***
+}
 from typing import Any, List, Optional
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -43,7 +43,7 @@ def _load_registry() -> ForgeRegistry:
     return ForgeRegistry(ROOT / "data_13" / "forge_registry.yaml")
 
 
-def _auto_register_workspace(project: Project, registry=None) -> Optional[str***REMOVED***:
+def _auto_register_workspace(project: Project, registry=None) -> Optional[str]:
     """B1 (R-123, промт 68): `forge register` → auto-регистрация Project в WorkspaceRegistry.
 
     Гарантия B1-границы (Workspace⊨Engine): регистрация проекта в Forge-реестре
@@ -70,13 +70,13 @@ def _auto_register_workspace(project: Project, registry=None) -> Optional[str***
             # strict=False: путь отсутствует на FS → привязка не произошла.
             # Не врём «привязан»: возвращаем None (деградация).
             print(
-                f"  [workspace***REMOVED*** B1 (R-123): привязка не выполнена — путь "
-                f"{project.root***REMOVED*** отсутствует на FS (warn-and-skip)"
+                f"  [workspace] B1 (R-123): привязка не выполнена — путь "
+                f"{project.root} отсутствует на FS (warn-and-skip)"
             )
             return None
         return "rabota"
     except Exception as exc:  # pragma: no cover — деградация, не блокер
-        print(f"  [workspace***REMOVED*** B1 auto-register пропущен: {exc***REMOVED***")
+        print(f"  [workspace] B1 auto-register пропущен: {exc}")
         return None
 
 
@@ -85,7 +85,7 @@ def _tg_notify(text: str) -> None:
     try:
         from core_02.telegram_contract import is_tg_available
         if not is_tg_available():
-            print("  [tg***REMOVED*** недоступен — отчёт пропущен")
+            print("  [tg) недоступен — отчёт пропущен")
             return
         try:
             from scripts_01.tg_session import send_text_message  # type: ignore
@@ -94,12 +94,12 @@ def _tg_notify(text: str) -> None:
             from core_02._tg_client_v2 import TgClientV2  # type: ignore
             client = TgClientV2()
             client.send(text)
-        print("  [tg***REMOVED*** отчёт отправлен")
+        print("  [tg) отчёт отправлен")
     except Exception as exc:
-        print(f"  [tg***REMOVED*** ошибка: {exc***REMOVED***")
+        print(f"  [tg] ошибка: {exc}")
 
 
-def _find_workspace_root(project_path) -> Optional[Path***REMOVED***:
+def _find_workspace_root(project_path) -> Optional[Path]:
     """Найти директорию с workspace.yaml, поднимаясь до 6 уровней."""
     cur = Path(project_path).resolve()
     if cur.is_file():
@@ -120,7 +120,7 @@ def _load_workspace_steps_policy(ws_root: Path) -> str:
         import yaml as _yaml
         cfg = _yaml.safe_load(
             (ws_root / "workspace.yaml").read_text(encoding="utf-8")
-        ) or {***REMOVED***
+        ) or {}
     except Exception:
         # Любая ошибка чтения/парсинга yaml → дефолтный lax-режим.
         return "optional"
@@ -147,16 +147,16 @@ def _format_steps_line(proj: Project) -> str:
     if not stats.exists:
         return "📊 STEPS.md: нет файла"
     last_part = (
-        f", последний #{stats.last_step_n***REMOVED***" if stats.last_step_n is not None
+        f", последний #{stats.last_step_n}" if stats.last_step_n is not None
         else ""
     )
     if not stats.format_ok:
-        problems = f" ({len(stats.format_problems)***REMOVED*** проблем)" if stats.format_problems else ""
-        return f"📊 STEPS.md: {stats.count***REMOVED*** шагов{last_part***REMOVED***, формат malformed{problems***REMOVED***"
-    return f"📊 STEPS.md: {stats.count***REMOVED*** шагов{last_part***REMOVED***, формат OK"
+        problems = f" ({len(stats.format_problems)} проблем)" if stats.format_problems else ""
+        return f"📊 STEPS.md: {stats.count} шагов{last_part}, формат malformed{problems}"
+    return f"📊 STEPS.md: {stats.count} шагов{last_part}, формат OK"
 
 
-def _record_learning_event(run) -> Optional[str***REMOVED***:
+def _record_learning_event(run) -> Optional[str]:
     """Phase 4.2 (промт 68): конвертировать PipelineRun output → learning event.
 
     Закрывает B7 (Factory vs Forge boundary): память получает факт прогона
@@ -172,21 +172,21 @@ def _record_learning_event(run) -> Optional[str***REMOVED***:
             "overall": run.overall,
             "status": "passed" if run.overall == "ok" else "failed",
             "stages": [
-                {"name": s.name, "status": s.status***REMOVED*** for s in run.stages
-            ***REMOVED***,
+                {"name": s.name, "status": s.status} for s in run.stages
+            ],
             "started_at": run.started_at,
             "finished_at": run.finished_at,
-        ***REMOVED***
+        }
         with MemoryStore() as ms:
             eid = ms.record_learning_event(
-                trigger_id=f"forge:{run.project_name***REMOVED***",
+                trigger_id=f"forge:{run.project_name}",
                 context_snapshot=snapshot,
                 outcome=outcome,
             )
-        print(f"  [memory***REMOVED*** learning event {eid***REMOVED*** ({outcome***REMOVED***)")
+        print(f"  [memory] learning event {eid} ({outcome})")
         return eid
     except Exception as exc:  # graceful degradation: CLI не падает из-за памяти
-        print(f"  [memory***REMOVED*** learning event не записан: {exc***REMOVED***")
+        print(f"  [memory] learning event не записан: {exc}")
         return None
 
 
@@ -196,17 +196,17 @@ def cmd_forge(args: argparse.Namespace) -> int:
     registry = _load_registry()
     registry.register_project(project.name, str(project.root))
 
-    hooks = {***REMOVED***
+    hooks = {}
     if not args.no_tg:
         def _on_report(proj, run):
             steps_line = _format_steps_line(proj)
             msg = (
-                f"⛏ Forge: {proj.name***REMOVED*** → {run.overall.upper()***REMOVED***\n"
-                f"{steps_line***REMOVED***"
+                f"⛏ Forge: {proj.name} → {run.overall.upper()}\n"
+                f"{steps_line}"
             )
             _tg_notify(msg)
 
-        hooks["on_report"***REMOVED*** = _on_report
+        hooks["on_report"] = _on_report
 
     pipe = ForgePipeline(
         project,
@@ -215,10 +215,10 @@ def cmd_forge(args: argparse.Namespace) -> int:
         workspace_steps_policy=ws_policy,
     )
     run = pipe.run()
-    print(f"\nForge {project.name***REMOVED*** [{project.root***REMOVED******REMOVED***")
+    print(f"\nForge {project.name} [{project.root}]")
     for s in run.stages:
-        print(f"  {s.status.upper():8s***REMOVED*** {s.name:6s***REMOVED*** {s.details[:80***REMOVED******REMOVED***")
-    print(f"  OVERALL: {run.overall.upper()***REMOVED***")
+        print(f"  {s.status.upper():8s} {s.name:6s} {s.details[:80]}")
+    print(f"  OVERALL: {run.overall.upper()}")
     if not args.dry_run:
         registry.record_run(project.name, run)
         _record_learning_event(run)  # Phase 4.2 (B7): PipelineRun → learning event
@@ -230,13 +230,13 @@ def cmd_check(args: argparse.Namespace) -> int:
     ws_policy = _workspace_policy_for(args.project_path)
     diag = project.run_env_doctor()
     req = project.get_requirements(steps_policy=ws_policy)
-    print(f"Check {project.name***REMOVED*** [{project.root***REMOVED******REMOVED***")
-    print(f"  Env Doctor: {'OK' if diag.ok else 'FAIL'***REMOVED***")
+    print(f"Check {project.name} [{project.root}]")
+    print(f"  Env Doctor: {'OK' if diag.ok else 'FAIL'}")
     for b in diag.blockers:
-        print(f"    blocker: {b***REMOVED***")
+        print(f"    blocker: {b}")
     for w in diag.warnings:
-        print(f"    warning: {w***REMOVED***")
-    print(f"  Артефакты: missing={req.missing or 'нет'***REMOVED***")
+        print(f"    warning: {w}")
+    print(f"  Артефакты: missing={req.missing or 'нет'}")
     # Краткий комментарий по политике
     eff = str(
         project.requirements_steps or ws_policy or "optional"
@@ -245,19 +245,19 @@ def cmd_check(args: argparse.Namespace) -> int:
         "strict (STEPS.md обязателен)" if eff in ("required", "strict")
         else "optional"
     )
-    print(f"  Steps policy: {policy_label***REMOVED***")
+    print(f"  Steps policy: {policy_label}")
     if req.has_steps:
         if req.steps_format_ok:
             print("  STEPS.md: OK")
         else:
             print("  STEPS.md: malformed (warning)")
             for p in req.steps_format_problems:
-                print(f"    step-format: {p***REMOVED***")
+                print(f"    step-format: {p}")
     else:
         marker = " (warning, optional)" if eff not in ("required", "strict") else ""
-        print(f"  STEPS.md: missing{marker***REMOVED***")
+        print(f"  STEPS.md: missing{marker}")
     ok = diag.ok and not req.missing
-    print(f"  OVERALL: {'OK' if ok else 'FAIL'***REMOVED***")
+    print(f"  OVERALL: {'OK' if ok else 'FAIL'}")
     return 0 if ok else 1
 
 
@@ -266,12 +266,12 @@ def cmd_step(args: argparse.Namespace) -> int:
         project = Project.load(args.project_path)
         n = project.append_step(args.phase, args.text)
     except ValueError as exc:
-        print(f"Ошибка: {exc***REMOVED***", file=sys.stderr)
+        print(f"Ошибка: {exc}", file=sys.stderr)
         return 2
     except FileNotFoundError as exc:
-        print(f"Проект/путь не найден: {exc***REMOVED***", file=sys.stderr)
+        print(f"Проект/путь не найден: {exc}", file=sys.stderr)
         return 2
-    print(f"Step #{n***REMOVED*** добавлен в STEPS.md проекта {project.name***REMOVED***.")
+    print(f"Step #{n} добавлен в STEPS.md проекта {project.name}.")
     return 0
 
 
@@ -281,9 +281,9 @@ def cmd_status(args: argparse.Namespace) -> int:
     if not statuses:
         print("Нет зарегистрированных проектов (forge register <path>)")
         return 1
-    print(f"{'PROJECT':24s***REMOVED*** {'STATUS':10s***REMOVED*** ROOT")
+    print(f"{'PROJECT':24s} {'STATUS':10s} ROOT")
     for st in statuses:
-        print(f"{st.name:24s***REMOVED*** {st.status:10s***REMOVED*** {st.root***REMOVED***")
+        print(f"{st.name:24s} {st.status:10s} {st.root}")
     return 0
 
 
@@ -291,10 +291,10 @@ def cmd_register(args: argparse.Namespace) -> int:
     project = Project.load(args.project_path)
     registry = _load_registry()
     pid = registry.register_project(project.name, str(project.root))
-    print(f"Зарегистрирован: {pid***REMOVED*** → {project.root***REMOVED***")
+    print(f"Зарегистрирован: {pid} → {project.root}")
     slug = _auto_register_workspace(project)
     if slug:
-        print(f"  [workspace***REMOVED*** B1 (R-123): проект привязан к workspace '{slug***REMOVED***'")
+        print(f"  [workspace] B1 (R-123): проект привязан к workspace '{slug}'")
     return 0
 
 
@@ -303,7 +303,7 @@ def cmd_report(args: argparse.Namespace) -> int:
         print("--no-tg задан, отчёт не отправляю")
         return 0
     project = Project.load(args.project_path)
-    _tg_notify(f"⛏ Forge отчёт: {project.name***REMOVED*** ({project.type***REMOVED***)")
+    _tg_notify(f"⛏ Forge отчёт: {project.name} ({project.type})")
     return 0
 
 
@@ -317,7 +317,7 @@ def _merge_chain_runs(prior_chain: list, partial: Any) -> Any:
     partial chain overwrote the full one and the next resume fell back to full).
 
     Args:
-        prior_chain: serialized prior ``last_pipeline['chain'***REMOVED***`` (list[dict***REMOVED***).
+        prior_chain: serialized prior ``last_pipeline['chain']`` (list[dict]).
         partial: the ChainRun just produced by ``facade.run_chain`` (subset),
             or the soft-failure sentinel on the crash path (v5.189.8) — only
             ``.chain`` and ``.validation_summary`` are consumed.
@@ -333,22 +333,22 @@ def _merge_chain_runs(prior_chain: list, partial: Any) -> Any:
         _aggregate_chain_overall,
     )
 
-    merged_map: dict = {***REMOVED***
+    merged_map: dict = {}
     for st in prior_chain:
         if isinstance(st, dict) and st.get("role_id"):
-            merged_map[st["role_id"***REMOVED******REMOVED*** = ChainStage(
-                role_id=st["role_id"***REMOVED***,
+            merged_map[st["role_id"]] = ChainStage(
+                role_id=st["role_id"],
                 mode=st.get("mode", "check_only"),
                 status=st.get("status", "missing"),
                 details=st.get("details", ""),
                 duration_s=st.get("duration_s", 0.0),
             )
     for st in partial.chain:
-        merged_map[st.role_id***REMOVED*** = st
+        merged_map[st.role_id] = st
 
-    ordered = [merged_map[rid***REMOVED*** for rid in PIPELINE_CHAIN if rid in merged_map***REMOVED***
+    ordered = [merged_map[rid] for rid in PIPELINE_CHAIN if rid in merged_map]
     # Defensive: any role outside the canonical chain is appended (custom subsets).
-    ordered += [st for rid, st in merged_map.items() if rid not in PIPELINE_CHAIN***REMOVED***
+    ordered += [st for rid, st in merged_map.items() if rid not in PIPELINE_CHAIN]
 
     merged_overall, _ = _aggregate_chain_overall(ordered, partial.validation_summary)
     return ChainRun(
@@ -411,7 +411,7 @@ def cmd_chain(args: argparse.Namespace) -> int:
 
     skip_stages = None
     if args.skip_stages:
-        skip_stages = {s.strip().upper() for s in args.skip_stages.split(",") if s.strip()***REMOVED***
+        skip_stages = {s.strip().upper() for s in args.skip_stages.split(",") if s.strip()}
 
     # ── ADR-016: --generate → автоисполнение LIGHT-ролей через RoleExecutorRegistry ──
     # llm_executor_registry = LisaExecutor (детерминированный) + 6 LLM-экзекьюторов
@@ -428,27 +428,27 @@ def cmd_chain(args: argparse.Namespace) -> int:
         workspace_steps_policy=ws_policy,
     )
 
-    # v5.169.0 (FIXED-up): routes diagnostic [resume***REMOVED*** + SOFT FAILURE preamble to
+    # v5.169.0 (FIXED-up): routes diagnostic [resume] + SOFT FAILURE preamble to
     # STDERR если --quiet задан. Declared BEFORE resume block to avoid
     # UnboundLocalError (Python treats diag as local throughout cmd_chain
     # because of later assignment; reference must come AFTER declaration).
     diag = sys.stderr if args.quiet else sys.stdout
 
     # ── resume-from-cursor semantics (v5.162.0, forward-step FWD-1) ──────
-    # Если --resume задан, читаем registry.get_project_status(...).last_pipeline['chain'***REMOVED***
-    # ищем последний stage со status в {"ok", "run_ok"***REMOVED*** (completion statuses);
+    # Если --resume задан, читаем registry.get_project_status(...).last_pipeline['chain']
+    # ищем последний stage со status в {"ok", "run_ok"} (completion statuses);
     # resume запускается с next-after этой позиции в PIPELINE_CHAIN.
     # Сериализация ChainRun → last_pipeline уже работает через initiate_forge → record_run
     # (закрывает use-case «знать на чём остановился роли для продолжения»). H4 REBUTTAL
     # (v5.158.0/v5.161.0) подтверждает: не нужны расширения STATUSES — достаточно existing поля.
-    prior_chain: list = [***REMOVED***
+    prior_chain: list = []
     if args.resume:
         from core_02.forge_facade import PIPELINE_CHAIN as _PC_RESUME
         project_id = ForgeRegistry._slug(project.name)
         status = registry.get_project_status(project_id)
-        resume_from: Optional[str***REMOVED*** = None
+        resume_from: Optional[str] = None
         if status is not None and status.last_pipeline is not None:
-            prior_chain = status.last_pipeline.get("chain") or [***REMOVED***
+            prior_chain = status.last_pipeline.get("chain") or []
             for stage in reversed(prior_chain):
                 if (
                     isinstance(stage, dict)
@@ -458,30 +458,30 @@ def cmd_chain(args: argparse.Namespace) -> int:
                     break
         if resume_from and resume_from in _PC_RESUME:
             idx = _PC_RESUME.index(resume_from) + 1
-            remaining = _PC_RESUME[idx:***REMOVED***
+            remaining = _PC_RESUME[idx:]
             if remaining:
                 print(
-                    f"  [resume***REMOVED*** last ok/run_ok={resume_from***REMOVED***; "
-                    f"resuming {len(remaining)***REMOVED*** roles: {list(remaining)***REMOVED***",
+                    f"  [resume] last ok/run_ok={resume_from}; "
+                    f"resuming {len(remaining)} roles: {list(remaining)}",
                     file=diag,
                 )
                 role_ids = tuple(remaining)
             else:
                 print(
-                    f"  [resume***REMOVED*** все роли уже завершены "
-                    f"({resume_from***REMOVED*** — last in PIPELINE_CHAIN)",
+                    f"  [resume] все роли уже завершены "
+                    f"({resume_from} — last in PIPELINE_CHAIN)",
                     file=diag,
                 )
                 return 0
         elif resume_from:
             print(
-                f"  [resume***REMOVED*** recorded role_id {resume_from!r***REMOVED*** не в PIPELINE_CHAIN "
+                f"  [resume] recorded role_id {resume_from!r} не в PIPELINE_CHAIN "
                 f"(возможно custom subset); running from scratch",
                 file=diag,
             )
         else:
             print(
-                "  [resume***REMOVED*** нет prior ok/run_ok в last_pipeline; "
+                "  [resume] нет prior ok/run_ok в last_pipeline; "
                 "running from scratch",
                 file=diag,
             )
@@ -507,7 +507,7 @@ def cmd_chain(args: argparse.Namespace) -> int:
         #   4) print fall-back diagnostic + return 1 (graceful, НЕ silent abrupt traceback).
         import traceback as _tb
         tb_full = _tb.format_exc(limit=20)
-        tb_short = tb_full if len(tb_full) <= 1000 else tb_full[:1000***REMOVED*** + "\n... (truncated)"
+        tb_short = tb_full if len(tb_full) <= 1000 else tb_full[:1000] + "\n... (truncated)"
         project_id = ForgeRegistry._slug(project.name)
         now_iso = _dt.datetime.now(_dt.timezone.utc).isoformat()
         sentinel = ChainRun(
@@ -518,7 +518,7 @@ def cmd_chain(args: argparse.Namespace) -> int:
                 role_id="<cmd_chain_wrapper>",
                 mode="check_only",
                 status="init_error",
-                details=f"{exc!r***REMOVED***\n--- Traceback ---\n{tb_short***REMOVED***",
+                details=f"{exc!r}\n--- Traceback ---\n{tb_short}",
                 duration_s=0.0,
             ),),
             overall="failed",
@@ -531,7 +531,7 @@ def cmd_chain(args: argparse.Namespace) -> int:
         # Если facade.record_run absence — warnings OK (forward-compatible).
         # v5.189.8 (crash-resume fidelity): на --resume НЕ затираем prior chain
         # голым 1-стадийным sentinel — сливаем sentinel в prior full chain через
-        # _merge_chain_runs, чтобы last_pipeline['chain'***REMOVED*** сохранил true last
+        # _merge_chain_runs, чтобы last_pipeline['chain'] сохранил true last
         # ok/run_ok → повторный --resume продолжит с него (а не from scratch).
         try:
             if hasattr(facade, "record_run"):
@@ -540,11 +540,11 @@ def cmd_chain(args: argparse.Namespace) -> int:
                     to_persist = _merge_chain_runs(prior_chain, sentinel)
                 facade.record_run(project.name, to_persist)
         except Exception as record_exc:  # pragma: no cover — деградация
-            print(f"  [cmd_chain***REMOVED*** sentinel persistence skipped: {record_exc!r***REMOVED***", file=diag)
+            print(f"  [cmd_chain] sentinel persistence skipped: {record_exc!r}", file=diag)
         print(
-            f"\nChain for {project.name***REMOVED*** — SOFT FAILURE (init_error).\n"
-            f"  exc: {exc!r***REMOVED***\n"
-            f"  Traceback excerpt:\n{tb_short***REMOVED***\n",
+            f"\nChain for {project.name} — SOFT FAILURE (init_error).\n"
+            f"  exc: {exc!r}\n"
+            f"  Traceback excerpt:\n{tb_short}\n",
             file=diag,
         )
         return 1
@@ -558,25 +558,25 @@ def cmd_chain(args: argparse.Namespace) -> int:
         try:
             to_persist = run
             # On --resume, merge the partial run into the prior full chain so the
-            # persisted last_pipeline['chain'***REMOVED*** keeps all 14 roles (cumulative
+            # persisted last_pipeline['chain'] keeps all 14 roles (cumulative
             # progress preserved; next --resume continues from the true last ok).
             if args.resume and prior_chain and len(run.chain) < len(prior_chain):
                 to_persist = _merge_chain_runs(prior_chain, run)
             facade.record_run(project.name, to_persist)
         except Exception as record_exc:  # pragma: no cover — деградация
-            print(f"  [cmd_chain***REMOVED*** chain persistence skipped: {record_exc!r***REMOVED***", file=diag)
+            print(f"  [cmd_chain] chain persistence skipped: {record_exc!r}", file=diag)
 
     if args.json:
         print(_json.dumps(run.to_dict(), indent=2, ensure_ascii=False))
     else:
-        print(f"\nChain for {project.name***REMOVED*** [{project.root***REMOVED******REMOVED*** — overall: {run.overall.upper()***REMOVED***")
+        print(f"\nChain for {project.name} [{project.root}] — overall: {run.overall.upper()}")
         for s in run.chain:
-            print(f"  {s.status.upper():10s***REMOVED*** {s.role_id:12s***REMOVED*** {s.details***REMOVED***")
+            print(f"  {s.status.upper():10s} {s.role_id:12s} {s.details}")
         if run.validation_summary is not None:
             print(
-                f"  [compose***REMOVED*** registry={run.validation_registry_status***REMOVED***, "
-                f"overall={run.validation_summary.overall***REMOVED***, "
-                f"base_check={run.validation_summary.base_check_status***REMOVED***"
+                f"  [compose] registry={run.validation_registry_status}, "
+                f"overall={run.validation_summary.overall}, "
+                f"base_check={run.validation_summary.base_check_status}"
             )
 
     return 0 if run.overall in ("ok", "degraded") else 1
@@ -591,28 +591,28 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--no-tg", action="store_true", help=argparse.SUPPRESS)
     sub = parser.add_subparsers(dest="command", required=True)
 
-    p_forge = sub.add_parser("forge", parents=[global_flags***REMOVED***, help="полный цикл FORGE→REPORT")
+    p_forge = sub.add_parser("forge", parents=[global_flags], help="полный цикл FORGE→REPORT")
     p_forge.add_argument("project_path")
     p_forge.set_defaults(func=cmd_forge)
 
-    p_check = sub.add_parser("check", parents=[global_flags***REMOVED***, help="Env Doctor + требования")
+    p_check = sub.add_parser("check", parents=[global_flags], help="Env Doctor + требования")
     p_check.add_argument("project_path")
     p_check.set_defaults(func=cmd_check)
 
-    p_status = sub.add_parser("status", parents=[global_flags***REMOVED***, help="список проектов со статусами")
+    p_status = sub.add_parser("status", parents=[global_flags], help="список проектов со статусами")
     p_status.add_argument("status", nargs="?", default=None)
     p_status.set_defaults(func=cmd_status)
 
-    p_reg = sub.add_parser("register", parents=[global_flags***REMOVED***, help="зарегистрировать проект")
+    p_reg = sub.add_parser("register", parents=[global_flags], help="зарегистрировать проект")
     p_reg.add_argument("project_path")
     p_reg.set_defaults(func=cmd_register)
 
-    p_report = sub.add_parser("report", parents=[global_flags***REMOVED***, help="отчёт в TG")
+    p_report = sub.add_parser("report", parents=[global_flags], help="отчёт в TG")
     p_report.add_argument("project_path")
     p_report.set_defaults(func=cmd_report)
 
     p_step = sub.add_parser(
-        "step", parents=[global_flags***REMOVED***,
+        "step", parents=[global_flags],
         help="добавить запись в STEPS.md проекта",
     )
     p_step.add_argument("project_path")
@@ -679,14 +679,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--resume", action="store_true",
         help=(
             "продолжить chain с последнего ok/run_ok в "
-            "registry.last_pipeline['chain'***REMOVED*** (forward-step FWD-1, v5.162.0). "
+            "registry.last_pipeline['chain'] (forward-step FWD-1, v5.162.0). "
             "Если prior ok/run_ok не найден — running from scratch."
         ),
     )
     p_chain.add_argument(
         "--quiet", action="store_true",
         help=(
-            "подавить [resume***REMOVED*** + SOFT FAILURE diagnostic preamble в STDOUT "
+            "подавить [resume] + SOFT FAILURE diagnostic preamble в STDOUT "
             "(отправить в STDERR вместо), чтобы --json output был parsable без "
             "preamble-strip workaround (v5.169.0 \u2014 closes v5.164.0 architectural smell)."
         ),
@@ -696,7 +696,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
+def main(argv: Optional[List[str]] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     return args.func(args)

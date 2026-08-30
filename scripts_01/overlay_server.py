@@ -6,9 +6,9 @@ FreeBuff Overlay Server — IPC-сервер статуса агента.
 отображает плавающее окно с прогрессом через Termux:Float.
 
 Протокол (JSON, newline-delimited):
-  → {"type":"status","task":"...","progress":0.5,"agent":"Buffy"***REMOVED***
-  → {"type":"command","action":"pause|resume|stop"***REMOVED***  (от сервера)
-  ← {"type":"ack"***REMOVED***
+  → {"type":"status","task":"...","progress":0.5,"agent":"Buffy"}
+  → {"type":"command","action":"pause|resume|stop"}  (от сервера)
+  ← {"type":"ack"}
 
 Запуск:
    python scripts_01/overlay_server.py
@@ -66,37 +66,37 @@ def _bar(progress: float, width: int = 20) -> str:
     """Прогресс-бар: ████████░░░░░░░░░░░░ 40%."""
     filled = int(progress * width)
     pct = int(progress * 100)
-    return f"▐{'█' * filled***REMOVED***{'░' * (width - filled)***REMOVED***▌ {pct***REMOVED***%"
+    return f"▐{'█' * filled}{'░' * (width - filled)}▌ {pct}%"
 
 
 def _status_icon(status: str) -> str:
     return {"idle": "⏳", "running": "🔄", "paused": "⏸️",
-            "done": "✅", "error": "❌"***REMOVED***.get(status, "❓")
+            "done": "✅", "error": "❌"}.get(status, "❓")
 
 
-def render_frame(state: AgentState, pending_cmd: Optional[Command***REMOVED*** = None) -> str:
+def render_frame(state: AgentState, pending_cmd: Optional[Command] = None) -> str:
     """Отрендерить кадр оверлея."""
     icon = _status_icon(state.status)
     bar = _bar(state.progress)
 
     lines = [
         "╔" + "═" * (FLOAT_WIDTH - 2) + "╗",
-        f"║ {'FreeBuff Overlay':^{FLOAT_WIDTH - 4***REMOVED******REMOVED*** ║",
+        f"║ {'FreeBuff Overlay':^{FLOAT_WIDTH - 4}} ║",
         "╠" + "═" * (FLOAT_WIDTH - 2) + "╣",
-        f"║ {icon***REMOVED*** Агент: {state.agent:<{FLOAT_WIDTH - 11***REMOVED******REMOVED*** ║",
-        f"║ 📋 {state.task[:FLOAT_WIDTH - 5***REMOVED***:<{FLOAT_WIDTH - 5***REMOVED******REMOVED*** ║",
-        f"║ {bar:<{FLOAT_WIDTH - 4***REMOVED******REMOVED*** ║",
-        f"║ Статус: {state.status:<{FLOAT_WIDTH - 10***REMOVED******REMOVED*** ║",
-    ***REMOVED***
+        f"║ {icon} Агент: {state.agent:<{FLOAT_WIDTH - 11}} ║",
+        f"║ 📋 {state.task[:FLOAT_WIDTH - 5]:<{FLOAT_WIDTH - 5}} ║",
+        f"║ {bar:<{FLOAT_WIDTH - 4}} ║",
+        f"║ Статус: {state.status:<{FLOAT_WIDTH - 10}} ║",
+    ]
 
     if state.message:
-        lines.append(f"║ 💬 {state.message[:FLOAT_WIDTH - 5***REMOVED***:<{FLOAT_WIDTH - 5***REMOVED******REMOVED*** ║")
+        lines.append(f"║ 💬 {state.message[:FLOAT_WIDTH - 5]:<{FLOAT_WIDTH - 5}} ║")
 
     if pending_cmd:
-        lines.append(f"║ ⚡ Команда: {pending_cmd.value:<{FLOAT_WIDTH - 13***REMOVED******REMOVED*** ║")
+        lines.append(f"║ ⚡ Команда: {pending_cmd.value:<{FLOAT_WIDTH - 13}} ║")
 
     lines.append("╠" + "═" * (FLOAT_WIDTH - 2) + "╣")
-    lines.append(f"║ [p***REMOVED***ause [r***REMOVED***esume [s***REMOVED***top [q***REMOVED***uit{' ' * (FLOAT_WIDTH - 32)***REMOVED*** ║")
+    lines.append(f"║ [p]ause [r]esume [s]top [q]uit{' ' * (FLOAT_WIDTH - 32)} ║")
     lines.append("╚" + "═" * (FLOAT_WIDTH - 2) + "╝")
 
     return "\n".join(lines)
@@ -110,7 +110,7 @@ class OverlayServer:
     def __init__(self):
         self._state = AgentState()
         self._running = True
-        self._pending_command: Optional[Command***REMOVED*** = None
+        self._pending_command: Optional[Command] = None
 
     # ── socket ────────────────────────────────────────────
 
@@ -150,11 +150,11 @@ class OverlayServer:
                     cmd = json.dumps({
                         "type": "command",
                         "action": self._pending_command.value
-                    ***REMOVED***)
+                    })
                     conn.sendall(cmd.encode("utf-8"))
                     self._pending_command = None
 
-                conn.sendall(b'{"type":"ack"***REMOVED***\n')
+                conn.sendall(b'{"type":"ack")\n')
 
         except (json.JSONDecodeError, ConnectionError):
             pass
@@ -225,7 +225,7 @@ class OverlayServer:
 
             # Проверяем stdin на клавиши (p/r/s/q)
             if has_termios:
-                r, _, _ = select.select([sys.stdin***REMOVED***, [***REMOVED***, [***REMOVED***, 0)
+                r, _, _ = select.select([sys.stdin], [], [], 0)
                 if r:
                     ch = sys.stdin.read(1)
                     if ch == 'p':

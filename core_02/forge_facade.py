@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-***REMOVED***
+}
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from core_02.forge_pipeline import ForgePipeline, _now as _iso_now
@@ -43,14 +43,14 @@ except ImportError:  # pragma: no cover
 #   - CONDITIONAL (inline): frontend (project.type == "web") + devops
 #     (always = полный цикл), обрабатываются через явную condicionallогику
 #     в run_chain (не вынесены в константу, т.к. правила зависят от project.type).
-LIGHT_ROLES: frozenset[str***REMOVED*** = frozenset({
+LIGHT_ROLES: frozenset[str] = frozenset({
     "explainer", "lisa", "risk", "decomposer",
     "architect", "auditor", "documenter", "retrospective",
-***REMOVED***)
+])
 
-HEAVY_ROLES: frozenset[str***REMOVED*** = frozenset({
+HEAVY_ROLES: frozenset[str] = frozenset({
     "developer", "tester", "fixer", "acceptance",
-***REMOVED***)
+])
 
 
 # ForgeRegistry уже импортирован выше. project_id вычисляется через
@@ -61,7 +61,7 @@ HEAVY_ROLES: frozenset[str***REMOVED*** = frozenset({
 # 12 ядро + frontend + devops. Задача 0 считала 15/17 — включая presale-трек
 # response_writer, который исключён из Facade-scope (дизайн §0.4).
 # Справочные роли (orchestrator, context_keeper) также НЕ включены.
-PIPELINE_ROLES: frozenset[str***REMOVED*** = frozenset({
+PIPELINE_ROLES: frozenset[str] = frozenset({
     "explainer",
     "lisa",
     "risk",
@@ -76,18 +76,18 @@ PIPELINE_ROLES: frozenset[str***REMOVED*** = frozenset({
     "acceptance",
     "documenter",
     "retrospective",
-***REMOVED***)
+])
 
 # Правильная полная цепочка (для документации/валидации порядка в будущем).
 # Включена и как источник истины для порядка; "frontend"/"devops"/"fixer" — условные ветки.
-PIPELINE_CHAIN: tuple[str, ...***REMOVED*** = (
+PIPELINE_CHAIN: tuple[str, ...] = (
     "explainer", "lisa", "risk", "decomposer", "architect", "auditor",
     "developer", "frontend", "devops", "tester", "fixer",
     "acceptance", "documenter", "retrospective",
 )
 
 # Reference-роли, для которых Facade-путь ЗАКРЫТ (gate → ValueError).
-REFERENCE_ROLES: frozenset[str***REMOVED*** = frozenset({"orchestrator", "context_keeper"***REMOVED***)
+REFERENCE_ROLES: frozenset[str] = frozenset({"orchestrator", "context_keeper"})
 
 
 # Дефолтные output-паттерны ролей для fallback (когда registry.yaml НЕ загружен).
@@ -98,7 +98,7 @@ REFERENCE_ROLES: frozenset[str***REMOVED*** = frozenset({"orchestrator", "contex
 #
 # При появлении 5 этапа Forge-классификации (categorical types, B-вне-модели)
 # этот fallback остаётся как safety net и должен синхронизироваться с registry.
-DEFAULT_ROLE_OUTPUTS: Dict[str, Tuple[str, ...***REMOVED******REMOVED*** = {
+DEFAULT_ROLE_OUTPUTS: Dict[str, Tuple[str, ...]] = {
     "explainer":     ("brief.md", "parsed_requirements.md"),
     "lisa":          ("lisa_report.md",),
     "risk":          ("risk_matrix.md",),
@@ -116,13 +116,13 @@ DEFAULT_ROLE_OUTPUTS: Dict[str, Tuple[str, ...***REMOVED******REMOVED*** = {
                       "API_DOCS.md", "ARCHITECTURE.md"),
     "retrospective": ("retrospective_report.md", "LESSONS.md",
                       "lisa_calibration.yaml"),
-***REMOVED***
+}
 
 
 # Кандидаты путей для авто-поиска registry.yaml (относительно project_root и cwd).
 # Совпадает с конвенцией v5.152.0 (промт 70, ADR-013): blueprints_v3/registry.yaml
 # на платформенном уровне, рядом с blueprints/blueprint.
-DEFAULT_REGISTRY_CANDIDATES: Tuple[str, ...***REMOVED*** = (
+DEFAULT_REGISTRY_CANDIDATES: Tuple[str, ...] = (
     "blueprints_v3/registry.yaml",
     "registry.yaml",  # для самых плоских layouts (тесты, урезанные setups)
 )
@@ -138,19 +138,19 @@ class RoleArtifactReport:
     """
 
     role_id: str
-    required: Tuple[str, ...***REMOVED***   # выходные паттерны (registry или fallback)
-    present: Tuple[str, ...***REMOVED***    # фактически существующие файлы (≤10, осторожно)
-    missing: Tuple[str, ...***REMOVED***    # паттерны без матчей
+    required: Tuple[str, ...]   # выходные паттерны (registry или fallback)
+    present: Tuple[str, ...]    # фактически существующие файлы (≤10, осторожно)
+    missing: Tuple[str, ...]    # паттерны без матчей
     status: str                 # "ok" | "partial" | "missing"
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "role_id": self.role_id,
             "required": list(self.required),
             "present": list(self.present),
             "missing": list(self.missing),
             "status": self.status,
-        ***REMOVED***
+        }
 
 
 @dataclass(frozen=True)
@@ -169,26 +169,26 @@ class ValidationSummary:
 
     project_id: str
     project_root: str
-    registry_path: Optional[str***REMOVED***  # None если registry_status="missing" и явный путь не задан
+    registry_path: Optional[str]  # None если registry_status="missing" и явный путь не задан
     registry_status: str
-    roles_checked: Tuple[str, ...***REMOVED***
-    role_reports: Tuple[RoleArtifactReport, ...***REMOVED***
+    roles_checked: Tuple[str, ...]
+    role_reports: Tuple[RoleArtifactReport, ...]
     overall: str
     base_check_status: str
-    base_check_missing: Tuple[str, ...***REMOVED***
+    base_check_missing: Tuple[str, ...]
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "project_id": self.project_id,
             "project_root": self.project_root,
             "registry_path": self.registry_path,
             "registry_status": self.registry_status,
             "roles_checked": list(self.roles_checked),
-            "role_reports": [r.to_dict() for r in self.role_reports***REMOVED***,
+            "role_reports": [r.to_dict() for r in self.role_reports],
             "overall": self.overall,
             "base_check_status": self.base_check_status,
             "base_check_missing": list(self.base_check_missing),
-        ***REMOVED***
+        }
 
 
 @dataclass(frozen=True)
@@ -200,11 +200,11 @@ class ForgeFacadeResult:
     status_before: str
     status_after: str
     overall: str
-    stages: tuple[dict[str, str***REMOVED***, ...***REMOVED***
+    stages: tuple[dict[str, str], ...]
     initiated_explicitly: bool = True  # фиксация «не молча»: всегда явный вызов
     project_read_only: bool = False    # B2 R-124: фиксация «не мутировал ли Project»
 
-    def to_dict(self) -> dict[str, Any***REMOVED***:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "project_id": self.project_id,
             "requested_by_role": self.requested_by_role,
@@ -214,7 +214,7 @@ class ForgeFacadeResult:
             "stages": list(self.stages),
             "initiated_explicitly": self.initiated_explicitly,
             "project_read_only": self.project_read_only,
-        ***REMOVED***
+        }
 
 
 # === Chain-runner dataclasses (шаг 3 ROADMAP §18, v5.157.0) ===
@@ -243,14 +243,14 @@ class ChainStage:
     details: str
     duration_s: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "role_id": self.role_id,
             "mode": self.mode,
             "status": self.status,
             "details": self.details,
             "duration_s": self.duration_s,
-        ***REMOVED***
+        }
 
 
 # ChainRun — агрегированный результат run_chain по всем ролям.
@@ -259,10 +259,10 @@ class ChainRun:
     """Результат ForgeFacade.run_chain по списку ролей.
 
     Поля:
-      - chain: tuple[ChainStage, ...***REMOVED*** — по одной стадии на каждую роль.
+      - chain: tuple[ChainStage, ...] — по одной стадии на каждую роль.
         Порядок = порядок входного role_ids (default = PIPELINE_CHAIN).
       - overall: "ok" | "partial" | "failed" | "degraded" (детали в §16 IDEA_EXPLORER).
-      - validation_summary: Optional[ValidationSummary***REMOVED*** — trace к full-валидации
+      - validation_summary: Optional[ValidationSummary] — trace к full-валидации
         артефактов (если compose_artifact_check=True).
       - validation_registry_status: "loaded" | "missing" | "unreadable" | "not_run".
     """
@@ -270,19 +270,19 @@ class ChainRun:
     project_id: str
     project_root: str
     stage_count: int
-    chain: Tuple[ChainStage, ...***REMOVED***
+    chain: Tuple[ChainStage, ...]
     overall: str
     started_at: str
     finished_at: str
     validation_registry_status: str
-    validation_summary: Optional[ValidationSummary***REMOVED*** = None
+    validation_summary: Optional[ValidationSummary] = None
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "project_id": self.project_id,
             "project_root": self.project_root,
             "stage_count": self.stage_count,
-            "chain": [s.to_dict() for s in self.chain***REMOVED***,
+            "chain": [s.to_dict() for s in self.chain],
             "overall": self.overall,
             "started_at": self.started_at,
             "finished_at": self.finished_at,
@@ -291,7 +291,7 @@ class ChainRun:
                 self.validation_summary.to_dict()
                 if self.validation_summary is not None else None
             ),
-        ***REMOVED***
+        }
 
 
 class ForgeFacade:
@@ -302,7 +302,7 @@ class ForgeFacade:
 
     def __init__(
         self,
-        registry: Optional[ForgeRegistry***REMOVED*** = None,
+        registry: Optional[ForgeRegistry] = None,
         dry_run: bool = False,
         workspace_steps_policy: str = "optional",
     ) -> None:
@@ -322,8 +322,8 @@ class ForgeFacade:
         self,
         project: Project,
         requested_by_role: str,
-        hooks: Optional[dict[str, Callable[[Project, Any***REMOVED***, None***REMOVED******REMOVED******REMOVED*** = None,
-        skip: Optional[set[str***REMOVED******REMOVED*** = None,
+        hooks: Optional[dict[str, Callable[[Project, Any], None]]] = None,
+        skip: Optional[set[str]] = None,
         project_read_only: bool = False,
     ) -> ForgeFacadeResult:
         """ЯВНЫЙ запрос на Forge-прогон от завершившей артефакт роли.
@@ -346,9 +346,9 @@ class ForgeFacade:
         """
         if not self.can_initiate(requested_by_role):
             raise ValueError(
-                f"role_id {requested_by_role!r***REMOVED*** не входит в PIPELINE_ROLES "
-                f"Facade (разрешены: {sorted(PIPELINE_ROLES)***REMOVED***). "
-                f"Справочные роли {sorted(REFERENCE_ROLES)***REMOVED*** не инициируют Forge-прогон "
+                f"role_id {requested_by_role!r} не входит в PIPELINE_ROLES "
+                f"Facade (разрешены: {sorted(PIPELINE_ROLES)}). "
+                f"Справочные роли {sorted(REFERENCE_ROLES)} не инициируют Forge-прогон "
                 f"(§7.3: только через явный вызов pipeline-роли)."
             )
 
@@ -361,7 +361,7 @@ class ForgeFacade:
         pipe = ForgePipeline(
             project,
             dry_run=self.dry_run,
-            hooks=hooks or {***REMOVED***,
+            hooks=hooks or {},
             workspace_steps_policy=self.workspace_steps_policy,
             project_read_only=project_read_only,
         )
@@ -369,7 +369,7 @@ class ForgeFacade:
 
         status_after = self.registry.record_run(project_id, run).status
         stages = tuple(
-            {"name": s.name, "status": s.status***REMOVED*** for s in run.stages
+            {"name": s.name, "status": s.status} for s in run.stages
         )
 
         return ForgeFacadeResult(
@@ -409,7 +409,7 @@ class ForgeFacade:
 
         Returns:
             Обновлённый ``ForgeStatus`` (вызывающий код может проверить
-            ``status.last_pipeline['chain'***REMOVED***`` для последующего --resume).
+            ``status.last_pipeline['chain']`` для последующего --resume).
 
         Raises:
             KeyError: если проект не зарегистрирован (см. record_run в registry).
@@ -429,10 +429,10 @@ class ForgeFacade:
     def validate_role_artifacts(
         self,
         project: Project,
-        role_ids: Optional[Tuple[str, ...***REMOVED******REMOVED*** = None,
+        role_ids: Optional[Tuple[str, ...]] = None,
         *,
         compose_check: bool = True,
-        registry_path: Optional[Path***REMOVED*** = None,
+        registry_path: Optional[Path] = None,
     ) -> ValidationSummary:
         """Делегирует RoleArtifactValidator.validate() — additive прокси.
 
@@ -479,14 +479,14 @@ class ForgeFacade:
     def run_chain(
         self,
         project: Project,
-        role_ids: Optional[Tuple[str, ...***REMOVED******REMOVED*** = None,
+        role_ids: Optional[Tuple[str, ...]] = None,
         *,
-        registry_path: Optional[Path***REMOVED*** = None,
+        registry_path: Optional[Path] = None,
         compose_artifact_check: bool = True,
         project_read_only: bool = True,
-        skip_full_cycle_stages: Optional[Set[str***REMOVED******REMOVED*** = None,
+        skip_full_cycle_stages: Optional[Set[str]] = None,
         light_mode: str = "check_only",
-        executor_registry: Optional[RoleExecutorRegistry***REMOVED*** = None,
+        executor_registry: Optional[RoleExecutorRegistry] = None,
     ) -> ChainRun:
         """Chain-runner поверх PIPELINE_CHAIN + RoleArtifactValidator + initiate_forge.
 
@@ -530,21 +530,21 @@ class ForgeFacade:
         if isinstance(role_ids, list):
             role_ids = tuple(role_ids)
         roles = role_ids if role_ids is not None else PIPELINE_CHAIN
-        invalid = [r for r in roles if r not in PIPELINE_ROLES***REMOVED***
+        invalid = [r for r in roles if r not in PIPELINE_ROLES]
         if invalid:
             raise ValueError(
-                f"role_ids содержит вне-scope-роли {invalid***REMOVED***; "
-                f"PIPELINE_ROLES = {sorted(PIPELINE_ROLES)***REMOVED***"
+                f"role_ids содержит вне-scope-роли {invalid}; "
+                f"PIPELINE_ROLES = {sorted(PIPELINE_ROLES)}"
             )
         if light_mode not in ("check_only", "generate"):
             raise ValueError(
-                f"light_mode={light_mode!r***REMOVED*** вне {{'check_only', 'generate'***REMOVED******REMOVED***"
+                f"light_mode={light_mode!r} вне {{'check_only', 'generate'}}"
             )
 
         started_at = _iso_now()
 
         # 1) Pre-flight: ValidationSummary (через уже существующий delegate v5.156.0)
-        validation: Optional[ValidationSummary***REMOVED*** = None
+        validation: Optional[ValidationSummary] = None
         if compose_artifact_check:
             validation = self.validate_role_artifacts(
                 project,
@@ -554,7 +554,7 @@ class ForgeFacade:
             )
 
         # 2) Per-role stage.
-        stages: List[ChainStage***REMOVED*** = [***REMOVED***
+        stages: List[ChainStage] = []
         preskip = skip_full_cycle_stages or set()
         for rid in roles:
             stage_start = time.monotonic()
@@ -596,7 +596,7 @@ class ForgeFacade:
                         role_id=rid, mode="conditional_skip",
                         status="skipped",
                         details=(
-                            f"project.type={proj_type!r***REMOVED*** != 'web'; "
+                            f"project.type={proj_type!r} != 'web'; "
                             f"frontend пропущен (per registry.yaml condition)"
                         ),
                         duration_s=time.monotonic() - stage_start,
@@ -627,7 +627,7 @@ class ForgeFacade:
                 stages.append(ChainStage(
                     role_id=rid, mode="full_cycle",
                     status="init_error",
-                    details=f"ValueError: {ve***REMOVED***",
+                    details=f"ValueError: {ve}",
                     duration_s=time.monotonic() - stage_start,
                 ))
             except Exception as exc:
@@ -635,7 +635,7 @@ class ForgeFacade:
                 stages.append(ChainStage(
                     role_id=rid, mode="full_cycle",
                     status="init_error",
-                    details=f"{type(exc).__name__***REMOVED***: {exc***REMOVED***",
+                    details=f"{type(exc).__name__}: {exc}",
                     duration_s=time.monotonic() - stage_start,
                 ))
 
@@ -663,7 +663,7 @@ class ForgeFacade:
         role_id: str,
         executor: BaseRoleExecutor,
         stage_start: float,
-        registry_path: Optional[Path***REMOVED***,
+        registry_path: Optional[Path],
     ) -> ChainStage:
         """Запустить executor LIGHT-роли и пере-проверить артефакты (ADR-016).
 
@@ -676,12 +676,12 @@ class ForgeFacade:
         продолжается, НЕ abort — симметрично full_cycle init_error).
         """
         try:
-            created = executor.execute(project, role_id) or [***REMOVED***
+            created = executor.execute(project, role_id) or []
         except Exception as exc:  # noqa: BLE001 — fail-safe, chain продолжается
             return ChainStage(
                 role_id=role_id, mode="generate",
                 status="gen_failed",
-                details=f"{type(exc).__name__***REMOVED***: {exc***REMOVED***",
+                details=f"{type(exc).__name__}: {exc}",
                 duration_s=time.monotonic() - stage_start,
             )
         if not created:
@@ -699,13 +699,13 @@ class ForgeFacade:
         if new_rprt is not None and new_rprt.status == "ok":
             return ChainStage(
                 role_id=role_id, mode="generate", status="generated",
-                details=f"created={created***REMOVED***",
+                details=f"created={created}",
                 duration_s=time.monotonic() - stage_start,
             )
         post = new_rprt.status if new_rprt is not None else "unknown"
         return ChainStage(
             role_id=role_id, mode="generate", status="partial",
-            details=f"created={created***REMOVED*** but re-check={post***REMOVED***",
+            details=f"created={created} but re-check={post}",
             duration_s=time.monotonic() - stage_start,
         )
 
@@ -736,7 +736,7 @@ class RoleArtifactValidator:
       - registry_resolution: явный путь → project_root/<cand> → cwd/<cand>
         → "missing" (если ничего не нашли).
       - parser: yaml.safe_load → json.loads fallback (как forge_registry._load).
-      - outputs_source: registry.pipeline[***REMOVED***.outputs (если loaded)
+      - outputs_source: registry.pipeline[].outputs (если loaded)
         ИЛИ DEFAULT_ROLE_OUTPUTS (если missing/unreadable,
         для указанных role_ids).
       - existence_check: прямой Path.is_file() для простых паттернов,
@@ -746,12 +746,12 @@ class RoleArtifactValidator:
         (CON-16 additive — НЕ модифицирует forge_pipeline.py).
     """
 
-    PRESENT_CAP: int = 10  # максимум матчей в present[***REMOVED*** для отчёта
+    PRESENT_CAP: int = 10  # максимум матчей в present[] для отчёта
 
     def __init__(
         self,
-        registry_path: Optional[Path***REMOVED*** = None,
-        registry_candidates: Optional[Tuple[str, ...***REMOVED******REMOVED*** = None,
+        registry_path: Optional[Path] = None,
+        registry_candidates: Optional[Tuple[str, ...]] = None,
     ) -> None:
         self.registry_path = registry_path
         self.registry_candidates = (
@@ -763,7 +763,7 @@ class RoleArtifactValidator:
 
     def _resolve_registry(
         self, project_root: Path
-    ) -> Tuple[str, Optional[Path***REMOVED******REMOVED***:
+    ) -> Tuple[str, Optional[Path]]:
         """Resolve registry.yaml: явный путь → candidates → missing.
 
         Returns (registry_status, path_or_None):
@@ -783,7 +783,7 @@ class RoleArtifactValidator:
         return "missing", None
 
     @staticmethod
-    def _try_load_registry(path: Path) -> Optional[Dict[str, Any***REMOVED******REMOVED***:
+    def _try_load_registry(path: Path) -> Optional[Dict[str, Any]]:
         """yaml.safe_load → json.loads fallback. None = unreadable."""
         try:
             text = path.read_text(encoding="utf-8")
@@ -809,11 +809,11 @@ class RoleArtifactValidator:
 
     @staticmethod
     def _extract_role_outputs(
-        registry_data: Dict[str, Any***REMOVED***, role_ids: Tuple[str, ...***REMOVED***
-    ) -> Dict[str, Tuple[str, ...***REMOVED******REMOVED***:
+        registry_data: Dict[str, Any], role_ids: Tuple[str, ...]
+    ) -> Dict[str, Tuple[str, ...]]:
         """Достать outputs для указанных ролей из loaded registry."""
-        out: Dict[str, Tuple[str, ...***REMOVED******REMOVED*** = {***REMOVED***
-        pipeline = registry_data.get("pipeline") or [***REMOVED***
+        out: Dict[str, Tuple[str, ...]] = {}
+        pipeline = registry_data.get("pipeline") or []
         if not isinstance(pipeline, list):
             return out
         wanted = set(role_ids)
@@ -823,29 +823,29 @@ class RoleArtifactValidator:
             rid = entry.get("id")
             if rid not in wanted:
                 continue
-            outs = entry.get("outputs") or [***REMOVED***
+            outs = entry.get("outputs") or []
             if isinstance(outs, list):
-                out[rid***REMOVED*** = tuple(str(p) for p in outs if isinstance(p, str))
+                out[rid] = tuple(str(p) for p in outs if isinstance(p, str))
         return out
 
     # ── glob / file existence ─────────────────────────────────────────
 
     def _glob_materialized(
         self, project_root: Path, pattern: str
-    ) -> Tuple[List[str***REMOVED***, bool***REMOVED***:
+    ) -> Tuple[List[str], bool]:
         """Проверяет наличие файла или ≥1 матча glob.
 
-        Returns (present_files[:PRESENT_CAP***REMOVED***, present_bool).
+        Returns (present_files[:PRESENT_CAP], present_bool).
 
-        Без glob-символов (``*?[***REMOVED***``) — это прямой файл: проверяем is_file().
+        Без glob-символов (``*?[]``) — это прямой файл: проверяем is_file().
         С ``**`` — pathlib.Path.glob() обрабатывает рекурсивно (Python 3.5+).
         Возвращаем relative paths (лимит PRESENT_CAP).
         """
         if not pattern or not any(ch in pattern for ch in "*?["):
             target = project_root / pattern
             if target.is_file():
-                return [pattern***REMOVED***, True
-            return [***REMOVED***, False
+                return [pattern], True
+            return [], False
         try:
             matches = sorted(
                 str(p.relative_to(project_root))
@@ -853,16 +853,16 @@ class RoleArtifactValidator:
                 if p.is_file()
             )
         except (ValueError, OSError):
-            return [***REMOVED***, False
+            return [], False
         if not matches:
-            return [***REMOVED***, False
-        return matches[: self.PRESENT_CAP***REMOVED***, True
+            return [], False
+        return matches[: self.PRESENT_CAP], True
 
     # ── status classification ─────────────────────────────────────────
 
     @staticmethod
     def _classify_role_status(
-        required: Tuple[str, ...***REMOVED***, present: Tuple[str, ...***REMOVED***, missing: Tuple[str, ...***REMOVED***
+        required: Tuple[str, ...], present: Tuple[str, ...], missing: Tuple[str, ...]
     ) -> str:
         """ok = все паттерны матчатся, missing = ни один не матчится, partial = смесь."""
         if not required:
@@ -878,14 +878,14 @@ class RoleArtifactValidator:
     @staticmethod
     def _overall_status(
         registry_status: str,
-        role_reports: Tuple["RoleArtifactReport", ...***REMOVED***,
+        role_reports: Tuple["RoleArtifactReport", ...],
         base_check_status: str,
     ) -> str:
         """Агрегированный статус для ValidationSummary."""
         if registry_status != "loaded":
             return "degraded"
-        statuses = {r.status for r in role_reports***REMOVED***
-        if statuses and statuses.issubset({"ok"***REMOVED***):
+        statuses = {r.status for r in role_reports}
+        if statuses and statuses.issubset({"ok"}):
             return "ok"
         if "missing" in statuses or "partial" in statuses:
             return "partial"
@@ -894,7 +894,7 @@ class RoleArtifactValidator:
     # ── compose с base CHECK ───────────────────────────────────────────
 
     @staticmethod
-    def _base_check(project: Project) -> Tuple[str, Tuple[str, ...***REMOVED******REMOVED***:
+    def _base_check(project: Project) -> Tuple[str, Tuple[str, ...]]:
         """compose с существующим ForgePipeline.stage_check() (READ-ONLY mode).
 
         ВАЖНО: dry_run=False — stage_check() имеет early-return ``if self.dry_run:
@@ -911,7 +911,7 @@ class RoleArtifactValidator:
         res = pipe.stage_check()
         # res.details содержит «missing artifacts: A, B» — извлекаем явно,
         # потому что статус stage_check просто «ok»/«failed», без itemized missing.
-        missing: Tuple[str, ...***REMOVED*** = ()
+        missing: Tuple[str, ...] = ()
         try:
             req = project.get_requirements(steps_policy="optional")
             missing = tuple(req.missing or ())
@@ -926,7 +926,7 @@ class RoleArtifactValidator:
     def validate(
         self,
         project: Project,
-        role_ids: Optional[Tuple[str, ...***REMOVED******REMOVED*** = None,
+        role_ids: Optional[Tuple[str, ...]] = None,
         *,
         compose_check: bool = True,
     ) -> ValidationSummary:
@@ -953,25 +953,25 @@ class RoleArtifactValidator:
 
         # 1) Resolve + load registry (или degraded fallback)
         reg_status, reg_path = self._resolve_registry(project_root)
-        registry_data: Optional[Dict[str, Any***REMOVED******REMOVED*** = None
+        registry_data: Optional[Dict[str, Any]] = None
         if reg_status == "loaded" and reg_path is not None:
             registry_data = self._try_load_registry(reg_path)
             if registry_data is None:
                 reg_status = "unreadable"
 
         # 2) Outputs source: registry ИЛИ DEFAULT_ROLE_OUTPUTS fallback
-        outputs_source: Dict[str, Tuple[str, ...***REMOVED******REMOVED***
+        outputs_source: Dict[str, Tuple[str, ...]]
         if registry_data is not None:
             outputs_source = self._extract_role_outputs(registry_data, roles)
         else:
-            outputs_source = {***REMOVED***
+            outputs_source = {}
 
         # 3) Per-role existence check (вкл. fallback для ролей без registry-выхода)
-        role_reports: List[RoleArtifactReport***REMOVED*** = [***REMOVED***
+        role_reports: List[RoleArtifactReport] = []
         for rid in roles:
             patterns = outputs_source.get(rid) or DEFAULT_ROLE_OUTPUTS.get(rid, ())
-            present: List[str***REMOVED*** = [***REMOVED***
-            missing: List[str***REMOVED*** = [***REMOVED***
+            present: List[str] = []
+            missing: List[str] = []
             for pat in patterns:
                 found, ok = self._glob_materialized(project_root, pat)
                 if ok:
@@ -980,7 +980,7 @@ class RoleArtifactValidator:
                     present.extend(found)
                 else:
                     missing.append(pat)
-            present_capped = tuple(present[: self.PRESENT_CAP***REMOVED***)
+            present_capped = tuple(present[: self.PRESENT_CAP])
             rprt = RoleArtifactReport(
                 role_id=rid,
                 required=patterns,
@@ -1036,15 +1036,15 @@ __all__ = [
     "ValidationSummary",
     "ForgeFacade",
     "RoleArtifactValidator",
-***REMOVED***
+]
 
 
 # === Module-level helpers (шаг 3 ROADMAP §18, v5.157.0) ===
 # Приватные helper'ы для run_chain; вынесены на module-level для улучшения
 # testability без обращения к private методам Facade.
 def _role_report_for(
-    validation: Optional[ValidationSummary***REMOVED***, role_id: str
-) -> Optional["RoleArtifactReport"***REMOVED***:
+    validation: Optional[ValidationSummary], role_id: str
+) -> Optional["RoleArtifactReport"]:
     """Извлекает RoleArtifactReport для роли из ValidationSummary (или None)."""
     if validation is None:
         return None
@@ -1059,41 +1059,41 @@ def _format_check_details(rprt: "RoleArtifactReport") -> str:
     if rprt.status == "ok":
         return "all artifacts present"
     if rprt.status == "missing":
-        return f"missing={[m for m in rprt.missing***REMOVED******REMOVED***"
-    return f"partial: missing={[m for m in rprt.missing***REMOVED******REMOVED***"
+        return f"missing={[m for m in rprt.missing]}"
+    return f"partial: missing={[m for m in rprt.missing]}"
 
 
 def _format_full_cycle_details(result: ForgeFacadeResult) -> str:
     """details для HEAVY chain_stage — summary ForgePipeline stages."""
-    stage_summary = ",".join(f"{s['name'***REMOVED******REMOVED***:{s['status'***REMOVED******REMOVED***" for s in result.stages)
-    return f"stages=[{stage_summary***REMOVED******REMOVED*** ({result.overall***REMOVED***)"
+    stage_summary = ",".join(f"{s['name']}:{s['status']}" for s in result.stages)
+    return f"stages=[{stage_summary}] ({result.overall})"
 
 
 # Маппинг human-readable skip-имён ("FORGE", "CHECK", "BUILD", "TEST",
 # "DEPLOY", "REPORT") в internal ForgePipeline метода ("stage_forge", …).
 # run_chain принимает человеко-читаемые имена (без префикса "stage_") —
 # более прозрачно для caller-side.
-_INTERNAL_SKIP_MAP: Dict[str, str***REMOVED*** = {
+_INTERNAL_SKIP_MAP: Dict[str, str] = {
     "FORGE":   "stage_forge",
     "CHECK":   "stage_check",
     "BUILD":   "stage_build",
     "TEST":    "stage_test",
     "DEPLOY":  "stage_deploy",
     "REPORT":  "stage_report",
-***REMOVED***
+}
 
 
-def _map_skip_to_internal(skip_names: Set[str***REMOVED***) -> Set[str***REMOVED***:
+def _map_skip_to_internal(skip_names: Set[str]) -> Set[str]:
     """Преобразует внешние имена стадий ("FORGE") в internal ("stage_forge")."""
     if not skip_names:
         return set()
-    return {_INTERNAL_SKIP_MAP.get(n, n) for n in skip_names***REMOVED***
+    return {_INTERNAL_SKIP_MAP.get(n, n) for n in skip_names}
 
 
 def _aggregate_chain_overall(
-    stages: List[ChainStage***REMOVED***,
-    validation: Optional[ValidationSummary***REMOVED***,
-) -> Tuple[str, str***REMOVED***:
+    stages: List[ChainStage],
+    validation: Optional[ValidationSummary],
+) -> Tuple[str, str]:
     """Compute ChainRun.overall + registry_status из стадий + validation.
 
     Decision tree (per §18 IDEA_EXPLORER §3.5):
@@ -1107,13 +1107,13 @@ def _aggregate_chain_overall(
     if n_stages == 0:
         return ("failed", validation.registry_status if validation else "not_run")
 
-    statuses = {s.status for s in stages***REMOVED***
+    statuses = {s.status for s in stages}
     reg_status = (
         validation.registry_status if validation is not None else "not_run"
     )
 
     # Все HEAVY/CONDITIONAL-true (full_cycle) упали на init_error → failed.
-    full_cycle_stages = [s for s in stages if s.mode == "full_cycle"***REMOVED***
+    full_cycle_stages = [s for s in stages if s.mode == "full_cycle"]
     if full_cycle_stages and all(
         s.status == "init_error" for s in full_cycle_stages
     ):
@@ -1126,7 +1126,7 @@ def _aggregate_chain_overall(
     # Есть неполадки (partial/missing/run_failed/init_error) → partial.
     imperfect = statuses & {
         "partial", "missing", "run_failed", "init_error", "gen_failed",
-    ***REMOVED***
+    }
     if imperfect:
         return ("partial", reg_status)
 

@@ -17,22 +17,22 @@ Use cases::
     )
 
     engine = WeightedScoringEngine()  # default weights
-    ranked = engine.score_supported(focus_tags=["pricing"***REMOVED***)
+    ranked = engine.score_supported(focus_tags=["pricing"])
     for r in ranked:
-        print(f"{r.score:.3f***REMOVED***  {r.hid***REMOVED***  ev={r.evidence_count***REMOVED*** age={r.days_since_update:.1f***REMOVED***d")
+        print(f"{r.score:.3f}  {r.hid}  ev={r.evidence_count} age={r.days_since_update:.1f}d")
 
 CLI::
 
-    python -m scripts_01.weighted_scoring_engine [--tag X***REMOVED*** [--tag Y***REMOVED*** [--json***REMOVED***
+    python -m scripts_01.weighted_scoring_engine [--tag X] [--tag Y] [--json]
     python -m scripts_01.weighted_scoring_engine --help
     python -m scripts_01.weighted_scoring_engine --version
 
 Design invariants (per thinker v5.189.65):
-- **Score ∈ [0.0, 1.0***REMOVED*****: bounded, deterministic per (weights, summary).
+- **Score ∈ [0.0, 1.0]**: bounded, deterministic per (weights, summary).
 - **4-factor linear combo**: confidence + evidence + recency + tag_match.
 - **Default weights normalize to 1.0**: tunable, but closed-set keys (4 mandatory).
 - **Lazy hypothesis_ledger import**: ADR-016 fail-safe on missing module.
-- **Empty ledger = empty list**: returns [***REMOVED*** without raising; CLI prints "no supported".
+- **Empty ledger = empty list**: returns [] without raising; CLI prints "no supported".
 - **Tie-break by recency**: equal-score entries sorted by ascending days-since-update.
 """
 
@@ -43,7 +43,7 @@ import datetime as _dt
 import json
 import sys
 from dataclasses import dataclass
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional
 
 __all__ = [
@@ -54,16 +54,16 @@ __all__ = [
     "WeightedScoringEngine",
     "normalize_weights",
     "main",
-***REMOVED***
+]
 
 
 # Кaнonic weights (sum=1.0; closed set; tunable per deployment).
-DEFAULT_WEIGHTS: Dict[str, float***REMOVED*** = {
-    "confidence": 0.40,   # HypothesisSummary.confidence ∈ [0.0, 1.0***REMOVED*** — direct LLM signal.
+DEFAULT_WEIGHTS: Dict[str, float] = {
+    "confidence": 0.40,   # HypothesisSummary.confidence ∈ [0.0, 1.0] — direct LLM signal.
     "evidence": 0.20,     # count(evidence_url across kill_criteria), saturated at SAT.
     "recency": 0.25,      # exp-decay by updated_at (1.0 at t=0, 0.5 at half-life).
     "tag_match": 0.15,    # Jaccard-like: |focus_tags ∩ summary.tags| / |focus_tags|.
-***REMOVED***
+}
 
 # Half-life for recency exp-decay (days): t*=7d → 0.5 weight at 7-day-old summary.
 DEFAULT_RECENCY_HALF_LIFE_DAYS: float = 7.0
@@ -82,11 +82,11 @@ class RankedCapability:
     Attributes (all public — used by tests + CLI):
         hid: hypothesis id (h_<sha8>_<slug>).
         text: hypothesis text.
-        score: combined weighted score ∈ [0.0, 1.0***REMOVED***.
-        confidence: raw confidence из summary ∈ [0.0, 1.0***REMOVED***.
+        score: combined weighted score ∈ [0.0, 1.0].
+        confidence: raw confidence из summary ∈ [0.0, 1.0].
         evidence_count: number of evidence_urls across all kill_criteria.
         days_since_update: age in days (now - updated_at).
-        tag_match_score: ∈ [0.0, 1.0***REMOVED***; 0.5 (neutral) if focus_tags absent.
+        tag_match_score: ∈ [0.0, 1.0]; 0.5 (neutral) if focus_tags absent.
         breakdown: per-factor contribution AFTER weights applied (for explainability).
     """
 
@@ -97,9 +97,9 @@ class RankedCapability:
     evidence_count: int
     days_since_update: float
     tag_match_score: float
-    breakdown: Dict[str, float***REMOVED***
+    breakdown: Dict[str, float]
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "hid": self.hid,
             "text": self.text,
@@ -108,14 +108,14 @@ class RankedCapability:
             "evidence_count": self.evidence_count,
             "days_since_update": round(self.days_since_update, 2),
             "tag_match_score": round(self.tag_match_score, 4),
-            "breakdown": {k: round(v, 4) for k, v in self.breakdown.items()***REMOVED***,
-        ***REMOVED***
+            "breakdown": {k: round(v, 4) for k, v in self.breakdown.items()},
+        }
 
 
 # ─── helpers ────────────────────────────────────────────────────────────
 
 
-def normalize_weights(weights: Dict[str, float***REMOVED***) -> Dict[str, float***REMOVED***:
+def normalize_weights(weights: Dict[str, float]) -> Dict[str, float]:
     """Normalize numeric weights to sum=1.0.
 
     Strict: 4 keys required (closed set per ``DEFAULT_WEIGHTS`` shape). Reweights
@@ -124,21 +124,21 @@ def normalize_weights(weights: Dict[str, float***REMOVED***) -> Dict[str, float*
     - extra/unknown keys;
     - sum AFTER cleaning is zero (degenerate weights).
     """
-    required = {"confidence", "evidence", "recency", "tag_match"***REMOVED***
+    required = {"confidence", "evidence", "recency", "tag_match"}
     missing = required - set(weights.keys())
     if missing:
-        raise ValueError(f"weights missing keys: {sorted(missing)***REMOVED*** (required: {sorted(required)***REMOVED***)")
+        raise ValueError(f"weights missing keys: {sorted(missing)} (required: {sorted(required)})")
     extra = set(weights.keys()) - required
     if extra:
-        raise ValueError(f"weights has unknown keys: {sorted(extra)***REMOVED*** (closed set: {sorted(required)***REMOVED***)")
+        raise ValueError(f"weights has unknown keys: {sorted(extra)} (closed set: {sorted(required)})")
     # Use input dict's insertion order (NOT ``required`` set) — Python set iteration
     # is hash-randomized; pairing values via ``zip(required, cleaned)`` would scramble
     # inputs and break tag_match=0.0 preservation contract (test_normalize_weights_allows_zero_tag_match).
-    cleaned = {k: max(0.0, float(weights[k***REMOVED***)) for k in weights.keys()***REMOVED***
+    cleaned = {k: max(0.0, float(weights[k])) for k in weights.keys()}
     s = sum(cleaned.values())
     if s <= 0.0:
         raise ValueError("weights sum to 0 (degenerate — at least one positive weight required)")
-    return {k: cleaned[k***REMOVED*** / s for k in weights.keys()***REMOVED***
+    return {k: cleaned[k] / s for k in weights.keys()}
 
 
 def _now_utc() -> _dt.datetime:
@@ -185,20 +185,20 @@ def _evidence_count_normalized(
     summary: Any,
     saturation: int = DEFAULT_EVIDENCE_SATURATION,
 ) -> tuple:
-    """Count evidence_urls across all kill_criteria + return normalized [0,1***REMOVED*** signal.
+    """Count evidence_urls across all kill_criteria + return normalized [0,1] signal.
 
     Returns (raw_count, normalized_score). Normalization saturates at ``saturation``
     (5+ evidences → max score 1.0) — prevents unbounded growth from distorting ranking.
     """
     raw = sum(
-        1 for kc in (getattr(summary, "kill_criteria", None) or [***REMOVED***)
+        1 for kc in (getattr(summary, "kill_criteria", None) or [])
         if getattr(kc, "evidence_url", None)
     )
     norm = min(raw / max(1, saturation), 1.0)
     return raw, norm
 
 
-def _tag_match(hyp_tags: List[str***REMOVED***, focus: Optional[List[str***REMOVED******REMOVED***) -> float:
+def _tag_match(hyp_tags: List[str], focus: Optional[List[str]]) -> float:
     """Jaccard-like coverage: |focus ∩ hypothesis.tags| / |focus|.
 
     Neutral 0.5 if focus is absent/empty (operator did not specify focus_tags →
@@ -206,10 +206,10 @@ def _tag_match(hyp_tags: List[str***REMOVED***, focus: Optional[List[str***REMOV
     """
     if not focus:
         return 0.5
-    focus_set = {(t or "").strip().lower() for t in focus if t and t.strip()***REMOVED***
+    focus_set = {(t or "").strip().lower() for t in focus if t and t.strip()}
     if not focus_set:
         return 0.5
-    hyp_set = {(t or "").strip().lower() for t in (hyp_tags or [***REMOVED***) if t and t.strip()***REMOVED***
+    hyp_set = {(t or "").strip().lower() for t in (hyp_tags or []) if t and t.strip()}
     return len(focus_set & hyp_set) / len(focus_set)
 
 
@@ -222,39 +222,39 @@ class WeightedScoringEngine:
     Closure ports:
     - constructor validates weights (sum=1.0, closed keyset);
     - ``score_supported`` consumes ``hypothesis_ledger.query_by_status(SUPPORTED)``;
-    - returns ``List[RankedCapability***REMOVED***`` sorted score-DESC.
+    - returns ``List[RankedCapability]`` sorted score-DESC.
     """
 
     def __init__(
         self,
         *,
-        weights: Optional[Dict[str, float***REMOVED******REMOVED*** = None,
+        weights: Optional[Dict[str, float]] = None,
         half_life_days: float = DEFAULT_RECENCY_HALF_LIFE_DAYS,
         evidence_saturation: int = DEFAULT_EVIDENCE_SATURATION,
     ) -> None:
         self.weights = normalize_weights(weights if weights is not None else dict(DEFAULT_WEIGHTS))
         if not (0.0 < float(half_life_days) <= 365.0):
             raise ValueError(
-                f"half_life_days must be in (0, 365***REMOVED***, got {half_life_days!r***REMOVED***"
+                f"half_life_days must be in (0, 365), got {half_life_days!r}"
             )
         self.half_life_days = float(half_life_days)
         if not (1 <= int(evidence_saturation) <= 100):
             raise ValueError(
-                f"evidence_saturation must be in [1, 100***REMOVED***, got {evidence_saturation!r***REMOVED***"
+                f"evidence_saturation must be in [1, 100], got {evidence_saturation!r}"
             )
         self.evidence_saturation = int(evidence_saturation)
 
     def score_supported(
         self,
         *,
-        focus_tags: Optional[List[str***REMOVED******REMOVED*** = None,
-        root: Optional[Path***REMOVED*** = None,
-    ) -> List[RankedCapability***REMOVED***:
+        focus_tags: Optional[List[str]] = None,
+        root: Optional[Path] = None,
+    ) -> List[RankedCapability]:
         """Score all SUPPORTED hypotheses, sorted score-DESC (ties: recency).
 
         ADR-016 fail-safe:
-        - hypothesis_ledger import failure → [***REMOVED*** (no exception).
-        - query_by_status failure → [***REMOVED*** (no exception).
+        - hypothesis_ledger import failure → [] (no exception).
+        - query_by_status failure → [] (no exception).
         - corrupt summary entries → silently skipped (handled внутри ledger).
 
         Args:
@@ -269,13 +269,13 @@ class WeightedScoringEngine:
                 query_by_status as _qbs,
             )
         except ImportError:
-            return [***REMOVED***  # fail-safe
+            return []  # fail-safe
         try:
             supported = _qbs(HypothesisStatus.SUPPORTED, root=root)
         except Exception:  # noqa: BLE001 — ADR-016 fail-safe
-            return [***REMOVED***
+            return []
 
-        ranked: List[RankedCapability***REMOVED*** = [***REMOVED***
+        ranked: List[RankedCapability] = []
         now = _now_utc()
         for summary in supported:
             confidence = float(getattr(summary, "confidence", 0.0) or 0.0)
@@ -286,16 +286,16 @@ class WeightedScoringEngine:
             days_since = _days_between(now, updated)
             recency = _recency_factor(days_since, half_life_days=self.half_life_days)
             tag_score = _tag_match(
-                list(getattr(summary, "tags", [***REMOVED***) or [***REMOVED***),
+                list(getattr(summary, "tags", []) or []),
                 focus_tags,
             )
 
             breakdown = {
-                "confidence": self.weights["confidence"***REMOVED*** * confidence,
-                "evidence": self.weights["evidence"***REMOVED*** * ev_norm,
-                "recency": self.weights["recency"***REMOVED*** * recency,
-                "tag_match": self.weights["tag_match"***REMOVED*** * tag_score,
-            ***REMOVED***
+                "confidence": self.weights["confidence"] * confidence,
+                "evidence": self.weights["evidence"] * ev_norm,
+                "recency": self.weights["recency"] * recency,
+                "tag_match": self.weights["tag_match"] * tag_score,
+            }
             total_raw = sum(breakdown.values())
             clamped = max(0.0, min(1.0, total_raw))
 
@@ -320,26 +320,26 @@ class WeightedScoringEngine:
 # ─── CLI ──────────────────────────────────────────────────────────────────
 
 
-def _format_text(ranked: List[RankedCapability***REMOVED***) -> str:
+def _format_text(ranked: List[RankedCapability]) -> str:
     """Human-readable ranked list (CLI text format).
 
     Format: 5 lines per entry, indented break-down breakdown.
     """
     if not ranked:
         return "(empty: no supported hypotheses found in ledger)\n"
-    lines: List[str***REMOVED*** = [***REMOVED***
+    lines: List[str] = []
     for i, r in enumerate(ranked, start=1):
         lines.append(
-            f"{i:3d***REMOVED***. [score={r.score:.3f***REMOVED***  hid={r.hid***REMOVED******REMOVED***  {r.text[:72***REMOVED******REMOVED***"
+            f"{i:3d}. [score={r.score:.3f}  hid={r.hid}]  {r.text[:72]}"
         )
         lines.append(
-            f"      confidence={r.confidence:.2f***REMOVED***  "
-            f"evidence_count={r.evidence_count***REMOVED***  "
-            f"days_since={r.days_since_update:.1f***REMOVED***  "
-            f"tag_match={r.tag_match_score:.2f***REMOVED***"
+            f"      confidence={r.confidence:.2f}  "
+            f"evidence_count={r.evidence_count}  "
+            f"days_since={r.days_since_update:.1f}  "
+            f"tag_match={r.tag_match_score:.2f}"
         )
         for k, v in r.breakdown.items():
-            lines.append(f"        {k:11s***REMOVED*** = {v:.4f***REMOVED***")
+            lines.append(f"        {k:11s} = {v:.4f}")
     return "\n".join(lines) + "\n"
 
 
@@ -387,14 +387,14 @@ def _build_parser() -> argparse.ArgumentParser:
     return p
 
 
-def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
+def main(argv: Optional[List[str]] = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
 
     engine = WeightedScoringEngine()
     ranked = engine.score_supported(focus_tags=args.tag, root=args.root)
     if args.json:
-        _print_json([r.to_dict() for r in ranked***REMOVED***)
+        _print_json([r.to_dict() for r in ranked])
     else:
         sys.stdout.write(_format_text(ranked))
     return 0

@@ -17,7 +17,7 @@ import os
 import sys
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Dict, List, Optional
 
 
@@ -32,58 +32,58 @@ TERMUX_HOME = os.environ.get("TERMUX_HOME", str(Path.home()))
 OPENCLAW_HOME = Path(os.environ.get("OPENCLAW_HOME", str(Path.home() / ".openclaw")))
 
 # Категории паттернов
-PATTERNS: Dict[str, List[str***REMOVED******REMOVED*** = {
+PATTERNS: Dict[str, List[str]] = {
     "llm_model": [
         "*.gguf", "*.bin", "ollama", "llama.cpp", "llama-cli",
         "model*.json", "ggml", "mlc-chat", "qwen", "deepseek",
         "gemini", "groq", "openrouter",
-    ***REMOVED***,
+    ],
     "agent_framework": [
         "CLAUDE.md", "AGENTS.md", "SOUL.md", "BUFFY.md",
         "CODY.md", "openclaw", "aider", "codebuff",
         "freebuff", "agent", "worker",
-    ***REMOVED***,
+    ],
     "mcp_bridge": [
         "mcp", "mcp-bridge", "mcp_server", "mcp_client",
         "modelcontextprotocol", "phone_mcp", "phone-mcp",
-    ***REMOVED***,
+    ],
     "python_project": [
         "pyproject.toml", "setup.py", "setup.cfg", "main.py",
         "requirements.txt", "Pipfile", "uv.lock",
-    ***REMOVED***,
+    ],
     "node_project": [
         "package.json", "tsconfig.json", "next.config.*",
         "node_modules/.package-lock.json",
-    ***REMOVED***,
+    ],
     "database": [
         "*.db", "*.sqlite", "*.sqlite3", "migrations/",
         "alembic.ini", "schema.sql", "prisma/",
-    ***REMOVED***,
+    ],
     "api_gateway": [
         "openapi.json", "swagger.*", "fastapi", "flask",
         "express", "nginx.conf", "caddyfile",
-    ***REMOVED***,
+    ],
     "devops": [
         "Dockerfile", "docker-compose.yml", "Makefile",
         ".github/workflows/", "crontab", "systemd",
-    ***REMOVED***,
+    ],
     "telegram": [
         "tg_", "telegram", "telethon", "pyrogram",
         "bot.py", "tg_bot", "tg_terminal",
-    ***REMOVED***,
+    ],
     "voice_audio": [
         "whisper", "tts", "speech", "audio",
         "voice", "stt", "sound",
-    ***REMOVED***,
+    ],
     "config_secret": [
         ".env", ".env.*", ".keys", ".secrets",
         "credentials", "token", "vault",
-    ***REMOVED***,
+    ],
     "docs_knowledge": [
         "README.md", "SPEC.md", "ARCHITECTURE.md",
         "docs_10/", "wiki/", "knowledge/",
-    ***REMOVED***,
-***REMOVED***
+    ],
+}
 
 
 @dataclass
@@ -101,19 +101,19 @@ class Finding:
 class ScanReport:
     """Итоговый отчёт сканера."""
     scanned_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    scan_roots: List[str***REMOVED*** = field(default_factory=list)
+    scan_roots: List[str] = field(default_factory=list)
     total_files_scanned: int = 0
-    findings: List[Finding***REMOVED*** = field(default_factory=list)
-    summary_by_category: Dict[str, int***REMOVED*** = field(default_factory=dict)
-    recommendations: List[str***REMOVED*** = field(default_factory=list)
+    findings: List[Finding] = field(default_factory=list)
+    summary_by_category: Dict[str, int] = field(default_factory=dict)
+    recommendations: List[str] = field(default_factory=list)
 
 
 class Scanner:
     """Сканер инструментов и систем."""
 
-    def __init__(self, roots: Optional[List[str***REMOVED******REMOVED*** = None):
-        self.roots = roots or [WORKSTATION, QWEN_HOME, TERMUX_HOME, OPENCLAW_HOME***REMOVED***
-        self.findings: List[Finding***REMOVED*** = [***REMOVED***
+    def __init__(self, roots: Optional[List[str]] = None):
+        self.roots = roots or [WORKSTATION, QWEN_HOME, TERMUX_HOME, OPENCLAW_HOME]
+        self.findings: List[Finding] = []
         self._file_count = 0
         self._max_files = 5000      # лимит, чтобы не зависнуть
         self._max_depth = 6
@@ -121,7 +121,7 @@ class Scanner:
             "__pycache__", ".git", "node_modules", ".venv",
             "venv", ".aider", ".cache", "dist", "build",
             ".mypy_cache", ".pytest_cache", ".ruff_cache",
-        ***REMOVED***
+        }
 
     def scan(self) -> ScanReport:
         """Главный метод: обход корней и поиск по паттернам."""
@@ -137,7 +137,7 @@ class Scanner:
 
         # Сводка по категориям
         for f in self.findings:
-            report.summary_by_category[f.category***REMOVED*** = (
+            report.summary_by_category[f.category] = (
                 report.summary_by_category.get(f.category, 0) + 1
             )
 
@@ -175,16 +175,16 @@ class Scanner:
 
                 if pattern.startswith("*."):
                     # Глоб: по расширению
-                    ext = pattern[1:***REMOVED***  # .gguf, .bin, .db
+                    ext = pattern[1:]  # .gguf, .bin, .db
                     if name_lower.endswith(ext.lower()):
                         matched = True
                 elif pattern.endswith("/"):
                     # Директория с именем
-                    if entry.is_dir() and name_lower == pattern[:-1***REMOVED***.lower():
+                    if entry.is_dir() and name_lower == pattern[:-1].lower():
                         matched = True
                 elif pattern.startswith("*"):
                     # Wildcard
-                    substr = pattern[1:***REMOVED***
+                    substr = pattern[1:]
                     if substr.lower() in name_lower:
                         matched = True
                 else:
@@ -213,8 +213,8 @@ class Scanner:
                     ))
                     return  # одно совпадение — одна категория
 
-    def _generate_recommendations(self, report: ScanReport) -> List[str***REMOVED***:
-        recs = [***REMOVED***
+    def _generate_recommendations(self, report: ScanReport) -> List[str]:
+        recs = []
 
         cats = report.summary_by_category
 
@@ -233,7 +233,7 @@ class Scanner:
         llm_count = cats.get("llm_model", 0)
         agent_count = cats.get("agent_framework", 0)
         if llm_count > 0 and agent_count > 0:
-            recs.append(f"✅ Найдено LLM-моделей: {llm_count***REMOVED***, агентских фреймворков: {agent_count***REMOVED***")
+            recs.append(f"✅ Найдено LLM-моделей: {llm_count}, агентских фреймворков: {agent_count}")
         elif agent_count == 0:
             recs.append("🔴 Нет агентских фреймворков — установи OpenClaw или Aider")
 
@@ -242,21 +242,21 @@ class Scanner:
 
 # ── CLI ───────────────────────────────────────────────────────
 
-def cmd_scan(args: List[str***REMOVED***) -> None:
+def cmd_scan(args: List[str]) -> None:
     roots = None
     category_filter = None
     output_file = None
 
     i = 0
     while i < len(args):
-        if args[i***REMOVED*** == "--category" and i + 1 < len(args):
-            category_filter = args[i + 1***REMOVED***
+        if args[i] == "--category" and i + 1 < len(args):
+            category_filter = args[i + 1]
             i += 2
-        elif args[i***REMOVED*** == "--output" and i + 1 < len(args):
-            output_file = args[i + 1***REMOVED***
+        elif args[i] == "--output" and i + 1 < len(args):
+            output_file = args[i + 1]
             i += 2
-        elif args[i***REMOVED*** == "--roots" and i + 1 < len(args):
-            roots = args[i + 1***REMOVED***.split(",")
+        elif args[i] == "--roots" and i + 1 < len(args):
+            roots = args[i + 1].split(",")
             i += 2
         else:
             i += 1
@@ -266,48 +266,48 @@ def cmd_scan(args: List[str***REMOVED***) -> None:
 
     # Фильтр по категории
     if category_filter and category_filter in PATTERNS:
-        report.findings = [f for f in report.findings if f.category == category_filter***REMOVED***
-        report.summary_by_category = {category_filter: len(report.findings)***REMOVED***
+        report.findings = [f for f in report.findings if f.category == category_filter]
+        report.summary_by_category = {category_filter: len(report.findings)}
 
     # Вывод
     if output_file:
         with open(output_file, "w") as f:
             json.dump(asdict(report), f, indent=2, ensure_ascii=False)
-        print(f"📄 Отчёт сохранён: {output_file***REMOVED***")
+        print(f"📄 Отчёт сохранён: {output_file}")
     else:
         _print_report(report)
 
 
 def _print_report(report: ScanReport) -> None:
     """Красивый вывод в консоль."""
-    print(f"\n{'='*60***REMOVED***")
-    print(f"🔍 SCANNER REPORT — {report.scanned_at[:19***REMOVED******REMOVED***")
-    print(f"{'='*60***REMOVED***")
-    print(f"Отсканировано файлов: {report.total_files_scanned***REMOVED***")
-    print(f"Найдено инструментов: {len(report.findings)***REMOVED***")
+    print(f"\n{'='*60}")
+    print(f"🔍 SCANNER REPORT — {report.scanned_at[:19]}")
+    print(f"{'='*60}")
+    print(f"Отсканировано файлов: {report.total_files_scanned}")
+    print(f"Найдено инструментов: {len(report.findings)}")
     print()
 
     if report.summary_by_category:
         print("📊 ПО КАТЕГОРИЯМ:")
-        for cat, count in sorted(report.summary_by_category.items(), key=lambda x: -x[1***REMOVED***):
+        for cat, count in sorted(report.summary_by_category.items(), key=lambda x: -x[1]):
             emoji = _cat_emoji(cat)
-            print(f"  {emoji***REMOVED*** {cat***REMOVED***: {count***REMOVED***")
+            print(f"  {emoji} {cat}: {count}")
         print()
 
     if report.findings:
         print("🔎 ТОП НАХОДОК:")
-        for f in report.findings[:20***REMOVED***:
-            print(f"  [{f.category***REMOVED******REMOVED*** {f.path***REMOVED***")
+        for f in report.findings[:20]:
+            print(f"  [{f.category}] {f.path}")
 
         if len(report.findings) > 20:
-            print(f"  ... и ещё {len(report.findings) - 20***REMOVED***")
+            print(f"  ... и ещё {len(report.findings) - 20}")
 
     if report.recommendations:
         print(f"\n💡 РЕКОМЕНДАЦИИ:")
         for r in report.recommendations:
-            print(f"  {r***REMOVED***")
+            print(f"  {r}")
 
-    print(f"\n{'='*60***REMOVED***\n")
+    print(f"\n{'='*60}\n")
 
 
 def _cat_emoji(cat: str) -> str:
@@ -324,8 +324,8 @@ def _cat_emoji(cat: str) -> str:
         "voice_audio": "🎤",
         "config_secret": "🔑",
         "docs_knowledge": "📚",
-    ***REMOVED***.get(cat, "📦")
+    ].get(cat, "📦")
 
 
 if __name__ == "__main__":
-    cmd_scan(sys.argv[1:***REMOVED***)
+    cmd_scan(sys.argv[1:])

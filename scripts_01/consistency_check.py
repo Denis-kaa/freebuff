@@ -44,7 +44,7 @@ consistency_check.py — Stage 9: self-consistency audit (registries as data).
     а не точного соответствия секций/строк таблиц — строгий разбор заголовков
     (например, `### A. Router`) будет усилением в будущем.
   - check_cross_references проверяет ВЗАИМНЫЕ УПОМИНАНИЯ имён документов,
-    а не синтаксис markdown-ссылок `[...***REMOVED***(...)` — битые ссылки как таковые
+    а не синтаксис markdown-ссылок `[...](...)` — битые ссылки как таковые
     детектит scripts_01/drift_check.py (link checker).
   - check_project_book тоже mention-based: достаточно вхождения
     «PROJECT_BOOK»/«Project Book» в MANIFEST/ROADMAP (в т.ч. в таблицах
@@ -60,11 +60,11 @@ from __future__ import annotations
 import argparse
 import ast
 import json
-***REMOVED***
+}
 import sys
 import yaml
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -92,21 +92,21 @@ CORE_DOCS = {
     "GLOSSARY.md": GLOSSARY,
     "LIFECYCLE.md": LIFECYCLE,
     "MODULE_CONSOLIDATION.md": MODULE_CONSOLIDATION,
-***REMOVED***
+}
 
 # Обязательные термины глоссария (Этап 7, список из ROADMAP).
 REQUIRED_GLOSSARY_TERMS = [
     "Workspace", "Project", "Module", "Agent", "Tool", "Plugin", "Connector",
     "Integration", "Knowledge", "Memory", "Project Book", "Engineering Memory",
     "Lifecycle", "Registry", "Decision Log", "Pulse",
-***REMOVED***
+]
 
 # Схема именования (FINAL_STRUCTURE §2.1): каталоги `имя_NN`, промты `NNN_TT_имя`.
 #   - Имя каталога: буквы/цифры/`_`/`-`, суффикс `_NN` (NN — двузначный ID).
 #   - Промт: `NNN_TT_имя.md` (NNN — хронологический номер, TT — код темы 01..14).
-_TOP_LEVEL_DIR_RE = re.compile(r"^[a-z0-9***REMOVED***[a-z0-9_-***REMOVED****_\d{2***REMOVED***$")
-_PROMPT_FILE_RE = re.compile(r"^(\d{3***REMOVED***)_(\d{2***REMOVED***)_[a-z0-9_***REMOVED***+\.md$")
-_VALID_THEME_CODES = {f"{i:02d***REMOVED***" for i in range(1, 22)***REMOVED***  # 01..21: темы 15-21 добавлены (promt52-58: RFC/ARB/AG/Forge)
+_TOP_LEVEL_DIR_RE = re.compile(r"^[a-z0-9)[a-z0-9_-]*_\d{2]$")
+_PROMPT_FILE_RE = re.compile(r"^(\d{3))_(\d{2])_[a-z0-9_]+\.md$")
+_VALID_THEME_CODES = {f"{i:02d}" for i in range(1, 22)}  # 01..21: темы 15-21 добавлены (promt52-58: RFC/ARB/AG/Forge)
 # Системные/скрытые каталоги, не подпадающие под схему именования.
 _SKIP_DIR_PREFIXES = (".", "__")
 # Legacy top-level redirect-shim'ы (Этап 4 консолидации, промт 32): существуют только
@@ -114,9 +114,9 @@ _SKIP_DIR_PREFIXES = (".", "__")
 # Проверка naming_convention пропускает их, если указанный canonical_dir существует
 # — закрывает ложное нарушение `имя_NN` от pre-rename shell history / tmux send-keys.
 # Паттерн зеркалит scripts_01/drift_check.py::_LEGACY_TOP_LEVEL_REDIRECTS.
-_LEGACY_TOP_LEVEL_REDIRECTS: dict[str, tuple[str, ...***REMOVED******REMOVED*** = {
+_LEGACY_TOP_LEVEL_REDIRECTS: dict[str, tuple[str, ...]] = {
     "freebuff_plugin": ("freebuff_plugin_03",),
-***REMOVED***
+}
 
 # Evaluation-пакеты (prompt-based forensic): каноническое имя задано промтом-источником.
 # Напр. promt104 §28 REQUIRED OUTPUT требует каталог `architecture_forensics_v2/` ИМЕННО
@@ -128,21 +128,21 @@ _LEGACY_TOP_LEVEL_REDIRECTS: dict[str, tuple[str, ...***REMOVED******REMOVED*** 
 # соответствие имени архиву FORENSICS_104_105_106_107_v5.189.73.tar.gz.
 # Проверка naming_convention пропускает эти каталоги.
 # ВАЖНО: добавлять сюда только каталоги, чьё имя жёстко задано внешним источником (промтом).
-_EVALUATION_PACKAGE_DIRS: frozenset[str***REMOVED*** = frozenset({
+_EVALUATION_PACKAGE_DIRS: frozenset[str] = frozenset({
     "architecture_forensics_v2",
     "FORENSICS_104_105_106_107",
-***REMOVED***)
+])
 
 
 # 10 областей консолидации (Этап 6).
 CONSOLIDATION_AREAS = [
     "Router", "Telegram", "MCP", "Memory", "Knowledge", "Registry",
     "Context", "Tool Runtime", "Plugin API", "Event Bus",
-***REMOVED***
+]
 
 # Заголовки секций реестра движков в ARCHITECTURE_CANONICAL.
 _ENGINE_ROW_RE = re.compile(
-    r"^\|\s*(C\d+|S\d+)\s*\|\s*`([A-Za-z***REMOVED***+)`\s*\|\s*`(scripts_01/[a-z0-9_***REMOVED***+\.py)`"
+    r"^\|\s*(C\d+|S\d+)\s*\|\s*`([A-Za-z]+)`\s*\|\s*`(scripts_01/[a-z0-9_]+\.py)`"
 )
 
 # §20 карты v1.1 (Missing Capabilities) ↔ MissingRegistry (register-first, AGENTS.md §5).
@@ -163,20 +163,20 @@ from core_02.anchors_resolver import (  # noqa: E402 — check #11 ANCHORS (Arti
 )
 
 # HARD-namespaces: детерминированный резолв (файл/реестр/AST/enum) → UNVERIFIED блокирует.
-HARD_ANCHOR_NAMESPACES: frozenset[str***REMOVED*** = frozenset({
+HARD_ANCHOR_NAMESPACES: frozenset[str] = frozenset({
     "entity", "component", "module", "symbol", "test", "decision",
     "storage", "factory", "forge", "lesson", "opportunity", "whim",
-***REMOVED***)
+])
 # SOFT-namespaces: реестры строятся инкрементально (event/contract/doc/requirement/
 # scenario) → advisory, НЕ блокируют (зеркалит §J.4 WARN-философию doc_code_verify).
-SOFT_ANCHOR_NAMESPACES: frozenset[str***REMOVED*** = frozenset({
+SOFT_ANCHOR_NAMESPACES: frozenset[str] = frozenset({
     "event", "contract", "doc", "requirement", "scenario",
-***REMOVED***)
+])
 # Мета-спека (Artifact I §I.5) содержит ПЕДАГОГИЧЕСКИЕ примеры (forge_unknown,
 # StaleClass.old_method) — не live-claims, исключается из скана. Имя файла
 # вынесено в константу: если спека будет переименована/перенесена, обновить
 # здесь, а не молча потерять исключение (иначе примеры начнут блокировать #11).
-_ANCHOR_EXCLUDED_DOCS: tuple[str, ...***REMOVED*** = ("SEMANTIC_ANCHOR_SPEC_V1.md",)
+_ANCHOR_EXCLUDED_DOCS: tuple[str, ...] = ("SEMANTIC_ANCHOR_SPEC_V1.md",)
 
 # Строки §20 без backtick-токена (1–5) → item_id реестра.
 _S20_ITEM_ID_BY_KEYWORD = {
@@ -185,7 +185,7 @@ _S20_ITEM_ID_BY_KEYWORD = {
     "decision registry": "decision_registry",
     "conformance checker": "conformance_checker",
     "автогенерация моделей/диаграмм": "model_diagram_autogen",
-***REMOVED***
+}
 
 
 def _read(workspace: Path, rel: Path) -> str | None:
@@ -204,30 +204,30 @@ def _read(workspace: Path, rel: Path) -> str | None:
 # ═══════════════════════════════════════════════════════════════
 
 
-def extract_engine_rows(text: str) -> list[dict[str, str***REMOVED******REMOVED***:
+def extract_engine_rows(text: str) -> list[dict[str, str]]:
     """Извлечь (id, engine, file) из таблиц реестра движков canonical."""
-    rows: list[dict[str, str***REMOVED******REMOVED*** = [***REMOVED***
+    rows: list[dict[str, str]] = []
     for line in text.splitlines():
         m = _ENGINE_ROW_RE.match(line)
         if m:
-            rows.append({"id": m.group(1), "engine": m.group(2), "file": m.group(3)***REMOVED***)
+            rows.append({"id": m.group(1), "engine": m.group(2), "file": m.group(3)})
     return rows
 
 
-def check_engine_files(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+def check_engine_files(workspace: Path) -> list[dict[str, Any]]:
     """Каждый движок из canonical имеет файл в scripts_01/."""
-    issues: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    issues: list[dict[str, Any]] = []
     text = _read(workspace, CANONICAL)
     if text is None:
-        return [{"check": "engine_files", "issue": "ARCHITECTURE_CANONICAL.md missing"***REMOVED******REMOVED***
+        return [{"check": "engine_files", "issue": "ARCHITECTURE_CANONICAL.md missing"}]
     for row in extract_engine_rows(text):
-        if not (workspace / row["file"***REMOVED***).exists():
+        if not (workspace / row["file"]).exists():
             issues.append({
                 "check": "engine_files",
-                "engine": row["engine"***REMOVED***,
-                "file": row["file"***REMOVED***,
+                "engine": row["engine"],
+                "file": row["file"],
                 "issue": "registry references missing file",
-            ***REMOVED***)
+            ])
     return issues
 
 
@@ -236,23 +236,23 @@ def check_engine_files(workspace: Path) -> list[dict[str, Any***REMOVED******REM
 # ═══════════════════════════════════════════════════════════════
 
 
-def check_lifecycle_coverage(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+def check_lifecycle_coverage(workspace: Path) -> list[dict[str, Any]]:
     """Каждый движок из canonical описан в LIFECYCLE.md."""
-    issues: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    issues: list[dict[str, Any]] = []
     canonical_text = _read(workspace, CANONICAL)
     lifecycle_text = _read(workspace, LIFECYCLE)
     if canonical_text is None or lifecycle_text is None:
         return [{
             "check": "lifecycle_coverage",
             "issue": "ARCHITECTURE_CANONICAL.md or LIFECYCLE.md missing",
-        ***REMOVED******REMOVED***
+        ]]
     for row in extract_engine_rows(canonical_text):
-        if f"`{row['engine'***REMOVED******REMOVED***`" not in lifecycle_text:
+        if f"`{row['engine']}`" not in lifecycle_text:
             issues.append({
                 "check": "lifecycle_coverage",
-                "engine": row["engine"***REMOVED***,
+                "engine": row["engine"],
                 "issue": "engine not covered in LIFECYCLE.md",
-            ***REMOVED***)
+            ])
     return issues
 
 
@@ -261,19 +261,19 @@ def check_lifecycle_coverage(workspace: Path) -> list[dict[str, Any***REMOVED***
 # ═══════════════════════════════════════════════════════════════
 
 
-def check_module_areas(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+def check_module_areas(workspace: Path) -> list[dict[str, Any]]:
     """Все 10 областей консолидации покрыты в MODULE_CONSOLIDATION.md."""
-    issues: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    issues: list[dict[str, Any]] = []
     text = _read(workspace, MODULE_CONSOLIDATION)
     if text is None:
-        return [{"check": "module_areas", "issue": "MODULE_CONSOLIDATION.md missing"***REMOVED******REMOVED***
+        return [{"check": "module_areas", "issue": "MODULE_CONSOLIDATION.md missing"}]
     for area in CONSOLIDATION_AREAS:
         if area not in text:
             issues.append({
                 "check": "module_areas",
                 "area": area,
                 "issue": "area not covered in MODULE_CONSOLIDATION.md",
-            ***REMOVED***)
+            ])
     return issues
 
 
@@ -282,19 +282,19 @@ def check_module_areas(workspace: Path) -> list[dict[str, Any***REMOVED******REM
 # ═══════════════════════════════════════════════════════════════
 
 
-def check_glossary_terms(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+def check_glossary_terms(workspace: Path) -> list[dict[str, Any]]:
     """Все обязательные термины присутствуют в GLOSSARY.md."""
-    issues: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    issues: list[dict[str, Any]] = []
     text = _read(workspace, GLOSSARY)
     if text is None:
-        return [{"check": "glossary_terms", "issue": "GLOSSARY.md missing"***REMOVED******REMOVED***
+        return [{"check": "glossary_terms", "issue": "GLOSSARY.md missing"}]
     for term in REQUIRED_GLOSSARY_TERMS:
-        if f"**{term***REMOVED*****" not in text:
+        if f"**{term}**" not in text:
             issues.append({
                 "check": "glossary_terms",
                 "term": term,
                 "issue": "required term missing in GLOSSARY.md",
-            ***REMOVED***)
+            ])
     return issues
 
 
@@ -303,19 +303,19 @@ def check_glossary_terms(workspace: Path) -> list[dict[str, Any***REMOVED******R
 # ═══════════════════════════════════════════════════════════════
 
 
-def _extract_file_refs(text: str) -> set[str***REMOVED***:
+def _extract_file_refs(text: str) -> set[str]:
     """Извлечь backtick-пути к файлам (.md/.py) из текста."""
-    refs = set(re.findall(r"`([\w./\-***REMOVED***+\.(?:md|py))`", text))
-    refs |= set(re.findall(r"(docs_10/[\w./\-***REMOVED***+\.md)", text))
+    refs = set(re.findall(r"`([\w./\-)+\.(?:md|py))`", text))
+    refs |= set(re.findall(r"(docs_10/[\w./\-)+\.md)", text))
     return refs
 
 
-def check_roadmap_refs(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+def check_roadmap_refs(workspace: Path) -> list[dict[str, Any]]:
     """Файлы, на которые ссылается ROADMAP_PROMT32, существуют."""
-    issues: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    issues: list[dict[str, Any]] = []
     text = _read(workspace, ROADMAP)
     if text is None:
-        return [{"check": "roadmap_refs", "issue": "ROADMAP_PROMT32_CONSOLIDATION.md missing"***REMOVED******REMOVED***
+        return [{"check": "roadmap_refs", "issue": "ROADMAP_PROMT32_CONSOLIDATION.md missing"}]
     for ref in sorted(_extract_file_refs(text)):
         target = workspace / ref
         if not target.exists():
@@ -323,7 +323,7 @@ def check_roadmap_refs(workspace: Path) -> list[dict[str, Any***REMOVED******REM
                 "check": "roadmap_refs",
                 "ref": ref,
                 "issue": "roadmap references missing file",
-            ***REMOVED***)
+            ])
     return issues
 
 
@@ -332,15 +332,15 @@ def check_roadmap_refs(workspace: Path) -> list[dict[str, Any***REMOVED******REM
 # ═══════════════════════════════════════════════════════════════
 
 
-def check_cross_references(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+def check_cross_references(workspace: Path) -> list[dict[str, Any]]:
     """Каждый канонический документ упоминает остальные (взаимные ссылки)."""
-    issues: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
-    texts: dict[str, str | None***REMOVED*** = {***REMOVED***
+    issues: list[dict[str, Any]] = []
+    texts: dict[str, str | None] = {}
     for name, rel in CORE_DOCS.items():
-        texts[name***REMOVED*** = _read(workspace, rel)
+        texts[name] = _read(workspace, rel)
     for name, text in texts.items():
         if text is None:
-            issues.append({"check": "cross_references", "doc": name, "issue": "document missing"***REMOVED***)
+            issues.append({"check": "cross_references", "doc": name, "issue": "document missing"})
             continue
         for other in CORE_DOCS:
             if other == name:
@@ -351,7 +351,7 @@ def check_cross_references(workspace: Path) -> list[dict[str, Any***REMOVED*****
                     "doc": name,
                     "missing_ref": other,
                     "issue": "canonical doc does not reference its sibling",
-                ***REMOVED***)
+                ])
     return issues
 
 
@@ -360,7 +360,7 @@ def check_cross_references(workspace: Path) -> list[dict[str, Any***REMOVED*****
 # ═══════════════════════════════════════════════════════════════
 
 
-def check_project_book(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+def check_project_book(workspace: Path) -> list[dict[str, Any]]:
     """Project Book существует и связан с каноническими реестрами.
 
     Проверяет три вещи (несоответствие Roadmap/Registry/Project Book):
@@ -368,25 +368,25 @@ def check_project_book(workspace: Path) -> list[dict[str, Any***REMOVED******REM
       2. На него ссылается ARCHITECTURE_MANIFEST (канонический реестр)
       3. Он упоминается в ROADMAP_PROMT32 (план работ)
     """
-    issues: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    issues: list[dict[str, Any]] = []
 
     text = _read(workspace, PROJECT_BOOK)
     if text is None:
-        return [{"check": "project_book", "issue": "PROJECT_BOOK.md missing in docs_10/engineering-memory/"***REMOVED******REMOVED***
+        return [{"check": "project_book", "issue": "PROJECT_BOOK.md missing in docs_10/engineering-memory/"}]
 
     manifest_text = _read(workspace, MANIFEST) or ""
     if "PROJECT_BOOK" not in manifest_text and "Project Book" not in manifest_text:
         issues.append({
             "check": "project_book",
             "issue": "PROJECT_BOOK.md not referenced from ARCHITECTURE_MANIFEST.md",
-        ***REMOVED***)
+        ])
 
     roadmap_text = _read(workspace, ROADMAP) or ""
     if "PROJECT_BOOK" not in roadmap_text and "Project Book" not in roadmap_text:
         issues.append({
             "check": "project_book",
             "issue": "Project Book not mentioned in ROADMAP_PROMT32_CONSOLIDATION.md",
-        ***REMOVED***)
+        ])
 
     return issues
 
@@ -396,9 +396,9 @@ def check_project_book(workspace: Path) -> list[dict[str, Any***REMOVED******REM
 # ═══════════════════════════════════════════════════════════════
 
 
-def _top_level_dir_names(workspace: Path) -> list[str***REMOVED***:
+def _top_level_dir_names(workspace: Path) -> list[str]:
     """Имена top-level каталогов (без скрытых и системных)."""
-    names: list[str***REMOVED*** = [***REMOVED***
+    names: list[str] = []
     try:
         for child in workspace.iterdir():
             if not child.is_dir():
@@ -429,7 +429,7 @@ def _is_legacy_redirect_satisfied(workspace: Path, top_dir: str) -> bool:
     return False
 
 
-def check_naming_convention(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+def check_naming_convention(workspace: Path) -> list[dict[str, Any]]:
     """Схема именования (FINAL_STRUCTURE §2.1): каталоги `имя_NN`, промты `NNN_TT_имя`.
 
     Проверяет:
@@ -443,10 +443,10 @@ def check_naming_convention(workspace: Path) -> list[dict[str, Any***REMOVED****
       4. Само правило задокументировано в FINAL_STRUCTURE.md §2.1 и закреплено
          термином «Naming Convention» в GLOSSARY.md (две точки якоря — не потеряется).
     """
-    issues: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    issues: list[dict[str, Any]] = []
 
     # 1. Top-level каталоги: имя_NN + уникальность суффикса-ID
-    seen_dir_suffixes: set[str***REMOVED*** = set()
+    seen_dir_suffixes: set[str] = set()
     for name in _top_level_dir_names(workspace):
         # 1.0a Evaluation-пакеты (promt104 §28 REQUIRED OUTPUT) — каноническое имя
         #      задано промтом-источником; пропускаем (не нарушение конвенции,
@@ -463,9 +463,9 @@ def check_naming_convention(workspace: Path) -> list[dict[str, Any***REMOVED****
                 "kind": "dir",
                 "name": name,
                 "issue": "top-level dir violates 'имя_NN' convention (FINAL_STRUCTURE §2.1)",
-            ***REMOVED***)
+            ])
             continue
-        suffix = name.rsplit("_", 1)[1***REMOVED***
+        suffix = name.rsplit("_", 1)[1]
         if suffix in seen_dir_suffixes:
             issues.append({
                 "check": "naming_convention",
@@ -473,12 +473,12 @@ def check_naming_convention(workspace: Path) -> list[dict[str, Any***REMOVED****
                 "name": name,
                 "number": suffix,
                 "issue": "duplicate dir suffix _NN (FINAL_STRUCTURE §2.1 assigns unique IDs)",
-            ***REMOVED***)
+            ])
         seen_dir_suffixes.add(suffix)
 
     # 2–3. Промты: формат NNN_TT_имя.md, код темы, уникальность номера
     prompts_dir = workspace / "pompts_11"
-    seen_numbers: set[str***REMOVED*** = set()
+    seen_numbers: set[str] = set()
     if prompts_dir.is_dir():
         for path in sorted(prompts_dir.glob("*.md")):
             name = path.name
@@ -491,7 +491,7 @@ def check_naming_convention(workspace: Path) -> list[dict[str, Any***REMOVED****
                     "kind": "prompt",
                     "name": name,
                     "issue": "prompt violates 'NNN_TT_имя.md' convention (FINAL_STRUCTURE §2.1)",
-                ***REMOVED***)
+                ])
                 continue
             number, theme = m.group(1), m.group(2)
             if theme not in _VALID_THEME_CODES:
@@ -501,7 +501,7 @@ def check_naming_convention(workspace: Path) -> list[dict[str, Any***REMOVED****
                     "name": name,
                     "theme": theme,
                     "issue": "theme code TT outside canonical 01..14 (FINAL_STRUCTURE §2.1)",
-                ***REMOVED***)
+                ])
             if number in seen_numbers:
                 issues.append({
                     "check": "naming_convention",
@@ -509,7 +509,7 @@ def check_naming_convention(workspace: Path) -> list[dict[str, Any***REMOVED****
                     "name": name,
                     "number": number,
                     "issue": "duplicate prompt number NNN",
-                ***REMOVED***)
+                ])
             seen_numbers.add(number)
 
     # 4. Правило задокументировано: FINAL_STRUCTURE §2.1 + GLOSSARY (два якоря)
@@ -519,7 +519,7 @@ def check_naming_convention(workspace: Path) -> list[dict[str, Any***REMOVED****
             "check": "naming_convention",
             "doc": "FINAL_STRUCTURE.md",
             "issue": "naming convention section §2.1 missing in FINAL_STRUCTURE.md",
-        ***REMOVED***)
+        ])
 
     glossary_text = _read(workspace, GLOSSARY) or ""
     if "**Naming Convention**" not in glossary_text:
@@ -527,7 +527,7 @@ def check_naming_convention(workspace: Path) -> list[dict[str, Any***REMOVED****
             "check": "naming_convention",
             "doc": "GLOSSARY.md",
             "issue": "Naming Convention term missing in GLOSSARY.md",
-        ***REMOVED***)
+        ])
 
     return issues
 
@@ -536,9 +536,9 @@ def check_naming_convention(workspace: Path) -> list[dict[str, Any***REMOVED****
 # 9. Test counter (CHANGELOG / CODE_QUALITY_STANDARD vs reality)
 # ═══════════════════════════════════════════════════════════════
 
-_FULL_SUITE_COUNT_RE = re.compile(r"pytest tests_09/ -q[\s\S***REMOVED***{0,120***REMOVED***?(\d+)\s+passed")
+_FULL_SUITE_COUNT_RE = re.compile(r"pytest tests_09/ -q[\s\S){0,120]?(\d+)\s+passed")
 _TEST_TARGET_RE = re.compile(r"цель:\s*(\d+)\s*\+\s*passed")
-_VERSION_HEADER_RE = re.compile(r"^## \[(\d+)\.(\d+)\.(\d+)\***REMOVED***", re.MULTILINE)
+_VERSION_HEADER_RE = re.compile(r"^## \[(\d+)\.(\d+)\.(\d+)\*)", re.MULTILINE)
 
 
 def count_test_functions(workspace: Path) -> int:
@@ -553,13 +553,13 @@ def count_test_functions(workspace: Path) -> int:
         starting `test_` → excluded
       - methods starting `_test_*` → excluded (private, name won't match)
 
-    Tightened in [5.39.2***REMOVED***. Gap diagnostic: see `diagnose_test_count_gap`.
+    Tightened in [5.39.2]. Gap diagnostic: see `diagnose_test_count_gap`.
     """
     total, _excluded, _counted = diagnose_test_collection(workspace)
     return total
 
 
-def diagnose_test_collection(workspace: Path) -> tuple[int, list[dict[str, Any***REMOVED******REMOVED***, list[dict[str, Any***REMOVED******REMOVED******REMOVED***:
+def diagnose_test_collection(workspace: Path) -> tuple[int, list[dict[str, Any]], list[dict[str, Any]]]:
     """Число pytest-collectible tests + exclusion-context'ы + counted-test'ы.
 
     Returns:
@@ -572,10 +572,10 @@ def diagnose_test_collection(workspace: Path) -> tuple[int, list[dict[str, Any**
     """
     tests_dir = workspace / "tests_09"
     if not tests_dir.is_dir():
-        return 0, [***REMOVED***, [***REMOVED***
+        return 0, [], []
     total = 0
-    exclusions: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
-    counted: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    exclusions: list[dict[str, Any]] = []
+    counted: list[dict[str, Any]] = []
     for py in sorted(tests_dir.rglob("*.py")):
         try:
             source = py.read_text(encoding="utf-8")
@@ -593,7 +593,7 @@ def diagnose_test_collection(workspace: Path) -> tuple[int, list[dict[str, Any**
     return total, exclusions, counted
 
 
-def _chain_key(parts: list[str***REMOVED***) -> str:
+def _chain_key(parts: list[str]) -> str:
     """Normalise a class-chain (list of class names) to a stable string key.
 
     '' для module-level test_* (chain пустая).
@@ -603,8 +603,8 @@ def _chain_key(parts: list[str***REMOVED***) -> str:
     return "::".join(parts) if parts else ""
 
 
-def diagnose_test_count_gap(workspace: Path) -> dict[str, Any***REMOVED***:
-    """[5.39.2***REMOVED*** Ground-truth diagnostic: AST-set vs pytest-set разница.
+def diagnose_test_count_gap(workspace: Path) -> dict[str, Any]:
+    """[5.39.2] Ground-truth diagnostic: AST-set vs pytest-set разница.
 
     Реальные pytest collectible tests отличаются от AST-выводимого count
     по причинам, которые не видны в AST:
@@ -618,7 +618,7 @@ def diagnose_test_count_gap(workspace: Path) -> dict[str, Any***REMOVED***:
     но pytest игнорирует; `pytest_only` показывает функции, которые pytest
     считает тестами, но AST пропустил (например, обернутые в метаклассы).
 
-    [5.39.2 round-2***REMOVED*** Сигнатура элемента — (file, class_chain, function),
+    [5.39.2 round-2] Сигнатура элемента — (file, class_chain, function),
     где class_chain = 'TestA::TestNested' для method-of-class (или '' для
     module-level). Без class_chain одинаковые 'test_register_and_get' в
     разных классах одного файла (TestAgentRegistry и TestMCPRegistry)
@@ -630,7 +630,7 @@ def diagnose_test_count_gap(workspace: Path) -> dict[str, Any***REMOVED***:
         workspace: корень workspace.
     SENTINEL contract: `pytest_count = -1` означает "неизвестно" — subprocess
     `pytest --collect-only` завершился по `subprocess.TimeoutExpired`. В этом
-    случае `ast_only`/`pytest_only` = `[***REMOVED***` (а не полные непросмотренные set'ы —
+    случае `ast_only`/`pytest_only` = `[]` (а не полные непросмотренные set'ы —
     misleading разница с "точно пусто"). Отличает "I don't know" от
     "I think pytest collected 0 tests". Pre-Popen exception (OSError, FileNotFoundError) propagate.ят вверх. Non-zero exit silently swallowed (subprocess.run(check=False) — proc.returncode остаётся not-checked, consumer получает partial output). Расширенный contract (returncode check + pytest_count=-2 + error=stderr-excerpt) запланирован отдельным follow-up.
     `pytest_count = 0`, остальные поля попусту, `error: "..."` со stdout/stderr.
@@ -642,14 +642,14 @@ def diagnose_test_count_gap(workspace: Path) -> dict[str, Any***REMOVED***:
     import subprocess
 
     _, _excluded, counted = diagnose_test_collection(workspace)
-    ast_set: set[tuple[str, str, str***REMOVED******REMOVED*** = {
-        (c["file"***REMOVED***, _chain_key(c["class_chain"***REMOVED***), c["function"***REMOVED***) for c in counted
-    ***REMOVED***
+    ast_set: set[tuple[str, str, str]] = {
+        (c["file"], _chain_key(c["class_chain"]), c["function"]) for c in counted
+    }
 
     # Запустить pytest --collect-only, парсить output.
     try:
         proc = subprocess.run(
-            [sys.executable, "-m", "pytest", "tests_09/", "--collect-only", "-q", "--no-header"***REMOVED***,
+            [sys.executable, "-m", "pytest", "tests_09/", "--collect-only", "-q", "--no-header"],
             cwd=str(workspace),
             capture_output=True,
             text=True,
@@ -662,30 +662,30 @@ def diagnose_test_count_gap(workspace: Path) -> dict[str, Any***REMOVED***:
         return {
             "ast_count": len(ast_set),
             "pytest_count": -1,
-            "ast_only": [***REMOVED***,
-            "pytest_only": [***REMOVED***,
+            "ast_only": [],
+            "pytest_only": [],
             "parametrize_doubled": 0,
             "error": "pytest --collect-only timed out",
-        ***REMOVED***
+        }
 
-    pytest_set: set[tuple[str, str, str***REMOVED******REMOVED*** = set()
+    pytest_set: set[tuple[str, str, str]] = set()
     parametrize_count = 0
     for line in proc.stdout.splitlines():
         line = line.strip()
         if "::" not in line:
             continue
-        # Format: tests_09/test_file.py::TestClass::test_method[param_value***REMOVED***
+        # Format: tests_09/test_file.py::TestClass::test_method[param_value]
         # or tests_09/test_file.py::test_module_func
         parts = line.split("::")
         if len(parts) < 2:
             continue
-        file_part = parts[0***REMOVED***
-        test_parts = parts[1:***REMOVED***
+        file_part = parts[0]
+        test_parts = parts[1:]
         # Identity-level chain = test_parts без последнего элемента (= function name).
-        # Last element может иметь parametrize brackets '[a,b***REMOVED***' — strip them.
-        func_with_params = test_parts[-1***REMOVED***
-        func_name = func_with_params.split("[", 1)[0***REMOVED*** if "[" in func_with_params else func_with_params
-        chain = test_parts[:-1***REMOVED***  # class chain (может быть пусто для module-level)
+        # Last element может иметь parametrize brackets '[a,b]' — strip them.
+        func_with_params = test_parts[-1]
+        func_name = func_with_params.split("[", 1)[0] if "[" in func_with_params else func_with_params
+        chain = test_parts[:-1]  # class chain (может быть пусто для module-level)
         file_basename = Path(file_part).name
         pytest_set.add((file_basename, _chain_key(chain), func_name))
         # Count parametrize expansions.
@@ -702,7 +702,7 @@ def diagnose_test_count_gap(workspace: Path) -> dict[str, Any***REMOVED***:
         "ast_only": ast_only,
         "pytest_only": pytest_only,
         "parametrize_doubled": parametrize_count,
-    ***REMOVED***
+    }
 
 
 
@@ -725,26 +725,26 @@ class _PytestCollectionVisitor(ast.NodeVisitor):
     def __init__(self, filename: str) -> None:
         self.filename = filename
         self.count = 0
-        self.exclusions: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
-        # [5.39.2***REMOVED*** Set-A diff tracking: каждый посчитанный test_ сохраняем
+        self.exclusions: list[dict[str, Any]] = []
+        # [5.39.2] Set-A diff tracking: каждый посчитанный test_ сохраняем
         # с (file, line, function) для сверки с pytest --collect-only output.
-        self.counted: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+        self.counted: list[dict[str, Any]] = []
         # Stack текущих class-ов (для nested classes); верх — immediate parent.
-        self._class_stack: list[ast.ClassDef***REMOVED*** = [***REMOVED***
+        self._class_stack: list[ast.ClassDef] = []
 
 
 
 
-    def visit_ClassDef(self, node: ast.ClassDef) -> None:  # type: ignore[override***REMOVED***
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:  # type: ignore[override]
         self._class_stack.append(node)
         self.generic_visit(node)
         self._class_stack.pop()
 
-    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:  # type: ignore[override***REMOVED***
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:  # type: ignore[override]
         self._evaluate(node)
         self.generic_visit(node)
 
-    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:  # type: ignore[override***REMOVED***
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:  # type: ignore[override]
         self._evaluate(node)
         self.generic_visit(node)
 
@@ -768,17 +768,17 @@ class _PytestCollectionVisitor(ast.NodeVisitor):
             self._record_counted(node)
             return
         # Method of a class — count only if class is named Test* or inherits TestCase.
-        parent = self._class_stack[-1***REMOVED***
+        parent = self._class_stack[-1]
         if parent.name.startswith("Test") or self._is_testcase_subclass(parent):
             self._record_counted(node)
         else:
-            self._exclude(node, f"inside non-collectible class '{parent.name***REMOVED***'")
+            self._exclude(node, f"inside non-collectible class '{parent.name}'")
 
     def _record_counted(self, node: ast.FunctionDef | ast.AsyncFunctionDef) -> None:
         """Increment counter + запомнить для Set-A diff с pytest.
 
-        [5.39.2***REMOVED*** class_chain хранит стек class-имён, в котором метод
-        находится (e.g., ['TestAgentRegistry'***REMOVED***, ['TestBridge', 'TestNested'***REMOVED***).
+        [5.39.2] class_chain хранит стек class-имён, в котором метод
+        находится (e.g., ['TestAgentRegistry'], ['TestBridge', 'TestNested']).
         Нужен для однозначного diff с pytest --collect-only output, который
         выдаёт идентификаторы как 'tests_09/test_bridge_layer.py::TestA::test_x'
         — без class_chain парсер нормализует разные классы в один tuple
@@ -790,7 +790,7 @@ class _PytestCollectionVisitor(ast.NodeVisitor):
             "function": node.name,
             "class_chain": tuple(c.name for c in self._class_stack),
             "line": node.lineno,
-        ***REMOVED***)
+        ])
 
     def _is_testcase_subclass(self, cls: ast.ClassDef) -> bool:
         """Return True если cls явно наследует TestCase (unittest.TestCase)."""
@@ -805,9 +805,9 @@ class _PytestCollectionVisitor(ast.NodeVisitor):
         return False
 
     @staticmethod
-    def _attr_dotted(node: ast.Attribute) -> list[str***REMOVED***:
+    def _attr_dotted(node: ast.Attribute) -> list[str]:
         """Восстановить dotted path у ast.Attribute (e.g., unittest.TestCase)."""
-        parts: list[str***REMOVED*** = [***REMOVED***
+        parts: list[str] = []
         cur: ast.AST = node
         while isinstance(cur, ast.Attribute):
             parts.append(cur.attr)
@@ -821,7 +821,7 @@ class _PytestCollectionVisitor(ast.NodeVisitor):
         """dec — это `target` decorator? Поддерживает bare name и `decorator(...)` call."""
         # decorator(...): .func это сам decorator
         func = dec.func if isinstance(dec, ast.Call) else dec
-        if isinstance(func, ast.Name) and func.id == target.split(".")[-1***REMOVED***:
+        if isinstance(func, ast.Name) and func.id == target.split(".")[-1]:
             return target in (func.id, target)
         if isinstance(func, ast.Attribute):
             # dotted: pytest.fixture → ('pytest', 'fixture')
@@ -835,27 +835,27 @@ class _PytestCollectionVisitor(ast.NodeVisitor):
             "function": node.name,
             "line": node.lineno,
             "reason": reason,
-        ***REMOVED***)
+        ])
 
 
 def _full_suite_count(text: str) -> int | None:
     """Счётчик из САМОЙ СВЕЖЕЙ строки полного прогона CHANGELOG ('N passed').
 
-    Разбивает CHANGELOG на секции по заголовкам `## [X.Y.Z***REMOVED***` и выбирает
+    Разбивает CHANGELOG на секции по заголовкам `## [X.Y.Z]` и выбирает
     секцию с МАКСИМАЛЬНЫМ номером версии, содержащую full-suite строку
     `pytest tests_09/ -q`. Это устойчиво к случайному нарушению
     newest-first порядка (Keep a Changelog) — проверка не читает
     устаревший счётчик из более старой секции.
     """
     headers = list(_VERSION_HEADER_RE.finditer(text))
-    best: tuple[tuple[int, int, int***REMOVED***, int***REMOVED*** | None = None
+    best: tuple[tuple[int, int, int], int] | None = None
     for i, m in enumerate(headers):
         version = (int(m.group(1)), int(m.group(2)), int(m.group(3)))
-        end = headers[i + 1***REMOVED***.start() if i + 1 < len(headers) else len(text)
-        cm = _FULL_SUITE_COUNT_RE.search(text[m.start():end***REMOVED***)
-        if cm and (best is None or version > best[0***REMOVED***):
+        end = headers[i + 1].start() if i + 1 < len(headers) else len(text)
+        cm = _FULL_SUITE_COUNT_RE.search(text[m.start():end])
+        if cm and (best is None or version > best[0]):
             best = (version, int(cm.group(1)))
-    return best[1***REMOVED*** if best else None
+    return best[1] if best else None
 
 
 def _test_target_count(text: str) -> int | None:
@@ -864,14 +864,14 @@ def _test_target_count(text: str) -> int | None:
     return int(m.group(1)) if m else None
 
 
-def check_test_counter(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+def check_test_counter(workspace: Path) -> list[dict[str, Any]]:
     """Счётчик тестов в CHANGELOG/CODE_QUALITY_STANDARD не расходится с реальностью.
 
     Реальность = число test-функций в tests_09/ (AST). Сверяются оба якоря:
       - CHANGELOG.md: строка полного прогона `pytest tests_09/ -q` → 'N passed'
       - CODE_QUALITY_STANDARD.md: правило 11.6 → 'цель: N+ passed'
     """
-    issues: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    issues: list[dict[str, Any]] = []
     actual = count_test_functions(workspace)
 
     changelog = _read(workspace, CHANGELOG)
@@ -882,7 +882,7 @@ def check_test_counter(workspace: Path) -> list[dict[str, Any***REMOVED******REM
                 "check": "test_counter",
                 "doc": "CHANGELOG.md",
                 "issue": "full-suite 'N passed' line not found (pytest tests_09/ -q)",
-            ***REMOVED***)
+            ])
         elif documented != actual:
             issues.append({
                 "check": "test_counter",
@@ -890,7 +890,7 @@ def check_test_counter(workspace: Path) -> list[dict[str, Any***REMOVED******REM
                 "documented": documented,
                 "actual": actual,
                 "issue": "test counter diverges from reality (tests_09)",
-            ***REMOVED***)
+            ])
 
     standard = _read(workspace, CODE_QUALITY_STANDARD)
     if standard is not None:
@@ -900,7 +900,7 @@ def check_test_counter(workspace: Path) -> list[dict[str, Any***REMOVED******REM
                 "check": "test_counter",
                 "doc": "CODE_QUALITY_STANDARD.md",
                 "issue": "regression test target 'цель: N+ passed' not found (rule 11.6)",
-            ***REMOVED***)
+            ])
         elif target != actual:
             issues.append({
                 "check": "test_counter",
@@ -908,7 +908,7 @@ def check_test_counter(workspace: Path) -> list[dict[str, Any***REMOVED******REM
                 "target": target,
                 "actual": actual,
                 "issue": "regression test target diverges from reality (tests_09)",
-            ***REMOVED***)
+            ])
 
     return issues
 
@@ -933,14 +933,14 @@ def _s20_status_from_cell(cell: str) -> str:
     return REGISTERED
 
 
-def extract_missing_capabilities(text: str) -> list[dict[str, str***REMOVED******REMOVED***:
-    """Разобрать §20-таблицу карты v1.1 → [{item_id, status***REMOVED******REMOVED***.
+def extract_missing_capabilities(text: str) -> list[dict[str, str]]:
+    """Разобрать §20-таблицу карты v1.1 → [{item_id, status]].
 
     item_id берётся из backtick-токена (``research_web``) либо keyword-маппинга
     строк 1–5 (Factory Registry → factory_registry и т.п.). status — из последней
     колонки через :func:`_s20_status_from_cell`.
     """
-    out: list[dict[str, str***REMOVED******REMOVED*** = [***REMOVED***
+    out: list[dict[str, str]] = []
     m = re.search(r"## 20\. Missing Capabilities\n(.*?)(?=\n---|\n## |\Z)", text, re.DOTALL)
     if not m:
         return out
@@ -949,11 +949,11 @@ def extract_missing_capabilities(text: str) -> list[dict[str, str***REMOVED*****
         line = line.strip()
         if not line.startswith("|"):
             continue
-        cells = [c.strip() for c in line.strip("|").split("|")***REMOVED***
+        cells = [c.strip() for c in line.strip("|").split("|")]
         if len(cells) < 4:
             continue
-        desc, priority = cells[1***REMOVED***, cells[3***REMOVED***
-        bt = re.search(r"`([a-z***REMOVED***[a-z0-9_***REMOVED***+)`", desc)
+        desc, priority = cells[1], cells[3]
+        bt = re.search(r"`([a-z)[a-z0-9_]+)`", desc)
         if bt:
             item_id = bt.group(1)
         else:
@@ -961,11 +961,11 @@ def extract_missing_capabilities(text: str) -> list[dict[str, str***REMOVED*****
             item_id = next((v for k, v in _S20_ITEM_ID_BY_KEYWORD.items() if k in low), None)
         if not item_id:
             continue
-        out.append({"item_id": item_id, "status": _s20_status_from_cell(priority)***REMOVED***)
+        out.append({"item_id": item_id, "status": _s20_status_from_cell(priority)})
     return out
 
 
-def check_missing_registry_sync(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+def check_missing_registry_sync(workspace: Path) -> list[dict[str, Any]]:
     """§20 карты v1.1 ↔ MissingRegistry не расходятся (register-first, AGENTS.md §5).
 
     Три класса расхождений:
@@ -974,34 +974,34 @@ def check_missing_registry_sync(workspace: Path) -> list[dict[str, Any***REMOVED
       3. статус реестра отстаёт/обгоняет §20 → lifecycle рассинхронизирован.
     Плюс schema_violations самого реестра (B10/R-127).
     """
-    issues: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    issues: list[dict[str, Any]] = []
     text = _read(workspace, MISSING_CAPABILITIES_DOC)
     if text is None:
         return [{
             "check": "missing_registry_sync",
             "issue": "FACTORY_FORGE_ARCHITECTURE_V1.md missing (§20)",
-        ***REMOVED******REMOVED***
+        ]]
 
     reg_path = workspace / MISSING_REGISTRY_YAML
     if not reg_path.exists():
         return [{
             "check": "missing_registry_sync",
-            "issue": f"{MISSING_REGISTRY_YAML***REMOVED*** missing (run: python -m core_02.missing_registry seed)",
-        ***REMOVED******REMOVED***
+            "issue": f"{MISSING_REGISTRY_YAML} missing (run: python -m core_02.missing_registry seed)",
+        ]]
 
     from core_02.missing_registry import MissingRegistry  # local import — держит модуль независимым
 
     try:
         reg = MissingRegistry(reg_path)
     except Exception as exc:  # noqa: BLE001 — fail-safe
-        return [{"check": "missing_registry_sync", "issue": f"MissingRegistry load failed: {exc***REMOVED***"***REMOVED******REMOVED***
+        return [{"check": "missing_registry_sync", "issue": f"MissingRegistry load failed: {exc}"}]
 
     for v in reg.schema_violations:
-        issues.append({"check": "missing_registry_sync", "issue": f"registry schema violation: {v***REMOVED***"***REMOVED***)
+        issues.append({"check": "missing_registry_sync", "issue": f"registry schema violation: {v}"})
 
     doc_items = extract_missing_capabilities(text)
-    doc_by_id = {i["item_id"***REMOVED***: i["status"***REMOVED*** for i in doc_items***REMOVED***
-    reg_items = {i.item_id: i.status for i in reg.list_all()***REMOVED***
+    doc_by_id = {i["item_id"]: i["status"] for i in doc_items}
+    reg_items = {i.item_id: i.status for i in reg.list_all()}
 
     for item_id, doc_status in sorted(doc_by_id.items()):
         if item_id not in reg_items:
@@ -1009,26 +1009,26 @@ def check_missing_registry_sync(workspace: Path) -> list[dict[str, Any***REMOVED
                 "check": "missing_registry_sync",
                 "item": item_id,
                 "issue": "in §20 map but missing from MissingRegistry (register-first)",
-            ***REMOVED***)
+            ])
             continue
         doc_rank = status_rank(doc_status)
-        reg_rank = status_rank(reg_items[item_id***REMOVED***)
+        reg_rank = status_rank(reg_items[item_id])
         if reg_rank < doc_rank:
             issues.append({
                 "check": "missing_registry_sync",
                 "item": item_id,
                 "doc_status": doc_status,
-                "registry_status": reg_items[item_id***REMOVED***,
+                "registry_status": reg_items[item_id],
                 "issue": "registry lags behind §20 map (register-first: реестр — источник истины)",
-            ***REMOVED***)
+            ])
         elif reg_rank > doc_rank:
             issues.append({
                 "check": "missing_registry_sync",
                 "item": item_id,
                 "doc_status": doc_status,
-                "registry_status": reg_items[item_id***REMOVED***,
+                "registry_status": reg_items[item_id],
                 "issue": "§20 map lags behind registry (update §20 row)",
-            ***REMOVED***)
+            ])
 
     for item_id in sorted(reg_items):
         if item_id not in doc_by_id:
@@ -1036,7 +1036,7 @@ def check_missing_registry_sync(workspace: Path) -> list[dict[str, Any***REMOVED
                 "check": "missing_registry_sync",
                 "item": item_id,
                 "issue": "in MissingRegistry but missing from §20 map (update §20)",
-            ***REMOVED***)
+            ])
 
     return issues
 
@@ -1046,8 +1046,8 @@ def check_missing_registry_sync(workspace: Path) -> list[dict[str, Any***REMOVED
 # ═══════════════════════════════════════════════════════════════
 
 
-def check_anchors(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
-    """[5.189.4***REMOVED*** Семантические анкоры резолвятся к коду/файлу/реестру (§I.3).
+def check_anchors(workspace: Path) -> list[dict[str, Any]]:
+    """[5.189.4] Семантические анкоры резолвятся к коду/файлу/реестру (§I.3).
 
     Прогоняет AnchorResolver по каноническим корням (engineering-memory,
     runtime_05, CHANGELOG.md), исключая мета-спеку SEMANTIC_ANCHOR_SPEC_V1.md
@@ -1064,8 +1064,8 @@ def check_anchors(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED*
         roots=("docs_10/engineering-memory", "runtime_05", "CHANGELOG.md"),
         exclude=_ANCHOR_EXCLUDED_DOCS,
     )
-    issues: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
-    for u in summary.get("unresolved", [***REMOVED***):
+    issues: list[dict[str, Any]] = []
+    for u in summary.get("unresolved", []):
         if u.get("namespace") in HARD_ANCHOR_NAMESPACES:
             issues.append({
                 "check": "anchors",
@@ -1074,9 +1074,9 @@ def check_anchors(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED*
                 "doc": u.get("doc"),
                 "line": u.get("line"),
                 "issue": (
-                    f"UNVERIFIED anchor {u.get('raw', '')***REMOVED*** — {u.get('evidence', '')***REMOVED***"
+                    f"UNVERIFIED anchor {u.get('raw', '')} — {u.get('evidence', '')}"
                 ),
-            ***REMOVED***)
+            ])
     return issues
 
 
@@ -1085,7 +1085,7 @@ def check_anchors(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED*
 # ═══════════════════════════════════════════════════════════════
 
 
-def check_backfill_signatures(workspace: Path) -> list[dict[str, Any***REMOVED******REMOVED***:
+def check_backfill_signatures(workspace: Path) -> list[dict[str, Any]]:
     """v5.189.51: scan ``data_13/missing_registry.yaml`` for retroactive-signature
     entries: ``status=implemented`` + ``registered_at==updated_at`` +
     ``backfill=False`` (or missing).
@@ -1106,27 +1106,27 @@ def check_backfill_signatures(workspace: Path) -> list[dict[str, Any***REMOVED**
     instrument and flagging them would be historical-cleanup noise.
 
     Returns:
-        list[dict[str, Any***REMOVED******REMOVED*** of warning dicts (may be empty).
+        list[dict[str, Any]] of warning dicts (may be empty).
     """
     registry_path = workspace / "data_13" / "missing_registry.yaml"
     if not registry_path.exists():
-        return [***REMOVED***
+        return []
     try:
-        data = yaml.safe_load(registry_path.read_text(encoding="utf-8")) or {***REMOVED***
+        data = yaml.safe_load(registry_path.read_text(encoding="utf-8")) or {}
     except yaml.YAMLError:
-        return [***REMOVED***
+        return []
     if not isinstance(data, dict):
-        return [***REMOVED***
+        return []
     # Exempt canonical SEED items (those predate backfill:bool discipline).
-    exempt_ids: set[str***REMOVED*** = set()
+    exempt_ids: set[str] = set()
     try:
-        from core_02.missing_registry import _SEED as _MR_SEED  # type: ignore[import-not-found***REMOVED***
-        for item in _MR_SEED or [***REMOVED***:
+        from core_02.missing_registry import _SEED as _MR_SEED  # type: ignore[import-not-found]
+        for item in _MR_SEED or []:
             if isinstance(item, dict) and "item_id" in item:
-                exempt_ids.add(str(item["item_id"***REMOVED***))
+                exempt_ids.add(str(item["item_id"]))
     except Exception:  # noqa: BLE001 — defensive: missing module/path drift
         pass
-    warnings: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+    warnings: list[dict[str, Any]] = []
     for item_id, entry in data.items():
         if not isinstance(entry, dict):
             continue
@@ -1152,13 +1152,13 @@ def check_backfill_signatures(workspace: Path) -> list[dict[str, Any***REMOVED**
                 "backfill:true — looks retroactive. Re-register with "
                 "`--backfill` (or bump updated_at to differ from registered_at)."
             ),
-        ***REMOVED***)
+        ])
     return warnings
 
 
-def build_report(workspace: Path) -> dict[str, Any***REMOVED***:
+def build_report(workspace: Path) -> dict[str, Any]:
     """Собрать полный отчёт самоконсистентности."""
-    report: dict[str, Any***REMOVED*** = {
+    report: dict[str, Any] = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "engine_files": check_engine_files(workspace),
         "lifecycle_coverage": check_lifecycle_coverage(workspace),
@@ -1172,43 +1172,43 @@ def build_report(workspace: Path) -> dict[str, Any***REMOVED***:
         "missing_registry_sync": check_missing_registry_sync(workspace),
         "backfill_signature": check_backfill_signatures(workspace),
         "anchors": check_anchors(workspace),
-    ***REMOVED***
+    }
     all_issues = (
-        report["engine_files"***REMOVED***
-        + report["lifecycle_coverage"***REMOVED***
-        + report["module_areas"***REMOVED***
-        + report["glossary_terms"***REMOVED***
-        + report["roadmap_refs"***REMOVED***
-        + report["cross_references"***REMOVED***
-        + report["project_book"***REMOVED***
-        + report["naming_convention"***REMOVED***
-        + report["test_counter"***REMOVED***
-        + report["missing_registry_sync"***REMOVED***
-        # NOTE: backfill_signature kept in report["backfill_signature"***REMOVED*** for
+        report["engine_files"]
+        + report["lifecycle_coverage"]
+        + report["module_areas"]
+        + report["glossary_terms"]
+        + report["roadmap_refs"]
+        + report["cross_references"]
+        + report["project_book"]
+        + report["naming_convention"]
+        + report["test_counter"]
+        + report["missing_registry_sync"]
+        # NOTE: backfill_signature kept in report["backfill_signature"] for
         # visibility but NOT aggregated into all_issues (soft discipline signal,
         # per user 'предупреждение' intent — see v5.189.51 docstring).
-        + report["anchors"***REMOVED***
+        + report["anchors"]
     )
-    report["total_issues"***REMOVED*** = len(all_issues)
-    report["consistent"***REMOVED*** = not all_issues
+    report["total_issues"] = len(all_issues)
+    report["consistent"] = not all_issues
     return report
 
 
-def format_report(report: dict[str, Any***REMOVED***) -> str:
-    lines: list[str***REMOVED*** = [
+def format_report(report: dict[str, Any]) -> str:
+    lines: list[str] = [
         "# Consistency Report (Stage 9)",
         "",
-        f"_Generated at: {report['generated_at'***REMOVED******REMOVED***_",
+        f"_Generated at: {report['generated_at']}_",
         "",
         "> Реестры как данные: ARCHITECTURE_CANONICAL, LIFECYCLE, MODULE_CONSOLIDATION, "
         "GLOSSARY, ROADMAP_PROMT32.",
         "",
-    ***REMOVED***
-    if report["consistent"***REMOVED***:
-        lines.extend(["## ✅ Consistent", "", "All canonical registries agree with the codebase."***REMOVED***)
+    ]
+    if report["consistent"]:
+        lines.extend(["## ✅ Consistent", "", "All canonical registries agree with the codebase."])
         return "\n".join(lines)
 
-    lines.append(f"## ⚠️ {report['total_issues'***REMOVED******REMOVED*** issue(s) found")
+    lines.append(f"## ⚠️ {report['total_issues']} issue(s) found")
     sections = [
         ("engine_files", "Engine files (canonical registry → scripts_01/)"),
         ("lifecycle_coverage", "Lifecycle coverage (registry → LIFECYCLE.md)"),
@@ -1221,20 +1221,20 @@ def format_report(report: dict[str, Any***REMOVED***) -> str:
         ("test_counter", "Test counter (CHANGELOG / CODE_QUALITY_STANDARD vs tests_09 reality)"),
         ("missing_registry_sync", "Missing Registry sync (§20 карты v1.1 ↔ data_13/missing_registry.yaml, register-first)"),
         ("anchors", "Anchors (AnchorResolver §I.3: hard namespaces → code/file/registry)"),
-    ***REMOVED***
+    ]
     for key, title in sections:
-        items = report[key***REMOVED***
+        items = report[key]
         if not items:
             continue
         lines.append("")
-        lines.append(f"## {title***REMOVED***")
+        lines.append(f"## {title}")
         for item in items:
-            detail = " · ".join(f"{k***REMOVED***={v***REMOVED***" for k, v in item.items() if k != "check")
-            lines.append(f"- `{item['check'***REMOVED******REMOVED***`: {detail***REMOVED***")
+            detail = " · ".join(f"{k}={v}" for k, v in item.items() if k != "check")
+            lines.append(f"- `{item['check']}`: {detail}")
     return "\n".join(lines)
 
 
-def run_consistency_check(workspace: Path | str) -> dict[str, Any***REMOVED***:
+def run_consistency_check(workspace: Path | str) -> dict[str, Any]:
     """Запустить проверку и вернуть отчёт."""
     ws = Path(workspace) if isinstance(workspace, str) else workspace
     return build_report(ws)
@@ -1249,7 +1249,7 @@ def main() -> int:
     parser.add_argument("--json", action="store_true", help="JSON output")
     parser.add_argument(
         "--diagnose-test-count", action="store_true",
-        help="Run ground-truth AST vs pytest --collect-only diff diagnostic ([5.39.2***REMOVED***)",
+        help="Run ground-truth AST vs pytest --collect-only diff diagnostic ([5.39.2])",
     )
     args = parser.parse_args()
 
@@ -1263,10 +1263,10 @@ def main() -> int:
 
     if args.json:
         print(json.dumps(report, ensure_ascii=False, indent=2))
-    elif args.report or not report["consistent"***REMOVED***:
+    elif args.report or not report["consistent"]:
         print(format_report(report))
 
-    return 0 if report["consistent"***REMOVED*** else 1
+    return 0 if report["consistent"] else 1
 
 
 if __name__ == "__main__":

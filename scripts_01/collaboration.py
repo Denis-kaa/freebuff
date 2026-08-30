@@ -37,7 +37,7 @@ collaboration.py — Live Collaboration Engine (Phase 7: CoWork / Companion Plat
     collab = engine.create_session(
         topic="Code Review",
         owner="buffy",
-        participants=["alice", "bob"***REMOVED***,
+        participants=["alice", "bob"],
     )
 
     # Отправить сообщение
@@ -67,7 +67,7 @@ import threading
 import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional, Set
 
 WORKSPACE = Path(__file__).resolve().parent
@@ -118,7 +118,7 @@ class Participant:
     joined_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     last_active: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     is_present: bool = True
-    metadata: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -141,24 +141,24 @@ class CollabMessage:
     msg_type: str = "text"
     timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     reply_to: str = ""
-    metadata: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class CollaborationSession:
     """Коллаборативная сессия — пространство для совместной работы."""
 
-    session_id: str = field(default_factory=lambda: f"collab-{uuid.uuid4().hex[:8***REMOVED******REMOVED***")
+    session_id: str = field(default_factory=lambda: f"collab-{uuid.uuid4().hex[:8]}")
     topic: str = ""
     status: str = SessionStatus.ACTIVE
     owner: str = ""
-    participants: List[Participant***REMOVED*** = field(default_factory=list)
+    participants: List[Participant] = field(default_factory=list)
     created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     closed_at: str = ""
     message_count: int = 0
-    metadata: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
-    def get_participant(self, name: str) -> Optional[Participant***REMOVED***:
+    def get_participant(self, name: str) -> Optional[Participant]:
         """Получить участника по имени."""
         for p in self.participants:
             if p.name == name:
@@ -169,11 +169,11 @@ class CollaborationSession:
         """Проверить, есть ли участник."""
         return self.get_participant(name) is not None
 
-    def participant_names(self) -> List[str***REMOVED***:
+    def participant_names(self) -> List[str]:
         """Имена всех участников."""
-        return [p.name for p in self.participants***REMOVED***
+        return [p.name for p in self.participants]
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         """Сериализация в dict для JSON."""
         return {
             "session_id": self.session_id,
@@ -188,15 +188,15 @@ class CollaborationSession:
                     "last_active": p.last_active,
                     "is_present": p.is_present,
                     "metadata": p.metadata,
-                ***REMOVED***
+                }
                 for p in self.participants
-            ***REMOVED***,
+            ],
             "participant_count": len(self.participants),
             "created_at": self.created_at,
             "closed_at": self.closed_at,
             "message_count": self.message_count,
             "metadata": self.metadata,
-        ***REMOVED***
+        }
 
 
 class CollaborationEngine:
@@ -247,7 +247,7 @@ class CollaborationEngine:
                     created_at TEXT NOT NULL,
                     closed_at TEXT DEFAULT '',
                     message_count INTEGER DEFAULT 0,
-                    metadata TEXT DEFAULT '{***REMOVED***'
+                    metadata TEXT DEFAULT '{}'
                 )
                 """
                 )
@@ -260,7 +260,7 @@ class CollaborationEngine:
                     joined_at TEXT NOT NULL,
                     last_active TEXT NOT NULL,
                     is_present INTEGER DEFAULT 1,
-                    metadata TEXT DEFAULT '{***REMOVED***',
+                    metadata TEXT DEFAULT '{}',
                     PRIMARY KEY (session_id, name)
                 )
                 """
@@ -275,7 +275,7 @@ class CollaborationEngine:
                     msg_type TEXT DEFAULT 'text',
                     timestamp TEXT NOT NULL,
                     reply_to TEXT DEFAULT '',
-                    metadata TEXT DEFAULT '{***REMOVED***'
+                    metadata TEXT DEFAULT '{}'
                 )
                 """
                 )
@@ -283,7 +283,7 @@ class CollaborationEngine:
             finally:
                 conn.close()
 
-    def _publish(self, event_type: str, data: Dict[str, Any***REMOVED***) -> None:
+    def _publish(self, event_type: str, data: Dict[str, Any]) -> None:
         """Публикует событие в EventBus (если подключён)."""
         if self._event_bus is None:
             return
@@ -299,9 +299,9 @@ class CollaborationEngine:
     def create_session(
         self,
         topic: str,
-        owner: str | List[str***REMOVED*** = "",
-        participants: Optional[List[str***REMOVED******REMOVED*** = None,
-        metadata: Optional[Dict[str, Any***REMOVED******REMOVED*** = None,
+        owner: str | List[str] = "",
+        participants: Optional[List[str]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> CollaborationSession:
         """Создаёт коллаборативную сессию.
 
@@ -318,7 +318,7 @@ class CollaborationEngine:
         if isinstance(owner, (list, tuple)):
             participants = list(owner)
             owner = ""
-        session_id = f"collab-{uuid.uuid4().hex[:8***REMOVED******REMOVED***"
+        session_id = f"collab-{uuid.uuid4().hex[:8]}"
         now_ts = datetime.now(timezone.utc).isoformat()
         with self._lock:
             conn = self._connect()
@@ -327,7 +327,7 @@ class CollaborationEngine:
                     "INSERT INTO collab_sessions\n"
                     "                       (session_id, topic, status, owner, created_at, metadata)\n"
                     "                       VALUES (?, ?, ?, ?, ?, ?)",
-                    (session_id, topic, SessionStatus.ACTIVE, owner, now_ts, json.dumps(metadata or {***REMOVED***)),
+                    (session_id, topic, SessionStatus.ACTIVE, owner, now_ts, json.dumps(metadata or {})),
                 )
                 # Владелец автоматически становится OWNER-участником.
                 conn.execute(
@@ -336,7 +336,7 @@ class CollaborationEngine:
                     "                           VALUES (?, ?, ?, ?, ?, 1)",
                     (session_id, owner, ParticipantRole.OWNER, now_ts, now_ts),
                 )
-                for name in participants or [***REMOVED***:
+                for name in participants or []:
                     if name == owner:
                         continue
                     # Участники, добавленные при создании, получают EDITOR
@@ -353,23 +353,23 @@ class CollaborationEngine:
         # Системные сообщения о создании (контракт тестов: сообщение с 'created'
         # и сообщение(я) с 'joined' для каждого участника).
         if owner:
-            self._add_system_message(session_id, f"Session '{topic***REMOVED***' created by {owner***REMOVED***")
+            self._add_system_message(session_id, f"Session '{topic}' created by {owner}")
         else:
-            self._add_system_message(session_id, f"Session '{topic***REMOVED***' created")
-        joined_names = [owner***REMOVED*** if owner else [***REMOVED***
-        joined_names.extend(participants or [***REMOVED***)
+            self._add_system_message(session_id, f"Session '{topic}' created")
+        joined_names = [owner] if owner else []
+        joined_names.extend(participants or [])
         for name in joined_names:
-            self._add_system_message(session_id, f"{name***REMOVED*** joined the session")
+            self._add_system_message(session_id, f"{name} joined the session")
         session = self.get_session(session_id)
-        self._publish("collab.created", {"session_id": session_id, "topic": topic, "owner": owner***REMOVED***)
+        self._publish("collab.created", {"session_id": session_id, "topic": topic, "owner": owner})
         assert session is not None
         return session
 
-    def get_session(self, session_id: str) -> Optional[CollaborationSession***REMOVED***:
+    def get_session(self, session_id: str) -> Optional[CollaborationSession]:
         """Получает сессию по ID."""
         return self._load_session(session_id)
 
-    def _load_session(self, session_id: str) -> Optional[CollaborationSession***REMOVED***:
+    def _load_session(self, session_id: str) -> Optional[CollaborationSession]:
         """Загружает сессию из БД (под блокировкой)."""
         with self._lock:
             conn = self._connect()
@@ -381,49 +381,49 @@ class CollaborationEngine:
                     return None
                 participants = self._load_participants(conn, session_id)
                 try:
-                    metadata = json.loads(row["metadata"***REMOVED***) if row["metadata"***REMOVED*** else {***REMOVED***
+                    metadata = json.loads(row["metadata"]) if row["metadata"] else {}
                 except (TypeError, ValueError):
-                    metadata = {***REMOVED***
+                    metadata = {}
                 return CollaborationSession(
-                    session_id=row["session_id"***REMOVED***,
-                    topic=row["topic"***REMOVED***,
-                    status=row["status"***REMOVED***,
-                    owner=row["owner"***REMOVED***,
+                    session_id=row["session_id"],
+                    topic=row["topic"],
+                    status=row["status"],
+                    owner=row["owner"],
                     participants=participants,
-                    created_at=row["created_at"***REMOVED***,
-                    closed_at=row["closed_at"***REMOVED*** or "",
-                    message_count=int(row["message_count"***REMOVED*** or 0),
+                    created_at=row["created_at"],
+                    closed_at=row["closed_at"] or "",
+                    message_count=int(row["message_count"] or 0),
                     metadata=metadata,
                 )
             finally:
                 conn.close()
 
-    def _load_participants(self, conn: sqlite3.Connection, session_id: str) -> List[Participant***REMOVED***:
+    def _load_participants(self, conn: sqlite3.Connection, session_id: str) -> List[Participant]:
         """Загружает участников сессии."""
         rows = conn.execute(
             "SELECT * FROM collab_participants WHERE session_id = ?", (session_id,)
         ).fetchall()
-        result = [***REMOVED***
+        result = []
         for r in rows:
             try:
-                metadata = json.loads(r["metadata"***REMOVED***) if r["metadata"***REMOVED*** else {***REMOVED***
+                metadata = json.loads(r["metadata"]) if r["metadata"] else {}
             except (TypeError, ValueError):
-                metadata = {***REMOVED***
+                metadata = {}
             result.append(
                 Participant(
-                    name=r["name"***REMOVED***,
-                    role=r["role"***REMOVED***,
-                    joined_at=r["joined_at"***REMOVED***,
-                    last_active=r["last_active"***REMOVED***,
-                    is_present=bool(r["is_present"***REMOVED***),
+                    name=r["name"],
+                    role=r["role"],
+                    joined_at=r["joined_at"],
+                    last_active=r["last_active"],
+                    is_present=bool(r["is_present"]),
                     metadata=metadata,
                 )
             )
         return result
 
     def list_sessions(
-        self, status: Optional[str***REMOVED*** = None, participant_name: Optional[str***REMOVED*** = None
-    ) -> List[CollaborationSession***REMOVED***:
+        self, status: Optional[str] = None, participant_name: Optional[str] = None
+    ) -> List[CollaborationSession]:
         """Список сессий с фильтрацией.
 
         Args:
@@ -462,23 +462,23 @@ class CollaborationEngine:
                     rows = conn.execute(
                         "SELECT * FROM collab_sessions ORDER BY created_at DESC"
                     ).fetchall()
-                result = [***REMOVED***
+                result = []
                 for r in rows:
-                    participants = self._load_participants(conn, r["session_id"***REMOVED***)
+                    participants = self._load_participants(conn, r["session_id"])
                     try:
-                        metadata = json.loads(r["metadata"***REMOVED***) if r["metadata"***REMOVED*** else {***REMOVED***
+                        metadata = json.loads(r["metadata"]) if r["metadata"] else {}
                     except (TypeError, ValueError):
-                        metadata = {***REMOVED***
+                        metadata = {}
                     result.append(
                         CollaborationSession(
-                            session_id=r["session_id"***REMOVED***,
-                            topic=r["topic"***REMOVED***,
-                            status=r["status"***REMOVED***,
-                            owner=r["owner"***REMOVED***,
+                            session_id=r["session_id"],
+                            topic=r["topic"],
+                            status=r["status"],
+                            owner=r["owner"],
                             participants=participants,
-                            created_at=r["created_at"***REMOVED***,
-                            closed_at=r["closed_at"***REMOVED*** or "",
-                            message_count=int(r["message_count"***REMOVED*** or 0),
+                            created_at=r["created_at"],
+                            closed_at=r["closed_at"] or "",
+                            message_count=int(r["message_count"] or 0),
                             metadata=metadata,
                         )
                     )
@@ -510,7 +510,7 @@ class CollaborationEngine:
             finally:
                 conn.close()
         self._add_system_message(session_id, "Session closed")
-        self._publish("collab.closed", {"session_id": session_id***REMOVED***)
+        self._publish("collab.closed", {"session_id": session_id})
         return True
 
     # ── Участники ─────────────────────────────────────────────────────
@@ -546,8 +546,8 @@ class CollaborationEngine:
                 conn.commit()
             finally:
                 conn.close()
-        self._add_system_message(session_id, f"{participant_name***REMOVED*** joined the session")
-        self._publish("collab.joined", {"session_id": session_id, "participant": participant_name, "role": role***REMOVED***)
+        self._add_system_message(session_id, f"{participant_name} joined the session")
+        self._publish("collab.joined", {"session_id": session_id, "participant": participant_name, "role": role})
         return True
 
     def leave_session(self, session_id: str, participant_name: str) -> bool:
@@ -576,8 +576,8 @@ class CollaborationEngine:
                 conn.commit()
             finally:
                 conn.close()
-        self._add_system_message(session_id, f"{participant_name***REMOVED*** left the session")
-        self._publish("collab.left", {"session_id": session_id, "participant": participant_name***REMOVED***)
+        self._add_system_message(session_id, f"{participant_name} left the session")
+        self._publish("collab.left", {"session_id": session_id, "participant": participant_name})
         return True
 
     def update_participant_role(self, session_id: str, participant_name: str, new_role: str) -> bool:
@@ -610,7 +610,7 @@ class CollaborationEngine:
                 conn.close()
         self._publish(
             "collab.participant_updated",
-            {"session_id": session_id, "participant": participant_name, "role": new_role***REMOVED***,
+            {"session_id": session_id, "participant": participant_name, "role": new_role},
         )
         return True
 
@@ -665,7 +665,7 @@ class CollaborationEngine:
                         "system",
                         datetime.now(timezone.utc).isoformat(),
                         "",
-                        "{***REMOVED***",
+                        "{]",
                     ),
                 )
                 conn.commit()
@@ -679,8 +679,8 @@ class CollaborationEngine:
         content: str,
         msg_type: str = "text",
         reply_to: str = "",
-        metadata: Optional[Dict[str, Any***REMOVED******REMOVED*** = None,
-    ) -> Optional[CollabMessage***REMOVED***:
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> Optional[CollabMessage]:
         """Отправляет сообщение в сессию.
 
         Args:
@@ -716,7 +716,7 @@ class CollaborationEngine:
                         msg_type,
                         now_ts,
                         reply_to,
-                        json.dumps(metadata or {***REMOVED***),
+                        json.dumps(metadata or {}),
                     ),
                 )
                 conn.execute(
@@ -733,7 +733,7 @@ class CollaborationEngine:
                 conn.close()
         self._publish(
             "collab.message",
-            {"session_id": session_id, "message_id": message_id, "sender": sender, "msg_type": msg_type***REMOVED***,
+            {"session_id": session_id, "message_id": message_id, "sender": sender, "msg_type": msg_type},
         )
         return CollabMessage(
             id=message_id,
@@ -743,16 +743,16 @@ class CollaborationEngine:
             msg_type=msg_type,
             timestamp=now_ts,
             reply_to=reply_to,
-            metadata=metadata or {***REMOVED***,
+            metadata=metadata or {},
         )
 
     def get_history(
         self,
         session_id: str,
         limit: int = 50,
-        since: Optional[str***REMOVED*** = None,
-        before: Optional[str***REMOVED*** = None,
-    ) -> List[CollabMessage***REMOVED***:
+        since: Optional[str] = None,
+        before: Optional[str] = None,
+    ) -> List[CollabMessage]:
         """Получает историю сообщений сессии.
 
         Args:
@@ -765,7 +765,7 @@ class CollaborationEngine:
             Список CollabMessage.
         """
         query = "SELECT * FROM collab_messages WHERE session_id = ?"
-        params: List[Any***REMOVED*** = [session_id***REMOVED***
+        params: List[Any] = [session_id]
         if since:
             query += " AND timestamp >= ?"
             params.append(since)
@@ -778,21 +778,21 @@ class CollaborationEngine:
             conn = self._connect()
             try:
                 rows = conn.execute(query, params).fetchall()
-                result = [***REMOVED***
+                result = []
                 for r in rows:
                     try:
-                        metadata = json.loads(r["metadata"***REMOVED***) if r["metadata"***REMOVED*** else {***REMOVED***
+                        metadata = json.loads(r["metadata"]) if r["metadata"] else {}
                     except (TypeError, ValueError):
-                        metadata = {***REMOVED***
+                        metadata = {}
                     result.append(
                         CollabMessage(
-                            id=r["id"***REMOVED***,
-                            session_id=r["session_id"***REMOVED***,
-                            sender=r["sender"***REMOVED***,
-                            content=r["content"***REMOVED***,
-                            msg_type=r["msg_type"***REMOVED***,
-                            timestamp=r["timestamp"***REMOVED***,
-                            reply_to=r["reply_to"***REMOVED*** or "",
+                            id=r["id"],
+                            session_id=r["session_id"],
+                            sender=r["sender"],
+                            content=r["content"],
+                            msg_type=r["msg_type"],
+                            timestamp=r["timestamp"],
+                            reply_to=r["reply_to"] or "",
                             metadata=metadata,
                         )
                     )
@@ -800,7 +800,7 @@ class CollaborationEngine:
             finally:
                 conn.close()
 
-    def get_recent_events(self, session_id: str, limit: int = 20) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    def get_recent_events(self, session_id: str, limit: int = 20) -> List[Dict[str, Any]]:
         """Получает последние события сессии (из EventBus лога).
 
         Note: EventBus.get_events() does exact matching, so we query
@@ -811,21 +811,21 @@ class CollaborationEngine:
             limit: максимальное количество событий
         """
         if self._event_bus is None:
-            return [***REMOVED***
+            return []
         try:
             events = self._event_bus.get_events(limit=limit * 5)
         except Exception:
-            return [***REMOVED***
-        result = [***REMOVED***
+            return []
+        result = []
         for ev in events:
-            data = getattr(ev, "data", {***REMOVED***) or {***REMOVED***
+            data = getattr(ev, "data", {}) or {}
             if isinstance(data, dict) and data.get("session_id") == session_id:
-                result.append({"type": getattr(ev, "event_type", ""), "data": data***REMOVED***)
-        return result[-limit:***REMOVED***
+                result.append({"type": getattr(ev, "event_type", ""), "data": data})
+        return result[-limit:]
 
     # ── Диагностика ───────────────────────────────────────────────────
 
-    def get_status(self) -> Dict[str, Any***REMOVED***:
+    def get_status(self) -> Dict[str, Any]:
         """Диагностика Collaboration Engine.
 
         Returns:
@@ -845,7 +845,7 @@ class CollaborationEngine:
                     "SELECT timestamp FROM collab_messages ORDER BY timestamp DESC LIMIT 1"
                 ).fetchone()
                 if row:
-                    last_activity = row[0***REMOVED***
+                    last_activity = row[0]
             finally:
                 conn.close()
         return {
@@ -859,7 +859,7 @@ class CollaborationEngine:
             "eventbus_connected": self._event_bus is not None,
             "presence_connected": self._presence_engine is not None,
             "last_activity": last_activity,
-        ***REMOVED***
+        }
 
 
 class Colors:
@@ -882,54 +882,54 @@ def _cmd_list(args: argparse.Namespace) -> None:
     if not sessions:
         print("📭 No collaboration sessions")
         return
-    print(f"Collaboration Sessions ({len(sessions)***REMOVED*** sessions)")
+    print(f"Collaboration Sessions ({len(sessions)} sessions)")
     for s in sessions:
         icon = "●" if s.status == SessionStatus.ACTIVE else "○"
-        print(f"  {icon***REMOVED*** {s.session_id***REMOVED***: {s.topic***REMOVED*** [{s.status***REMOVED******REMOVED*** owner={s.owner***REMOVED*** msgs={s.message_count***REMOVED***")
+        print(f"  {icon} {s.session_id}: {s.topic} [{s.status}] owner={s.owner} msgs={s.message_count}")
 
 
 def _cmd_get(args: argparse.Namespace) -> None:
     engine = CollaborationEngine(db_path=args.db_path)
     session = engine.get_session(args.session_id)
     if session is None:
-        print(f"❌ Session not found: {args.session_id***REMOVED***")
+        print(f"❌ Session not found: {args.session_id}")
         return
-    print(f"Session: {session.session_id***REMOVED***")
-    print(f"  Topic:        {session.topic***REMOVED***")
-    print(f"  Status:       {session.status***REMOVED***")
-    print(f"  Owner:        {session.owner***REMOVED***")
-    print(f"  Created:      {session.created_at***REMOVED***")
-    print(f"  Closed:       {session.closed_at or '—'***REMOVED***")
-    print(f"  Messages:     {session.message_count***REMOVED***")
+    print(f"Session: {session.session_id}")
+    print(f"  Topic:        {session.topic}")
+    print(f"  Status:       {session.status}")
+    print(f"  Owner:        {session.owner}")
+    print(f"  Created:      {session.created_at}")
+    print(f"  Closed:       {session.closed_at or '—'}")
+    print(f"  Messages:     {session.message_count}")
     print("  Participants:")
     for p in session.participants:
         present = "●" if p.is_present else "○"
-        print(f"    {present***REMOVED*** {p.name***REMOVED*** ({p.role***REMOVED***) last_active={p.last_active***REMOVED***")
+        print(f"    {present} {p.name} ({p.role}) last_active={p.last_active}")
 
 
 def _cmd_create(args: argparse.Namespace) -> None:
     engine = CollaborationEngine(db_path=args.db_path)
-    participants = [p.strip() for p in (args.participants or "").split(",") if p.strip()***REMOVED***
+    participants = [p.strip() for p in (args.participants or "").split(",") if p.strip()]
     session = engine.create_session(args.topic, args.owner, participants)
-    print(f"✅ Session created: {session.session_id***REMOVED***")
+    print(f"✅ Session created: {session.session_id}")
 
 
 def _cmd_close(args: argparse.Namespace) -> None:
     engine = CollaborationEngine(db_path=args.db_path)
     ok = engine.close_session(args.session_id)
     if ok:
-        print(f"✅ Session closed: {args.session_id***REMOVED***")
+        print(f"✅ Session closed: {args.session_id}")
     else:
-        print(f"❌ Session not found or already closed: {args.session_id***REMOVED***")
+        print(f"❌ Session not found or already closed: {args.session_id}")
 
 
 def _cmd_send(args: argparse.Namespace) -> None:
     engine = CollaborationEngine(db_path=args.db_path)
     msg = engine.send_message(args.session_id, args.sender, args.content, msg_type=args.type)
     if msg is None:
-        print(f"❌ Session not found or closed: {args.session_id***REMOVED***")
+        print(f"❌ Session not found or closed: {args.session_id}")
         return
-    print(f"✅ Message sent ({msg.id***REMOVED***)")
+    print(f"✅ Message sent ({msg.id})")
 
 
 def _cmd_history(args: argparse.Namespace) -> None:
@@ -938,23 +938,23 @@ def _cmd_history(args: argparse.Namespace) -> None:
     if not messages:
         print("📭 No messages in session")
         return
-    print(f"Messages ({len(messages)***REMOVED***):")
+    print(f"Messages ({len(messages)}):")
     for m in messages:
-        print(f"  [{m.timestamp***REMOVED******REMOVED*** {m.sender***REMOVED*** ({m.msg_type***REMOVED***): {m.content[:80***REMOVED******REMOVED***")
+        print(f"  [{m.timestamp}] {m.sender} ({m.msg_type}): {m.content[:80]}")
 
 
 def _cmd_status(args: argparse.Namespace) -> None:
     engine = CollaborationEngine(db_path=args.db_path)
     st = engine.get_status()
     print("Collaboration Engine Status")
-    print(f"  Sessions:        {st['total_sessions'***REMOVED******REMOVED***")
-    print(f"  Active:          {st['active_sessions'***REMOVED******REMOVED***")
-    print(f"  Participants:    {st['total_participants'***REMOVED******REMOVED***")
-    print(f"  Messages:        {st['total_messages'***REMOVED******REMOVED***")
-    print(f"  DB:              {st['db_path'***REMOVED******REMOVED***")
-    print(f"  EventBus:        {'connected' if st['eventbus_connected'***REMOVED*** else 'not connected'***REMOVED***")
-    print(f"  Presence:        {'connected' if st['presence_connected'***REMOVED*** else 'not connected'***REMOVED***")
-    print(f"  Last activity:   {st['last_activity'***REMOVED******REMOVED***")
+    print(f"  Sessions:        {st['total_sessions']}")
+    print(f"  Active:          {st['active_sessions']}")
+    print(f"  Participants:    {st['total_participants']}")
+    print(f"  Messages:        {st['total_messages']}")
+    print(f"  DB:              {st['db_path']}")
+    print(f"  EventBus:        {'connected' if st['eventbus_connected'] else 'not connected'}")
+    print(f"  Presence:        {'connected' if st['presence_connected'] else 'not connected'}")
+    print(f"  Last activity:   {st['last_activity']}")
 
 
 def main() -> int:
@@ -1002,7 +1002,7 @@ def main() -> int:
         "send": _cmd_send,
         "history": _cmd_history,
         "status": _cmd_status,
-    ***REMOVED***
+    }
     handler = handlers.get(args.command)
     if handler is None:
         parser.print_help()

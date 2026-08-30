@@ -22,7 +22,7 @@
 **TG substrate integration:**
   - `push_state()` chunks JSON envelope → calls
     `core_02.telegram_contract.report_to_saved_messages()` (or `report_to_litvinov`
-    depending on `sync_mode`) for each chunk. Returns `Optional[int***REMOVED***`
+    depending on `sync_mode`) for each chunk. Returns `Optional[int]`
     msg_id per chunk; report back the count to caller.
   - `pull_state()` lazy-imports `projects_17.tg_terminal_messenger.TGClient`
     to access `get_history()` (NOT exposed via `telegram_contract` —
@@ -73,16 +73,16 @@ from typing import (
 
 import importlib.util as _importlib_util
 import sys as _sys  # noqa: E402
-***REMOVED*** as _Path  # noqa: E402
+] as _Path  # noqa: E402
 
 _FB_ROOT_CANDIDATES = [
     _Path("/storage/emulated/0/PROJECTS/workstation/freebuff"),
     _Path(__file__).resolve().parent.parent,  # local-dev layout: core_02/ is sibling of runtime_05/
     _Path.cwd(),
-***REMOVED***
+]
 _FB_ROOT = next(
     (p for p in _FB_ROOT_CANDIDATES if (p / "runtime_05" / "scenarios").is_dir()),
-    _FB_ROOT_CANDIDATES[0***REMOVED***,
+    _FB_ROOT_CANDIDATES[0],
 )
 
 _INTERFACE_PATH = (
@@ -93,14 +93,14 @@ _spec = _importlib_util.spec_from_file_location(
 )
 if _spec is None or _spec.loader is None:
     raise ImportError(
-        f"could not build module spec for {_INTERFACE_PATH***REMOVED*** (file must exist)"
+        f"could not build module spec for {_INTERFACE_PATH} (file must exist)"
     )
 _interface_mod = _importlib_util.module_from_spec(_spec)
 # CRITICAL: register module in sys.modules BEFORE exec_module so that
 # `@dataclass` introspection (which keys on `cls.__module__`) can resolve
 # the module via `sys.modules.get(cls.__module__).__dict__`. Without this,
 # dataclass raises `'NoneType' object has no attribute '__dict__'`.
-_sys.modules["remote_sync_interface"***REMOVED*** = _interface_mod
+_sys.modules["remote_sync_interface"] = _interface_mod
 _spec.loader.exec_module(_interface_mod)
 
 SYNC_VERSION_V1 = _interface_mod.SYNC_VERSION_V1
@@ -131,7 +131,7 @@ logger = logging.getLogger(__name__)
 if not logger.handlers:
     h = logging.StreamHandler()
     h.setFormatter(
-        logging.Formatter("[RemoteSync:impl***REMOVED*** %(asctime)s %(levelname)s %(message)s")
+        logging.Formatter("[RemoteSync:impl) %(asctime)s %(levelname)s %(message)s")
     )
     logger.addHandler(h)
     logger.setLevel(logging.INFO)
@@ -156,7 +156,7 @@ __all__ = [
     "set_active_coordinator",
     "get_active_coordinator",
     "publish_sync_status_event",
-***REMOVED***
+]
 
 
 # ── Constants ─────────────────────────────────────────────────────────────
@@ -201,29 +201,29 @@ def _now_ms() -> int:
 
 
 def _lww_merge_per_key(
-    local: Dict[str, Tuple[Any, int***REMOVED******REMOVED***,
-    remote: Dict[str, Tuple[Any, int***REMOVED******REMOVED***,
-) -> Tuple[Dict[str, Tuple[Any, int***REMOVED******REMOVED***, Set[str***REMOVED******REMOVED***:
+    local: Dict[str, Tuple[Any, int]],
+    remote: Dict[str, Tuple[Any, int]],
+) -> Tuple[Dict[str, Tuple[Any, int]], Set[str]]:
     """Per-key LWW merge (NOT whole-document).
 
     Args:
-      local: `{key: (value, last_updated_ms)***REMOVED***`
-      remote: `{key: (value, last_updated_ms)***REMOVED***`
+      local: `{key: (value, last_updated_ms)}`
+      remote: `{key: (value, last_updated_ms)}`
 
     Returns:
       merged: post-LWW dict (newer wins per-key, ties keep local)
       dropped_keys: keys dropped because remote was strictly older
     """
-    merged: Dict[str, Tuple[Any, int***REMOVED******REMOVED*** = dict(local)
-    dropped: Set[str***REMOVED*** = set()
+    merged: Dict[str, Tuple[Any, int]] = dict(local)
+    dropped: Set[str] = set()
 
     for key, (rvalue, rts) in remote.items():
         if key not in local:
-            merged[key***REMOVED*** = (rvalue, rts)
+            merged[key] = (rvalue, rts)
             continue
-        lvalue, lts = local[key***REMOVED***
+        lvalue, lts = local[key]
         if rts > lts:
-            merged[key***REMOVED*** = (rvalue, rts)
+            merged[key] = (rvalue, rts)
         elif rts == lts:
             # deterministic tie-break: keep local (avoids flapping on
             # simultaneous edits from two devices with shared clock drift)
@@ -235,7 +235,7 @@ def _lww_merge_per_key(
 
 def _chunk_envelope_payload(
     payload_json: str,
-) -> List[str***REMOVED***:
+) -> List[str]:
     """Split a JSON envelope payload into TG-message-sized chunks.
 
     Layout (per ADR-010 + scenario.yaml chunking spec):
@@ -248,7 +248,7 @@ def _chunk_envelope_payload(
     """
     if not payload_json or not isinstance(payload_json, str):
         raise ChunkingError(
-            f"empty envelope payload — cannot chunk (got {payload_json!r***REMOVED***)"
+            f"empty envelope payload — cannot chunk (got {payload_json!r})"
         )
     if len(payload_json.encode("utf-8")) > _CHUNK_GZIP_THRESHOLD_BYTES:
         gz = gzip.compress(payload_json.encode("utf-8"))
@@ -256,14 +256,14 @@ def _chunk_envelope_payload(
 
     # Primary chunks (3500 bytes / 3500 chars approximated via utf-8)
     if len(payload_json) <= _CHUNK_PRIMARY_BYTES:
-        return [payload_json***REMOVED***
+        return [payload_json]
 
     # Simple byte-based split (no JSON-boundary heal — ADR-010 §chunking note:
     # "client reconstructs by stitching, validates JSON parse at end")
-    chunks: List[str***REMOVED*** = [***REMOVED***
+    chunks: List[str] = []
     step = _CHUNK_PRIMARY_BYTES
     for i in range(0, len(payload_json), step):
-        chunks.append(payload_json[i : i + step***REMOVED***)
+        chunks.append(payload_json[i : i + step])
     if not chunks:
         raise ChunkingError("empty envelope payload — cannot chunk")
     return chunks
@@ -282,35 +282,35 @@ def _format_envelope_marker(
     bodies in `0..N-1` order.
     """
     return (
-        f"{_SYNC_MARKER_PREFIX***REMOVED*** V{SYNC_VERSION_V1***REMOVED*** {correlation_id***REMOVED*** "
-        f"CHUNK {chunk_index***REMOVED***/{chunk_total***REMOVED***"
+        f"{_SYNC_MARKER_PREFIX} V{SYNC_VERSION_V1} {correlation_id} "
+        f"CHUNK {chunk_index}/{chunk_total}"
     )
 
 
-def _validate_closed_vocab_capability(token: str, valid: Set[str***REMOVED***) -> bool:
+def _validate_closed_vocab_capability(token: str, valid: Set[str]) -> bool:
     """Closed-vocab validation per CON-8: never accept free-form strings."""
     return token in valid
 
 
 # ── Capability closed-vocab (mirrors scenario.yaml capabilities: list) ───
 
-_VALID_CAPABILITIES: Set[str***REMOVED*** = frozenset(
+_VALID_CAPABILITIES: Set[str] = frozenset(
     {
         "state-sync",
         "telegram-mtproto-relay",
         "delta-resolution",
         "chunked-large-state",
-    ***REMOVED***
+    }
 )
 
 
 # ── Test-injection hooks (per CAN-14 mockability pattern) ────────────────
 
-# Each hook is optional Callable[Awaitable***REMOVED*** used by tests to bypass real TG.
+# Each hook is optional Callable[Awaitable] used by tests to bypass real TG.
 # In production, defaults are populated from core_02.telegram_contract.
-SendFn = Callable[[int, str***REMOVED***, Awaitable[Optional[int***REMOVED******REMOVED******REMOVED***
-HistoryFn = Callable[[int, int***REMOVED***, Awaitable[List[str***REMOVED******REMOVED******REMOVED***
-MeFn = Callable[[***REMOVED***, Awaitable[Any***REMOVED******REMOVED***
+SendFn = Callable[[int, str], Awaitable[Optional[int]]]
+HistoryFn = Callable[[int, int], Awaitable[List[str]]]
+MeFn = Callable[[], Awaitable[Any]]
 
 
 # ── Internal helpers (impl-private; tests bypass) ────────────────────────
@@ -356,7 +356,7 @@ class RemoteSyncCoordinatorImpl:
     Args:
       device_label: human-readable label for this peer ("lipgloss-laptop",
         "android-pixel-7", etc).
-      sync_mode: one of `SyncMode.{SAVED_MESSAGES,SYNC_GROUP,DRAFT***REMOVED***`. Maps
+      sync_mode: one of `SyncMode.{SAVED_MESSAGES,SYNC_GROUP,DRAFT}`. Maps
         to a CAN-3 chat_id (or designator for SYNC_GROUP pending_resolve).
       send_fn: optional override for the TG-send function
         (test-injection; default = lambda resolved via `sync_mode`).
@@ -368,9 +368,9 @@ class RemoteSyncCoordinatorImpl:
         self,
         device_label: str,
         sync_mode: SyncMode = SyncMode.SAVED_MESSAGES,
-        send_fn: Optional[SendFn***REMOVED*** = None,
-        history_fn: Optional[HistoryFn***REMOVED*** = None,
-        me_fn: Optional[MeFn***REMOVED*** = None,
+        send_fn: Optional[SendFn] = None,
+        history_fn: Optional[HistoryFn] = None,
+        me_fn: Optional[MeFn] = None,
     ) -> None:
         """Construct (no I/O). Validate capability closed-vocab early."""
         if (
@@ -380,7 +380,7 @@ class RemoteSyncCoordinatorImpl:
         ):
             raise RemoteSyncConfigError(
                 f"device_label must be non-empty non-whitespace string, "
-                f"got {device_label!r***REMOVED***"
+                f"got {device_label!r}"
             )
 
         self._device_label = device_label
@@ -389,31 +389,31 @@ class RemoteSyncCoordinatorImpl:
         # Lifecycle
         self._lock = threading.RLock()
         self._shutdown_called = False
-        self._device_id: Optional[str***REMOVED*** = None  # assigned at register_device
-        self._last_event: Optional[Dict[str, Any***REMOVED******REMOVED*** = None
+        self._device_id: Optional[str] = None  # assigned at register_device
+        self._last_event: Optional[Dict[str, Any]] = None
 
         # State
-        self._local_state: Dict[str, Tuple[Any, int***REMOVED******REMOVED*** = {***REMOVED***
-        self._registered_devices: Dict[str, SyncDevice***REMOVED*** = {***REMOVED***
-        self._conflict_log: Dict[str, _ConflictRecord***REMOVED*** = {***REMOVED***
+        self._local_state: Dict[str, Tuple[Any, int]] = {}
+        self._registered_devices: Dict[str, SyncDevice] = {}
+        self._conflict_log: Dict[str, _ConflictRecord] = {}
         # Quarantine stores SynthEnvelope items for uniform downstream
         # processing. NOTE: per-key timestamps not preserved (by Protocol
         # spec — SyncDelta has only one timestamp_ms). For manual resolve
         # at Play time, app feteches fractal snapshot from local+remote
         # streams separately.
-        self._quarantine_buffer: Deque[SyncEnvelope***REMOVED*** = deque(
+        self._quarantine_buffer: Deque[SyncEnvelope] = deque(
             maxlen=_QUARANTINE_MAX_BUFFER_LEN
         )
-        self._pending_push: Deque[_PendingPush***REMOVED*** = deque(maxlen=_QUARANTINE_MAX_BUFFER_LEN)
+        self._pending_push: Deque[_PendingPush] = deque(maxlen=_QUARANTINE_MAX_BUFFER_LEN)
 
         # asyncio task (listener loop) — placeholder for Phase 5.3-C
-        self._listener_task: Optional[asyncio.Task***REMOVED*** = None  # type: ignore[type-arg***REMOVED***
+        self._listener_task: Optional[asyncio.Task] = None  # type: ignore[type-arg]
 
         # Phase 5.3-F: attached RemoteSyncListener (coordinated lifecycle)
-        self._listener: "Optional[RemoteSyncListener***REMOVED***" = None
+        self._listener: "Optional[RemoteSyncListener]" = None
 
         # Live TG cache (cached pushes from pull_state)
-        self._incoming_buffer: Deque[SyncEnvelope***REMOVED*** = deque(maxlen=500)
+        self._incoming_buffer: Deque[SyncEnvelope] = deque(maxlen=500)
 
         # Test-injection hooks (defaulting to real telegram_contract calls)
         if send_fn is not None:
@@ -448,20 +448,20 @@ class RemoteSyncCoordinatorImpl:
         """Early-fail if a caller asks for an unsupported capability."""
         if not _validate_closed_vocab_capability(token, _VALID_CAPABILITIES):
             raise RemoteSyncCapabilityError(
-                f"capability token {token!r***REMOVED*** not in closed-set "
-                f"{sorted(_VALID_CAPABILITIES)***REMOVED***"
+                f"capability token {token!r} not in closed-set "
+                f"{sorted(_VALID_CAPABILITIES)}"
             )
 
     # ── State mutation (lock-guarded) ────────────────────────────────────
 
     def _update_local(self, key: str, value: Any, ts_ms: int) -> None:
         with self._lock:
-            self._local_state[key***REMOVED*** = (value, ts_ms)
+            self._local_state[key] = (value, ts_ms)
             self._last_event = {
                 "kind": "local_update",
                 "key": key,
                 "ts_ms": ts_ms,
-            ***REMOVED***
+            }
 
     def _apply_remote_envelope(self, envelope: SyncEnvelope) -> None:
         """Apply a remote SyncEnvelope into local mirror (no LWW; pure last-wins
@@ -469,7 +469,7 @@ class RemoteSyncCoordinatorImpl:
         reconciliation."""
         with self._lock:
             for k, v in envelope.delta.updated_keys.items():
-                self._local_state[k***REMOVED*** = (v, envelope.delta.timestamp_ms)
+                self._local_state[k] = (v, envelope.delta.timestamp_ms)
             for k in envelope.delta.deleted_keys:
                 self._local_state.pop(k, None)
             self._last_event = {
@@ -477,7 +477,7 @@ class RemoteSyncCoordinatorImpl:
                 "source_device_id": envelope.delta.source_device_id,
                 "ts_ms": envelope.delta.timestamp_ms,
                 "keys": list(envelope.delta.updated_keys),
-            ***REMOVED***
+            }
 
     # ── Default send_fn resolver (sync_mode → chat_id binding) ──────────
 
@@ -500,12 +500,12 @@ class RemoteSyncCoordinatorImpl:
             chat_id = SAVED_MESSAGES_CHAT_ID
             report_fn = report_to_saved_messages
         else:
-            closed = [m.value for m in SyncMode***REMOVED***
+            closed = [m.value for m in SyncMode]
             raise RemoteSyncConfigError(
-                f"sync_mode {sync_mode!r***REMOVED*** not in closed-set {closed***REMOVED***"
+                f"sync_mode {sync_mode!r} not in closed-set {closed}"
             )
 
-        async def _default_send(_chat_id: int, text: str) -> Optional[int***REMOVED***:
+        async def _default_send(_chat_id: int, text: str) -> Optional[int]:
             # Default send dispatches on resolved chat_id (closure); the
             # _chat_id positional arg is honored for symmetry with injection.
             if _chat_id != chat_id:
@@ -529,12 +529,12 @@ class RemoteSyncCoordinatorImpl:
         if self._sync_mode == SyncMode.DRAFT:
             return SAVED_MESSAGES_CHAT_ID
         raise RemoteSyncConfigError(
-            f"sync_mode {self._sync_mode!r***REMOVED*** not in closed-set {[m.value for m in SyncMode***REMOVED******REMOVED***"
+            f"sync_mode {self._sync_mode!r} not in closed-set {[m.value for m in SyncMode]}"
         )
 
     # ── Async pub methods (Protocol surface) ────────────────────────────
 
-    async def push_state(self, delta: SyncDelta) -> Dict[str, Any***REMOVED***:
+    async def push_state(self, delta: SyncDelta) -> Dict[str, Any]:
         """Push a delta to Telegram via chunked message envelope.
 
         Behavior:
@@ -548,14 +548,14 @@ class RemoteSyncCoordinatorImpl:
         self._assert_capability("telegram-mtproto-relay")
 
         if self._shutdown_called:
-            return {"ok": False, "error": "coordinator is shutdown"***REMOVED***
+            return {"ok": False, "error": "coordinator is shutdown"}
 
         if self._device_id is None:
             return {
                 "ok": False,
                 "error": "device not registered; call register_device() first",
                 "chunk_count": 0,
-            ***REMOVED***
+            }
 
         # Build SyncEnvelope
         try:
@@ -563,10 +563,10 @@ class RemoteSyncCoordinatorImpl:
                 delta=delta,
                 signature=None,
                 compression="none",
-                marker="##FB_STATE##",  # type: ignore[arg-type***REMOVED***
+                marker="##FB_STATE##",  # type: ignore[arg-type]
             )
         except TypeError as e:
-            return {"ok": False, "error": f"SyncEnvelope construction: {e***REMOVED***"***REMOVED***
+            return {"ok": False, "error": f"SyncEnvelope construction: {e}"}
 
         payload_json = json.dumps(
             {
@@ -578,18 +578,18 @@ class RemoteSyncCoordinatorImpl:
                     "sync_mode": delta.sync_mode.value,
                     "updated_keys": delta.updated_keys,
                     "deleted_keys": list(delta.deleted_keys),
-                ***REMOVED***,
-            ***REMOVED***,
+                },
+            },
             separators=(",", ":"),
             sort_keys=True,
         )
 
         chunks = _chunk_envelope_payload(payload_json)
         chunk_count = len(chunks)
-        correlation_id = f"{self._device_id***REMOVED***-{delta.revision***REMOVED***-{_now_ms()***REMOVED***"
+        correlation_id = f"{self._device_id}-{delta.revision}-{_now_ms()}"
 
         # Send each chunk
-        sent_msg_ids: List[int***REMOVED*** = [***REMOVED***
+        sent_msg_ids: List[int] = []
         chat_id = self._chat_id_for_mode()
         for i, body in enumerate(chunks):
             text = _format_envelope_marker(i, chunk_count, correlation_id) + "\n" + body
@@ -599,10 +599,10 @@ class RemoteSyncCoordinatorImpl:
                 logger.warning("chunk %d/%d send failed: %s", i, chunk_count, e)
                 return {
                     "ok": False,
-                    "error": f"chunk {i***REMOVED***/{chunk_count***REMOVED*** failed: {e***REMOVED***",
+                    "error": f"chunk {i}/{chunk_count} failed: {e}",
                     "chunk_count": chunk_count,
                     "partial_sent": sent_msg_ids,
-                ***REMOVED***
+                }
             # None msg_id is non-fatal (could be telethon race or zombie hook)
             if msg_id is not None:
                 sent_msg_ids.append(msg_id)
@@ -628,14 +628,14 @@ class RemoteSyncCoordinatorImpl:
             "chunk_count": chunk_count,
             "msg_ids": sent_msg_ids,
             "correlation_id": correlation_id,
-        ***REMOVED***
+        }
 
-    async def pull_state(self) -> Optional[SyncDelta***REMOVED***:
+    async def pull_state(self) -> Optional[SyncDelta]:
         """Replay past state events from Telegram history; return the latest
         applied `SyncDelta` (or `None` if no incoming messages since last pull).
 
         Conformance: per `runtime_05/scenarios/19_remote_sync/interface.py`
-        Protocol `RemoteSyncCoordinator` the contract returns `Optional[SyncDelta***REMOVED***`.
+        Protocol `RemoteSyncCoordinator` the contract returns `Optional[SyncDelta]`.
         Envelopes are still cached in `_incoming_buffer` for the 5.3-C
         listener loop.
 
@@ -667,7 +667,7 @@ class RemoteSyncCoordinatorImpl:
             return None
 
         # Parse marker-prefixed messages into envelopes
-        envelopes: List[SyncEnvelope***REMOVED*** = [***REMOVED***
+        envelopes: List[SyncEnvelope] = []
         for msg_text in history:
             if not isinstance(msg_text, str):
                 continue
@@ -675,7 +675,7 @@ class RemoteSyncCoordinatorImpl:
                 continue
             # Strip marker header line; parse the JSON body
             try:
-                body = msg_text.split("\n", 1)[1***REMOVED***
+                body = msg_text.split("\n", 1)[1]
                 parsed = json.loads(body)
                 env = _reconstruct_envelope_from_parsed(parsed)
                 if env is not None:
@@ -684,7 +684,7 @@ class RemoteSyncCoordinatorImpl:
                 continue
 
         # Apply each envelope to local mirror + cache + track latest
-        latest_delta: Optional[SyncDelta***REMOVED*** = None
+        latest_delta: Optional[SyncDelta] = None
         with self._lock:
             for env in envelopes:
                 self._incoming_buffer.append(env)
@@ -701,10 +701,10 @@ class RemoteSyncCoordinatorImpl:
 
     async def resolve_conflict(
         self,
-        local: Dict[str, Tuple[Any, int***REMOVED******REMOVED***,
-        remote: Dict[str, Tuple[Any, int***REMOVED******REMOVED***,
+        local: Dict[str, Tuple[Any, int]],
+        remote: Dict[str, Tuple[Any, int]],
         mode: ConflictResolution = ConflictResolution.LWW_PER_KEY,
-    ) -> Dict[str, Any***REMOVED***:
+    ) -> Dict[str, Any]:
         """Resolve a per-key conflict between local and remote states.
 
         Modes:
@@ -724,7 +724,7 @@ class RemoteSyncCoordinatorImpl:
                 "merged": merged,
                 "dropped_keys": sorted(dropped),
                 "quarantined": False,
-            ***REMOVED***
+            }
 
         if mode == ConflictResolution.WHOLE_DOC_LWW:
             # pick whichever side has the most-recent maximum timestamp
@@ -733,18 +733,18 @@ class RemoteSyncCoordinatorImpl:
             return {
                 "mode": mode.value,
                 "merged": remote if remote_max > local_max else local,
-                "dropped_keys": [***REMOVED***,
+                "dropped_keys": [],
                 "quarantined": False,
-            ***REMOVED***
+            }
 
         if mode == ConflictResolution.MANUAL:
             self._record_conflicts(local, remote)
             return {
                 "mode": mode.value,
                 "merged": local,  # keep local pending user action
-                "dropped_keys": [***REMOVED***,
+                "dropped_keys": [],
                 "quarantined": False,
-            ***REMOVED***
+            }
 
         if mode == ConflictResolution.QUARANTINE:
             self._record_conflicts(local, remote)
@@ -755,15 +755,15 @@ class RemoteSyncCoordinatorImpl:
             return {
                 "mode": mode.value,
                 "merged": local,
-                "dropped_keys": [***REMOVED***,
+                "dropped_keys": [],
                 "quarantined": True,
                 "quarantine_len": len(self._quarantine_buffer),
-            ***REMOVED***
+            }
 
         # Should not reach here (closed enum); fail loud per CON-8
-        raise RemoteSyncError(f"unknown conflict mode: {mode!r***REMOVED***")
+        raise RemoteSyncError(f"unknown conflict mode: {mode!r}")
 
-    async def quarantine(self, envelope: SyncEnvelope) -> Dict[str, Any***REMOVED***:
+    async def quarantine(self, envelope: SyncEnvelope) -> Dict[str, Any]:
         """Manually append an envelope to the bounded quarantine buffer.
 
         Buffer is `deque(maxlen=_QUARANTINE_MAX_BUFFER_LEN)` — older entries
@@ -772,7 +772,7 @@ class RemoteSyncCoordinatorImpl:
         self._assert_capability("state-sync")
 
         if self._shutdown_called:
-            return {"ok": False, "error": "coordinator is shutdown"***REMOVED***
+            return {"ok": False, "error": "coordinator is shutdown"}
 
         # Reject quarantining if envelope age > max_delta_age_seconds policy
         age_seconds = (_now_ms() - envelope.delta.timestamp_ms) // 1000
@@ -780,11 +780,11 @@ class RemoteSyncCoordinatorImpl:
             return {
                 "ok": False,
                 "error": (
-                    f"envelope age {age_seconds***REMOVED***s exceeds quarantine limit "
-                    f"{_QUARANTINE_MAX_AGE_SECONDS***REMOVED***s"
+                    f"envelope age {age_seconds}s exceeds quarantine limit "
+                    f"{_QUARANTINE_MAX_AGE_SECONDS}s"
                 ),
                 "age_seconds": age_seconds,
-            ***REMOVED***
+            }
 
         with self._lock:
             self._quarantine_buffer.append(envelope)
@@ -795,7 +795,7 @@ class RemoteSyncCoordinatorImpl:
             "age_seconds": age_seconds,
             "buffer_len": buf_len,
             "evicted": buf_len >= _QUARANTINE_MAX_BUFFER_LEN,
-        ***REMOVED***
+        }
 
     async def register_device(self, label: str) -> SyncDevice:
         """Register this device via TG identity lookup.
@@ -807,7 +807,7 @@ class RemoteSyncCoordinatorImpl:
         """
         if self._device_id is not None:
             with self._lock:
-                return self._registered_devices[self._device_id***REMOVED***
+                return self._registered_devices[self._device_id]
 
         me_fn = await self._ensure_me_fn()
         if me_fn is None:
@@ -822,11 +822,11 @@ class RemoteSyncCoordinatorImpl:
             try:
                 me = await me_fn()
             except Exception as e:
-                raise RemoteSyncLifecycleError(f"register_device me_fn: {e***REMOVED***") from e
+                raise RemoteSyncLifecycleError(f"register_device me_fn: {e}") from e
             tg_user_id = getattr(me, "user_id", getattr(me, "id", LITVINOV_CHAT_ID))
 
         # device_id derived from tg user_id + label (stable per session)
-        device_id = f"tg:{tg_user_id***REMOVED***:{label***REMOVED***"
+        device_id = f"tg:{tg_user_id}:{label}"
         now_ms = _now_ms()
         device = SyncDevice(
             device_id=device_id,
@@ -836,7 +836,7 @@ class RemoteSyncCoordinatorImpl:
             last_seen_ms=now_ms,
         )
         with self._lock:
-            self._registered_devices[device_id***REMOVED*** = device
+            self._registered_devices[device_id] = device
             self._device_id = device_id
         logger.info(
             "register_device ok (device_id=%s, tg_user_id=%d)",
@@ -845,7 +845,7 @@ class RemoteSyncCoordinatorImpl:
         )
         return device
 
-    async def shutdown(self) -> Dict[str, Any***REMOVED***:
+    async def shutdown(self) -> Dict[str, Any]:
         """Orderly shutdown: drain queue → stop listener → cancel listener task.
 
         Idempotent: post-shutdown calls return `error`.
@@ -855,7 +855,7 @@ class RemoteSyncCoordinatorImpl:
         listener loop. Then the coordinator's own listener task is cancelled.
         """
         if self._shutdown_called:
-            return {"ok": False, "error": "shutdown already called"***REMOVED***
+            return {"ok": False, "error": "shutdown already called"}
         self._shutdown_called = True
 
         # Phase 5.3-F: stop attached listener first (coordinated lifecycle)
@@ -882,9 +882,9 @@ class RemoteSyncCoordinatorImpl:
                 logger.warning("listener task cancel failed: %s", e)
 
         logger.info("shutdown complete (drained=%d)", drained)
-        return {"ok": True, "drained": drained***REMOVED***
+        return {"ok": True, "drained": drained}
 
-    async def get_last_event(self) -> Optional[Dict[str, Any***REMOVED******REMOVED***:
+    async def get_last_event(self) -> Optional[Dict[str, Any]]:
         """Return last cached event for UI polling. None if no events yet."""
         with self._lock:
             return self._last_event
@@ -915,7 +915,7 @@ class RemoteSyncCoordinatorImpl:
 
     # ── Internal helpers ────────────────────────────────────────────────
 
-    async def _ensure_history_fn(self) -> Optional[HistoryFn***REMOVED***:
+    async def _ensure_history_fn(self) -> Optional[HistoryFn]:
         """Lazy-bootstrap history_fn if not injected.
 
         Returns None if `projects_17/tg_terminal_messenger/TGClient` cannot
@@ -930,19 +930,19 @@ class RemoteSyncCoordinatorImpl:
 
             async def _history_via_tgclient(
                 chat_id: int, limit: int
-            ) -> List[str***REMOVED***:
+            ) -> List[str]:
                 client = TGClient()
                 try:
                     connected = await client.connect()
                     if not connected:
-                        return [***REMOVED***
+                        return []
                     history = await client.get_history(chat_id, limit=limit)
                     # Telethon iterates Messages; extract .text attribute
                     return [
                         m.text
                         for m in history
                         if getattr(m, "text", None) is not None
-                    ***REMOVED***
+                    ]
                 finally:
                     try:
                         await client.disconnect()
@@ -955,7 +955,7 @@ class RemoteSyncCoordinatorImpl:
             logger.warning("_ensure_history_fn: TGClient unavailable: %s", e)
             return None
 
-    async def _ensure_me_fn(self) -> Optional[MeFn***REMOVED***:
+    async def _ensure_me_fn(self) -> Optional[MeFn]:
         """Lazy-bootstrap me_fn if not injected."""
         if self._me_fn is not None:
             return self._me_fn
@@ -985,16 +985,16 @@ class RemoteSyncCoordinatorImpl:
 
     def _record_conflicts(
         self,
-        local: Dict[str, Tuple[Any, int***REMOVED******REMOVED***,
-        remote: Dict[str, Tuple[Any, int***REMOVED******REMOVED***,
+        local: Dict[str, Tuple[Any, int]],
+        remote: Dict[str, Tuple[Any, int]],
     ) -> None:
         """Record per-key conflicts in `_conflict_log` (internal)."""
         with self._lock:
             for k, (lv, lts) in local.items():
                 if k in remote:
-                    rv, rts = remote[k***REMOVED***
+                    rv, rts = remote[k]
                     if lv != rv and abs(lts - rts) < 10_000:  # near-simultaneous
-                        self._conflict_log[k***REMOVED*** = _ConflictRecord(
+                        self._conflict_log[k] = _ConflictRecord(
                             key=k,
                             local_value=lv,
                             local_ts_ms=lts,
@@ -1005,8 +1005,8 @@ class RemoteSyncCoordinatorImpl:
 
     def _synthesize_quarantine_record(
         self,
-        local: Dict[str, Tuple[Any, int***REMOVED******REMOVED***,
-        remote: Dict[str, Tuple[Any, int***REMOVED******REMOVED***,
+        local: Dict[str, Tuple[Any, int]],
+        remote: Dict[str, Tuple[Any, int]],
     ) -> SyncEnvelope:
         """Build a quarantine envelope from synthesized LWW-merged snapshot.
 
@@ -1016,20 +1016,20 @@ class RemoteSyncCoordinatorImpl:
         limitation, not silent).
         """
         merged, _ = _lww_merge_per_key(local, remote)
-        flat: Dict[str, Any***REMOVED*** = {k: v for k, (v, _) in merged.items()***REMOVED***
+        flat: Dict[str, Any] = {k: v for k, (v, _) in merged.items()}
         delta = SyncDelta(
             timestamp_ms=_now_ms(),
             source_device_id=self._device_id or "local",
             revision=0,
             sync_mode=self._sync_mode,
             updated_keys=flat,
-            deleted_keys=[***REMOVED***,
+            deleted_keys=[],
         )
         return SyncEnvelope(
             delta=delta,
             signature=None,
             compression="none",
-            marker="##FB_STATE##",  # type: ignore[arg-type***REMOVED***
+            marker="##FB_STATE##",  # type: ignore[arg-type]
         )
 
 
@@ -1037,25 +1037,25 @@ class RemoteSyncCoordinatorImpl:
 
 
 def _reconstruct_envelope_from_parsed(
-    parsed: Dict[str, Any***REMOVED***
-) -> Optional[SyncEnvelope***REMOVED***:
+    parsed: Dict[str, Any]
+) -> Optional[SyncEnvelope]:
     """Parse a TG-message JSON body into a SyncEnvelope (helper used by
     `pull_state`). Pure function on `parsed` — no I/O."""
     try:
-        d = parsed["delta"***REMOVED***
+        d = parsed["delta"]
         delta = SyncDelta(
-            timestamp_ms=int(d["timestamp_ms"***REMOVED***),
-            source_device_id=str(d["source_device_id"***REMOVED***),
-            revision=int(d["revision"***REMOVED***),
-            sync_mode=SyncMode(str(d["sync_mode"***REMOVED***)),
-            updated_keys=dict(d.get("updated_keys", {***REMOVED***)),
-            deleted_keys=list(d.get("deleted_keys", [***REMOVED***)),
+            timestamp_ms=int(d["timestamp_ms"]),
+            source_device_id=str(d["source_device_id"]),
+            revision=int(d["revision"]),
+            sync_mode=SyncMode(str(d["sync_mode"])),
+            updated_keys=dict(d.get("updated_keys", {})),
+            deleted_keys=list(d.get("deleted_keys", [])),
         )
         return SyncEnvelope(
             delta=delta,
             signature=None,
             compression="none",
-            marker="##FB_STATE##",  # type: ignore[arg-type***REMOVED***
+            marker="##FB_STATE##",  # type: ignore[arg-type]
         )
     except (KeyError, ValueError, TypeError):
         return None
@@ -1105,12 +1105,12 @@ class RemoteSyncListener:
         self._coordinator = coordinator
         self._tg_client = None  # set in start()
         self._running = False
-        self._listener_task: "Optional[asyncio.Task[None***REMOVED******REMOVED***" = None
+        self._listener_task: "Optional[asyncio.Task[None]]" = None
         # Incoming message buffer (hot-path writes, cold-path reads via pull_state)
         from collections import deque
-        self._incoming_buffer: "deque[tuple[int, bytes***REMOVED******REMOVED***" = deque(maxlen=128)
+        self._incoming_buffer: "deque[tuple[int, bytes]]" = deque(maxlen=128)
         # Source-of-truth chat_ids (Saved Messages + Литвинов, per ADR-010)
-        self._source_chat_ids: "tuple[int, ...***REMOVED***" = (
+        self._source_chat_ids: "tuple[int, ...]" = (
                 SAVED_MESSAGES_CHAT_ID,  # CON-19: canonical single-source-of-truth (telegram_contract)
                 ALEX_LITVINOV_CHAT_ID,   # alias of LITVINOV_CHAT_ID
             )
@@ -1210,7 +1210,7 @@ class RemoteSyncListener:
                         text = envelope_bytes.decode("utf-8")
                         # Extract JSON body from marker header
                         if "\n" in text:
-                            body = text.split("\n", 1)[1***REMOVED***
+                            body = text.split("\n", 1)[1]
                             parsed = json.loads(body)
                             env = _reconstruct_envelope_from_parsed(parsed)
                             if env is not None:
@@ -1264,15 +1264,15 @@ class RemoteSyncListener:
         envelope_bytes = text.encode("utf-8")
         self._incoming_buffer.append((msg_id, envelope_bytes))
 
-    def drain_incoming(self) -> "list[tuple[int, bytes***REMOVED******REMOVED***":
+    def drain_incoming(self) -> "list[tuple[int, bytes]]":
         """Cold-path helper: drain _incoming_buffer atomically. Called by listener loop.
 
         Returns list of (msg_id, envelope_bytes) tuples accumulated since last drain.
         Returns empty list if listener not running or buffer is empty.
         """
         if not self._running:
-            return [***REMOVED***
-        drained: "list[tuple[int, bytes***REMOVED******REMOVED***" = [***REMOVED***
+            return []
+        drained: "list[tuple[int, bytes]]" = []
         while self._incoming_buffer:
             drained.append(self._incoming_buffer.popleft())
         return drained
@@ -1293,8 +1293,8 @@ class RemoteSyncListener:
 # Closed-vocab status tokens (CON-8). UI indicator in freebuff_flutter_app
 # renders one of: idle / connected / conflict / quarantine.
 
-_SYNC_STATUS_VALUES: Set[str***REMOVED*** = frozenset(
-    {"idle", "connected", "conflict", "quarantine"***REMOVED***
+_SYNC_STATUS_VALUES: Set[str] = frozenset(
+    {"idle", "connected", "conflict", "quarantine"}
 )
 
 
@@ -1303,7 +1303,7 @@ def _normalize_sync_status(value: str) -> str:
     return value if value in _SYNC_STATUS_VALUES else "idle"
 
 
-def derive_sync_status(coordinator: "RemoteSyncCoordinatorImpl") -> Dict[str, Any***REMOVED***:
+def derive_sync_status(coordinator: "RemoteSyncCoordinatorImpl") -> Dict[str, Any]:
     """Derive a UI-friendly sync-status snapshot (Phase 5.4).
 
     Priority (worst-first):
@@ -1340,16 +1340,16 @@ def derive_sync_status(coordinator: "RemoteSyncCoordinatorImpl") -> Dict[str, An
         "quarantine_count": quarantine_count,
         "last_event": last_event,
         "timestamp_ms": _now_ms(),
-    ***REMOVED***
+    }
 
 
 # ── Active-coordinator registry (MCP / FastAPI live status read) ──────────
 
-_ACTIVE_COORDINATOR: Optional["RemoteSyncCoordinatorImpl"***REMOVED*** = None
+_ACTIVE_COORDINATOR: Optional["RemoteSyncCoordinatorImpl"] = None
 _ACTIVE_COORDINATOR_LOCK = threading.Lock()
 
 
-def set_active_coordinator(coordinator: Optional["RemoteSyncCoordinatorImpl"***REMOVED***) -> None:
+def set_active_coordinator(coordinator: Optional["RemoteSyncCoordinatorImpl"]) -> None:
     """Register (or clear) the app-level live coordinator for status reads.
 
     MCP tool `sync_status` / FastAPI `GET /sync/status` read this registry to
@@ -1360,13 +1360,13 @@ def set_active_coordinator(coordinator: Optional["RemoteSyncCoordinatorImpl"***R
         _ACTIVE_COORDINATOR = coordinator
 
 
-def get_active_coordinator() -> Optional["RemoteSyncCoordinatorImpl"***REMOVED***:
+def get_active_coordinator() -> Optional["RemoteSyncCoordinatorImpl"]:
     """Return the registered live coordinator (or None if not registered)."""
     with _ACTIVE_COORDINATOR_LOCK:
         return _ACTIVE_COORDINATOR
 
 
-def publish_sync_status_event() -> Optional[str***REMOVED***:
+def publish_sync_status_event() -> Optional[str]:
     """Best-effort publish of a `remote_sync.status.*` event to EventStore.
 
     None-safe per CAN-14: EventStore may be unavailable in CI → returns None,
@@ -1382,7 +1382,7 @@ def publish_sync_status_event() -> Optional[str***REMOVED***:
 
         store = EventStore()
         return store.store(
-            event_type=f"remote_sync.status.{snapshot['status'***REMOVED******REMOVED***",
+            event_type=f"remote_sync.status.{snapshot['status']}",
             source="core_02.remote_sync",
             data=snapshot,
             project="freebuff",

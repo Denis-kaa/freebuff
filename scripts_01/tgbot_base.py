@@ -26,7 +26,7 @@ import asyncio
 import logging
 import os
 import sys
-***REMOVED***
+}
 from typing import Any
 
 logger = logging.getLogger("freebuff.tgbot_base")
@@ -120,7 +120,7 @@ class BaseTGBot:
             self.logger.info("Bot stopped by user.")
         except Exception as exc:
             self.logger.exception("Bot polling failed")
-            print(f"❌ Bot polling failed: {exc***REMOVED***", file=sys.stderr)
+            print(f"❌ Bot polling failed: {exc}", file=sys.stderr)
             return 1
         finally:
             try:

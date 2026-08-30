@@ -22,7 +22,7 @@ EM сохраняет опыт проекта: почему принималис
         decision="SQLite",
         rationale="Zero setup, Python stdlib",
         consequences="Simple but single-node",
-        authors=["Buffy"***REMOVED***,
+        authors=["Buffy"],
     )
     path = em.finalize_draft(draft_id)
     results = em.query_experience("sqlite state")
@@ -32,11 +32,11 @@ from __future__ import annotations
 
 import json
 import logging
-***REMOVED***
+}
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
@@ -60,7 +60,7 @@ TYPE_TO_DIR = {
     "lessons_learned": "lessons",
     "architecture_evolution": "architecture-evolution",
     "project_chronicle": ".",
-***REMOVED***
+}
 
 # ═══════════════════════════════════════════════════════════════
 # Types
@@ -74,20 +74,20 @@ class EMRecord:
     type: str
     title: str
     date: str
-    authors: List[str***REMOVED***
-    tags: List[str***REMOVED***
-    related_components: List[str***REMOVED***
-    related_commits: List[str***REMOVED***
-    related_tasks: List[str***REMOVED***
+    authors: List[str]
+    tags: List[str]
+    related_components: List[str]
+    related_commits: List[str]
+    related_tasks: List[str]
     status: str
-    sections: Dict[str, str***REMOVED***
+    sections: Dict[str, str]
 
     @property
     def content(self) -> str:
         """Собирает Markdown body из секций."""
-        lines: List[str***REMOVED*** = [***REMOVED***
+        lines: List[str] = []
         for heading, body in self.sections.items():
-            lines.append(f"## {heading***REMOVED***\n")
+            lines.append(f"## {heading}\n")
             lines.append(body.strip())
             lines.append("\n")
         return "\n".join(lines)
@@ -109,12 +109,12 @@ class DraftNotFoundError(EMEngineError):
 class TemplateRenderer:
     """Рендерит Markdown-шаблоны из docs_10/engineering-memory/templates/.
 
-    Плейсхолдеры в шаблоне: `{title***REMOVED***`, `{context***REMOVED***`, `{date***REMOVED***` и т.д.
+    Плейсхолдеры в шаблоне: `{title}`, `{context}`, `{date}` и т.д.
     Если значение для плейсхолдера не передано, он остаётся как есть,
     что позволяет использовать шаблон и как руководство для ручного заполнения.
     """
 
-    _LIST_FIELDS = {"authors", "tags", "related_components", "related_commits", "related_tasks"***REMOVED***
+    _LIST_FIELDS = {"authors", "tags", "related_components", "related_commits", "related_tasks"}
 
     def __init__(self, templates_dir: Path | None = None):
         if templates_dir is None:
@@ -133,17 +133,17 @@ class TemplateRenderer:
         """
         template_path = self._templates_dir / template_name
         if not template_path.exists():
-            raise FileNotFoundError(f"Template not found: {template_path***REMOVED***")
+            raise FileNotFoundError(f"Template not found: {template_path}")
 
         content = template_path.read_text(encoding="utf-8")
 
         # Автоматически заполняем дату, если не передана
         if "date" not in values:
-            values["date"***REMOVED*** = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            values["date"] = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
         # Простая замена плейсхолдеров
         for key, value in values.items():
-            placeholder = "{" + key + "***REMOVED***"
+            placeholder = "{" + key + "]"
             if placeholder in content:
                 serialized = self._serialize_value(key, value)
                 content = content.replace(placeholder, serialized)
@@ -154,21 +154,21 @@ class TemplateRenderer:
         """Сериализует значение для вставки в Markdown-шаблон."""
         # Автоматически нормализуем строки в списки для list-полей
         if key in self._LIST_FIELDS and isinstance(value, str):
-            value = [value***REMOVED*** if value.strip() else [***REMOVED***
+            value = [value] if value.strip() else []
 
         if isinstance(value, list):
-            items = [json.dumps(str(item), ensure_ascii=False) for item in value***REMOVED***
-            return "[" + ", ".join(items) + "***REMOVED***"
+            items = [json.dumps(str(item), ensure_ascii=False) for item in value]
+            return "[" + ", ".join(items) + "]"
         if isinstance(value, bool):
             return "true" if value else "false"
         if value is None:
             return ""
         return str(value)
 
-    def list_templates(self) -> List[str***REMOVED***:
+    def list_templates(self) -> List[str]:
         """Возвращает список доступных шаблонов."""
         if not self._templates_dir.exists():
-            return [***REMOVED***
+            return []
         return sorted(
             p.name for p in self._templates_dir.iterdir()
             if p.suffix == ".md" and p.is_file() and p.name.lower() != "readme.md"
@@ -176,7 +176,7 @@ class TemplateRenderer:
 
     def available_for(self, doc_type: str) -> bool:
         """Проверяет, есть ли шаблон для данного типа документа."""
-        return (self._templates_dir / f"{doc_type***REMOVED***.md").exists()
+        return (self._templates_dir / f"{doc_type}.md").exists()
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -272,11 +272,11 @@ class EMEngine:
         context: str = "",
         alternatives: str = "",
         consequences: str = "",
-        authors: List[str***REMOVED*** | None = None,
-        tags: List[str***REMOVED*** | None = None,
-        related_components: List[str***REMOVED*** | None = None,
-        related_commits: List[str***REMOVED*** | None = None,
-        related_tasks: List[str***REMOVED*** | None = None,
+        authors: List[str] | None = None,
+        tags: List[str] | None = None,
+        related_components: List[str] | None = None,
+        related_commits: List[str] | None = None,
+        related_tasks: List[str] | None = None,
     ) -> str:
         """Создаёт черновик Decision Journal.
 
@@ -287,18 +287,18 @@ class EMEngine:
             "Context": context or "(не указано)",
             "Decision": decision,
             "Rationale": rationale,
-        ***REMOVED***
+        }
         if alternatives:
-            sections["Alternatives Considered"***REMOVED*** = alternatives
+            sections["Alternatives Considered"] = alternatives
         if consequences:
-            sections["Consequences"***REMOVED*** = consequences
+            sections["Consequences"] = consequences
 
         return self._create_draft(
             type="decision_journal",
             title=title,
             sections=sections,
             authors=authors,
-            tags=tags or ["decision"***REMOVED***,
+            tags=tags or ["decision"],
             related_components=related_components,
             related_commits=related_commits,
             related_tasks=related_tasks,
@@ -313,35 +313,35 @@ class EMEngine:
         prevention: str = "",
         timeline: str = "",
         impact: str = "",
-        authors: List[str***REMOVED*** | None = None,
-        tags: List[str***REMOVED*** | None = None,
-        related_components: List[str***REMOVED*** | None = None,
-        related_commits: List[str***REMOVED*** | None = None,
-        related_tasks: List[str***REMOVED*** | None = None,
+        authors: List[str] | None = None,
+        tags: List[str] | None = None,
+        related_components: List[str] | None = None,
+        related_commits: List[str] | None = None,
+        related_tasks: List[str] | None = None,
     ) -> str:
         """Создаёт черновик Incident Report.
 
         Returns:
             draft_id — ключ драфта в MemoryEngine.
         """
-        sections: Dict[str, str***REMOVED*** = {
+        sections: Dict[str, str] = {
             "Summary": summary,
             "Root Cause": root_cause,
             "Resolution": resolution,
-        ***REMOVED***
+        }
         if timeline:
-            sections["Timeline"***REMOVED*** = timeline
+            sections["Timeline"] = timeline
         if impact:
-            sections["Impact"***REMOVED*** = impact
+            sections["Impact"] = impact
         if prevention:
-            sections["Prevention"***REMOVED*** = prevention
+            sections["Prevention"] = prevention
 
         return self._create_draft(
             type="incident_report",
             title=title,
             sections=sections,
             authors=authors,
-            tags=tags or ["incident"***REMOVED***,
+            tags=tags or ["incident"],
             related_components=related_components,
             related_commits=related_commits,
             related_tasks=related_tasks,
@@ -353,31 +353,31 @@ class EMEngine:
         lesson: str,
         context: str = "",
         example: str = "",
-        authors: List[str***REMOVED*** | None = None,
-        tags: List[str***REMOVED*** | None = None,
-        related_components: List[str***REMOVED*** | None = None,
-        related_commits: List[str***REMOVED*** | None = None,
-        related_tasks: List[str***REMOVED*** | None = None,
+        authors: List[str] | None = None,
+        tags: List[str] | None = None,
+        related_components: List[str] | None = None,
+        related_commits: List[str] | None = None,
+        related_tasks: List[str] | None = None,
     ) -> str:
         """Создаёт черновик Lessons Learned.
 
         Returns:
             draft_id — ключ драфта в MemoryEngine.
         """
-        sections: Dict[str, str***REMOVED*** = {
+        sections: Dict[str, str] = {
             "Lesson": lesson,
-        ***REMOVED***
+        }
         if context:
-            sections["Context"***REMOVED*** = context
+            sections["Context"] = context
         if example:
-            sections["Example"***REMOVED*** = example
+            sections["Example"] = example
 
         return self._create_draft(
             type="lessons_learned",
             title=title,
             sections=sections,
             authors=authors,
-            tags=tags or ["lesson"***REMOVED***,
+            tags=tags or ["lesson"],
             related_components=related_components,
             related_commits=related_commits,
             related_tasks=related_tasks,
@@ -391,34 +391,34 @@ class EMEngine:
         friction: str = "",
         discoveries: str = "",
         follow_ups: str = "",
-        authors: List[str***REMOVED*** | None = None,
-        tags: List[str***REMOVED*** | None = None,
-        related_components: List[str***REMOVED*** | None = None,
-        related_commits: List[str***REMOVED*** | None = None,
-        related_tasks: List[str***REMOVED*** | None = None,
+        authors: List[str] | None = None,
+        tags: List[str] | None = None,
+        related_components: List[str] | None = None,
+        related_commits: List[str] | None = None,
+        related_tasks: List[str] | None = None,
     ) -> str:
         """Создаёт черновик Task Retrospective.
 
         Returns:
             draft_id — ключ драфта в MemoryEngine.
         """
-        sections: Dict[str, str***REMOVED*** = {
+        sections: Dict[str, str] = {
             "Intent": intent,
             "Reality": reality,
-        ***REMOVED***
+        }
         if friction:
-            sections["Friction"***REMOVED*** = friction
+            sections["Friction"] = friction
         if discoveries:
-            sections["Discoveries"***REMOVED*** = discoveries
+            sections["Discoveries"] = discoveries
         if follow_ups:
-            sections["Follow-ups"***REMOVED*** = follow_ups
+            sections["Follow-ups"] = follow_ups
 
         return self._create_draft(
             type="task_retrospective",
             title=title,
             sections=sections,
             authors=authors,
-            tags=tags or ["retrospective"***REMOVED***,
+            tags=tags or ["retrospective"],
             related_components=related_components,
             related_commits=related_commits,
             related_tasks=related_tasks,
@@ -426,7 +426,7 @@ class EMEngine:
 
     # ── Public: finalize / query / list ─────────────────────
 
-    def finalize_draft(self, draft_id: str, *, reviewer: Optional[str***REMOVED*** = None) -> Path:
+    def finalize_draft(self, draft_id: str, *, reviewer: Optional[str] = None) -> Path:
         """Сохраняет драфт в Markdown-файл и индексирует его.
 
         Args:
@@ -441,9 +441,9 @@ class EMEngine:
         """
         entry = self._memory.retrieve(MemoryLevel.PROJECT, draft_id)
         if entry is None:
-            raise DraftNotFoundError(f"Draft not found: {draft_id***REMOVED***")
+            raise DraftNotFoundError(f"Draft not found: {draft_id}")
 
-        meta = entry.metadata or {***REMOVED***
+        meta = entry.metadata or {}
         doc_type = meta.get("type", "record")
         title = meta.get("title", "untitled")
         date = meta.get("date", datetime.now(timezone.utc).strftime("%Y-%m-%d"))
@@ -455,32 +455,32 @@ class EMEngine:
 
         # Имя файла (уникальное, чтобы не перезаписать случайно)
         slug = self._slugify(title) or "untitled"
-        filename = f"{doc_type***REMOVED***-{slug***REMOVED***-{date***REMOVED***.md"
+        filename = f"{doc_type}-{slug}-{date}.md"
         target_path = target_dir / filename
         counter = 1
         while target_path.exists():
-            filename = f"{doc_type***REMOVED***-{slug***REMOVED***-{date***REMOVED***-{counter***REMOVED***.md"
+            filename = f"{doc_type}-{slug}-{date}-{counter}.md"
             target_path = target_dir / filename
             counter += 1
 
         # Собираем frontmatter
         frontmatter = self._build_frontmatter(
-            id=f"em-{doc_type***REMOVED***-{slug***REMOVED***-{date***REMOVED***",
+            id=f"em-{doc_type}-{slug}-{date}",
             type=doc_type,
             title=title,
             date=date,
-            authors=meta.get("authors", [***REMOVED***),
-            tags=meta.get("tags", [***REMOVED***),
-            related_components=meta.get("related_components", [***REMOVED***),
-            related_commits=meta.get("related_commits", [***REMOVED***),
-            related_tasks=meta.get("related_tasks", [***REMOVED***),
+            authors=meta.get("authors", []),
+            tags=meta.get("tags", []),
+            related_components=meta.get("related_components", []),
+            related_commits=meta.get("related_commits", []),
+            related_tasks=meta.get("related_tasks", []),
             status="final",
             reviewer=reviewer,
         )
 
         # Decision journals receive an canonical ADR id and update the index
         if doc_type == "decision_journal" and "adr_id" not in frontmatter:
-            frontmatter["adr_id"***REMOVED*** = self._next_adr_id()
+            frontmatter["adr_id"] = self._next_adr_id()
 
         frontmatter_str = self._frontmatter_to_string(frontmatter)
 
@@ -501,19 +501,19 @@ class EMEngine:
                     "draft_id": draft_id,
                     "path": str(self._root / "docs_10" / "decisions" / "DECISIONS.md"),
                     "error": str(exc),
-                ***REMOVED***)
+                ])
 
         # Индексируем в KnowledgeEngine
         try:
             self._knowledge_engine.index_document(
-                doc_id=frontmatter["id"***REMOVED***,
+                doc_id=frontmatter["id"],
                 content=full_content,
                 metadata={
                     "title": title,
                     "source": str(target_path.relative_to(self._root)),
                     "doc_type": doc_type,
-                    "tags": ",".join(meta.get("tags", [***REMOVED***)),
-                ***REMOVED***,
+                    "tags": ",".join(meta.get("tags", [])),
+                },
             )
         except Exception as exc:
             # KnowledgeEngine не должен блокировать EM
@@ -521,19 +521,19 @@ class EMEngine:
                 "draft_id": draft_id,
                 "path": str(target_path),
                 "error": str(exc),
-            ***REMOVED***)
+            ])
 
         # Удаляем драфт из MemoryEngine
         self._memory.delete(MemoryLevel.PROJECT, draft_id)
 
         # Публикуем событие финализации
         self._maybe_publish("em.document_finalized", {
-            "doc_id": frontmatter["id"***REMOVED***,
+            "doc_id": frontmatter["id"],
             "type": doc_type,
             "title": title,
             "path": str(target_path),
             "reviewer": reviewer,
-        ***REMOVED***)
+        ])
 
         return target_path
 
@@ -542,7 +542,7 @@ class EMEngine:
         query: str,
         limit: int = 5,
         mode: str = "hybrid",
-    ) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    ) -> List[Dict[str, Any]]:
         """Ищет по индексированным EM-документам.
 
         Args:
@@ -554,23 +554,23 @@ class EMEngine:
             Список результатов поиска как dict.
         """
         results = self._knowledge_engine.search(query, top_k=limit * 3, mode=mode)
-        em_results = [r for r in results if r.doc_id.startswith("em-")***REMOVED***
+        em_results = [r for r in results if r.doc_id.startswith("em-")]
         return [
             {
                 "doc_id": r.doc_id,
                 "score": r.score,
                 "snippet": r.snippet,
                 "metadata": r.metadata,
-            ***REMOVED***
-            for r in em_results[:limit***REMOVED***
-        ***REMOVED***
+            }
+            for r in em_results[:limit]
+        ]
 
-    def list_drafts(self) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    def list_drafts(self) -> List[Dict[str, Any]]:
         """Возвращает список EM-драфтов из MemoryEngine."""
         entries = self._memory.list_entries(level=MemoryLevel.PROJECT)
-        drafts = [***REMOVED***
+        drafts = []
         for entry in entries:
-            meta = entry.metadata or {***REMOVED***
+            meta = entry.metadata or {}
             if meta.get("em_draft"):
                 drafts.append({
                     "draft_id": entry.key,
@@ -578,7 +578,7 @@ class EMEngine:
                     "title": meta.get("title"),
                     "date": meta.get("date"),
                     "status": meta.get("status", "draft"),
-                ***REMOVED***)
+                ])
         return drafts
 
     def discard_draft(self, draft_id: str) -> bool:
@@ -590,7 +590,7 @@ class EMEngine:
         entry = self._memory.retrieve(MemoryLevel.PROJECT, draft_id)
         if entry is None:
             return False
-        meta = entry.metadata or {***REMOVED***
+        meta = entry.metadata or {}
         if not meta.get("em_draft"):
             return False
         return self._memory.delete(MemoryLevel.PROJECT, draft_id)
@@ -630,14 +630,14 @@ class EMEngine:
         doc_type = Path(template_name).stem
 
         # Нормализуем list-поля: строки → список, если это возможно
-        def _as_list(value: Any) -> List[str***REMOVED***:
+        def _as_list(value: Any) -> List[str]:
             if value is None:
-                return [***REMOVED***
+                return []
             if isinstance(value, list):
-                return [str(v) for v in value***REMOVED***
+                return [str(v) for v in value]
             if isinstance(value, str):
-                return [value***REMOVED*** if value.strip() else [***REMOVED***
-            return [str(value)***REMOVED***
+                return [value] if value.strip() else []
+            return [str(value)]
 
         return self._create_draft(
             type=doc_type,
@@ -650,7 +650,7 @@ class EMEngine:
             related_tasks=_as_list(values.get("related_tasks")),
         )
 
-    def list_templates(self) -> List[str***REMOVED***:
+    def list_templates(self) -> List[str]:
         """Возвращает список доступных шаблонов EM."""
         return self.template_renderer.list_templates()
 
@@ -658,17 +658,17 @@ class EMEngine:
 
     def has_auto_trigger(self, ref: str) -> bool:
         """Проверяет, был ли уже создан авто-драфт для данного ref."""
-        return self._memory.retrieve(MemoryLevel.PROJECT, f"em_auto_trigger_{ref***REMOVED***") is not None
+        return self._memory.retrieve(MemoryLevel.PROJECT, f"em_auto_trigger_{ref}") is not None
 
     def set_auto_trigger(self, ref: str) -> None:
         """Сохраняет маркер, что авто-драфт для данного ref уже создан."""
         self._memory.store(
             level=MemoryLevel.PROJECT,
-            key=f"em_auto_trigger_{ref***REMOVED***",
+            key=f"em_auto_trigger_{ref}",
             content="auto-trigger marker",
             content_type=ContentType.TEXT,
-            summary=f"EM auto-trigger marker for {ref***REMOVED***",
-            metadata={"em_auto_trigger": True, "ref": ref***REMOVED***,
+            summary=f"EM auto-trigger marker for {ref}",
+            metadata={"em_auto_trigger": True, "ref": ref},
         )
 
     # ── Internal helpers ────────────────────────────────────
@@ -677,32 +677,32 @@ class EMEngine:
         self,
         type: str,
         title: str,
-        sections: Dict[str, str***REMOVED*** | None = None,
+        sections: Dict[str, str] | None = None,
         content: str | None = None,
-        authors: List[str***REMOVED*** | None = None,
-        tags: List[str***REMOVED*** | None = None,
-        related_components: List[str***REMOVED*** | None = None,
-        related_commits: List[str***REMOVED*** | None = None,
-        related_tasks: List[str***REMOVED*** | None = None,
+        authors: List[str] | None = None,
+        tags: List[str] | None = None,
+        related_components: List[str] | None = None,
+        related_commits: List[str] | None = None,
+        related_tasks: List[str] | None = None,
     ) -> str:
         """Создаёт драфт в MemoryEngine и возвращает draft_id."""
-        draft_id = f"em_draft_{uuid.uuid4().hex[:8***REMOVED******REMOVED***"
+        draft_id = f"em_draft_{uuid.uuid4().hex[:8]}"
         now = datetime.now(timezone.utc)
         date = now.strftime("%Y-%m-%d")
 
         if content is None:
             if sections is None:
-                sections = {***REMOVED***
+                sections = {}
             record = EMRecord(
                 id=draft_id,
                 type=type,
                 title=title,
                 date=date,
-                authors=authors or ["Buffy"***REMOVED***,
-                tags=tags or [***REMOVED***,
-                related_components=related_components or [***REMOVED***,
-                related_commits=related_commits or [***REMOVED***,
-                related_tasks=related_tasks or [***REMOVED***,
+                authors=authors or ["Buffy"],
+                tags=tags or [],
+                related_components=related_components or [],
+                related_commits=related_commits or [],
+                related_tasks=related_tasks or [],
                 status="draft",
                 sections=sections,
             )
@@ -713,45 +713,45 @@ class EMEngine:
             key=draft_id,
             content=content,
             content_type=ContentType.MARKDOWN,
-            summary=f"EM draft: {type***REMOVED*** — {title***REMOVED***",
+            summary=f"EM draft: {type} — {title}",
             metadata={
                 "em_draft": True,
                 "type": type,
                 "title": title,
                 "date": date,
-                "authors": authors or ["Buffy"***REMOVED***,
-                "tags": tags or [***REMOVED***,
-                "related_components": related_components or [***REMOVED***,
-                "related_commits": related_commits or [***REMOVED***,
-                "related_tasks": related_tasks or [***REMOVED***,
+                "authors": authors or ["Buffy"],
+                "tags": tags or [],
+                "related_components": related_components or [],
+                "related_commits": related_commits or [],
+                "related_tasks": related_tasks or [],
                 "status": "draft",
-            ***REMOVED***,
+            },
         )
 
         self._maybe_publish("em.draft_created", {
             "draft_id": draft_id,
             "type": type,
             "title": title,
-        ***REMOVED***)
+        ])
 
         return draft_id
 
-    def _build_frontmatter(self, *, reviewer: Optional[str***REMOVED*** = None, **kwargs: Any) -> Dict[str, Any***REMOVED***:
+    def _build_frontmatter(self, *, reviewer: Optional[str] = None, **kwargs: Any) -> Dict[str, Any]:
         """Собирает frontmatter в виде dict (JSON-экранированного YAML)."""
         frontmatter = dict(kwargs)
         if reviewer:
-            frontmatter["reviewer"***REMOVED*** = reviewer
+            frontmatter["reviewer"] = reviewer
         return frontmatter
 
-    def _frontmatter_to_string(self, frontmatter: Dict[str, Any***REMOVED***) -> str:
+    def _frontmatter_to_string(self, frontmatter: Dict[str, Any]) -> str:
         """Сериализует frontmatter dict в YAML-like блок с JSON-escaped значениями."""
-        lines = ["---"***REMOVED***
+        lines = ["---"]
         for key, value in frontmatter.items():
-            lines.append(f"{key***REMOVED***: {json.dumps(value, ensure_ascii=False)***REMOVED***")
+            lines.append(f"{key}: {json.dumps(value, ensure_ascii=False)}")
         lines.append("---")
         return "\n".join(lines)
 
-    def _maybe_publish(self, event_type: str, data: Dict[str, Any***REMOVED***) -> None:
+    def _maybe_publish(self, event_type: str, data: Dict[str, Any]) -> None:
         """Публикует событие в EventBus, если он доступен."""
         if self._event_bus is None:
             return
@@ -771,23 +771,23 @@ class EMEngine:
             Markdown без frontmatter (с сохранением оригинальных пустых строк).
         """
         lines = markdown.splitlines()
-        if not lines or lines[0***REMOVED***.strip() != "---":
+        if not lines or lines[0].strip() != "---":
             return markdown
         try:
-            end_index = lines[1:***REMOVED***.index("---") + 1
+            end_index = lines[1:].index("---") + 1
         except ValueError:
             return markdown
-        body_lines = lines[end_index + 1:***REMOVED***
+        body_lines = lines[end_index + 1:]
         return "\n".join(body_lines).strip("\n")
 
     @staticmethod
     def _slugify(text: str) -> str:
         """Превращает строку в безопасный для файлов slug."""
         text = text.lower().strip()
-        text = re.sub(r"[^\w\s-***REMOVED***", "", text)
-        text = re.sub(r"[\s_***REMOVED***+", "-", text)
+        text = re.sub(r"[^\w\s-)", "", text)
+        text = re.sub(r"[\s_)+", "-", text)
         text = re.sub(r"-+", "-", text)
-        return text.strip("-")[:50***REMOVED***
+        return text.strip("-")[:50]
 
     # ── ADR index helpers ─────────────────────────────────────
 
@@ -799,14 +799,14 @@ class EMEngine:
             for path in decisions_dir.glob("*.md"):
                 try:
                     text = path.read_text(encoding="utf-8")
-                    for match in re.finditer(r"\bADR-(\d{3,***REMOVED***)\b", text):
+                    for match in re.finditer(r"\bADR-(\d{3,))\b", text):
                         max_num = max(max_num, int(match.group(1)))
                 except Exception:
                     continue
-        return f"ADR-{max_num + 1:03d***REMOVED***"
+        return f"ADR-{max_num + 1:03d}"
 
     @staticmethod
-    def _extract_adr_metadata(path: Path) -> Optional[Dict[str, str***REMOVED******REMOVED***:
+    def _extract_adr_metadata(path: Path) -> Optional[Dict[str, str]]:
         """Извлекает метаданные ADR из файла (ручной или EM-generated формат)."""
         try:
             text = path.read_text(encoding="utf-8")
@@ -817,17 +817,17 @@ class EMEngine:
         if text.startswith("---"):
             try:
                 lines = text.splitlines()
-                end_index = lines[1:***REMOVED***.index("---") + 1
-                frontmatter: Dict[str, Any***REMOVED*** = {***REMOVED***
-                for line in lines[1:end_index***REMOVED***:
+                end_index = lines[1:].index("---") + 1
+                frontmatter: Dict[str, Any] = {}
+                for line in lines[1:end_index]:
                     if ":" in line:
                         key, value = line.split(":", 1)
                         key = key.strip()
                         value = value.strip()
                         try:
-                            frontmatter[key***REMOVED*** = json.loads(value)
+                            frontmatter[key] = json.loads(value)
                         except json.JSONDecodeError:
-                            frontmatter[key***REMOVED*** = value
+                            frontmatter[key] = value
 
                 title = frontmatter.get("title", "").strip()
                 adr_id = str(frontmatter.get("adr_id", "")).strip()
@@ -840,16 +840,16 @@ class EMEngine:
                         "date": date,
                         "status": status,
                         "path": str(path),
-                    ***REMOVED***
+                    }
             except Exception:
                 pass
 
         # Ручной формат: # ADR-XXX: Title, **Дата:** ..., **Статус:** ...
-        h1_match = re.search(r"^# (ADR-\d{3,***REMOVED***):\s*(.+)$", text, re.MULTILINE)
+        h1_match = re.search(r"^# (ADR-\d{3,)):\s*(.+)$", text, re.MULTILINE)
         if h1_match:
             adr_id = h1_match.group(1)
             title = h1_match.group(2).strip()
-            date_match = re.search(r"\*\*Дата:\*\*\s*(\d{4***REMOVED***-\d{2***REMOVED***-\d{2***REMOVED***)", text)
+            date_match = re.search(r"\*\*Дата:\*\*\s*(\d{4)-\d{2]-\d{2])", text)
             date = date_match.group(1) if date_match else ""
             status_match = re.search(r"\*\*Статус:\*\*\s*(.+)", text)
             status = status_match.group(1).strip() if status_match else ""
@@ -859,7 +859,7 @@ class EMEngine:
                 "date": date,
                 "status": status,
                 "path": str(path),
-            ***REMOVED***
+            }
 
         return None
 
@@ -868,28 +868,28 @@ class EMEngine:
         decisions_dir = self._em_dir / "decisions"
         index_path = self._root / "docs_10" / "decisions" / "DECISIONS.md"
 
-        adrs: List[Dict[str, str***REMOVED******REMOVED*** = [***REMOVED***
+        adrs: List[Dict[str, str]] = []
         if decisions_dir.exists():
             for path in sorted(decisions_dir.glob("*.md")):
                 meta = self._extract_adr_metadata(path)
                 if meta:
                     adrs.append(meta)
 
-        def _sort_key(adr: Dict[str, str***REMOVED***) -> tuple[int, int, str***REMOVED***:
-            match = re.match(r"ADR-(\d+)", adr["id"***REMOVED***)
+        def _sort_key(adr: Dict[str, str]) -> tuple[int, int, str]:
+            match = re.match(r"ADR-(\d+)", adr["id"])
             if match:
                 return (0, int(match.group(1)), "")
-            return (1, 0, adr["id"***REMOVED***)
+            return (1, 0, adr["id"])
 
         adrs.sort(key=_sort_key)
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-        lines: List[str***REMOVED*** = [
+        lines: List[str] = [
             "# Decisions — Архитектурные решения Buffy Project",
             "",
-            f"> **Последнее обновление:** {today***REMOVED***",
+            f"> **Последнее обновление:** {today}",
             "> ",
-            "> Этот файл больше не хранит ADR в одном месте. Каждое решение вынесено в отдельный журнал в [`docs_10/engineering-memory/decisions/`***REMOVED***(../engineering-memory/decisions/).",
+            "> Этот файл больше не хранит ADR в одном месте. Каждое решение вынесено в отдельный журнал в [`docs_10/engineering-memory/decisions/`](../engineering-memory/decisions/).",
             "",
             "---",
             "",
@@ -897,15 +897,15 @@ class EMEngine:
             "",
             "| ID | Название | Дата | Статус | Ссылка |",
             "|----|----------|------|--------|--------|",
-        ***REMOVED***
+        ]
 
         for adr in adrs:
-            link = f"../engineering-memory/decisions/{Path(adr['path'***REMOVED***).name***REMOVED***"
-            title = adr["title"***REMOVED***.replace("|", "\\|")
+            link = f"../engineering-memory/decisions/{Path(adr['path']).name}"
+            title = adr["title"].replace("|", "\\|")
             status = adr.get("status", "").replace("|", "\\|")
             date = adr.get("date", "")
             lines.append(
-                f"| {adr['id'***REMOVED******REMOVED*** | {title***REMOVED*** | {date***REMOVED*** | {status***REMOVED*** | [{Path(adr['path'***REMOVED***).name***REMOVED******REMOVED***({link***REMOVED***) |"
+                f"| {adr['id']} | {title} | {date} | {status} | [{Path(adr['path']).name}]({link}) |"
             )
 
         lines.extend([
@@ -920,9 +920,9 @@ class EMEngine:
             "",
             "---",
             "",
-            "_См. также [Engineering Memory***REMOVED***(../engineering-memory/ARCHITECTURE.md) и [Project Book***REMOVED***(../engineering-memory/PROJECT_BOOK.md)_.",
+            "_См. также [Engineering Memory](../engineering-memory/ARCHITECTURE.md) и [Project Book](../engineering-memory/PROJECT_BOOK.md)_.",
             "",
-        ***REMOVED***)
+        ])
 
         index_path.parent.mkdir(parents=True, exist_ok=True)
         index_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -1006,7 +1006,7 @@ def main():
     p_query = sub.add_parser("query", help="Искать по Engineering Memory")
     p_query.add_argument("query", help="Поисковый запрос")
     p_query.add_argument("--limit", type=int, default=5, help="Количество результатов")
-    p_query.add_argument("--mode", choices=["keyword", "semantic", "hybrid"***REMOVED***,
+    p_query.add_argument("--mode", choices=["keyword", "semantic", "hybrid"],
                          default="hybrid", help="Режим поиска")
 
     # list-drafts
@@ -1020,8 +1020,8 @@ def main():
 
     em = EMEngine()
 
-    def _split(value: str) -> List[str***REMOVED***:
-        return [v.strip() for v in value.split(",") if v.strip()***REMOVED*** if value else [***REMOVED***
+    def _split(value: str) -> List[str]:
+        return [v.strip() for v in value.split(",") if v.strip()] if value else []
 
     if args.command == "record-decision":
         draft_id = em.record_decision(
@@ -1034,7 +1034,7 @@ def main():
             authors=_split(args.authors),
             tags=_split(args.tags),
         )
-        print(f"📝 Decision draft: {draft_id***REMOVED***")
+        print(f"📝 Decision draft: {draft_id}")
 
     elif args.command == "record-incident":
         draft_id = em.record_incident(
@@ -1048,7 +1048,7 @@ def main():
             authors=_split(args.authors),
             tags=_split(args.tags),
         )
-        print(f"📝 Incident draft: {draft_id***REMOVED***")
+        print(f"📝 Incident draft: {draft_id}")
 
     elif args.command == "record-lesson":
         draft_id = em.record_lesson(
@@ -1059,7 +1059,7 @@ def main():
             authors=_split(args.authors),
             tags=_split(args.tags),
         )
-        print(f"📝 Lesson draft: {draft_id***REMOVED***")
+        print(f"📝 Lesson draft: {draft_id}")
 
     elif args.command == "record-retrospective":
         draft_id = em.record_task_retrospective(
@@ -1072,37 +1072,37 @@ def main():
             authors=_split(args.authors),
             tags=_split(args.tags),
         )
-        print(f"📝 Retrospective draft: {draft_id***REMOVED***")
+        print(f"📝 Retrospective draft: {draft_id}")
 
     elif args.command == "finalize":
         try:
             path = em.finalize_draft(args.draft_id, reviewer=args.reviewer)
-            print(f"✅ Finalized: {path***REMOVED***")
+            print(f"✅ Finalized: {path}")
         except DraftNotFoundError:
-            print(f" Draft not found: {args.draft_id***REMOVED***")
+            print(f" Draft not found: {args.draft_id}")
 
     elif args.command == "discard":
         ok = em.discard_draft(args.draft_id)
-        print(f"{'🗑 Discarded' if ok else '❌ Not found'***REMOVED***: {args.draft_id***REMOVED***")
+        print(f"{'🗑 Discarded' if ok else '❌ Not found'}: {args.draft_id}")
 
     elif args.command == "query":
         results = em.query_experience(args.query, limit=args.limit, mode=args.mode)
         if not results:
             print("🔍 No results")
         else:
-            print(f"🔍 {len(results)***REMOVED*** results:")
+            print(f"🔍 {len(results)} results:")
             for r in results:
-                print(f"  [{r['score'***REMOVED***:.4f***REMOVED******REMOVED*** {r['doc_id'***REMOVED******REMOVED***")
-                print(f"     {r['snippet'***REMOVED***[:120***REMOVED******REMOVED***")
+                print(f"  [{r['score']:.4f}] {r['doc_id']}")
+                print(f"     {r['snippet'][:120]}")
 
     elif args.command == "list-drafts":
         drafts = em.list_drafts()
         if not drafts:
             print("📭 No drafts")
         else:
-            print(f"📋 {len(drafts)***REMOVED*** drafts:")
+            print(f"📋 {len(drafts)} drafts:")
             for d in drafts:
-                print(f"  {d['draft_id'***REMOVED******REMOVED*** | {d['type'***REMOVED******REMOVED*** | {d['title'***REMOVED******REMOVED***")
+                print(f"  {d['draft_id']} | {d['type']} | {d['title']}")
 
 
 if __name__ == "__main__":

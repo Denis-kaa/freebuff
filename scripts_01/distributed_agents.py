@@ -42,16 +42,16 @@ distributed_agents.py — Мульти-агентная оркестрация �
     coord.start()
 
     # Подключить агентов через Bridge Layer
-    coord.spawn_agent("agent-code", command="python", args=["mcp_server.py"***REMOVED***)
-    coord.spawn_agent("agent-research", command="python", args=["research_server.py"***REMOVED***)
+    coord.spawn_agent("agent-code", command="python", args=["mcp_server.py"])
+    coord.spawn_agent("agent-research", command="python", args=["research_server.py"])
 
     # Запустить workflow
     plan = coord.run_distributed_workflow(
         goal="Implement feature",
         steps=[
-            {"agent": "agent-code", "tool": "code", "arguments": {...***REMOVED******REMOVED***,
-            {"agent": "agent-research", "tool": "research", "arguments": {...***REMOVED******REMOVED***,
-        ***REMOVED***,
+            {"agent": "agent-code", "tool": "code", "arguments": {...}},
+            {"agent": "agent-research", "tool": "research", "arguments": {...}},
+        ],
     )
 """
 
@@ -68,7 +68,7 @@ import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-***REMOVED***
+}
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 WORKSPACE = Path(__file__).resolve().parent
@@ -104,7 +104,7 @@ class AgentCapability:
     name: str
     description: str = ""
     confidence: float = 1.0
-    metadata: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -121,16 +121,16 @@ class AgentNode:
     name: str
     agent_type: str = "mcp"
     status: AgentNodeStatus = AgentNodeStatus.PENDING
-    capabilities: Dict[str, AgentCapability***REMOVED*** = field(default_factory=dict)
+    capabilities: Dict[str, AgentCapability] = field(default_factory=dict)
     transport: str = "stdio"
     address: str = ""
     connected_at: float = 0.0
     last_seen: float = 0.0
-    error: Optional[str***REMOVED*** = None
-    metadata: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    error: Optional[str] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
     bridge_server_name: str = ""
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         """Сериализация в dict для JSON."""
         return {
             "name": self.name,
@@ -141,9 +141,9 @@ class AgentNode:
                     "name": cap.name,
                     "description": cap.description,
                     "confidence": cap.confidence,
-                ***REMOVED***
+                }
                 for name, cap in self.capabilities.items()
-            ***REMOVED***,
+            },
             "transport": self.transport,
             "address": self.address,
             "connected_at": self.connected_at,
@@ -151,18 +151,18 @@ class AgentNode:
             "error": self.error,
             "metadata": self.metadata,
             "bridge_server_name": self.bridge_server_name,
-        ***REMOVED***
+        }
 
 
 @dataclass
 class AgentTask:
     """Задача для распределённого агента."""
 
-    id: str = field(default_factory=lambda: f"task-{uuid.uuid4().hex[:8***REMOVED******REMOVED***")
+    id: str = field(default_factory=lambda: f"task-{uuid.uuid4().hex[:8]}")
     agent: str = ""
     tool: str = ""
     capability: str = ""
-    arguments: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    arguments: Dict[str, Any] = field(default_factory=dict)
     strategy: str = "best_match"
     timeout: float = 60.0
     status: str = "pending"
@@ -182,28 +182,28 @@ class AgentTaskResult:
     agent: str
     success: bool
     data: Any = None
-    error: Optional[str***REMOVED*** = None
+    error: Optional[str] = None
     duration_ms: float = 0.0
     completed_at: float = field(default_factory=time.time)
-    metadata: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class DistributedWorkflowStep:
     """Шаг распределённого workflow."""
 
-    id: str = field(default_factory=lambda: f"step-{uuid.uuid4().hex[:8***REMOVED******REMOVED***")
+    id: str = field(default_factory=lambda: f"step-{uuid.uuid4().hex[:8]}")
     agent: str = ""
     step_type: str = "tool"
     tool: str = ""
-    arguments: Dict[str, Any***REMOVED*** = field(default_factory=dict)
-    depends_on: List[str***REMOVED*** = field(default_factory=list)
+    arguments: Dict[str, Any] = field(default_factory=dict)
+    depends_on: List[str] = field(default_factory=list)
     status: str = "pending"
     result: Any = None
-    error: Optional[str***REMOVED*** = None
+    error: Optional[str] = None
     duration_ms: float = 0.0
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         """Сериализация в dict для JSON."""
         return {
             "id": self.id,
@@ -216,32 +216,32 @@ class DistributedWorkflowStep:
             "result": self.result,
             "error": self.error,
             "duration_ms": self.duration_ms,
-        ***REMOVED***
+        }
 
 
 @dataclass
 class DistributedWorkflowPlan:
     """План распределённого workflow."""
 
-    id: str = field(default_factory=lambda: f"wf-{uuid.uuid4().hex[:8***REMOVED******REMOVED***")
+    id: str = field(default_factory=lambda: f"wf-{uuid.uuid4().hex[:8]}")
     goal: str = ""
-    steps: List[DistributedWorkflowStep***REMOVED*** = field(default_factory=list)
+    steps: List[DistributedWorkflowStep] = field(default_factory=list)
     status: WorkCoordStatus = WorkCoordStatus.PENDING
     created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    errors: List[str***REMOVED*** = field(default_factory=list)
+    errors: List[str] = field(default_factory=list)
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         """Сериализация в dict для JSON."""
         return {
             "id": self.id,
             "goal": self.goal,
-            "steps": [s.to_dict() for s in self.steps***REMOVED***,
+            "steps": [s.to_dict() for s in self.steps],
             "status": self.status.value,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
             "errors": self.errors,
-        ***REMOVED***
+        }
 
 
 
@@ -254,8 +254,8 @@ class AgentMesh:
     """
 
     def __init__(self, max_agents: int = 10):
-        self._agents: Dict[str, AgentNode***REMOVED*** = {***REMOVED***
-        self._task_history: List[AgentTaskResult***REMOVED*** = [***REMOVED***
+        self._agents: Dict[str, AgentNode] = {}
+        self._task_history: List[AgentTaskResult] = []
         self._max_agents = max_agents
         self._lock = threading.RLock()
 
@@ -267,14 +267,14 @@ class AgentMesh:
     def register(self, node: AgentNode) -> None:
         """Регистрирует агента в mesh."""
         with self._lock:
-            self._agents[node.name***REMOVED*** = node
+            self._agents[node.name] = node
 
     def unregister(self, name: str) -> bool:
         """Удаляет агента из mesh."""
         with self._lock:
             return self._agents.pop(name, None) is not None
 
-    def get(self, name: str) -> Optional[AgentNode***REMOVED***:
+    def get(self, name: str) -> Optional[AgentNode]:
         """Получает агента по имени."""
         with self._lock:
             return self._agents.get(name)
@@ -300,18 +300,18 @@ class AgentMesh:
             return True
 
     def list_agents(
-        self, status: Optional[AgentNodeStatus***REMOVED*** = None, agent_type: Optional[str***REMOVED*** = None
-    ) -> List[AgentNode***REMOVED***:
+        self, status: Optional[AgentNodeStatus] = None, agent_type: Optional[str] = None
+    ) -> List[AgentNode]:
         """Список агентов с фильтрацией."""
         with self._lock:
             agents = list(self._agents.values())
         if status is not None:
-            agents = [a for a in agents if a.status == status***REMOVED***
+            agents = [a for a in agents if a.status == status]
         if agent_type is not None:
-            agents = [a for a in agents if a.agent_type == agent_type***REMOVED***
+            agents = [a for a in agents if a.agent_type == agent_type]
         return agents
 
-    def find_by_capability(self, capability: str) -> List[AgentNode***REMOVED***:
+    def find_by_capability(self, capability: str) -> List[AgentNode]:
         """Находит агентов, у которых есть определённая capability.
 
         Args:
@@ -326,9 +326,9 @@ class AgentMesh:
                 for a in self._agents.values()
                 if a.status in (AgentNodeStatus.ONLINE, AgentNodeStatus.BUSY)
                 and capability in a.capabilities
-            ***REMOVED***
+            ]
         matching.sort(
-            key=lambda a: a.capabilities[capability***REMOVED***.confidence, reverse=True
+            key=lambda a: a.capabilities[capability].confidence, reverse=True
         )
         return matching
 
@@ -338,41 +338,41 @@ class AgentMesh:
             1 for a in self.list_agents() if a.status == AgentNodeStatus.ONLINE
         )
 
-    def get_summary(self) -> Dict[str, Any***REMOVED***:
+    def get_summary(self) -> Dict[str, Any]:
         """Сводка по mesh."""
         agents = self.list_agents()
         return {
             "total": len(agents),
-            "agents": [a.to_dict() for a in agents***REMOVED***,
+            "agents": [a.to_dict() for a in agents],
             "online": sum(1 for a in agents if a.status == AgentNodeStatus.ONLINE),
             "busy": sum(1 for a in agents if a.status == AgentNodeStatus.BUSY),
             "error": sum(1 for a in agents if a.status == AgentNodeStatus.ERROR),
             "offline": sum(1 for a in agents if a.status == AgentNodeStatus.OFFLINE),
             "pending": sum(1 for a in agents if a.status == AgentNodeStatus.PENDING),
-        ***REMOVED***
+        }
 
     def record_task_result(self, result: AgentTaskResult) -> None:
         """Сохраняет результат задачи в историю."""
         with self._lock:
             self._task_history.append(result)
             if len(self._task_history) > 1000:
-                self._task_history = self._task_history[-500:***REMOVED***
+                self._task_history = self._task_history[-500:]
 
     def get_task_history(
-        self, limit: int = 50, agent: Optional[str***REMOVED*** = None
-    ) -> List[AgentTaskResult***REMOVED***:
+        self, limit: int = 50, agent: Optional[str] = None
+    ) -> List[AgentTaskResult]:
         """История задач."""
         with self._lock:
             history = list(self._task_history)
         if agent:
-            history = [r for r in history if r.agent == agent***REMOVED***
-        return history[-limit:***REMOVED***[::-1***REMOVED***
+            history = [r for r in history if r.agent == agent]
+        return history[-limit:][::-1]
 
-    def get_agent_stats(self, agent_name: str) -> Dict[str, Any***REMOVED***:
+    def get_agent_stats(self, agent_name: str) -> Dict[str, Any]:
         """Статистика по агенту."""
         with self._lock:
             node = self._agents.get(agent_name)
-            history = [r for r in self._task_history if r.agent == agent_name***REMOVED***
+            history = [r for r in self._task_history if r.agent == agent_name]
         success = sum(1 for r in history if r.success)
         total = len(history)
         avg_duration = (
@@ -387,8 +387,8 @@ class AgentMesh:
             "failed": total - success,
             "success_rate": (success / total if total else 0.0),
             "avg_duration_ms": avg_duration,
-            "tools": list(node.capabilities.keys()) if node else [***REMOVED***,
-        ***REMOVED***
+            "tools": list(node.capabilities.keys()) if node else [],
+        }
 
 
 class TaskDistributor:
@@ -403,16 +403,16 @@ class TaskDistributor:
 
     def __init__(self, mesh: AgentMesh):
         self._mesh = mesh
-        self._rr_index: Dict[str, int***REMOVED*** = {***REMOVED***
+        self._rr_index: Dict[str, int] = {}
 
     def distribute(
         self,
         capability: str,
-        arguments: Dict[str, Any***REMOVED***,
+        arguments: Dict[str, Any],
         strategy: str = "best_match",
         timeout: float = 60.0,
-        specific_agent: Optional[str***REMOVED*** = None,
-    ) -> Optional[AgentTask***REMOVED***:
+        specific_agent: Optional[str] = None,
+    ) -> Optional[AgentTask]:
         """Выбирает агента и создаёт задачу.
 
         Args:
@@ -437,15 +437,15 @@ class TaskDistributor:
             if not candidates:
                 return None
             idx = self._rr_index.get(capability, 0)
-            agent_name = candidates[idx % len(candidates)***REMOVED***.name
-            self._rr_index[capability***REMOVED*** = idx + 1
+            agent_name = candidates[idx % len(candidates)].name
+            self._rr_index[capability] = idx + 1
         else:  # best_match
             if not candidates:
                 return None
-            agent_name = candidates[0***REMOVED***.name
+            agent_name = candidates[0].name
 
         return AgentTask(
-            id=f"task-{uuid.uuid4().hex[:8***REMOVED******REMOVED***",
+            id=f"task-{uuid.uuid4().hex[:8]}",
             capability=capability,
             arguments=arguments,
             agent=agent_name,
@@ -454,8 +454,8 @@ class TaskDistributor:
         )
 
     def distribute_to_all(
-        self, capability: str, arguments: Dict[str, Any***REMOVED***, timeout: float = 60.0
-    ) -> List[AgentTask***REMOVED***:
+        self, capability: str, arguments: Dict[str, Any], timeout: float = 60.0
+    ) -> List[AgentTask]:
         """Создаёт задачи для всех подходящих агентов (broadcast).
 
         Args:
@@ -469,7 +469,7 @@ class TaskDistributor:
         candidates = self._mesh.find_by_capability(capability)
         return [
             AgentTask(
-                id=f"task-{uuid.uuid4().hex[:8***REMOVED******REMOVED***",
+                id=f"task-{uuid.uuid4().hex[:8]}",
                 capability=capability,
                 arguments=arguments,
                 agent=node.name,
@@ -477,7 +477,7 @@ class TaskDistributor:
                 timeout=timeout,
             )
             for node in candidates
-        ***REMOVED***
+        ]
 
 
 class DistributedCoordinator:
@@ -504,11 +504,11 @@ class DistributedCoordinator:
         self._distributor = TaskDistributor(self.mesh)
         self._event_bus = event_bus
         self._bridge_layer = bridge_layer
-        self._workflows: Dict[str, DistributedWorkflowPlan***REMOVED*** = {***REMOVED***
+        self._workflows: Dict[str, DistributedWorkflowPlan] = {}
         self._lock = threading.RLock()
         self._running = False
         self.is_running = False
-        self._monitor_thread: Optional[threading.Thread***REMOVED*** = None
+        self._monitor_thread: Optional[threading.Thread] = None
 
     # ── Lifecycle ─────────────────────────────────────────────────────
 
@@ -523,14 +523,14 @@ class DistributedCoordinator:
             target=self._monitor_loop, name="distributed-monitor", daemon=True
         )
         self._monitor_thread.start()
-        self._publish("distributed.started", {"coordinator": True***REMOVED***)
+        self._publish("distributed.started", {"coordinator": True})
 
     def stop(self) -> None:
         """Останавливает координатор."""
         with self._lock:
             self._running = False
             self.is_running = False
-        self._publish("distributed.stopped", {***REMOVED***)
+        self._publish("distributed.stopped", {})
 
     def _monitor_loop(self) -> None:
         """Мониторит состояние агентов."""
@@ -543,11 +543,11 @@ class DistributedCoordinator:
                     if time.time() - node.last_seen > 120.0:
                         old = node.status
                         self._mesh.update_status(node.name, AgentNodeStatus.OFFLINE)
-                        self._publish("distributed.agent_offline", {"agent_name": node.name, "old_status": old.value***REMOVED***)
+                        self._publish("distributed.agent_offline", {"agent_name": node.name, "old_status": old.value})
             except Exception as exc:  # noqa: BLE001
-                self._publish("distributed.agent_lost", {"error": str(exc)***REMOVED***)
+                self._publish("distributed.agent_lost", {"error": str(exc)})
 
-    def _publish(self, event_type: str, data: Dict[str, Any***REMOVED***) -> None:
+    def _publish(self, event_type: str, data: Dict[str, Any]) -> None:
         """Публикует событие в EventBus."""
         if self._event_bus is None:
             return
@@ -564,17 +564,17 @@ class DistributedCoordinator:
         self,
         name: str = "",
         agent_type: str = "mcp",
-        capabilities: Optional[Dict[str, str***REMOVED******REMOVED*** = None,
+        capabilities: Optional[Dict[str, str]] = None,
         address: str = "",
         transport: str = "stdio",
-        metadata: Optional[Dict[str, Any***REMOVED******REMOVED*** = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> str:
         """Регистрирует агента в mesh без подключения.
 
         Args:
             name: имя агента (авто-генерация если не указано)
             agent_type: тип агента (mcp, local, remote)
-            capabilities: {capability_name: description***REMOVED***
+            capabilities: {capability_name: description}
             address: адрес (команда или endpoint)
             transport: транспорт (stdio, http)
             metadata: дополнительные данные
@@ -586,10 +586,10 @@ class DistributedCoordinator:
             if len(self._mesh.list_agents()) >= self._mesh.max_agents:
                 return ""
         if not name:
-            name = f"agent-{uuid.uuid4().hex[:6***REMOVED******REMOVED***"
-        caps: Dict[str, AgentCapability***REMOVED*** = {***REMOVED***
-        for cap_name, desc in (capabilities or {***REMOVED***).items():
-            caps[cap_name***REMOVED*** = AgentCapability(name=cap_name, description=desc)
+            name = f"agent-{uuid.uuid4().hex[:6]}"
+        caps: Dict[str, AgentCapability] = {}
+        for cap_name, desc in (capabilities or {}).items():
+            caps[cap_name] = AgentCapability(name=cap_name, description=desc)
         node = AgentNode(
             name=name,
             agent_type=agent_type,
@@ -599,25 +599,25 @@ class DistributedCoordinator:
             address=address,
             connected_at=time.time(),
             last_seen=time.time(),
-            metadata=metadata or {***REMOVED***,
+            metadata=metadata or {},
             bridge_server_name="",
         )
         self._mesh.register(node)
-        self._publish("distributed.agent_registered", {"agent_name": name, "agent_type": agent_type***REMOVED***)
-        self._publish("distributed.agent_online", {"agent_name": name***REMOVED***)
+        self._publish("distributed.agent_registered", {"agent_name": name, "agent_type": agent_type})
+        self._publish("distributed.agent_online", {"agent_name": name})
         self._mesh.update_status(name, AgentNodeStatus.ONLINE)
         return name
 
     def spawn_agent(
         self,
-        name: Optional[str***REMOVED*** = None,
+        name: Optional[str] = None,
         command: str = "",
-        args: Optional[List[str***REMOVED******REMOVED*** = None,
-        cwd: Optional[str***REMOVED*** = None,
-        capabilities: Optional[Dict[str, str***REMOVED******REMOVED*** = None,
+        args: Optional[List[str]] = None,
+        cwd: Optional[str] = None,
+        capabilities: Optional[Dict[str, str]] = None,
         transport: str = "stdio",
         endpoint: str = "",
-    ) -> Dict[str, Any***REMOVED***:
+    ) -> Dict[str, Any]:
         """Запускает и подключает нового агента.
 
         Агент запускается как MCP сервер (подпроцесс) и
@@ -628,7 +628,7 @@ class DistributedCoordinator:
             command: команда для запуска (например "python")
             args: аргументы команды
             cwd: рабочая директория
-            capabilities: {capability_name: description***REMOVED***
+            capabilities: {capability_name: description}
             transport: транспорт (stdio, http)
             endpoint: endpoint для http транспорта
 
@@ -639,25 +639,25 @@ class DistributedCoordinator:
             if len(self._mesh.list_agents()) >= self._mesh.max_agents:
                 return {
                     "success": False,
-                    "error": f"Max agents reached ({self._mesh.max_agents***REMOVED***)",
-                ***REMOVED***
-        agent_name = name or f"agent-{uuid.uuid4().hex[:6***REMOVED******REMOVED***"
+                    "error": f"Max agents reached ({self._mesh.max_agents})",
+                }
+        agent_name = name or f"agent-{uuid.uuid4().hex[:6]}"
         if self._bridge_layer is None:
             # Регистрируем без подключения (graceful degradation).
             self.register_agent(
                 name=agent_name,
                 capabilities=capabilities,
                 transport=transport,
-                metadata={"note": "Registered without Bridge Layer"***REMOVED***,
+                metadata={"note": "Registered without Bridge Layer"},
             )
-            return {"success": True, "agent": agent_name, "agent_name": agent_name, "connected": False***REMOVED***
+            return {"success": True, "agent": agent_name, "agent_name": agent_name, "connected": False}
 
         try:
             if hasattr(self._bridge_layer, "connect_mcp_stdio"):
                 server_name = self._bridge_layer.connect_mcp_stdio(
                     name=agent_name,
                     command=command,
-                    args=args or [***REMOVED***,
+                    args=args or [],
                     cwd=cwd,
                     transport=transport,
                     endpoint=endpoint,
@@ -666,18 +666,18 @@ class DistributedCoordinator:
                 server_name = self._bridge_layer.connect_mcp(
                     name=agent_name,
                     command=command,
-                    args=args or [***REMOVED***,
+                    args=args or [],
                     cwd=cwd,
                     transport=transport,
                     endpoint=endpoint,
                 )
         except Exception as exc:  # noqa: BLE001
             self._mesh.set_error(agent_name, str(exc))
-            return {"success": False, "agent": agent_name, "agent_name": agent_name, "error": str(exc)***REMOVED***
+            return {"success": False, "agent": agent_name, "agent_name": agent_name, "error": str(exc)}
 
-        caps: Dict[str, AgentCapability***REMOVED*** = {***REMOVED***
-        for cap_name, desc in (capabilities or {***REMOVED***).items():
-            caps[cap_name***REMOVED*** = AgentCapability(name=cap_name, description=desc)
+        caps: Dict[str, AgentCapability] = {}
+        for cap_name, desc in (capabilities or {}).items():
+            caps[cap_name] = AgentCapability(name=cap_name, description=desc)
         node = AgentNode(
             name=agent_name,
             agent_type="mcp",
@@ -690,9 +690,9 @@ class DistributedCoordinator:
             bridge_server_name=server_name or "",
         )
         self._mesh.register(node)
-        self._publish("distributed.agent_registered", {"agent_name": agent_name***REMOVED***)
-        self._publish("distributed.agent_online", {"agent_name": agent_name***REMOVED***)
-        return {"success": True, "agent": agent_name, "agent_name": agent_name, "connected": True, "server_name": server_name***REMOVED***
+        self._publish("distributed.agent_registered", {"agent_name": agent_name})
+        self._publish("distributed.agent_online", {"agent_name": agent_name})
+        return {"success": True, "agent": agent_name, "agent_name": agent_name, "connected": True, "server_name": server_name}
 
     def remove_agent(self, agent_name: str) -> bool:
         """Удаляет агента из mesh и отключает."""
@@ -706,14 +706,14 @@ class DistributedCoordinator:
                 pass
         ok = self._mesh.unregister(agent_name)
         if ok:
-            self._publish("distributed.agent_removed", {"agent_name": agent_name***REMOVED***)
+            self._publish("distributed.agent_removed", {"agent_name": agent_name})
         return ok
 
-    def list_agents(self) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    def list_agents(self) -> List[Dict[str, Any]]:
         """Список агентов."""
-        return [a.to_dict() for a in self._mesh.list_agents()***REMOVED***
+        return [a.to_dict() for a in self._mesh.list_agents()]
 
-    def broadcast_to_all(self, message: str, data: Optional[Dict[str, Any***REMOVED******REMOVED*** = None) -> int:
+    def broadcast_to_all(self, message: str, data: Optional[Dict[str, Any]] = None) -> int:
         """Отправляет broadcast всем агентам.
 
         Args:
@@ -734,19 +734,19 @@ class DistributedCoordinator:
                     if hasattr(self._bridge_layer, "send_acp_broadcast"):
                         self._bridge_layer.send_acp_broadcast(
                             server,
-                            {"type": "broadcast", "message": message, "data": data or {***REMOVED******REMOVED***,
+                            {"type": "broadcast", "message": message, "data": data or {}},
                         )
                     else:
                         self._bridge_layer.send_message(
                             server,
-                            {"type": "broadcast", "message": message, "data": data or {***REMOVED******REMOVED***,
+                            {"type": "broadcast", "message": message, "data": data or {}},
                         )
                     count += 1
                 except Exception:
                     continue
             else:
                 count += 1
-        self._publish("distributed.heartbeat", {"message": message, "recipients": count***REMOVED***)
+        self._publish("distributed.heartbeat", {"message": message, "recipients": count})
         return count
 
     # ── Выполнение задач ──────────────────────────────────────────────
@@ -785,7 +785,7 @@ class DistributedCoordinator:
                 agent=task.agent,
                 success=ok,
                 data=response,
-                error=None if ok else (response or {***REMOVED***).get("error"),
+                error=None if ok else (response or {}).get("error"),
                 duration_ms=(time.time() - start) * 1000.0,
             )
         except Exception as exc:  # noqa: BLE001
@@ -797,10 +797,10 @@ class DistributedCoordinator:
                 duration_ms=(time.time() - start) * 1000.0,
             )
         self._mesh.record_task_result(result)
-        self._publish("distributed.task_completed", {"task_id": task.id, "agent": task.agent, "success": result.success***REMOVED***)
+        self._publish("distributed.task_completed", {"task_id": task.id, "agent": task.agent, "success": result.success})
         return result
 
-    def execute_parallel(self, tasks: List[AgentTask***REMOVED***, timeout: float = 60.0) -> List[AgentTaskResult***REMOVED***:
+    def execute_parallel(self, tasks: List[AgentTask], timeout: float = 60.0) -> List[AgentTaskResult]:
         """Выполняет несколько задач параллельно на разных агентах.
 
         Args:
@@ -810,7 +810,7 @@ class DistributedCoordinator:
         Returns:
             список результатов
         """
-        results: List[AgentTaskResult***REMOVED*** = [***REMOVED***
+        results: List[AgentTaskResult] = []
         for task in tasks:
             results.append(self.execute_agent_task(task, timeout=timeout))
         return results
@@ -820,63 +820,63 @@ class DistributedCoordinator:
     def run_distributed_workflow(
         self,
         goal: str,
-        steps: List[Dict[str, Any***REMOVED******REMOVED***,
+        steps: List[Dict[str, Any]],
         timeout: float = 300.0,
     ) -> DistributedWorkflowPlan:
         """Запускает распределённый workflow.
 
         workflow_steps format:
             [
-                {"agent": "agent-name", "tool": "tool-name", "arguments": {...***REMOVED***,
-                 "depends_on": ["step-id"***REMOVED***, "step_type": "tool"***REMOVED***,
-                {"agent": "agent-name", "step_type": "broadcast", "message": "..."***REMOVED***
-            ***REMOVED***
+                {"agent": "agent-name", "tool": "tool-name", "arguments": {...},
+                 "depends_on": ["step-id"], "step_type": "tool"],
+                {"agent": "agent-name", "step_type": "broadcast", "message": "..."}
+            }
         """
-        workflow_id = f"wf-{uuid.uuid4().hex[:8***REMOVED******REMOVED***"
-        wf_steps: List[DistributedWorkflowStep***REMOVED*** = [***REMOVED***
+        workflow_id = f"wf-{uuid.uuid4().hex[:8]}"
+        wf_steps: List[DistributedWorkflowStep] = []
         for i, s in enumerate(steps):
             wf_steps.append(
                 DistributedWorkflowStep(
-                    id=s.get("id") or f"step_{i+1***REMOVED***",
+                    id=s.get("id") or f"step_{i+1}",
                     agent=s.get("agent", ""),
                     step_type=s.get("step_type", "tool"),
                     tool=s.get("tool", ""),
-                    arguments=s.get("arguments", {***REMOVED***),
-                    depends_on=list(s.get("depends_on", [***REMOVED***)),
+                    arguments=s.get("arguments", {}),
+                    depends_on=list(s.get("depends_on", [])),
                 )
             )
         plan = DistributedWorkflowPlan(id=workflow_id, goal=goal, steps=wf_steps)
         plan.status = WorkCoordStatus.PLANNING
-        self._workflows[workflow_id***REMOVED*** = plan
-        self._publish("distributed.workflow_planning", {"workflow_id": workflow_id, "goal": goal***REMOVED***)
+        self._workflows[workflow_id] = plan
+        self._publish("distributed.workflow_planning", {"workflow_id": workflow_id, "goal": goal})
 
         plan.status = WorkCoordStatus.RUNNING
         plan.updated_at = datetime.now(timezone.utc).isoformat()
 
-        step_map = {s.id: s for s in wf_steps***REMOVED***
+        step_map = {s.id: s for s in wf_steps}
         start = time.time()
         completed = 0
         for step in wf_steps:
             # Проверяем зависимости.
-            deps_failed = [d for d in step.depends_on if step_map.get(d) and step_map[d***REMOVED***.status == "failed"***REMOVED***
+            deps_failed = [d for d in step.depends_on if step_map.get(d) and step_map[d].status == "failed"]
             if deps_failed:
                 step.status = "skipped"
                 step.error = "Dependencies failed"
-                plan.errors.append(f"{step.id***REMOVED***: dependencies failed")
+                plan.errors.append(f"{step.id}: dependencies failed")
                 continue
             if step.step_type == "broadcast":
                 self.broadcast_to_all(step.arguments.get("message", ""), step.arguments)
                 step.status = "completed"
-                step.result = {"broadcast": True***REMOVED***
+                step.result = {"broadcast": True}
                 completed += 1
             else:
                 if not step.agent or not step.tool:
                     step.status = "failed"
                     step.error = "No agent or tool specified"
-                    plan.errors.append(f"{step.id***REMOVED***: no agent or tool")
+                    plan.errors.append(f"{step.id}: no agent or tool")
                     continue
                 task = AgentTask(
-                    id=f"task-{uuid.uuid4().hex[:8***REMOVED******REMOVED***",
+                    id=f"task-{uuid.uuid4().hex[:8]}",
                     capability=step.tool,
                     arguments=step.arguments,
                     agent=step.agent,
@@ -890,10 +890,10 @@ class DistributedCoordinator:
                 else:
                     step.status = "failed"
                     step.error = result.error or "Unknown error"
-                    plan.errors.append(f"{step.id***REMOVED***: {step.error***REMOVED***")
+                    plan.errors.append(f"{step.id}: {step.error}")
             step.duration_ms = (time.time() - start) * 1000.0
             plan.updated_at = datetime.now(timezone.utc).isoformat()
-            self._publish("distributed.workflow_progress", {"workflow_id": workflow_id, "step": step.id, "status": step.status***REMOVED***)
+            self._publish("distributed.workflow_progress", {"workflow_id": workflow_id, "step": step.id, "status": step.status})
 
         if completed == len(wf_steps):
             plan.status = WorkCoordStatus.COMPLETED
@@ -902,24 +902,24 @@ class DistributedCoordinator:
         else:
             plan.status = WorkCoordStatus.FAILED
         plan.updated_at = datetime.now(timezone.utc).isoformat()
-        self._publish("distributed.workflow_completed", {"workflow_id": workflow_id, "status": plan.status.value***REMOVED***)
+        self._publish("distributed.workflow_completed", {"workflow_id": workflow_id, "status": plan.status.value})
         return plan
 
-    def get_workflow(self, workflow_id: str) -> Optional[DistributedWorkflowPlan***REMOVED***:
+    def get_workflow(self, workflow_id: str) -> Optional[DistributedWorkflowPlan]:
         """Получает workflow по ID."""
         with self._lock:
             return self._workflows.get(workflow_id)
 
     def _get_ready_steps(
-        self, plan: DistributedWorkflowPlan, done_set: Optional[Set[str***REMOVED******REMOVED*** = None
-    ) -> List[DistributedWorkflowStep***REMOVED***:
+        self, plan: DistributedWorkflowPlan, done_set: Optional[Set[str]] = None
+    ) -> List[DistributedWorkflowStep]:
         """Шаги, готовые к выполнению: все зависимости в done_set (или их нет).
 
         Контракт тестов: coord._get_ready_steps(plan, set()) — шаги без
         незавершённых зависимостей.
         """
         done_set = done_set or set()
-        ready = [***REMOVED***
+        ready = []
         for s in plan.steps:
             if s.status in ("completed", "skipped", "failed"):
                 continue
@@ -930,15 +930,15 @@ class DistributedCoordinator:
         return ready
 
     def _get_blocked_steps(
-        self, plan: DistributedWorkflowPlan, done_set: Optional[Set[str***REMOVED******REMOVED*** = None
-    ) -> List[DistributedWorkflowStep***REMOVED***:
+        self, plan: DistributedWorkflowPlan, done_set: Optional[Set[str]] = None
+    ) -> List[DistributedWorkflowStep]:
         """Шаги, заблокированные зависимостями из done_set.
 
-        Контракт тестов: coord._get_blocked_steps(plan, {'s1'***REMOVED***) — шаги,
+        Контракт тестов: coord._get_blocked_steps(plan, {'s1'}) — шаги,
         чьи зависимости пересекаются с переданным множеством.
         """
         done_set = done_set or set()
-        blocked = [***REMOVED***
+        blocked = []
         for s in plan.steps:
             if s.status in ("completed", "skipped", "failed"):
                 continue
@@ -947,21 +947,21 @@ class DistributedCoordinator:
                 blocked.append(s)
         return blocked
 
-    def list_workflows(self, limit: int = 10, status: Optional[WorkCoordStatus***REMOVED*** = None) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    def list_workflows(self, limit: int = 10, status: Optional[WorkCoordStatus] = None) -> List[Dict[str, Any]]:
         """Список workflow."""
         with self._lock:
             workflows = list(self._workflows.values())
         if status is not None:
-            workflows = [w for w in workflows if w.status == status***REMOVED***
-        return [w.to_dict() for w in workflows[-limit:***REMOVED***[::-1***REMOVED******REMOVED***
+            workflows = [w for w in workflows if w.status == status]
+        return [w.to_dict() for w in workflows[-limit:][::-1]]
 
-    def get_status(self) -> Dict[str, Any***REMOVED***:
+    def get_status(self) -> Dict[str, Any]:
         """Общий статус системы."""
         mesh_summary = self._mesh.get_summary()
         workflows = self.list_workflows(limit=100)
-        total_tasks = sum(len(w["steps"***REMOVED***) for w in workflows)
+        total_tasks = sum(len(w["steps"]) for w in workflows)
         success = sum(
-            1 for w in workflows if w["status"***REMOVED*** == WorkCoordStatus.COMPLETED.value
+            1 for w in workflows if w["status"] == WorkCoordStatus.COMPLETED.value
         )
         return {
             "running": self._running,
@@ -971,7 +971,7 @@ class DistributedCoordinator:
             "success_count": success,
             "success_rate": (success / len(workflows) if workflows else 0.0),
             "bridge_layer": self._bridge_layer is not None,
-        ***REMOVED***
+        }
 
 
 # ── CLI ───────────────────────────────────────────────────────────────
@@ -980,43 +980,43 @@ def _cmd_agents(args: argparse.Namespace) -> None:
     coord = DistributedCoordinator()
     agents = coord.list_agents()
     print("🌐 Agent Mesh Summary")
-    print(f"  Agents: {len(agents)***REMOVED***")
+    print(f"  Agents: {len(agents)}")
     for a in agents:
-        status = a["status"***REMOVED***
+        status = a["status"]
         icon = "🟢" if status == "online" else ("🟡" if status == "busy" else "⚪")
-        print(f"  {icon***REMOVED*** {a['name'***REMOVED******REMOVED***: {status***REMOVED*** ({a['agent_type'***REMOVED******REMOVED***)")
-        if a["capabilities"***REMOVED***:
-            print(f"     Capabilities ({len(a['capabilities'***REMOVED***)***REMOVED***): {', '.join(a['capabilities'***REMOVED***)***REMOVED***")
+        print(f"  {icon} {a['name']}: {status} ({a['agent_type']})")
+        if a["capabilities"]:
+            print(f"     Capabilities ({len(a['capabilities'])}): {', '.join(a['capabilities'])}")
 
 
 def _cmd_status(args: argparse.Namespace) -> None:
     coord = DistributedCoordinator()
     st = coord.get_status()
     print("🌐 Distributed System Status")
-    print(f"  Coordinator: {'🟢 Active' if st['running'***REMOVED*** else '🔴 Stopped'***REMOVED***")
-    print(f"  Bridge Layer: {'available' if st['bridge_layer'***REMOVED*** else 'not available'***REMOVED***")
-    print(f"  Total agents: {st['mesh'***REMOVED***['total'***REMOVED******REMOVED*** (online: {st['mesh'***REMOVED***['online'***REMOVED******REMOVED***)")
-    print(f"  Workflows: {st['total_workflows'***REMOVED******REMOVED*** (success: {st['success_count'***REMOVED******REMOVED***)")
-    print(f"  Tasks: {st['total_tasks'***REMOVED******REMOVED***")
+    print(f"  Coordinator: {'🟢 Active' if st['running'] else '🔴 Stopped'}")
+    print(f"  Bridge Layer: {'available' if st['bridge_layer'] else 'not available'}")
+    print(f"  Total agents: {st['mesh']['total']} (online: {st['mesh']['online']})")
+    print(f"  Workflows: {st['total_workflows']} (success: {st['success_count']})")
+    print(f"  Tasks: {st['total_tasks']}")
 
 
 def _cmd_spawn(args: argparse.Namespace) -> None:
     coord = DistributedCoordinator()
-    caps = {***REMOVED***
+    caps = {}
     for c in (args.capabilities or "").split(","):
         c = c.strip()
         if c:
-            caps[c***REMOVED*** = f"{c***REMOVED*** capability"
+            caps[c] = f"{c} capability"
     result = coord.spawn_agent(
         name=args.name,
         command=args.command,
-        args=[args.args***REMOVED*** if args.args else [***REMOVED***,
+        args=[args.args] if args.args else [],
         capabilities=caps,
     )
     if result.get("success"):
-        print(f"✅ Agent '{result['agent_name'***REMOVED******REMOVED***' spawned")
+        print(f"✅ Agent '{result['agent_name']}' spawned")
     else:
-        print(f"❌ Failed: {result.get('error', 'unknown')***REMOVED***")
+        print(f"❌ Failed: {result.get('error', 'unknown')}")
 
 
 def _cmd_workflow(args: argparse.Namespace) -> None:
@@ -1028,7 +1028,7 @@ def _cmd_workflow(args: argparse.Namespace) -> None:
             print("No workflows yet.")
             return
         for w in workflows:
-            print(f"  {w['id'***REMOVED******REMOVED***: {w['goal'***REMOVED******REMOVED*** [{w['status'***REMOVED******REMOVED******REMOVED*** steps={len(w['steps'***REMOVED***)***REMOVED***")
+            print(f"  {w['id']}: {w['goal']} [{w['status']}] steps={len(w['steps'])}")
     elif args.command == "run":
         plan_data = None
         if args.plan:
@@ -1039,14 +1039,14 @@ def _cmd_workflow(args: argparse.Namespace) -> None:
             return
         plan = coord.run_distributed_workflow(
             goal=plan_data.get("goal", args.goal or "Distributed workflow"),
-            steps=plan_data.get("steps", [***REMOVED***),
+            steps=plan_data.get("steps", []),
         )
-        print(f"🚀 Starting distributed workflow: {plan.goal***REMOVED***")
-        print(f"  ID: {plan.id***REMOVED***")
+        print(f"🚀 Starting distributed workflow: {plan.goal}")
+        print(f"  ID: {plan.id}")
         for s in plan.steps:
             icon = "✅" if s.status == "completed" else ("❌" if s.status == "failed" else "⏳")
-            print(f"  {icon***REMOVED*** {s.id***REMOVED***: {s.agent or 'broadcast'***REMOVED*** → {s.tool or s.step_type***REMOVED*** [{s.status***REMOVED******REMOVED***")
-        print(f"📊 Status: {plan.status.value***REMOVED***")
+            print(f"  {icon} {s.id}: {s.agent or 'broadcast'} → {s.tool or s.step_type} [{s.status}]")
+        print(f"📊 Status: {plan.status.value}")
 
 
 def main() -> int:

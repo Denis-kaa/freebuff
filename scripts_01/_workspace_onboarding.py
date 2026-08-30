@@ -8,7 +8,7 @@
 
 Persistence:
   - State:         data_13/telegram_onboarding.json (chat_id → state dict)
-  - Workspaces:    data_13/telegram_workspaces.json (chat_id → [workspace, ...***REMOVED***)
+  - Workspaces:    data_13/telegram_workspaces.json (chat_id → [workspace, ...])
   Оба JSON-файла flat + human-readable; error-tolerant: пустой/невалидный →
   default значение (CAN-14 fail-loud на уровне logger, recoverable на уровне runtime).
 
@@ -22,7 +22,7 @@ import json
 import logging
 import time
 from dataclasses import asdict, dataclass, field
-***REMOVED***
+}
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -45,13 +45,13 @@ STATE_DONE = "DONE"
 class OnboardingState:
     state: str = STATE_NONE
     source: str = ""  # откуда workspace: "pompts_11/047_06_*" или "idea:<user_text>"
-    candidates: list[str***REMOVED*** = field(default_factory=list)  # stem pompts_11 файлов для ASKING_PICK_PROJECT
+    candidates: list[str] = field(default_factory=list)  # stem pompts_11 файлов для ASKING_PICK_PROJECT
     workspace_name: str = ""
 
     def reset(self) -> None:
         self.state = STATE_NONE
         self.source = ""
-        self.candidates = [***REMOVED***
+        self.candidates = []
         self.workspace_name = ""
 
 
@@ -82,15 +82,15 @@ def save_state(workspace: Path, chat_id: int, state: OnboardingState) -> None:
     """Persist OnboardingState for chat_id (durable across bot restarts)."""
     path = workspace / "data_13" / ONBOARDING_FILENAME
     try:
-        payload: dict[str, Any***REMOVED*** = {***REMOVED***
+        payload: dict[str, Any] = {}
         if path.exists():
             try:
                 payload = json.loads(path.read_text(encoding="utf-8"))
                 if not isinstance(payload, dict):
-                    payload = {***REMOVED***
+                    payload = {}
             except Exception:
-                payload = {***REMOVED***
-        payload[str(chat_id)***REMOVED*** = asdict(state)
+                payload = {}
+        payload[str(chat_id)] = asdict(state)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(
             json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
@@ -121,21 +121,21 @@ def clear_state(workspace: Path, chat_id: int) -> None:
 
 def list_pompts_11_corpus(
     workspace: Path, top_n: int = 5
-) -> list[dict[str, Any***REMOVED******REMOVED***:
+) -> list[dict[str, Any]]:
     """Scan pompts_11/*.md как existing-project corpus; top-N by mtime desc.
 
-    Возвращает [{filename, stem, title, snippet, mtime***REMOVED***, ...***REMOVED***.
+    Возвращает [{filename, stem, title, snippet, mtime}, ...].
     Анти-OOM: только первые top_n файлов и только первые 200 символов каждого.
     """
     corpus_dir = workspace / "pompts_11"
     if not corpus_dir.is_dir():
         logger.warning("pompts_11/ not found at %s", corpus_dir)
-        return [***REMOVED***
-    results: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+        return []
+    results: list[dict[str, Any]] = []
     try:
-        candidates = [p for p in corpus_dir.glob("*.md")***REMOVED***
+        candidates = [p for p in corpus_dir.glob("*.md")]
         candidates.sort(key=lambda p: p.stat().st_mtime, reverse=True)
-        for path in candidates[:top_n***REMOVED***:
+        for path in candidates[:top_n]:
             title, snippet = _read_title_snippet(path)
             results.append(
                 {
@@ -144,14 +144,14 @@ def list_pompts_11_corpus(
                     "title": title,
                     "snippet": snippet,
                     "mtime": path.stat().st_mtime,
-                ***REMOVED***
+                }
             )
     except Exception as exc:
         logger.exception("list_pompts_11_corpus failed: %s", exc)
     return results
 
 
-def _read_title_snippet(path: Path, snippet_chars: int = 200) -> tuple[str, str***REMOVED***:
+def _read_title_snippet(path: Path, snippet_chars: int = 200) -> tuple[str, str]:
     """Извлечь title (первый H1) и snippet (первая непустая строка prose).
 
     Анти-OOM: читаем только первые 50 строк файла (≈10 KB cap, не больше).
@@ -167,11 +167,11 @@ def _read_title_snippet(path: Path, snippet_chars: int = 200) -> tuple[str, str*
                 if not s:
                     continue
                 if s.startswith("# "):
-                    title = s[2:***REMOVED***.strip() or path.stem
+                    title = s[2:].strip() or path.stem
                     continue
                 if s.startswith("#") or s.startswith(">"):
                     continue
-                snippet = s[:snippet_chars***REMOVED***
+                snippet = s[:snippet_chars]
                 break
     except Exception:
         return path.stem, ""
@@ -186,7 +186,7 @@ def register_workspace(
     chat_id: int,
     name: str,
     source: str,
-) -> dict[str, Any***REMOVED***:
+) -> dict[str, Any]:
     """Persist new workspace record for chat_id. Returns the record."""
     path = workspace / "data_13" / WORKSPACES_FILENAME
     record = {
@@ -194,20 +194,20 @@ def register_workspace(
         "source": source,
         "created_at": time.time(),
         "status": "active",
-    ***REMOVED***
+    }
     try:
-        payload: dict[str, Any***REMOVED*** = {***REMOVED***
+        payload: dict[str, Any] = {}
         if path.exists():
             try:
                 payload = json.loads(path.read_text(encoding="utf-8"))
                 if not isinstance(payload, dict):
-                    payload = {***REMOVED***
+                    payload = {}
             except Exception:
-                payload = {***REMOVED***
-        chat_workspaces = payload.setdefault(str(chat_id), [***REMOVED***)
+                payload = {}
+        chat_workspaces = payload.setdefault(str(chat_id), [])
         if not isinstance(chat_workspaces, list):
-            chat_workspaces = [***REMOVED***
-            payload[str(chat_id)***REMOVED*** = chat_workspaces
+            chat_workspaces = []
+            payload[str(chat_id)] = chat_workspaces
         chat_workspaces.append(record)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(
@@ -221,16 +221,16 @@ def register_workspace(
 
 def list_workspaces_for_chat(
     workspace: Path, chat_id: int
-) -> list[dict[str, Any***REMOVED******REMOVED***:
-    """Return list of workspaces registered for chat_id; [***REMOVED*** if none."""
+) -> list[dict[str, Any]]:
+    """Return list of workspaces registered for chat_id; [] if none."""
     path = workspace / "data_13" / WORKSPACES_FILENAME
     if not path.exists():
-        return [***REMOVED***
+        return []
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
-        return payload.get(str(chat_id), [***REMOVED***) if isinstance(payload, dict) else [***REMOVED***
+        return payload.get(str(chat_id), []) if isinstance(payload, dict) else []
     except Exception:
-        return [***REMOVED***
+        return []
 
 
 # ── State machine ──────────────────────────────────────────────
@@ -259,7 +259,7 @@ TXT_ASKING_PROJECT = (
     "  • `/cancel` — выйти из онбординга"
 )
 
-TXT_ASKING_PICK_HEADER = "📂 Кандидаты из `pompts_11/` (топ-{n***REMOVED*** по свежести):\n\n"
+TXT_ASKING_PICK_HEADER = "📂 Кандидаты из `pompts_11/` (топ-{n] по свежести):\n\n"
 TXT_ASKING_PICK_SEPARATOR = "\n\nВыбери номер (например: `1`) или `/cancel`."
 
 TXT_ASKING_IDEA = (
@@ -276,9 +276,9 @@ TXT_ASKING_WORKSPACE_NAME = (
 
 TXT_WORKSPACE_CREATED = (
     "✅ Готово!\n\n"
-    "📁 **Workspace:** `{name***REMOVED***`\n"
-    "📦 **Source:** {source***REMOVED***\n"
-    "🆔 **chat_id:** {chat_id***REMOVED***\n\n"
+    "📁 **Workspace:** `{name]`\n"
+    "📦 **Source:** {source]\n"
+    "🆔 **chat_id:** {chat_id]\n\n"
     "Я уже запомнил контекст этого workspace. "
     "Отправляй задачи — каждый раз буду держать в голове, "
     "что мы делали раньше в этой «жизни».\n\n"
@@ -286,17 +286,17 @@ TXT_WORKSPACE_CREATED = (
 )
 
 
-def render_pick_list(candidates: list[dict[str, Any***REMOVED******REMOVED***) -> str:
+def render_pick_list(candidates: list[dict[str, Any]]) -> str:
     """Render pompts_11 candidates as numbered pick list for Telegram."""
     if not candidates:
         return "📂 В `pompts_11/` пока нет кандидатов.\n\nОтветь `нет` — спрошу про идею. Или `/cancel`."
-    lines = [TXT_ASKING_PICK_HEADER.format(n=len(candidates))***REMOVED***
+    lines = [TXT_ASKING_PICK_HEADER.format(n=len(candidates))]
     for i, c in enumerate(candidates, 1):
         title = c.get("title") or c.get("stem")
         snippet = c.get("snippet", "")
         if snippet:
-            lines.append(f"**{i***REMOVED***.** {title***REMOVED***\n    _{snippet***REMOVED***_")
+            lines.append(f"**{i}.** {title}\n    _{snippet}_")
         else:
-            lines.append(f"**{i***REMOVED***.** {title***REMOVED***")
+            lines.append(f"**{i}.** {title}")
     lines.append(TXT_ASKING_PICK_SEPARATOR.lstrip("\n"))
     return "\n".join(lines)

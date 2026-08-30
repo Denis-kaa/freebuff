@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 sys.path.insert(0, os.path.dirname(__file__))
 
 from context_manager import ContextManager, SessionStatus, CheckpointType
-from session_utils ***REMOVED***solve_session_id
+from session_utils ]solve_session_id
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORKSPACE = os.environ.get("FREEBUFF_ROOT", PROJECT_ROOT)
@@ -21,7 +21,7 @@ def auto_conspect(session_id: str) -> str:
 
     session = cm.get_session(session_id)
     if session is None:
-        return f"Session {session_id***REMOVED*** not found"
+        return f"Session {session_id} not found"
 
     # Экспортируем полную сессию
     full_export = cm.export_markdown(session_id)
@@ -31,7 +31,7 @@ def auto_conspect(session_id: str) -> str:
 
     # Сохраняем конспект
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M")
-    filename = f"conspect_{session.project***REMOVED***_{ts***REMOVED***.md"
+    filename = f"conspect_{session.project}_{ts}.md"
     filepath = os.path.join(WORKSPACE, "context_12", "summaries", filename)
     with open(filepath, "w", encoding="utf-8") as f:
         f.write(conspect)
@@ -39,7 +39,7 @@ def auto_conspect(session_id: str) -> str:
     # Сохраняем финальный чекпоинт и завершаем сессию
     cm.save_checkpoint(
         session_id=session_id,
-        summary=f"Session completed. Conspect saved to {filename***REMOVED***",
+        summary=f"Session completed. Conspect saved to {filename}",
         ctype=CheckpointType.POST_STEP,
     )
     cm.complete_session(session_id)
@@ -75,11 +75,11 @@ if __name__ == "__main__":
     if args.session_id:
         full_id = resolve_session_id(cm, args.session_id)
         if full_id is None:
-            print(f"❌ Сессия не найдена: {args.session_id***REMOVED***")
+            print(f"❌ Сессия не найдена: {args.session_id}")
             sys.exit(1)
-        targets = [full_id***REMOVED***
+        targets = [full_id]
     else:
-        targets = [s["session_id"***REMOVED*** for s in cm.list_sessions(status=SessionStatus.ACTIVE)***REMOVED***
+        targets = [s["session_id"] for s in cm.list_sessions(status=SessionStatus.ACTIVE)]
 
     if not targets:
         print("No active sessions.")
@@ -87,6 +87,6 @@ if __name__ == "__main__":
 
     for sid in targets:
         session = cm.get_session(sid)
-        print(f"Conspecting session: {sid[:8***REMOVED******REMOVED*** ({session.topic if session else '?'***REMOVED***)" if session else f"Conspecting session: {sid[:8***REMOVED******REMOVED***")
+        print(f"Conspecting session: {sid[:8]} ({session.topic if session else '?'})" if session else f"Conspecting session: {sid[:8]}")
         result = auto_conspect(sid)
-        print(f"  → {result***REMOVED***")
+        print(f"  → {result}")

@@ -34,7 +34,7 @@ import time
 import uuid
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone, timedelta
-***REMOVED***
+}
 from typing import Any, Dict, List
 
 WORKSPACE = Path(__file__).resolve().parent.parent
@@ -49,7 +49,7 @@ METRIC_NAMES = {
     "cpvo": "Cost per Verified Outcome",
     "rrr": "Rework/Rollback Rate",
     "ttd": "Time-To-Detect (false)",
-***REMOVED***
+}
 
 
 @dataclass
@@ -81,7 +81,7 @@ class MetricResult:
 
     def __post_init__(self) -> None:
         if not self.name:
-            self.name = str(uuid.uuid4().hex[:12***REMOVED***)
+            self.name = str(uuid.uuid4().hex[:12])
         if not self.display_name:
             self.display_name = METRIC_NAMES.get(self.name, self.name)
         self.value = round(self.value, 4)
@@ -92,7 +92,7 @@ class MetricsReport:
     """Полный отчёт со всеми 5 метриками.
 
     Attributes:
-        metrics: словарь {name: MetricResult***REMOVED***
+        metrics: словарь {name: MetricResult}
         total_tasks: общее количество задач
         period_start: начало периода
         period_end: конец периода
@@ -100,7 +100,7 @@ class MetricsReport:
         timestamp: время создания отчёта
     """
 
-    metrics: Dict[str, MetricResult***REMOVED*** = field(default_factory=dict)
+    metrics: Dict[str, MetricResult] = field(default_factory=dict)
     total_tasks: int = 0
     period_start: str = ""
     period_end: str = ""
@@ -109,16 +109,16 @@ class MetricsReport:
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         """Сериализация в dict."""
         return {
-            "metrics": {name: asdict(m) for name, m in self.metrics.items()***REMOVED***,
+            "metrics": {name: asdict(m) for name, m in self.metrics.items()},
             "total_tasks": self.total_tasks,
             "period_start": self.period_start,
             "period_end": self.period_end,
             "duration_ms": self.duration_ms,
             "timestamp": self.timestamp,
-        ***REMOVED***
+        }
 
 
 class MetricsEngine:
@@ -128,7 +128,7 @@ class MetricsEngine:
         engine = MetricsEngine()
         engine.setup_databases()  # проверить что БД существуют
         report = engine.compute_report()
-        print(f"VCR: {report.metrics['vcr'***REMOVED***.value:.1%***REMOVED***")
+        print(f"VCR: {report.metrics['vcr'].value:.1%}")
     """
 
     _context_db: Path | str | None = None
@@ -203,7 +203,7 @@ class MetricsEngine:
             ID сохранённого отчёта.
         """
         self._init_metrics_db()
-        report_id = uuid.uuid4().hex[:12***REMOVED***
+        report_id = uuid.uuid4().hex[:12]
         with sqlite3.connect(str(self._metrics_db)) as conn:
             conn.execute(
                 "INSERT INTO reports (id, total_tasks, duration_ms, created_at) VALUES (?, ?, ?, ?)",
@@ -216,7 +216,7 @@ class MetricsEngine:
                     "                        interpretation, snapshot_time, report_id)\n"
                     "                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                     (
-                        uuid.uuid4().hex[:12***REMOVED***,
+                        uuid.uuid4().hex[:12],
                         name,
                         metric.value,
                         metric.unit,
@@ -230,7 +230,7 @@ class MetricsEngine:
             conn.commit()
         return report_id
 
-    def get_trend(self, metric_name: str, limit: int = 10) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    def get_trend(self, metric_name: str, limit: int = 10) -> List[Dict[str, Any]]:
         """Получает историю значений метрики для отслеживания тренда.
 
         Args:
@@ -238,7 +238,7 @@ class MetricsEngine:
             limit: количество последних замеров
 
         Returns:
-            Список {value, unit, snapshot_time***REMOVED*** отсортированный по времени.
+            Список {value, unit, snapshot_time} отсортированный по времени.
         """
         self._init_metrics_db()
         with sqlite3.connect(str(self._metrics_db)) as conn:
@@ -251,7 +251,7 @@ class MetricsEngine:
                 "                   LIMIT ?",
                 (metric_name, limit),
             ).fetchall()
-            return [dict(r) for r in rows***REMOVED***
+            return [dict(r) for r in rows]
 
     def compute_vcr(self) -> MetricResult:
         """VCR: доля verified_status='verified_ok'.
@@ -279,16 +279,16 @@ class MetricsEngine:
                 "                   WHERE verified_status IN ('verified_ok', 'verified_fail')"
             ).fetchone()
             conn.close()
-            total = row["total"***REMOVED*** if row and row["total"***REMOVED*** else 0
-            ok_count = row["ok_count"***REMOVED*** if row and row["ok_count"***REMOVED*** else 0
+            total = row["total"] if row and row["total"] else 0
+            ok_count = row["ok_count"] if row and row["ok_count"] else 0
             value = ok_count / total if total > 0 else 0.0
             confidence = min(1.0, total / 10)
             if value >= 0.8:
                 interpretation = "Высокий уровень верификации (>80%)"
             elif value >= 0.5:
-                interpretation = f"Средний уровень ({value:.0%***REMOVED***) — есть задачи без верификации"
+                interpretation = f"Средний уровень ({value:.0%}) — есть задачи без верификации"
             else:
-                interpretation = f"Низкий уровень ({value:.0%***REMOVED***) — большинство задач не верифицированы"
+                interpretation = f"Низкий уровень ({value:.0%}) — большинство задач не верифицированы"
             if value >= 0.7:
                 trend = "up"
             elif value < 0.3:
@@ -310,7 +310,7 @@ class MetricsEngine:
                 name="vcr",
                 value=0.0,
                 unit="%",
-                interpretation=f"Error: {e***REMOVED***",
+                interpretation=f"Error: {e}",
                 sample_size=0,
                 confidence=0.0,
             )
@@ -346,17 +346,17 @@ class MetricsEngine:
                 "                   FROM action_verifications"
             ).fetchone()
             conn.close()
-            done_count = row["done_count"***REMOVED*** if row and row["done_count"***REMOVED*** else 0
-            gap_count = row["gap_count"***REMOVED*** if row and row["gap_count"***REMOVED*** else 0
-            total = row["total_claimed"***REMOVED*** if row and row["total_claimed"***REMOVED*** else 0
+            done_count = row["done_count"] if row and row["done_count"] else 0
+            gap_count = row["gap_count"] if row and row["gap_count"] else 0
+            total = row["total_claimed"] if row and row["total_claimed"] else 0
             value = gap_count / done_count if done_count > 0 else 0.0
             confidence = min(1.0, total / 10)
             if value <= 0.2:
                 interpretation = "Низкий разрыв — заявленное соответствует проверенному"
             elif value <= 0.5:
-                interpretation = f"Средний разрыв ({value:.0%***REMOVED***) — часть задач требует доработки"
+                interpretation = f"Средний разрыв ({value:.0%}) — часть задач требует доработки"
             else:
-                interpretation = f"Высокий разрыв ({value:.0%***REMOVED***) — заявленное часто расходится с проверенным"
+                interpretation = f"Высокий разрыв ({value:.0%}) — заявленное часто расходится с проверенным"
             if value <= 0.2:
                 trend = "down"
             elif value > 0.5:
@@ -378,7 +378,7 @@ class MetricsEngine:
                 name="srg",
                 value=0.0,
                 unit="%",
-                interpretation=f"Error: {e***REMOVED***",
+                interpretation=f"Error: {e}",
                 sample_size=0,
                 confidence=0.0,
             )
@@ -409,17 +409,17 @@ class MetricsEngine:
                 "                   FROM verification_results"
             ).fetchone()
             conn.close()
-            total = row["total"***REMOVED*** if row and row["total"***REMOVED*** else 0
-            total_duration = row["total_duration"***REMOVED*** if row and row["total_duration"***REMOVED*** else 0.0
-            passed_count = row["passed_count"***REMOVED*** if row and row["passed_count"***REMOVED*** else 0
+            total = row["total"] if row and row["total"] else 0
+            total_duration = row["total_duration"] if row and row["total_duration"] else 0.0
+            passed_count = row["passed_count"] if row and row["passed_count"] else 0
             value = total_duration / passed_count if passed_count > 0 else 0.0
             confidence = min(1.0, total / 10)
             if value <= 100:
                 interpretation = "Низкая стоимость верификации (<100ms/check)"
             elif value <= 1000:
-                interpretation = f"Средняя стоимость ({value:.0f***REMOVED***ms/check)"
+                interpretation = f"Средняя стоимость ({value:.0f}ms/check)"
             else:
-                interpretation = f"Высокая стоимость ({value:.0f***REMOVED***ms/check) — возможно, есть медленные проверки"
+                interpretation = f"Высокая стоимость ({value:.0f}ms/check) — возможно, есть медленные проверки"
             if value <= 100:
                 trend = "down"
             elif value > 1000:
@@ -441,7 +441,7 @@ class MetricsEngine:
                 name="cpvo",
                 value=0.0,
                 unit="ms/verification",
-                interpretation=f"Error: {e***REMOVED***",
+                interpretation=f"Error: {e}",
                 sample_size=0,
                 confidence=0.0,
             )
@@ -479,17 +479,17 @@ class MetricsEngine:
                 "                   FROM action_verifications"
             ).fetchone()
             conn.close()
-            verified_count = row["verified_count"***REMOVED*** if row and row["verified_count"***REMOVED*** else 0
-            rework_count = row["rework_count"***REMOVED*** if row and row["rework_count"***REMOVED*** else 0
-            total = row["total_verified"***REMOVED*** if row and row["total_verified"***REMOVED*** else 0
+            verified_count = row["verified_count"] if row and row["verified_count"] else 0
+            rework_count = row["rework_count"] if row and row["rework_count"] else 0
+            total = row["total_verified"] if row and row["total_verified"] else 0
             value = rework_count / verified_count if verified_count > 0 else 0.0
             confidence = min(1.0, total / 10)
             if value <= 0.1:
                 interpretation = "Низкий уровень доработок — качество первой реализации высокое"
             elif value <= 0.3:
-                interpretation = f"Средний уровень доработок ({value:.0%***REMOVED***)"
+                interpretation = f"Средний уровень доработок ({value:.0%})"
             else:
-                interpretation = f"Высокий уровень доработок ({value:.0%***REMOVED***) — требуются улучшения в первой реализации"
+                interpretation = f"Высокий уровень доработок ({value:.0%}) — требуются улучшения в первой реализации"
             if value <= 0.1:
                 trend = "down"
             elif value > 0.3:
@@ -511,7 +511,7 @@ class MetricsEngine:
                 name="rrr",
                 value=0.0,
                 unit="%",
-                interpretation=f"Error: {e***REMOVED***",
+                interpretation=f"Error: {e}",
                 sample_size=0,
                 confidence=0.0,
             )
@@ -557,8 +557,8 @@ class MetricsEngine:
             count = 0
             for row in rows:
                 try:
-                    created = datetime.fromisoformat(row["created_at"***REMOVED***)
-                    verified = datetime.fromisoformat(row["verified_at"***REMOVED***)
+                    created = datetime.fromisoformat(row["created_at"])
+                    verified = datetime.fromisoformat(row["verified_at"])
                     diff = (verified - created).total_seconds() / 60.0
                     if diff >= 0:
                         total_minutes += diff
@@ -568,11 +568,11 @@ class MetricsEngine:
             value = total_minutes / count if count > 0 else 0.0
             confidence = min(1.0, count / 10)
             if value <= 60:
-                interpretation = f"Быстрое обнаружение (~{value:.0f***REMOVED*** мин)"
+                interpretation = f"Быстрое обнаружение (~{value:.0f} мин)"
             elif value <= 1440:
-                interpretation = f"Среднее время обнаружения (~{value:.0f***REMOVED*** мин ≈ {value / 60:.1f***REMOVED*** ч)"
+                interpretation = f"Среднее время обнаружения (~{value:.0f} мин ≈ {value / 60:.1f} ч)"
             else:
-                interpretation = f"Долгое обнаружение (~{value:.0f***REMOVED*** мин ≈ {value / 1440:.1f***REMOVED*** д)"
+                interpretation = f"Долгое обнаружение (~{value:.0f} мин ≈ {value / 1440:.1f} д)"
             if value <= 60:
                 trend = "down"
             elif value > 1440:
@@ -594,22 +594,22 @@ class MetricsEngine:
                 name="ttd",
                 value=0.0,
                 unit="minutes",
-                interpretation=f"Error: {e***REMOVED***",
+                interpretation=f"Error: {e}",
                 sample_size=0,
                 confidence=0.0,
             )
 
-    def setup_databases(self) -> Dict[str, bool***REMOVED***:
+    def setup_databases(self) -> Dict[str, bool]:
         """Проверяет доступность БД-источников.
 
         Returns:
-            Словарь {db_name: is_available***REMOVED***
+            Словарь {db_name: is_available}
         """
         return {
             "context.db": self._context_db.exists(),
             "verifier.db": self._verifier_db.exists(),
             "metrics.db": True,
-        ***REMOVED***
+        }
 
     def compute_report(self, save: bool = True) -> MetricsReport:
         """Вычисляет все 5 метрик и возвращает отчёт.
@@ -635,7 +635,7 @@ class MetricsEngine:
                     "SELECT COUNT(*) as cnt FROM action_verifications"
                 ).fetchone()
                 if row:
-                    total_tasks = row["cnt"***REMOVED***
+                    total_tasks = row["cnt"]
                 conn.close()
             except Exception:
                 pass
@@ -648,7 +648,7 @@ class MetricsEngine:
                 "cpvo": cpvo,
                 "rrr": rrr,
                 "ttd": ttd,
-            ***REMOVED***,
+            },
             total_tasks=total_tasks,
             duration_ms=duration_ms,
         )
@@ -671,14 +671,14 @@ class MetricsEngine:
                                 "rrr": rrr.value,
                                 "ttd": ttd.value,
                                 "duration_ms": duration_ms,
-                            ***REMOVED***,
+                            },
                         )
                     )
             except Exception:
                 pass
         return report
 
-    def get_status(self) -> Dict[str, Any***REMOVED***:
+    def get_status(self) -> Dict[str, Any]:
         """Диагностика Metrics Engine.
 
         Returns:
@@ -692,7 +692,7 @@ class MetricsEngine:
             "verifier_db_path": str(self._verifier_db),
             "metrics_db_path": str(self._metrics_db),
             "eventbus_connected": self._event_bus is not None,
-        ***REMOVED***
+        }
 
 
 class Colors:
@@ -707,23 +707,23 @@ class Colors:
 
 def _print_header(text: str) -> None:
     """Печатает заголовок с рамкой."""
-    print(f"\n{Colors.BOLD***REMOVED***{Colors.CYAN***REMOVED***============================================================{Colors.RESET***REMOVED***")
-    print(f"{Colors.BOLD***REMOVED***{Colors.CYAN***REMOVED***  {text***REMOVED***{Colors.RESET***REMOVED***")
-    print(f"{Colors.BOLD***REMOVED***{Colors.CYAN***REMOVED***============================================================{Colors.RESET***REMOVED***")
+    print(f"\n{Colors.BOLD}{Colors.CYAN}============================================================{Colors.RESET}")
+    print(f"{Colors.BOLD}{Colors.CYAN}  {text}{Colors.RESET}")
+    print(f"{Colors.BOLD}{Colors.CYAN}============================================================{Colors.RESET}")
 
 
 def _format_metric(metric: MetricResult) -> None:
     """Форматирует вывод одной метрики."""
     if metric.unit == "%":
-        value_str = f"{metric.value:.1%***REMOVED***"
+        value_str = f"{metric.value:.1%}"
     elif metric.unit == "minutes" and metric.value >= 1440:
-        value_str = f"{metric.value:.0f***REMOVED*** min ({metric.value / 1440:.1f***REMOVED*** days)"
+        value_str = f"{metric.value:.0f} min ({metric.value / 1440:.1f} days)"
     elif metric.unit == "minutes":
-        value_str = f"{metric.value:.0f***REMOVED*** min ({metric.value / 60:.1f***REMOVED*** h)"
+        value_str = f"{metric.value:.0f} min ({metric.value / 60:.1f} h)"
     else:
-        value_str = f"{metric.value:.2f***REMOVED*** {metric.unit***REMOVED***"
+        value_str = f"{metric.value:.2f} {metric.unit}"
 
-    trend_icons = {"up": "↑", "down": "↓", "stable": "→"***REMOVED***
+    trend_icons = {"up": "↑", "down": "↓", "stable": "→"}
     trend_icon = trend_icons.get(metric.trend, "→")
 
     trend_colors = {
@@ -732,15 +732,15 @@ def _format_metric(metric: MetricResult) -> None:
         "cpvo": Colors.GREEN if metric.trend == "down" else Colors.RED if metric.trend == "up" else Colors.YELLOW,
         "rrr": Colors.GREEN if metric.trend == "down" else Colors.RED if metric.trend == "up" else Colors.YELLOW,
         "ttd": Colors.GREEN if metric.trend == "down" else Colors.RED if metric.trend == "up" else Colors.YELLOW,
-    ***REMOVED***
+    }
     trend_color = trend_colors.get(metric.name, Colors.YELLOW)
 
-    print(f"\n  {Colors.BOLD***REMOVED***{metric.display_name***REMOVED***{Colors.RESET***REMOVED***")
-    print(f"    Value:       {Colors.BOLD***REMOVED***{value_str***REMOVED***{Colors.RESET***REMOVED***")
-    print(f"    Trend:       {trend_color***REMOVED***{trend_icon***REMOVED*** {metric.trend***REMOVED***{Colors.RESET***REMOVED***")
-    print(f"    Samples:     {metric.sample_size***REMOVED***")
-    print(f"    Confidence:  {metric.confidence:.0%***REMOVED***")
-    print(f"    {metric.interpretation***REMOVED***")
+    print(f"\n  {Colors.BOLD}{metric.display_name}{Colors.RESET}")
+    print(f"    Value:       {Colors.BOLD}{value_str}{Colors.RESET}")
+    print(f"    Trend:       {trend_color}{trend_icon} {metric.trend}{Colors.RESET}")
+    print(f"    Samples:     {metric.sample_size}")
+    print(f"    Confidence:  {metric.confidence:.0%}")
+    print(f"    {metric.interpretation}")
 
 
 def _cmd_report(args: argparse.Namespace, engine: MetricsEngine) -> None:
@@ -751,16 +751,16 @@ def _cmd_report(args: argparse.Namespace, engine: MetricsEngine) -> None:
 
     if args.json:
         data = report.to_dict()
-        data["execution_ms"***REMOVED*** = round(duration_ms)
+        data["execution_ms"] = round(duration_ms)
         print(json.dumps(data, ensure_ascii=False, indent=2))
         return
 
     _print_header(
-        f"Metrics Report — {report.total_tasks***REMOVED*** tasks (computed in {duration_ms:.0f***REMOVED***ms)"
+        f"Metrics Report — {report.total_tasks} tasks (computed in {duration_ms:.0f}ms)"
     )
     for name in ("vcr", "srg", "cpvo", "rrr", "ttd"):
         if name in report.metrics:
-            _format_metric(report.metrics[name***REMOVED***)
+            _format_metric(report.metrics[name])
     print()
 
     score = _compute_health_score(report)
@@ -771,7 +771,7 @@ def _cmd_report(args: argparse.Namespace, engine: MetricsEngine) -> None:
         if score >= 4
         else Colors.RED
     )
-    print(f"  {Colors.BOLD***REMOVED***Health Score: {score_color***REMOVED***{score***REMOVED***/10{Colors.RESET***REMOVED***")
+    print(f"  {Colors.BOLD}Health Score: {score_color}{score}/10{Colors.RESET}")
     print("  (based on VCR↑, SRG↓, CpVO↓, RRR↓, TTD↓)")
     print()
 
@@ -779,9 +779,9 @@ def _cmd_report(args: argparse.Namespace, engine: MetricsEngine) -> None:
 def _cmd_single(args: argparse.Namespace, engine: MetricsEngine) -> None:
     """Команда: vcr/srg/cpvo/rrr/ttd — одна метрика."""
     metric_name = args.command
-    compute_fn = getattr(engine, f"compute_{metric_name***REMOVED***", None)
+    compute_fn = getattr(engine, f"compute_{metric_name}", None)
     if compute_fn is None:
-        print(f"{Colors.RED***REMOVED***Unknown metric: {metric_name***REMOVED***{Colors.RESET***REMOVED***")
+        print(f"{Colors.RED}Unknown metric: {metric_name}{Colors.RESET}")
         sys.exit(1)
     metric = compute_fn()
     if args.json:
@@ -796,8 +796,8 @@ def _cmd_trend(args: argparse.Namespace, engine: MetricsEngine) -> None:
     metric_name = args.metric
     if metric_name not in METRIC_NAMES:
         print(
-            f"{Colors.RED***REMOVED***Unknown metric: {metric_name***REMOVED***. Available: "
-            f"{', '.join(METRIC_NAMES.keys())***REMOVED***{Colors.RESET***REMOVED***"
+            f"{Colors.RED}Unknown metric: {metric_name}. Available: "
+            f"{', '.join(METRIC_NAMES.keys())}{Colors.RESET}"
         )
         sys.exit(1)
     history = engine.get_trend(metric_name, limit=args.limit)
@@ -805,24 +805,24 @@ def _cmd_trend(args: argparse.Namespace, engine: MetricsEngine) -> None:
         print(json.dumps(history, ensure_ascii=False, indent=2))
         return
 
-    _print_header(f"Trend: {METRIC_NAMES[metric_name***REMOVED******REMOVED*** (last {len(history)***REMOVED***)")
+    _print_header(f"Trend: {METRIC_NAMES[metric_name]} (last {len(history)})")
     if not history:
-        print(f"  {Colors.YELLOW***REMOVED***No history available{Colors.RESET***REMOVED***")
+        print(f"  {Colors.YELLOW}No history available{Colors.RESET}")
         return
     for entry in reversed(history):
-        value = entry["value"***REMOVED***
+        value = entry["value"]
         if metric_name in ("vcr", "srg", "rrr"):
-            value_str = f"{value:.1%***REMOVED***"
+            value_str = f"{value:.1%}"
         elif metric_name == "cpvo":
-            value_str = f"{value:.0f***REMOVED*** ms"
+            value_str = f"{value:.0f} ms"
         elif metric_name == "ttd":
-            value_str = f"{value:.0f***REMOVED*** min"
+            value_str = f"{value:.0f} min"
         else:
-            value_str = f"{value:.2f***REMOVED***"
+            value_str = f"{value:.2f}"
         ts = entry.get("snapshot_time", "")
         if ts:
-            ts = ts[:16***REMOVED***
-        print(f"  {ts***REMOVED***  {value_str***REMOVED***  (n={entry['sample_size'***REMOVED******REMOVED***)")
+            ts = ts[:16]
+        print(f"  {ts}  {value_str}  (n={entry['sample_size']})")
     print()
 
 
@@ -834,12 +834,12 @@ def _cmd_status(args: argparse.Namespace, engine: MetricsEngine) -> None:
         return
 
     _print_header("Metrics Engine Status")
-    dbs = status["databases"***REMOVED***
+    dbs = status["databases"]
     for name, available in dbs.items():
-        icon = f"{Colors.GREEN***REMOVED***✓{Colors.RESET***REMOVED***" if available else f"{Colors.RED***REMOVED***✗{Colors.RESET***REMOVED***"
-        print(f"  {icon***REMOVED*** {name***REMOVED***")
-    print(f"  EventBus:  {'✅' if status['eventbus_connected'***REMOVED*** else '❌'***REMOVED***")
-    print(f"  Status:    {Colors.GREEN***REMOVED***{status['status'***REMOVED******REMOVED***{Colors.RESET***REMOVED***")
+        icon = f"{Colors.GREEN}✓{Colors.RESET}" if available else f"{Colors.RED}✗{Colors.RESET}"
+        print(f"  {icon} {name}")
+    print(f"  EventBus:  {'✅' if status['eventbus_connected'] else '❌'}")
+    print(f"  Status:    {Colors.GREEN}{status['status']}{Colors.RESET}")
     print()
 
 
@@ -847,23 +847,23 @@ def _compute_health_score(report: MetricsReport) -> int:
     """Вычисляет общий Health Score (0-10) на основе 5 метрик."""
     score = 5
     m = report.metrics
-    if "vcr" in m and m["vcr"***REMOVED***.value >= 0.8:
+    if "vcr" in m and m["vcr"].value >= 0.8:
         score += 2
-    elif "vcr" in m and m["vcr"***REMOVED***.value >= 0.5:
+    elif "vcr" in m and m["vcr"].value >= 0.5:
         score += 1
-    if "srg" in m and m["srg"***REMOVED***.value <= 0.2:
+    if "srg" in m and m["srg"].value <= 0.2:
         score += 2
-    elif "srg" in m and m["srg"***REMOVED***.value <= 0.5:
+    elif "srg" in m and m["srg"].value <= 0.5:
         score += 1
-    if "cpvo" in m and m["cpvo"***REMOVED***.value <= 100:
+    if "cpvo" in m and m["cpvo"].value <= 100:
         score += 1
-    if "rrr" in m and m["rrr"***REMOVED***.value <= 0.1:
+    if "rrr" in m and m["rrr"].value <= 0.1:
         score += 1
-    elif "rrr" in m and m["rrr"***REMOVED***.value <= 0.3:
+    elif "rrr" in m and m["rrr"].value <= 0.3:
         score += 0
-    if "ttd" in m and m["ttd"***REMOVED***.value <= 60:
+    if "ttd" in m and m["ttd"].value <= 60:
         score += 1
-    elif "ttd" in m and m["ttd"***REMOVED***.value <= 1440:
+    elif "ttd" in m and m["ttd"].value <= 1440:
         score += 0.5
     return min(10, max(0, round(score)))
 
@@ -889,7 +889,7 @@ def main() -> None:
         "command",
         nargs="?",
         default="report",
-        choices=["report", "vcr", "srg", "cpvo", "rrr", "ttd", "trend", "status"***REMOVED***,
+        choices=["report", "vcr", "srg", "cpvo", "rrr", "ttd", "trend", "status"],
         help="Команда: report (по умолчанию) или имя метрики",
     )
     parser.add_argument("--json", action="store_true", help="Вывод в JSON")
@@ -911,7 +911,7 @@ def main() -> None:
         return
     if args.command == "trend":
         if not args.metric:
-            print(f"{Colors.RED***REMOVED***Error: --metric is required for trend command{Colors.RESET***REMOVED***")
+            print(f"{Colors.RED}Error: --metric is required for trend command{Colors.RESET}")
             print("Usage: python scripts_01/metrics.py trend --metric vcr")
             sys.exit(1)
         _cmd_trend(args, engine)

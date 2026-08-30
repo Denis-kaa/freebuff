@@ -13,8 +13,8 @@ Public API (per TestXxxBuilder contract):
         save(self, path) -> Path                        # atomic: tempfile + os.replace
         load(cls, path, *, data_only=False) -> 'Workbook'   # classmethod
         cell_value(self, addr) -> Any
-        cell_formula(self, addr) -> Optional[str***REMOVED***
-        sheetnames(self) -> list[str***REMOVED***
+        cell_formula(self, addr) -> Optional[str]
+        sheetnames(self) -> list[str]
         current_sheet (property) -> str
 
 Per Task 0 scope: минимальный API (НЕ openpyxl wholesale), без define_name(),
@@ -26,14 +26,14 @@ import os
 import shutil
 import tempfile
 from copy import copy
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional, Union
 
 import openpyxl
 from openpyxl import Workbook as _XLWorkbook
 from openpyxl.cell.cell import Cell
 
-__all__ = ["Workbook"***REMOVED***
+__all__ = ["Workbook"]
 
 
 class Workbook:
@@ -46,17 +46,17 @@ class Workbook:
     def sheet(self, name: str) -> None:
         """Switch to existing sheet or create new one."""
         if name in self._wb.sheetnames:
-            self._wb.active = self._wb[name***REMOVED***
+            self._wb.active = self._wb[name]
         else:
             self._wb.create_sheet(title=name)
-            self._wb.active = self._wb[name***REMOVED***
+            self._wb.active = self._wb[name]
         self._current_name = name
 
     @property
     def current_sheet(self) -> str:
         return self._current_name
 
-    def sheetnames(self) -> List[str***REMOVED***:
+    def sheetnames(self) -> List[str]:
         return list(self._wb.sheetnames)
 
     def cell(
@@ -64,8 +64,8 @@ class Workbook:
         addr: str,
         *,
         value: Any = None,
-        formula: Optional[str***REMOVED*** = None,
-        fmt: Optional[Dict[str, Any***REMOVED******REMOVED*** = None,
+        formula: Optional[str] = None,
+        fmt: Optional[Dict[str, Any]] = None,
     ) -> None:
         """Set cell content. value XOR formula (не оба, не ни одного).
 
@@ -76,16 +76,16 @@ class Workbook:
             fmt: format dict, optional keys 'bold', 'fill', 'align'.
         """
         if value is not None and formula is not None:
-            raise ValueError(f"cell({addr***REMOVED***): value XOR formula constraint violated")
+            raise ValueError(f"cell({addr}): value XOR formula constraint violated")
         if value is None and formula is None:
-            raise ValueError(f"cell({addr***REMOVED***): must pass either value or formula")
+            raise ValueError(f"cell({addr}): must pass either value or formula")
 
-        c: Cell = self._wb.active[addr***REMOVED***
+        c: Cell = self._wb.active[addr]
         if formula is not None:
             # Per thinker-with-files-gemini insight (ROADMAP-VV-001): openpyxl
             # tracks formula vs value via `=` prefix. Without it, `data_only=True`
             # on load won't return None for unevaluated formulas. Auto-prepend.
-            c.value = formula if formula.startswith("=") else f"={formula***REMOVED***"
+            c.value = formula if formula.startswith("=") else f"={formula}"
         else:
             c.value = value
 
@@ -97,27 +97,27 @@ class Workbook:
                 c.font = new_font
             if fmt.get("fill"):
                 c.fill = openpyxl.styles.PatternFill(
-                    start_color=fmt["fill"***REMOVED***, end_color=fmt["fill"***REMOVED***, fill_type="solid"
+                    start_color=fmt["fill"], end_color=fmt["fill"], fill_type="solid"
                 )
             if fmt.get("align"):
-                c.alignment = openpyxl.styles.Alignment(horizontal=fmt["align"***REMOVED***)
+                c.alignment = openpyxl.styles.Alignment(horizontal=fmt["align"])
 
     def cell_value(self, addr: str) -> Any:
         """Read cell value (literal, не formula)."""
-        return self._wb.active[addr***REMOVED***.value
+        return self._wb.active[addr].value
 
-    def cell_formula(self, addr: str) -> Optional[str***REMOVED***:
+    def cell_formula(self, addr: str) -> Optional[str]:
         """Read cell formula (if any)."""
-        v = self._wb.active[addr***REMOVED***.value
+        v = self._wb.active[addr].value
         if isinstance(v, str) and v.startswith("="):
             return v
         return None
 
-    def save(self, path: Union[str, Path***REMOVED***) -> Path:
+    def save(self, path: Union[str, Path]) -> Path:
         """Save atomic via tempfile in SAME DIR + os.replace (PB-7 mirror: fuseblk safe).
 
         Per PB-7 (cross-device save on fuseblk): tempfile.mkstemp в /tmp нельзя
-        переносить через os.replace на /storage (fuseblk) — OSError [Errno 18***REMOVED***
+        переносить через os.replace на /storage (fuseblk) — OSError [Errno 18]
         Cross-device link. Fix: tempfile.mkstemp с dir=path.parent, чтобы
         temp и destination были на одном mount.
 
@@ -143,11 +143,11 @@ class Workbook:
         return path
 
     @classmethod
-    def load(cls, path: Union[str, Path***REMOVED***, *, data_only: bool = False) -> "Workbook":
+    def load(cls, path: Union[str, Path], *, data_only: bool = False) -> "Workbook":
         """Load existing .xlsx. data_only=True — read cached values, NO formula eval."""
         path = Path(path)
         if not path.exists():
-            raise FileNotFoundError(f"xlsx not found: {path***REMOVED***")
+            raise FileNotFoundError(f"xlsx not found: {path}")
         wb = cls.__new__(cls)
         wb._wb = openpyxl.load_workbook(str(path), data_only=data_only)
         wb._current_name = wb._wb.active.title

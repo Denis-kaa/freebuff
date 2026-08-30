@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import logging
 import sys
-***REMOVED***
+}
 from typing import Any, Optional
 
 logger = logging.getLogger("core_02.telegram_contract")
@@ -39,17 +39,17 @@ ALEX_LITVINOV_CHAT_ID: int = LITVINOV_CHAT_ID  # explicit alias for clarity
 LIVE_SESSION_PHONE: str = "+79223919054"  # informational; @vaalchik owner
 
 _TG_CLIENT_DIR = (
-    Path(__file__).resolve().parents[1***REMOVED***
+    Path(__file__).resolve().parents[1]
     / "projects_17"
     / "tg_terminal_messenger"
 )
-_cached_client_factory: Optional[Any***REMOVED*** = None  # cached TGClient *class*
+_cached_client_factory: Optional[Any] = None  # cached TGClient *class*
 
 
 # ─── Telegram client lazy bootstrap ────────────────────────────
 
 
-def _get_tg_client_factory() -> Optional[Any***REMOVED***:
+def _get_tg_client_factory() -> Optional[Any]:
     """Lazy import TGClient class. Cached after first successful import.
 
     Returns None if tg_terminal_messenger module is unavailable
@@ -79,7 +79,7 @@ def is_tg_available() -> bool:
 # ─── Internal: shared send path ──────────────────────────────
 
 
-async def _send_text(chat_id: int, text: str) -> Optional[int***REMOVED***:
+async def _send_text(chat_id: int, text: str) -> Optional[int]:
     """Bootstrap TGClient session + send_message → msg_id | None.
 
     Single chokepoint for TG-send mechanics. Failures are logged but don't
@@ -115,7 +115,7 @@ async def _send_text(chat_id: int, text: str) -> Optional[int***REMOVED***:
 # ─── Public: report functions (3 aliases for clarity) ─────────
 
 
-async def report_to_saved_messages(message: str) -> Optional[int***REMOVED***:
+async def report_to_saved_messages(message: str) -> Optional[int]:
     """Send `message` to Saved Messages (Избранное) — own @vaalchik channel.
 
     Returns Telegram msg_id on success, None on any failure.
@@ -125,7 +125,7 @@ async def report_to_saved_messages(message: str) -> Optional[int***REMOVED***:
     return await _send_text(SAVED_MESSAGES_CHAT_ID, message)
 
 
-async def send_to_chat(chat_id: int, message: str) -> Optional[int***REMOVED***:
+async def send_to_chat(chat_id: int, message: str) -> Optional[int]:
     """Send `message` to an arbitrary chat_id (public single chokepoint, CON-19).
 
     Reuses the same connect/send/disconnect mechanics as report_* helpers —
@@ -137,7 +137,7 @@ async def send_to_chat(chat_id: int, message: str) -> Optional[int***REMOVED***:
     return await _send_text(chat_id, message)
 
 
-async def report_to_litvinov(message: str) -> Optional[int***REMOVED***:
+async def report_to_litvinov(message: str) -> Optional[int]:
     """Send `message` to Александр Литвинов. Returns msg_id or None.
 
     Spec alias: `report_to_alex_litvinov` is the user-facing name from
@@ -162,4 +162,4 @@ __all__ = [
     "report_to_litvinov",
     "report_to_alex_litvinov",
     "send_to_chat",
-***REMOVED***
+]

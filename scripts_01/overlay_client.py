@@ -39,9 +39,9 @@ class OverlayClient:
     _TIMEOUT = 2  # секунды на ответ сервера
 
     def __init__(self):
-        self._last_command: Optional[str***REMOVED*** = None
+        self._last_command: Optional[str] = None
 
-    def _send(self, payload: dict) -> Optional[dict***REMOVED***:
+    def _send(self, payload: dict) -> Optional[dict]:
         """Отправить JSON и получить ответ."""
         if not os.path.exists(SOCKET_PATH):
             return None
@@ -71,21 +71,21 @@ class OverlayClient:
 
         Команды от сервера проверяются через check_command().
         """
-        payload: dict = {"type": "status"***REMOVED***
+        payload: dict = {"type": "status"}
         if task:
-            payload["task"***REMOVED*** = task
+            payload["task"] = task
         if progress >= 0:
-            payload["progress"***REMOVED*** = progress
+            payload["progress"] = progress
         if agent:
-            payload["agent"***REMOVED*** = agent
+            payload["agent"] = agent
         if status:
-            payload["status"***REMOVED*** = status
+            payload["status"] = status
         if message:
-            payload["message"***REMOVED*** = message
+            payload["message"] = message
 
         resp = self._send(payload)
         if resp and resp.get("type") == "command":
-            self._last_command = resp["action"***REMOVED***
+            self._last_command = resp["action"]
 
     def done(self, task: str = "", message: str = "") -> None:
         """Пометить задачу выполненной."""
@@ -95,7 +95,7 @@ class OverlayClient:
         """Сообщить об ошибке."""
         self.status(task=task, status="error", message=message)
 
-    def check_command(self) -> Optional[str***REMOVED***:
+    def check_command(self) -> Optional[str]:
         """Проверить, есть ли ожидающая команда (после последнего status).
 
         Возвращает 'pause', 'resume', 'stop' или None.
@@ -142,7 +142,7 @@ def main():
             agent=args.agent, status=args.status, message=args.message
         )
         cmd = client.check_command()
-        print(f"Status sent. Command: {cmd***REMOVED***" if cmd else "Status sent.")
+        print(f"Status sent. Command: {cmd}" if cmd else "Status sent.")
     elif args.action == "done":
         client.done(task=args.task, message=args.message)
         print("Done.")

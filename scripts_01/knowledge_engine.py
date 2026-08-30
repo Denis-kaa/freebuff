@@ -20,7 +20,7 @@ knowledge_engine.py — Knowledge Engine для Buffy Project.
     ke.index_document("router-v2", "Capability-based router with scoring...")
     results = ke.search("capability router scoring")
     for r in results:
-        print(f"  [{r.score:.3f***REMOVED******REMOVED*** {r.doc_id***REMOVED***: {r.snippet[:80***REMOVED******REMOVED***")
+        print(f"  [{r.score:.3f}] {r.doc_id}: {r.snippet[:80]}")
 """
 
 from __future__ import annotations
@@ -28,14 +28,14 @@ from __future__ import annotations
 import json
 import math
 import os
-***REMOVED***
+}
 import sqlite3
 import threading
 import uuid
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 import numpy as np
@@ -61,7 +61,7 @@ DEFAULT_VOCAB_PATH = "context_12/knowledge/vocab.json"
 DEFAULT_META_PATH = "context_12/knowledge/metadata.json"
 
 # Стоп-слова (технические, для кода и документации)
-STOP_WORDS: Set[str***REMOVED*** = {
+STOP_WORDS: Set[str] = {
     "the", "a", "an", "and", "or", "but", "in", "on", "at", "to", "for",
     "of", "by", "with", "from", "as", "is", "was", "are", "were", "be",
     "been", "being", "have", "has", "had", "do", "does", "did", "will",
@@ -109,7 +109,7 @@ STOP_WORDS: Set[str***REMOVED*** = {
     "print", "len", "range", "map", "filter", "sorted", "reversed",
     "enumerate", "zip", "open", "read", "write", "close",
     "assert", "del", "global", "nonlocal",
-***REMOVED***
+}
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -124,12 +124,12 @@ class SearchResult:
     score: float
     content: str
     snippet: str = ""
-    metadata: Dict[str, Any***REMOVED*** = field(default_factory=dict)
-    matched_terms: List[str***REMOVED*** = field(default_factory=list)
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    matched_terms: List[str] = field(default_factory=list)
 
     def __post_init__(self):
         if not self.snippet:
-            self.snippet = self.content[:200***REMOVED***.replace("\n", " ").strip()
+            self.snippet = self.content[:200].replace("\n", " ").strip()
 
 
 @dataclass
@@ -137,7 +137,7 @@ class Document:
     """Документ для индексации."""
     doc_id: str
     content: str
-    metadata: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
     created_at: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
@@ -152,17 +152,17 @@ class Tokenizer:
     """Токенизатор для технических текстов и кода."""
 
     @staticmethod
-    def tokenize(text: str) -> List[str***REMOVED***:
+    def tokenize(text: str) -> List[str]:
         """Разбивает текст на токены, убирает стоп-слова и короткие токены."""
         # Приводим к нижнему регистру
         text = text.lower()
 
         # Извлекаем слова (буквы, цифры, подчёркивания, дефисы)
         # Для кода: сохраняем snake_case, kebab-case, CamelCase как один токен
-        tokens = re.findall(r"[a-zA-Zа-яА-ЯёЁ0-9***REMOVED***[\w\-***REMOVED***{1,***REMOVED***", text)
+        tokens = re.findall(r"[a-zA-Zа-яА-ЯёЁ0-9)[\w\-]{1,]", text)
 
         # Фильтруем
-        result = [***REMOVED***
+        result = []
         for token in tokens:
             token = token.strip("_-")
             if len(token) < 2:
@@ -176,7 +176,7 @@ class Tokenizer:
         return result
 
     @staticmethod
-    def extract_snippet(text: str, query_terms: List[str***REMOVED***, context_chars: int = 150) -> str:
+    def extract_snippet(text: str, query_terms: List[str], context_chars: int = 150) -> str:
         """Извлекает сниппет с подсветкой релевантных терминов."""
         if not text or not text.strip():
             return "(semantic match — content not stored in vector index)"
@@ -195,19 +195,19 @@ class Tokenizer:
                     if t.lower() in text_lower[
                         max(0, pos - context_chars):
                         pos + context_chars
-                    ***REMOVED***
+                    ]
                 )
                 if count > best_count:
                     best_count = count
                     best_pos = pos
 
         if best_pos < 0:
-            return text[:200***REMOVED***.replace("\n", " ").strip()
+            return text[:200].replace("\n", " ").strip()
 
         start = max(0, best_pos - context_chars // 2)
         end = min(len(text), best_pos + context_chars)
 
-        snippet = text[start:end***REMOVED***.replace("\n", " ")
+        snippet = text[start:end].replace("\n", " ")
         if start > 0:
             snippet = "... " + snippet
         if end < len(text):
@@ -258,9 +258,9 @@ class FtsIndex:
 
     # ── CRUD ──────────────────────────────────────────────
 
-    def index(self, doc_id: str, content: str, metadata: Dict[str, Any***REMOVED*** | None = None) -> None:
+    def index(self, doc_id: str, content: str, metadata: Dict[str, Any] | None = None) -> None:
         """Индексирует документ в FTS5."""
-        meta = metadata or {***REMOVED***
+        meta = metadata or {}
         now = datetime.now(timezone.utc).isoformat()
 
         with self._lock:
@@ -303,12 +303,12 @@ class FtsIndex:
 
     def search(
         self, query: str, top_k: int = 10
-    ) -> List[Tuple[str, float, str, Dict[str, Any***REMOVED******REMOVED******REMOVED***:
+    ) -> List[Tuple[str, float, str, Dict[str, Any]]]:
         """Поиск по FTS5. Возвращает (doc_id, score, content, metadata)."""
         # Экранируем спецсимволы FTS5
         safe_query = self._sanitize_query(query)
         if not safe_query:
-            return [***REMOVED***
+            return []
 
         with self._lock:
             with self._connect() as conn:
@@ -325,7 +325,7 @@ class FtsIndex:
                 except sqlite3.OperationalError:
                     # FTS5 синтаксическая ошибка — пробуем как phrase
                     try:
-                        safe_query = f'"{safe_query***REMOVED***"'
+                        safe_query = f'"{safe_query}"'
                         rows = conn.execute(
                             """SELECT d.doc_id, d.rank, d.content, m.title, m.source, m.doc_type
                                FROM docs_fts d
@@ -336,19 +336,19 @@ class FtsIndex:
                             (safe_query, top_k),
                         ).fetchall()
                     except sqlite3.OperationalError:
-                        return [***REMOVED***
+                        return []
 
-        results = [***REMOVED***
+        results = []
         for doc_id, rank, content, title, source, doc_type in rows:
             # FTS5 rank — отрицательное число (чем меньше, тем лучше)
-            # Конвертируем в score [0, 1***REMOVED***
+            # Конвертируем в score [0, 1]
             score = max(0.0, min(1.0, -rank / 100.0)) if rank < 0 else 0.5
             meta = {
                 "title": title or "",
                 "source": source or "",
                 "doc_type": doc_type or "text",
                 "search_method": "fts5",
-            ***REMOVED***
+            }
             results.append((doc_id, score, content, meta))
 
         return results
@@ -374,7 +374,7 @@ class FtsIndex:
         """Количество проиндексированных документов."""
         with self._connect() as conn:
             row = conn.execute("SELECT COUNT(*) FROM doc_meta").fetchone()
-            return row[0***REMOVED*** if row else 0
+            return row[0] if row else 0
 
     def clear(self) -> None:
         """Очищает индекс."""
@@ -394,7 +394,7 @@ class TfidfIndex:
     """TF-IDF векторный индекс для семантического поиска.
 
     Хранит:
-      - vocab.json:  словарь {термин: id***REMOVED***
+      - vocab.json:  словарь {термин: id}
       - vectors.npy: матрица документ-термин (n_docs × n_terms), float32
       - metadata.json: список doc_id в порядке строк матрицы
     """
@@ -411,10 +411,10 @@ class TfidfIndex:
         self._lock = threading.Lock()
 
         # In-memory кэш
-        self._vocab: Dict[str, int***REMOVED*** = {***REMOVED***       # термин → id
+        self._vocab: Dict[str, int] = {}       # термин → id
         self._idf: np.ndarray | None = None     # IDF веса
         self._vectors: np.ndarray | None = None  # матрица документов
-        self._doc_ids: List[str***REMOVED*** = [***REMOVED***            # документы
+        self._doc_ids: List[str] = []            # документы
         self._dirty: bool = False                # нужно ли сохранять
 
         self._load()
@@ -467,7 +467,7 @@ class TfidfIndex:
     # ── Индексация ───────────────────────────────────────
 
     def index_documents(
-        self, docs: List[Tuple[str, str***REMOVED******REMOVED***, rebuild: bool = False
+        self, docs: List[Tuple[str, str]], rebuild: bool = False
     ) -> None:
         """Индексирует список документов (doc_id, content).
 
@@ -476,14 +476,14 @@ class TfidfIndex:
         """
         if rebuild:
             with self._lock:
-                self._vocab = {***REMOVED***
+                self._vocab = {}
                 self._idf = None
                 self._vectors = None
-                self._doc_ids = [***REMOVED***
+                self._doc_ids = []
                 self._dirty = True
 
         # 1. Токенизируем все документы
-        tokenized: List[Tuple[str, Counter***REMOVED******REMOVED*** = [***REMOVED***
+        tokenized: List[Tuple[str, Counter]] = []
         for doc_id, content in docs:
             tokens = Tokenizer.tokenize(content)
             tokenized.append((doc_id, Counter(tokens)))
@@ -500,21 +500,21 @@ class TfidfIndex:
 
                 for token in counter:
                     if token not in self._vocab:
-                        self._vocab[token***REMOVED*** = len(self._vocab)
+                        self._vocab[token] = len(self._vocab)
 
             # 3. Строим матрицу
             n_docs = len(self._doc_ids) + len(tokenized)
             n_terms = len(self._vocab)
             matrix = np.zeros((n_docs, n_terms), dtype=np.float32)
-            new_doc_ids: List[str***REMOVED*** = [***REMOVED***
+            new_doc_ids: List[str] = []
 
             # Старые документы — их векторы могут быть короче новой матрицы
-            old_n_terms = self._vectors.shape[1***REMOVED*** if self._vectors is not None else 0
+            old_n_terms = self._vectors.shape[1] if self._vectors is not None else 0
             for i, doc_id in enumerate(self._doc_ids):
                 if doc_id in existing_ids:
                     # Копируем только существующие колонки (новые = 0)
                     if old_n_terms > 0:
-                        matrix[i, :old_n_terms***REMOVED*** = self._vectors[i***REMOVED***
+                        matrix[i, :old_n_terms] = self._vectors[i]
                     new_doc_ids.append(doc_id)
 
             # Новые документы
@@ -523,8 +523,8 @@ class TfidfIndex:
                 row = start_idx + i
                 for token, count in counter.items():
                     if token in self._vocab:
-                        col = self._vocab[token***REMOVED***
-                        matrix[row, col***REMOVED*** = count
+                        col = self._vocab[token]
+                        matrix[row, col] = count
                 new_doc_ids.append(doc_id)
 
             self._vectors = matrix
@@ -556,19 +556,19 @@ class TfidfIndex:
 
     def search(
         self, query: str, top_k: int = 10
-    ) -> List[Tuple[str, float, List[str***REMOVED******REMOVED******REMOVED***:
+    ) -> List[Tuple[str, float, List[str]]]:
         """Векторный поиск по TF-IDF косинусной близости.
 
         Returns:
             Список (doc_id, score, matched_terms)
         """
         if self._vectors is None or len(self._doc_ids) == 0:
-            return [***REMOVED***
+            return []
 
         # 1. Токенизируем запрос
         query_tokens = Tokenizer.tokenize(query)
         if not query_tokens:
-            return [***REMOVED***
+            return []
 
         # 2. Строим вектор запроса (TF-IDF)
         q_counter = Counter(query_tokens)
@@ -576,12 +576,12 @@ class TfidfIndex:
 
         for token, count in q_counter.items():
             if token in self._vocab:
-                col = self._vocab[token***REMOVED***
+                col = self._vocab[token]
                 # TF = log(1 + count)
                 tf = math.log(1 + count)
                 # IDF
-                idf = self._idf[col***REMOVED*** if self._idf is not None else 1.0
-                q_vec[col***REMOVED*** = tf * idf
+                idf = self._idf[col] if self._idf is not None else 1.0
+                q_vec[col] = tf * idf
 
         # 3. TF-IDF для документов
         if self._idf is not None:
@@ -592,30 +592,30 @@ class TfidfIndex:
         # 4. Косинусная близость
         q_norm = np.linalg.norm(q_vec)
         if q_norm < 1e-10:
-            return [***REMOVED***
+            return []
 
         q_unit = q_vec / q_norm
         doc_norms = np.linalg.norm(doc_vectors, axis=1)
         doc_norms = np.where(doc_norms < 1e-10, 1.0, doc_norms)
-        doc_unit = doc_vectors / doc_norms[:, np.newaxis***REMOVED***
+        doc_unit = doc_vectors / doc_norms[:, np.newaxis]
 
         similarities = doc_unit @ q_unit
 
         # 5. Топ-K
-        top_indices = np.argsort(similarities)[-top_k:***REMOVED***[::-1***REMOVED***
+        top_indices = np.argsort(similarities)[-top_k:][::-1]
 
-        results = [***REMOVED***
+        results = []
         for idx in top_indices:
-            score = float(similarities[idx***REMOVED***)
+            score = float(similarities[idx])
             if score < 0.01:
                 continue
-            doc_id = self._doc_ids[idx***REMOVED***
+            doc_id = self._doc_ids[idx]
 
             # Какие термины совпали
             matched = [
                 token for token in q_counter
                 if token in self._vocab
-            ***REMOVED***
+            ]
 
             results.append((doc_id, score, matched))
 
@@ -632,10 +632,10 @@ class TfidfIndex:
     def clear(self) -> None:
         """Очищает индекс."""
         with self._lock:
-            self._vocab = {***REMOVED***
+            self._vocab = {}
             self._idf = None
             self._vectors = None
-            self._doc_ids = [***REMOVED***
+            self._doc_ids = []
             self._dirty = True
         self._save()
 
@@ -675,9 +675,9 @@ class SemanticIndex:
         self._u: np.ndarray | None = None      # document embeddings
         self._s: np.ndarray | None = None      # singular values
         self._vh: np.ndarray | None = None     # term projections
-        self._doc_ids: List[str***REMOVED*** = [***REMOVED***
+        self._doc_ids: List[str] = []
         self._n_components: int = 0
-        self._vocab: Dict[str, int***REMOVED*** = {***REMOVED***
+        self._vocab: Dict[str, int] = {}
 
         self._load()
 
@@ -696,12 +696,12 @@ class SemanticIndex:
             if self._path("svd_meta.json").exists():
                 with open(self._path("svd_meta.json"), "r") as f:
                     meta = json.load(f)
-                self._doc_ids = meta.get("doc_ids", [***REMOVED***)
+                self._doc_ids = meta.get("doc_ids", [])
                 self._n_components = meta.get("n_components", 0)
-                self._vocab = meta.get("vocab", {***REMOVED***)
+                self._vocab = meta.get("vocab", {})
         except Exception:
             self._u = self._s = self._vh = None
-            self._doc_ids = [***REMOVED***
+            self._doc_ids = []
 
     def _save(self):
         """Сохраняет SVD компоненты на диск."""
@@ -717,25 +717,25 @@ class SemanticIndex:
                 "doc_ids": self._doc_ids,
                 "n_components": self._n_components,
                 "vocab": self._vocab,
-            ***REMOVED***, f, ensure_ascii=False, indent=2)
+            ], f, ensure_ascii=False, indent=2)
 
-    def fit(self, tfidf_vectors: np.ndarray, doc_ids: List[str***REMOVED***,
-            vocab: Dict[str, int***REMOVED***, n_components: int = 100) -> None:
+    def fit(self, tfidf_vectors: np.ndarray, doc_ids: List[str],
+            vocab: Dict[str, int], n_components: int = 100) -> None:
         """Обучает SVD на TF-IDF матрице.
 
         Args:
             tfidf_vectors: матрица (n_docs × n_terms), float32
             doc_ids: список doc_id в порядке строк
-            vocab: словарь {термин: id***REMOVED***
+            vocab: словарь {термин: id}
             n_components: количество SVD компонент
         """
         n_docs, n_terms = tfidf_vectors.shape
         # Нужно минимум 2 документа и 2 термина для осмысленной SVD
         if n_docs < 2 or n_terms < 2:
             self._u = self._s = self._vh = None
-            self._doc_ids = [***REMOVED***
+            self._doc_ids = []
             self._n_components = 0
-            self._vocab = {***REMOVED***
+            self._vocab = {}
             return
         k = min(n_components, n_docs, n_terms)
 
@@ -750,15 +750,15 @@ class SemanticIndex:
                 import torch
                 t = torch.from_numpy(normalized.astype(np.float64))
                 u, s, vh = torch.linalg.svd(t, full_matrices=False)
-                self._u = u[:, :k***REMOVED***.numpy().astype(np.float32) * s[:k***REMOVED***.numpy().astype(np.float32)
-                self._s = s[:k***REMOVED***.numpy().astype(np.float32)
-                self._vh = vh[:k, :***REMOVED***.numpy().astype(np.float32)
+                self._u = u[:, :k].numpy().astype(np.float32) * s[:k].numpy().astype(np.float32)
+                self._s = s[:k].numpy().astype(np.float32)
+                self._vh = vh[:k, :].numpy().astype(np.float32)
             except Exception:
                 # Fallback: numpy SVD
                 u, s, vh = np.linalg.svd(normalized, full_matrices=False)
-                self._u = u[:, :k***REMOVED***.astype(np.float32) * s[:k***REMOVED***.astype(np.float32)
-                self._s = s[:k***REMOVED***.astype(np.float32)
-                self._vh = vh[:k, :***REMOVED***.astype(np.float32)
+                self._u = u[:, :k].astype(np.float32) * s[:k].astype(np.float32)
+                self._s = s[:k].astype(np.float32)
+                self._vh = vh[:k, :].astype(np.float32)
 
             self._doc_ids = list(doc_ids)
             self._n_components = k
@@ -766,19 +766,19 @@ class SemanticIndex:
 
         self._save()
 
-    def search(self, query: str, top_k: int = 10) -> List[Tuple[str, float, List[str***REMOVED******REMOVED******REMOVED***:
+    def search(self, query: str, top_k: int = 10) -> List[Tuple[str, float, List[str]]]:
         """Поиск в семантическом пространстве LSA.
 
         Returns:
             Список (doc_id, score, matched_terms)
         """
         if self._u is None or self._vh is None or len(self._doc_ids) == 0:
-            return [***REMOVED***
+            return []
 
         # 1. Строим TF-IDF вектор запроса
         query_tokens = Tokenizer.tokenize(query)
         if not query_tokens:
-            return [***REMOVED***
+            return []
 
         from collections import Counter
         import math
@@ -786,13 +786,13 @@ class SemanticIndex:
         q_vec = np.zeros(len(self._vocab), dtype=np.float32)
         for token, count in q_counter.items():
             if token in self._vocab:
-                col = self._vocab[token***REMOVED***
-                q_vec[col***REMOVED*** = math.log(1 + count)
+                col = self._vocab[token]
+                q_vec[col] = math.log(1 + count)
 
         # 2. Нормализуем
         q_norm = np.linalg.norm(q_vec)
         if q_norm < 1e-10:
-            return [***REMOVED***
+            return []
         q_unit = q_vec / q_norm
 
         # 3. Проецируем запрос в семантическое пространство
@@ -809,26 +809,26 @@ class SemanticIndex:
 
         q_proj_norm = np.linalg.norm(q_proj)
         if q_proj_norm < 1e-10:
-            return [***REMOVED***
+            return []
         q_proj_unit = q_proj / q_proj_norm
 
         similarities = doc_unit @ q_proj_unit  # (n_docs,)
 
         # 5. Топ-K
-        top_indices = np.argsort(similarities)[-top_k:***REMOVED***[::-1***REMOVED***
+        top_indices = np.argsort(similarities)[-top_k:][::-1]
 
-        results = [***REMOVED***
+        results = []
         for idx in top_indices:
-            score = float(similarities[idx***REMOVED***)
+            score = float(similarities[idx])
             if score < 0.01:
                 continue
-            doc_id = self._doc_ids[idx***REMOVED***
+            doc_id = self._doc_ids[idx]
 
             # Какие термины запроса есть в словаре
             matched = [
                 token for token in q_counter
                 if token in self._vocab
-            ***REMOVED***
+            ]
 
             results.append((doc_id, score, matched))
 
@@ -839,11 +839,11 @@ class SemanticIndex:
 
     def clear(self):
         self._u = self._s = self._vh = None
-        self._doc_ids = [***REMOVED***
+        self._doc_ids = []
         self._n_components = 0
-        self._vocab = {***REMOVED***
+        self._vocab = {}
         # Удаляем файлы
-        for name in ["svd_u.npy", "svd_s.npy", "svd_vh.npy", "svd_meta.json"***REMOVED***:
+        for name in ["svd_u.npy", "svd_s.npy", "svd_vh.npy", "svd_meta.json"]:
             p = self._path(name)
             if p.exists():
                 p.unlink()
@@ -903,20 +903,20 @@ class KnowledgeEngine:
         self,
         doc_id: str,
         content: str,
-        metadata: Dict[str, Any***REMOVED*** | None = None,
+        metadata: Dict[str, Any] | None = None,
     ) -> None:
         """Индексирует один документ (в FTS5 + TF-IDF)."""
         # FTS5
         self._fts.index(doc_id, content, metadata)
 
         # TF-IDF (SemanticIndex обновится при следующем fit_semantic())
-        self._tfidf.index_documents([(doc_id, content)***REMOVED***)
+        self._tfidf.index_documents([(doc_id, content)])
 
         # Публикуем событие
         if self._event_bus is not None:
             try:
                 from scripts_01.event_bus import Event
-                meta = metadata or {***REMOVED***
+                meta = metadata or {}
                 self._event_bus.publish(Event(
                     type="knowledge.indexed",
                     source="knowledge_engine",
@@ -925,7 +925,7 @@ class KnowledgeEngine:
                         "title": meta.get("title", ""),
                         "doc_type": meta.get("doc_type", "text"),
                         "char_count": len(content),
-                    ***REMOVED***,
+                    },
                 ))
             except Exception:
                 pass
@@ -964,29 +964,29 @@ class KnowledgeEngine:
         engine = MemoryEngine(workspace_root=str(self._workspace))
 
         if level:
-            levels = [MemoryLevel(level)***REMOVED***
+            levels = [MemoryLevel(level)]
         else:
             levels = [
                 MemoryLevel.KNOWLEDGE,
                 MemoryLevel.PROJECT,
                 MemoryLevel.WORKING,
                 MemoryLevel.PERSONAL,
-            ***REMOVED***
+            ]
 
         count = 0
         for lvl in levels:
             entries = engine.list_entries(level=lvl)
             for entry in entries:
-                doc_id = f"mem_{lvl.value***REMOVED***_{entry.key***REMOVED***"
+                doc_id = f"mem_{lvl.value}_{entry.key}"
                 self.index_document(
                     doc_id=doc_id,
                     content=entry.content,
                     metadata={
                         "title": entry.key,
-                        "source": f"memory/{lvl.value***REMOVED***/{entry.key***REMOVED***",
+                        "source": f"memory/{lvl.value}/{entry.key}",
                         "doc_type": entry.content_type.value,
                         "created_at": entry.created_at,
-                    ***REMOVED***,
+                    },
                 )
                 count += 1
 
@@ -1005,7 +1005,7 @@ class KnowledgeEngine:
                 self._event_bus.publish(Event(
                     type="knowledge.rebuilt",
                     source="knowledge_engine",
-                    data={"count": count***REMOVED***,
+                    data={"count": count},
                 ))
             except Exception:
                 pass
@@ -1020,7 +1020,7 @@ class KnowledgeEngine:
         top_k: int = 10,
         mode: str = "hybrid",
         fts_weight: float = 0.4,
-    ) -> List[SearchResult***REMOVED***:
+    ) -> List[SearchResult]:
         """Поиск по знаниям.
 
         Args:
@@ -1034,106 +1034,106 @@ class KnowledgeEngine:
             Список SearchResult, отсортированных по score (убывание).
         """
         if not query.strip():
-            return [***REMOVED***
+            return []
 
         query_terms = Tokenizer.tokenize(query)
 
         # Keyword search (FTS5)
-        fts_results: Dict[str, Tuple[float, str, Dict[str, Any***REMOVED******REMOVED******REMOVED*** = {***REMOVED***
+        fts_results: Dict[str, Tuple[float, str, Dict[str, Any]]] = {}
         # Semantic ML search (LSA via torch SVD)
-        semantic_results: Dict[str, Tuple[float, List[str***REMOVED******REMOVED******REMOVED*** = {***REMOVED***
+        semantic_results: Dict[str, Tuple[float, List[str]]] = {}
         if mode == "semantic_ml":
             si = self.semantic
             if not si.is_empty():
                 for doc_id, score, matched in si.search(query, top_k * 3):
-                    if doc_id not in semantic_results or score > semantic_results[doc_id***REMOVED***[0***REMOVED***:
-                        semantic_results[doc_id***REMOVED*** = (score, matched)
+                    if doc_id not in semantic_results or score > semantic_results[doc_id][0]:
+                        semantic_results[doc_id] = (score, matched)
 
         if mode in ("keyword", "hybrid"):
             for doc_id, score, content, meta in self._fts.search(query, top_k * 3):
-                if doc_id not in fts_results or score > fts_results[doc_id***REMOVED***[0***REMOVED***:
-                    fts_results[doc_id***REMOVED*** = (score, content, meta)
+                if doc_id not in fts_results or score > fts_results[doc_id][0]:
+                    fts_results[doc_id] = (score, content, meta)
 
         # Semantic search (TF-IDF)
-        tfidf_results: Dict[str, Tuple[float, List[str***REMOVED******REMOVED******REMOVED*** = {***REMOVED***
+        tfidf_results: Dict[str, Tuple[float, List[str]]] = {}
         if mode in ("semantic", "hybrid"):
             for doc_id, score, matched in self._tfidf.search(query, top_k * 3):
-                if doc_id not in tfidf_results or score > tfidf_results[doc_id***REMOVED***[0***REMOVED***:
-                    tfidf_results[doc_id***REMOVED*** = (score, matched)
+                if doc_id not in tfidf_results or score > tfidf_results[doc_id][0]:
+                    tfidf_results[doc_id] = (score, matched)
 
         # Комбинируем
-        combined: Dict[str, Dict[str, Any***REMOVED******REMOVED*** = {***REMOVED***
+        combined: Dict[str, Dict[str, Any]] = {}
 
         if mode == "keyword":
             for doc_id, (score, content, meta) in fts_results.items():
-                combined[doc_id***REMOVED*** = {
+                combined[doc_id] = {
                     "score": score,
                     "content": content,
                     "metadata": meta,
-                    "matched_terms": [t for t in query_terms if t.lower() in content.lower()***REMOVED***,
-                ***REMOVED***
+                    "matched_terms": [t for t in query_terms if t.lower() in content.lower()],
+                }
 
         elif mode == "semantic":
             for doc_id, (score, matched) in tfidf_results.items():
-                combined[doc_id***REMOVED*** = {
+                combined[doc_id] = {
                     "score": score,
                     "content": "",
-                    "metadata": {"search_method": "tfidf"***REMOVED***,
+                    "metadata": {"search_method": "tfidf"},
                     "matched_terms": matched,
-                ***REMOVED***
+                }
 
         elif mode == "semantic_ml":
             for doc_id, (score, matched) in semantic_results.items():
-                combined[doc_id***REMOVED*** = {
+                combined[doc_id] = {
                     "score": score,
                     "content": "",
-                    "metadata": {"search_method": "semantic_ml"***REMOVED***,
+                    "metadata": {"search_method": "semantic_ml"},
                     "matched_terms": matched,
-                ***REMOVED***
+                }
 
         elif mode == "hybrid":
             all_ids = set(fts_results.keys()) | set(tfidf_results.keys())
 
             for doc_id in all_ids:
-                fts_score = fts_results.get(doc_id, (0.0, "", {***REMOVED***))[0***REMOVED***
-                tfidf_score = tfidf_results.get(doc_id, (0.0, [***REMOVED***))[0***REMOVED***
-                content = fts_results.get(doc_id, ("", {***REMOVED***))[1***REMOVED*** if doc_id in fts_results else ""
-                meta = fts_results.get(doc_id, ("", {***REMOVED***))[2***REMOVED*** if doc_id in fts_results else {***REMOVED***
+                fts_score = fts_results.get(doc_id, (0.0, "", {}))[0]
+                tfidf_score = tfidf_results.get(doc_id, (0.0, []))[0]
+                content = fts_results.get(doc_id, ("", {}))[1] if doc_id in fts_results else ""
+                meta = fts_results.get(doc_id, ("", {}))[2] if doc_id in fts_results else {}
 
                 # Нормализованная комбинация
                 hybrid_score = fts_weight * fts_score + (1 - fts_weight) * tfidf_score
 
-                matched = tfidf_results.get(doc_id, (0.0, [***REMOVED***))[1***REMOVED*** if doc_id in tfidf_results else [***REMOVED***
+                matched = tfidf_results.get(doc_id, (0.0, []))[1] if doc_id in tfidf_results else []
                 if not matched:
-                    matched = [t for t in query_terms if t.lower() in content.lower()***REMOVED***
+                    matched = [t for t in query_terms if t.lower() in content.lower()]
 
-                combined[doc_id***REMOVED*** = {
+                combined[doc_id] = {
                     "score": hybrid_score,
                     "content": content,
-                    "metadata": {**meta, "search_method": "hybrid"***REMOVED***,
+                    "metadata": {**meta, "search_method": "hybrid"},
                     "matched_terms": matched,
-                ***REMOVED***
+                }
 
         # Сортируем и формируем результат
         sorted_ids = sorted(
             combined.keys(),
-            key=lambda did: combined[did***REMOVED***["score"***REMOVED***,
+            key=lambda did: combined[did]["score"],
             reverse=True,
-        )[:top_k***REMOVED***
+        )[:top_k]
 
-        results = [***REMOVED***
+        results = []
         for doc_id in sorted_ids:
-            info = combined[doc_id***REMOVED***
-            content = info["content"***REMOVED***
-            snippet = Tokenizer.extract_snippet(content, info["matched_terms"***REMOVED***)
+            info = combined[doc_id]
+            content = info["content"]
+            snippet = Tokenizer.extract_snippet(content, info["matched_terms"])
 
             results.append(SearchResult(
                 doc_id=doc_id,
-                score=round(info["score"***REMOVED***, 4),
+                score=round(info["score"], 4),
                 content=content,
                 snippet=snippet,
-                metadata=info["metadata"***REMOVED***,
-                matched_terms=info["matched_terms"***REMOVED***,
+                metadata=info["metadata"],
+                matched_terms=info["matched_terms"],
             ))
 
         # Публикуем событие поиска
@@ -1144,10 +1144,10 @@ class KnowledgeEngine:
                     type="knowledge.searched",
                     source="knowledge_engine",
                     data={
-                        "query": query[:100***REMOVED***,
+                        "query": query[:100],
                         "mode": mode,
                         "result_count": len(results),
-                    ***REMOVED***,
+                    },
                 ))
             except Exception:
                 pass
@@ -1158,7 +1158,7 @@ class KnowledgeEngine:
         self,
         query: str,
         top_k: int = 5,
-    ) -> List[str***REMOVED***:
+    ) -> List[str]:
         """Извлекает capabilities (возможности) из запроса.
 
         Анализирует запрос и возвращает наиболее релевантные
@@ -1169,10 +1169,10 @@ class KnowledgeEngine:
             top_k: максимальное количество capability
 
         Returns:
-            Список capability-строк (например: ["code", "router", "memory"***REMOVED***)
+            Список capability-строк (например: ["code", "router", "memory"])
         """
         results = self.search(query, top_k=top_k, mode="hybrid")
-        capabilities: List[str***REMOVED*** = [***REMOVED***
+        capabilities: List[str] = []
 
         for r in results:
             # Из метаданных
@@ -1181,19 +1181,19 @@ class KnowledgeEngine:
 
             parts = source.split("/")
             if len(parts) >= 2:
-                capabilities.append(f"{parts[-2***REMOVED******REMOVED***:{parts[-1***REMOVED******REMOVED***")
+                capabilities.append(f"{parts[-2]}:{parts[-1]}")
 
-            capabilities.extend(r.matched_terms[:3***REMOVED***)
+            capabilities.extend(r.matched_terms[:3])
 
         # Убираем дубликаты, сохраняем порядок
-        seen: Set[str***REMOVED*** = set()
-        unique: List[str***REMOVED*** = [***REMOVED***
+        seen: Set[str] = set()
+        unique: List[str] = []
         for cap in capabilities:
             if cap not in seen:
                 seen.add(cap)
                 unique.append(cap)
 
-        return unique[:top_k***REMOVED***
+        return unique[:top_k]
 
     # ── Графовый поиск ─────────────────────────────────
 
@@ -1219,7 +1219,7 @@ class KnowledgeEngine:
         mode: str = "related",
         max_depth: int = 2,
         rel_type: str | None = None,
-    ) -> Dict[str, Any***REMOVED***:
+    ) -> Dict[str, Any]:
         """Поиск по графу связей.
 
         Args:
@@ -1243,24 +1243,24 @@ class KnowledgeEngine:
                 "central": doc_id,
                 "count": len(related),
                 "results": [
-                    {"doc_id": r[0***REMOVED***, "rel_type": r[1***REMOVED***,
-                     "direction": r[2***REMOVED***, "weight": r[3***REMOVED***, "depth": r[4***REMOVED******REMOVED***
+                    {"doc_id": r[0], "rel_type": r[1],
+                     "direction": r[2], "weight": r[3], "depth": r[4]]
                     for r in related
-                ***REMOVED***,
-            ***REMOVED***
+                },
+            ]
 
         elif mode == "subgraph":
             nodes, edges = g.subgraph(doc_id, depth=max_depth, rel_type=rel_type)
             return {
                 "mode": "subgraph",
                 "central": doc_id,
-                "nodes": [n.doc_id for n in nodes***REMOVED***,
+                "nodes": [n.doc_id for n in nodes],
                 "edges": [
                     {"source": e.source_id, "target": e.target_id,
-                     "type": e.rel_type, "weight": e.weight***REMOVED***
+                     "type": e.rel_type, "weight": e.weight]
                     for e in edges
-                ***REMOVED***,
-            ***REMOVED***
+                },
+            ]
 
         elif mode == "traverse":
             paths = g.traverse(
@@ -1272,12 +1272,12 @@ class KnowledgeEngine:
                 "mode": "traverse",
                 "start": doc_id,
                 "paths": [
-                    [{"node": p[0***REMOVED***, "rel_type": p[1***REMOVED***, "weight": p[2***REMOVED******REMOVED*** for p in path***REMOVED***
+                    [{"node": p[0], "rel_type": p[1], "weight": p[2]} for p in path]
                     for path in paths
-                ***REMOVED***,
-            ***REMOVED***
+                ],
+            }
 
-        return {"mode": mode, "error": f"Unknown mode: {mode***REMOVED***"***REMOVED***
+        return {"mode": mode, "error": f"Unknown mode: {mode}"}
 
     def add_graph_edge(
         self,
@@ -1285,7 +1285,7 @@ class KnowledgeEngine:
         target_id: str,
         rel_type: str,
         weight: float = 1.0,
-        metadata: Dict[str, Any***REMOVED*** | None = None,
+        metadata: Dict[str, Any] | None = None,
     ) -> None:
         """Добавляет связь в граф."""
         self.graph.add_edge(source_id, target_id, rel_type, weight, metadata)
@@ -1362,7 +1362,7 @@ def main():
     p_search.add_argument("query", help="Поисковый запрос")
     p_search.add_argument("--top-k", type=int, default=10, help="Количество результатов")
     p_search.add_argument(
-        "--mode", choices=["keyword", "semantic", "hybrid", "semantic_ml"***REMOVED***,
+        "--mode", choices=["keyword", "semantic", "hybrid", "semantic_ml"],
         default="hybrid", help="Режим поиска (semantic_ml = LSA через torch)",
     )
 
@@ -1390,40 +1390,40 @@ def main():
         if not results:
             print("🔍 No results")
             return
-        print(f"🔍 {len(results)***REMOVED*** results for '{args.query***REMOVED***' ({args.mode***REMOVED***):")
+        print(f"🔍 {len(results)} results for '{args.query}' ({args.mode}):")
         print()
         for i, r in enumerate(results, 1):
-            print(f"  {i***REMOVED***. [{r.score:.4f***REMOVED******REMOVED*** {r.doc_id***REMOVED***")
-            print(f"     📝 {r.snippet[:120***REMOVED******REMOVED***")
+            print(f"  {i}. [{r.score:.4f}] {r.doc_id}")
+            print(f"     📝 {r.snippet[:120]}")
             if r.matched_terms:
-                print(f"     🏷  {', '.join(r.matched_terms[:5***REMOVED***)***REMOVED***")
+                print(f"     🏷  {', '.join(r.matched_terms[:5])}")
             print()
 
     elif args.command == "index":
         if args.doc:
             doc_id, content = args.doc
             ke.index_document(doc_id, content)
-            print(f"✅ Indexed: {doc_id***REMOVED*** ({len(content)***REMOVED*** chars)")
+            print(f"✅ Indexed: {doc_id} ({len(content)} chars)")
         elif args.level:
             count = ke.index_from_memory(level=args.level)
-            print(f"✅ Indexed {count***REMOVED*** documents from memory level '{args.level***REMOVED***'")
+            print(f"✅ Indexed {count} documents from memory level '{args.level}'")
         else:
             count = ke.index_from_memory()
-            print(f"✅ Indexed {count***REMOVED*** documents from memory")
+            print(f"✅ Indexed {count} documents from memory")
 
     elif args.command == "rebuild":
         count = ke.rebuild_index()
-        print(f"✅ Index rebuilt: {count***REMOVED*** documents")
+        print(f"✅ Index rebuilt: {count} documents")
 
     elif args.command == "stats":
         stats = ke.get_stats()
         print("📊 KNOWLEDGE ENGINE STATS")
-        print(f"   Total docs:     {stats.total_docs***REMOVED***")
-        print(f"   FTS5 (keyword): {stats.fts_docs***REMOVED***")
-        print(f"   TF-IDF (vector): {stats.vector_docs***REMOVED***")
-        print(f"   Vocabulary:     {stats.vocab_size***REMOVED*** terms")
-        print(f"   DB size:        {stats.db_size_bytes:,***REMOVED*** bytes")
-        print(f"   Vectors size:   {stats.vectors_size_bytes:,***REMOVED*** bytes")
+        print(f"   Total docs:     {stats.total_docs}")
+        print(f"   FTS5 (keyword): {stats.fts_docs}")
+        print(f"   TF-IDF (vector): {stats.vector_docs}")
+        print(f"   Vocabulary:     {stats.vocab_size} terms")
+        print(f"   DB size:        {stats.db_size_bytes:,} bytes")
+        print(f"   Vectors size:   {stats.vectors_size_bytes:,} bytes")
 
     elif args.command == "clear":
         ke.clear()

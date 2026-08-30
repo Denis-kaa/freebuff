@@ -33,7 +33,7 @@ from __future__ import annotations
 import datetime as _dt
 import uuid
 from dataclasses import dataclass, field
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional, Tuple
 
 
@@ -42,8 +42,8 @@ def _now_iso() -> str:
 
 
 # Закрытый словарь overall (ANTI-6b) — mirror ChainRun/ForgeFacadeResult.
-OVERALL_VALUES: frozenset[str***REMOVED*** = frozenset(
-    {"ok", "partial", "failed", "degraded", "unknown"***REMOVED***
+OVERALL_VALUES: frozenset[str] = frozenset(
+    {"ok", "partial", "failed", "degraded", "unknown"}
 )
 
 
@@ -70,16 +70,16 @@ class Artifact:
 
     # ── Результат (из A: ChainRun) ─────────────────────────────────────────
     overall: str
-    chain: Tuple[Dict[str, Any***REMOVED***, ...***REMOVED*** = ()          # ChainStage.to_dict() проекции
+    chain: Tuple[Dict[str, Any], ...] = ()          # ChainStage.to_dict() проекции
     stage_count: int = 0
-    validation: Optional[Dict[str, Any***REMOVED*** | str***REMOVED*** = None  # ValidationSummary.to_dict()
+    validation: Optional[Dict[str, Any] | str] = None  # ValidationSummary.to_dict()
     started_at: str = ""
     finished_at: str = ""
     validation_registry_status: str = "not_run"
 
     # ── Физические файлы (из C) ────────────────────────────────────────────
     target: str = ""              # "projects_17/<id>/forge/"
-    files: Tuple[str, ...***REMOVED*** = ()   # относительные пути созданных артефактов
+    files: Tuple[str, ...] = ()   # относительные пути созданных артефактов
 
     # ── Мета ───────────────────────────────────────────────────────────────
     created_at: str = field(default_factory=_now_iso)
@@ -89,12 +89,12 @@ class Artifact:
         """ANTI-6b: закрытый словарь overall. Дрейф = ValueError, не молча."""
         if self.overall not in OVERALL_VALUES:
             raise ValueError(
-                f"overall={self.overall!r***REMOVED*** вне закрытого словаря {sorted(OVERALL_VALUES)***REMOVED***"
+                f"overall={self.overall!r} вне закрытого словаря {sorted(OVERALL_VALUES)}"
             )
 
     # ── B: dict-проекция (надмножество factory_base.normalize_output) ──────
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         """→ B. Содержит ВСЕ ключи старого dict normalize_output + chain/stage_count/files/project_root.
 
         BC-гарантия: существующие потребители (``_accumulate``, CLI) не ломаются.
@@ -119,11 +119,11 @@ class Artifact:
             "finished_at": self.finished_at,
             "validation_registry_status": self.validation_registry_status,
             "created_at": self.created_at,
-        ***REMOVED***
+        }
 
     # ── A: ChainRun-dict-проекция (1:1) ─────────────────────────────────────
 
-    def to_chain_run_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_chain_run_dict(self) -> Dict[str, Any]:
         """→ A. 1:1 с ``ChainRun.to_dict()`` (для opp.artifacts / event payloads).
 
         Содержит все ключи ChainRun.to_dict() в том же виде; временные поля и
@@ -139,18 +139,18 @@ class Artifact:
             "finished_at": self.finished_at or self.created_at,
             "validation_registry_status": self.validation_registry_status,
             "validation_summary": self.validation,
-        ***REMOVED***
+        }
 
     # ── C: файлы на диске ───────────────────────────────────────────────────
 
-    def resolve_files(self, root: Path) -> List[Path***REMOVED***:
+    def resolve_files(self, root: Path) -> List[Path]:
         """→ C. Существующие файлы из ``files`` относительно ``root``.
 
         Возвращает только реально существующие (Path.exists()); отсутствующие
         игнорируются — расхождение с диском видно через ``files`` vs результат.
         """
         base = Path(root).resolve()
-        out: List[Path***REMOVED*** = [***REMOVED***
+        out: List[Path] = []
         for rel in self.files:
             candidate = (base / rel).resolve()
             try:
@@ -170,7 +170,7 @@ class Artifact:
         run: Any,
         request: Any,
         *,
-        files: Tuple[str, ...***REMOVED*** = (),
+        files: Tuple[str, ...] = (),
         artifact_id: str = "",
         created_at: str = "",
     ) -> "Artifact":
@@ -195,18 +195,18 @@ class Artifact:
                 "chain": [
                     s.to_dict() if hasattr(s, "to_dict") else dict(s)
                     for s in (getattr(run, "chain", ()) or ())
-                ***REMOVED***,
+                ],
                 "overall": getattr(run, "overall", "unknown"),
                 "started_at": getattr(run, "started_at", ""),
                 "finished_at": getattr(run, "finished_at", ""),
                 "validation_registry_status": getattr(run, "validation_registry_status", "not_run"),
                 "validation_summary": getattr(run, "validation_summary", None),
-            ***REMOVED***
+            }
         # ExecutionRequest-объект или dict
         if isinstance(request, dict):
             req_d = request
         else:
-            output_spec = getattr(request, "output_spec", {***REMOVED***) or {***REMOVED***
+            output_spec = getattr(request, "output_spec", {}) or {}
             req_d = {
                 "opportunity_id": getattr(request, "opportunity_id", ""),
                 "project_id": getattr(request, "project_id", ""),
@@ -214,10 +214,10 @@ class Artifact:
                 "factory_id": getattr(request, "factory_id", ""),
                 "forge_id": getattr(request, "forge_id", ""),
                 "output_spec": output_spec,
-            ***REMOVED***
+            }
 
         vs = run_d.get("validation_summary")
-        validation: Optional[Dict[str, Any***REMOVED*** | str***REMOVED*** = None
+        validation: Optional[Dict[str, Any] | str] = None
         if vs is not None:
             if isinstance(vs, dict):
                 validation = dict(vs)
@@ -227,8 +227,8 @@ class Artifact:
                 validation = str(vs)
 
         chain_raw = run_d.get("chain", ()) or ()
-        chain: Tuple[Dict[str, Any***REMOVED***, ...***REMOVED*** = tuple(
-            dict(c) if isinstance(c, dict) else (c.to_dict() if hasattr(c, "to_dict") else {"raw": str(c)***REMOVED***)
+        chain: Tuple[Dict[str, Any], ...] = tuple(
+            dict(c) if isinstance(c, dict) else (c.to_dict() if hasattr(c, "to_dict") else {"raw": str(c)})
             for c in chain_raw
         )
 
@@ -237,7 +237,7 @@ class Artifact:
             # fail-safe: unknown токен → 'unknown' (не краш); дрейф виден в validation
             overall = "unknown"
 
-        output_spec = req_d.get("output_spec") or {***REMOVED***
+        output_spec = req_d.get("output_spec") or {}
         target = output_spec.get("target", "") if isinstance(output_spec, dict) else ""
         kind = (
             output_spec.get("artifact_kind", "generic_artifact")
@@ -246,7 +246,7 @@ class Artifact:
         )
 
         return cls(
-            id=artifact_id or f"art-{_uuid10()***REMOVED***",
+            id=artifact_id or f"art-{_uuid10()}",
             kind=str(kind),
             opportunity_id=str(req_d.get("opportunity_id", "") or ""),
             project_id=str(req_d.get("project_id", "") or ""),
@@ -269,21 +269,21 @@ class Artifact:
         )
 
     @classmethod
-    def from_dict(cls, d: Dict[str, Any***REMOVED***) -> "Artifact":
+    def from_dict(cls, d: Dict[str, Any]) -> "Artifact":
         """B → Artifact (round-trip c to_dict()). Неизвестные ключи игнорируются."""
         known = {k: v for k, v in d.items() if k in {
             "id", "kind", "opportunity_id", "project_id", "capability",
             "factory_id", "forge_id", "overall", "chain", "stage_count",
             "validation", "target", "files", "created_at", "project_root",
             "started_at", "finished_at", "validation_registry_status",
-        ***REMOVED******REMOVED***
+        ]]
         # нормализация списков → кортежи
         if isinstance(known.get("chain"), list):
-            known["chain"***REMOVED*** = tuple(known["chain"***REMOVED***)
+            known["chain"] = tuple(known["chain"])
         if isinstance(known.get("files"), list):
-            known["files"***REMOVED*** = tuple(known["files"***REMOVED***)
+            known["files"] = tuple(known["files"])
         return cls(**known)
 
 
 def _uuid10() -> str:
-    return uuid.uuid4().hex[:10***REMOVED***
+    return uuid.uuid4().hex[:10]

@@ -30,7 +30,7 @@ Key invariants:
 
 from __future__ import annotations
 
-***REMOVED***
+}
 from typing import Optional
 
 from core_02.scenario import Role, Scenario, ScenarioManifest
@@ -39,12 +39,12 @@ from core_02.blueprint_v3 import BlueprintCorpus as BlueprintScenario  # BC alia
 
 # Scenario-type → class dispatch table. New scenario types register here.
 # The class MUST accept (scenario_id: str, root: Path) as kwargs.
-_SCENARIO_TYPES: dict[str, type[Scenario***REMOVED******REMOVED*** = {
+_SCENARIO_TYPES: dict[str, type[Scenario]] = {
     "blueprint_v3": BlueprintScenario,
-***REMOVED***
+}
 
 
-def _default_scenarios_dir() -> Optional[Path***REMOVED***:
+def _default_scenarios_dir() -> Optional[Path]:
     """Resolution order:
 
     1. ``$FREEBUFF_SCENARIOS_DIR`` env var (point at a custom scenarios dir).
@@ -57,7 +57,7 @@ def _default_scenarios_dir() -> Optional[Path***REMOVED***:
     env = os.environ.get("FREEBUFF_SCENARIOS_DIR")
     if env:
         return Path(env).expanduser().resolve()
-    repo_root = Path(__file__).resolve().parents[1***REMOVED***
+    repo_root = Path(__file__).resolve().parents[1]
     default = repo_root / "runtime_05" / "scenarios"
     return default if default.exists() else None
 
@@ -77,12 +77,12 @@ class ScenarioRegistry:
 
     def __init__(
         self,
-        scenarios_dir: Optional[Path***REMOVED*** = None,
+        scenarios_dir: Optional[Path] = None,
         silent: bool = False,
     ):
         self.scenarios_dir = scenarios_dir or _default_scenarios_dir()
-        self._scenarios: dict[str, Scenario***REMOVED*** = {***REMOVED***
-        self._load_warnings: list[str***REMOVED*** = [***REMOVED***
+        self._scenarios: dict[str, Scenario] = {}
+        self._load_warnings: list[str] = []
 
         if self.scenarios_dir and self.scenarios_dir.exists():
             self._load_from_dir(self.scenarios_dir, silent=silent)
@@ -101,38 +101,38 @@ class ScenarioRegistry:
             try:
                 manifest = ScenarioManifest.from_yaml(yaml_path)
             except (ValueError, Exception) as exc:
-                warning = f"{yaml_path.name***REMOVED***: manifest parse failed — {exc***REMOVED***"
+                warning = f"{yaml_path.name}: manifest parse failed — {exc}"
                 self._load_warnings.append(warning)
                 if not silent:
-                    print(f"warning: {warning***REMOVED***", file=sys.stderr)
+                    print(f"warning: {warning}", file=sys.stderr)
                 continue
             if not manifest.enabled:
                 continue
             try:
                 scenario = self._instantiate(manifest)
             except (FileNotFoundError, ValueError, OSError) as exc:
-                warning = f"{yaml_path.name***REMOVED***: instantiation failed — {exc***REMOVED***"
+                warning = f"{yaml_path.name}: instantiation failed — {exc}"
                 self._load_warnings.append(warning)
                 if not silent:
-                    print(f"warning: {warning***REMOVED***", file=sys.stderr)
+                    print(f"warning: {warning}", file=sys.stderr)
                 continue
             if manifest.scenario_id in self._scenarios:
                 warning = (
-                    f"duplicate scenario_id {manifest.scenario_id!r***REMOVED*** — "
-                    f"second instance ignored (yaml={yaml_path.name***REMOVED***)"
+                    f"duplicate scenario_id {manifest.scenario_id!r} — "
+                    f"second instance ignored (yaml={yaml_path.name})"
                 )
                 self._load_warnings.append(warning)
                 if not silent:
-                    print(f"warning: {warning***REMOVED***", file=sys.stderr)
+                    print(f"warning: {warning}", file=sys.stderr)
                 continue
-            self._scenarios[manifest.scenario_id***REMOVED*** = scenario
+            self._scenarios[manifest.scenario_id] = scenario
 
     def _instantiate(self, manifest: ScenarioManifest) -> Scenario:
         cls = _SCENARIO_TYPES.get(manifest.scenario_type)
         if cls is None:
             raise ValueError(
-                f"unknown scenario_type {manifest.scenario_type!r***REMOVED***; "
-                f"known types: {sorted(_SCENARIO_TYPES)***REMOVED***"
+                f"unknown scenario_type {manifest.scenario_type!r}; "
+                f"known types: {sorted(_SCENARIO_TYPES)}"
             )
         # Each Scenario subclass declares its own keyword signature.
         # Today only (scenario_id: str, root: Path) — extend in subclasses as needed.
@@ -140,11 +140,11 @@ class ScenarioRegistry:
 
     # ─── reading ─────────────────────────────────────────────────────────────
 
-    def list_scenarios(self) -> list[Scenario***REMOVED***:
+    def list_scenarios(self) -> list[Scenario]:
         """Return enabled, successfully-instantiated scenarios in load order."""
         return list(self._scenarios.values())
 
-    def get(self, scenario_id: str) -> Optional[Scenario***REMOVED***:
+    def get(self, scenario_id: str) -> Optional[Scenario]:
         """Scenario by id; ``None`` if unknown."""
         return self._scenarios.get(scenario_id)
 
@@ -161,22 +161,22 @@ class ScenarioRegistry:
         so the CLI emits a friendly error before this raises.
         """
         if scenario_id not in self._scenarios:
-            raise KeyError(f"scenario_id {scenario_id!r***REMOVED*** not registered")
-        kept = self._scenarios[scenario_id***REMOVED***
+            raise KeyError(f"scenario_id {scenario_id!r} not registered")
+        kept = self._scenarios[scenario_id]
         # Narrow warnings to entries that mention the kept scenario (or, as
         # a fallback, generic parse/instantiation warnings whose root is the
         # kept manifest).
         narrowed = [
             w for w in self._load_warnings
             if scenario_id in w or "manifest" in w
-        ***REMOVED***
+        ]
         view = ScenarioRegistry.__new__(ScenarioRegistry)  # skip __init__
         view.scenarios_dir = self.scenarios_dir
-        view._scenarios = {scenario_id: kept***REMOVED***
+        view._scenarios = {scenario_id: kept}
         view._load_warnings = narrowed
         return view
 
-    def find_role(self, role_id: str) -> Optional[tuple[Scenario, Role***REMOVED******REMOVED***:
+    def find_role(self, role_id: str) -> Optional[tuple[Scenario, Role]]:
         """Cross-scenario role lookup. Returns first match or ``None``.
 
         If two scenarios expose the same role_id, first registered wins;
@@ -189,9 +189,9 @@ class ScenarioRegistry:
                     return scenario, role
         return None
 
-    def all_roles(self) -> list[tuple[Scenario, Role***REMOVED******REMOVED***:
+    def all_roles(self) -> list[tuple[Scenario, Role]]:
         """All (scenario, role) pairs across the registry."""
-        pairs: list[tuple[Scenario, Role***REMOVED******REMOVED*** = [***REMOVED***
+        pairs: list[tuple[Scenario, Role]] = []
         for scenario in self._scenarios.values():
             for role in scenario.role_objects():
                 pairs.append((scenario, role))
@@ -203,53 +203,53 @@ class ScenarioRegistry:
         self,
         query: str,
         top_n: int = 3,
-    ) -> list[tuple[Scenario, Role, float***REMOVED******REMOVED***:
+    ) -> list[tuple[Scenario, Role, float]]:
         """Cross-scenario fuzzy-match by keyword overlap.
 
         Returns ``(scenario, role, score)`` tuples sorted by score desc.
-        Fails safe: empty registry returns ``[***REMOVED***``; zero-score top returns
+        Fails safe: empty registry returns ``[]``; zero-score top returns
         head with first registered role + score 0.0 (deterministic).
         """
         # Local import — wizard_lib imports core_02; this keeps the dependency
         # edge one-way (registry → wizard_lib) and out of init.
         from core_02.wizard_lib import score_role_match
-        scored: list[tuple[Scenario, Role, float***REMOVED******REMOVED*** = [***REMOVED***
+        scored: list[tuple[Scenario, Role, float]] = []
         for scenario, role in self.all_roles():
             text = scenario.load_role_text(role.role_id)
             score = score_role_match(query, role.role_id, role.title, text)
             scored.append((scenario, role, score))
-        scored.sort(key=lambda r: (-r[2***REMOVED***, r[0***REMOVED***.scenario_id, r[1***REMOVED***.role_id))
+        scored.sort(key=lambda r: (-r[2], r[0].scenario_id, r[1].role_id))
         if not scored:
-            return [***REMOVED***
-        if scored[0***REMOVED***[2***REMOVED*** <= 0.0:
-            first_scenario, first_role = self.all_roles()[0***REMOVED***
+            return []
+        if scored[0][2] <= 0.0:
+            first_scenario, first_role = self.all_roles()[0]
             scored.insert(0, (first_scenario, first_role, 0.0))
-        return scored[:top_n***REMOVED***
+        return scored[:top_n]
 
     # ─── validation ─────────────────────────────────────────────────────────
 
-    def validate_all(self) -> list[str***REMOVED***:
+    def validate_all(self) -> list[str]:
         """Aggregate errors across all loaded scenarios. Empty list = all OK."""
-        errors: list[str***REMOVED*** = [***REMOVED***
+        errors: list[str] = []
         for sid, scenario in self._scenarios.items():
             for err in scenario.validate():
-                errors.append(f"[{sid***REMOVED******REMOVED*** {err***REMOVED***")
+                errors.append(f"[{sid}] {err}")
         # Optional cross-scenario duplicate role_id warning (non-blocking).
-        seen: dict[str, str***REMOVED*** = {***REMOVED***
+        seen: dict[str, str] = {}
         for sid, scenario in self._scenarios.items():
             for role in scenario.role_objects():
                 key = role.role_id
-                if key in seen and seen[key***REMOVED*** != sid:
+                if key in seen and seen[key] != sid:
                     errors.append(
-                        f"role_id {key!r***REMOVED*** appears in multiple scenarios "
-                        f"({seen[key***REMOVED******REMOVED***, {sid***REMOVED***) — find_role will return the first"
+                        f"role_id {key!r} appears in multiple scenarios "
+                        f"({seen[key]}, {sid}) — find_role will return the first"
                     )
-                seen[key***REMOVED*** = sid
+                seen[key] = sid
         return errors
 
-    def warnings(self) -> list[str***REMOVED***:
+    def warnings(self) -> list[str]:
         """All load-time warnings accumulated during instantiation."""
         return list(self._load_warnings)
 
 
-__all__ = ["ScenarioRegistry", "_default_scenarios_dir", "_SCENARIO_TYPES"***REMOVED***
+__all__ = ["ScenarioRegistry", "_default_scenarios_dir", "_SCENARIO_TYPES"]

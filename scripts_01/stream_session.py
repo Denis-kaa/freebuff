@@ -35,7 +35,7 @@ import sys
 import threading
 from collections import deque
 from datetime import datetime, timezone
-***REMOVED***
+}
 from queue import Queue, Empty
 from typing import Optional, Any
 
@@ -81,7 +81,7 @@ class BackgroundWriter:
     """
 
     def __init__(self) -> None:
-        self._queue: Queue[dict[str, Any***REMOVED******REMOVED*** = Queue()
+        self._queue: Queue[dict[str, Any]] = Queue()
         self._thread: threading.Thread | None = None
         self._started = False
         self._lock = threading.Lock()
@@ -103,7 +103,7 @@ class BackgroundWriter:
         """Добавляет операцию в очередь (неблокирующая)."""
         if not self._started:
             self.start()
-        self._queue.put({"op": operation, **kwargs***REMOVED***)
+        self._queue.put({"op": operation, **kwargs})
 
     def flush(self, timeout: float = 5.0) -> int:
         """Ожидает опустошения очереди. Возвращает сколько осталось."""
@@ -126,16 +126,16 @@ class BackgroundWriter:
 
             try:
                 op = item.pop("op")
-                handler = getattr(self, f"_handle_{op***REMOVED***", None)
+                handler = getattr(self, f"_handle_{op}", None)
                 if handler:
                     handler(**item)
                 else:
-                    print(f"⚠️ Unknown BG operation: {op***REMOVED***", file=sys.stderr)
+                    print(f"⚠️ Unknown BG operation: {op}", file=sys.stderr)
             except Exception as e:
                 # traceback в stderr — иначе ошибка фонового потока невидима
                 import traceback
                 traceback.print_exc(file=sys.stderr)
-                print(f"⚠️ BG writer error: {e***REMOVED***", file=sys.stderr)
+                print(f"⚠️ BG writer error: {e}", file=sys.stderr)
             finally:
                 self._queue.task_done()
 
@@ -155,26 +155,26 @@ class BackgroundWriter:
         # Defensive: Path-коэрция (str / str → TypeError терял сообщение молча)
         session_dir = Path(session_dir)
 
-        icon = {"user": "🧑", "assistant": "🤖", "system": "⚙️"***REMOVED***.get(role, "❓")
+        icon = {"user": "🧑", "assistant": "🤖", "system": "⚙️"}.get(role, "❓")
 
         # conversation.log (читаемый)
         log_file = session_dir / "conversation.log"
         with open(log_file, "a", encoding="utf-8") as f:
-            f.write(f"[{ts***REMOVED******REMOVED*** {icon***REMOVED*** [{role***REMOVED******REMOVED*** msg#{count***REMOVED***\n")
+            f.write(f"[{ts}] {icon} [{role}] msg#{count}\n")
             for line in content.strip().split("\n"):
-                f.write(f"  │ {line***REMOVED***\n")
-            f.write(f"  └─ ({len(content)***REMOVED*** chars)\n\n")
+                f.write(f"  │ {line}\n")
+            f.write(f"  └─ ({len(content)} chars)\n\n")
 
         # raw.jsonl (полный машинный формат)
         jsonl_file = session_dir / "raw.jsonl"
-        entry: dict[str, Any***REMOVED*** = {
+        entry: dict[str, Any] = {
             "ts": ts,
             "role": role,
             "msg_num": count,
             "chars": len(content),
             "content": content,
-            "preview": content[:200***REMOVED***,
-        ***REMOVED***
+            "preview": content[:200],
+        }
         with open(jsonl_file, "a", encoding="utf-8") as f:
             f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
@@ -189,9 +189,9 @@ class BackgroundWriter:
             # Defensive: Path-коэрция (см. _handle_log)
             session_dir = Path(session_dir)
             summary_file = session_dir / "summary.md"
-            preview = summary[:120***REMOVED***.replace("\n", " ")
+            preview = summary[:120].replace("\n", " ")
             with open(summary_file, "a", encoding="utf-8") as f:
-                f.write(f"- [{ts***REMOVED******REMOVED*** msg#{count***REMOVED***: {preview***REMOVED***\n")
+                f.write(f"- [{ts}] msg#{count}: {preview}\n")
 
 
 # Глобальный экземпляр BackgroundWriter
@@ -204,11 +204,11 @@ BG_WRITER = BackgroundWriter()
 
 def _safe_topic(topic: str) -> str:
     """Очищает тему для имени директории."""
-    safe = "".join(c if c.isalnum() or c in " _-" else "_" for c in topic)[:40***REMOVED***
+    safe = "".join(c if c.isalnum() or c in " _-" else "_" for c in topic)[:40]
     return safe.strip().replace(" ", "_")
 
 
-def _current_session_path() -> Optional[Path***REMOVED***:
+def _current_session_path() -> Optional[Path]:
     """Читает .current файл и возвращает путь к сессии."""
     if CURRENT_FILE.exists():
         name = CURRENT_FILE.read_text().strip()
@@ -225,20 +225,20 @@ def _set_current_session(name: str) -> None:
 
 # ── Счётчик (in-memory cache) ────────────────────────────────
 
-_counter_cache: dict[str, int***REMOVED*** = {***REMOVED***
+_counter_cache: dict[str, int] = {}
 
 def _get_counter(session_dir: Path) -> int:
     name = session_dir.name
     if name not in _counter_cache:
         cf = session_dir / ".counter"
-        _counter_cache[name***REMOVED*** = int(cf.read_text()) if cf.exists() else 0
-    return _counter_cache[name***REMOVED***
+        _counter_cache[name] = int(cf.read_text()) if cf.exists() else 0
+    return _counter_cache[name]
 
 
 def _inc_counter(session_dir: Path) -> int:
     name = session_dir.name
     count = _get_counter(session_dir) + 1
-    _counter_cache[name***REMOVED*** = count
+    _counter_cache[name] = count
     cf = session_dir / ".counter"
     cf.write_text(str(count))
     return count
@@ -273,7 +273,7 @@ def _get_adaptive_interval(msg_count: int) -> int:
 
 def start_session(topic: str, session_id: str | None = None) -> Path:
     """Создаёт новую сессию."""
-    name = f"{_safe_topic(topic)***REMOVED***_{datetime.now().strftime('%Y-%m-%d_%H%M%S')***REMOVED***"
+    name = f"{_safe_topic(topic)}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
     session_dir = STREAMS_DIR / name
     session_dir.mkdir(parents=True, exist_ok=True)
     _set_current_session(name)
@@ -286,26 +286,26 @@ def start_session(topic: str, session_id: str | None = None) -> Path:
         sid = session_id or name
         snap = cm.start_session(project="tg_terminal_messenger", topic=topic, session_id=sid)
         (session_dir / ".session_id").write_text(snap.session_id)
-        print(f"   SQLite: {snap.session_id[:8***REMOVED******REMOVED***")
+        print(f"   SQLite: {snap.session_id[:8]}")
     else:
         (session_dir / ".session_id").write_text(name)
 
     log_file = session_dir / "conversation.log"
     with open(log_file, "w", encoding="utf-8") as f:
-        f.write(f"{'='*60***REMOVED***\n")
-        f.write(f" Сессия: {topic***REMOVED***\n")
-        f.write(f" Начата: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')***REMOVED***\n")
-        f.write(f"{'='*60***REMOVED***\n\n")
+        f.write(f"{'='*60}\n")
+        f.write(f" Сессия: {topic}\n")
+        f.write(f" Начата: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"{'='*60}\n\n")
 
     # Запускаем фоновый писатель
     BG_WRITER.start()
 
-    print(f"▶ Сессия начата: {name***REMOVED***")
-    print(f"   Лог: {log_file***REMOVED***")
+    print(f"▶ Сессия начата: {name}")
+    print(f"   Лог: {log_file}")
     return session_dir
 
 
-def resume_session(session_id: str) -> Optional[Path***REMOVED***:
+def resume_session(session_id: str) -> Optional[Path]:
     """Найти и продолжить существующую сессию по session_id или префиксу."""
     # Поиск среди стрим-директорий
     for d in sorted(STREAMS_DIR.iterdir(), reverse=True):
@@ -313,24 +313,24 @@ def resume_session(session_id: str) -> Optional[Path***REMOVED***:
             sid_file = d / ".session_id"
             if sid_file.exists() and sid_file.read_text().strip().startswith(session_id):
                 _set_current_session(d.name)
-                print(f"▶ Продолжена сессия: {d.name***REMOVED***")
-                print(f"   Лог: {d / 'conversation.log'***REMOVED***")
+                print(f"▶ Продолжена сессия: {d.name}")
+                print(f"   Лог: {d / 'conversation.log'}")
                 return d
 
     # Поиск в ContextManager
     if cm is not None:
         sessions = cm.list_sessions()
         for s in sessions:
-            sid = s["session_id"***REMOVED***
+            sid = s["session_id"]
             if sid.startswith(session_id):
-                print(f"  📌 Найдено в SQLite: {sid[:8***REMOVED******REMOVED***, создаю стрим-директорию...")
+                print(f"  📌 Найдено в SQLite: {sid[:8]}, создаю стрим-директорию...")
                 return attach_session(sid)
 
-    print(f"❌ Сессия не найдена: {session_id***REMOVED***")
+    print(f"❌ Сессия не найдена: {session_id}")
     return None
 
 
-def attach_session(session_id: str) -> Optional[Path***REMOVED***:
+def attach_session(session_id: str) -> Optional[Path]:
     """Привязать стрим-сессию к существующей SQLite-сессии."""
     if cm is None:
         print("❌ ContextManager не загружен, attach недоступен")
@@ -339,17 +339,17 @@ def attach_session(session_id: str) -> Optional[Path***REMOVED***:
     sessions = cm.list_sessions()
     target = None
     for s in sessions:
-        sid = s["session_id"***REMOVED***
+        sid = s["session_id"]
         if sid.startswith(session_id):
             target = s
             break
 
     if target is None:
-        print(f"❌ Сессия не найдена в SQLite: {session_id***REMOVED***")
+        print(f"❌ Сессия не найдена в SQLite: {session_id}")
         print("   Список сессий: python freebuff_cli.py list")
         return None
 
-    sid = target["session_id"***REMOVED***
+    sid = target["session_id"]
 
     # Проверить, не привязана ли уже
     for d in sorted(STREAMS_DIR.iterdir(), reverse=True):
@@ -357,11 +357,11 @@ def attach_session(session_id: str) -> Optional[Path***REMOVED***:
             sf = d / ".session_id"
             if sf.exists() and sf.read_text().strip() == sid:
                 _set_current_session(d.name)
-                print(f"▶ Уже привязана: {d.name***REMOVED***")
+                print(f"▶ Уже привязана: {d.name}")
                 return d
 
     topic = target.get("topic", "untitled")
-    name = f"attached_{_safe_topic(topic)***REMOVED***_{sid[:8***REMOVED******REMOVED***_{datetime.now().strftime('%Y-%m-%d_%H%M%S')***REMOVED***"
+    name = f"attached_{_safe_topic(topic)}_{sid[:8]}_{datetime.now().strftime('%Y-%m-%d_%H%M%S')}"
     session_dir = STREAMS_DIR / name
     session_dir.mkdir(parents=True, exist_ok=True)
     _set_current_session(name)
@@ -370,14 +370,14 @@ def attach_session(session_id: str) -> Optional[Path***REMOVED***:
 
     log_file = session_dir / "conversation.log"
     with open(log_file, "w", encoding="utf-8") as f:
-        f.write(f"{'='*60***REMOVED***\n")
-        f.write(f" Сессия: {topic***REMOVED*** (attached to {sid[:8***REMOVED******REMOVED***)\n")
-        f.write(f" Начата: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')***REMOVED***\n")
-        f.write(f"{'='*60***REMOVED***\n\n")
+        f.write(f"{'='*60}\n")
+        f.write(f" Сессия: {topic} (attached to {sid[:8]})\n")
+        f.write(f" Начата: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        f.write(f"{'='*60}\n\n")
 
-    print(f"▶ Привязана стрим-сессия: {name***REMOVED***")
-    print(f"   SQLite ID: {sid[:8***REMOVED******REMOVED***")
-    print(f"   Лог: {log_file***REMOVED***")
+    print(f"▶ Привязана стрим-сессия: {name}")
+    print(f"   SQLite ID: {sid[:8]}")
+    print(f"   Лог: {log_file}")
     return session_dir
 
 
@@ -385,7 +385,7 @@ def attach_session(session_id: str) -> Optional[Path***REMOVED***:
 # Логирование
 # ═══════════════════════════════════════════════════════════════
 
-def log_message(role: str, content: str) -> Optional[int***REMOVED***:
+def log_message(role: str, content: str) -> Optional[int]:
     """
     Добавить сообщение в лог текущей сессии (асинхронно + синхронно в SQLite).
 
@@ -429,7 +429,7 @@ def log_message(role: str, content: str) -> Optional[int***REMOVED***:
 
     # 3. Локальный авточекпоинт (в файл summary.md) — если ContextManager создал
     if cp_result:
-        summary = cp_result.get("summary", f"Auto-checkpoint at msg#{count***REMOVED***")
+        summary = cp_result.get("summary", f"Auto-checkpoint at msg#{count}")
         ctype = cp_result.get("checkpoint_type", "auto_interval")
         rollup_path = cp_result.get("rollup_path")
 
@@ -441,12 +441,12 @@ def log_message(role: str, content: str) -> Optional[int***REMOVED***:
             ts=ts,
         )
 
-        small = summary[:60***REMOVED***
-        print(f"  📌 Чекпоинт msg#{count***REMOVED*** [{ctype***REMOVED******REMOVED***: {small***REMOVED***...")
+        small = summary[:60]
+        print(f"  📌 Чекпоинт msg#{count} [{ctype}]: {small}...")
 
         # Если CONTEXT_FULL — показываем путь к rollup
         if ctype == "context_full" and rollup_path:
-            print(f"  🔄 Rollup-конспект: {rollup_path***REMOVED***")
+            print(f"  🔄 Rollup-конспект: {rollup_path}")
             print(f"  💡 Инжектни в новый контекст для непрерывности")
 
     return count
@@ -464,12 +464,12 @@ def prune_streams(keep: int = MAX_STREAM_DIRS, dry_run: bool = False) -> int:
         Количество удалённых директорий.
     """
     dirs = sorted(
-        [d for d in STREAMS_DIR.iterdir() if d.is_dir()***REMOVED***,
+        [d for d in STREAMS_DIR.iterdir() if d.is_dir()],
         key=lambda d: d.stat().st_mtime,
         reverse=True,
     )
 
-    to_delete = dirs[keep:***REMOVED***
+    to_delete = dirs[keep:]
     current = _current_session_path()
 
     deleted = 0
@@ -478,9 +478,9 @@ def prune_streams(keep: int = MAX_STREAM_DIRS, dry_run: bool = False) -> int:
             continue  # не удаляем активную
 
         if dry_run:
-            print(f"  [DRY RUN***REMOVED*** Буду удалён: {d.name***REMOVED*** "
-                  f"({_get_counter(d)***REMOVED*** msgs, "
-                  f"{sum(f.stat().st_size for f in d.glob('*') if f.is_file()) // 1024***REMOVED*** KB)")
+            print(f"  [DRY RUN] Буду удалён: {d.name} "
+                  f"({_get_counter(d)} msgs, "
+                  f"{sum(f.stat().st_size for f in d.glob('*') if f.is_file()) // 1024} KB)")
             continue
 
         import shutil
@@ -489,24 +489,24 @@ def prune_streams(keep: int = MAX_STREAM_DIRS, dry_run: bool = False) -> int:
             _counter_cache.pop(d.name, None)
             deleted += 1
         except OSError as e:
-            print(f"  ⚠️ Не удалось удалить {d.name***REMOVED***: {e***REMOVED***", file=sys.stderr)
+            print(f"  ⚠️ Не удалось удалить {d.name}: {e}", file=sys.stderr)
 
     if deleted:
-        print(f"  🗑 Удалено старых стрим-директорий: {deleted***REMOVED***")
+        print(f"  🗑 Удалено старых стрим-директорий: {deleted}")
     elif not dry_run:
-        print(f"  ✓ Всё чисто: {len(dirs)***REMOVED*** директорий, лимит {keep***REMOVED***")
+        print(f"  ✓ Всё чисто: {len(dirs)} директорий, лимит {keep}")
 
     return deleted
 
 
-def prune_all(dry_run: bool = False) -> dict[str, int***REMOVED***:
+def prune_all(dry_run: bool = False) -> dict[str, int]:
     """
     Полная очистка: ABANDONED сессии + старые стрим-директории.
 
     Returns:
-        dict с количеством удалённого: {abandoned, streams, stale_active***REMOVED***
+        dict с количеством удалённого: {abandoned, streams, stale_active}
     """
-    result: dict[str, int***REMOVED*** = {"abandoned": 0, "streams": 0, "stale_active": 0***REMOVED***
+    result: dict[str, int] = {"abandoned": 0, "streams": 0, "stale_active": 0}
 
     # 1. Очистка ABANDONED в SQLite
     if cm is not None:
@@ -526,20 +526,20 @@ def prune_all(dry_run: bool = False) -> dict[str, int***REMOVED***:
                     except (ValueError, TypeError):
                         pass
             if stale_count:
-                print(f"  [DRY RUN***REMOVED*** Будут удалены ABANDONED сессии: {stale_count***REMOVED***")
+                print(f"  [DRY RUN] Будут удалены ABANDONED сессии: {stale_count}")
         else:
             # Переводим пустые ACTIVE в ABANDONED
-            result["stale_active"***REMOVED*** = cm.auto_abandon_stale(days=ABANDONED_CLEANUP_DAYS)
-            if result["stale_active"***REMOVED***:
-                print(f"  💤 Переведено ACTIVE→ABANDONED: {result['stale_active'***REMOVED******REMOVED***")
+            result["stale_active"] = cm.auto_abandon_stale(days=ABANDONED_CLEANUP_DAYS)
+            if result["stale_active"]:
+                print(f"  💤 Переведено ACTIVE→ABANDONED: {result['stale_active']}")
 
             # Удаляем ABANDONED
-            result["abandoned"***REMOVED*** = cm.prune_abandoned(days=ABANDONED_CLEANUP_DAYS)
-            if result["abandoned"***REMOVED***:
-                print(f"  🗑 Удалено ABANDONED сессий: {result['abandoned'***REMOVED******REMOVED***")
+            result["abandoned"] = cm.prune_abandoned(days=ABANDONED_CLEANUP_DAYS)
+            if result["abandoned"]:
+                print(f"  🗑 Удалено ABANDONED сессий: {result['abandoned']}")
 
     # 2. Очистка стрим-директорий
-    result["streams"***REMOVED*** = prune_streams(keep=MAX_STREAM_DIRS, dry_run=dry_run)
+    result["streams"] = prune_streams(keep=MAX_STREAM_DIRS, dry_run=dry_run)
 
     return result
 
@@ -558,10 +558,10 @@ def print_status() -> None:
     log_file = session_dir / "conversation.log"
     count = _get_counter(session_dir)
     sz = log_file.stat().st_size if log_file.exists() else 0
-    print(f"▶ Активная сессия: {session_dir.name***REMOVED***")
-    print(f"   Сообщений: {count***REMOVED***")
-    print(f"   Размер лога: {sz // 1024***REMOVED*** KB")
-    print(f"   Лог: {log_file***REMOVED***")
+    print(f"▶ Активная сессия: {session_dir.name}")
+    print(f"   Сообщений: {count}")
+    print(f"   Размер лога: {sz // 1024} KB")
+    print(f"   Лог: {log_file}")
 
     # Статус контекста из ContextManager
     if cm is not None:
@@ -570,9 +570,9 @@ def print_status() -> None:
             sid = sid_file.read_text().strip()
             status = cm.get_context_status(sid)
             if "error" not in status:
-                print(f"   Контекст: {status['token_estimate'***REMOVED******REMOVED*** / {status['threshold'***REMOVED******REMOVED*** tokens "
-                      f"({status['usage_percent'***REMOVED******REMOVED***%) "
-                      f"{'⚠️ FULL' if status['is_full'***REMOVED*** else '✅ OK'***REMOVED***")
+                print(f"   Контекст: {status['token_estimate']} / {status['threshold']} tokens "
+                      f"({status['usage_percent']}%) "
+                      f"{'⚠️ FULL' if status['is_full'] else '✅ OK'}")
 
 
 def print_tail(n: int = 20) -> None:
@@ -586,8 +586,8 @@ def print_tail(n: int = 20) -> None:
         print("📭 Лог пуст")
         return
     lines = log_file.read_text().splitlines()
-    tail = lines[-n:***REMOVED***
-    print(f"📋 Последние {len(tail)***REMOVED*** строк:")
+    tail = lines[-n:]
+    print(f"📋 Последние {len(tail)} строк:")
     for line in tail:
         print(line)
 
@@ -595,25 +595,25 @@ def print_tail(n: int = 20) -> None:
 def list_sessions() -> None:
     """Список всех стрим-сессий."""
     dirs = sorted(
-        [d for d in STREAMS_DIR.iterdir() if d.is_dir()***REMOVED***,
+        [d for d in STREAMS_DIR.iterdir() if d.is_dir()],
         key=lambda d: d.stat().st_mtime, reverse=True
     )
     if not dirs:
         print("📭 Нет стрим-сессий")
         return
-    print(f"📋 Всего стрим-сессий: {len(dirs)***REMOVED***")
+    print(f"📋 Всего стрим-сессий: {len(dirs)}")
     print("")
-    for d in dirs[:10***REMOVED***:
+    for d in dirs[:10]:
         count = _get_counter(d)
         sz = sum(f.stat().st_size for f in d.glob("*") if f.is_file()) // 1024
         sid_file = d / ".session_id"
-        sid = sid_file.read_text()[:8***REMOVED*** if sid_file.exists() else "?"
+        sid = sid_file.read_text()[:8] if sid_file.exists() else "?"
         active = " ◀" if _current_session_path() == d else ""
-        print(f"  {d.name***REMOVED***")
-        print(f"    msgs={count***REMOVED***, {sz***REMOVED***KB, id={sid***REMOVED***{active***REMOVED***")
+        print(f"  {d.name}")
+        print(f"    msgs={count}, {sz}KB, id={sid}{active}")
 
     if len(dirs) > 10:
-        print(f"   ... и ещё {len(dirs) - 10***REMOVED***")
+        print(f"   ... и ещё {len(dirs) - 10}")
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -651,7 +651,7 @@ def main():
     p_attach.add_argument("session_id", help="ID сессии из ContextManager (первые 8 символов)")
 
     p_log = sub.add_parser("log", help="Добавить сообщение")
-    p_log.add_argument("role", choices=["user", "assistant", "system"***REMOVED***)
+    p_log.add_argument("role", choices=["user", "assistant", "system"])
     p_log.add_argument("text", nargs="?", help="Текст (или --file / stdin)")
     p_log.add_argument("--file", "-f", help="Читать текст из файла")
 
@@ -701,8 +701,8 @@ def main():
         summary_file = session_dir / "summary.md"
         ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         with open(summary_file, "a", encoding="utf-8") as f:
-            f.write(f"- [{ts***REMOVED******REMOVED*** [MANUAL***REMOVED*** msg#{count***REMOVED***: {args.message***REMOVED***\n")
-        print(f"📌 Чекпоинт msg#{count***REMOVED***: {args.message***REMOVED***")
+            f.write(f"- [{ts}] [MANUAL] msg#{count}: {args.message}\n")
+        print(f"📌 Чекпоинт msg#{count}: {args.message}")
 
     elif args.command == "tail":
         print_tail()

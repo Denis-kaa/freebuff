@@ -19,7 +19,7 @@ import fnmatch
 import hashlib
 import json
 import os
-***REMOVED***
+}
 import shutil
 import shlex
 import sqlite3
@@ -29,13 +29,13 @@ import tempfile
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
 try:
     import yaml
 except ImportError:  # pragma: no cover - requirements.txt already includes PyYAML
-    yaml = None  # type: ignore[assignment***REMOVED***
+    yaml = None  # type: ignore[assignment]
 
 MODULE_VERSION = "1.0.0"
 
@@ -97,7 +97,7 @@ ROOT_ALLOWLIST = {
     "smart_test_runner_fixed.sh",
     "status_report.sh",
     "verify_archive.sh",
-***REMOVED***
+}
 
 HARD_DENY_DIRS = {
     ".git",
@@ -127,7 +127,7 @@ HARD_DENY_DIRS = {
     "repository_organization_forensics_32",
     "system_model_forensics_33",
     "FORENSICS_104_105_106_107",
-***REMOVED***
+}
 
 HARD_DENY_PATTERNS = (
     ".env",
@@ -201,12 +201,12 @@ def utc_stamp() -> str:
 def _json_default(value: Any) -> Any:
     if isinstance(value, Path):
         return str(value)
-    raise TypeError(f"not JSON serialisable: {type(value).__name__***REMOVED***")
+    raise TypeError(f"not JSON serialisable: {type(value).__name__}")
 
 
 def write_json(path: Path, payload: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f".{path.name***REMOVED***.{os.getpid()***REMOVED***.tmp")
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
     temporary.write_text(
         json.dumps(payload, ensure_ascii=False, indent=2, default=_json_default) + "\n",
         encoding="utf-8",
@@ -224,8 +224,8 @@ def sha256_file(path: Path, limit: int | None = None) -> str | None:
     return digest.hexdigest()
 
 
-def _as_dict(value: Any) -> dict[str, Any***REMOVED***:
-    return dict(value) if isinstance(value, Mapping) else {***REMOVED***
+def _as_dict(value: Any) -> dict[str, Any]:
+    return dict(value) if isinstance(value, Mapping) else {}
 
 
 def _expand_local_path(value: str | Path, base: Path) -> Path:
@@ -236,9 +236,9 @@ def _expand_local_path(value: str | Path, base: Path) -> Path:
 def validate_remote_path(value: str, field_name: str) -> str:
     path = Path(os.path.expanduser(value))
     if not path.is_absolute():
-        raise ValueError(f"{field_name***REMOVED*** must be an absolute path: {value!r***REMOVED***")
+        raise ValueError(f"{field_name} must be an absolute path: {value!r}")
     if any(char in str(path) for char in ("\x00", "\n", "\r")):
-        raise ValueError(f"{field_name***REMOVED*** contains control characters")
+        raise ValueError(f"{field_name} contains control characters")
     return str(path)
 
 
@@ -284,20 +284,20 @@ class WatchOptions:
     backend: str = "hybrid"
     auto_commit: bool = True
     auto_push: bool = True
-    check_command: tuple[str, ...***REMOVED*** | None = None
+    check_command: tuple[str, ...] | None = None
     commit_prefix: str = "chore(sync):"
 
 
 @dataclass(frozen=True)
 class FilterConfig:
-    include: tuple[str, ...***REMOVED*** = CANONICAL_DIRS
-    root_allowlist: tuple[str, ...***REMOVED*** = tuple(sorted(ROOT_ALLOWLIST))
-    exclude: tuple[str, ...***REMOVED*** = ()
+    include: tuple[str, ...] = CANONICAL_DIRS
+    root_allowlist: tuple[str, ...] = tuple(sorted(ROOT_ALLOWLIST))
+    exclude: tuple[str, ...] = ()
     runtime_data: bool = False
-    runtime_allowlist: tuple[str, ...***REMOVED*** = RUNTIME_DECLARATIVE
-    sqlite_allowlist: tuple[str, ...***REMOVED*** = ()
+    runtime_allowlist: tuple[str, ...] = RUNTIME_DECLARATIVE
+    sqlite_allowlist: tuple[str, ...] = ()
     large_file_limit_mib: int = 25
-    large_file_allowlist: tuple[str, ...***REMOVED*** = ()
+    large_file_allowlist: tuple[str, ...] = ()
     unknown_policy: str = "exclude-and-report"
 
 
@@ -320,10 +320,10 @@ class SyncConfig:
     config_path: Path | None = None
 
     @classmethod
-    def from_mapping(cls, raw: Mapping[str, Any***REMOVED***, config_path: Path | None = None) -> "SyncConfig":
+    def from_mapping(cls, raw: Mapping[str, Any], config_path: Path | None = None) -> "SyncConfig":
         version = int(raw.get("version", 1))
         if version != 1:
-            raise ValueError(f"unsupported sync config version: {version***REMOVED***")
+            raise ValueError(f"unsupported sync config version: {version}")
         local_raw = _as_dict(raw.get("local"))
         remote_raw = _as_dict(raw.get("remote"))
         sync_raw = _as_dict(raw.get("sync"))
@@ -332,18 +332,18 @@ class SyncConfig:
         logging_raw = _as_dict(raw.get("logging"))
         check = watch_raw.get("check_command")
         if isinstance(check, str):
-            check_value: tuple[str, ...***REMOVED*** | None = (check,)
+            check_value: tuple[str, ...] | None = (check,)
         elif isinstance(check, (list, tuple)):
             check_value = tuple(str(item) for item in check)
         else:
             check_value = None
 
-        def tuple_value(key: str, default: Iterable[str***REMOVED***) -> tuple[str, ...***REMOVED***:
+        def tuple_value(key: str, default: Iterable[str]) -> tuple[str, ...]:
             value = filter_raw.get(key, default)
             if isinstance(value, str):
                 return (value,)
             if not isinstance(value, (list, tuple)):
-                raise ValueError(f"filters.{key***REMOVED*** must be a list")
+                raise ValueError(f"filters.{key} must be a list")
             return tuple(str(item) for item in value)
 
         config = cls(
@@ -354,12 +354,12 @@ class SyncConfig:
             ),
             remote=RemoteConfig(
                 ssh_alias=str(remote_raw.get("ssh_alias", "wimp")),
-                workspace_root=(str(remote_raw["workspace_root"***REMOVED***) if remote_raw.get("workspace_root") else None),
-                bare_repo=(str(remote_raw["bare_repo"***REMOVED***) if remote_raw.get("bare_repo") else None),
-                worktree=(str(remote_raw["worktree"***REMOVED***) if remote_raw.get("worktree") else None),
+                workspace_root=(str(remote_raw["workspace_root"]) if remote_raw.get("workspace_root") else None),
+                bare_repo=(str(remote_raw["bare_repo"]) if remote_raw.get("bare_repo") else None),
+                worktree=(str(remote_raw["worktree"]) if remote_raw.get("worktree") else None),
                 branch=str(remote_raw.get("branch", "auto")),
-                lock_path=(str(remote_raw["lock_path"***REMOVED***) if remote_raw.get("lock_path") else None),
-                log_dir=(str(remote_raw["log_dir"***REMOVED***) if remote_raw.get("log_dir") else None),
+                lock_path=(str(remote_raw["lock_path"]) if remote_raw.get("lock_path") else None),
+                log_dir=(str(remote_raw["log_dir"]) if remote_raw.get("log_dir") else None),
             ),
             sync=SyncOptions(
                 lock_timeout_sec=int(sync_raw.get("lock_timeout_sec", 30)),
@@ -406,7 +406,7 @@ class SyncConfig:
             raise ValueError("watch intervals are invalid")
         if self.filters.large_file_limit_mib <= 0:
             raise ValueError("filters.large_file_limit_mib must be positive")
-        if self.filters.unknown_policy not in {"exclude-and-report", "fail"***REMOVED***:
+        if self.filters.unknown_policy not in {"exclude-and-report", "fail"}:
             raise ValueError("filters.unknown_policy must be exclude-and-report or fail")
         if not self.remote.ssh_alias or any(char.isspace() for char in self.remote.ssh_alias):
             raise ValueError("remote.ssh_alias must be a non-empty SSH alias")
@@ -416,7 +416,7 @@ class SyncConfig:
             "remote.worktree": self.remote.worktree,
             "remote.lock_path": self.remote.lock_path,
             "remote.log_dir": self.remote.log_dir,
-        ***REMOVED***
+        }
         for name, value in values.items():
             if value:
                 validate_remote_path(value, name)
@@ -437,7 +437,7 @@ class SyncConfig:
 def load_config(path: Path) -> SyncConfig:
     if yaml is None:
         raise RuntimeError("PyYAML is required to read sync configuration")
-    raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {***REMOVED***
+    raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     if not isinstance(raw, Mapping):
         raise ValueError("sync config root must be a mapping")
     return SyncConfig.from_mapping(raw, path.resolve())
@@ -462,13 +462,13 @@ class FileClassifier:
         self.large_limit = config.large_file_limit_mib * 1024 * 1024
 
     @staticmethod
-    def _matches(path: str, patterns: Iterable[str***REMOVED***) -> bool:
+    def _matches(path: str, patterns: Iterable[str]) -> bool:
         normalized = path.strip("/")
         for pattern in patterns:
             pattern = pattern.strip("/")
             if fnmatch.fnmatchcase(normalized, pattern) or fnmatch.fnmatchcase(normalized, pattern.lstrip("**/")):
                 return True
-            if pattern.endswith("/**") and (normalized == pattern[:-3***REMOVED*** or normalized.startswith(pattern[:-2***REMOVED***)):
+            if pattern.endswith("/**") and (normalized == pattern[:-3] or normalized.startswith(pattern[:-2])):
                 return True
         return False
 
@@ -476,11 +476,11 @@ class FileClassifier:
         parts = relative.split("/")
         if relative == "core" or relative.startswith("core/"):
             return "hard-deny legacy core directory"
-        if any(part in HARD_DENY_DIRS for part in parts[:-1***REMOVED***):
+        if any(part in HARD_DENY_DIRS for part in parts[:-1]):
             return "hard-deny directory"
-        if relative in {".freebuff_result", ".freebuff_original_agents", "data_13/.drift_last_run", "data_13/.pulse_snapshot.json", "docs_10/DRIFT_REPORT.md", "status_report_20260801_205122.txt", "verify_archive_marker.txt"***REMOVED***:
+        if relative in {".freebuff_result", ".freebuff_original_agents", "data_13/.drift_last_run", "data_13/.pulse_snapshot.json", "docs_10/DRIFT_REPORT.md", "status_report_20260801_205122.txt", "verify_archive_marker.txt"}:
             return "hard-deny generated artifact"
-        basename = parts[-1***REMOVED***
+        basename = parts[-1]
         if basename == ".env" or basename.startswith(".env."):
             return "hard-deny secret environment file"
         lower_name = basename.lower()
@@ -506,24 +506,24 @@ class FileClassifier:
             return FileClassification(relative, "ignored", "SQLite requires explicit sqlite_allowlist", size, git_tracked)
         if relative.startswith(("data_13/", "context_12/", "logs_14/", "sessions_15/")) and not self._runtime_allowed(relative):
             return FileClassification(relative, "unknown", "runtime data is opt-in", size, git_tracked)
-        top = relative.split("/", 1)[0***REMOVED***
+        top = relative.split("/", 1)[0]
         allowed = top in self.config.include or relative in set(self.config.root_allowlist)
         if self._matches(relative, self.config.exclude):
             return FileClassification(relative, "ignored", "explicit YAML exclude", size, git_tracked)
         if not allowed and not self._runtime_allowed(relative):
             return FileClassification(relative, "unknown", "outside canonical workspace allowlist", size, git_tracked)
         if path.is_file() and size > self.large_limit and not self._matches(relative, self.config.large_file_allowlist):
-            return FileClassification(relative, "suspicious", f"file exceeds {self.config.large_file_limit_mib***REMOVED*** MiB", size, git_tracked)
+            return FileClassification(relative, "suspicious", f"file exceeds {self.config.large_file_limit_mib} MiB", size, git_tracked)
         digest = sha256_file(path, limit=self.large_limit)
         return FileClassification(relative, "included", "canonical workspace allowlist", size, git_tracked, digest)
 
-    def scan(self, tracked_paths: set[str***REMOVED*** | None = None) -> list[FileClassification***REMOVED***:
+    def scan(self, tracked_paths: set[str] | None = None) -> list[FileClassification]:
         tracked_paths = tracked_paths or set()
-        result: list[FileClassification***REMOVED*** = [***REMOVED***
+        result: list[FileClassification] = []
         if not self.root.exists():
             raise FileNotFoundError(self.root)
         for current, directories, filenames in os.walk(self.root):
-            directories[:***REMOVED*** = sorted(
+            directories[:] = sorted(
                 name for name in directories
                 if name not in HARD_DENY_DIRS and name != "__pycache__"
             )
@@ -538,12 +538,12 @@ class FileClassifier:
         return result
 
 
-def discover_local(root: Path, runner: Callable[..., CommandResult***REMOVED*** | None = None) -> dict[str, Any***REMOVED***:
+def discover_local(root: Path, runner: Callable[..., CommandResult] | None = None) -> dict[str, Any]:
     root = root.resolve()
     runner = runner or run_command
-    markers = [name for name in ("AGENTS.md", "BUFFY.md", "core_02", "scripts_01", "projects_17") if (root / name).exists()***REMOVED***
+    markers = [name for name in ("AGENTS.md", "BUFFY.md", "core_02", "scripts_01", "projects_17") if (root / name).exists()]
     if len(markers) < 2:
-        raise ValueError(f"not a Freebuff workspace: {root***REMOVED***")
+        raise ValueError(f"not a Freebuff workspace: {root}")
     git_root: str | None = None
     branch: str | None = None
     head: str | None = None
@@ -551,27 +551,27 @@ def discover_local(root: Path, runner: Callable[..., CommandResult***REMOVED*** 
     git_present = shutil.which("git") is not None
     if git_present:
         try:
-            git_root = runner(["git", "-C", str(root), "rev-parse", "--show-toplevel"***REMOVED***).stdout.strip()
-            branch = runner(["git", "-C", str(root), "symbolic-ref", "--short", "-q", "HEAD"***REMOVED***, check=False).stdout.strip() or None
-            head = runner(["git", "-C", str(root), "rev-parse", "HEAD"***REMOVED***, check=False).stdout.strip() or None
-            tracked_diff = runner(["git", "-C", str(root), "diff", "--quiet"***REMOVED***, check=False, timeout=15)
-            staged_diff = runner(["git", "-C", str(root), "diff", "--cached", "--quiet"***REMOVED***, check=False, timeout=15)
-            untracked = runner(["git", "-C", str(root), "ls-files", "--others", "--exclude-standard", "--directory"***REMOVED***, check=False, timeout=15)
+            git_root = runner(["git", "-C", str(root), "rev-parse", "--show-toplevel"]).stdout.strip()
+            branch = runner(["git", "-C", str(root), "symbolic-ref", "--short", "-q", "HEAD"], check=False).stdout.strip() or None
+            head = runner(["git", "-C", str(root), "rev-parse", "HEAD"], check=False).stdout.strip() or None
+            tracked_diff = runner(["git", "-C", str(root), "diff", "--quiet"], check=False, timeout=15)
+            staged_diff = runner(["git", "-C", str(root), "diff", "--cached", "--quiet"], check=False, timeout=15)
+            untracked = runner(["git", "-C", str(root), "ls-files", "--others", "--exclude-standard", "--directory"], check=False, timeout=15)
             clean = tracked_diff.returncode == 0 and staged_diff.returncode == 0 and not untracked.stdout.strip()
         except OSError:
             pass
-    return {"workspace_root": str(root), "git_root": git_root, "git_present": git_present, "branch": branch, "head": head, "clean": clean, "markers": markers***REMOVED***
+    return {"workspace_root": str(root), "git_root": git_root, "git_present": git_present, "branch": branch, "head": head, "clean": clean, "markers": markers}
 
 
 @dataclass(frozen=True)
 class CommandResult:
-    argv: tuple[str, ...***REMOVED***
+    argv: tuple[str, ...]
     returncode: int
     stdout: str = ""
     stderr: str = ""
 
 
-def run_command(argv: Sequence[str***REMOVED***, *, input_text: str | None = None, check: bool = True, cwd: Path | None = None, timeout: int = 30) -> CommandResult:
+def run_command(argv: Sequence[str], *, input_text: str | None = None, check: bool = True, cwd: Path | None = None, timeout: int = 30) -> CommandResult:
     completed = subprocess.run(
         list(argv),
         input=input_text,
@@ -583,7 +583,7 @@ def run_command(argv: Sequence[str***REMOVED***, *, input_text: str | None = Non
     )
     result = CommandResult(tuple(str(item) for item in argv), completed.returncode, completed.stdout, completed.stderr)
     if check and result.returncode != 0:
-        raise RuntimeError(f"command failed ({result.returncode***REMOVED***): {' '.join(result.argv)***REMOVED***\n{result.stderr.strip()***REMOVED***")
+        raise RuntimeError(f"command failed ({result.returncode}): {' '.join(result.argv)}\n{result.stderr.strip()}")
     return result
 
 
@@ -591,7 +591,7 @@ REMOTE_PROBE_SCRIPT = """set -eu
 printf 'protocol=1\\n'
 printf 'host=%s\\n' \"$(hostname 2>/dev/null || printf unknown)\"
 printf 'user=%s\\n' \"$(id -un 2>/dev/null || printf unknown)\"
-printf 'home=%s\\n' \"${HOME:-unknown***REMOVED***\"
+printf 'home=%s\\n' \"${HOME:-unknown]\"
 printf 'os=%s\\n' \"$(uname -s 2>/dev/null || printf unknown)\"
 printf 'arch=%s\\n' \"$(uname -m 2>/dev/null || printf unknown)\"
 printf 'git=%s\\n' \"$(command -v git 2>/dev/null || printf missing)\"
@@ -605,15 +605,15 @@ worktree=$2
 lock=$3
 backup=$4
 mkdir -p "$(dirname "$bare")" "$(dirname "$worktree")" "$(dirname "$lock")" "$(dirname "$backup")"
-mkdir "$lock" 2>/dev/null || { printf 'remote sync lock is busy\\n' >&2; exit 43; ***REMOVED***
+mkdir "$lock" 2>/dev/null || { printf 'remote sync lock is busy\\n' >&2; exit 43; }
 trap 'rmdir "$lock" 2>/dev/null || true' EXIT
-if [ -e "$bare" ***REMOVED***; then
+if [ -e "$bare" ]; then
   git --git-dir="$bare" rev-parse --is-bare-repository >/dev/null
 else
   git init --bare "$bare" >/dev/null
 fi
-if [ -e "$worktree" ***REMOVED***; then
-  if [ -z "$(find "$worktree" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ***REMOVED***; then
+if [ -e "$worktree" ]; then
+  if [ -z "$(find "$worktree" -mindepth 1 -maxdepth 1 -print -quit 2>/dev/null)" ]; then
     rmdir "$worktree"
   else
     mkdir -p "$backup"
@@ -634,18 +634,18 @@ chmod 700 "$bare/hooks/pre-receive" "$bare/hooks/post-receive"
 """
 
 REMOTE_CANDIDATE_SCRIPT = r"""set -eu
-home=${HOME:?***REMOVED***
+home=${HOME:?}
 for root in "$home" "$home/work" "$home/workspace" "$home/projects" "$home/src" "$home/PROJECTS" /srv /opt; do
-  [ -d "$root" ***REMOVED*** || continue
+  [ -d "$root" ] || continue
   find "$root" -maxdepth 4 -xdev -type d -name .git -prune -print 2>/dev/null | while IFS= read -r gitdir; do
-    candidate=${gitdir%/.git***REMOVED***
+    candidate=${gitdir%/.git}
     markers=0
-    [ -f "$candidate/AGENTS.md" ***REMOVED*** && markers=$((markers + 1))
-    [ -f "$candidate/BUFFY.md" ***REMOVED*** && markers=$((markers + 1))
-    [ -d "$candidate/core_02" ***REMOVED*** && markers=$((markers + 1))
-    [ -d "$candidate/scripts_01" ***REMOVED*** && markers=$((markers + 1))
-    [ -d "$candidate/projects_17" ***REMOVED*** && markers=$((markers + 1))
-    [ "$markers" -ge 2 ***REMOVED*** || continue
+    [ -f "$candidate/AGENTS.md" ] && markers=$((markers + 1))
+    [ -f "$candidate/BUFFY.md" ] && markers=$((markers + 1))
+    [ -d "$candidate/core_02" ] && markers=$((markers + 1))
+    [ -d "$candidate/scripts_01" ] && markers=$((markers + 1))
+    [ -d "$candidate/projects_17" ] && markers=$((markers + 1))
+    [ "$markers" -ge 2 ] || continue
     printf '%s\\t%s\\t%s\\n' "$candidate" "$markers" "worktree"
   done
   find "$root" -maxdepth 4 -xdev -type d -name '*.git' -prune -print 2>/dev/null | while IFS= read -r bare; do
@@ -655,44 +655,44 @@ done
 """
 
 
-def parse_candidates(output: str) -> list[dict[str, Any***REMOVED******REMOVED***:
-    candidates: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
-    seen: set[str***REMOVED*** = set()
+def parse_candidates(output: str) -> list[dict[str, Any]]:
+    candidates: list[dict[str, Any]] = []
+    seen: set[str] = set()
     for line in output.splitlines():
         if not line.strip():
             continue
         fields = line.split("\\t")
         if len(fields) != 3:
-            raise ValueError(f"invalid candidate probe line: {line!r***REMOVED***")
+            raise ValueError(f"invalid candidate probe line: {line!r}")
         path, marker_count, kind = fields
-        if not path.startswith("/") or kind not in {"worktree", "bare"***REMOVED***:
-            raise ValueError(f"invalid candidate probe values: {line!r***REMOVED***")
+        if not path.startswith("/") or kind not in {"worktree", "bare"}:
+            raise ValueError(f"invalid candidate probe values: {line!r}")
         if path in seen:
             continue
         seen.add(path)
-        candidates.append({"path": path, "markers": int(marker_count), "git_kind": kind***REMOVED***)
+        candidates.append({"path": path, "markers": int(marker_count), "git_kind": kind})
     return candidates
 
 
-def ssh_candidates(alias: str, runner: Callable[..., CommandResult***REMOVED*** = run_command) -> list[dict[str, Any***REMOVED******REMOVED***:
+def ssh_candidates(alias: str, runner: Callable[..., CommandResult] = run_command) -> list[dict[str, Any]]:
     result = runner(
-        ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", alias, "sh", "-s", "--"***REMOVED***,
+        ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", alias, "sh", "-s", "--"],
         input_text=REMOTE_CANDIDATE_SCRIPT,
         timeout=30,
     )
     return parse_candidates(result.stdout)
 
 
-def parse_probe(output: str) -> dict[str, str***REMOVED***:
-    parsed: dict[str, str***REMOVED*** = {***REMOVED***
-    allowed = {"protocol", "host", "user", "home", "os", "arch", "git", "python3", "inotifywait"***REMOVED***
+def parse_probe(output: str) -> dict[str, str]:
+    parsed: dict[str, str] = {}
+    allowed = {"protocol", "host", "user", "home", "os", "arch", "git", "python3", "inotifywait"}
     for line in output.splitlines():
         if not line.strip():
             continue
         key, separator, value = line.partition("=")
         if not separator or key not in allowed or key in parsed:
-            raise ValueError(f"invalid remote probe line: {line!r***REMOVED***")
-        parsed[key***REMOVED*** = value
+            raise ValueError(f"invalid remote probe line: {line!r}")
+        parsed[key] = value
     if parsed.get("protocol") != "1":
         raise ValueError("remote probe protocol must be 1")
     if not parsed.get("home", "").startswith("/"):
@@ -700,9 +700,9 @@ def parse_probe(output: str) -> dict[str, str***REMOVED***:
     return parsed
 
 
-def ssh_probe(alias: str, runner: Callable[..., CommandResult***REMOVED*** = run_command) -> dict[str, str***REMOVED***:
+def ssh_probe(alias: str, runner: Callable[..., CommandResult] = run_command) -> dict[str, str]:
     result = runner(
-        ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", alias, "sh", "-s", "--"***REMOVED***,
+        ["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", alias, "sh", "-s", "--"],
         input_text=REMOTE_PROBE_SCRIPT,
         timeout=15,
     )
@@ -725,9 +725,9 @@ class LocalLock:
         try:
             fd = os.open(self.path, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
         except FileExistsError as exc:
-            raise LockBusy(f"sync lock is busy: {self.path***REMOVED***") from exc
+            raise LockBusy(f"sync lock is busy: {self.path}") from exc
         with os.fdopen(fd, "w", encoding="utf-8") as handle:
-            handle.write(json.dumps({"pid": os.getpid(), "hostname": os.uname().nodename, "mode": self.mode, "timestamp": utc_stamp()***REMOVED***))
+            handle.write(json.dumps({"pid": os.getpid(), "hostname": os.uname().nodename, "mode": self.mode, "timestamp": utc_stamp()}))
         self.acquired = True
         return self
 
@@ -739,66 +739,66 @@ class LocalLock:
 
 @dataclass
 class BootstrapPlan:
-    local: dict[str, Any***REMOVED***
-    remote_probe: dict[str, str***REMOVED*** | None
-    candidates: list[dict[str, Any***REMOVED******REMOVED***
-    paths: dict[str, str | None***REMOVED***
-    classifications: list[FileClassification***REMOVED***
-    actions: list[str***REMOVED***
-    blocked: list[str***REMOVED***
+    local: dict[str, Any]
+    remote_probe: dict[str, str] | None
+    candidates: list[dict[str, Any]]
+    paths: dict[str, str | None]
+    classifications: list[FileClassification]
+    actions: list[str]
+    blocked: list[str]
     dry_run: bool = True
 
-    def to_dict(self) -> dict[str, Any***REMOVED***:
+    def to_dict(self) -> dict[str, Any]:
         data = asdict(self)
-        data["classifications"***REMOVED*** = [asdict(item) for item in self.classifications***REMOVED***
+        data["classifications"] = [asdict(item) for item in self.classifications]
         return data
 
 
 class FreebuffSync:
     """Orchestrate discovery and Git synchronisation for one workspace."""
 
-    def __init__(self, config: SyncConfig, runner: Callable[..., CommandResult***REMOVED*** = run_command):
+    def __init__(self, config: SyncConfig, runner: Callable[..., CommandResult] = run_command):
         self.config = config
         self.runner = runner
         self.root = config.resolved_local_root()
         self.local_lock_path = self.config.external_log_dir(self.root) / "sync.lock"
 
-    def tracked_paths(self) -> set[str***REMOVED***:
+    def tracked_paths(self) -> set[str]:
         if not shutil.which("git"):
             return set()
-        result = self.runner(["git", "-C", str(self.root), "ls-files"***REMOVED***, check=False)
-        return {line.strip() for line in result.stdout.splitlines() if line.strip()***REMOVED***
+        result = self.runner(["git", "-C", str(self.root), "ls-files"], check=False)
+        return {line.strip() for line in result.stdout.splitlines() if line.strip()}
 
-    def classify(self) -> list[FileClassification***REMOVED***:
+    def classify(self) -> list[FileClassification]:
         return FileClassifier(self.root, self.config.filters).scan(self.tracked_paths())
 
-    def _remote_paths(self) -> dict[str, str | None***REMOVED***:
+    def _remote_paths(self) -> dict[str, str | None]:
         remote = self.config.remote
-        return {"workspace_root": remote.workspace_root, "bare_repo": remote.bare_repo, "worktree": remote.worktree, "lock_path": remote.lock_path, "log_dir": remote.log_dir***REMOVED***
+        return {"workspace_root": remote.workspace_root, "bare_repo": remote.bare_repo, "worktree": remote.worktree, "lock_path": remote.lock_path, "log_dir": remote.log_dir}
 
-    def plan_bootstrap(self, dry_run: bool = True, probe: dict[str, str***REMOVED*** | None = None) -> BootstrapPlan:
+    def plan_bootstrap(self, dry_run: bool = True, probe: dict[str, str] | None = None) -> BootstrapPlan:
         local = discover_local(self.root, self.runner)
-        candidates: list[dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+        candidates: list[dict[str, Any]] = []
         if probe is None and self.config.remote.ssh_alias:
             try:
                 probe = ssh_probe(self.config.remote.ssh_alias, self.runner)
                 if not self.config.remote.workspace_root:
                     candidates = ssh_candidates(self.config.remote.ssh_alias, self.runner)
             except Exception as exc:
-                probe = {"protocol": "error", "error": str(exc)***REMOVED***
+                probe = {"protocol": "error", "error": str(exc)}
         classifications = self.classify()
-        blocked: list[str***REMOVED*** = [***REMOVED***
-        suspicious = [item.path for item in classifications if item.category == "suspicious"***REMOVED***
-        unknown = [item.path for item in classifications if item.category == "unknown"***REMOVED***
+        blocked: list[str] = []
+        suspicious = [item.path for item in classifications if item.category == "suspicious"]
+        unknown = [item.path for item in classifications if item.category == "unknown"]
         if suspicious:
-            blocked.append(f"suspicious files require review: {len(suspicious)***REMOVED***")
+            blocked.append(f"suspicious files require review: {len(suspicious)}")
         if unknown and self.config.filters.unknown_policy == "fail":
-            blocked.append(f"unknown files require review: {len(unknown)***REMOVED***")
+            blocked.append(f"unknown files require review: {len(unknown)}")
         if local.get("branch") is None:
             blocked.append("local repository is detached or has no branch")
         paths = self._remote_paths()
         if probe and probe.get("protocol") == "error":
-            blocked.append(f"SSH discovery failed: {probe.get('error', 'unknown error')***REMOVED***")
+            blocked.append(f"SSH discovery failed: {probe.get('error', 'unknown error')}")
         if probe and probe.get("git") == "missing":
             blocked.append("remote git is unavailable")
         if not all(paths.get(key) for key in ("workspace_root", "bare_repo", "worktree")):
@@ -812,12 +812,12 @@ class FreebuffSync:
             "create/reuse clean server worktree",
             "install versioned pre-receive and post-receive hooks",
             "verify local HEAD == bare ref == server worktree HEAD",
-        ***REMOVED***
+        ]
         if not paths.get("workspace_root") and not candidates:
             blocked.append("no unambiguous remote Freebuff candidate was discovered")
         return BootstrapPlan(local, probe, candidates, paths, classifications, actions, blocked, dry_run)
 
-    def bootstrap(self, *, apply: bool = False, yes: bool = False, probe: dict[str, str***REMOVED*** | None = None) -> BootstrapPlan:
+    def bootstrap(self, *, apply: bool = False, yes: bool = False, probe: dict[str, str] | None = None) -> BootstrapPlan:
         plan = self.plan_bootstrap(dry_run=not apply, probe=probe)
         if not apply:
             self._write_report("bootstrap-dry-run", plan.to_dict())
@@ -832,9 +832,9 @@ class FreebuffSync:
         self._write_report("bootstrap", plan.to_dict())
         return plan
 
-    def _write_report(self, mode: str, payload: dict[str, Any***REMOVED***) -> Path:
+    def _write_report(self, mode: str, payload: dict[str, Any]) -> Path:
         report_dir = self.config.external_log_dir(self.root) / "runs"
-        report = report_dir / f"{utc_stamp()***REMOVED***-{mode***REMOVED***.json"
+        report = report_dir / f"{utc_stamp()}-{mode}.json"
         write_json(report, payload)
         return report
 
@@ -847,29 +847,29 @@ class FreebuffSync:
         if probe.get("git") == "missing":
             raise RuntimeError("remote git is unavailable")
         # Remote commands use argv; paths have already passed absolute-path validation.
-        lock_path = remote.lock_path or f"{remote.bare_repo***REMOVED***.lock"
-        log_dir = remote.log_dir or f"{remote.bare_repo***REMOVED***.logs"
-        backup = f"{remote.worktree***REMOVED***.freebuff-sync-backups/bootstrap-{utc_stamp()***REMOVED***"
+        lock_path = remote.lock_path or f"{remote.bare_repo}.lock"
+        log_dir = remote.log_dir or f"{remote.bare_repo}.logs"
+        backup = f"{remote.worktree}.freebuff-sync-backups/bootstrap-{utc_stamp()}"
         self.runner(
             [
                 "ssh", remote.ssh_alias, "sh", "-s", "--",
                 shlex.quote(remote.bare_repo), shlex.quote(remote.worktree),
                 shlex.quote(lock_path), shlex.quote(backup),
-            ***REMOVED***,
+            ],
             input_text=REMOTE_BOOTSTRAP_SCRIPT,
             timeout=120,
         )
-        remote_url = f"{remote.ssh_alias***REMOVED***:{remote.bare_repo***REMOVED***"
-        remotes = self.runner(["git", "-C", str(self.root), "remote"***REMOVED***, check=False).stdout.splitlines()
+        remote_url = f"{remote.ssh_alias}:{remote.bare_repo}"
+        remotes = self.runner(["git", "-C", str(self.root), "remote"], check=False).stdout.splitlines()
         if "freebuff-sync" not in remotes:
-            self.runner(["git", "-C", str(self.root), "remote", "add", "freebuff-sync", remote_url***REMOVED***)
-        branch = plan.local["branch"***REMOVED***
-        self.runner(["git", "-C", str(self.root), "push", "freebuff-sync", f"{branch***REMOVED***:refs/heads/{branch***REMOVED***"***REMOVED***, timeout=120)
+            self.runner(["git", "-C", str(self.root), "remote", "add", "freebuff-sync", remote_url])
+        branch = plan.local["branch"]
+        self.runner(["git", "-C", str(self.root), "push", "freebuff-sync", f"{branch}:refs/heads/{branch}"], timeout=120)
         self.runner(
-            ["ssh", remote.ssh_alias, "git", "clone", shlex.quote(remote.bare_repo), shlex.quote(remote.worktree)***REMOVED***,
+            ["ssh", remote.ssh_alias, "git", "clone", shlex.quote(remote.bare_repo), shlex.quote(remote.worktree)],
             timeout=120,
         )
-        self.runner(["ssh", remote.ssh_alias, "mkdir", "-p", shlex.quote(str(Path(lock_path).parent)), shlex.quote(log_dir)***REMOVED***, timeout=30)
+        self.runner(["ssh", remote.ssh_alias, "mkdir", "-p", shlex.quote(str(Path(lock_path).parent)), shlex.quote(log_dir)], timeout=30)
         import base64
         import shlex
         branch_literal = shlex.quote(branch)
@@ -879,22 +879,22 @@ class FreebuffSync:
         log_literal = shlex.quote(log_dir)
         pre_hook = f"""#!/bin/sh
 set -eu
-branch={branch_literal***REMOVED***
+branch={branch_literal}
 while IFS=' ' read -r old new ref; do
-  [ \"$ref\" = \"refs/heads/$branch\" ***REMOVED*** || {{ printf 'only configured branch may be pushed\\n' >&2; exit 1; ***REMOVED******REMOVED***
+  [ \"$ref\" = \"refs/heads/$branch\" ] || {{ printf 'only configured branch may be pushed\\n' >&2; exit 1; ]]
 done
 """
         post_hook = f"""#!/bin/sh
 set -eu
-bare={bare_literal***REMOVED***
-worktree={worktree_literal***REMOVED***
-lock={lock_literal***REMOVED***
-log_dir={log_literal***REMOVED***
-branch={branch_literal***REMOVED***
-mkdir \"$lock\" 2>/dev/null || {{ printf 'sync hook lock is busy\\n' >&2; exit 1; ***REMOVED******REMOVED***
+bare={bare_literal}
+worktree={worktree_literal}
+lock={lock_literal}
+log_dir={log_literal}
+branch={branch_literal}
+mkdir \"$lock\" 2>/dev/null || {{ printf 'sync hook lock is busy\\n' >&2; exit 1; ]]
 trap 'rmdir \"$lock\" 2>/dev/null || true' EXIT
 mkdir -p \"$log_dir\"
-if [ -n \"$(git -C \"$worktree\" status --porcelain --untracked-files=all)\" ***REMOVED***; then
+if [ -n \"$(git -C \"$worktree\" status --porcelain --untracked-files=all)\" ]; then
   printf '%s dirty worktree\\n' \"$(date -u +%FT%TZ)\" >> \"$log_dir/hook.log\"
   exit 1
 fi
@@ -906,13 +906,13 @@ git -C \"$worktree\" merge --ff-only FETCH_HEAD
                 "ssh", remote.ssh_alias, "sh", "-s", "--", shlex.quote(remote.bare_repo),
                 shlex.quote(log_dir), base64.b64encode(pre_hook.encode()).decode(),
                 base64.b64encode(post_hook.encode()).decode(),
-            ***REMOVED***,
+            ],
             input_text=REMOTE_HOOK_INSTALL_SCRIPT,
             timeout=30,
         )
 
     def _git(self, *args: str, check: bool = True, timeout: int = 120) -> CommandResult:
-        return self.runner(["git", "-C", str(self.root), *args***REMOVED***, check=check, timeout=timeout)
+        return self.runner(["git", "-C", str(self.root), *args], check=check, timeout=timeout)
 
     def _branch(self) -> str:
         branch = discover_local(self.root, self.runner).get("branch")
@@ -931,11 +931,11 @@ git -C \"$worktree\" merge --ff-only FETCH_HEAD
         return "freebuff-sync"
 
     def _ensure_no_denied_tracked_files(self) -> None:
-        denied = [item.path for item in self.classify() if item.git_tracked and item.category in {"ignored", "suspicious"***REMOVED******REMOVED***
+        denied = [item.path for item in self.classify() if item.git_tracked and item.category in {"ignored", "suspicious"}]
         if denied:
-            raise RuntimeError("tracked files are blocked by sync filters: " + ", ".join(denied[:20***REMOVED***))
+            raise RuntimeError("tracked files are blocked by sync filters: " + ", ".join(denied[:20]))
 
-    def push(self) -> dict[str, Any***REMOVED***:
+    def push(self) -> dict[str, Any]:
         """Push the current branch without force and verify the remote ref."""
         branch = self._branch()
         self._ensure_clean()
@@ -944,92 +944,92 @@ git -C \"$worktree\" merge --ff-only FETCH_HEAD
         if not remote.bare_repo:
             raise ValueError("remote.bare_repo is required for push")
         with LocalLock(self.local_lock_path, "push", self.config.sync.lock_timeout_sec):
-            result = self._git("push", self._remote_name(), f"{branch***REMOVED***:refs/heads/{branch***REMOVED***", timeout=120)
-        return {"mode": "push", "branch": branch, "returncode": result.returncode, "stdout": result.stdout, "stderr": result.stderr***REMOVED***
+            result = self._git("push", self._remote_name(), f"{branch}:refs/heads/{branch}", timeout=120)
+        return {"mode": "push", "branch": branch, "returncode": result.returncode, "stdout": result.stdout, "stderr": result.stderr}
 
-    def pull(self) -> dict[str, Any***REMOVED***:
+    def pull(self) -> dict[str, Any]:
         """Fetch and fast-forward/merge remote changes without destructive reset."""
         branch = self._branch()
         self._ensure_clean()
         with LocalLock(self.local_lock_path, "pull", self.config.sync.lock_timeout_sec):
             self._git("fetch", self._remote_name(), branch, timeout=120)
-            remote_ref = f"{self._remote_name()***REMOVED***/{branch***REMOVED***"
+            remote_ref = f"{self._remote_name()}/{branch}"
             merge = self._git("merge", "--ff-only", remote_ref, check=False, timeout=120)
             if merge.returncode != 0:
-                raise RuntimeError(f"pull requires manual merge or has a conflict:\n{merge.stderr or merge.stdout***REMOVED***")
-        return {"mode": "pull", "branch": branch, "head": self._git("rev-parse", "HEAD").stdout.strip()***REMOVED***
+                raise RuntimeError(f"pull requires manual merge or has a conflict:\n{merge.stderr or merge.stdout}")
+        return {"mode": "pull", "branch": branch, "head": self._git("rev-parse", "HEAD").stdout.strip()}
 
-    def sync(self) -> dict[str, Any***REMOVED***:
+    def sync(self) -> dict[str, Any]:
         """Fetch, merge, push and verify a clean equal state."""
         branch = self._branch()
         self._ensure_clean()
         with LocalLock(self.local_lock_path, "sync", self.config.sync.lock_timeout_sec):
             self._git("fetch", self._remote_name(), branch, timeout=120)
-            remote_ref = f"{self._remote_name()***REMOVED***/{branch***REMOVED***"
+            remote_ref = f"{self._remote_name()}/{branch}"
             merge = self._git("merge", remote_ref, check=False, timeout=120)
             if merge.returncode != 0:
-                raise RuntimeError(f"sync conflict; resolve manually:\n{merge.stderr or merge.stdout***REMOVED***")
-            self._git("push", self._remote_name(), f"{branch***REMOVED***:refs/heads/{branch***REMOVED***", timeout=120)
+                raise RuntimeError(f"sync conflict; resolve manually:\n{merge.stderr or merge.stdout}")
+            self._git("push", self._remote_name(), f"{branch}:refs/heads/{branch}", timeout=120)
             head = self._git("rev-parse", "HEAD").stdout.strip()
-        return {"mode": "sync", "branch": branch, "head": head, "clean": True***REMOVED***
+        return {"mode": "sync", "branch": branch, "head": head, "clean": True}
 
-    def status(self) -> dict[str, Any***REMOVED***:
+    def status(self) -> dict[str, Any]:
         local = discover_local(self.root, self.runner)
-        data: dict[str, Any***REMOVED*** = {"version": MODULE_VERSION, "local": local, "remote": self._remote_paths(), "config_path": str(self.config.config_path) if self.config.config_path else None***REMOVED***
+        data: dict[str, Any] = {"version": MODULE_VERSION, "local": local, "remote": self._remote_paths(), "config_path": str(self.config.config_path) if self.config.config_path else None}
         try:
-            data["classifications"***REMOVED*** = {category: count for category, count in _counts(self.classify()).items()***REMOVED***
+            data["classifications"] = {category: count for category, count in _counts(self.classify()).items()}
         except (FileNotFoundError, ValueError) as exc:
-            data["classification_error"***REMOVED*** = str(exc)
+            data["classification_error"] = str(exc)
         remote = self.config.remote
         if remote.ssh_alias:
             try:
-                data["remote_probe"***REMOVED*** = ssh_probe(remote.ssh_alias, self.runner)
+                data["remote_probe"] = ssh_probe(remote.ssh_alias, self.runner)
                 if not remote.workspace_root:
-                    data["remote_candidates"***REMOVED*** = ssh_candidates(remote.ssh_alias, self.runner)
+                    data["remote_candidates"] = ssh_candidates(remote.ssh_alias, self.runner)
             except Exception as exc:
-                data["remote_error"***REMOVED*** = str(exc)
+                data["remote_error"] = str(exc)
         return data
 
-    def watch_once(self) -> dict[str, Any***REMOVED***:
-        before = self.runner(["git", "-C", str(self.root), "status", "--porcelain", "--untracked-files=normal"***REMOVED***, check=False, timeout=15).stdout
+    def watch_once(self) -> dict[str, Any]:
+        before = self.runner(["git", "-C", str(self.root), "status", "--porcelain", "--untracked-files=normal"], check=False, timeout=15).stdout
         time.sleep(self.config.sync.watch_debounce_sec)
-        after = self.runner(["git", "-C", str(self.root), "status", "--porcelain", "--untracked-files=normal"***REMOVED***, check=False, timeout=15).stdout
-        result: dict[str, Any***REMOVED*** = {"changed": before != after, "before": before.splitlines(), "after": after.splitlines()***REMOVED***
+        after = self.runner(["git", "-C", str(self.root), "status", "--porcelain", "--untracked-files=normal"], check=False, timeout=15).stdout
+        result: dict[str, Any] = {"changed": before != after, "before": before.splitlines(), "after": after.splitlines()}
         if before == after or not self.config.watch.auto_commit:
             return result
         self._ensure_no_denied_tracked_files()
         classifications = self.classify()
-        blocked = [item.path for item in classifications if item.category in {"suspicious", "unknown"***REMOVED*** and item.path in after***REMOVED***
+        blocked = [item.path for item in classifications if item.category in {"suspicious", "unknown"} and item.path in after]
         if blocked:
-            raise RuntimeError("watch blocked by unclassified files: " + ", ".join(blocked[:20***REMOVED***))
+            raise RuntimeError("watch blocked by unclassified files: " + ", ".join(blocked[:20]))
         self._git("add", "--all")
         staged = self._git("diff", "--cached", "--quiet", check=False)
         if staged.returncode == 0:
             return result
-        self._git("commit", "-m", f"{self.config.watch.commit_prefix***REMOVED*** update workspace from Termux", timeout=120)
-        result["committed"***REMOVED*** = True
+        self._git("commit", "-m", f"{self.config.watch.commit_prefix} update workspace from Termux", timeout=120)
+        result["committed"] = True
         if self.config.watch.auto_push:
-            result["push"***REMOVED*** = self.push()
+            result["push"] = self.push()
         return result
 
 
-def _counts(items: Iterable[FileClassification***REMOVED***) -> dict[str, int***REMOVED***:
-    result: dict[str, int***REMOVED*** = {***REMOVED***
+def _counts(items: Iterable[FileClassification]) -> dict[str, int]:
+    result: dict[str, int] = {}
     for item in items:
-        result[item.category***REMOVED*** = result.get(item.category, 0) + 1
+        result[item.category] = result.get(item.category, 0) + 1
     return result
 
 
 def sqlite_backup(source: Path, destination: Path) -> None:
     """Create an integrity-checked SQLite backup atomically."""
     destination.parent.mkdir(parents=True, exist_ok=True)
-    temporary = destination.with_name(f".{destination.name***REMOVED***.{os.getpid()***REMOVED***.tmp")
+    temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
     try:
         with sqlite3.connect(source) as source_db, sqlite3.connect(temporary) as destination_db:
             source_db.backup(destination_db)
             result = destination_db.execute("PRAGMA integrity_check").fetchone()
-            if not result or result[0***REMOVED*** != "ok":
-                raise RuntimeError(f"SQLite integrity check failed: {result!r***REMOVED***")
+            if not result or result[0] != "ok":
+                raise RuntimeError(f"SQLite integrity check failed: {result!r}")
         os.replace(temporary, destination)
     finally:
         temporary.unlink(missing_ok=True)
@@ -1052,15 +1052,15 @@ def _default_config_path(root: Path) -> Path:
     return root / ".freebuff" / "sync.yaml"
 
 
-def main(argv: Sequence[str***REMOVED*** | None = None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         config_path = args.config.resolve() if args.config else _default_config_path(Path.cwd().resolve())
         if not config_path.exists():
-            raise ValueError(f"sync config not found: {config_path***REMOVED***; create .freebuff/sync.yaml")
+            raise ValueError(f"sync config not found: {config_path}; create .freebuff/sync.yaml")
         config = load_config(config_path)
         if args.non_interactive:
-            from dataclasses ***REMOVED***place
+            from dataclasses ]place
             config = replace(config, sync=replace(config.sync, non_interactive=True))
         sync = FreebuffSync(config)
         if args.mode == "bootstrap":
@@ -1089,7 +1089,7 @@ def main(argv: Sequence[str***REMOVED*** | None = None) -> int:
         print(str(exc), file=sys.stderr)
         return EXIT_LOCK
     except ValueError as exc:
-        print(f"configuration error: {exc***REMOVED***", file=sys.stderr)
+        print(f"configuration error: {exc}", file=sys.stderr)
         return EXIT_CONFIG
     except RuntimeError as exc:
         print(str(exc), file=sys.stderr)
