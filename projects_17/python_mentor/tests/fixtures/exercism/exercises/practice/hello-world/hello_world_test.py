@@ -10,15 +10,15 @@ try:
     )
 
 except ImportError as import_fail:
-    message = import_fail.args[0***REMOVED***.split("(", maxsplit=1)
-    item_name = import_fail.args[0***REMOVED***.split()[3***REMOVED***
+    message = import_fail.args[0].split("(", maxsplit=1)
+    item_name = import_fail.args[0].split()[3]
 
-    item_name = item_name[:-1***REMOVED*** + "()'"
+    item_name = item_name[:-1] + "()'"
 
     # pylint: disable=raise-missing-from
     raise ImportError(
         "\n\nMISSING FUNCTION --> In your 'hello_world.py' file, we can not find or import the"
-        f" function named {item_name***REMOVED***. \nThe tests for this first exercise expect a function that"
+        f" function named {item_name}. \nThe tests for this first exercise expect a function that"
         f' returns the string "Hello, World!"'
         f'\n\nDid you use print("Hello, World!") instead?'
     ) from None

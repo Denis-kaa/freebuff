@@ -69,7 +69,7 @@ def test_profile_builds_reproducible_rules_snapshot() -> None:
         intent_terms=("нужен",),
     )
 
-    assert profile.rules_snapshot["required_terms"***REMOVED*** == ("python",)
+    assert profile.rules_snapshot["required_terms"] == ("python",)
     assert "django" in profile.all_terms
     assert profile.version == 2
 
@@ -109,7 +109,7 @@ def test_match_decision_keeps_profile_version_and_reason() -> None:
         score=0.9,
         matched_terms=("python",),
         reasons=("required term matched",),
-        rules_snapshot={"required_terms": ("python",)***REMOVED***,
+        rules_snapshot={"required_terms": ("python",)},
         decided_at=NOW,
     )
 

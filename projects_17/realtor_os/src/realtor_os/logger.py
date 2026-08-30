@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import sys
-***REMOVED***
+}
 
 from realtor_os.constants import DEFAULT_LOG_LEVEL, LOGS_DIR
 
@@ -25,7 +25,7 @@ def setup_logger(
     """
     logger = logging.getLogger(name)
     logger.setLevel(getattr(logging, level.upper(), logging.INFO))
-    logger.handlers = [***REMOVED***
+    logger.handlers = []
 
     if not quiet:
         console = logging.StreamHandler(sys.stdout)

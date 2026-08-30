@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
-***REMOVED***
+}
 from typing import List, Optional
 
 from freebuff_plugin_03.runtime import (
@@ -34,7 +34,7 @@ class ClaudeCodeAdapter(StdioMCPAdapter):
 
     def __init__(
         self,
-        config: Optional[RuntimeConfig***REMOVED*** = None,
+        config: Optional[RuntimeConfig] = None,
     ):
         cfg = config or RuntimeConfig()
         command, args = self._find_claude()
@@ -51,7 +51,7 @@ class ClaudeCodeAdapter(StdioMCPAdapter):
             RuntimeCapability("architecture", "Architecture and design", 0.85),
             RuntimeCapability("documentation", "Documentation generation", 0.90),
             RuntimeCapability("planning", "Task planning", 0.80),
-        ***REMOVED***
+        ]
 
     @staticmethod
     def _find_claude() -> tuple:
@@ -63,7 +63,7 @@ class ClaudeCodeAdapter(StdioMCPAdapter):
         # 1. which claude
         path = shutil.which("claude")
         if path:
-            return path, ["mcp"***REMOVED***
+            return path, ["mcp"]
 
         # 2. npm root -g
         npm_global = shutil.which("npm")
@@ -71,19 +71,19 @@ class ClaudeCodeAdapter(StdioMCPAdapter):
             import subprocess
             try:
                 result = subprocess.run(
-                    [npm_global, "root", "-g"***REMOVED***,
+                    [npm_global, "root", "-g"],
                     capture_output=True, text=True, timeout=10,
                 )
                 if result.returncode == 0:
                     global_dir = result.stdout.strip()
                     claude_path = Path(global_dir) / "@anthropic" / "claude-code" / "cli.js"
                     if claude_path.exists():
-                        return "node", [str(claude_path), "mcp"***REMOVED***
+                        return "node", [str(claude_path), "mcp"]
             except Exception:
                 pass
 
         # 3. Fallback
-        return "claude", ["mcp"***REMOVED***
+        return "claude", ["mcp"]
 
     @staticmethod
     def is_installed() -> bool:
@@ -96,7 +96,7 @@ class ClaudeCodeAdapter(StdioMCPAdapter):
             import subprocess
             try:
                 result = subprocess.run(
-                    [npm, "list", "-g", "@anthropic/claude-code"***REMOVED***,
+                    [npm, "list", "-g", "@anthropic/claude-code"],
                     capture_output=True, text=True, timeout=10,
                 )
                 return result.returncode == 0

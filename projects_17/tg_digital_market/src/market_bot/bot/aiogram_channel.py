@@ -28,7 +28,7 @@ class AiogramNotificationChannel:
         except Exception as exc:
             logger.warning("Не удалось отправить сообщение user=%s: %r", user_id, exc)
 
-    async def broadcast(self, user_ids: Iterable[int***REMOVED***, text: str) -> None:
+    async def broadcast(self, user_ids: Iterable[int], text: str) -> None:
         for uid in list(user_ids):
             try:
                 await self._bot.send_message(chat_id=uid, text=text)

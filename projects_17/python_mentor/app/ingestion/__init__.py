@@ -6,4 +6,4 @@
 pytest-grader, AST-детектор, Python-анализаторы, LLM, FastAPI.
 """
 
-__all__: list[str***REMOVED*** = [***REMOVED***
+__all__: list[str] = []

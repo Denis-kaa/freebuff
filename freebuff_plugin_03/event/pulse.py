@@ -32,7 +32,7 @@ class PulseEngine:
         self._bus = bus
         self._store = store
         self._subscription = None
-        self._handler: Optional[Callable***REMOVED*** = None
+        self._handler: Optional[Callable] = None
         self._running = False
 
         # Категории для фильтрации
@@ -46,9 +46,9 @@ class PulseEngine:
             "audit.",
             "bridge.",
             "mcp.",
-        ***REMOVED***
+        ]
 
-    def start(self, custom_handler: Optional[Callable***REMOVED*** = None) -> None:
+    def start(self, custom_handler: Optional[Callable] = None) -> None:
         """Подписаться на события и начать формировать Pulse.
 
         Args:
@@ -85,12 +85,12 @@ class PulseEngine:
             return
 
         # Сохраняем как pulse событие с метаданными
-        metadata = dict(getattr(event, "metadata", {***REMOVED***))
-        metadata["pulse"***REMOVED*** = "true"
+        metadata = dict(getattr(event, "metadata", {}))
+        metadata["pulse"] = "true"
 
         # Добавляем маркер _pulse в data, чтобы FTS5 мог найти событие
-        data = dict(getattr(event, "data", {***REMOVED***))
-        data["_pulse"***REMOVED*** = True
+        data = dict(getattr(event, "data", {}))
+        data["_pulse"] = True
 
         self._store.store(
             event_type=event_type,
@@ -107,8 +107,8 @@ class PulseEngine:
         self,
         project: str = "",
         limit: int = 20,
-        event_types: Optional[List[str***REMOVED******REMOVED*** = None,
-    ) -> List[PulseEntry***REMOVED***:
+        event_types: Optional[List[str]] = None,
+    ) -> List[PulseEntry]:
         """Получить ленту Pulse.
 
         Args:
@@ -140,16 +140,16 @@ class PulseEngine:
                 entries.extend(cat_entries)
             # Сортируем по времени и ограничиваем
             entries.sort(key=lambda e: e.timestamp, reverse=True)
-            entries = entries[:limit***REMOVED***
+            entries = entries[:limit]
 
         # Применяем фильтр по event_types
         if event_types:
             entries = [
                 e for e in entries
                 if any(e.event_type.startswith(et) for et in event_types)
-            ***REMOVED***
+            ]
 
-        return [self._format_pulse_entry(e) for e in entries***REMOVED***
+        return [self._format_pulse_entry(e) for e in entries]
 
     @staticmethod
     def _format_pulse_entry(event: EventEntry) -> PulseEntry:
@@ -173,7 +173,7 @@ class PulseEngine:
             icon=icon,
             title=title,
             description=description,
-            timestamp=event.timestamp[:19***REMOVED***,
+            timestamp=event.timestamp[:19],
             severity=severity,
         )
 
@@ -190,50 +190,50 @@ def _pulse_title(event: EventEntry) -> str:
     if event.event_type.startswith("task."):
         task_id = data.get("task_id", "")
         if event.event_type == "task.created":
-            return f"Task started: {task_id***REMOVED***"
+            return f"Task started: {task_id}"
         elif event.event_type == "task.completed":
-            return f"Task done: {task_id***REMOVED***"
+            return f"Task done: {task_id}"
         elif event.event_type == "task.failed":
-            return f"Task failed: {task_id***REMOVED***"
-        return f"Task: {task_id***REMOVED***"
+            return f"Task failed: {task_id}"
+        return f"Task: {task_id}"
 
     if event.event_type.startswith("step."):
         step_id = data.get("step_id", "")
-        return f"Step: {step_id***REMOVED***"
+        return f"Step: {step_id}"
 
     if event.event_type.startswith("session."):
         topic = data.get("topic", data.get("summary", ""))
         if event.event_type == "session.created":
-            return f"Session: {topic***REMOVED***"
-        return f"Session: {topic[:40***REMOVED******REMOVED***"
+            return f"Session: {topic}"
+        return f"Session: {topic[:40]}"
 
     if event.event_type.startswith("memory."):
         key = data.get("key", "")
         level = data.get("level", "")
-        return f"Memory ({level***REMOVED***): {key[:30***REMOVED******REMOVED***"
+        return f"Memory ({level}): {key[:30]}"
 
     if event.event_type.startswith("knowledge."):
-        doc_id = data.get("doc_id", "")[:30***REMOVED***
-        return f"Knowledge: {doc_id***REMOVED***"
+        doc_id = data.get("doc_id", "")[:30]
+        return f"Knowledge: {doc_id}"
 
     if event.event_type.startswith("checkpoint"):
-        summary = data.get("summary", "")[:40***REMOVED***
-        return f"Checkpoint: {summary***REMOVED***"
+        summary = data.get("summary", "")[:40]
+        return f"Checkpoint: {summary}"
 
     if event.event_type.startswith("audit."):
         if event.event_type == "audit.decision":
-            return f"Decision: {data.get('capability', '?')***REMOVED*** → {data.get('runtime_selected', '?')***REMOVED***"
-        return f"Audit: {event.event_type***REMOVED***"
+            return f"Decision: {data.get('capability', '?')} → {data.get('runtime_selected', '?')}"
+        return f"Audit: {event.event_type}"
 
     if event.event_type.startswith("bridge."):
         server = data.get("server", "")
-        return f"Bridge: {server***REMOVED***"
+        return f"Bridge: {server}"
 
     if event.event_type.startswith("mcp."):
         tool = data.get("tool", "")
-        return f"MCP: {tool***REMOVED***"
+        return f"MCP: {tool}"
 
-    return f"Event: {event.event_type***REMOVED***"
+    return f"Event: {event.event_type}"
 
 
 def _pulse_description(event: EventEntry) -> str:
@@ -243,13 +243,13 @@ def _pulse_description(event: EventEntry) -> str:
     if event.event_type == "task.completed":
         duration = data.get("duration_ms", "")
         if duration:
-            return f"Completed in {duration***REMOVED***ms"
+            return f"Completed in {duration}ms"
         return ""
 
     if event.event_type == "step.started":
         return data.get("description", "")
 
     if event.event_type == "audit.decision":
-        return f"Policy: {data.get('policy_name', '?')***REMOVED***, Cost: ${data.get('cost_estimate', 0):.2f***REMOVED***"
+        return f"Policy: {data.get('policy_name', '?')}, Cost: ${data.get('cost_estimate', 0):.2f}"
 
     return ""

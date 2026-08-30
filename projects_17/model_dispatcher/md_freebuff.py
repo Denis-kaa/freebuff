@@ -16,14 +16,14 @@
 
 from __future__ import annotations
 
-***REMOVED***
+}
 import shlex
 import subprocess
 import time
 import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Callable, Dict, List, Optional
 
 from . import md_models
@@ -41,9 +41,9 @@ SINGLE_INSTANCE_MARKERS = (
 
 def clean_tui(text: str) -> str:
     """Очищает дамп TUI от ANSI/управляющих последовательностей."""
-    text = re.sub(r"\x1b\[[0-9;***REMOVED****[a-zA-Z***REMOVED***", "", text)
-    text = re.sub(r"\x1b\***REMOVED***[^\x07***REMOVED****\x07", "", text)
-    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f***REMOVED***", "", text)
+    text = re.sub(r"\x1b\[[0-9;)*[a-zA-Z]", "", text)
+    text = re.sub(r"\x1b\*)[^\x07]*\x07", "", text)
+    text = re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f)", "", text)
     return text
 
 
@@ -61,10 +61,10 @@ class SessionResult:
 
 
 # Типы команд (инъекция для тестов)
-RunCmd = Callable[[List[str***REMOVED******REMOVED***, Any***REMOVED***
-CapturePane = Callable[[str***REMOVED***, str***REMOVED***
-SendKeys = Callable[[str, str***REMOVED***, None***REMOVED***
-HasSession = Callable[[str***REMOVED***, bool***REMOVED***
+RunCmd = Callable[[List[str]], Any]
+CapturePane = Callable[[str], str]
+SendKeys = Callable[[str, str], None]
+HasSession = Callable[[str], bool]
 
 
 class FreebuffDriver:
@@ -90,26 +90,26 @@ class FreebuffDriver:
         binary_cmd: str = "",
         session_name: str = "",
         timeout_s: int = 3600,
-        model_priority: Optional[List[Dict[str, Any***REMOVED******REMOVED******REMOVED*** = None,
-        unavailable_markers: Optional[List[str***REMOVED******REMOVED*** = None,
+        model_priority: Optional[List[Dict[str, Any]]] = None,
+        unavailable_markers: Optional[List[str]] = None,
         max_restarts: int = 2,
         restart_delay_s: int = 10,
         startup_wait_s: int = 120,
         poll_s: int = 3,
         continue_resume: bool = True,
         resume: bool = False,
-        run_cmd: Optional[RunCmd***REMOVED*** = None,
-        capture_pane: Optional[CapturePane***REMOVED*** = None,
-        send_keys: Optional[SendKeys***REMOVED*** = None,
-        has_session: Optional[HasSession***REMOVED*** = None,
+        run_cmd: Optional[RunCmd] = None,
+        capture_pane: Optional[CapturePane] = None,
+        send_keys: Optional[SendKeys] = None,
+        has_session: Optional[HasSession] = None,
     ):
         self.work_dir = Path(work_dir)
         self.work_dir.mkdir(parents=True, exist_ok=True)
         self.binary_cmd = binary_cmd
-        self.session_name = session_name or f"md_{uuid.uuid4().hex[:8***REMOVED******REMOVED***"
+        self.session_name = session_name or f"md_{uuid.uuid4().hex[:8]}"
         self.timeout_s = timeout_s
-        self.model_priority = model_priority or [***REMOVED***
-        self.unavailable_markers = [str(m).lower() for m in (unavailable_markers or [***REMOVED***)***REMOVED***
+        self.model_priority = model_priority or []
+        self.unavailable_markers = [str(m).lower() for m in (unavailable_markers or [])]
         self.max_restarts = max_restarts
         self.restart_delay_s = restart_delay_s
         self.startup_wait_s = startup_wait_s
@@ -131,32 +131,32 @@ class FreebuffDriver:
 
     # ── Подключение к tmux ─────────────────────────────────────
 
-    def _default_run_cmd(self, cmd: List[str***REMOVED***) -> Any:
+    def _default_run_cmd(self, cmd: List[str]) -> Any:
         return subprocess.run(cmd, capture_output=True, timeout=10)
 
     def _default_capture_pane(self, session: str) -> str:
         r = subprocess.run(
-            ["tmux", "capture-pane", "-t", session, "-p"***REMOVED***,
+            ["tmux", "capture-pane", "-t", session, "-p"],
             capture_output=True, text=True, timeout=5,
         )
         return r.stdout or ""
 
     def _default_send_keys(self, session: str, keys: str) -> None:
         subprocess.run(
-            ["tmux", "send-keys", "-t", session, keys, "Enter"***REMOVED***,
+            ["tmux", "send-keys", "-t", session, keys, "Enter"],
             capture_output=True, timeout=5,
         )
 
     def _default_has_session(self, session: str) -> bool:
         r = subprocess.run(
-            ["tmux", "has-session", "-t", session***REMOVED***,
+            ["tmux", "has-session", "-t", session],
             capture_output=True, timeout=5,
         )
         return r.returncode == 0
 
     # ── Запуск / остановка ─────────────────────────────────────
 
-    def build_launch_cmd(self, cwd: Path) -> List[str***REMOVED***:
+    def build_launch_cmd(self, cwd: Path) -> List[str]:
         """Строит команду запуска freebuff.
 
         Приоритет: бинарь из config (`binary_cmd`) → PATH (`freebuff`) →
@@ -167,10 +167,10 @@ class FreebuffDriver:
         if self.binary_cmd:
             parts = shlex.split(self.binary_cmd)
         else:
-            parts = ["freebuff"***REMOVED***
-        parts += ["--cwd", str(cwd)***REMOVED***
+            parts = ["freebuff"]
+        parts += ["--cwd", str(cwd)]
         if self.resume and self.continue_resume:
-            parts += ["--continue"***REMOVED***
+            parts += ["--continue"]
         return parts
 
     def start(self) -> bool:
@@ -181,22 +181,22 @@ class FreebuffDriver:
         """
         cmd = self.build_launch_cmd(self.work_dir)
         shell_cmd = " ".join(shlex.quote(p) for p in cmd)
-        tmux_new = ["tmux", "new-session", "-d", "-s", self.session_name, shell_cmd***REMOVED***
+        tmux_new = ["tmux", "new-session", "-d", "-s", self.session_name, shell_cmd]
         try:
             r = self._run_cmd(tmux_new)
             rc = getattr(r, "returncode", 0)
             if rc is not None and rc != 0:
-                self.last_error = f"tmux new-session rc={rc***REMOVED***"
+                self.last_error = f"tmux new-session rc={rc}"
                 return False
             return True
         except Exception as e:
-            self.last_error = f"tmux new-session failed: {e***REMOVED***"
+            self.last_error = f"tmux new-session failed: {e}"
             return False
 
     def stop(self) -> None:
         """Убивает tmux-сессию (если жива)."""
         if self._has_session(self.session_name):
-            self._run_cmd(["tmux", "kill-session", "-t", self.session_name***REMOVED***)
+            self._run_cmd(["tmux", "kill-session", "-t", self.session_name])
 
     def is_alive(self) -> bool:
         return self._has_session(self.session_name)
@@ -206,7 +206,7 @@ class FreebuffDriver:
 
     # ── Сценарий «имитация человека» ───────────────────────────
 
-    def wait_for_screen(self, timeout_s: Optional[int***REMOVED*** = None) -> str:
+    def wait_for_screen(self, timeout_s: Optional[int] = None) -> str:
         """Ждёт появления стартового экрана/приглашения. Возвращает дамп.
 
         Маркеры готовности берутся из SCREEN_START_MARKERS /
@@ -265,7 +265,7 @@ class FreebuffDriver:
     def monitor(
         self,
         result_marker: str = ".freebuff_result",
-        baseline_mtime: Optional[int***REMOVED*** = None,
+        baseline_mtime: Optional[int] = None,
     ) -> SessionResult:
         """Мониторит сессию до завершения/таймаута/вылета.
 
@@ -307,7 +307,7 @@ class FreebuffDriver:
                         ok=False, status="crashed",
                         model_used=self.selected_model,
                         output=self.capture(),
-                        error=f"freebuff вылетел {attempts***REMOVED*** раз",
+                        error=f"freebuff вылетел {attempts} раз",
                         attempts=attempts,
                         duration_s=round(time.time() - start, 1),
                     )
@@ -335,7 +335,7 @@ class FreebuffDriver:
             ok=False, status="timeout",
             model_used=self.selected_model,
             output=self.capture(),
-            error=f"timeout after {self.timeout_s***REMOVED***s (сессия сохранена для --continue)",
+            error=f"timeout after {self.timeout_s}s (сессия сохранена для --continue)",
             attempts=attempts,
             duration_s=round(time.time() - start, 1),
         )
@@ -349,13 +349,13 @@ class FreebuffDriver:
         """
         state_dir = self.work_dir / ".md_state"
         state_dir.mkdir(parents=True, exist_ok=True)
-        state = state_dir / f"{task_id***REMOVED***.json"
+        state = state_dir / f"{task_id}.json"
         import json
         data = {
             "tmux_session": self.session_name,
             "model": self.selected_model,
             "saved_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "conversation_id": self._conversation_id,
-        ***REMOVED***
+        }
         state.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
         return state

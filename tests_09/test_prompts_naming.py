@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-[5.61.0***REMOVED*** regression — pompts_11/ NNN_TT_имя.md convention hardening.
+[5.61.0] regression — pompts_11/ NNN_TT_имя.md convention hardening.
 
 User directive (v5.61.0): "добавь regression-тест на naming convention."
 
 Two-layer guard:
   (a) Reuse `consistency_check.check_naming_convention` (Stage 9) via `build_report(PROJECT_ROOT)`
       — if consistency_check raises prompt violation, this test catches the drift.
-  (b) Direct local scan — assert each file in `pompts_11/` matches `^[0-9***REMOVED***+_[0-9***REMOVED***+_.*\.md$`
+  (b) Direct local scan — assert each file in `pompts_11/` matches `^[0-9]+_[0-9]+_.*\.md$`
       with NNN in 001..999, TT in 01..14 (canonical theme codes per FINAL_STRUCTURE §2.1).
       This is independent from consistency_check and survives a regression where the
       broader consistency_check is bypassed.
@@ -34,9 +34,9 @@ Independent of consistency_check's `check_naming_convention`:
 
 from __future__ import annotations
 
-***REMOVED***
+}
 import sys
-***REMOVED***
+}
 
 import pytest
 
@@ -45,16 +45,16 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 # ── Convention pattern (FINAL_STRUCTURE §2.1). Imports mirror
 #    scripts_01/consistency_check.py::_PROMPT_FILE_RE for parity.
-_PROMPT_NAME_RE = re.compile(r"^(\d{3***REMOVED***)_(\d{2***REMOVED***)_.*\.md$")
+_PROMPT_NAME_RE = re.compile(r"^(\d{3))_(\d{2])_.*\.md$")
 
 # Canonical theme codes (FINAL_STRUCTURE §2.1: TT = 01..14; same set as
 # scripts_01/consistency_check._VALID_THEME_CODES). If a new theme code is added
 # in FINAL_STRUCTURE, update both this tuple AND consistency_check.
-_VALID_THEMES: frozenset[str***REMOVED*** = frozenset({f"{i:02d***REMOVED***" for i in range(1, 22)***REMOVED***)  # 01..21: синхронизировано с consistency_check._VALID_THEME_CODES (темы 15-21: promt52-58)
+_VALID_THEMES: frozenset[str] = frozenset({f"{i:02d}" for i in range(1, 22)})  # 01..21: синхронизировано с consistency_check._VALID_THEME_CODES (темы 15-21: promt52-58)
 
 # Files explicitly exempt from NNN_TT_имя.md (служебные файлы очереди pompts_11;
 # синхронизировано со skip в scripts_01/consistency_check.py naming-проверке).
-EXEMPT_FILES: frozenset[str***REMOVED*** = frozenset({"README.md", "errors.md"***REMOVED***)
+EXEMPT_FILES: frozenset[str] = frozenset({"README.md", "errors.md"})
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -74,10 +74,10 @@ class TestPromptNameRegex:
         "047_06_e2e_platform_test.md",  # v5.61.0 canonical name post-rename
         "043_08_workspace_os_ui.md",
         "999_14_max_test.md",  # synthetic for boundary
-    ***REMOVED***)
+    ])
     def test_valid_names_ok(self, name: str) -> None:
         m = _PROMPT_NAME_RE.match(name)
-        assert m is not None, f"{name***REMOVED*** не соответствует NNN_TT_имя.md"
+        assert m is not None, f"{name} не соответствует NNN_TT_имя.md"
         n, t = m.group(1), m.group(2)
         assert len(n) == 3 and n.isdigit()
         assert t in _VALID_THEMES
@@ -94,7 +94,7 @@ class TestPromptNameRegex:
         "abc_01_test.md",                   # non-digit NNN
         "prompts_11.md",                    # weird
         "047_06_e2e_platform_test.txt",     # wrong extension
-    ***REMOVED***)
+    ])
     def test_invalid_names_detected(self, name: str) -> None:
         """Bad names MUST be detected as invalid (either via regex rejection OR theme-code violation).
 
@@ -114,7 +114,7 @@ class TestPromptNameRegex:
         # Layer (b): if regex matched, theme code MUST be outside canonical set.
         # If theme IS canonical (passes the assert), the name is actually valid → test fixture bug.
         assert m.group(2) not in _VALID_THEMES, (
-            f"{name***REMOVED*** matched base regex AND theme {m.group(2)***REMOVED*** IS canonical — "
+            f"{name} matched base regex AND theme {m.group(2)} IS canonical — "
             f"this name should have been in test_valid_names_ok, not here. "
             f"(strict-validate theme: 99/15/etc outside 01..14 are detected)"
         )
@@ -130,34 +130,34 @@ class TestPomptsDirectory:
 
     def test_no_bare_name_files(self) -> None:
         prompts_dir = PROJECT_ROOT / "pompts_11"
-        violations: list[str***REMOVED*** = [***REMOVED***
+        violations: list[str] = []
         for path in sorted(prompts_dir.glob("*.md")):
             if path.name in EXEMPT_FILES:
                 continue
             m = _PROMPT_NAME_RE.match(path.name)
             if m is None:
                 violations.append(
-                    f"{path.name***REMOVED***: bare name (no NNN_TT_ prefix) — "
+                    f"{path.name}: bare name (no NNN_TT_ prefix) — "
                     f"violates FINAL_STRUCTURE §2.1"
                 )
                 continue
             if m.group(2) not in _VALID_THEMES:
                 violations.append(
-                    f"{path.name***REMOVED***: theme code TT={m.group(2)***REMOVED*** outside "
+                    f"{path.name}: theme code TT={m.group(2)} outside "
                     f"canonical 01..14 (FINAL_STRUCTURE §2.1)"
                 )
-        assert violations == [***REMOVED***, (
+        assert violations == [], (
             "pompts_11/ имеет NNN_TT нарушения — это и есть debt §5.13:\n"
-            + "\n".join(f"  - {v***REMOVED***" for v in violations)
+            + "\n".join(f"  - {v}" for v in violations)
         )
 
     def test_promt47_renamed(self) -> None:
-        """[5.61.0***REMOVED*** Регрессия-guard: `prompts_11/promt47.md` НЕ должен
+        """[5.61.0] Регрессия-guard: `prompts_11/promt47.md` НЕ должен
         вновь появиться. Если кто-то когда-то откатит rename — этот
         тест мигом упадёт."""
         bad = PROJECT_ROOT / "pompts_11" / "promt47.md"
         assert not bad.exists(), (
-            f"{bad***REMOVED*** появился снова — откатил rename из v5.61.0? "
+            f"{bad} появился снова — откатил rename из v5.61.0? "
             f"Каноническая версия файла теперь `047_06_e2e_platform_test.md`"
         )
 
@@ -165,22 +165,22 @@ class TestPomptsDirectory:
         """Положительная проверка: новый файл живёт там где должен."""
         canonical = PROJECT_ROOT / "pompts_11" / "047_06_e2e_platform_test.md"
         assert canonical.is_file(), (
-            f"{canonical***REMOVED*** отсутствует — rename из v5.61.0 не выполнился?"
+            f"{canonical} отсутствует — rename из v5.61.0 не выполнился?"
         )
 
     def test_prompts_unique_numbers(self) -> None:
         """Номера NNN должны быть уникальны (gaps OK, duplicates NOT)."""
-        seen: dict[str, str***REMOVED*** = {***REMOVED***
+        seen: dict[str, str] = {}
         for path in sorted((PROJECT_ROOT / "pompts_11").glob("*.md")):
             m = _PROMPT_NAME_RE.match(path.name)
             if m is None:
                 continue
             num = m.group(1)
             assert num not in seen, (
-                f"Дубликат номера NNN={num***REMOVED***: {seen[num***REMOVED******REMOVED*** vs {path.name***REMOVED*** "
+                f"Дубликат номера NNN={num}: {seen[num]} vs {path.name} "
                 f"— §5.13 explicit rule (FINAL_STRUCTURE §2.1)."
             )
-            seen[num***REMOVED*** = path.name
+            seen[num] = path.name
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -201,15 +201,15 @@ class TestConsistencyCheckIntegration:
             pytest.skip("scripts_01/consistency_check.py недоступен")
         issues = check_naming_convention(PROJECT_ROOT)
         # Filter out only "prompt" kind (we don't care about top-level dirs here).
-        prompt_issues = [i for i in issues if i.get("kind") == "prompt"***REMOVED***
-        assert prompt_issues == [***REMOVED***, (
+        prompt_issues = [i for i in issues if i.get("kind") == "prompt"]
+        assert prompt_issues == [], (
             "consistency_check нашёл NNN_TT нарушения в реальном проекте:\n"
-            + "\n".join(f"  - {i***REMOVED***" for i in prompt_issues)
+            + "\n".join(f"  - {i}" for i in prompt_issues)
         )
 
 
 class TestNamingConventionContract:
-    """[5.61.0***REMOVED*** hardening: явный contract для DEVELOPMENT. Если будущий
+    """[5.61.0] hardening: явный contract для DEVELOPMENT. Если будущий
     разработчик добавит новый файл `prompts_11/foo.md` (забыв NNN_TT_),
     эти тесты ловят на pre-commit / CI — debt §5.13 prevented regressively."""
 
@@ -227,7 +227,7 @@ class TestNamingConventionContract:
         Если добавляется тема — обновить _VALID_THEMES И consistency_check
         _VALID_THEME_CODES синхронно."""
         assert len(_VALID_THEMES) == 21, (
-            f"_VALID_THEMES имеет {len(_VALID_THEMES)***REMOVED*** элементов — "
+            f"_VALID_THEMES имеет {len(_VALID_THEMES)} элементов — "
             f"ожидается 21 (канон 01..21). При добавлении новой "
             f"темы обновить sync с consistency_check._VALID_THEME_CODES."
         )

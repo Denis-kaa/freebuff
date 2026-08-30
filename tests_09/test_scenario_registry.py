@@ -12,7 +12,7 @@ Covers:
 
 from __future__ import annotations
 
-***REMOVED***
+}
 
 import pytest
 
@@ -46,15 +46,15 @@ def _seed_two_role_corpus(root: Path) -> Path:
         '      - "тест"\n'
         "project_types:\n"
         "  web:\n"
-        "    required_roles: [developer***REMOVED***\n"
-        "    skip_roles: [***REMOVED***\n"
+        "    required_roles: [developer]\n"
+        "    skip_roles: []\n"
         "complexity_routing:\n"
         "  small:\n"
-        "    required_roles: [developer***REMOVED***\n"
-        "    skip_roles: [***REMOVED***\n"
+        "    required_roles: [developer]\n"
+        "    skip_roles: []\n"
         "categories:\n"
-        "  implementation: [developer***REMOVED***\n"
-        "  validation: [tester***REMOVED***\n"
+        "  implementation: [developer]\n"
+        "  validation: [tester]\n"
         "metadata:\n"
         "  version: \"3.0.0\"\n",
         encoding="utf-8",
@@ -91,10 +91,10 @@ def _seed_two_role_corpus(root: Path) -> Path:
 def _seed_scenarios_dir(scenarios: Path, *, alias: str = "test", root: Path) -> Path:
     """Write one manifest YAML pointing at ``root`` and return ``scenarios``."""
     scenarios.mkdir(parents=True, exist_ok=True)
-    (scenarios / f"{alias***REMOVED***.yaml").write_text(
-        f"id: {alias***REMOVED***\n"
+    (scenarios / f"{alias}.yaml").write_text(
+        f"id: {alias}\n"
         "type: blueprint_v3\n"
-        f"root: {root***REMOVED***\n"
+        f"root: {root}\n"
         "enabled: true\n",
         encoding="utf-8",
     )
@@ -125,17 +125,17 @@ def registry_two(tmp_path: Path) -> ScenarioRegistry:
     scenarios_dir = tmp_path / "scenarios"
     scenarios_dir.mkdir(parents=True, exist_ok=True)
     (scenarios_dir / "alpha.yaml").write_text(
-        f"id: alpha\ntype: blueprint_v3\nroot: {bp_root_a***REMOVED***\nenabled: true\n",
+        f"id: alpha\ntype: blueprint_v3\nroot: {bp_root_a}\nenabled: true\n",
         encoding="utf-8",
     )
     (scenarios_dir / "beta.yaml").write_text(
-        f"id: beta\ntype: blueprint_v3\nroot: {bp_root_b***REMOVED***\nenabled: true\n",
+        f"id: beta\ntype: blueprint_v3\nroot: {bp_root_b}\nenabled: true\n",
         encoding="utf-8",
     )
     return ScenarioRegistry(scenarios_dir=scenarios_dir, silent=True)
 
 
-def _seed_unique_corpus(root: Path, *, roles: tuple[tuple[str, str***REMOVED***, ...***REMOVED***) -> Path:
+def _seed_unique_corpus(root: Path, *, roles: tuple[tuple[str, str], ...]) -> Path:
     """Seed a corpus with the EXACT ``roles`` ((id, file), ...) — no shared defaults.
 
     Used by the ``registry_two_with_unique_roles`` fixture to make role_id
@@ -145,32 +145,32 @@ def _seed_unique_corpus(root: Path, *, roles: tuple[tuple[str, str***REMOVED***,
     pipeline_yaml = "pipeline:\n"
     for rid, fname in roles:
         pipeline_yaml += (
-            f"  - id: {rid***REMOVED***\n"
-            f"    file: {fname***REMOVED***\n"
+            f"  - id: {rid}\n"
+            f"    file: {fname}\n"
             "    type: implementation\n"
-            f"    role: AI {rid***REMOVED***\n"
-            f"    description: {rid***REMOVED*** role\n"
+            f"    role: AI {rid}\n"
+            f"    description: {rid} role\n"
             "    condition: always\n"
             '    triggers:\n'
-            f'      - "{rid***REMOVED***"\n'
+            f'      - "{rid}"\n'
         )
     pipeline_yaml += (
-        "project_types:\n  web:\n    required_roles: [developer***REMOVED***\n    skip_roles: [***REMOVED***\n"
-        "complexity_routing:\n  small:\n    required_roles: [developer***REMOVED***\n    skip_roles: [***REMOVED***\n"
-        "categories:\n  implementation: [developer***REMOVED***\n"
+        "project_types:\n  web:\n    required_roles: [developer]\n    skip_roles: []\n"
+        "complexity_routing:\n  small:\n    required_roles: [developer]\n    skip_roles: []\n"
+        "categories:\n  implementation: [developer]\n"
         "metadata:\n  version: '3.0.0'\n"
     )
     (root / "registry.yaml").write_text(pipeline_yaml, encoding="utf-8")
     for _rid, fname in roles:
         (root / fname).write_text(
-            f"ROLE: AI {_rid***REMOVED***\nVERSION: 3.1.0\n\n"
-            f"<role>{_rid***REMOVED*** backend.</role>\n\n"
-            f"<system_role>{_rid***REMOVED***.</system_role>\n\n"
+            f"ROLE: AI {_rid}\nVERSION: 3.1.0\n\n"
+            f"<role>{_rid} backend.</role>\n\n"
+            f"<system_role>{_rid}.</system_role>\n\n"
             "<input>Architecture spec.</input>\n\n"
-            f"<main_objective>{_rid***REMOVED***.</main_objective>\n\n"
+            f"<main_objective>{_rid}.</main_objective>\n\n"
             "<priority_order>Correctness first.</priority_order>\n\n"
             "<implementation_scope_rules>Allowed: target module only.</implementation_scope_rules>\n\n"
-            f"<capabilities>\n- {_rid***REMOVED***\n</capabilities>\n",
+            f"<capabilities>\n- {_rid}\n</capabilities>\n",
             encoding="utf-8",
         )
     return root
@@ -203,11 +203,11 @@ def registry_two_with_unique_roles(tmp_path: Path) -> ScenarioRegistry:
     scenarios_dir = tmp_path / "scenarios"
     scenarios_dir.mkdir(parents=True, exist_ok=True)
     (scenarios_dir / "alpha.yaml").write_text(
-        f"id: alpha\ntype: blueprint_v3\nroot: {bp_root_a***REMOVED***\nenabled: true\n",
+        f"id: alpha\ntype: blueprint_v3\nroot: {bp_root_a}\nenabled: true\n",
         encoding="utf-8",
     )
     (scenarios_dir / "beta.yaml").write_text(
-        f"id: beta\ntype: blueprint_v3\nroot: {bp_root_b***REMOVED***\nenabled: true\n",
+        f"id: beta\ntype: blueprint_v3\nroot: {bp_root_b}\nenabled: true\n",
         encoding="utf-8",
     )
     return ScenarioRegistry(scenarios_dir=scenarios_dir, silent=True)
@@ -218,7 +218,7 @@ def registry_two_with_unique_roles(tmp_path: Path) -> ScenarioRegistry:
 
 def test_scenario_manifest_parses_yaml(tmp_path: Path) -> None:
     (tmp_path / "m.yaml").write_text(
-        "id: foo\ntype: blueprint_v3\nroot: /tmp/x\nenabled: false\ncapabilities: [a, b***REMOVED***\nmetadata:\n  v: '1'\n",
+        "id: foo\ntype: blueprint_v3\nroot: /tmp/x\nenabled: false\ncapabilities: [a, b]\nmetadata:\n  v: '1'\n",
         encoding="utf-8",
     )
     m = ScenarioManifest.from_yaml(tmp_path / "m.yaml")
@@ -227,7 +227,7 @@ def test_scenario_manifest_parses_yaml(tmp_path: Path) -> None:
     assert m.root == Path("/tmp/x").expanduser().resolve()
     assert m.enabled is False
     assert m.capabilities == ("a", "b")
-    assert m.metadata == {"v": "1"***REMOVED***
+    assert m.metadata == {"v": "1"}
 
 
 def test_scenario_manifest_rejects_missing_required_keys(tmp_path: Path) -> None:
@@ -240,13 +240,13 @@ def test_scenario_manifest_rejects_missing_required_keys(tmp_path: Path) -> None
 def test_registry_discovers_yaml_manifests(registry_one: ScenarioRegistry) -> None:
     scenarios = registry_one.list_scenarios()
     assert len(scenarios) == 1
-    assert scenarios[0***REMOVED***.scenario_id == "test"
-    assert scenarios[0***REMOVED***.display_name  # non-empty
+    assert scenarios[0].scenario_id == "test"
+    assert scenarios[0].display_name  # non-empty
 
 
 def test_registry_discovers_all_enabled_in_sort_order(registry_two: ScenarioRegistry) -> None:
-    ids = [sc.scenario_id for sc in registry_two.list_scenarios()***REMOVED***
-    assert ids == ["alpha", "beta"***REMOVED***
+    ids = [sc.scenario_id for sc in registry_two.list_scenarios()]
+    assert ids == ["alpha", "beta"]
 
 
 def test_registry_disabled_manifest_is_skipped(tmp_path: Path) -> None:
@@ -256,11 +256,11 @@ def test_registry_disabled_manifest_is_skipped(tmp_path: Path) -> None:
     scenarios_dir = tmp_path / "scenarios"
     scenarios_dir.mkdir(parents=True, exist_ok=True)
     (scenarios_dir / "off.yaml").write_text(
-        f"id: off\ntype: blueprint_v3\nroot: {bp_root***REMOVED***\nenabled: false\n",
+        f"id: off\ntype: blueprint_v3\nroot: {bp_root}\nenabled: false\n",
         encoding="utf-8",
     )
     reg = ScenarioRegistry(scenarios_dir=scenarios_dir, silent=True)
-    assert reg.list_scenarios() == [***REMOVED***
+    assert reg.list_scenarios() == []
     # No warning though — disabled manifests are silently skipped by design.
 
 
@@ -279,12 +279,12 @@ def test_registry_unknown_type_records_warning(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     reg = ScenarioRegistry(scenarios_dir=scenarios_dir, silent=False)
-    assert reg.list_scenarios() == [***REMOVED***
+    assert reg.list_scenarios() == []
     warnings = reg.warnings()
     # Warning text is the canonical signal — silent=False also prints to
     # stderr but that's a side effect, not the contract.
     assert any("instantiation failed" in w for w in warnings), (
-        f"expected instantiation-failed warning, got: {warnings***REMOVED***"
+        f"expected instantiation-failed warning, got: {warnings}"
     )
 
 
@@ -296,7 +296,7 @@ def test_registry_parse_failure_records_warning(tmp_path: Path) -> None:
         encoding="utf-8",
     )
     reg = ScenarioRegistry(scenarios_dir=scenarios_dir, silent=True)
-    assert reg.list_scenarios() == [***REMOVED***
+    assert reg.list_scenarios() == []
     assert any("required keys missing" in w for w in reg.warnings())
 
 
@@ -306,7 +306,7 @@ def test_registry_duplicate_id_warns_first_wins(tmp_path: Path) -> None:
     _seed_two_role_corpus(bp_root)
     scenarios_dir = tmp_path / "scenarios"
     scenarios_dir.mkdir(parents=True, exist_ok=True)
-    manifest_text = f"id: dup\ntype: blueprint_v3\nroot: {bp_root***REMOVED***\nenabled: true\n"
+    manifest_text = f"id: dup\ntype: blueprint_v3\nroot: {bp_root}\nenabled: true\n"
     (scenarios_dir / "first.yaml").write_text(manifest_text, encoding="utf-8")
     (scenarios_dir / "second.yaml").write_text(manifest_text, encoding="utf-8")
     reg = ScenarioRegistry(scenarios_dir=scenarios_dir, silent=True)
@@ -318,12 +318,12 @@ def test_registry_empty_dir_yields_empty(tmp_path: Path) -> None:
     empty = tmp_path / "empty"
     empty.mkdir()
     reg = ScenarioRegistry(scenarios_dir=empty, silent=True)
-    assert reg.list_scenarios() == [***REMOVED***
+    assert reg.list_scenarios() == []
 
 
 def test_registry_nonexistent_dir_yields_empty(tmp_path: Path) -> None:
     reg = ScenarioRegistry(scenarios_dir=tmp_path / "no-such-dir", silent=True)
-    assert reg.list_scenarios() == [***REMOVED***
+    assert reg.list_scenarios() == []
 
 
 # ─── cross-scenario APIs ─────────────────────────────────────────────────────
@@ -357,8 +357,8 @@ def test_propose_roles_returns_top_matches(registry_one: ScenarioRegistry) -> No
     """Project goal with 'backend' + 'code' keywords should pick 'developer'."""
     scored = registry_one.propose_roles("надо реализовать backend код", top_n=2)
     assert scored
-    assert scored[0***REMOVED***[1***REMOVED***.role_id == "developer"
-    assert scored[0***REMOVED***[2***REMOVED*** > 0.0
+    assert scored[0][1].role_id == "developer"
+    assert scored[0][2] > 0.0
 
 
 def test_propose_roles_falls_back_when_no_match(registry_one: ScenarioRegistry) -> None:
@@ -367,20 +367,20 @@ def test_propose_roles_falls_back_when_no_match(registry_one: ScenarioRegistry) 
         "qwertyzzz-gibberish-nonexistent-words", top_n=3
     )
     assert scored
-    assert scored[0***REMOVED***[2***REMOVED*** == 0.0
+    assert scored[0][2] == 0.0
 
 
 def test_propose_roles_cross_scenario_pick(registry_two: ScenarioRegistry) -> None:
     """Even if 'backend' is fully in alpha, beta still appears in the top-N."""
     scored = registry_two.propose_roles("backend code developer", top_n=4)
-    sids = {entry[0***REMOVED***.scenario_id for entry in scored***REMOVED***
+    sids = {entry[0].scenario_id for entry in scored}
     # Both scenarios are represented (at least the fallback head picks from one).
     assert "alpha" in sids or "beta" in sids
 
 
 def test_validate_all_returns_empty_for_clean_corpus(registry_one: ScenarioRegistry) -> None:
     """Both roles are complete → validate returns clean."""
-    assert registry_one.validate_all() == [***REMOVED***
+    assert registry_one.validate_all() == []
 
 
 def test_validate_all_flags_corrupt_role_sections(tmp_path: Path) -> None:
@@ -395,10 +395,10 @@ def test_validate_all_flags_corrupt_role_sections(tmp_path: Path) -> None:
         "    role: Half Role\n"
         "    description: x\n"
         "    condition: always\n"
-        "    triggers: ['x'***REMOVED***\n"
-        "project_types: {***REMOVED***\n"
-        "complexity_routing: {***REMOVED***\n"
-        "categories: {***REMOVED***\n"
+        "    triggers: ['x']\n"
+        "project_types: {]\n"
+        "complexity_routing: {]\n"
+        "categories: {]\n"
         "metadata:\n"
         "  version: 'x'\n",
         encoding="utf-8",
@@ -424,11 +424,11 @@ def test_validate_all_flags_cross_scenario_role_id_collisions(tmp_path: Path) ->
     scenarios_dir = tmp_path / "scenarios"
     scenarios_dir.mkdir(parents=True, exist_ok=True)
     (scenarios_dir / "x.yaml").write_text(
-        f"id: x\ntype: blueprint_v3\nroot: {bp_root***REMOVED***\nenabled: true\n",
+        f"id: x\ntype: blueprint_v3\nroot: {bp_root}\nenabled: true\n",
         encoding="utf-8",
     )
     (scenarios_dir / "y.yaml").write_text(
-        f"id: y\ntype: blueprint_v3\nroot: {bp_root***REMOVED***\nenabled: true\n",
+        f"id: y\ntype: blueprint_v3\nroot: {bp_root}\nenabled: true\n",
         encoding="utf-8",
     )
     reg = ScenarioRegistry(scenarios_dir=scenarios_dir, silent=True)
@@ -446,12 +446,12 @@ def test_blueprint_scenario_alias_is_same_class() -> None:
 
 def test_blueprint_corpus_satisfies_scenario_abc(registry_one: ScenarioRegistry) -> None:
     """The instantiated BlueprintCorpus is a Scenario subclass on the registry."""
-    sc = registry_one.list_scenarios()[0***REMOVED***
+    sc = registry_one.list_scenarios()[0]
     assert isinstance(sc, Scenario)
     assert sc.scenario_id  # property
     assert sc.display_name  # property
     roles = sc.role_objects()
-    assert roles and isinstance(roles[0***REMOVED***, Role)
+    assert roles and isinstance(roles[0], Role)
     text = sc.load_role_text("developer")
     assert "backend" in text.lower()
     # load_role_text for missing role → empty string (no FileNotFoundError leak)
@@ -486,7 +486,7 @@ def test_registry_filter_keeps_only_kept_scenario(
     4. Beta's UNIQUE role ('auditor') is NOT findable in alpha's view.
     """
     filtered = registry_two_with_unique_roles.filter("alpha")
-    assert [sc.scenario_id for sc in filtered.list_scenarios()***REMOVED*** == ["alpha"***REMOVED***
+    assert [sc.scenario_id for sc in filtered.list_scenarios()] == ["alpha"]
     # all_roles scope: only alpha (2 roles = developer + designer).
     pairs = filtered.all_roles()
     assert len(pairs) == 2
@@ -494,15 +494,15 @@ def test_registry_filter_keeps_only_kept_scenario(
     # find_role scope: alpha's 'developer' resolves to alpha, not beta.
     match = filtered.find_role("developer")
     assert match is not None
-    assert match[0***REMOVED***.scenario_id == "alpha"
+    assert match[0].scenario_id == "alpha"
     # alpha's UNIQUE role 'designer' resolves to alpha.
     match_designer = filtered.find_role("designer")
     assert match_designer is not None
-    assert match_designer[0***REMOVED***.scenario_id == "alpha"
+    assert match_designer[0].scenario_id == "alpha"
     # Beta's UNIQUE role ('auditor') is NOT findable in alpha's view.
     registry_full = registry_two_with_unique_roles
     match_auditor = registry_full.find_role("auditor")
-    assert match_auditor is not None and match_auditor[0***REMOVED***.scenario_id == "beta"
+    assert match_auditor is not None and match_auditor[0].scenario_id == "beta"
     assert filtered.find_role("auditor") is None
 
 
@@ -535,7 +535,7 @@ def test_registry_filter_narrows_warnings(tmp_path: Path) -> None:
     bp_root.mkdir()
     _seed_two_role_corpus(bp_root)
     (scenarios_dir / "good.yaml").write_text(
-        f"id: good\ntype: blueprint_v3\nroot: {bp_root***REMOVED***\nenabled: true\n",
+        f"id: good\ntype: blueprint_v3\nroot: {bp_root}\nenabled: true\n",
         encoding="utf-8",
     )
     (scenarios_dir / "bad.yaml").write_text(
@@ -545,7 +545,7 @@ def test_registry_filter_narrows_warnings(tmp_path: Path) -> None:
     reg = ScenarioRegistry(scenarios_dir=scenarios_dir, silent=True)
     pre_filter_warnings = reg.warnings()
     assert any("instantiation failed" in w for w in pre_filter_warnings), (
-        f"expected pre-filter instantiation warning, got: {pre_filter_warnings***REMOVED***"
+        f"expected pre-filter instantiation warning, got: {pre_filter_warnings}"
     )
     # Filter to "good" — the bad-scenario warning must NOT survive.
     # Asserting on the warning TYPE ("instantiation failed") rather than
@@ -555,5 +555,5 @@ def test_registry_filter_narrows_warnings(tmp_path: Path) -> None:
     filtered = reg.filter("good")
     kept_warnings = filtered.warnings()
     assert not any("instantiation failed" in w for w in kept_warnings), (
-        f"filtered warnings leaked an instantiation-failed entry: {kept_warnings***REMOVED***"
+        f"filtered warnings leaked an instantiation-failed entry: {kept_warnings}"
     )

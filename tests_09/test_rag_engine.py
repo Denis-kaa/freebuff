@@ -14,9 +14,9 @@ Tests:
 
 from __future__ import annotations
 
-***REMOVED***
+}
 import sys
-***REMOVED***
+}
 
 import pytest
 
@@ -45,37 +45,37 @@ class _StubResult:
         self.doc_id = doc_id
         self.score = score
         self.content = content
-        self.metadata = metadata or {***REMOVED***
+        self.metadata = metadata or {}
 
 
 class _StubKnowledgeEngine:
     """Заглушка KnowledgeEngine: простой keyword-поиск по словарю документов."""
 
-    def __init__(self, docs: dict[str, str***REMOVED***):
+    def __init__(self, docs: dict[str, str]):
         self.docs = docs  # doc_id -> content
 
     def search(self, query: str, top_k: int = 10, mode: str = "keyword"):
-        terms = [t for t in re.findall(r"[а-яa-z0-9***REMOVED***+", query.lower()) if len(t) > 1***REMOVED***
-        results = [***REMOVED***
+        terms = [t for t in re.findall(r"[а-яa-z0-9)+", query.lower()) if len(t) > 1]
+        results = []
         for doc_id, content in self.docs.items():
             score = float(sum(1 for t in terms if t in content.lower()))
             results.append(_StubResult(doc_id, score, content))
         results.sort(key=lambda r: r.score, reverse=True)
-        return results[:top_k***REMOVED***
+        return results[:top_k]
 
 
 @pytest.fixture
-def docs() -> dict[str, str***REMOVED***:
+def docs() -> dict[str, str]:
     return {
         "d1": "capability based router with scoring system for task distribution",
         "d2": "semantic search engine ranking documents by relevance and freshness",
         "d3": "collaboration session presence tracking for distributed agents",
         "d4": "capability scoring router re-ranking with bm25 and rrf fusion",
-    ***REMOVED***
+    }
 
 
 @pytest.fixture
-def engine(docs: dict[str, str***REMOVED***) -> RAGEngine:
+def engine(docs: dict[str, str]) -> RAGEngine:
     return RAGEngine(knowledge_engine=_StubKnowledgeEngine(docs))
 
 
@@ -91,40 +91,40 @@ class TestSerialization:
             score=0.75,
             content="some content",
             snippet="short",
-            metadata={"source": "test"***REMOVED***,
-            matched_terms=["router"***REMOVED***,
-            rank_sources={"keyword": 0.5***REMOVED***,
-            features={"coverage": 0.5***REMOVED***,
+            metadata={"source": "test"},
+            matched_terms=["router"],
+            rank_sources={"keyword": 0.5},
+            features={"coverage": 0.5},
         )
         d = res.to_dict()
-        assert d["doc_id"***REMOVED*** == "d1"
-        assert d["score"***REMOVED*** == 0.75
-        assert d["snippet"***REMOVED*** == "short"
-        assert d["metadata"***REMOVED*** == {"source": "test"***REMOVED***
-        assert d["matched_terms"***REMOVED*** == ["router"***REMOVED***
-        assert d["rank_sources"***REMOVED*** == {"keyword": 0.5***REMOVED***
-        assert d["features"***REMOVED*** == {"coverage": 0.5***REMOVED***
+        assert d["doc_id"] == "d1"
+        assert d["score"] == 0.75
+        assert d["snippet"] == "short"
+        assert d["metadata"] == {"source": "test"}
+        assert d["matched_terms"] == ["router"]
+        assert d["rank_sources"] == {"keyword": 0.5}
+        assert d["features"] == {"coverage": 0.5}
 
     def test_rag_result_snippet_default_and_truncation(self):
         long_content = "x" * 300
         res = RAGResult(doc_id="d1", score=1.0, content=long_content)
         d = res.to_dict()
         # Сниппет по умолчанию — первые 200 символов контента.
-        assert len(d["snippet"***REMOVED***) == 200
-        assert d["snippet"***REMOVED*** == long_content[:200***REMOVED***
+        assert len(d["snippet"]) == 200
+        assert d["snippet"] == long_content[:200]
 
     def test_rag_result_snippet_long_explicit_truncated(self):
         res = RAGResult(doc_id="d1", score=1.0, content="c", snippet="y" * 300)
         d = res.to_dict()
-        assert len(d["snippet"***REMOVED***) == 200
-        assert d["snippet"***REMOVED***.endswith("...")
+        assert len(d["snippet"]) == 200
+        assert d["snippet"].endswith("...")
 
     def test_rag_report_to_dict(self, engine: RAGEngine):
         report = engine.search("capability router", mode="keyword")
         d = report.to_dict()
-        assert d["query"***REMOVED*** == "capability router"
-        assert d["mode"***REMOVED*** == "keyword"
-        assert isinstance(d["results"***REMOVED***, list)
+        assert d["query"] == "capability router"
+        assert d["mode"] == "keyword"
+        assert isinstance(d["results"], list)
         assert "total_time_ms" in d
         assert "query_terms" in d
 
@@ -136,17 +136,17 @@ class TestSerialization:
 
     def test_feature_vector_combined_score_custom_weights(self):
         fv = FeatureVector(coverage=1.0, term_frequency=1.0)
-        score = fv.combined_score({"coverage": 0.5, "term_frequency": 0.5***REMOVED***)
+        score = fv.combined_score({"coverage": 0.5, "term_frequency": 0.5})
         assert score == pytest.approx(1.0, abs=1e-6)
 
     def test_feature_vector_to_dict(self):
         fv = FeatureVector(coverage=0.5)
         d = fv.to_dict()
-        assert d["coverage"***REMOVED*** == 0.5
+        assert d["coverage"] == 0.5
         assert set(d.keys()) == {
             "coverage", "term_frequency", "position", "length_norm",
             "freshness", "bm25_score", "semantic_score",
-        ***REMOVED***
+        }
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -156,33 +156,33 @@ class TestSerialization:
 
 class TestRRFMerge:
     def test_merge_two_lists(self):
-        list_a = [("d1", 0.9, "c1", {***REMOVED***), ("d2", 0.8, "c2", {***REMOVED***)***REMOVED***
-        list_b = [("d2", 0.95, "c2", {***REMOVED***), ("d3", 0.7, "c3", {***REMOVED***)***REMOVED***
-        merged = RAGEngine.rrf_merge([list_a, list_b***REMOVED***, k=60, top_k=10)
+        list_a = [("d1", 0.9, "c1", {}), ("d2", 0.8, "c2", {})]
+        list_b = [("d2", 0.95, "c2", {}), ("d3", 0.7, "c3", {})]
+        merged = RAGEngine.rrf_merge([list_a, list_b], k=60, top_k=10)
         assert len(merged) == 3
-        doc_ids = [m[0***REMOVED*** for m in merged***REMOVED***
+        doc_ids = [m[0] for m in merged]
         # d2 присутствует в обоих списках → выше суммарный RRF.
-        assert doc_ids[0***REMOVED*** == "d2"
+        assert doc_ids[0] == "d2"
         assert "d1" in doc_ids and "d3" in doc_ids
 
     def test_merge_rank_sources(self):
-        list_a = [("d1", 0.9, "c1", {***REMOVED***)***REMOVED***
-        list_b = [("d1", 0.5, "c1", {***REMOVED***)***REMOVED***
-        merged = RAGEngine.rrf_merge([list_a, list_b***REMOVED***, top_k=10)
-        _, score, content, meta, sources = merged[0***REMOVED***
+        list_a = [("d1", 0.9, "c1", {})]
+        list_b = [("d1", 0.5, "c1", {})]
+        merged = RAGEngine.rrf_merge([list_a, list_b], top_k=10)
+        _, score, content, meta, sources = merged[0]
         assert content == "c1"
         assert "source_0" in sources and "source_1" in sources
-        assert sources["source_0"***REMOVED*** == 0.9
-        assert sources["source_1"***REMOVED*** == 0.5
+        assert sources["source_0"] == 0.9
+        assert sources["source_1"] == 0.5
 
     def test_merge_top_k_limit(self):
-        list_a = [("d1", 1.0, "c1", {***REMOVED***), ("d2", 0.9, "c2", {***REMOVED***), ("d3", 0.8, "c3", {***REMOVED***)***REMOVED***
-        merged = RAGEngine.rrf_merge([list_a***REMOVED***, top_k=2)
+        list_a = [("d1", 1.0, "c1", {}), ("d2", 0.9, "c2", {}), ("d3", 0.8, "c3", {})]
+        merged = RAGEngine.rrf_merge([list_a], top_k=2)
         assert len(merged) == 2
 
     def test_merge_empty(self):
-        merged = RAGEngine.rrf_merge([[***REMOVED***, [***REMOVED******REMOVED***, top_k=10)
-        assert merged == [***REMOVED***
+        merged = RAGEngine.rrf_merge([[], []], top_k=10)
+        assert merged == []
 
     def test_rrf_k_constant(self):
         assert RRF_K == 60
@@ -196,29 +196,29 @@ class TestRRFMerge:
 class TestFeatureExtraction:
     def test_coverage_full_and_partial(self, engine: RAGEngine):
         content = "capability router scoring"
-        fv_full = engine._extract_features(content, ["capability", "router", "scoring"***REMOVED***)
+        fv_full = engine._extract_features(content, ["capability", "router", "scoring"])
         assert fv_full.coverage == pytest.approx(1.0, abs=1e-6)
-        fv_part = engine._extract_features(content, ["capability", "router", "missing"***REMOVED***)
+        fv_part = engine._extract_features(content, ["capability", "router", "missing"])
         assert fv_part.coverage == pytest.approx(2 / 3, abs=1e-6)
 
     def test_position_early_term(self, engine: RAGEngine):
         content = "router appears right at the start of the document text"
-        fv = engine._extract_features(content, ["router"***REMOVED***)
+        fv = engine._extract_features(content, ["router"])
         assert fv.position == pytest.approx(1.0, abs=1e-6)
 
     def test_length_norm_short_and_long(self, engine: RAGEngine):
-        fv_short = engine._extract_features("ab", ["ab"***REMOVED***)
+        fv_short = engine._extract_features("ab", ["ab"])
         assert fv_short.length_norm == pytest.approx(0.002, abs=1e-6)
         long_text = "word " * 1200  # ~6000 chars
-        fv_long = engine._extract_features(long_text, ["word"***REMOVED***)
+        fv_long = engine._extract_features(long_text, ["word"])
         assert 0.0 <= fv_long.length_norm <= 1.0
 
     def test_empty_content(self, engine: RAGEngine):
-        fv = engine._extract_features("", ["term"***REMOVED***)
+        fv = engine._extract_features("", ["term"])
         assert fv.coverage == 0.0
 
     def test_freshness_default(self, engine: RAGEngine):
-        fv = engine._extract_features("content with term", ["term"***REMOVED***, metadata={***REMOVED***)
+        fv = engine._extract_features("content with term", ["term"], metadata={})
         assert fv.freshness == pytest.approx(0.5, abs=1e-6)
 
 
@@ -232,21 +232,21 @@ class TestRerank:
         candidates = [
             RAGResult(doc_id="far", score=1.0, content="text at end of document " * 50),
             RAGResult(doc_id="near", score=0.9, content="router capability near the beginning"),
-        ***REMOVED***
+        ]
         reranked = engine.rerank("router capability", candidates)
         assert len(reranked) == 2
-        assert reranked[0***REMOVED***.doc_id == "near"
+        assert reranked[0].doc_id == "near"
 
     def test_rerank_empty_candidates(self, engine: RAGEngine):
-        assert engine.rerank("query", [***REMOVED***) == [***REMOVED***
+        assert engine.rerank("query", []) == []
 
     def test_rerank_keeps_features(self, engine: RAGEngine):
-        candidates = [RAGResult(doc_id="d1", score=1.0, content="router capability")***REMOVED***
+        candidates = [RAGResult(doc_id="d1", score=1.0, content="router capability")]
         reranked = engine.rerank("router capability", candidates, keep_features=True)
-        assert "coverage" in reranked[0***REMOVED***.features
-        fresh = [RAGResult(doc_id="d1", score=1.0, content="router capability")***REMOVED***
+        assert "coverage" in reranked[0].features
+        fresh = [RAGResult(doc_id="d1", score=1.0, content="router capability")]
         reranked2 = engine.rerank("router capability", fresh, keep_features=False)
-        assert reranked2[0***REMOVED***.features == {***REMOVED***
+        assert reranked2[0].features == {}
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -258,12 +258,12 @@ class TestExpandQuery:
     def test_empty_query(self, engine: RAGEngine):
         expanded, extra = engine.expand_query("")
         assert expanded == ""
-        assert extra == [***REMOVED***
+        assert extra == []
 
     def test_single_term_query_unchanged(self, engine: RAGEngine):
         expanded, extra = engine.expand_query("router")
         assert expanded == "router"
-        assert extra == [***REMOVED***
+        assert extra == []
 
     def test_expansion_returns_extra_terms(self, engine: RAGEngine):
         expanded, extra = engine.expand_query("capability router scoring", max_terms=3)
@@ -280,7 +280,7 @@ class TestSearch:
     def test_empty_query_returns_empty_report(self, engine: RAGEngine):
         report = engine.search("")
         assert isinstance(report, RAGReport)
-        assert report.results == [***REMOVED***
+        assert report.results == []
 
     def test_keyword_mode_returns_results(self, engine: RAGEngine):
         report = engine.search("capability router", mode="keyword")
@@ -315,12 +315,12 @@ class TestSearch:
         rag = RAGEngine(workspace_root=tmp_path)
         report = rag.search("anything", mode="hybrid_rrf")
         assert isinstance(report, RAGReport)
-        assert report.results == [***REMOVED***
+        assert report.results == []
 
     def test_rerank_not_called_for_keyword(self, engine: RAGEngine):
         report = engine.search("capability router", mode="keyword")
         for r in report.results:
-            assert r.features == {***REMOVED***
+            assert r.features == {}
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -332,7 +332,7 @@ class TestCLI:
     def test_main_help(self, monkeypatch):
         from scripts_01.rag_engine import main
 
-        monkeypatch.setattr(sys, "argv", ["rag_engine.py", "--help"***REMOVED***)
+        monkeypatch.setattr(sys, "argv", ["rag_engine.py", "--help"])
         with pytest.raises(SystemExit) as exc:
             main()
         assert exc.value.code == 0
@@ -340,7 +340,7 @@ class TestCLI:
     def test_main_no_command_prints_help(self, monkeypatch, capsys):
         from scripts_01.rag_engine import main
 
-        monkeypatch.setattr(sys, "argv", ["rag_engine.py"***REMOVED***)
+        monkeypatch.setattr(sys, "argv", ["rag_engine.py"])
         code = main()
         assert code == 1
         out = capsys.readouterr().out

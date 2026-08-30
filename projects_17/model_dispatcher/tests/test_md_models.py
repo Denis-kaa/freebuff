@@ -3,12 +3,12 @@
 from projects_17.model_dispatcher import md_models
 
 PRIORITY = [
-    {"name": "glm-5.2", "keywords": ["glm", "5.2"***REMOVED******REMOVED***,
-    {"name": "mimo-2.5-pro", "keywords": ["mimo", "2.5"***REMOVED******REMOVED***,
-    {"name": "minimax-m3", "keywords": ["minimax", "m3"***REMOVED******REMOVED***,
-    {"name": "deepseek-v4-flash", "keywords": ["deepseek"***REMOVED***, "free_fallback": True***REMOVED***,
-***REMOVED***
-MARKERS = ["out of", "sold out", "exhausted", "no sessions", "0 available"***REMOVED***
+    {"name": "glm-5.2", "keywords": ["glm", "5.2"]},
+    {"name": "mimo-2.5-pro", "keywords": ["mimo", "2.5"]},
+    {"name": "minimax-m3", "keywords": ["minimax", "m3"]},
+    {"name": "deepseek-v4-flash", "keywords": ["deepseek"], "free_fallback": True},
+]
+MARKERS = ["out of", "sold out", "exhausted", "no sessions", "0 available"]
 
 
 def test_parse_screen_glm_first_available():
@@ -22,9 +22,9 @@ def test_parse_screen_glm_first_available():
     """
     entries = md_models.parse_screen(screen, PRIORITY, MARKERS)
     assert entries, "нет распознанных моделей"
-    assert entries[0***REMOVED***.name == "glm-5.2"
-    assert entries[0***REMOVED***.position == 0
-    assert entries[0***REMOVED***.available
+    assert entries[0].name == "glm-5.2"
+    assert entries[0].position == 0
+    assert entries[0].available
 
     sel = md_models.pick_model(entries, PRIORITY)
     assert sel.name == "glm-5.2"
@@ -42,12 +42,12 @@ def test_pick_model_falls_to_next_when_glm_unavailable():
       DeepSeek V4 Flash · free
     """
     entries = md_models.parse_screen(screen, PRIORITY, MARKERS)
-    by_name = {e.name: e for e in entries***REMOVED***
-    assert not by_name["glm-5.2"***REMOVED***.available, "GLM должна быть недоступна"
+    by_name = {e.name: e for e in entries}
+    assert not by_name["glm-5.2"].available, "GLM должна быть недоступна"
 
     sel = md_models.pick_model(entries, PRIORITY)
     assert sel.name == "mimo-2.5-pro"
-    assert sel.position == by_name["mimo-2.5-pro"***REMOVED***.position
+    assert sel.position == by_name["mimo-2.5-pro"].position
     assert sel.source == "detected"
 
 
@@ -66,14 +66,14 @@ def test_pick_model_fallback_to_free():
 
 def test_pick_model_empty_screen_fallback():
     """Экран пуст/не распознан → fallback на free-модель без падения."""
-    sel = md_models.pick_model([***REMOVED***, PRIORITY)
+    sel = md_models.pick_model([], PRIORITY)
     assert sel.source == "fallback"
     assert sel.name == "deepseek-v4-flash"
 
 
 def test_pick_model_no_priority_no_crash():
     """Пустой конфиг → 'auto' без падения."""
-    sel = md_models.pick_model([***REMOVED***, [***REMOVED***)
+    sel = md_models.pick_model([], [])
     assert sel.name == "auto"
     assert sel.position == 0
 
@@ -82,7 +82,7 @@ def test_parse_screen_case_insensitive():
     """Детект регистронезависим."""
     screen = "GLM 5.2 available\n  mimo 2.5 pro\n"
     entries = md_models.parse_screen(screen, PRIORITY, MARKERS)
-    names = {e.name for e in entries***REMOVED***
+    names = {e.name for e in entries}
     assert "glm-5.2" in names
     assert "mimo-2.5-pro" in names
 
@@ -91,6 +91,6 @@ def test_unavailable_markers_detect():
     """Маркеры недоступности (sold out) → available=False."""
     screen = "GLM 5.2 · sold out\n  MiMo 2.5 Pro\n"
     entries = md_models.parse_screen(screen, PRIORITY, MARKERS)
-    by_name = {e.name: e for e in entries***REMOVED***
-    assert not by_name["glm-5.2"***REMOVED***.available
-    assert by_name["mimo-2.5-pro"***REMOVED***.available
+    by_name = {e.name: e for e in entries}
+    assert not by_name["glm-5.2"].available
+    assert by_name["mimo-2.5-pro"].available

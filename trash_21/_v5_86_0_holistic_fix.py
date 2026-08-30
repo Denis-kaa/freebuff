@@ -5,7 +5,7 @@ string concatenation (chr(39) for literal apostrophes where needed).
 
 Usage: python3 scripts_01/_v5_86_0_holistic_fix.py
 """
-***REMOVED***
+}
 import os
 import shutil
 
@@ -67,17 +67,17 @@ NEW_PROBE = '''async def _probe_tg_session() -> bool:
                         await client.disconnect()
                     except Exception:
                         pass
-                print(f"  ok TG probe OK (attempt {attempt***REMOVED***/2)", flush=True)
+                print(f"  ok TG probe OK (attempt {attempt}/2)", flush=True)
                 return True
             except TG_AUTH_FAILURES as exc:
                 # Non-recoverable, fail-loud per CAN-14. Unified exit(2).
                 cls = type(exc).__name__
-                print(f"FAIL TG AUTH FAILURE ({cls***REMOVED***): {exc***REMOVED***", flush=True)
-                print(f"     session path: {TG_SESSION_PATH***REMOVED***", flush=True)
+                print(f"FAIL TG AUTH FAILURE ({cls}): {exc}", flush=True)
+                print(f"     session path: {TG_SESSION_PATH}", flush=True)
                 if cls in ("AuthKeyUnregisteredError", "InvalidAuthKeyError"):
                     print("     Reauth required. Regenerate with:", flush=True)
                     print("       python3 -c 'from telethon.sync import TelegramClient;'", flush=True)
-                    print("         c = TelegramClient(\"tg_session\", int(os.environ[\"TG_API_ID\"***REMOVED***), os.environ[\"TG_API_HASH\"***REMOVED***);", flush=True)
+                    print("         c = TelegramClient(\"tg_session\", int(os.environ[\"TG_API_ID\")), os.environ[\"TG_API_HASH\"]);", flush=True)
                     print("         c.start()'", flush=True)
                     print("     Requires TG_API_ID/TG_API_HASH env vars + interactive phone+code.", flush=True)
                     print("     Get creds at: https://my.telegram.org/apps", flush=True)
@@ -94,7 +94,7 @@ NEW_PROBE = '''async def _probe_tg_session() -> bool:
                 # FloodWaitError (if available) is rate-limit; echo seconds
                 if FloodWaitError is not None and isinstance(exc, FloodWaitError):
                     seconds = getattr(exc, "seconds", 60)
-                    print(f"FAIL TG FLOOD-WAIT: must wait {seconds***REMOVED***s before retrying", flush=True)
+                    print(f"FAIL TG FLOOD-WAIT: must wait {seconds}s before retrying", flush=True)
                     try:
                         if client is not None:
                             await client.disconnect()
@@ -103,11 +103,11 @@ NEW_PROBE = '''async def _probe_tg_session() -> bool:
                     sys.exit(2)
                 if isinstance(exc, (ConnectionError, TimeoutError, OSError)):
                     last_exc = exc
-                    print(f"  warn transient probe error (attempt {attempt***REMOVED***/2): {type(exc).__name__***REMOVED***: {exc***REMOVED***", flush=True)
+                    print(f"  warn transient probe error (attempt {attempt}/2): {type(exc).__name__}: {exc}", flush=True)
                     if attempt == 1:
                         await _asyncio.sleep(1)
                         continue
-                    print(f"FAIL TG probe failed after 2 attempts; last error: {last_exc***REMOVED***", flush=True)
+                    print(f"FAIL TG probe failed after 2 attempts; last error: {last_exc}", flush=True)
                     if client is not None:
                         try:
                             await client.disconnect()
@@ -116,7 +116,7 @@ NEW_PROBE = '''async def _probe_tg_session() -> bool:
                     sys.exit(2)
                 # Unknown — soft-warn, retry-once
                 last_exc = exc
-                print(f"  warn unexpected probe error (attempt {attempt***REMOVED***/2): {type(exc).__name__***REMOVED***: {exc***REMOVED***", flush=True)
+                print(f"  warn unexpected probe error (attempt {attempt}/2): {type(exc).__name__}: {exc}", flush=True)
                 if attempt == 1:
                     await _asyncio.sleep(1)
                     continue
@@ -140,15 +140,15 @@ NEW_PROBE = '''async def _probe_tg_session() -> bool:
 
 def main() -> None:
     if BAK.exists():
-        print(f"backup already exists at {BAK***REMOVED***; remove it first if you want to re-run")
+        print(f"backup already exists at {BAK}; remove it first if you want to re-run")
         return
     shutil.copy2(SRC, BAK)
-    print(f"backup created: {BAK***REMOVED***")
+    print(f"backup created: {BAK}")
 
     src = SRC.read_text(encoding="utf-8")
 
     # Locate probe function bounds and replace.
-    ***REMOVED***
+    }
 
     probe_start_re = re.compile(r"^async def _probe_tg_session", re.M)
     next_def_re = re.compile(r"^async def _round_trip_chat_id|^def _", re.M)
@@ -163,10 +163,10 @@ def main() -> None:
         return
     end_idx = m_end.start()
 
-    new_src = src[: m_start.start()***REMOVED*** + NEW_PROBE + src[end_idx:***REMOVED***
+    new_src = src[: m_start.start()] + NEW_PROBE + src[end_idx:]
     SRC.write_text(new_src, encoding="utf-8")
-    print(f"probe function replaced (old {end_idx - m_start.start()***REMOVED*** bytes -> new {len(NEW_PROBE)***REMOVED*** bytes)")
-    print(f"file size: {BAK.stat().st_size***REMOVED*** -> {SRC.stat().st_size***REMOVED*** bytes")
+    print(f"probe function replaced (old {end_idx - m_start.start()} bytes -> new {len(NEW_PROBE)} bytes)")
+    print(f"file size: {BAK.stat().st_size} -> {SRC.stat().st_size} bytes")
 
 
 if __name__ == "__main__":

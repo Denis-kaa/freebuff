@@ -43,7 +43,7 @@ __all__ = [
     "SyncDevice",
     "RemoteSyncCoordinator",
     "SYNC_VERSION_V1",
-***REMOVED***
+]
 
 
 # ── Constants ────────────────────────────────────────────────────────────
@@ -116,8 +116,8 @@ class SyncDelta:
     source_device_id: str                   # device that produced this delta
     revision: int                           # monotonically increasing per-device
     sync_mode: SyncMode                     # where this delta was sent
-    updated_keys: Dict[str, Any***REMOVED***            # key → value (gzip+base64 if >3500 chars)
-    deleted_keys: List[str***REMOVED*** = field(default_factory=list)
+    updated_keys: Dict[str, Any]            # key → value (gzip+base64 if >3500 chars)
+    deleted_keys: List[str] = field(default_factory=list)
     envelope_version: str = SYNC_VERSION_V1
 
     def age_ms(self, now_ms: int) -> int:
@@ -137,9 +137,9 @@ class SyncEnvelope:
     """
 
     delta: SyncDelta                        # the actual change being transported (required)
-    signature: Optional[str***REMOVED*** = None         # xsalsa20_poly1305 HMAC (if pre-encrypted)
-    compression: Literal["none", "gzip_base64"***REMOVED*** = "none"
-    marker: Literal["##FB_STATE##"***REMOVED*** = "##FB_STATE##"   # message body marker for TGClient.on(NewMessage) filter
+    signature: Optional[str] = None         # xsalsa20_poly1305 HMAC (if pre-encrypted)
+    compression: Literal["none", "gzip_base64"] = "none"
+    marker: Literal["##FB_STATE##"] = "##FB_STATE##"   # message body marker for TGClient.on(NewMessage) filter
 
     def serialize(self) -> str:
         """Render envelope to single-line JSON suitable for TG message body."""
@@ -170,8 +170,8 @@ class RemoteSyncCoordinator(Protocol):
         ...
 
     @property
-    def my_devices(self) -> List[SyncDevice***REMOVED***:
-        """Devices in current Sync Group (or [self***REMOVED*** if using Saved Messages only)."""
+    def my_devices(self) -> List[SyncDevice]:
+        """Devices in current Sync Group (or [self] if using Saved Messages only)."""
         ...
 
     async def push_state(self, delta: SyncDelta) -> bool:
@@ -187,7 +187,7 @@ class RemoteSyncCoordinator(Protocol):
         """
         ...
 
-    async def pull_state(self) -> Optional[SyncDelta***REMOVED***:
+    async def pull_state(self) -> Optional[SyncDelta]:
         """Fetch latest TG messages with marker `##FB_STATE##` and apply
         external deltas to local store.
 
@@ -216,7 +216,7 @@ class RemoteSyncCoordinator(Protocol):
             if present in only one side: take that side
             if present in both:
               pick the one with newer timestamp_ms
-              if timestamp_ms equal: drop with [CONFLICT***REMOVED*** log (rare, but safe)
+              if timestamp_ms equal: drop with [CONFLICT] log (rare, but safe)
 
         Whole-doc LWW (mode=WHOLE_DOC_LWW) exists for tiny state (memory of
         <100 keys) but is NOT recommended for interior_planner (each chair
@@ -250,7 +250,7 @@ class RemoteSyncCoordinator(Protocol):
 
     # ── Observability hooks (CAN-14 fail-loud surfaces) ────────────────
 
-    def get_last_event(self) -> Optional[Dict[str, Any***REMOVED******REMOVED***:
+    def get_last_event(self) -> Optional[Dict[str, Any]]:
         """For /last_event TG command convenience. Returns None if no events."""
         ...
 
@@ -288,4 +288,4 @@ DEFAULT_DEDUPE_WINDOW_SECONDS: int = 30
 DEFAULT_MAX_DELTA_AGE_SECONDS: int = 86400       # 24h
 DEFAULT_CHUNK_PRIMARY_CHARS: int = 3500
 DEFAULT_CHUNK_FALLBACK_CHARS: int = 2_000_000   # 2MB → TG document
-DEFAULT_COMPRESSION: Literal["none", "gzip_base64"***REMOVED*** = "gzip_base64"
+DEFAULT_COMPRESSION: Literal["none", "gzip_base64"] = "gzip_base64"

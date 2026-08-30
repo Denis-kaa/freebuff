@@ -50,7 +50,7 @@ def delivery_key_for(
     owner_scope: str,
 ) -> str:
     """Идемпотентный ключ доставки: scope + публикация + версия профиля."""
-    return f"{owner_scope***REMOVED***:{publication.item_key***REMOVED***:p{decision.profile_version***REMOVED***"
+    return f"{owner_scope}:{publication.item_key}:p{decision.profile_version}"
 
 
 class MessageTransport(Protocol):
@@ -93,21 +93,21 @@ def render_card(
         for value in publication.metadata.get("categories", "").split(",")
         if value.strip()
     )
-    score_text = f" · score {score_label***REMOVED***" if score_label else ""
-    categories_line = f"\nКатегории: {categories***REMOVED***" if categories else ""
+    score_text = f" · score {score_label}" if score_label else ""
+    categories_line = f"\nКатегории: {categories}" if categories else ""
 
     source_link = (
-        f"🔗 <a href=\"{_escape(publication.canonical_url)***REMOVED***\">Открыть источник</a>"
+        f"🔗 <a href=\"{_escape(publication.canonical_url)}\">Открыть источник</a>"
     )
     apply_url = publication.metadata.get("apply_url", "").strip()
     apply_link = (
-        f" · ✉️ <a href=\"{_escape(apply_url)***REMOVED***\">Откликнуться</a>" if apply_url else ""
+        f" · ✉️ <a href=\"{_escape(apply_url)}\">Откликнуться</a>" if apply_url else ""
     )
 
     text = (
-        f"<b>{title***REMOVED***</b>\n"
-        f"{summary***REMOVED***\n"
-        f"{source_link***REMOVED***{apply_link***REMOVED***{score_text***REMOVED***{categories_line***REMOVED***"
+        f"<b>{title}</b>\n"
+        f"{summary}\n"
+        f"{source_link}{apply_link}{score_text}{categories_line}"
     )
     return DeliveryCard(text=text, parse_mode="HTML")
 
@@ -131,8 +131,8 @@ class TelegramDelivery:
         self.default_owner_scope = default_owner_scope.strip()
         self.dry_run = dry_run
         self.default_chat_id = default_chat_id
-        self.allowed_owner_scopes: frozenset[str***REMOVED*** = frozenset({self.default_owner_scope***REMOVED***)
-        self._attempts: dict[str, DeliveryAttempt***REMOVED*** = {***REMOVED***
+        self.allowed_owner_scopes: frozenset[str] = frozenset({self.default_owner_scope})
+        self._attempts: dict[str, DeliveryAttempt] = {}
 
     # ------------------------------------------------------------------
     def _existing_sent(self, key: str) -> str | None:
@@ -155,7 +155,7 @@ class TelegramDelivery:
         profile_id: str,
         profile_version: int,
     ) -> None:
-        self._attempts[key***REMOVED*** = attempt
+        self._attempts[key] = attempt
         if self.storage is not None:
             self.storage.save_delivery_attempt(
                 attempt,
@@ -198,7 +198,7 @@ class TelegramDelivery:
                 provider_message_id=existing,
             )
 
-        card = render_card(publication, decision, score_label=f"{decision.score:.2f***REMOVED***")
+        card = render_card(publication, decision, score_label=f"{decision.score:.2f}")
 
         if self.dry_run or self.transport is None:
             attempt = DeliveryAttempt(
@@ -256,4 +256,4 @@ __all__ = [
     "TelegramDelivery",
     "delivery_key_for",
     "render_card",
-***REMOVED***
+]

@@ -42,15 +42,15 @@ class TelegramDelivery:
         """Экранирование HTML (промт 69 п.5: экранируй HTML для TG-бота)."""
         import html as html_mod
 
-        text = html_mod.escape(lead.text[:1000***REMOVED***)
+        text = html_mod.escape(lead.text[:1000])
         lines = [
             "🧲 <b>Найден потенциальный клиент</b>",
-            f"Источник: {lead.source***REMOVED***",
-            f"Интент: {lead.intent***REMOVED*** · Score: <b>{lead.score:.0f***REMOVED***</b>/100",
-            f"<blockquote>{text***REMOVED***</blockquote>",
-        ***REMOVED***
+            f"Источник: {lead.source}",
+            f"Интент: {lead.intent} · Score: <b>{lead.score:.0f}</b>/100",
+            f"<blockquote>{text}</blockquote>",
+        ]
         if lead.url:
-            lines.append(f"🔗 {html_mod.escape(lead.url)***REMOVED***")
+            lines.append(f"🔗 {html_mod.escape(lead.url)}")
         return "\n".join(lines)
 
     async def send(self, lead: Lead) -> bool:
@@ -59,12 +59,12 @@ class TelegramDelivery:
             return False
         try:
             resp = await self._client.post(
-                f"{self.api_base***REMOVED***/bot{self.bot_token***REMOVED***/sendMessage",
+                f"{self.api_base}/bot{self.bot_token}/sendMessage",
                 json={
                     "chat_id": self.chat_id,
                     "text": self._format(lead),
                     "parse_mode": "HTML",
-                ***REMOVED***,
+                },
             )
             resp.raise_for_status()
             return True

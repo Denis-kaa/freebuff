@@ -16,7 +16,7 @@ __all__ = [
     "BootstrapEngine",
     "RuntimeRegistry",
     "RuntimeCapabilityRegistry",
-***REMOVED***
+]
 
 
 def __getattr__(name: str):
@@ -38,6 +38,6 @@ def __getattr__(name: str):
         from freebuff_plugin_03.runtime import RuntimeCapabilityRegistry
         return RuntimeCapabilityRegistry
     raise AttributeError(
-        f"module 'freebuff_plugin' has no attribute '{name***REMOVED***'. "
-        f"Available: {', '.join(__all__)***REMOVED***"
+        f"module 'freebuff_plugin' has no attribute '{name}'. "
+        f"Available: {', '.join(__all__)}"
     )

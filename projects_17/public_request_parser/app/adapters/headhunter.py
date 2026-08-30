@@ -21,7 +21,7 @@ Live-запрос разрешён только при статусе `ALLOWED` 
 
 from __future__ import annotations
 
-***REMOVED***
+}
 from collections.abc import Awaitable, Callable, Mapping
 from datetime import datetime, timezone
 from typing import Any, AsyncIterator
@@ -32,9 +32,9 @@ from app.domain import AdapterError, SourceItem, SourcePolicy, SourcePolicyStatu
 API_BASE = "https://api.hh.ru/vacancies"
 DEFAULT_USER_AGENT = "public-request-parser/0.1 (read-only)"
 
-HttpGetter = Callable[[str***REMOVED***, Awaitable[bytes***REMOVED******REMOVED***
+HttpGetter = Callable[[str], Awaitable[bytes]]
 
-_HIGHLIGHT_RE = re.compile(r"<[^>***REMOVED***+>")
+_HIGHLIGHT_RE = re.compile(r"<[^>)+>")
 
 
 async def _default_http_get(url: str) -> bytes:
@@ -61,7 +61,7 @@ def make_token_http_get(token: str) -> HttpGetter:
         import httpx
 
         async with httpx.AsyncClient(timeout=20.0, follow_redirects=True) as client:
-            response = await client.get(url, headers={"Authorization": f"Bearer {safe_token***REMOVED***"***REMOVED***)
+            response = await client.get(url, headers={"Authorization": f"Bearer {safe_token}"})
             response.raise_for_status()
             return response.content
 
@@ -73,8 +73,8 @@ def _parse_iso(value: str | None) -> datetime | None:
     if not value or not value.strip():
         return None
     raw = value.strip().replace("Z", "+00:00")
-    if len(raw) > 6 and raw[-5***REMOVED*** in "+-" and raw[-2***REMOVED*** != ":":
-        raw = raw[:-5***REMOVED*** + raw[-5:-2***REMOVED*** + ":" + raw[-2:***REMOVED***
+    if len(raw) > 6 and raw[-5] in "+-" and raw[-2] != ":":
+        raw = raw[:-5] + raw[-5:-2] + ":" + raw[-2:]
     try:
         parsed = datetime.fromisoformat(raw)
     except ValueError:
@@ -89,20 +89,20 @@ def _strip_tags(value: str) -> str:
     return _HIGHLIGHT_RE.sub("", value).strip()
 
 
-def _name_of(mapping: Mapping[str, Any***REMOVED*** | None, key: str) -> str:
+def _name_of(mapping: Mapping[str, Any] | None, key: str) -> str:
     if isinstance(mapping, Mapping):
         return str(mapping.get(key) or "").strip()
     return ""
 
 
-def _title_from(item: Mapping[str, Any***REMOVED***) -> str:
+def _title_from(item: Mapping[str, Any]) -> str:
     return str(item.get("name") or "").strip() or str(item.get("id") or "untitled")
 
 
-def _text_from(item: Mapping[str, Any***REMOVED***) -> str:
+def _text_from(item: Mapping[str, Any]) -> str:
     """Объединить snippet.requirement + responsibility (+description), без тегов."""
     snippet = item.get("snippet")
-    parts: list[str***REMOVED*** = [***REMOVED***
+    parts: list[str] = []
     if isinstance(snippet, Mapping):
         for key in ("requirement", "responsibility"):
             value = snippet.get(key)
@@ -114,44 +114,44 @@ def _text_from(item: Mapping[str, Any***REMOVED***) -> str:
     return " ".join(part for part in parts if part).strip()
 
 
-def _metadata_from(item: Mapping[str, Any***REMOVED***) -> dict[str, str***REMOVED***:
+def _metadata_from(item: Mapping[str, Any]) -> dict[str, str]:
     """Безопасные технические metadata (без контактов/адресов)."""
-    meta: dict[str, str***REMOVED*** = {***REMOVED***
+    meta: dict[str, str] = {}
     area = _name_of(item.get("area"), "name")
     if area:
-        meta["area"***REMOVED*** = area
+        meta["area"] = area
     employment = _name_of(item.get("employment"), "name")
     if employment:
-        meta["employment"***REMOVED*** = employment
+        meta["employment"] = employment
     experience = _name_of(item.get("experience"), "name")
     if experience:
-        meta["experience"***REMOVED*** = experience
+        meta["experience"] = experience
     schedule = _name_of(item.get("schedule"), "name")
     if schedule:
-        meta["schedule"***REMOVED*** = schedule
+        meta["schedule"] = schedule
     employer = item.get("employer")
     if isinstance(employer, Mapping):
         ename = str(employer.get("name") or "").strip()
         if ename:
-            meta["employer"***REMOVED*** = ename
+            meta["employer"] = ename
     salary = item.get("salary")
     if isinstance(salary, Mapping):
         for key in ("from", "to", "currency"):
             value = salary.get(key)
             if value is not None and str(value).strip():
-                meta[f"salary_{key***REMOVED***"***REMOVED*** = str(value)
+                meta[f"salary_{key}"] = str(value)
     published = item.get("published_at") or item.get("created_at")
     if published:
-        meta["published_at"***REMOVED*** = str(published)
+        meta["published_at"] = str(published)
     apply_url = item.get("apply_alternate_url")
     if apply_url:
         # Официальная ссылка отклика площадки (не контактные данные):
         # jobseek-режим показывает её как кнопку «Откликнуться».
-        meta["apply_url"***REMOVED*** = str(apply_url)
+        meta["apply_url"] = str(apply_url)
     return meta
 
 
-def _vacancy_to_source_item(item: Mapping[str, Any***REMOVED***) -> SourceItem | None:
+def _vacancy_to_source_item(item: Mapping[str, Any]) -> SourceItem | None:
     """Одна вакансия `item` → `SourceItem`; None если нельзя построить."""
     item_id = str(item.get("id") or "").strip()
     url = str(
@@ -160,7 +160,7 @@ def _vacancy_to_source_item(item: Mapping[str, Any***REMOVED***) -> SourceItem |
     if not item_id or not url:
         return None
     parsed = urlparse(url)
-    if parsed.scheme not in {"http", "https"***REMOVED*** or not parsed.netloc:
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         return None
     published = _parse_iso(
         item.get("published_at") or item.get("created_at")
@@ -171,13 +171,13 @@ def _vacancy_to_source_item(item: Mapping[str, Any***REMOVED***) -> SourceItem |
         canonical_url=url,
         title=_title_from(item),
         published_at=published,
-        summary=text[:1000***REMOVED***,
+        summary=text[:1000],
         content=text or None,
         metadata=_metadata_from(item),
     )
 
 
-def parse_vacancies_payload(payload: bytes) -> list[SourceItem***REMOVED***:
+def parse_vacancies_payload(payload: bytes) -> list[SourceItem]:
     """Разобрать JSON-ответ `GET /vacancies` в список `SourceItem`.
 
     Поднимает `AdapterError` при ошибке API (не-JSON, `errors`, отсутствие
@@ -189,20 +189,20 @@ def parse_vacancies_payload(payload: bytes) -> list[SourceItem***REMOVED***:
     try:
         data = json.loads(payload.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise AdapterError(f"headhunter: invalid JSON payload: {exc***REMOVED***") from exc
+        raise AdapterError(f"headhunter: invalid JSON payload: {exc}") from exc
     if not isinstance(data, Mapping):
         raise AdapterError("headhunter: unexpected payload structure")
     errors = data.get("errors")
     if isinstance(errors, list) and errors:
         detail = "; ".join(
             str(e.get("value") or e) if isinstance(e, Mapping) else str(e)
-            for e in errors[:2***REMOVED***
+            for e in errors[:2]
         )
-        raise AdapterError(f"headhunter: API error: {detail***REMOVED***")
+        raise AdapterError(f"headhunter: API error: {detail}")
     items = data.get("items")
     if not isinstance(items, list):
         raise AdapterError("headhunter: response missing 'items'")
-    result: list[SourceItem***REMOVED*** = [***REMOVED***
+    result: list[SourceItem] = []
     for raw in items:
         if not isinstance(raw, Mapping):
             continue
@@ -238,7 +238,7 @@ class HeadhunterAdapter:
         if self._policy.status is not SourcePolicyStatus.ALLOWED:
             raise AdapterError(
                 "live polling requires ALLOWED source policy, "
-                f"got {self._policy.status.value***REMOVED***"
+                f"got {self._policy.status.value}"
             )
         if not self._policy.can_poll:
             raise AdapterError(
@@ -252,13 +252,13 @@ class HeadhunterAdapter:
         per_page: int,
         modified_from: datetime | None,
     ) -> str:
-        params: dict[str, str***REMOVED*** = {"per_page": str(per_page), "page": "0"***REMOVED***
+        params: dict[str, str] = {"per_page": str(per_page), "page": "0"}
         if text:
-            params["text"***REMOVED*** = text
+            params["text"] = text
         if modified_from is not None:
             # HH поддерживает фильтр по дате публикации
-            params["date_from"***REMOVED*** = modified_from.astimezone(timezone.utc).isoformat()
-        return f"{self._base_url***REMOVED***?{urlencode(params)***REMOVED***"
+            params["date_from"] = modified_from.astimezone(timezone.utc).isoformat()
+        return f"{self._base_url}?{urlencode(params)}"
 
     async def fetch(
         self,
@@ -267,7 +267,7 @@ class HeadhunterAdapter:
         checkpoint: str | None = None,
         text: str = "",
         modified_from: datetime | None = None,
-    ) -> AsyncIterator[SourceItem***REMOVED***:
+    ) -> AsyncIterator[SourceItem]:
         """Bounded batch вакансий; пропускает элементы до checkpoint.
 
         `per_page` максимум 100 (контракт API). Checkpoint-by-id + UNIQUE
@@ -290,7 +290,7 @@ class HeadhunterAdapter:
                 if item.item_id == checkpoint:
                     start = index + 1
                     break
-        for item in items[start : start + limit***REMOVED***:
+        for item in items[start : start + limit]:
             yield item
 
     async def health(self) -> bool:
@@ -310,4 +310,4 @@ __all__ = [
     "HeadhunterAdapter",
     "make_token_http_get",
     "parse_vacancies_payload",
-***REMOVED***
+]

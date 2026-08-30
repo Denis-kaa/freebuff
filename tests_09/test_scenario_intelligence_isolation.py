@@ -21,7 +21,7 @@ construction).
 from __future__ import annotations
 
 import sys
-***REMOVED***
+}
 
 import pytest
 
@@ -55,15 +55,15 @@ def _fresh_si() -> ScenarioIntelligence:
 # ─── Test 1: fresh instance starts with empty warnings ─────────────────────
 
 def test_1_fresh_instance_starts_with_empty_warnings():
-    """Each ScenarioIntelligence instance must start with [***REMOVED*** warnings."""
+    """Each ScenarioIntelligence instance must start with [] warnings."""
     inst = _fresh_si()
-    assert inst._import_warnings == [***REMOVED***, (
+    assert inst._import_warnings == [], (
         "fresh ScenarioIntelligence instance must start with empty warnings"
     )
     # Class-level annotation must exist (mypy --strict PEP 526 forward-ref).
     # NOTE: a bare annotation does NOT create a class attribute — it lives in
     # ``__annotations__`` (and with `from __future__ import annotations` the
-    # value is the string "List[str***REMOVED***"). Check the annotation dict, not the
+    # value is the string "List[str]"). Check the annotation dict, not the
     # attribute (accessing ScenarioIntelligence._import_warnings would raise
     # AttributeError).
     assert "_import_warnings" in ScenarioIntelligence.__annotations__, (
@@ -76,32 +76,32 @@ def test_1_fresh_instance_starts_with_empty_warnings():
 def test_2_lazy_failures_land_per_instance_no_cross_pollution(failing_lazy_import):
     """All 3 lazy methods append to self._import_warnings — never shared."""
     inst1 = _fresh_si()
-    assert inst1._import_warnings == [***REMOVED***
+    assert inst1._import_warnings == []
 
     # ─── 1. _scenario_registry — trigger on inst1 ───
     assert inst1._scenario_registry() is None
-    assert inst1._import_warnings == ["scenario_registry: unavailable"***REMOVED***, (
-        f"inst1 warnings mismatch: {inst1._import_warnings!r***REMOVED***"
+    assert inst1._import_warnings == ["scenario_registry: unavailable"], (
+        f"inst1 warnings mismatch: {inst1._import_warnings!r}"
     )
     snap1 = list(inst1._import_warnings)
 
     # ─── 2. _lazy_factory_registry — trigger on inst1 ───
     assert inst1._lazy_factory_registry() is None
-    assert inst1._import_warnings == snap1 + ["factory_registry: unavailable"***REMOVED***, (
-        f"inst1 must accumulate both warnings: {inst1._import_warnings!r***REMOVED***"
+    assert inst1._import_warnings == snap1 + ["factory_registry: unavailable"], (
+        f"inst1 must accumulate both warnings: {inst1._import_warnings!r}"
     )
     snap1 = list(inst1._import_warnings)
 
     # ─── 3. _lazy_memory_store — trigger on inst1 ───
     assert inst1._lazy_memory_store() is None
-    assert inst1._import_warnings == snap1 + ["memory_store: unavailable"***REMOVED***, (
-        f"inst1 must accumulate all 3 warnings: {inst1._import_warnings!r***REMOVED***"
+    assert inst1._import_warnings == snap1 + ["memory_store: unavailable"], (
+        f"inst1 must accumulate all 3 warnings: {inst1._import_warnings!r}"
     )
     snap1 = list(inst1._import_warnings)  # full 3-warning snapshot for later
 
     # ─── 4. SECOND instance — must have FRESH empty warnings ───
     inst2 = _fresh_si()
-    assert inst2._import_warnings == [***REMOVED***, (
+    assert inst2._import_warnings == [], (
         "SECOND SI instance must have FRESH empty warnings (no cross-pollution)"
     )
 
@@ -113,10 +113,10 @@ def test_2_lazy_failures_land_per_instance_no_cross_pollution(failing_lazy_impor
         "scenario_registry: unavailable",
         "factory_registry: unavailable",
         "memory_store: unavailable",
-    ***REMOVED***, f"inst2 warnings mismatch: {inst2._import_warnings!r***REMOVED***"
+    ], f"inst2 warnings mismatch: {inst2._import_warnings!r}"
     assert inst1._import_warnings == snap1, (
         f"inst1 warnings DRIFTED after inst2 lazy loads — cross-pollution: "
-        f"before={snap1!r***REMOVED*** after={inst1._import_warnings!r***REMOVED***"
+        f"before={snap1!r} after={inst1._import_warnings!r}"
     )
 
 
@@ -159,8 +159,8 @@ def test_3_deprecated_singleton_untouched_and_value_shape(failing_lazy_import):
         depr_after = list(si_mod._LAZY_IMPORT_ERRORS)
     assert depr_after == depr_before, (
         f"DEPRECATED module-level singleton must NOT receive appends from "
-        f"per-instance lazy methods (ADR-015). before={depr_before!r***REMOVED*** "
-        f"after={depr_after!r***REMOVED***"
+        f"per-instance lazy methods (ADR-015). before={depr_before!r} "
+        f"after={depr_after!r}"
     )
 
     # Cross-check: warnings landed on the instances instead.
@@ -177,7 +177,7 @@ def test_4_lazy_import_errors_singleton_emits_deprecation_warning():
     core_02/factory_base.py v5.189.33 + test_content_factory test_16).
 
     Also verifies:
-    - The access still returns a real ``List[str***REMOVED***`` (backward-compat surface).
+    - The access still returns a real ``List[str]`` (backward-compat surface).
     - The warning text contains the migration pointer.
     - The warning is filterable to ``error`` (pytest ``-W error::DeprecationWarning``
       does NOT break the value shape).
@@ -192,20 +192,20 @@ def test_4_lazy_import_errors_singleton_emits_deprecation_warning():
         val = si_mod._LAZY_IMPORT_ERRORS
 
     assert isinstance(val, list), (
-        f"DEPRECATED shim must remain a real list (backward-compat); got {type(val).__name__***REMOVED***"
+        f"DEPRECATED shim must remain a real list (backward-compat); got {type(val).__name__}"
     )
     assert any(issubclass(w.category, DeprecationWarning) for w in caught), (
         f"Expected at least one DeprecationWarning, got: "
-        f"{[(w.category.__name__, str(w.message)[:60***REMOVED***) for w in caught***REMOVED******REMOVED***"
+        f"{[(w.category.__name__, str(w.message)[:60]) for w in caught]}"
     )
     deprecation_msgs = [str(w.message) for w in caught
-                       if issubclass(w.category, DeprecationWarning)***REMOVED***
+                       if issubclass(w.category, DeprecationWarning)]
     assert deprecation_msgs, "at least one DeprecationWarning must be present"
     assert any("inst._import_warnings" in m for m in deprecation_msgs), (
-        f"DeprecationWarning must point at inst._import_warnings; got: {deprecation_msgs!r***REMOVED***"
+        f"DeprecationWarning must point at inst._import_warnings; got: {deprecation_msgs!r}"
     )
     assert any("scenario_intelligence._LAZY_IMPORT_ERRORS" in m for m in deprecation_msgs), (
-        f"DeprecationWarning must mention _LAZY_IMPORT_ERRORS; got: {deprecation_msgs!r***REMOVED***"
+        f"DeprecationWarning must mention _LAZY_IMPORT_ERRORS; got: {deprecation_msgs!r}"
     )
 
     # ─── 2. Re-access: deprecation still works (fresh catch_warnings resets state) ───
@@ -213,7 +213,7 @@ def test_4_lazy_import_errors_singleton_emits_deprecation_warning():
         warnings.simplefilter("always", DeprecationWarning)
         val2 = si_mod._LAZY_IMPORT_ERRORS
     assert isinstance(val2, list)
-    deprecation2 = [w for w in caught2 if issubclass(w.category, DeprecationWarning)***REMOVED***
+    deprecation2 = [w for w in caught2 if issubclass(w.category, DeprecationWarning)]
     assert deprecation2, (
         "Each explicit consumer call should still get a DeprecationWarning; "
         "if this fails, Python's filter is suppressing it (check -W flags)"
@@ -226,5 +226,5 @@ def test_4_lazy_import_errors_singleton_emits_deprecation_warning():
             si_mod._LAZY_IMPORT_ERRORS
     assert "inst._import_warnings" in str(excinfo.value), (
         f"Raised DeprecationWarning must point at inst._import_warnings; "
-        f"got: {str(excinfo.value)[:120***REMOVED******REMOVED***"
+        f"got: {str(excinfo.value)[:120]}"
     )

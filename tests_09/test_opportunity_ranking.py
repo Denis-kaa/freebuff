@@ -13,12 +13,12 @@ from __future__ import annotations
 import json
 import sys
 from datetime import datetime, timedelta, timezone
-***REMOVED***
+}
 from typing import Any, Dict
 
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parents[1***REMOVED***
+REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS_DIR = REPO_ROOT / "scripts_01"
 sys.path.insert(0, str(SCRIPTS_DIR))
 sys.path.insert(0, str(REPO_ROOT))
@@ -51,14 +51,14 @@ def _make_opp(
     return Opportunity(
         id=opp_id,
         project_id=project_id,
-        title=f"Opp {opp_id***REMOVED***",
+        title=f"Opp {opp_id}",
         description="ranking test",
         source=source,
         status="ACTIVE",
         priority=priority,
         created_at=created_at,
         updated_at=created_at,
-        provenance={"source": source, "confidence": confidence, "stub": False***REMOVED***,
+        provenance={"source": source, "confidence": confidence, "stub": False},
     )
 
 
@@ -66,13 +66,13 @@ def _days_ago(days: float) -> str:
     return (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
 
 
-def _hermetic_sources(tmp_path: Path, whims_yaml: Path) -> Dict[str, Path***REMOVED***:
+def _hermetic_sources(tmp_path: Path, whims_yaml: Path) -> Dict[str, Path]:
     return {
         "whims": whims_yaml,
         "pulse": tmp_path / "missing_pulse.db",
         "events": tmp_path / "missing_events.db",
         "memory": tmp_path / "missing_memory.db",
-    ***REMOVED***
+    }
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -80,7 +80,7 @@ def _hermetic_sources(tmp_path: Path, whims_yaml: Path) -> Dict[str, Path***REMO
 # ═════════════════════════════════════════════════════════════════════════
 
 def test_rank_score_default_weights_bounds():
-    """score ∈ [0,1***REMOVED*** при дефолтных весах; известная точка для hand/fresh/prio5."""
+    """score ∈ [0,1] при дефолтных весах; известная точка для hand/fresh/prio5."""
     opp = _make_opp(source="hand", confidence=0.5, priority=5)
     s = rank_score(opp)
     assert 0.0 <= s <= 1.0
@@ -100,7 +100,7 @@ def test_rank_score_confidence_clamping():
 def test_rank_score_source_weights():
     """whim=1.0 > knowledge=0.8 > event_bus=0.5; unknown=0.5 (равны event_bus)."""
     ts = _days_ago(0)
-    base: Dict[str, Any***REMOVED*** = {"confidence": 0.5, "priority": 5***REMOVED***
+    base: Dict[str, Any] = {"confidence": 0.5, "priority": 5}
     whim = _make_opp(source="whim", created_at=ts, **base)
     kn = _make_opp(source="knowledge", created_at=ts, **base)
     ev = _make_opp(source="event_bus", created_at=ts, **base)
@@ -130,7 +130,7 @@ def test_rank_score_custom_weights_override():
     ts = _days_ago(0)
     low = _make_opp(source="event_bus", confidence=0.5, priority=1, created_at=ts)
     high = _make_opp(source="event_bus", confidence=0.9, priority=1, created_at=ts)
-    w = {"confidence": 1.0, "source": 0.0, "recency": 0.0, "priority": 0.0***REMOVED***
+    w = {"confidence": 1.0, "source": 0.0, "recency": 0.0, "priority": 0.0}
     assert rank_score(high, weights=w) > rank_score(low, weights=w)
 
 
@@ -142,15 +142,15 @@ def test_rank_candidates_sorts_desc_by_score():
     low = _make_opp(opp_id="low", source="event_bus", confidence=0.3, priority=1)
     high = _make_opp(opp_id="high", source="whim", confidence=0.9, priority=10)
     mid = _make_opp(opp_id="mid", source="knowledge", confidence=0.6, priority=5)
-    ranked = rank_candidates([low, high, mid***REMOVED***)
-    assert [o.id for o in ranked***REMOVED*** == ["high", "mid", "low"***REMOVED***
+    ranked = rank_candidates([low, high, mid])
+    assert [o.id for o in ranked] == ["high", "mid", "low"]
 
 
 def test_rank_candidates_tiebreak_newer_first():
     old = _make_opp(opp_id="old", created_at=_days_ago(10))
     new = _make_opp(opp_id="new", created_at=_days_ago(0))
-    ranked = rank_candidates([old, new***REMOVED***)
-    assert [o.id for o in ranked***REMOVED*** == ["new", "old"***REMOVED***
+    ranked = rank_candidates([old, new])
+    assert [o.id for o in ranked] == ["new", "old"]
 
 
 def test_rank_candidates_stable_on_full_tie():
@@ -158,24 +158,24 @@ def test_rank_candidates_stable_on_full_tie():
     a = _make_opp(opp_id="a", created_at=ts)
     b = _make_opp(opp_id="b", created_at=ts)
     c = _make_opp(opp_id="c", created_at=ts)
-    ranked = rank_candidates([a, b, c***REMOVED***)
-    assert [o.id for o in ranked***REMOVED*** == ["a", "b", "c"***REMOVED***
+    ranked = rank_candidates([a, b, c])
+    assert [o.id for o in ranked] == ["a", "b", "c"]
 
 
 def test_rank_candidates_persists_traceability():
     opp = _make_opp(source="whim", confidence=0.8, priority=7)
-    rank_candidates([opp***REMOVED***)
+    rank_candidates([opp])
     assert "rank_score" in opp.provenance
     assert "rank_factors" in opp.provenance
-    f = opp.provenance["rank_factors"***REMOVED***
-    assert f["source"***REMOVED*** == "whim"
-    assert f["source_weight"***REMOVED*** == SOURCE_WEIGHTS["whim"***REMOVED***
-    assert f["confidence"***REMOVED*** == 0.8
+    f = opp.provenance["rank_factors"]
+    assert f["source"] == "whim"
+    assert f["source_weight"] == SOURCE_WEIGHTS["whim"]
+    assert f["confidence"] == 0.8
 
 
 def test_rank_candidates_no_persist():
     opp = _make_opp()
-    rank_candidates([opp***REMOVED***, persist_score=False)
+    rank_candidates([opp], persist_score=False)
     assert "rank_score" not in opp.provenance
 
 
@@ -197,9 +197,9 @@ def test_discover_rank_true_orders_by_score(tmp_path: Path):
         "proj-r", max_results=5, source_paths=_hermetic_sources(tmp_path, whims_yaml), rank=True
     )
     assert len(cands) == 2
-    assert cands[0***REMOVED***.provenance["confidence"***REMOVED*** == 0.8  # PROMOTE_CANDIDATE выше
-    assert cands[1***REMOVED***.provenance["confidence"***REMOVED*** == 0.6
-    assert cands[0***REMOVED***.provenance.get("rank_score") is not None
+    assert cands[0].provenance["confidence"] == 0.8  # PROMOTE_CANDIDATE выше
+    assert cands[1].provenance["confidence"] == 0.6
+    assert cands[0].provenance.get("rank_score") is not None
 
 
 def test_discover_rank_false_backward_compat(tmp_path: Path):
@@ -216,8 +216,8 @@ def test_discover_rank_false_backward_compat(tmp_path: Path):
         "proj-b", max_results=5, source_paths=_hermetic_sources(tmp_path, whims_yaml), rank=False
     )
     assert len(cands) == 2
-    assert cands[0***REMOVED***.provenance["confidence"***REMOVED*** == 0.8  # порядок источников (вставки)
-    assert "rank_score" not in cands[0***REMOVED***.provenance
+    assert cands[0].provenance["confidence"] == 0.8  # порядок источников (вставки)
+    assert "rank_score" not in cands[0].provenance
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -230,10 +230,10 @@ def test_cli_rank_subcommand(tmp_path: Path, capsys: pytest.CaptureFixture):
     store.upsert(_make_opp(opp_id="low", source="event_bus", confidence=0.3, priority=1))
     store.upsert(_make_opp(opp_id="high", source="whim", confidence=0.9, priority=10))
 
-    rc = main(["--data-path", str(tmp_path / "opps.yaml"), "rank", "--json"***REMOVED***)
+    rc = main(["--data-path", str(tmp_path / "opps.yaml"), "rank", "--json"])
     captured = capsys.readouterr()
     assert rc == 0
     payload = json.loads(captured.out)
-    assert payload["opportunity_engine"***REMOVED*** == "rank"
-    assert payload["top"***REMOVED*** == "high"
-    assert [i["id"***REMOVED*** for i in payload["items"***REMOVED******REMOVED*** == ["high", "low"***REMOVED***
+    assert payload["opportunity_engine"] == "rank"
+    assert payload["top"] == "high"
+    assert [i["id"] for i in payload["items"]] == ["high", "low"]

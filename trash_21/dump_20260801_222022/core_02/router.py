@@ -9,8 +9,8 @@ freebuff/core_02/router.py — Capability-based LLM Router.
 Usage:
     from freebuff.core_02.router import SmartRouter, ModelCatalog
     router = SmartRouter(catalog)
-    decision = router.route(required_capabilities=["code"***REMOVED***)
-    print(f"Using {decision.model***REMOVED*** ({decision.reason***REMOVED***)")
+    decision = router.route(required_capabilities=["code"])
+    print(f"Using {decision.model} ({decision.reason})")
 """
 
 from __future__ import annotations
@@ -61,7 +61,7 @@ class ModelEntry:
     max_tokens: int = 4096
     cost_per_1k: float = 0.0           # USD per 1K tokens
     latency_ms: int = 1000             # estimated latency
-    capabilities: List[str***REMOVED*** = field(default_factory=list)  # ["code", "vision", "tools"***REMOVED***
+    capabilities: List[str] = field(default_factory=list)  # ["code", "vision", "tools"]
 
 
 @dataclass
@@ -88,33 +88,33 @@ class ModelCatalog:
     - Создавать дефолтный каталог для окружения пользователя
     """
 
-    def __init__(self, entries: Optional[List[ModelEntry***REMOVED******REMOVED*** = None):
-        self._entries: Dict[str, ModelEntry***REMOVED*** = {***REMOVED***
+    def __init__(self, entries: Optional[List[ModelEntry]] = None):
+        self._entries: Dict[str, ModelEntry] = {}
         if entries:
             for e in entries:
-                self._entries[e.name***REMOVED*** = e
+                self._entries[e.name] = e
 
     def add(self, entry: ModelEntry) -> None:
-        self._entries[entry.name***REMOVED*** = entry
+        self._entries[entry.name] = entry
 
-    def get(self, name: str) -> Optional[ModelEntry***REMOVED***:
+    def get(self, name: str) -> Optional[ModelEntry]:
         return self._entries.get(name)
 
-    def list_by_provider(self, provider: Provider) -> List[ModelEntry***REMOVED***:
-        return [e for e in self._entries.values() if e.provider == provider***REMOVED***
+    def list_by_provider(self, provider: Provider) -> List[ModelEntry]:
+        return [e for e in self._entries.values() if e.provider == provider]
 
-    def list_by_capability(self, capability: str) -> List[ModelEntry***REMOVED***:
-        return [e for e in self._entries.values() if capability in e.capabilities***REMOVED***
+    def list_by_capability(self, capability: str) -> List[ModelEntry]:
+        return [e for e in self._entries.values() if capability in e.capabilities]
 
     @property
-    def all(self) -> List[ModelEntry***REMOVED***:
+    def all(self) -> List[ModelEntry]:
         return list(self._entries.values())
 
     def match(
         self,
-        required: List[str***REMOVED***,
+        required: List[str],
         max_tokens: int = 0,
-    ) -> List[Tuple[ModelEntry, int***REMOVED******REMOVED***:
+    ) -> List[Tuple[ModelEntry, int]]:
         """Возвращает модели, отсортированные по совпадению capabilities.
 
         Args:
@@ -127,7 +127,7 @@ class ModelCatalog:
             match_score = сколько из required capabilities есть у модели.
         """
         required_set = set(required) if required else set()
-        scored = [***REMOVED***
+        scored = []
 
         for entry in self._entries.values():
             # Фильтр: модель должна вмещать контекст
@@ -143,7 +143,7 @@ class ModelCatalog:
             scored.append((entry, matches))
 
         # Сортируем: сначала больше совпадений, потом быстрее/дешевле
-        scored.sort(key=lambda x: (-x[1***REMOVED***, x[0***REMOVED***.latency_ms, x[0***REMOVED***.cost_per_1k))
+        scored.sort(key=lambda x: (-x[1], x[0].latency_ms, x[0].cost_per_1k))
 
         return scored
 
@@ -163,7 +163,7 @@ class ModelCatalog:
                            "fast",         # низкая задержка
                            "code",         # умеет писать код
                            "summarize",    # умеет суммаризировать
-                       ***REMOVED***),
+                       ]),
             ModelEntry("qwen2.5:0.5b", Provider.OLLAMA,
                        max_tokens=2048, latency_ms=100, cost_per_1k=0.0,
                        capabilities=[
@@ -171,7 +171,7 @@ class ModelCatalog:
                            "fast",
                            "router",       # достаточно для роутинга задач
                            "classify",     # классификация
-                       ***REMOVED***),
+                       ]),
             # ── Облачные модели ───────────────────────────────
             ModelEntry("deepseek-v4-flash", Provider.DEEPSEEK,
                        max_tokens=128000, latency_ms=2000, cost_per_1k=0.00015,
@@ -181,7 +181,7 @@ class ModelCatalog:
                            "plan",
                            "refactor",
                            "explain",
-                       ***REMOVED***),
+                       ]),
             ModelEntry("deepseek-v4-pro", Provider.DEEPSEEK,
                        max_tokens=128000, latency_ms=3000, cost_per_1k=0.002,
                        capabilities=[
@@ -191,7 +191,7 @@ class ModelCatalog:
                            "architecture", # архитектурное проектирование
                            "plan",
                            "review",
-                       ***REMOVED***),
+                       ]),
             ModelEntry("gemini-2.5-flash", Provider.GEMINI,
                        max_tokens=1048576, latency_ms=1500, cost_per_1k=0.00015,
                        capabilities=[
@@ -201,7 +201,7 @@ class ModelCatalog:
                            "long_context", # 1M+ токенов
                            "reasoning",
                            "multimodal",
-                       ***REMOVED***),
+                       ]),
             ModelEntry("llama-3.3-70b-versatile", Provider.GROQ,
                        max_tokens=128000, latency_ms=800, cost_per_1k=0.00059,
                        capabilities=[
@@ -209,8 +209,8 @@ class ModelCatalog:
                            "code",
                            "reasoning",
                            "instruct",     # хорошо следует инструкциям
-                       ***REMOVED***),
-        ***REMOVED***)
+                       ]),
+        ])
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -235,7 +235,7 @@ class SmartRouter:
 
     def route(
         self,
-        required_capabilities: Optional[List[str***REMOVED******REMOVED*** = None,
+        required_capabilities: Optional[List[str]] = None,
         max_tokens_needed: int = 0,
         preference: Preference = Preference.BALANCED,
     ) -> RouteDecision:
@@ -243,7 +243,7 @@ class SmartRouter:
 
         Args:
             required_capabilities: что нужно модели уметь
-                (например ["code", "vision"***REMOVED*** или ["local", "fast"***REMOVED***).
+                (например ["code", "vision"] или ["local", "fast"]).
                 Если указано — выбор идёт по совпадению capabilities.
                 Preference учитывается только при равном score.
             max_tokens_needed: сколько токенов нужно обработать
@@ -256,20 +256,20 @@ class SmartRouter:
         Raises:
             RuntimeError: если ни одна модель не доступна.
         """
-        req = required_capabilities or [***REMOVED***
+        req = required_capabilities or []
 
         # 1. Capability-based matching
         scored = self.catalog.match(req, max_tokens=max_tokens_needed)
 
         if scored:
-            best_entry, best_score = scored[0***REMOVED***
+            best_entry, best_score = scored[0]
 
             # Если есть совпадения — используем лучшую
             if best_score > 0:
                 return RouteDecision(
                     model=best_entry.name,
                     provider=best_entry.provider,
-                    reason=f"capability_match:{best_score***REMOVED***/{len(req)***REMOVED***",
+                    reason=f"capability_match:{best_score}/{len(req)}",
                     fallback_used=False,
                 )
 
@@ -279,24 +279,24 @@ class SmartRouter:
                 return RouteDecision(
                     model=entry.name,
                     provider=entry.provider,
-                    reason=f"preference:{preference.value***REMOVED***",
+                    reason=f"preference:{preference.value}",
                     fallback_used=False,
                 )
 
         # 2. Fallback: требования не совпали ни с одной моделью
         # Пробуем модель с максимальными tokens (чтобы хотя бы обработала)
-        all_models = self.catalog.match([***REMOVED***, max_tokens=0)
+        all_models = self.catalog.match([], max_tokens=0)
 
         if all_models:
             # Берём модель с самой большой ёмкостью контекста
             by_context = sorted(
-                all_models, key=lambda x: -x[0***REMOVED***.max_tokens
+                all_models, key=lambda x: -x[0].max_tokens
             )
-            entry = by_context[0***REMOVED***[0***REMOVED***
+            entry = by_context[0][0]
             return RouteDecision(
                 model=entry.name,
                 provider=entry.provider,
-                reason=f"fallback:no_capability_match (needed {req***REMOVED***, best effort)",
+                reason=f"fallback:no_capability_match (needed {req}, best effort)",
                 fallback_used=True,
             )
 
@@ -314,27 +314,27 @@ class SmartRouter:
 
     def _route_by_preference(
         self,
-        scored: List[Tuple[ModelEntry, int***REMOVED******REMOVED***,
+        scored: List[Tuple[ModelEntry, int]],
         preference: Preference,
     ) -> ModelEntry:
         """Выбирает модель на основе предпочтения (когда нет требований)."""
         if preference == Preference.LOCAL:
             # Сначала локальные, потом всё остальное
-            local = [e for e, _ in scored if e.provider == Provider.OLLAMA***REMOVED***
+            local = [e for e, _ in scored if e.provider == Provider.OLLAMA]
             if local:
-                return local[0***REMOVED***
+                return local[0]
         elif preference == Preference.CLOUD:
-            cloud = [e for e, _ in scored if e.provider != Provider.OLLAMA***REMOVED***
+            cloud = [e for e, _ in scored if e.provider != Provider.OLLAMA]
             if cloud:
-                return cloud[0***REMOVED***
+                return cloud[0]
         elif preference == Preference.FAST:
             # Сортируем по latency ascending
-            by_latency = sorted(scored, key=lambda x: x[0***REMOVED***.latency_ms)
-            return by_latency[0***REMOVED***[0***REMOVED***
+            by_latency = sorted(scored, key=lambda x: x[0].latency_ms)
+            return by_latency[0][0]
         elif preference == Preference.CHEAP:
             # Сортируем по cost ascending
-            by_cost = sorted(scored, key=lambda x: x[0***REMOVED***.cost_per_1k)
-            return by_cost[0***REMOVED***[0***REMOVED***
+            by_cost = sorted(scored, key=lambda x: x[0].cost_per_1k)
+            return by_cost[0][0]
 
         # BALANCED: берём первую (уже отсортирована)
-        return scored[0***REMOVED***[0***REMOVED***
+        return scored[0][0]

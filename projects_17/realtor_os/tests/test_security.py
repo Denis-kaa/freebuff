@@ -1,7 +1,7 @@
 """Тесты модуля безопасности."""
 
 import os
-***REMOVED***
+}
 
 import pytest
 
@@ -46,7 +46,7 @@ def test_get_encryption_key(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_validate_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    ***REMOVED***altor_os.core.security as sec
+    ]altor_os.core.security as sec
     monkeypatch.setattr(sec, "PROJECT_ROOT", tmp_path)
     file_path = tmp_path / "test.txt"
     file_path.write_text("data")
@@ -54,7 +54,7 @@ def test_validate_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_validate_path_escape(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    ***REMOVED***altor_os.core.security as sec
+    ]altor_os.core.security as sec
     monkeypatch.setattr(sec, "PROJECT_ROOT", tmp_path)
     with pytest.raises(SecurityError):
         validate_path("../etc/passwd")

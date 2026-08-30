@@ -7,10 +7,10 @@ normalized into diagnostic-only reports and never become learning evidence.
 from __future__ import annotations
 
 import json
-***REMOVED***
+}
 import subprocess
 from abc import ABC, abstractmethod
-***REMOVED***
+}
 from typing import Any, Sequence
 
 from app.diagnostics.contract import (
@@ -38,10 +38,10 @@ class AnalyzerAdapter(ABC):
 
     def _run(
         self,
-        args: Sequence[str***REMOVED***,
+        args: Sequence[str],
         *,
-        accepted_exit_codes: tuple[int, ...***REMOVED*** = (0, 1),
-    ) -> tuple[SensorStatus, str, str, int | None***REMOVED***:
+        accepted_exit_codes: tuple[int, ...] = (0, 1),
+    ) -> tuple[SensorStatus, str, str, int | None]:
         try:
             completed = subprocess.run(
                 list(args),
@@ -51,12 +51,12 @@ class AnalyzerAdapter(ABC):
                 timeout=self.timeout_seconds,
             )
         except FileNotFoundError:
-            return SensorStatus.UNAVAILABLE, "", f"{self.executable***REMOVED***: executable not found", None
+            return SensorStatus.UNAVAILABLE, "", f"{self.executable}: executable not found", None
         except subprocess.TimeoutExpired as exc:
             stderr = _text(exc.stderr)
             return SensorStatus.FAILED, _text(exc.stdout), "analyzer timeout" if not stderr else stderr, None
         except OSError as exc:
-            return SensorStatus.FAILED, "", f"{type(exc).__name__***REMOVED***: {exc***REMOVED***", None
+            return SensorStatus.FAILED, "", f"{type(exc).__name__}: {exc}", None
         status = SensorStatus.OK if completed.returncode in accepted_exit_codes else SensorStatus.FAILED
         return status, completed.stdout, completed.stderr, completed.returncode
 
@@ -74,7 +74,7 @@ class PylintAdapter(AnalyzerAdapter):
         if status is not SensorStatus.OK:
             return SensorReport(self.source, status, stderr=stderr, exit_code=exit_code)
         try:
-            payload = json.loads(stdout or "[***REMOVED***")
+            payload = json.loads(stdout or "[)")
             if not isinstance(payload, list):
                 raise ValueError("expected a JSON list")
             diagnostics = tuple(_pylint_item(item, path) for item in payload)
@@ -82,7 +82,7 @@ class PylintAdapter(AnalyzerAdapter):
             return SensorReport(
                 self.source,
                 SensorStatus.INVALID_OUTPUT,
-                stderr=f"invalid pylint JSON: {exc***REMOVED***",
+                stderr=f"invalid pylint JSON: {exc}",
                 exit_code=exit_code,
             )
         return SensorReport(self.source, SensorStatus.OK, diagnostics, stderr, exit_code).ordered()
@@ -94,9 +94,9 @@ class RadonAdapter(AnalyzerAdapter):
     source = "radon"
 
     def analyze(self, path: Path, *, security_eligible: bool = False) -> SensorReport:
-        diagnostics: list[Diagnostic***REMOVED*** = [***REMOVED***
-        errors: list[str***REMOVED*** = [***REMOVED***
-        exit_codes: list[int***REMOVED*** = [***REMOVED***
+        diagnostics: list[Diagnostic] = []
+        errors: list[str] = []
+        exit_codes: list[int] = []
         commands = (
             ("cc", "complexity", self._parse_complexity),
             ("raw", "raw metrics", self._parse_raw),
@@ -112,34 +112,34 @@ class RadonAdapter(AnalyzerAdapter):
             if status is SensorStatus.UNAVAILABLE:
                 return SensorReport(self.source, status, stderr=stderr, exit_code=exit_code)
             if status is not SensorStatus.OK:
-                errors.append(f"{label***REMOVED***: {stderr or 'tool failed'***REMOVED***")
+                errors.append(f"{label}: {stderr or 'tool failed'}")
                 continue
             try:
                 diagnostics.extend(parser(stdout, path))
             except (TypeError, ValueError, json.JSONDecodeError) as exc:
-                errors.append(f"{label***REMOVED***: invalid JSON: {exc***REMOVED***")
+                errors.append(f"{label}: invalid JSON: {exc}")
         if errors and not diagnostics:
             return SensorReport(
                 self.source,
                 SensorStatus.INVALID_OUTPUT if any("invalid JSON" in item for item in errors) else SensorStatus.FAILED,
                 stderr="; ".join(errors),
-                exit_code=exit_codes[-1***REMOVED*** if exit_codes else None,
+                exit_code=exit_codes[-1] if exit_codes else None,
             )
         return SensorReport(
             self.source,
             SensorStatus.OK if not errors else SensorStatus.FAILED,
             tuple(diagnostics),
             stderr="; ".join(errors),
-            exit_code=exit_codes[-1***REMOVED*** if exit_codes else 0,
+            exit_code=exit_codes[-1] if exit_codes else 0,
         ).ordered()
 
     @staticmethod
-    def _parse_complexity(raw: str, path: Path) -> list[Diagnostic***REMOVED***:
+    def _parse_complexity(raw: str, path: Path) -> list[Diagnostic]:
         payload = _json_object(raw)
-        items = payload.get(str(path), [***REMOVED***)
+        items = payload.get(str(path), [])
         if not isinstance(items, list):
             raise ValueError("complexity payload must contain a list")
-        result: list[Diagnostic***REMOVED*** = [***REMOVED***
+        result: list[Diagnostic] = []
         for item in items:
             if not isinstance(item, dict):
                 raise ValueError("complexity item must be an object")
@@ -154,18 +154,18 @@ class RadonAdapter(AnalyzerAdapter):
                     DiagnosticSeverity.MEDIUM if _number(complexity) > 10 else DiagnosticSeverity.INFO,
                     path,
                     line,
-                    f"{name***REMOVED*** cyclomatic complexity is {complexity***REMOVED***",
+                    f"{name} cyclomatic complexity is {complexity}",
                 )
             )
         return result
 
     @staticmethod
-    def _parse_raw(raw: str, path: Path) -> list[Diagnostic***REMOVED***:
+    def _parse_raw(raw: str, path: Path) -> list[Diagnostic]:
         payload = _json_object(raw)
-        item = payload.get(str(path), {***REMOVED***)
+        item = payload.get(str(path), {})
         if not isinstance(item, dict):
             raise ValueError("raw payload must contain an object")
-        result: list[Diagnostic***REMOVED*** = [***REMOVED***
+        result: list[Diagnostic] = []
         for key, pattern, message in (
             ("loc", "lines-of-code", "logical lines of code"),
             ("lloc", "logical-lines-of-code", "logical lines"),
@@ -173,26 +173,26 @@ class RadonAdapter(AnalyzerAdapter):
             ("comments", "comment-lines", "comment lines"),
         ):
             if key in item:
-                result.append(_diagnostic("RADON_RAW", pattern, pattern, DiagnosticSeverity.INFO, path, 1, f"{message***REMOVED***: {item[key***REMOVED******REMOVED***"))
+                result.append(_diagnostic("RADON_RAW", pattern, pattern, DiagnosticSeverity.INFO, path, 1, f"{message}: {item[key]}"))
         return result
 
     @staticmethod
-    def _parse_halstead(raw: str, path: Path) -> list[Diagnostic***REMOVED***:
+    def _parse_halstead(raw: str, path: Path) -> list[Diagnostic]:
         payload = _json_object(raw)
-        item = payload.get(str(path), {***REMOVED***)
+        item = payload.get(str(path), {})
         if not isinstance(item, dict):
             raise ValueError("Halstead payload must contain an object")
         metrics = item.get("total", item)
         if not isinstance(metrics, dict):
             raise ValueError("Halstead metrics must contain an object")
-        result: list[Diagnostic***REMOVED*** = [***REMOVED***
+        result: list[Diagnostic] = []
         for key in ("h1", "h2", "N1", "N2", "vocabulary", "length", "volume", "difficulty", "effort", "time", "bugs"):
             if key in metrics:
-                result.append(_diagnostic("RADON_HAL", f"halstead-{key.lower()***REMOVED***", f"halstead-{key.lower()***REMOVED***", DiagnosticSeverity.INFO, path, 1, f"Halstead {key***REMOVED***: {metrics[key***REMOVED******REMOVED***"))
+                result.append(_diagnostic("RADON_HAL", f"halstead-{key.lower()}", f"halstead-{key.lower()}", DiagnosticSeverity.INFO, path, 1, f"Halstead {key}: {metrics[key]}"))
         return result
 
     @staticmethod
-    def _parse_mi(raw: str, path: Path) -> list[Diagnostic***REMOVED***:
+    def _parse_mi(raw: str, path: Path) -> list[Diagnostic]:
         payload = _json_object(raw)
         value = payload.get(str(path))
         if isinstance(value, dict):
@@ -206,33 +206,33 @@ class RadonAdapter(AnalyzerAdapter):
             DiagnosticSeverity.INFO,
             path,
             1,
-            f"maintainability index: {value***REMOVED***",
-        )***REMOVED***
+            f"maintainability index: {value}",
+        )]
 
 
 class Flake8Adapter(AnalyzerAdapter):
     """Normalize Flake8's stable line-oriented output."""
 
     source = "flake8"
-    _line = re.compile(r"^(?P<file>.+?):(?P<line>\d+):(?P<column>\d+):\s*(?P<rule>[A-Z***REMOVED***\d+)\s+(?P<message>.+)$")
+    _line = re.compile(r"^(?P<file>.+?):(?P<line>\d+):(?P<column>\d+):\s*(?P<rule>[A-Z)\d+)\s+(?P<message>.+)$")
 
     def analyze(self, path: Path, *, security_eligible: bool = False) -> SensorReport:
         status, stdout, stderr, exit_code = self._run((self.executable, str(path)))
         if status is not SensorStatus.OK:
             return SensorReport(self.source, status, stderr=stderr, exit_code=exit_code)
-        diagnostics: list[Diagnostic***REMOVED*** = [***REMOVED***
+        diagnostics: list[Diagnostic] = []
         for line in stdout.splitlines():
             match = self._line.match(line.strip())
             if match is None:
-                return SensorReport(self.source, SensorStatus.INVALID_OUTPUT, stderr=f"invalid flake8 line: {line***REMOVED***", exit_code=exit_code)
+                return SensorReport(self.source, SensorStatus.INVALID_OUTPUT, stderr=f"invalid flake8 line: {line}", exit_code=exit_code)
             diagnostics.append(_diagnostic(
                 "FLAKE8",
                 match.group("rule"),
-                f"flake8-{match.group('rule').lower()***REMOVED***",
+                f"flake8-{match.group('rule').lower()}",
                 _severity_for_rule(match.group("rule")),
                 Path(match.group("file")),
                 int(match.group("line")),
-                f"{match.group('rule')***REMOVED***: {match.group('message')***REMOVED***",
+                f"{match.group('rule')}: {match.group('message')}",
                 column=int(match.group("column")),
             ))
         return SensorReport(self.source, SensorStatus.OK, tuple(diagnostics), stderr, exit_code).ordered()
@@ -252,24 +252,24 @@ class BanditAdapter(AnalyzerAdapter):
         if status is not SensorStatus.OK:
             return SensorReport(self.source, status, stderr=stderr, exit_code=exit_code)
         try:
-            payload = json.loads(stdout or '{"results": [***REMOVED******REMOVED***')
-            results = payload["results"***REMOVED***
+            payload = json.loads(stdout or '{"results": [)]')
+            results = payload["results"]
             if not isinstance(results, list):
                 raise ValueError("results must be a list")
             diagnostics = tuple(_bandit_item(item, path) for item in results)
         except (KeyError, TypeError, ValueError, json.JSONDecodeError) as exc:
-            return SensorReport(self.source, SensorStatus.INVALID_OUTPUT, stderr=f"invalid bandit JSON: {exc***REMOVED***", exit_code=exit_code)
+            return SensorReport(self.source, SensorStatus.INVALID_OUTPUT, stderr=f"invalid bandit JSON: {exc}", exit_code=exit_code)
         return SensorReport(self.source, SensorStatus.OK, diagnostics, stderr, exit_code).ordered()
 
 
 def _pylint_item(item: Any, default_path: Path) -> Diagnostic:
     if not isinstance(item, dict):
         raise ValueError("pylint item must be an object")
-    rule_id = str(item["message-id"***REMOVED***)
+    rule_id = str(item["message-id"])
     return _diagnostic(
         "PYLINT",
         rule_id,
-        f"pylint-{rule_id.lower()***REMOVED***",
+        f"pylint-{rule_id.lower()}",
         _severity_for_pylint(str(item.get("type", "convention"))),
         _path_value(item.get("path"), default_path),
         _positive_int(item.get("line", 1)),
@@ -281,11 +281,11 @@ def _pylint_item(item: Any, default_path: Path) -> Diagnostic:
 def _bandit_item(item: Any, default_path: Path) -> Diagnostic:
     if not isinstance(item, dict):
         raise ValueError("bandit item must be an object")
-    test_id = str(item["test_id"***REMOVED***)
+    test_id = str(item["test_id"])
     return _diagnostic(
         "BANDIT",
         test_id,
-        f"bandit-{test_id.lower()***REMOVED***",
+        f"bandit-{test_id.lower()}",
         _severity_for_bandit(str(item.get("issue_severity", "low"))),
         _path_value(item.get("filename"), default_path),
         _positive_int(item.get("line_number", 1)),
@@ -317,8 +317,8 @@ def _diagnostic(
     )
 
 
-def _json_object(raw: str) -> dict[str, Any***REMOVED***:
-    value = json.loads(raw or "{***REMOVED***")
+def _json_object(raw: str) -> dict[str, Any]:
+    value = json.loads(raw or "{)")
     if not isinstance(value, dict):
         raise ValueError("expected a JSON object")
     return value
@@ -362,7 +362,7 @@ def _severity_for_pylint(kind: str) -> DiagnosticSeverity:
         "warning": DiagnosticSeverity.MEDIUM,
         "refactor": DiagnosticSeverity.MEDIUM,
         "convention": DiagnosticSeverity.LOW,
-    ***REMOVED***.get(kind.lower(), DiagnosticSeverity.INFO)
+    ].get(kind.lower(), DiagnosticSeverity.INFO)
 
 
 def _severity_for_bandit(value: str) -> DiagnosticSeverity:
@@ -370,4 +370,4 @@ def _severity_for_bandit(value: str) -> DiagnosticSeverity:
         "high": DiagnosticSeverity.HIGH,
         "medium": DiagnosticSeverity.MEDIUM,
         "low": DiagnosticSeverity.LOW,
-    ***REMOVED***.get(value.lower(), DiagnosticSeverity.INFO)
+    ].get(value.lower(), DiagnosticSeverity.INFO)

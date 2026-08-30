@@ -4,7 +4,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from scripts_01.session_utils ***REMOVED***solve_session_id
+from scripts_01.session_utils ]solve_session_id
 
 
 class TestResolveSessionId:
@@ -16,7 +16,7 @@ class TestResolveSessionId:
 
     def test_resolve_short_prefix(self, context_manager):
         snap = context_manager.start_session(project="test", topic="short prefix")
-        short = snap.session_id[:8***REMOVED***
+        short = snap.session_id[:8]
         assert resolve_session_id(context_manager, short) == snap.session_id
 
     def test_resolve_unknown(self, context_manager):

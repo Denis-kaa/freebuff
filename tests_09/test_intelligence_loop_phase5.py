@@ -23,12 +23,12 @@ from __future__ import annotations
 
 import sys
 import types
-***REMOVED***
+}
 from typing import Any, Dict, List
 
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parents[1***REMOVED***
+REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS_DIR = REPO_ROOT / "scripts_01"
 sys.path.insert(0, str(SCRIPTS_DIR))
 sys.path.insert(0, str(REPO_ROOT))
@@ -61,7 +61,7 @@ def _make_opp(project_id: str = "proj-e2e", **kwargs: Any) -> Opportunity:
     return opp
 
 
-def _seed_whim(tmp_path: Path, project_id: str, body: str = "Написать книгу про архитектуру") -> tuple[WhimStore, Path, str***REMOVED***:
+def _seed_whim(tmp_path: Path, project_id: str, body: str = "Написать книгу про архитектуру") -> tuple[WhimStore, Path, str]:
     """Seed реального whim-источника (WhimStore на tmp-пути). Возвращает (store, path, whim_id)."""
     whims_yaml = tmp_path / "whims.yaml"
     wstore = WhimStore(whims_yaml)
@@ -71,7 +71,7 @@ def _seed_whim(tmp_path: Path, project_id: str, body: str = "Написать к
     return wstore, whims_yaml, w.id
 
 
-def _hermetic_sources(tmp_path: Path, whims_yaml: Path | None = None) -> Dict[str, Path***REMOVED***:
+def _hermetic_sources(tmp_path: Path, whims_yaml: Path | None = None) -> Dict[str, Path]:
     """Герметичный source_paths: whims (если задан) + НЕСУЩЕСТВУЮЩИЕ tmp-пути
     для pulse/events/memory. Без этого остальные источники читают РЕАЛЬНЫЕ
     data_13/project_pulse.db / context_12/events.db / data_13/context.db
@@ -82,15 +82,15 @@ def _hermetic_sources(tmp_path: Path, whims_yaml: Path | None = None) -> Dict[st
         "pulse": tmp_path / "missing_pulse.db",
         "events": tmp_path / "missing_events.db",
         "memory": tmp_path / "missing_memory.db",
-    ***REMOVED***
+    }
 
 
-def _mock_forge_facade(monkeypatch: pytest.MonkeyPatch, result: Any) -> List[str***REMOVED***:
+def _mock_forge_facade(monkeypatch: pytest.MonkeyPatch, result: Any) -> List[str]:
     """Подмена core_02.forge_facade на фейк с run_chain (как в test_opportunity_engine)."""
-    calls: List[str***REMOVED*** = [***REMOVED***
+    calls: List[str] = []
 
     class _FakeForgeFacade:
-        PIPELINE_CHAIN = ["r1", "r2"***REMOVED***
+        PIPELINE_CHAIN = ["r1", "r2"]
 
         @staticmethod
         def run_chain(*args: Any, **kwargs: Any) -> Any:
@@ -112,8 +112,8 @@ class _FakeChainRun:
         self.overall = overall
         self.stage_count = 2
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
-        return {"overall": self.overall, "stage_count": self.stage_count***REMOVED***
+    def to_dict(self) -> Dict[str, Any]:
+        return {"overall": self.overall, "stage_count": self.stage_count}
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -126,13 +126,13 @@ def test_1_real_whim_source_discover_candidate(tmp_path: Path):
 
     cands = discover_candidates("proj-1", max_results=5, source_paths=_hermetic_sources(tmp_path, whims_yaml))
     assert cands, "real whim source must produce ≥1 candidate"
-    c = cands[0***REMOVED***
+    c = cands[0]
     assert c.source == "whim"
     assert c.project_id == "proj-1"
-    assert c.provenance["source_id"***REMOVED*** == whim_id
-    assert c.provenance["stub"***REMOVED*** is False
-    assert c.provenance["confidence"***REMOVED*** >= 0.5
-    assert c.provenance["evidence"***REMOVED***  # тело whim как evidence
+    assert c.provenance["source_id"] == whim_id
+    assert c.provenance["stub"] is False
+    assert c.provenance["confidence"] >= 0.5
+    assert c.provenance["evidence"]  # тело whim как evidence
 
 
 def test_1b_no_stub_when_sources_empty(tmp_path: Path):
@@ -145,10 +145,10 @@ def test_1b_no_stub_when_sources_empty(tmp_path: Path):
             "pulse": tmp_path / "missing_pulse.db",
             "events": tmp_path / "missing_events.db",
             "memory": tmp_path / "missing_memory.db",
-        ***REMOVED***,
+        },
     )
-    assert cands == [***REMOVED***
-    titles = [c.title for c in cands***REMOVED***
+    assert cands == []
+    titles = [c.title for c in cands]
     assert not any("Stub" in t for t in titles)
 
 
@@ -163,11 +163,11 @@ def test_2_candidate_to_opportunity_store(tmp_path: Path):
     assert cands
 
     store = OpportunityStore(tmp_path / "opps.yaml")
-    store.upsert(cands[0***REMOVED***)
-    loaded = store.get(cands[0***REMOVED***.id)
+    store.upsert(cands[0])
+    loaded = store.get(cands[0].id)
     assert loaded is not None
     assert loaded.source == "whim"
-    assert loaded.provenance.get("source_id") == cands[0***REMOVED***.provenance["source_id"***REMOVED***
+    assert loaded.provenance.get("source_id") == cands[0].provenance["source_id"]
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -184,8 +184,8 @@ def test_3_opportunity_to_scenario(monkeypatch: pytest.MonkeyPatch):
         scenario_id = "blueprint_v3"
 
     class _FakeRegistry:
-        def propose_roles(self, text: str, top_n: int = 3) -> List[tuple[Any, Any, float***REMOVED******REMOVED***:
-            return [(_FakeScenario(), _FakeRole(), 0.9)***REMOVED***
+        def propose_roles(self, text: str, top_n: int = 3) -> List[tuple[Any, Any, float]]:
+            return [(_FakeScenario(), _FakeRole(), 0.9)]
 
     fake_module = types.ModuleType("core_02.scenario_registry")
     fake_module.ScenarioRegistry = _FakeRegistry
@@ -194,13 +194,13 @@ def test_3_opportunity_to_scenario(monkeypatch: pytest.MonkeyPatch):
     opp = _make_opp()
     opp = propose(opp)
     assert opp.scenario is not None
-    assert opp.scenario["scenario_id"***REMOVED*** == "blueprint_v3"
-    assert opp.scenario["role_id"***REMOVED*** == "novella_struct"
+    assert opp.scenario["scenario_id"] == "blueprint_v3"
+    assert opp.scenario["role_id"] == "novella_struct"
     # Phase 8 (promt 91): propose() делегирует в ScenarioIntelligence.select() →
     # composite score (relevance·0.35 + capability·0.25 + history·0.20 + feasibility·0.20).
     # Fake scenario без capabilities → capability=neutral 0.5, history=neutral 0.5,
     # feasibility=1.0: 0.9·0.35 + 0.5·0.25 + 0.5·0.20 + 1.0·0.20 = 0.74.
-    assert opp.scenario["score"***REMOVED*** == pytest.approx(0.74)
+    assert opp.scenario["score"] == pytest.approx(0.74)
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -213,13 +213,13 @@ def test_4_5_scenario_to_execution_to_artifact(monkeypatch: pytest.MonkeyPatch, 
 
     calls = _mock_forge_facade(monkeypatch, _FakeChainRun(overall="ok"))
     opp = _make_opp()
-    opp.roles = [{"role_id": "r1"***REMOVED***, {"role_id": "r2"***REMOVED******REMOVED***
+    opp.roles = [{"role_id": "r1"}, {"role_id": "r2"}]
     # memory_store инъектируется: ACCUMULATE не должен писать в реальную БД
     opp = execute(opp, dry_run=False, memory_store=MemoryStore(tmp_path / "mem45.db"))
-    assert calls == ["run_chain"***REMOVED***
+    assert calls == ["run_chain"]
     assert opp.status == "COMPLETED"
     assert opp.artifacts, "TEST 5: execution → artifact"
-    assert opp.artifacts[0***REMOVED***["raw"***REMOVED***["overall"***REMOVED*** == "ok"
+    assert opp.artifacts[0]["raw"]["overall"] == "ok"
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -233,7 +233,7 @@ def test_6_7_artifact_to_memory_to_learning(tmp_path: Path):
 
     mem = MemoryStore(tmp_path / "mem.db")
     opp = _make_opp()
-    opp.artifacts = [{"raw": {"overall": "ok", "stage_count": 2***REMOVED******REMOVED******REMOVED***
+    opp.artifacts = [{"raw": {"overall": "ok", "stage_count": 2}}]
     # Lifecycle: ACTIVE → READY → COMPLETED (state machine)
     opp = advance(opp, "READY", reason="execution started")
     opp = advance(opp, "COMPLETED", reason="forge chain finished")
@@ -241,26 +241,26 @@ def test_6_7_artifact_to_memory_to_learning(tmp_path: Path):
     loop = LearningLoop(mem)
     result = accumulate(opp, memory_store=mem, learning_loop=loop)
 
-    assert result["accumulated"***REMOVED*** is True
-    assert result["knowledge_id"***REMOVED***
-    assert result["learning_event_id"***REMOVED***
-    assert result["outcome"***REMOVED*** == "success"
+    assert result["accumulated"] is True
+    assert result["knowledge_id"]
+    assert result["learning_event_id"]
+    assert result["outcome"] == "success"
 
     # KO kind=candidate с тегом opportunity (CAN-16: существующий kind)
     kos = mem.query_by_type("candidate", limit=10)
-    assert any(k["id"***REMOVED*** == result["knowledge_id"***REMOVED*** for k in kos)
-    ko = mem.get_knowledge(result["knowledge_id"***REMOVED***)
+    assert any(k["id"] == result["knowledge_id"] for k in kos)
+    ko = mem.get_knowledge(result["knowledge_id"])
     assert ko is not None
-    tags = ko.get("tags") or [***REMOVED***
-    assert "opportunity" in tags, f"KO tags missing 'opportunity': {tags***REMOVED***"
-    assert opp.provenance.get("memory_knowledge_id") == result["knowledge_id"***REMOVED***
+    tags = ko.get("tags") or []
+    assert "opportunity" in tags, f"KO tags missing 'opportunity': {tags}"
+    assert opp.provenance.get("memory_knowledge_id") == result["knowledge_id"]
 
     # learning event зафиксирован
     events = mem.list_learning_events(limit=10)
-    assert any(e["id"***REMOVED*** == result["learning_event_id"***REMOVED*** for e in events)
+    assert any(e["id"] == result["learning_event_id"] for e in events)
     # feedback → confidence пересчитан (success/(success+failure))
-    assert result["confidence"***REMOVED*** is not None
-    assert result["confidence"***REMOVED*** > 0
+    assert result["confidence"] is not None
+    assert result["confidence"] > 0
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -278,7 +278,7 @@ def test_8_repeated_source_no_duplicate(tmp_path: Path):
     assert store.count() == len(first) > 0
 
     second = discover_candidates("proj-8", max_results=5, source_paths=_hermetic_sources(tmp_path, whims_yaml), store=store)
-    assert second == [***REMOVED***, "повторный discover не должен создавать uncontrolled duplicates"
+    assert second == [], "повторный discover не должен создавать uncontrolled duplicates"
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -309,18 +309,18 @@ def test_10_failure_not_false_completed(monkeypatch: pytest.MonkeyPatch, tmp_pat
     calls = _mock_forge_facade(monkeypatch, RuntimeError("forge boom"))
     mem = MemoryStore(tmp_path / "mem_fail.db")
     opp = _make_opp()
-    opp.roles = [{"role_id": "r1"***REMOVED******REMOVED***
+    opp.roles = [{"role_id": "r1"}]
     opp = execute(opp, dry_run=False, memory_store=mem)
 
-    assert calls == ["run_chain"***REMOVED***
+    assert calls == ["run_chain"]
     assert opp.status == "FAILED", "ошибка не должна маскироваться как COMPLETED"
     assert opp.failed_at
     assert "forge boom" in (opp.failure_reason or "")
     # ACCUMULATE отработал с outcome=failure (Learning получает результат)
-    acc = opp.provenance.get("accumulate") or {***REMOVED***
+    acc = opp.provenance.get("accumulate") or {}
     assert acc.get("outcome") == "failure"
     events = mem.list_learning_events(limit=10)
-    assert any(e["outcome"***REMOVED*** == "failure" for e in events)
+    assert any(e["outcome"] == "failure" for e in events)
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -335,15 +335,15 @@ def test_10b_failed_retry_success_completes(monkeypatch: pytest.MonkeyPatch, tmp
     # Первый запуск — сбой
     calls = _mock_forge_facade(monkeypatch, RuntimeError("first boom"))
     opp = _make_opp()
-    opp.roles = [{"role_id": "r1"***REMOVED******REMOVED***
+    opp.roles = [{"role_id": "r1"}]
     opp = execute(opp, dry_run=False, memory_store=MemoryStore(tmp_path / "mem10b.db"))
-    assert calls == ["run_chain"***REMOVED***  # симметрия с test_10c (reviewer nit)
+    assert calls == ["run_chain"]  # симметрия с test_10c (reviewer nit)
     assert opp.status == "FAILED"
 
     # Retry: run_chain теперь успешен (новый фейк возвращает результат)
     calls2 = _mock_forge_facade(monkeypatch, _FakeChainRun(overall="ok"))
     opp2 = execute(opp, dry_run=False, memory_store=MemoryStore(tmp_path / "mem10b2.db"))
-    assert calls2 == ["run_chain"***REMOVED***
+    assert calls2 == ["run_chain"]
     assert opp2.status == "COMPLETED"
     assert opp2.artifacts
     assert opp2.previous_status == "READY"  # нормализация ACTIVE/FAILED→READY перед COMPLETED
@@ -355,17 +355,17 @@ def test_10c_failed_retry_failure_stays_failed(monkeypatch: pytest.MonkeyPatch, 
 
     calls = _mock_forge_facade(monkeypatch, RuntimeError("boom again"))
     opp = _make_opp()
-    opp.roles = [{"role_id": "r1"***REMOVED******REMOVED***
+    opp.roles = [{"role_id": "r1"}]
     opp = execute(opp, dry_run=False, memory_store=MemoryStore(tmp_path / "mem10c.db"))
     assert opp.status == "FAILED"
 
     # Retry: снова сбой — раньше бросало InvalidTransition (FAILED→FAILED);
     # теперь нормализация (ACTIVE|FAILED)→READY, затем READY→FAILED (валидно).
     opp2 = execute(opp, dry_run=False, memory_store=MemoryStore(tmp_path / "mem10c2.db"))
-    assert calls == ["run_chain", "run_chain"***REMOVED***
+    assert calls == ["run_chain", "run_chain"]
     assert opp2.status == "FAILED"
     assert "boom again" in (opp2.failure_reason or "")
-    acc = opp2.provenance.get("accumulate") or {***REMOVED***
+    acc = opp2.provenance.get("accumulate") or {}
     assert acc.get("outcome") == "failure"
 
 
@@ -389,7 +389,7 @@ def test_e2e_vertical_slice(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     opp_store = OpportunityStore(tmp_path / "opps.yaml")
     cands = discover_candidates("proj-e2e", max_results=5, source_paths=_hermetic_sources(tmp_path, whims_yaml), store=opp_store)
     assert cands
-    opp = cands[0***REMOVED***
+    opp = cands[0]
     opp_store.upsert(opp)
 
     # 4. SCENARIO: propose (мок ScenarioRegistry — внешний тяжёлый ресурс)
@@ -401,15 +401,15 @@ def test_e2e_vertical_slice(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
         scenario_id = "blueprint_v3"
 
     class _FakeRegistry:
-        def propose_roles(self, text: str, top_n: int = 3) -> List[tuple[Any, Any, float***REMOVED******REMOVED***:
-            return [(_FakeScenario(), _FakeRole(), 0.9)***REMOVED***
+        def propose_roles(self, text: str, top_n: int = 3) -> List[tuple[Any, Any, float]]:
+            return [(_FakeScenario(), _FakeRole(), 0.9)]
 
     fake_scn = types.ModuleType("core_02.scenario_registry")
     fake_scn.ScenarioRegistry = _FakeRegistry
     monkeypatch.setitem(sys.modules, "core_02.scenario_registry", fake_scn)
 
     opp = propose(opp)
-    assert opp.scenario and opp.scenario["scenario_id"***REMOVED*** == "blueprint_v3"
+    assert opp.scenario and opp.scenario["scenario_id"] == "blueprint_v3"
     opp_store.upsert(opp)
 
     # 5-6. EXECUTION: ForgeFacade (мок) → artifact.
@@ -423,17 +423,17 @@ def test_e2e_vertical_slice(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     opp_store.upsert(opp)
 
     # 7. ACCUMULATE вызван из execute() → Memory + Learning на tmp-сторе
-    acc = opp.provenance.get("accumulate") or {***REMOVED***
-    assert acc.get("accumulated") is True, f"accumulate missing: {opp.provenance***REMOVED***"
-    assert acc["outcome"***REMOVED*** == "success"
+    acc = opp.provenance.get("accumulate") or {}
+    assert acc.get("accumulated") is True, f"accumulate missing: {opp.provenance}"
+    assert acc["outcome"] == "success"
     assert acc.get("knowledge_id")
-    assert opp.provenance.get("memory_knowledge_id") == acc["knowledge_id"***REMOVED***
+    assert opp.provenance.get("memory_knowledge_id") == acc["knowledge_id"]
     kos = mem.query_by_type("candidate", limit=10)
-    assert any(k["id"***REMOVED*** == acc["knowledge_id"***REMOVED*** for k in kos)
+    assert any(k["id"] == acc["knowledge_id"] for k in kos)
     events = mem.list_learning_events(limit=10)
-    assert any(e["id"***REMOVED*** == acc.get("learning_event_id") for e in events)
-    assert acc.get("confidence") is not None and acc["confidence"***REMOVED*** > 0
+    assert any(e["id"] == acc.get("learning_event_id") for e in events)
+    assert acc.get("confidence") is not None and acc["confidence"] > 0
 
     # 8. IDEMPOTENCY: повторный discover не создаёт дублей
     again = discover_candidates("proj-e2e", max_results=5, source_paths=_hermetic_sources(tmp_path, whims_yaml), store=opp_store)
-    assert again == [***REMOVED***
+    assert again == []

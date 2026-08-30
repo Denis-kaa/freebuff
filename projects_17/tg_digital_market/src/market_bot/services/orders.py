@@ -45,7 +45,7 @@ class OrderService:
     def __init__(
         self,
         repo: Repository,
-        payment_service: Optional["PaymentService"***REMOVED*** = None,
+        payment_service: Optional["PaymentService"] = None,
     ) -> None:
         self._repo = repo
         self._payment_service = payment_service
@@ -54,7 +54,7 @@ class OrderService:
 
     def create_order_for_product(
         self, user_id: int, product_id: int
-    ) -> tuple[Order, OrderItem***REMOVED***:
+    ) -> tuple[Order, OrderItem]:
         """Создать pending-заказ на 1 товар с атомарным резервом ключа.
 
         Возвращает (Order, OrderItem). Если ключа в стоке нет — OutOfStockError,
@@ -62,7 +62,7 @@ class OrderService:
         """
         product = self._repo.get_product(product_id)
         if product is None or not product.is_active:
-            raise InvalidOrderStateError(f"Товар #{product_id***REMOVED*** недоступен.")
+            raise InvalidOrderStateError(f"Товар #{product_id} недоступен.")
         if product.seller_id == user_id:
             raise InvalidOrderStateError("Нельзя купить собственный товар.")
 
@@ -81,28 +81,28 @@ class OrderService:
         if key is None:
             self._repo.set_order_status(order.id, OrderStatus.FAILED, cancelled=True)
             raise OutOfStockError(
-                f"Товар #{product.id***REMOVED*** ({product.name!r***REMOVED***) закончился."
+                f"Товар #{product.id} ({product.name!r}) закончился."
             )
         return order, item
 
     # ── Запросы ─────────────────────────────────────────────────────────────
 
-    def get(self, order_id: int) -> Optional[Order***REMOVED***:
+    def get(self, order_id: int) -> Optional[Order]:
         return self._repo.get_order(order_id)
 
-    def get_detail(self, order_id: int) -> Optional[tuple[Order, list[OrderItem***REMOVED******REMOVED******REMOVED***:
+    def get_detail(self, order_id: int) -> Optional[tuple[Order, list[OrderItem]]]:
         order = self._repo.get_order(order_id)
         if order is None:
             return None
         return order, self._repo.get_order_items(order_id)
 
-    def user_history(self, user_id: int, limit: int = 20) -> List[Order***REMOVED***:
+    def user_history(self, user_id: int, limit: int = 20) -> List[Order]:
         return self._repo.list_user_orders(user_id, limit=limit)
 
     # ── Переходы стейт-машины ──────────────────────────────────────────────
 
     def mark_paid(
-        self, order_id: int, payment_external_id: Optional[str***REMOVED*** = None
+        self, order_id: int, payment_external_id: Optional[str] = None
     ) -> Order:
         """Перевести заказ в PAID. Идемпотентен.
 
@@ -112,12 +112,12 @@ class OrderService:
         """
         order = self._repo.get_order(order_id)
         if order is None:
-            raise InvalidOrderStateError(f"Заказ #{order_id***REMOVED*** не найден.")
+            raise InvalidOrderStateError(f"Заказ #{order_id} не найден.")
         if order.status in (OrderStatus.PAID, OrderStatus.DELIVERED):
             return order  # idempotent no-op
         if order.status != OrderStatus.PENDING:
             raise InvalidOrderStateError(
-                f"Нельзя оплатить заказ в статусе {order.status.value***REMOVED***."
+                f"Нельзя оплатить заказ в статусе {order.status.value}."
             )
         self._repo.set_order_status(
             order_id,
@@ -137,10 +137,10 @@ class OrderService:
         """
         order = self._repo.get_order(order_id)
         if order is None:
-            raise InvalidOrderStateError(f"Заказ #{order_id***REMOVED*** не найден.")
+            raise InvalidOrderStateError(f"Заказ #{order_id} не найден.")
         if order.status != OrderStatus.PENDING:
             raise InvalidOrderStateError(
-                f"Нельзя отменить заказ в статусе {order.status.value***REMOVED***. "
+                f"Нельзя отменить заказ в статусе {order.status.value}. "
                 "Для оплаченных заказов нужен refund; доставленные не отменяются."
             )
         self._release_unfinished_keys(order_id)
@@ -156,10 +156,10 @@ class OrderService:
     def mark_failed(self, order_id: int, reason: str = "payment_failed") -> Order:
         order = self._repo.get_order(order_id)
         if order is None:
-            raise InvalidOrderStateError(f"Заказ #{order_id***REMOVED*** не найден.")
+            raise InvalidOrderStateError(f"Заказ #{order_id} не найден.")
         if order.status != OrderStatus.PENDING:
             raise InvalidOrderStateError(
-                f"Нельзя перевести в failed из {order.status.value***REMOVED***."
+                f"Нельзя перевести в failed из {order.status.value}."
             )
         self._release_unfinished_keys(order_id)
         if self._payment_service is not None:
@@ -186,14 +186,14 @@ class OrderService:
         ).fetchall()
         released = 0
         for r in rows:
-            if r["status"***REMOVED*** == "reserved":
-                self._repo.release_reserved_key(r["id"***REMOVED***)
+            if r["status"] == "reserved":
+                self._repo.release_reserved_key(r["id"])
                 released += 1
         return released
 
     # ── TTL-сборка ──────────────────────────────────────────────────────────
 
-    def expire_overdue(self, ttl_seconds: int) -> List[int***REMOVED***:
+    def expire_overdue(self, ttl_seconds: int) -> List[int]:
         """Перевести просроченные pending-заказы → CANCELLED. Возвращает ID.
 
         Параллельно фейлит связанный `payment` (если был создан) — иначе
@@ -201,7 +201,7 @@ class OrderService:
         деньги. Возвращает список отменённых order_id.
         """
         pending = self._repo.list_pending_orders_older_than(ttl_seconds)
-        cancelled: List[int***REMOVED*** = [***REMOVED***
+        cancelled: List[int] = []
         for o in pending:
             try:
                 self.cancel(o.id, reason="ttl_expired")
@@ -212,7 +212,7 @@ class OrderService:
 
     # ── Recovery ────────────────────────────────────────────────────────────
 
-    def find_paid_orphans(self) -> List[int***REMOVED***:
+    def find_paid_orphans(self) -> List[int]:
         """Найти PAID-заказы без выдачи — кандидаты на восстановление.
 
         Вызывается из `bot/main.py` при старте и в background-таске.
@@ -224,6 +224,6 @@ class OrderService:
             "SELECT id FROM orders WHERE status = 'paid'"
         ).fetchall()
         return [
-            r["id"***REMOVED*** for r in rows
-            if self._repo.get_delivery_for_order(r["id"***REMOVED***) is None
-        ***REMOVED***
+            r["id"] for r in rows
+            if self._repo.get_delivery_for_order(r["id"]) is None
+        ]

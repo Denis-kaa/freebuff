@@ -2,4 +2,4 @@
 
 from realtor_os.curator.knowledge import KnowledgeCurator
 
-__all__ = ["KnowledgeCurator"***REMOVED***
+__all__ = ["KnowledgeCurator"]

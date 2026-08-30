@@ -31,7 +31,7 @@ class ModelEntry:
     """Строка модели, обнаруженная на стартовом экране."""
 
     name: str
-    keywords: tuple[str, ...***REMOVED***
+    keywords: tuple[str, ...]
     position: int            # 0-based индекс в списке моделей на экране
     available: bool
     free_fallback: bool = False
@@ -51,16 +51,16 @@ class ModelSelection:
 
 def parse_screen(
     screen_text: str,
-    models_priority: List[Dict[str, Any***REMOVED******REMOVED***,
-    unavailable_markers: List[str***REMOVED***,
-) -> List[ModelEntry***REMOVED***:
+    models_priority: List[Dict[str, Any]],
+    unavailable_markers: List[str],
+) -> List[ModelEntry]:
     """Разбирает дамп стартового экрана в список ModelEntry.
 
     Args:
         screen_text: дамп tmux capture-pane (можно с ANSI-мусором — ищем
             только подстроки в нижнем регистре).
         models_priority: список моделей из config.yaml `models.priority`,
-            каждая: {name, keywords: [...***REMOVED***, free_fallback?***REMOVED***.
+            каждая: {name, keywords: [...], free_fallback?}.
         unavailable_markers: маркеры недоступности из config.yaml
             `models.unavailable_markers`.
 
@@ -68,14 +68,14 @@ def parse_screen(
         Список ModelEntry в порядке появления на экране (позиции 0..N).
     """
     if not screen_text:
-        return [***REMOVED***
-    lines = [ln.strip().lower() for ln in screen_text.splitlines()***REMOVED***
+        return []
+    lines = [ln.strip().lower() for ln in screen_text.splitlines()]
 
     # Строка модели: все keywords модели есть в строке.
-    rows: List[Dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***   # {model, line, row_index***REMOVED***
+    rows: List[Dict[str, Any]] = []   # {model, line, row_index}
     for model_cfg in models_priority:
         name = str(model_cfg.get("name", "?")).strip()
-        keywords = tuple(str(k).lower() for k in model_cfg.get("keywords", [***REMOVED***))
+        keywords = tuple(str(k).lower() for k in model_cfg.get("keywords", []))
         if not keywords:
             continue
         for i, line in enumerate(lines):
@@ -86,33 +86,33 @@ def parse_screen(
                     "line": line,
                     "row": i,
                     "free_fallback": bool(model_cfg.get("free_fallback", False)),
-                ***REMOVED***)
+                })
 
     # Дедикация: одна строка может матчить несколько моделей (glm + 5.2).
     # Берём самую конкретную (больше keywords) на строку; строки сортируем
     # по порядку появления.
-    unique: Dict[int, Dict[str, Any***REMOVED******REMOVED*** = {***REMOVED***
+    unique: Dict[int, Dict[str, Any]] = {}
     for r in rows:
-        row_idx = r["row"***REMOVED***
-        if row_idx not in unique or len(r["keywords"***REMOVED***) > len(unique[row_idx***REMOVED***["keywords"***REMOVED***):
-            unique[row_idx***REMOVED*** = r
+        row_idx = r["row"]
+        if row_idx not in unique or len(r["keywords"]) > len(unique[row_idx]["keywords"]):
+            unique[row_idx] = r
 
-    entries: List[ModelEntry***REMOVED*** = [***REMOVED***
+    entries: List[ModelEntry] = []
     for position, (row_idx, r) in enumerate(sorted(unique.items())):
-        available = not any(m in r["line"***REMOVED*** for m in unavailable_markers)
+        available = not any(m in r["line"] for m in unavailable_markers)
         entries.append(ModelEntry(
-            name=r["model"***REMOVED***,
-            keywords=r["keywords"***REMOVED***,
+            name=r["model"],
+            keywords=r["keywords"],
             position=position,
             available=available,
-            free_fallback=r["free_fallback"***REMOVED***,
+            free_fallback=r["free_fallback"],
         ))
     return entries
 
 
 def pick_model(
-    entries: List[ModelEntry***REMOVED***,
-    models_priority: List[Dict[str, Any***REMOVED******REMOVED***,
+    entries: List[ModelEntry],
+    models_priority: List[Dict[str, Any]],
 ) -> ModelSelection:
     """Выбирает ПЕРВУЮ доступную модель по приоритету (по убыванию мощности).
 
@@ -144,7 +144,7 @@ def pick_model(
                 name=e.name,
                 position=e.position,
                 source="detected",
-                reason=f"доступна на экране (позиция {e.position***REMOVED***)",
+                reason=f"доступна на экране (позиция {e.position})",
             )
 
     # Fallback: free-модель из приоритета (позиция 0 = рекомендованная).
@@ -160,7 +160,7 @@ def pick_model(
     # Без free_fallback в конфиге: позиция 0, первая модель приоритета.
     if models_priority:
         return ModelSelection(
-            name=str(models_priority[0***REMOVED***.get("name", "auto")),
+            name=str(models_priority[0].get("name", "auto")),
             position=0,
             source="fallback",
             reason="конфиг без free_fallback — позиция 0 (рекомендованная)",

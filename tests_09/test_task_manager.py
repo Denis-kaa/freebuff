@@ -25,7 +25,7 @@ from __future__ import annotations
 import json
 import sys
 import time
-***REMOVED***
+}
 from typing import Any
 
 import pytest
@@ -89,7 +89,7 @@ def _seed_project(db: Path, name: str = "CRM") -> None:
         "INSERT OR REPLACE INTO projects "
         "(name, path, description, category, status, last_scanned) "
         "VALUES (?, ?, '', '', 'active', '2026-08-01T00:00:00+00:00')",
-        (name, f"/tmp/{name***REMOVED***"),
+        (name, f"/tmp/{name}"),
     )
     conn.commit()
     conn.close()
@@ -107,28 +107,28 @@ class TestInitDB:
         ).fetchone()
         conn.close()
         assert row is not None
-        assert row[0***REMOVED*** == "tasks"
+        assert row[0] == "tasks"
 
     def test_columns_match_canonical_schema(self, db: Path):
         conn = init_db(db)
-        cols = {r[1***REMOVED***: r[2***REMOVED*** for r in conn.execute("PRAGMA table_info(tasks)").fetchall()***REMOVED***
+        cols = {r[1]: r[2] for r in conn.execute("PRAGMA table_info(tasks)").fetchall()}
         conn.close()
         expected = {
             "id", "project_id", "title", "description",
             "task_type", "status", "priority",
             "meeting_time", "location", "participants",
             "briefing_generated", "created_at", "updated_at",
-        ***REMOVED***
+        }
         assert set(cols) == expected
 
     def test_indices_created(self, db: Path):
         conn = init_db(db)
-        idx = {r[0***REMOVED*** for r in conn.execute(
+        idx = {r[0] for r in conn.execute(
             "SELECT name FROM sqlite_master WHERE type='index' "
             "AND tbl_name='tasks' AND name LIKE 'idx_%'"
-        ).fetchall()***REMOVED***
+        ).fetchall()]
         conn.close()
-        assert {"idx_tasks_project", "idx_tasks_type", "idx_tasks_status"***REMOVED*** <= idx
+        assert {"idx_tasks_project", "idx_tasks_type", "idx_tasks_status"} <= idx
 
     def test_idempotent_init(self, db: Path):
         # Повторный init не должен падать (CREATE TABLE IF NOT EXISTS).
@@ -137,7 +137,7 @@ class TestInitDB:
 
     def test_journal_mode_wal(self, db: Path):
         conn = init_db(db)
-        mode = conn.execute("PRAGMA journal_mode").fetchone()[0***REMOVED***
+        mode = conn.execute("PRAGMA journal_mode").fetchone()[0]
         conn.close()
         assert mode.upper() == "WAL"
 
@@ -149,7 +149,7 @@ class TestInitDB:
         DELETE в tasks). Schema — FK declared. Runtime — unenforced.
         """
         conn = init_db(db)
-        fk = conn.execute("PRAGMA foreign_keys").fetchone()[0***REMOVED***
+        fk = conn.execute("PRAGMA foreign_keys").fetchone()[0]
         conn.close()
         assert fk == 0
 
@@ -162,18 +162,18 @@ class TestCreateTask:
     def test_creates_digital_task(self, db: Path):
         _seed_project(db)
         t = create_task("CRM", "написать API", db_path=db)
-        assert t["project_id"***REMOVED*** == "CRM"
-        assert t["title"***REMOVED*** == "написать API"
-        assert t["task_type"***REMOVED*** == "digital"
-        assert t["status"***REMOVED*** == "pending"
-        assert t["priority"***REMOVED*** == "normal"
-        assert t["participants"***REMOVED*** == [***REMOVED***
-        assert t["meeting_time"***REMOVED*** is None
-        assert t["location"***REMOVED*** is None
-        assert t["briefing_generated"***REMOVED*** is False
-        assert t["id"***REMOVED***.startswith("tm-")
-        assert t["created_at"***REMOVED***
-        assert t["updated_at"***REMOVED*** == t["created_at"***REMOVED***
+        assert t["project_id"] == "CRM"
+        assert t["title"] == "написать API"
+        assert t["task_type"] == "digital"
+        assert t["status"] == "pending"
+        assert t["priority"] == "normal"
+        assert t["participants"] == []
+        assert t["meeting_time"] is None
+        assert t["location"] is None
+        assert t["briefing_generated"] is False
+        assert t["id"].startswith("tm-")
+        assert t["created_at"]
+        assert t["updated_at"] == t["created_at"]
 
     def test_creates_meeting_task_with_attrs(self, db: Path):
         _seed_project(db)
@@ -181,20 +181,20 @@ class TestCreateTask:
             "CRM", "Встреча с клиентом", task_type="meeting",
             meeting_time="2026-08-02T14:00",
             location="Офис",
-            participants=["Алексей", "Иван"***REMOVED***,
+            participants=["Алексей", "Иван"],
             priority="high",
             db_path=db,
         )
-        assert t["task_type"***REMOVED*** == "meeting"
-        assert t["meeting_time"***REMOVED*** == "2026-08-02T14:00"
-        assert t["location"***REMOVED*** == "Офис"
-        assert t["participants"***REMOVED*** == ["Алексей", "Иван"***REMOVED***
-        assert t["priority"***REMOVED*** == "high"
+        assert t["task_type"] == "meeting"
+        assert t["meeting_time"] == "2026-08-02T14:00"
+        assert t["location"] == "Офис"
+        assert t["participants"] == ["Алексей", "Иван"]
+        assert t["priority"] == "high"
 
     def test_creates_document_task(self, db: Path):
         _seed_project(db)
         t = create_task("CRM", "ТЗ для подрядчика", task_type="document", db_path=db)
-        assert t["task_type"***REMOVED*** == "document"
+        assert t["task_type"] == "document"
 
     def test_meeting_attrs_rejected_for_non_meeting_types(self, db: Path):
         """Правило 8 (Context-Aware Routing): meeting-атрибуты только с meeting.
@@ -214,17 +214,17 @@ class TestCreateTask:
         with pytest.raises(ValueError, match="participants"):
             create_task(
                 "CRM", "code", task_type="digital",
-                participants=["a"***REMOVED***, db_path=db,
+                participants=["a"], db_path=db,
             )
         # meeting сам разрешает любой набор:
         t = create_task(
             "CRM", "sync", task_type="meeting",
             meeting_time="2026-08-01T14:00", location="X",
-            participants=["a"***REMOVED***, db_path=db,
+            participants=["a"], db_path=db,
         )
-        assert t["meeting_time"***REMOVED*** == "2026-08-01T14:00"
-        assert t["location"***REMOVED*** == "X"
-        assert t["participants"***REMOVED*** == ["a"***REMOVED***
+        assert t["meeting_time"] == "2026-08-01T14:00"
+        assert t["location"] == "X"
+        assert t["participants"] == ["a"]
 
     def test_rejects_invalid_task_type(self, db: Path):
         _seed_project(db)
@@ -252,18 +252,18 @@ class TestCreateTask:
         with pytest.raises(ValueError, match="list"):
             create_task(
                 "CRM", "x", task_type="meeting",
-                participants=["a", 42***REMOVED***, db_path=db,  # type: ignore[list-item***REMOVED***
+                participants=["a", 42], db_path=db,  # type: ignore[list-item]
             )
 
     def test_strips_whitespace(self, db: Path):
         _seed_project(db)
         t = create_task("  CRM  ", "  Title  ", db_path=db)
-        assert t["project_id"***REMOVED*** == "CRM"
-        assert t["title"***REMOVED*** == "Title"
+        assert t["project_id"] == "CRM"
+        assert t["title"] == "Title"
 
     def test_id_is_unique(self, db: Path):
         _seed_project(db)
-        ids = {create_task("CRM", f"task #{i***REMOVED***", db_path=db)["id"***REMOVED*** for i in range(20)***REMOVED***
+        ids = {create_task("CRM", f"task #{i}", db_path=db)["id"] for i in range(20)}
         assert len(ids) == 20
 
 
@@ -273,7 +273,7 @@ class TestCreateTask:
 
 class TestGetTasks:
     def test_returns_empty_for_unknown_project(self, db: Path):
-        assert get_tasks("ghost", db_path=db) == [***REMOVED***
+        assert get_tasks("ghost", db_path=db) == []
 
     def test_returns_only_tasks_for_project(self, db: Path):
         _seed_project(db)
@@ -290,20 +290,20 @@ class TestGetTasks:
         create_task("CRM", "meeting-1", task_type="meeting", db_path=db)
         create_task("CRM", "doc-1", task_type="document", db_path=db)
         digital = get_tasks("CRM", task_type="digital", db_path=db)
-        assert len(digital) == 1 and digital[0***REMOVED***["task_type"***REMOVED*** == "digital"
+        assert len(digital) == 1 and digital[0]["task_type"] == "digital"
         meeting = get_tasks("CRM", task_type="meeting", db_path=db)
-        assert len(meeting) == 1 and meeting[0***REMOVED***["task_type"***REMOVED*** == "meeting"
+        assert len(meeting) == 1 and meeting[0]["task_type"] == "meeting"
 
     def test_filter_by_status(self, db: Path):
         _seed_project(db)
         t = create_task("CRM", "a", db_path=db)
         create_task("CRM", "b", db_path=db)
-        update_task(t["id"***REMOVED***, status="in_progress", db_path=db)
+        update_task(t["id"], status="in_progress", db_path=db)
         pending = get_tasks("CRM", status="pending", db_path=db)
         in_progress = get_tasks("CRM", status="in_progress", db_path=db)
         assert len(pending) == 1
         assert len(in_progress) == 1
-        assert in_progress[0***REMOVED***["id"***REMOVED*** == t["id"***REMOVED***
+        assert in_progress[0]["id"] == t["id"]
 
     def test_rejects_invalid_type_filter(self, db: Path):
         with pytest.raises(ValueError):
@@ -321,8 +321,8 @@ class TestGetTasks:
         time.sleep(0.1)
         t2 = create_task("CRM", "second", db_path=db)
         tasks = get_tasks("CRM", db_path=db)
-        assert tasks[0***REMOVED***["id"***REMOVED*** == t2["id"***REMOVED***
-        assert tasks[-1***REMOVED***["id"***REMOVED*** == t1["id"***REMOVED***     
+        assert tasks[0]["id"] == t2["id"]
+        assert tasks[-1]["id"] == t1["id"]     
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -333,10 +333,10 @@ class TestShowTask:
     def test_returns_task_by_id(self, db: Path):
         _seed_project(db)
         t = create_task("CRM", "x", db_path=db)
-        loaded = show_task(t["id"***REMOVED***, db_path=db)
+        loaded = show_task(t["id"], db_path=db)
         assert loaded is not None
-        assert loaded["id"***REMOVED*** == t["id"***REMOVED***
-        assert loaded["title"***REMOVED*** == "x"
+        assert loaded["id"] == t["id"]
+        assert loaded["title"] == "x"
 
     def test_missing_returns_none(self, db: Path):
         assert show_task("tm-bogus", db_path=db) is None
@@ -350,34 +350,34 @@ class TestUpdateTask:
     def test_partial_update_of_status(self, db: Path):
         _seed_project(db)
         t = create_task("CRM", "x", priority="low", db_path=db)
-        updated = update_task(t["id"***REMOVED***, status="in_progress", db_path=db)
+        updated = update_task(t["id"], status="in_progress", db_path=db)
         assert updated is not None
-        assert updated["status"***REMOVED*** == "in_progress"
-        assert updated["priority"***REMOVED*** == "low"  # не сбросилось
-        assert updated["title"***REMOVED*** == "x"      # не сбросилось
-        assert updated["updated_at"***REMOVED*** >= t["updated_at"***REMOVED***
+        assert updated["status"] == "in_progress"
+        assert updated["priority"] == "low"  # не сбросилось
+        assert updated["title"] == "x"      # не сбросилось
+        assert updated["updated_at"] >= t["updated_at"]
 
     def test_update_meeting_attrs(self, db: Path):
         _seed_project(db)
         t = create_task("CRM", "x", task_type="meeting", db_path=db)
         updated = update_task(
-            t["id"***REMOVED***, meeting_time="2026-09-01T15:00",
-            location="Zoom", participants=["a", "b"***REMOVED***, db_path=db,
+            t["id"], meeting_time="2026-09-01T15:00",
+            location="Zoom", participants=["a", "b"], db_path=db,
         )
-        assert updated["meeting_time"***REMOVED*** == "2026-09-01T15:00"
-        assert updated["location"***REMOVED*** == "Zoom"
-        assert updated["participants"***REMOVED*** == ["a", "b"***REMOVED***
+        assert updated["meeting_time"] == "2026-09-01T15:00"
+        assert updated["location"] == "Zoom"
+        assert updated["participants"] == ["a", "b"]
 
     def test_id_and_created_at_immutable(self, db: Path):
         _seed_project(db)
         t = create_task("CRM", "x", db_path=db)
         # Попытка перезаписать id/created_at должна быть отвергнута.
         with pytest.raises(ValueError, match="нельзя обновлять"):
-            update_task(t["id"***REMOVED***, id="tm-hacked", db_path=db)
+            update_task(t["id"], id="tm-hacked", db_path=db)
         with pytest.raises(ValueError, match="нельзя обновлять"):
-            update_task(t["id"***REMOVED***, created_at="1999-01-01", db_path=db)
+            update_task(t["id"], created_at="1999-01-01", db_path=db)
         with pytest.raises(ValueError, match="нельзя обновлять"):
-            update_task(t["id"***REMOVED***, briefing_generated=True, db_path=db)
+            update_task(t["id"], briefing_generated=True, db_path=db)
 
     def test_missing_returns_none(self, db: Path):
         assert update_task("tm-bogus", status="done", db_path=db) is None
@@ -385,21 +385,21 @@ class TestUpdateTask:
     def test_empty_update_returns_current(self, db: Path):
         _seed_project(db)
         t = create_task("CRM", "x", db_path=db)
-        loaded = update_task(t["id"***REMOVED***, db_path=db)
-        assert loaded == show_task(t["id"***REMOVED***, db_path=db)
+        loaded = update_task(t["id"], db_path=db)
+        assert loaded == show_task(t["id"], db_path=db)
 
     def test_rejects_invalid_enum_value(self, db: Path):
         _seed_project(db)
         t = create_task("CRM", "x", db_path=db)
         with pytest.raises(ValueError):
-            update_task(t["id"***REMOVED***, status="weird", db_path=db)
+            update_task(t["id"], status="weird", db_path=db)
 
     def test_participants_roundtrip(self, db: Path):
         _seed_project(db)
         t = create_task("CRM", "x", task_type="meeting", db_path=db)
-        update_task(t["id"***REMOVED***, participants=["X", "Y"***REMOVED***, db_path=db)
-        loaded = show_task(t["id"***REMOVED***, db_path=db)
-        assert loaded["participants"***REMOVED*** == ["X", "Y"***REMOVED***
+        update_task(t["id"], participants=["X", "Y"], db_path=db)
+        loaded = show_task(t["id"], db_path=db)
+        assert loaded["participants"] == ["X", "Y"]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -410,8 +410,8 @@ class TestDeleteTask:
     def test_deletes_existing(self, db: Path):
         _seed_project(db)
         t = create_task("CRM", "x", db_path=db)
-        assert delete_task(t["id"***REMOVED***, db_path=db) is True
-        assert get_tasks("CRM", db_path=db) == [***REMOVED***
+        assert delete_task(t["id"], db_path=db) is True
+        assert get_tasks("CRM", db_path=db) == []
 
     def test_missing_returns_false_idempotent(self, db: Path):
         assert delete_task("tm-bogus", db_path=db) is False
@@ -430,10 +430,10 @@ class TestGenerateBriefing:
             "CRM", "Встреча", task_type="meeting",
             meeting_time="2026-08-02T14:00",
             location="Офис",
-            participants=["Алексей", "Иван"***REMOVED***,
+            participants=["Алексей", "Иван"],
             db_path=db,
         )
-        briefing = generate_meeting_briefing(t["id"***REMOVED***, db_path=db)
+        briefing = generate_meeting_briefing(t["id"], db_path=db)
         assert briefing is not None
         assert "Брифинг встречи: Встреча" in briefing
         assert "CRM" in briefing
@@ -442,17 +442,17 @@ class TestGenerateBriefing:
         assert "Алексей" in briefing and "Иван" in briefing
 
         # В БД флаг выставлен.
-        loaded = show_task(t["id"***REMOVED***, db_path=db)
-        assert loaded["briefing_generated"***REMOVED*** is True
+        loaded = show_task(t["id"], db_path=db)
+        assert loaded["briefing_generated"] is True
         # Поле `updated_at` обновлено.
-        assert loaded["updated_at"***REMOVED*** >= t["created_at"***REMOVED***
+        assert loaded["updated_at"] >= t["created_at"]
 
     def test_no_briefing_for_digital(self, db: Path):
         _seed_project(db)
         t = create_task("CRM", "code", task_type="digital", db_path=db)
-        assert generate_meeting_briefing(t["id"***REMOVED***, db_path=db) is None
-        loaded = show_task(t["id"***REMOVED***, db_path=db)
-        assert loaded["briefing_generated"***REMOVED*** is False
+        assert generate_meeting_briefing(t["id"], db_path=db) is None
+        loaded = show_task(t["id"], db_path=db)
+        assert loaded["briefing_generated"] is False
 
     def test_no_briefing_for_missing_task(self, db: Path):
         assert generate_meeting_briefing("tm-bogus", db_path=db) is None
@@ -465,11 +465,11 @@ class TestGenerateBriefing:
         conn = init_db(db)
         conn.execute(
             "UPDATE tasks SET participants = ? WHERE id = ?",
-            ("not-json", t["id"***REMOVED***),
+            ("not-json", t["id"]),
         )
         conn.commit()
         conn.close()
-        briefing = generate_meeting_briefing(t["id"***REMOVED***, db_path=db)
+        briefing = generate_meeting_briefing(t["id"], db_path=db)
         assert briefing is not None
         assert "(не указаны)" in briefing
 
@@ -488,7 +488,7 @@ class TestGenerateBriefingV1:
     gather_linked_resources (work_area_view.resources_for_project)
     + gather_recent_tasks (get_tasks) + gather_knowledge_hits
     (KnowledgeEngine.search) + optional _generate_llm_synthesis
-    через ModelGateway.generate_by_capabilities([meeting_brief***REMOVED***).
+    через ModelGateway.generate_by_capabilities([meeting_brief]).
 
     Все шаги защищены try/except — brief отдаётся даже при полном
     фейле зависимостей (deterministic fallback).
@@ -515,9 +515,9 @@ class TestGenerateBriefingV1:
                 ),
                 "title": "Architecture",
                 "source": "docs_10/architecture",
-                "matched_terms": ["crm", "client"***REMOVED***,
-            ***REMOVED***,
-        ***REMOVED***
+                "matched_terms": ["crm", "client"],
+            },
+        ]
         monkeypatch.setattr(
             tm, "_gather_knowledge_hits",
             lambda query: knowledge_fixture,
@@ -529,9 +529,9 @@ class TestGenerateBriefingV1:
         t = create_task(
             "CRM", "Синхронизация roadmap", task_type="meeting",
             meeting_time="2026-08-10T11:00", location="Zoom",
-            participants=["Алексей", "Иван"***REMOVED***, db_path=db,
+            participants=["Алексей", "Иван"], db_path=db,
         )
-        briefing = generate_meeting_briefing(t["id"***REMOVED***, db_path=db)
+        briefing = generate_meeting_briefing(t["id"], db_path=db)
         assert briefing is not None
 
         # ⭐ Основные якоря по требованию промта: project name +
@@ -554,8 +554,8 @@ class TestGenerateBriefingV1:
         assert "Детерминированный режим" in briefing
 
         # Side-effect: briefing_generated=1.
-        loaded = show_task(t["id"***REMOVED***, db_path=db)
-        assert loaded["briefing_generated"***REMOVED*** is True
+        loaded = show_task(t["id"], db_path=db)
+        assert loaded["briefing_generated"] is True
 
     def test_v1_llm_synthesis_used_when_provided(
         self, db: Path, monkeypatch
@@ -575,9 +575,9 @@ class TestGenerateBriefingV1:
 
         t = create_task(
             "CRM", "Sync", task_type="meeting",
-            participants=["Алексей"***REMOVED***, db_path=db,
+            participants=["Алексей"], db_path=db,
         )
-        briefing = generate_meeting_briefing(t["id"***REMOVED***, db_path=db)
+        briefing = generate_meeting_briefing(t["id"], db_path=db)
         assert briefing is not None
         # LLM-вывод подхвачен.
         assert "Потеря pipeline в QA" in briefing
@@ -602,9 +602,9 @@ class TestGenerateBriefingV1:
 
         t = create_task(
             "CRM", "X", task_type="meeting",
-            participants=["A"***REMOVED***, db_path=db,
+            participants=["A"], db_path=db,
         )
-        briefing = generate_meeting_briefing(t["id"***REMOVED***, db_path=db)
+        briefing = generate_meeting_briefing(t["id"], db_path=db)
         assert briefing is not None
         # Fallback активен (LLM был short-circuit по env, ни fake-blocking).
         assert "Детерминированный режим" in briefing
@@ -616,13 +616,13 @@ class TestGenerateBriefingV1:
         детерминистично вне зависимости от состояния workspace.
         """
         from scripts_01 import task_manager as tm
-        monkeypatch.setattr(tm, "_gather_knowledge_hits", lambda q: [***REMOVED***)
+        monkeypatch.setattr(tm, "_gather_knowledge_hits", lambda q: [])
         _seed_project(db)
         t = create_task(
             "CRM", "Solo", task_type="meeting",
-            participants=["A"***REMOVED***, db_path=db,
+            participants=["A"], db_path=db,
         )
-        briefing = generate_meeting_briefing(t["id"***REMOVED***, db_path=db)
+        briefing = generate_meeting_briefing(t["id"], db_path=db)
         assert briefing is not None
         # Нет Knowledge Engine → секция отсутствует.
         assert "Заметки из Knowledge Engine" not in briefing
@@ -641,9 +641,9 @@ class TestGenerateBriefingV1:
 
         t = create_task(
             "CRM", "X", task_type="meeting",
-            participants=["A"***REMOVED***, db_path=db,
+            participants=["A"], db_path=db,
         )
-        briefing = generate_meeting_briefing(t["id"***REMOVED***, db_path=db)
+        briefing = generate_meeting_briefing(t["id"], db_path=db)
         assert briefing is not None
         assert "Детерминированный режим" in briefing
 
@@ -655,27 +655,27 @@ class TestGenerateBriefingV1:
         _seed_project(db)
         from scripts_01.work_area_view import link as wav_link
         for i in range(20):
-            wav_link("CRM", f"Res-{i:02d***REMOVED***", db_path=db)
+            wav_link("CRM", f"Res-{i:02d}", db_path=db)
         from scripts_01 import task_manager as tm
         monkeypatch.setattr(
             tm, "_generate_llm_synthesis", lambda *a, **kw: None,
         )
-        monkeypatch.setattr(tm, "_gather_knowledge_hits", lambda q: [***REMOVED***)
+        monkeypatch.setattr(tm, "_gather_knowledge_hits", lambda q: [])
 
         t = create_task(
             "CRM", "X", task_type="meeting",
-            participants=["A"***REMOVED***, db_path=db,
+            participants=["A"], db_path=db,
         )
-        briefing = generate_meeting_briefing(t["id"***REMOVED***, db_path=db)
+        briefing = generate_meeting_briefing(t["id"], db_path=db)
         assert briefing is not None
         # Шапка содержит ровно 10 (top by created_at DESC).
         assert f"## Связанные ресурсы (10)" in briefing
         # В top-10 попадают первые 10 по моменту создания (Res-19..Res-10).
         for i in range(10, 20):
-            assert f"Res-{i:02d***REMOVED***" in briefing
+            assert f"Res-{i:02d}" in briefing
         # За пределами CAP (Res-00..Res-09) НЕ появляются.
         for i in range(10):
-            assert f"Res-{i:02d***REMOVED***" not in briefing
+            assert f"Res-{i:02d}" not in briefing
 
     def test_v1_persists_briefing_generated_and_updated(
         self, db: Path
@@ -684,23 +684,23 @@ class TestGenerateBriefingV1:
         _seed_project(db)
         t = create_task(
             "CRM", "X", task_type="meeting",
-            participants=["A"***REMOVED***, db_path=db,
+            participants=["A"], db_path=db,
         )
-        original_updated = t["updated_at"***REMOVED***
-        briefing = generate_meeting_briefing(t["id"***REMOVED***, db_path=db)
+        original_updated = t["updated_at"]
+        briefing = generate_meeting_briefing(t["id"], db_path=db)
         assert briefing is not None
-        loaded = show_task(t["id"***REMOVED***, db_path=db)
-        assert loaded["briefing_generated"***REMOVED*** is True
-        assert loaded["updated_at"***REMOVED*** >= original_updated
+        loaded = show_task(t["id"], db_path=db)
+        assert loaded["briefing_generated"] is True
+        assert loaded["updated_at"] >= original_updated
 
     def test_v1_handles_missing_projects_table(self, db: Path):
         """Без таблицы projects → brief без секции «Описание» (graceful)."""
         # Не сидируем projects, но сидируем задачу (FK-онли).
         t = create_task(
             "CRM", "Z", task_type="meeting",
-            participants=["A"***REMOVED***, db_path=db,
+            participants=["A"], db_path=db,
         )
-        briefing = generate_meeting_briefing(t["id"***REMOVED***, db_path=db)
+        briefing = generate_meeting_briefing(t["id"], db_path=db)
         assert briefing is not None
         # Нет описания проекта → нет строки "Описание:".
         assert "Описание:" not in briefing
@@ -739,20 +739,20 @@ class TestCLI:
             monkeypatch, capsys, db,
             "create", "CRM", "Встреча", "--type", "meeting",
             "--time", "2026-08-02T14:00", "--location", "Zoom",
-            "--participants", '["Алексей", "Иван"***REMOVED***',
+            "--participants", '["Алексей", "Иван"]',
         )
         assert rc == 0
         tasks = get_tasks("CRM", task_type="meeting", db_path=db)
         assert len(tasks) == 1
-        assert tasks[0***REMOVED***["meeting_time"***REMOVED*** == "2026-08-02T14:00"
-        assert tasks[0***REMOVED***["location"***REMOVED*** == "Zoom"
-        assert tasks[0***REMOVED***["participants"***REMOVED*** == ["Алексей", "Иван"***REMOVED***
+        assert tasks[0]["meeting_time"] == "2026-08-02T14:00"
+        assert tasks[0]["location"] == "Zoom"
+        assert tasks[0]["participants"] == ["Алексей", "Иван"]
 
     def test_create_invalid_task_type_via_argparse(self, db: Path, monkeypatch, capsys):
         # argparse сам отвергает — SystemExit + exit code 2.
         from scripts_01.task_manager import main
         monkeypatch.setattr(sys, "argv",
-            ["task_manager.py", "create", "CRM", "x", "--type", "bogus"***REMOVED***)
+            ["task_manager.py", "create", "CRM", "x", "--type", "bogus"])
         monkeypatch.setattr("scripts_01.task_manager.DB_PATH", db)
         with pytest.raises(SystemExit) as exc_info:
             main()
@@ -767,10 +767,10 @@ class TestCLI:
         out = capsys.readouterr().out
         assert "Задачи проекта CRM" in out
         assert "(2):" in out
-        # Булеты рендерятся как "- tm-<id>  [<type>/<status>/<priority>***REMOVED*** <title>".
+        # Булеты рендерятся как "- tm-<id>  [<type>/<status>/<priority>] <title>".
         # Проверяем по полной сигнатуре, не по усечённому "-/<title>".
-        assert "[digital/pending/normal***REMOVED*** alpha" in out
-        assert "[digital/pending/normal***REMOVED*** beta" in out
+        assert "[digital/pending/normal] alpha" in out
+        assert "[digital/pending/normal] beta" in out
 
     def test_list_empty_project(self, db: Path, monkeypatch, capsys):
         rc = _run_cli(monkeypatch, capsys, db, "list", "ghost")
@@ -794,10 +794,10 @@ class TestCLI:
     def test_show_existing(self, db: Path, monkeypatch, capsys):
         _seed_project(db)
         t = create_task("CRM", "x", db_path=db)
-        rc = _run_cli(monkeypatch, capsys, db, "show", t["id"***REMOVED***)
+        rc = _run_cli(monkeypatch, capsys, db, "show", t["id"])
         assert rc == 0
         out = capsys.readouterr().out
-        assert t["id"***REMOVED*** in out and "x" in out
+        assert t["id"] in out and "x" in out
 
     def test_show_missing_exits_nonzero(self, db: Path, monkeypatch, capsys):
         rc = _run_cli(monkeypatch, capsys, db, "show", "tm-bogus")
@@ -808,13 +808,13 @@ class TestCLI:
     def test_update_partial(self, db: Path, monkeypatch, capsys):
         _seed_project(db)
         t = create_task("CRM", "x", db_path=db)
-        rc = _run_cli(monkeypatch, capsys, db, "update", t["id"***REMOVED***,
+        rc = _run_cli(monkeypatch, capsys, db, "update", t["id"],
                       "--status", "in_progress", "--priority", "high")
         assert rc == 0
-        loaded = show_task(t["id"***REMOVED***, db_path=db)
-        assert loaded["status"***REMOVED*** == "in_progress"
-        assert loaded["priority"***REMOVED*** == "high"
-        assert loaded["title"***REMOVED*** == "x"  # не сбросилось
+        loaded = show_task(t["id"], db_path=db)
+        assert loaded["status"] == "in_progress"
+        assert loaded["priority"] == "high"
+        assert loaded["title"] == "x"  # не сбросилось
 
     def test_update_missing_exits_nonzero(self, db: Path, monkeypatch, capsys):
         rc = _run_cli(monkeypatch, capsys, db, "update", "tm-bogus", "--status", "done")
@@ -823,9 +823,9 @@ class TestCLI:
     def test_delete_existing(self, db: Path, monkeypatch, capsys):
         _seed_project(db)
         t = create_task("CRM", "x", db_path=db)
-        rc = _run_cli(monkeypatch, capsys, db, "delete", t["id"***REMOVED***)
+        rc = _run_cli(monkeypatch, capsys, db, "delete", t["id"])
         assert rc == 0
-        assert get_tasks("CRM", db_path=db) == [***REMOVED***
+        assert get_tasks("CRM", db_path=db) == []
 
     def test_delete_missing_is_idempotent(self, db: Path, monkeypatch, capsys):
         rc = _run_cli(monkeypatch, capsys, db, "delete", "tm-bogus")
@@ -837,7 +837,7 @@ class TestCLI:
     def test_briefing_meeting(self, db: Path, monkeypatch, capsys):
         _seed_project(db)
         t = create_task("CRM", "Встреча", task_type="meeting", db_path=db)
-        rc = _run_cli(monkeypatch, capsys, db, "briefing", t["id"***REMOVED***)
+        rc = _run_cli(monkeypatch, capsys, db, "briefing", t["id"])
         assert rc == 0
         out = capsys.readouterr().out
         assert "Брифинг встречи: Встреча" in out
@@ -845,7 +845,7 @@ class TestCLI:
     def test_briefing_digital_exits_nonzero(self, db: Path, monkeypatch, capsys):
         _seed_project(db)
         t = create_task("CRM", "code", db_path=db)
-        rc = _run_cli(monkeypatch, capsys, db, "briefing", t["id"***REMOVED***)
+        rc = _run_cli(monkeypatch, capsys, db, "briefing", t["id"])
         assert rc == 1
         err = capsys.readouterr().err
         assert "только для task_type='meeting'" in err
@@ -863,7 +863,7 @@ class TestCLI:
 def _run_cli(monkeypatch, capsys, db_path: Path, *args: str) -> int:
     """Запускает task_manager.main() с подменой argv и DB_PATH."""
     from scripts_01.task_manager import main
-    monkeypatch.setattr(sys, "argv", ["task_manager.py", *args***REMOVED***)
+    monkeypatch.setattr(sys, "argv", ["task_manager.py", *args])
     monkeypatch.setattr("scripts_01.task_manager.DB_PATH", db_path)
     return main()
 
@@ -877,16 +877,16 @@ class TestCanonicalInvariants:
 
     def test_valid_task_types_match_prompts_42(self):
         # pompts_11/042_06: digital, meeting, document. Не доб./не удалять.
-        assert VALID_TASK_TYPES == frozenset({"digital", "meeting", "document"***REMOVED***)
+        assert VALID_TASK_TYPES == frozenset({"digital", "meeting", "document"})
 
     def test_valid_statuses_match_conventions(self):
         # pending → in_progress → done (+cancelled). Стандарт kanban.
         assert VALID_STATUSES == frozenset(
-            {"pending", "in_progress", "done", "cancelled"***REMOVED***
+            {"pending", "in_progress", "done", "cancelled"}
         )
 
     def test_valid_priorities_match_dpe_3_levels_plus_low(self):
         # promt37 DPE priority: 1-Critical / 2-High / 3-Normal. low расширение.
         assert VALID_PRIORITIES == frozenset(
-            {"low", "normal", "high", "critical"***REMOVED***
+            {"low", "normal", "high", "critical"}
         )

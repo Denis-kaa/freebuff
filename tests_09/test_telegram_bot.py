@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import os
 import sys
-***REMOVED***
+}
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -98,11 +98,11 @@ def test_get_or_create_session_creates_entry(bot: TelegramFreebuffBot) -> None:
 def test_record_message_and_build_messages(bot: TelegramFreebuffBot) -> None:
     chat_id = 11111
     bot._record_message(chat_id, "user", "hello")
-    messages = bot._build_messages(bot._active_session[chat_id***REMOVED***, "how are you?")
-    roles = [m["role"***REMOVED*** for m in messages***REMOVED***
-    assert roles[0***REMOVED*** == "system"
-    assert roles[-1***REMOVED*** == "user"
-    assert "how are you?" in [m["content"***REMOVED*** for m in messages***REMOVED***
+    messages = bot._build_messages(bot._active_session[chat_id], "how are you?")
+    roles = [m["role"] for m in messages]
+    assert roles[0] == "system"
+    assert roles[-1] == "user"
+    assert "how are you?" in [m["content"] for m in messages]
 
 
 def test_session_status_text_for_new_chat(bot: TelegramFreebuffBot) -> None:
@@ -121,11 +121,11 @@ def test_new_session_creates_fresh_id(bot: TelegramFreebuffBot) -> None:
     first = bot._get_or_create_session(chat_id)
     old = bot._active_session.pop(chat_id, bot._session_id(chat_id))
     bot.cm.complete_session(old)
-    new_id = f"telegram-{chat_id***REMOVED***-{os.urandom(4).hex()***REMOVED***"
+    new_id = f"telegram-{chat_id}-{os.urandom(4).hex()}"
     bot.cm.start_session(
-        session_id=new_id, project="telegram_bot", topic=f"telegram chat {chat_id***REMOVED***"
+        session_id=new_id, project="telegram_bot", topic=f"telegram chat {chat_id}"
     )
-    bot._active_session[chat_id***REMOVED*** = new_id
+    bot._active_session[chat_id] = new_id
     assert new_id != first
 
 
@@ -150,7 +150,7 @@ async def test_start_handler(
         await tb_mod._start(mock_update, mock_context)
 
     mock_update.effective_message.reply_text.assert_awaited_once()
-    reply_text = mock_update.effective_message.reply_text.await_args[0***REMOVED***[0***REMOVED***
+    reply_text = mock_update.effective_message.reply_text.await_args[0][0]
     assert "Привет" in reply_text
     assert "У тебя уже есть" in reply_text
     assert "/cancel" in reply_text
@@ -169,7 +169,7 @@ async def test_status_handler(
         await tb_mod._status(mock_update, mock_context)
 
     mock_update.effective_message.reply_text.assert_awaited_once()
-    reply_text = mock_update.effective_message.reply_text.await_args[0***REMOVED***[0***REMOVED***
+    reply_text = mock_update.effective_message.reply_text.await_args[0][0]
     assert "Сессия ещё не создана" in reply_text or "Session:" in reply_text
 
 
@@ -186,7 +186,7 @@ async def test_status_after_message(
     with patch.object(tb_mod, "_bot", bot):
         await tb_mod._status(mock_update, mock_context)
 
-    reply_text = mock_update.effective_message.reply_text.await_args[0***REMOVED***[0***REMOVED***
+    reply_text = mock_update.effective_message.reply_text.await_args[0][0]
     assert "Session:" in reply_text
     assert "telegram" in reply_text  # truncated to 8 chars: "telegram"
 
@@ -228,7 +228,7 @@ async def test_message_handler_empty_text(
         await tb_mod._handle_message(mock_update, mock_context)
 
     mock_update.effective_message.reply_text.assert_awaited_once()
-    reply_text = mock_update.effective_message.reply_text.await_args[0***REMOVED***[0***REMOVED***
+    reply_text = mock_update.effective_message.reply_text.await_args[0][0]
     assert "Отправь текстовое сообщение" in reply_text
 
 
@@ -269,7 +269,7 @@ async def test_new_session_handler(
 
     # Should have replied
     mock_update.effective_message.reply_text.assert_awaited_once()
-    reply_text = mock_update.effective_message.reply_text.await_args[0***REMOVED***[0***REMOVED***
+    reply_text = mock_update.effective_message.reply_text.await_args[0][0]
     assert "Новая сессия создана" in reply_text
 
 
@@ -285,7 +285,7 @@ async def test_session_handler(
         await tb_mod._session(mock_update, mock_context)
 
     mock_update.effective_message.reply_text.assert_awaited_once()
-    reply_text = mock_update.effective_message.reply_text.await_args[0***REMOVED***[0***REMOVED***
+    reply_text = mock_update.effective_message.reply_text.await_args[0][0]
     assert "telegram-12345" in reply_text
 
 
@@ -302,7 +302,7 @@ async def test_error_handler_logs_and_replies(
 
     mock_log.assert_called_once()
     mock_update.effective_message.reply_text.assert_awaited_once()
-    reply_text = mock_update.effective_message.reply_text.await_args[0***REMOVED***[0***REMOVED***
+    reply_text = mock_update.effective_message.reply_text.await_args[0][0]
     assert "Произошла ошибка" in reply_text
 
 
@@ -337,7 +337,7 @@ async def test_persistence_round_trip(tmp_path: Path) -> None:
     # Create a new instance simulating restart
     bot2 = TelegramFreebuffBot(tmp_path)
     assert 55555 in bot2._active_session
-    assert bot2._active_session[55555***REMOVED*** == "telegram-55555"
+    assert bot2._active_session[55555] == "telegram-55555"
 
 
 # ── Onboarding state machine tests (Phase 5.4, closes OQ26-Q31) ────────────
@@ -378,14 +378,14 @@ async def test_start_suggests_existing_projects(
         await tb_mod._start(mock_update, mock_context)
 
     mock_update.effective_message.reply_text.assert_awaited_once()
-    reply_text = mock_update.effective_message.reply_text.await_args[0***REMOVED***[0***REMOVED***
+    reply_text = mock_update.effective_message.reply_text.await_args[0][0]
     assert "Привет" in reply_text
     assert "У тебя уже есть" in reply_text
     assert "/cancel" in reply_text
     # State should be persisted as ASKING_PROJECT
     state = bot_with_corpus.onboarding_state(12345)
     assert state.state == STATE_ASKING_PROJECT
-    assert state.candidates == [***REMOVED***  # not yet populated
+    assert state.candidates == []  # not yet populated
 
 
 @pytest.mark.asyncio
@@ -416,7 +416,7 @@ async def test_onboarding_existing_project_path_uses_pompts_11(
     assert len(updated.candidates) >= 3
     # Reply should include a numbered pick list or some pompts_11 marker.
     mock_update.effective_message.reply_text.assert_awaited_once()
-    reply_text = mock_update.effective_message.reply_text.await_args[0***REMOVED***[0***REMOVED***
+    reply_text = mock_update.effective_message.reply_text.await_args[0][0]
     assert _pompts_11_marker_present(reply_text)
 
 
@@ -477,10 +477,10 @@ async def test_onboarding_idea_path_creates_workspace(
 
     workspaces = list_workspaces_for_chat(bot_with_corpus.workspace, 12345)
     assert len(workspaces) == 1
-    assert workspaces[0***REMOVED***["name"***REMOVED*** == "Работа"
-    assert workspaces[0***REMOVED***["source"***REMOVED***.startswith("idea:")
+    assert workspaces[0]["name"] == "Работа"
+    assert workspaces[0]["source"].startswith("idea:")
     # Reply should mention workspace name + source preview
-    last_reply = mock_update.effective_message.reply_text.await_args_list[-1***REMOVED***[0***REMOVED***[0***REMOVED***
+    last_reply = mock_update.effective_message.reply_text.await_args_list[-1][0][0]
     assert "Работа" in last_reply
     assert "Workspace" in last_reply
 
@@ -514,7 +514,7 @@ async def test_cancel_clears_state(
     assert cleared.source == ""
     # Reply should be informational
     mock_update.effective_message.reply_text.assert_awaited_once()
-    reply_text = mock_update.effective_message.reply_text.await_args[0***REMOVED***[0***REMOVED***
+    reply_text = mock_update.effective_message.reply_text.await_args[0][0]
     assert "прерван" in reply_text.lower() or "cancel" in reply_text.lower()
 
 
@@ -531,7 +531,7 @@ async def test_cancel_noop_when_no_onboarding(
         await tb_mod._cancel(mock_update, mock_context)
 
     mock_update.effective_message.reply_text.assert_awaited_once()
-    reply_text = mock_update.effective_message.reply_text.await_args[0***REMOVED***[0***REMOVED***
+    reply_text = mock_update.effective_message.reply_text.await_args[0][0]
     assert "не в онбординге" in reply_text or "ℹ️" in reply_text
 
 
@@ -589,7 +589,7 @@ async def test_onboarding_persists_to_workspace_registry(
     assert our_workspace.owner_chat_id == 12345
     # project_paths должен содержать абсолютный resolved path
     assert len(our_workspace.project_paths) == 1
-    bound = our_workspace.project_paths[0***REMOVED***
+    bound = our_workspace.project_paths[0]
     assert bound.endswith("047_06_e2e_platform_test.md")
     assert Path(bound).is_absolute()
 
@@ -606,13 +606,13 @@ async def test_workspace_list_command_filters_by_owner_chat_id(
     # Two workspaces with different owner_chat_ids.
     bot.registry.create_workspace(
         name="Mine Работа",
-        project_paths=[***REMOVED***,
+        project_paths=[],
         description="owned by 12345",
         owner_chat_id=12345,
     )
     bot.registry.create_workspace(
         name="Someone Else Учёба",
-        project_paths=[***REMOVED***,
+        project_paths=[],
         description="owned by 99999",
         owner_chat_id=99999,
     )
@@ -621,7 +621,7 @@ async def test_workspace_list_command_filters_by_owner_chat_id(
         await tb_mod.cmd_workspace(mock_update, mock_context)
 
     mock_update.effective_message.reply_text.assert_awaited_once()
-    reply = mock_update.effective_message.reply_text.await_args[0***REMOVED***[0***REMOVED***
+    reply = mock_update.effective_message.reply_text.await_args[0][0]
     # Наш workspace виден.
     assert "Mine Работа" in reply
     # Чужой workspace НЕ виден.
@@ -644,7 +644,7 @@ async def test_workspace_list_command_empty_state_message(
         await tb_mod.cmd_workspace(mock_update, mock_context)
 
     mock_update.effective_message.reply_text.assert_awaited_once()
-    reply = mock_update.effective_message.reply_text.await_args[0***REMOVED***[0***REMOVED***
+    reply = mock_update.effective_message.reply_text.await_args[0][0]
     assert "нет зарегистрированных workspace-ов" in reply
     assert "📂" in reply
 
@@ -684,14 +684,14 @@ async def test_queue_command_empty_state(
     bot = TelegramFreebuffBot(queue_prompts_root)
     upd = _make_mock_update_for_queue()
     ctx = MagicMock(spec=ContextTypes.DEFAULT_TYPE)
-    ctx.args = [***REMOVED***
+    ctx.args = []
 
     import scripts_01.telegram_bot as tb_mod
     with patch.object(tb_mod, "_bot", bot):
         await tb_mod.cmd_queue(upd, ctx)
 
     upd.effective_message.reply_text.assert_awaited_once()
-    reply = upd.effective_message.reply_text.await_args[0***REMOVED***[0***REMOVED***
+    reply = upd.effective_message.reply_text.await_args[0][0]
     # Counts line: all zeros.
     assert "0 user • 0 running • 0 done • 0 failed" in reply
     # All 4 dir labels visible, each '(пусто)'.
@@ -718,13 +718,13 @@ async def test_queue_command_user_only(
 
     upd = _make_mock_update_for_queue()
     ctx = MagicMock(spec=ContextTypes.DEFAULT_TYPE)
-    ctx.args = [***REMOVED***
+    ctx.args = []
 
     import scripts_01.telegram_bot as tb_mod
     with patch.object(tb_mod, "_bot", bot):
         await tb_mod.cmd_queue(upd, ctx)
 
-    reply = upd.effective_message.reply_text.await_args[0***REMOVED***[0***REMOVED***
+    reply = upd.effective_message.reply_text.await_args[0][0]
     # Counts: user=1, others=0.
     assert "1 user" in reply
     assert "0 running" in reply
@@ -757,13 +757,13 @@ async def test_queue_command_running_filter(
 
     upd = _make_mock_update_for_queue()
     ctx = MagicMock(spec=ContextTypes.DEFAULT_TYPE)
-    ctx.args = ["running"***REMOVED***
+    ctx.args = ["running"]
 
     import scripts_01.telegram_bot as tb_mod
     with patch.object(tb_mod, "_bot", bot):
         await tb_mod.cmd_queue(upd, ctx)
 
-    reply = upd.effective_message.reply_text.await_args[0***REMOVED***[0***REMOVED***
+    reply = upd.effective_message.reply_text.await_args[0][0]
     # Only running/ section visible, with 1 file.
     assert "⚙️ running (в работе / resumable): 1 файл(ов)" in reply
     assert "running task B" in reply
@@ -781,13 +781,13 @@ async def test_queue_command_invalid_filter(
     bot = TelegramFreebuffBot(queue_prompts_root)
     upd = _make_mock_update_for_queue()
     ctx = MagicMock(spec=ContextTypes.DEFAULT_TYPE)
-    ctx.args = ["banana"***REMOVED***
+    ctx.args = ["banana"]
 
     import scripts_01.telegram_bot as tb_mod
     with patch.object(tb_mod, "_bot", bot):
         await tb_mod.cmd_queue(upd, ctx)
 
-    reply = upd.effective_message.reply_text.await_args[0***REMOVED***[0***REMOVED***
+    reply = upd.effective_message.reply_text.await_args[0][0]
     assert "Usage: /queue" in reply
     assert "user|running|done|failed" in reply
 
@@ -810,14 +810,14 @@ async def test_queue_command_multiturn_badge(
 
     upd = _make_mock_update_for_queue()
     ctx = MagicMock(spec=ContextTypes.DEFAULT_TYPE)
-    ctx.args = [***REMOVED***
+    ctx.args = []
 
     import scripts_01.telegram_bot as tb_mod
     with patch.object(tb_mod, "_bot", bot):
         await tb_mod.cmd_queue(upd, ctx)
 
-    reply = upd.effective_message.reply_text.await_args[0***REMOVED***[0***REMOVED***
-    # Badge format: "[running-pending iter 2/3***REMOVED***"
+    reply = upd.effective_message.reply_text.await_args[0][0]
+    # Badge format: "[running-pending iter 2/3]"
     assert "running-pending iter 2/3" in reply
     # Status counted correctly.
     assert "1 running" in reply
@@ -832,21 +832,21 @@ async def test_queue_command_truncates_at_limit(
     bot = TelegramFreebuffBot(queue_prompts_root)
     from scripts_01.prompt_queue import write_user_prompt
     for i in range(50):
-        write_user_prompt(f"test task {i***REMOVED*** - " + ("x" * 100), chat_id=12345)
+        write_user_prompt(f"test task {i} - " + ("x" * 100), chat_id=12345)
 
     upd = _make_mock_update_for_queue()
     ctx = MagicMock(spec=ContextTypes.DEFAULT_TYPE)
-    ctx.args = [***REMOVED***
+    ctx.args = []
 
     import scripts_01.telegram_bot as tb_mod
     with patch.object(tb_mod, "_bot", bot):
         await tb_mod.cmd_queue(upd, ctx)
 
-    reply = upd.effective_message.reply_text.await_args[0***REMOVED***[0***REMOVED***
+    reply = upd.effective_message.reply_text.await_args[0][0]
     # TG-limit safety margin: <= 4096 chars.
-    assert len(reply) <= 4096, f"reply length {len(reply)***REMOVED*** exceeds 4096 TG-limit"
+    assert len(reply) <= 4096, f"reply length {len(reply)} exceeds 4096 TG-limit"
     # Truncation marker present when len > 3800.
-    assert "truncated" in reply.lower(), f"missing truncation marker; reply_len={len(reply)***REMOVED***"
+    assert "truncated" in reply.lower(), f"missing truncation marker; reply_len={len(reply)}"
 
 
 def test_telegram_bot_class_scope_indent_guard() -> None:
@@ -856,7 +856,7 @@ def test_telegram_bot_class_scope_indent_guard() -> None:
     so callers `bot._fallback_reply()` raised AttributeError. This guard catches that
     regression without booting a Telegram bot.
     """
-    ***REMOVED***
+    }
     src_path = Path(__file__).resolve().parent.parent / "scripts_01" / "telegram_bot.py"
     text = src_path.read_text(encoding="utf-8")
     match = re.search(r"^( +)def _fallback_reply\(self\)", text, re.MULTILINE)
@@ -864,7 +864,7 @@ def test_telegram_bot_class_scope_indent_guard() -> None:
     indent_spaces = len(match.group(1))
     assert indent_spaces == 4, (
         f"_fallback_reply de-indented outside class scope; current indent = "
-        f"{indent_spaces***REMOVED*** spaces (expected 4 inside class)"
+        f"{indent_spaces} spaces (expected 4 inside class)"
     )
 
 
@@ -895,7 +895,7 @@ async def test_cmd_task_spawns_dispatcher_subprocess(
         async def wait(self) -> None:
             return None
 
-    calls_made: list = [***REMOVED***
+    calls_made: list = []
     async def fake_create(*args, **kwargs):
         calls_made.append((args, kwargs))
         return _FakeProc()
@@ -904,14 +904,14 @@ async def test_cmd_task_spawns_dispatcher_subprocess(
 
     update = _make_mock_update_for_queue()
     context = MagicMock(spec=ContextTypes.DEFAULT_TYPE)
-    context.args = ["test", "task", "body"***REMOVED***
+    context.args = ["test", "task", "body"]
     await cmd_task(update, context)
 
-    assert len(calls_made) == 1, f"expected 1 spawn, got {len(calls_made)***REMOVED***"
-    args, _ = calls_made[0***REMOVED***
+    assert len(calls_made) == 1, f"expected 1 spawn, got {len(calls_made)}"
+    args, _ = calls_made[0]
     script_arg = next((a for a in args if "prompt_dispatcher.py" in str(a)), None)
-    assert script_arg is not None, f"prompt_dispatcher.py not in spawn args: {args***REMOVED***"
-    assert "--once" in args, f"--once not in spawn args: {args***REMOVED***"
+    assert script_arg is not None, f"prompt_dispatcher.py not in spawn args: {args}"
+    assert "--once" in args, f"--once not in spawn args: {args}"
 
 
 @pytest.mark.asyncio
@@ -927,16 +927,16 @@ async def test_cmd_task_spawn_failure_replies_cron_fallback(
 
     update = _make_mock_update_for_queue()
     context = MagicMock(spec=ContextTypes.DEFAULT_TYPE)
-    context.args = ["test"***REMOVED***
+    context.args = ["test"]
     await cmd_task(update, context)
 
     sent = update.effective_message.reply_text.call_args_list
-    texts: list = [***REMOVED***
+    texts: list = []
     for c in sent:
-        txt = c.kwargs.get("text") if c.kwargs.get("text") else (str(c.args[0***REMOVED***) if c.args else "")
+        txt = c.kwargs.get("text") if c.kwargs.get("text") else (str(c.args[0]) if c.args else "")
         texts.append(txt)
     assert any("deferred" in t or "cron safety-net" in t for t in texts), \
-        f"expected cron fallback hint, got texts: {texts***REMOVED***"
+        f"expected cron fallback hint, got texts: {texts}"
 
 
 def test_dispatch_one_race_returns_skipped_locked(
@@ -959,21 +959,21 @@ def test_dispatch_one_race_returns_skipped_locked(
 
     def fake_move(path: "Path", status: "str") -> "Path":
         if status == "running":
-            raise FileNotFoundError(f"raced: {path***REMOVED***")
+            raise FileNotFoundError(f"raced: {path}")
         return original_move(path, status)
 
     monkeypatch.setattr(pd, "move_to_status", fake_move)
 
-    launch_calls: "list[str***REMOVED***" = [***REMOVED***
+    launch_calls: "list[str]" = []
     def fake_launch(body: "str", ws: "str", timeout: int, model: str = "auto") -> "dict":
         launch_calls.append(body)
-        return {"success": True, "output": "should not run"***REMOVED***
+        return {"success": True, "output": "should not run"}
 
     result = dispatch_one(launcher=fake_launch, send_tg=False)
 
-    assert result["handled"***REMOVED*** is False
-    assert result["status"***REMOVED*** == "skipped_locked"
-    assert launch_calls == [***REMOVED***, f"launcher must NOT run on race; got {launch_calls***REMOVED***"
+    assert result["handled"] is False
+    assert result["status"] == "skipped_locked"
+    assert launch_calls == [], f"launcher must NOT run on race; got {launch_calls}"
 
 
 @pytest.mark.asyncio
@@ -997,12 +997,12 @@ async def test_reap_subprocess_safe_unregisters_from_pending(
 
     await reaper
     after = len(_pending_reapers)
-    assert after == before - 1, f"reaper not unregistered: before={before***REMOVED***, after={after***REMOVED***"
+    assert after == before - 1, f"reaper not unregistered: before={before}, after={after}"
 
 
 def test_prompt_dispatch_sh_invokes_recover_before_main_flag() -> None:
     """v5.83.0: prompt_dispatch.sh — recover call precedes main $FLAG invocation."""
-    ***REMOVED***
+    }
     sh = (Path(__file__).resolve().parent.parent / "scripts_01" / "prompt_dispatch.sh").read_text(
         encoding="utf-8"
     )
@@ -1014,5 +1014,5 @@ def test_prompt_dispatch_sh_invokes_recover_before_main_flag() -> None:
     assert recover_idx > 0, f"recover invocation NOT found in dispatch script"
     assert main_idx > 0, f"main $FLAG invocation NOT found in dispatch script"
     assert main_idx > recover_idx, (
-        f"recover (idx={recover_idx***REMOVED***) must PRECEDE main dispatch (idx={main_idx***REMOVED***)"
+        f"recover (idx={recover_idx}) must PRECEDE main dispatch (idx={main_idx})"
     )

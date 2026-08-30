@@ -11,8 +11,8 @@
 
 from __future__ import annotations
 
-***REMOVED***
-***REMOVED***
+}
+}
 
 import yaml
 
@@ -20,7 +20,7 @@ from app.curriculum.map import CompetencyMap
 from app.ingestion.parser import ExerciseRecord
 
 # --- blurb-эвристика (low confidence) --------------------------------
-_BLURB_KEYWORDS: dict[str, tuple[str, ...***REMOVED******REMOVED*** = {
+_BLURB_KEYWORDS: dict[str, tuple[str, ...]] = {
     "primitive-types": ("number", "integer", "float", "numeric"),
     "lists": ("list", "array", "collection"),
     "dicts": ("dictionary", "dict", "map", "hash"),
@@ -33,31 +33,31 @@ _BLURB_KEYWORDS: dict[str, tuple[str, ...***REMOVED******REMOVED*** = {
     "files-io": ("file", "read", "write"),
     "exceptions": ("error", "except", "fail"),
     "testing": ("test", "suite"),
-***REMOVED***
+}
 
 
-def load_overrides(path: str | Path) -> dict[str, dict***REMOVED***:
-    """Загрузить configs/exercise_overrides.yaml -> {exercise_id: {competency_id, confidence***REMOVED******REMOVED***."""
+def load_overrides(path: str | Path) -> dict[str, dict]:
+    """Загрузить configs/exercise_overrides.yaml -> {exercise_id: {competency_id, confidence]]."""
     with open(path, encoding="utf-8") as f:
         raw = yaml.safe_load(f)
-    out: dict[str, dict***REMOVED*** = {***REMOVED***
-    for entry in raw.get("overrides", [***REMOVED***):
-        ex_id = str(entry["exercise_id"***REMOVED***)
+    out: dict[str, dict] = {}
+    for entry in raw.get("overrides", []):
+        ex_id = str(entry["exercise_id"])
         if ex_id in out:
-            raise ValueError(f"двойной override для упражнения {ex_id!r***REMOVED***")
-        out[ex_id***REMOVED*** = {
-            "competency_id": str(entry["competency_id"***REMOVED***),
+            raise ValueError(f"двойной override для упражнения {ex_id!r}")
+        out[ex_id] = {
+            "competency_id": str(entry["competency_id"]),
             "confidence": str(entry.get("confidence", "low")),
-        ***REMOVED***
+        }
     return out
 
 
-def _concept_to_competency(cm: CompetencyMap) -> dict[str, list[str***REMOVED******REMOVED***:
-    """concept slug -> [competency ids***REMOVED***."""
-    out: dict[str, list[str***REMOVED******REMOVED*** = {***REMOVED***
+def _concept_to_competency(cm: CompetencyMap) -> dict[str, list[str]]:
+    """concept slug -> [competency ids]."""
+    out: dict[str, list[str]] = {}
     for c in cm.competencies:
         for concept in c.exercism_concepts:
-            out.setdefault(concept, [***REMOVED***).append(c.id)
+            out.setdefault(concept, []).append(c.id)
     return out
 
 
@@ -65,7 +65,7 @@ def _blurb_match(blurb: str) -> str | None:
     low = blurb.lower()
     for comp_id, words in _BLURB_KEYWORDS.items():
         for w in words:
-            if re.search(rf"\b{w***REMOVED***\b", low):
+            if re.search(rf"\b{w}\b", low):
                 return comp_id
     return None
 
@@ -73,33 +73,33 @@ def _blurb_match(blurb: str) -> str | None:
 def apply_mapping(
     rec: ExerciseRecord,
     cm: CompetencyMap,
-    overrides: dict[str, dict***REMOVED***,
-) -> list[tuple[str, str, str***REMOVED******REMOVED***:
-    """Вернуть [(competency_id, confidence, source)***REMOVED*** (0 или 1 связь)."""
+    overrides: dict[str, dict],
+) -> list[tuple[str, str, str]]:
+    """Вернуть [(competency_id, confidence, source)] (0 или 1 связь)."""
     # 1) override
     if rec.slug in overrides:
-        ov = overrides[rec.slug***REMOVED***
-        return [(ov["competency_id"***REMOVED***, ov["confidence"***REMOVED***, "override")***REMOVED***
+        ov = overrides[rec.slug]
+        return [(ov["competency_id"], ov["confidence"], "override")]
 
     # 2) rule-based по concepts
     concept_to = _concept_to_competency(cm)
-    scores: dict[str, int***REMOVED*** = {***REMOVED***
+    scores: dict[str, int] = {}
     for concept in rec.source_concepts:
-        for comp_id in concept_to.get(concept, [***REMOVED***):
-            scores[comp_id***REMOVED*** = scores.get(comp_id, 0) + 1
+        for comp_id in concept_to.get(concept, []):
+            scores[comp_id] = scores.get(comp_id, 0) + 1
     if scores:
         top = max(scores.values())
-        best = sorted(c for c, s in scores.items() if s == top)[0***REMOVED***
+        best = sorted(c for c, s in scores.items() if s == top)[0]
         conf = "high" if top >= 2 else "medium"
-        return [(best, conf, "rule")***REMOVED***
+        return [(best, conf, "rule")]
 
     # 3) blurb-эвристика (low)
     comp = _blurb_match(rec.blurb or rec.name)
     if comp is not None:
-        return [(comp, "low", "rule")***REMOVED***
+        return [(comp, "low", "rule")]
 
     # 4) unmapped
-    return [***REMOVED***
+    return []
 
 
 def create_mapper(
@@ -109,13 +109,13 @@ def create_mapper(
     overrides = load_overrides(overrides_path)
     by_id = cm.by_id()
 
-    def mapper(rec: ExerciseRecord) -> list[tuple[str, str, str***REMOVED******REMOVED***:
+    def mapper(rec: ExerciseRecord) -> list[tuple[str, str, str]]:
         matches = apply_mapping(rec, cm, overrides)
         # валидируем: компетенция обязана существовать (иначе это баг конфига)
-        validated: list[tuple[str, str, str***REMOVED******REMOVED*** = [***REMOVED***
+        validated: list[tuple[str, str, str]] = []
         for comp_id, conf, src in matches:
             if comp_id not in by_id:
-                raise ValueError(f"override мапит на несуществующую компетенцию {comp_id!r***REMOVED***")
+                raise ValueError(f"override мапит на несуществующую компетенцию {comp_id!r}")
             validated.append((comp_id, conf, src))
         return validated
 

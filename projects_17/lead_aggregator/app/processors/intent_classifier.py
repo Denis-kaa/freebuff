@@ -8,7 +8,7 @@ L2: intent — «клиент ищет исполнителя» (горячий 
 """
 from __future__ import annotations
 
-***REMOVED***
+}
 from typing import Iterable
 
 
@@ -23,13 +23,13 @@ class IntentClassifier:
 
     def __init__(
         self,
-        stopwords: Iterable[str***REMOVED*** = (),
-        client_markers: Iterable[str***REMOVED*** = (),
-        seeker_markers: Iterable[str***REMOVED*** = (),
+        stopwords: Iterable[str] = (),
+        client_markers: Iterable[str] = (),
+        seeker_markers: Iterable[str] = (),
     ) -> None:
-        self.stopwords = [s.lower() for s in stopwords***REMOVED***
-        self.client_markers = [m.lower() for m in client_markers***REMOVED***
-        self.seeker_markers = [m.lower() for m in seeker_markers***REMOVED***
+        self.stopwords = [s.lower() for s in stopwords]
+        self.client_markers = [m.lower() for m in client_markers]
+        self.seeker_markers = [m.lower() for m in seeker_markers]
 
     # ── L1 ──────────────────────────────────────────────────────────
     def check_l1(self, text: str) -> bool:
@@ -50,7 +50,7 @@ class IntentClassifier:
         return "neutral"
 
     # ── combined ────────────────────────────────────────────────────
-    def classify(self, text: str) -> tuple[bool, str***REMOVED***:
+    def classify(self, text: str) -> tuple[bool, str]:
         """Полный проход: (legal_ok, intent).
 
         legal_ok=False означает отсев на L1 (спам-зона, W-7).

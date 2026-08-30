@@ -10,7 +10,7 @@ import os
 import shutil
 import subprocess
 import sys
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional
 
 from freebuff_plugin_03.bootstrap import DiagnosticReport, EnvironmentState
@@ -47,18 +47,18 @@ class RuntimeDoctor:
         required_dirs = [
             "/usr/local/bin",
             os.path.expanduser("~/.local/bin"),
-        ***REMOVED***
+        ]
         if self._env.is_termux:
             required_dirs.append(os.environ.get("PREFIX", "/data/data/com.termux/files/usr") + "/bin")
 
         for d in required_dirs:
             if d not in self._env.path_dirs:
-                report.path_issues.append(f"{d***REMOVED*** not in PATH")
+                report.path_issues.append(f"{d} not in PATH")
 
         # Проверяем базовые утилиты
-        for util in ["python3", "git", "curl"***REMOVED***:
+        for util in ["python3", "git", "curl"]:
             if not shutil.which(util):
-                report.path_issues.append(f"{util***REMOVED*** not found in PATH")
+                report.path_issues.append(f"{util} not found in PATH")
 
     def _check_runtimes(self, report: DiagnosticReport) -> None:
         """Проверяет runtime."""
@@ -66,11 +66,11 @@ class RuntimeDoctor:
         try:
             parts = self._env.python_version.split(".")
             if len(parts) >= 2:
-                py_major = int(parts[0***REMOVED***)
-                py_minor = int(parts[1***REMOVED***)
+                py_major = int(parts[0])
+                py_minor = int(parts[1])
                 if py_major < 3 or (py_major == 3 and py_minor < 11):
                     report.runtime_issues.append(
-                        f"Python {py_major***REMOVED***.{py_minor***REMOVED*** < 3.11 — may cause compatibility issues"
+                        f"Python {py_major}.{py_minor} < 3.11 — may cause compatibility issues"
                     )
         except (ValueError, IndexError):
             pass
@@ -79,7 +79,7 @@ class RuntimeDoctor:
         if self._env.git_available:
             try:
                 result = subprocess.run(
-                    ["git", "--version"***REMOVED***,
+                    ["git", "--version"],
                     capture_output=True, text=True, timeout=5,
                 )
                 if result.returncode == 0:
@@ -91,7 +91,7 @@ class RuntimeDoctor:
         if shutil.which("freebuff"):
             try:
                 result = subprocess.run(
-                    ["freebuff", "--version"***REMOVED***,
+                    ["freebuff", "--version"],
                     capture_output=True, text=True, timeout=10,
                 )
                 if result.returncode == 0:
@@ -103,10 +103,10 @@ class RuntimeDoctor:
 
     def _check_dependencies(self, report: DiagnosticReport) -> None:
         """Проверяет зависимости."""
-        required_pips = ["requests", "pyyaml"***REMOVED***
+        required_pips = ["requests", "pyyaml"]
         for pkg in required_pips:
             if pkg not in self._env.pip_packages:
-                report.dependency_issues.append(f"pip package '{pkg***REMOVED***' not installed")
+                report.dependency_issues.append(f"pip package '{pkg}' not installed")
 
     def _check_keys(self, report: DiagnosticReport) -> None:
         """Проверяет наличие API ключей."""
@@ -134,7 +134,7 @@ class RuntimeDoctor:
             report.key_issues.append("No API keys found")
         else:
             # Очищаем пустые строки (ключи найдены)
-            report.key_issues = [k for k in report.key_issues if k***REMOVED***
+            report.key_issues = [k for k in report.key_issues if k]
 
     def _calculate_health(self, report: DiagnosticReport) -> None:
         """Вычисляет health score."""

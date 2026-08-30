@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-***REMOVED***
+}
 from typing import Mapping
 
 
@@ -27,9 +27,9 @@ class ExecutionStatus(str, Enum):
 class ExecutionJob:
     """A command and its copied workspace; no student code is imported here."""
 
-    command: tuple[str, ...***REMOVED***
+    command: tuple[str, ...]
     workspace: Path
-    environment: Mapping[str, str***REMOVED***
+    environment: Mapping[str, str]
 
     def __post_init__(self) -> None:
         if not self.command:

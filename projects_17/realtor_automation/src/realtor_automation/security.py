@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import os
-***REMOVED***
-***REMOVED***
+}
+}
 
 
 class SecurityError(RuntimeError):
@@ -39,7 +39,7 @@ class PIIEncryptor:
                 "cryptography package is not installed. Run: pip install cryptography"
             ) from exc
         except ValueError as exc:
-            raise SecurityError(f"Invalid PII encryption key: {exc***REMOVED***") from exc
+            raise SecurityError(f"Invalid PII encryption key: {exc}") from exc
 
     def encrypt(self, plaintext: str) -> str:
         """Encrypt a string and return a URL-safe token."""
@@ -52,17 +52,17 @@ class PIIEncryptor:
         try:
             return self._fernet.decrypt(token.encode("utf-8")).decode("utf-8")
         except Exception as exc:
-            raise SecurityError(f"Failed to decrypt token: {exc***REMOVED***") from exc
+            raise SecurityError(f"Failed to decrypt token: {exc}") from exc
 
     def redact_pii(self, text: str) -> str:
-        """Replace common Russian PII patterns with [REDACTED***REMOVED***."""
+        """Replace common Russian PII patterns with [REDACTED]."""
         # Passport series/number, phone, email, SNILS-like numbers.
-        ***REMOVED***
-            (r"\d{4***REMOVED***\s?\d{6***REMOVED***", "[PASSPORT***REMOVED***"),  # passport
-            (r"\+?7\s?\d{3***REMOVED***[\s\-***REMOVED***?\d{3***REMOVED***[\s\-***REMOVED***?\d{2***REMOVED***[\s\-***REMOVED***?\d{2***REMOVED***", "[PHONE***REMOVED***"),
-            (r"[a-zA-Z0-9._%+-***REMOVED***+@[a-zA-Z0-9.-***REMOVED***+\.[a-zA-Z***REMOVED***{2,***REMOVED***", "[EMAIL***REMOVED***"),
-            (r"\d{3***REMOVED***[\s\-***REMOVED***?\d{3***REMOVED***[\s\-***REMOVED***?\d{3***REMOVED***[\s\-***REMOVED***?\d{2***REMOVED***", "[SNILS***REMOVED***"),
-        ***REMOVED***
+        }
+            (r"\d{4)\s?\d{6]", "[PASSPORT]"),  # passport
+            (r"\+?7\s?\d{3)[\s\-]?\d{3][\s\-]?\d{2][\s\-]?\d{2]", "[PHONE]"),
+            (r"[a-zA-Z0-9._%+-)+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,]", "[EMAIL]"),
+            (r"\d{3)[\s\-]?\d{3][\s\-]?\d{3][\s\-]?\d{2]", "[SNILS]"),
+        }
         redacted = text
         for pattern, replacement in patterns:
             redacted = re.sub(pattern, replacement, redacted)
@@ -86,15 +86,15 @@ def validate_path(path: str) -> Path:
     try:
         resolved.relative_to(project_root)
     except ValueError as exc:
-        raise SecurityError(f"Path traversal detected: {path***REMOVED***") from exc
+        raise SecurityError(f"Path traversal detected: {path}") from exc
     return resolved
 
 
 def validate_non_empty(value: str, name: str = "value") -> str:
     """Return the stripped value or raise SecurityError if empty."""
     if not isinstance(value, str):
-        raise SecurityError(f"{name***REMOVED*** must be a string")
+        raise SecurityError(f"{name} must be a string")
     stripped = value.strip()
     if not stripped:
-        raise SecurityError(f"{name***REMOVED*** cannot be empty")
+        raise SecurityError(f"{name} cannot be empty")
     return stripped

@@ -17,7 +17,7 @@ import json
 import os
 import sys
 import time
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional
 from unittest.mock import MagicMock, patch
 
@@ -82,12 +82,12 @@ class DemoPlugin(BasePlugin):
         self.unload_called = False
         self.enable_called = False
         self.disable_called = False
-        self.events_received: List[Event***REMOVED*** = [***REMOVED***
-        self.last_error: Optional[Exception***REMOVED*** = None
+        self.events_received: List[Event] = []
+        self.last_error: Optional[Exception] = None
 
     @property
     def events_subscribed(self):
-        return ["demo.*", "test.*"***REMOVED***
+        return ["demo.*", "test.*"]
 
     @property
     def meta(self):
@@ -95,13 +95,13 @@ class DemoPlugin(BasePlugin):
             name=self._name,
             version=self._version,
             description=self._description,
-            tags=["test", "demo"***REMOVED***,
+            tags=["test", "demo"],
             events_subscribed=self.events_subscribed,
         )
 
     def get_tools(self):
         from scripts_01.tool_runtime import FileTool
-        return [FileTool()***REMOVED***
+        return [FileTool()]
 
     def on_load(self):
         self.load_called = True
@@ -122,10 +122,10 @@ class DemoPlugin(BasePlugin):
         self.last_error = error
 
     def do_test_action(self, value: str = "default") -> dict:
-        return {"action": "test", "value": value, "plugin": self._name***REMOVED***
+        return {"action": "test", "value": value, "plugin": self._name}
 
     def do_echo(self, message: str = "") -> dict:
-        return {"echo": message, "length": len(message)***REMOVED***
+        return {"echo": message, "length": len(message)}
 
 
 class FailingPlugin(BasePlugin):
@@ -171,38 +171,38 @@ class TestBasePlugin:
         assert "test" in meta.tags
 
     def test_events_subscribed(self, demo_plugin):
-        assert demo_plugin.events_subscribed == ["demo.*", "test.*"***REMOVED***
+        assert demo_plugin.events_subscribed == ["demo.*", "test.*"]
 
     def test_get_tools(self, demo_plugin):
         tools = demo_plugin.get_tools()
         assert len(tools) == 1
-        assert tools[0***REMOVED***.meta.name == "file"
+        assert tools[0].meta.name == "file"
 
     def test_get_commands_default(self, demo_plugin):
-        assert demo_plugin.get_commands() == [***REMOVED***
+        assert demo_plugin.get_commands() == []
 
     def test_execute_success(self, demo_plugin):
-        result = demo_plugin.execute("test_action", {"value": "hello"***REMOVED***)
+        result = demo_plugin.execute("test_action", {"value": "hello"})
         assert result.success
-        assert result.data["value"***REMOVED*** == "hello"
-        assert result.data["action"***REMOVED*** == "test"
+        assert result.data["value"] == "hello"
+        assert result.data["action"] == "test"
         assert result.plugin_name == "demo"
 
     def test_execute_unknown_action(self, demo_plugin):
-        result = demo_plugin.execute("nonexistent", {***REMOVED***)
+        result = demo_plugin.execute("nonexistent", {})
         assert not result.success
         assert "Unknown action" in result.error
 
     def test_execute_with_defaults(self, demo_plugin):
-        result = demo_plugin.execute("test_action", {***REMOVED***)
+        result = demo_plugin.execute("test_action", {})
         assert result.success
-        assert result.data["value"***REMOVED*** == "default"
+        assert result.data["value"] == "default"
 
     def test_execute_echo(self, demo_plugin):
-        result = demo_plugin.execute("echo", {"message": "hello world"***REMOVED***)
+        result = demo_plugin.execute("echo", {"message": "hello world"})
         assert result.success
-        assert result.data["echo"***REMOVED*** == "hello world"
-        assert result.data["length"***REMOVED*** == 11
+        assert result.data["echo"] == "hello world"
+        assert result.data["length"] == 11
 
     def test_on_error_called(self):
         plugin = FailingPlugin()
@@ -371,7 +371,7 @@ class TestPluginRegistry:
         registry.register(demo_plugin)
         loaded = registry.list(state=PluginState.LOADED)
         assert len(loaded) == 1
-        assert loaded[0***REMOVED***.name == "demo"
+        assert loaded[0].name == "demo"
 
         enabled = registry.list(state=PluginState.ENABLED)
         assert len(enabled) == 0
@@ -385,24 +385,24 @@ class TestPluginRegistry:
 
     def test_execute_plugin_action(self, registry, demo_plugin):
         registry.register(demo_plugin)
-        result = registry.execute("demo", "test_action", {"value": "registry_test"***REMOVED***)
+        result = registry.execute("demo", "test_action", {"value": "registry_test"})
         assert result.success
-        assert result.data["value"***REMOVED*** == "registry_test"
+        assert result.data["value"] == "registry_test"
 
     def test_execute_nonexistent_plugin(self, registry):
-        result = registry.execute("ghost", "action", {***REMOVED***)
+        result = registry.execute("ghost", "action", {})
         assert not result.success
         assert "not found" in result.error
 
     def test_get_state(self, registry):
         registry.register(DemoPlugin())
         state = registry.get_state()
-        assert state["total"***REMOVED*** == 1
-        assert state["loaded"***REMOVED*** == 1
-        assert state["enabled"***REMOVED*** == 0
-        assert state["disabled"***REMOVED*** == 0
-        assert state["error"***REMOVED*** == 0
-        assert len(state["plugins"***REMOVED***) == 1
+        assert state["total"] == 1
+        assert state["loaded"] == 1
+        assert state["enabled"] == 0
+        assert state["disabled"] == 0
+        assert state["error"] == 0
+        assert len(state["plugins"]) == 1
 
     def test_enable_nonexistent(self, registry):
         assert not registry.enable("ghost")
@@ -455,12 +455,12 @@ class TestEventBusIntegration:
         registry.enable("demo")
 
         # Публикуем событие, на которое подписан плагин
-        event_bus.publish(Event("demo.test", {"key": "value"***REMOVED***, source="test"))
-        event_bus.publish(Event("test.hello", {***REMOVED***, source="test"))
+        event_bus.publish(Event("demo.test", {"key": "value"}, source="test"))
+        event_bus.publish(Event("test.hello", {}, source="test"))
 
         assert len(demo.events_received) == 2
-        assert demo.events_received[0***REMOVED***.type == "demo.test"
-        assert demo.events_received[0***REMOVED***.data["key"***REMOVED*** == "value"
+        assert demo.events_received[0].type == "demo.test"
+        assert demo.events_received[0].data["key"] == "value"
 
     def test_plugin_receives_only_subscribed_events(self, event_bus):
         registry = PluginRegistry(event_bus=event_bus)
@@ -469,7 +469,7 @@ class TestEventBusIntegration:
         registry.enable("demo")
 
         # Событие, на которое НЕ подписан
-        event_bus.publish(Event("other.event", {***REMOVED***, source="test"))
+        event_bus.publish(Event("other.event", {}, source="test"))
 
         assert len(demo.events_received) == 0
 
@@ -480,7 +480,7 @@ class TestEventBusIntegration:
         registry.enable("demo")
         registry.disable("demo")
 
-        event_bus.publish(Event("demo.test", {***REMOVED***, source="test"))
+        event_bus.publish(Event("demo.test", {}, source="test"))
 
         assert len(demo.events_received) == 0
 
@@ -489,13 +489,13 @@ class TestEventBusIntegration:
         demo = DemoPlugin()
         registry.register(demo)
 
-        events_log = [***REMOVED***
+        events_log = []
         event_bus.subscribe("plugin.enabled", lambda e: events_log.append(e))
 
         registry.enable("demo")
 
         assert len(events_log) == 1
-        assert events_log[0***REMOVED***.data["plugin"***REMOVED*** == "demo"
+        assert events_log[0].data["plugin"] == "demo"
 
     def test_plugin_disabled_event_published(self, event_bus):
         registry = PluginRegistry(event_bus=event_bus)
@@ -503,13 +503,13 @@ class TestEventBusIntegration:
         registry.register(demo)
         registry.enable("demo")
 
-        events_log = [***REMOVED***
+        events_log = []
         event_bus.subscribe("plugin.disabled", lambda e: events_log.append(e))
 
         registry.disable("demo")
 
         assert len(events_log) == 1
-        assert events_log[0***REMOVED***.data["plugin"***REMOVED*** == "demo"
+        assert events_log[0].data["plugin"] == "demo"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -525,7 +525,7 @@ class TestPluginLoader:
         discovered = loader.discover(str(WORKSPACE / "plugins_04"))
         assert len(discovered) >= 1
         # Должен найти hello_world
-        names = [p.name for p in discovered***REMOVED***
+        names = [p.name for p in discovered]
         assert "hello_world" in names
 
     def test_load_existing_plugin(self):
@@ -549,7 +549,7 @@ class TestPluginLoader:
         loader = PluginLoader(registry)
         entries = loader.load_all(str(WORKSPACE / "plugins_04"))
         assert len(entries) >= 1
-        names = [e.name for e in entries***REMOVED***
+        names = [e.name for e in entries]
         assert "hello_world" in names
 
     def test_loaded_plugin_can_be_enabled(self, event_bus):
@@ -562,10 +562,10 @@ class TestPluginLoader:
         assert registry.enable("hello_world")
 
         # Выполняем действие
-        result = registry.execute("hello_world", "hello", {"name": "Buffy"***REMOVED***)
+        result = registry.execute("hello_world", "hello", {"name": "Buffy"})
         assert result.success
-        assert "Hello, Buffy" in result.data["message"***REMOVED***
-        assert result.data["count"***REMOVED*** == 1
+        assert "Hello, Buffy" in result.data["message"]
+        assert result.data["count"] == 1
 
     def test_loaded_plugin_echo_action(self, event_bus):
         registry = PluginRegistry(event_bus=event_bus)
@@ -573,9 +573,9 @@ class TestPluginLoader:
         loader.load_all(str(WORKSPACE / "plugins_04"))
         registry.enable("hello_world")
 
-        result = registry.execute("hello_world", "echo", {"text": "test echo"***REMOVED***)
+        result = registry.execute("hello_world", "echo", {"text": "test echo"})
         assert result.success
-        assert result.data["echo"***REMOVED*** == "test echo"
+        assert result.data["echo"] == "test echo"
 
     def test_hello_world_receives_system_events(self, event_bus):
         registry = PluginRegistry(event_bus=event_bus)
@@ -585,13 +585,13 @@ class TestPluginLoader:
 
         # После enable плагин уже получил plugin.enabled (через plugin.*)
         # Публикуем ещё 2 события
-        event_bus.publish(Event("system.startup", {"mode": "test"***REMOVED***, source="pytest"))
-        event_bus.publish(Event("plugin.loaded", {"plugin": "test"***REMOVED***, source="pytest"))
+        event_bus.publish(Event("system.startup", {"mode": "test"}, source="pytest"))
+        event_bus.publish(Event("plugin.loaded", {"plugin": "test"}, source="pytest"))
 
         # Проверяем статус: 1 (plugin.enabled) + 2 новых = 3
-        result = registry.execute("hello_world", "status", {***REMOVED***)
+        result = registry.execute("hello_world", "status", {})
         assert result.success
-        assert result.data["events_received"***REMOVED*** == 3
+        assert result.data["events_received"] == 3
 
     def test_loaded_plugin_has_manifest(self):
         registry = PluginRegistry()
@@ -617,32 +617,32 @@ class TestPluginManifest:
             "version": "2.0.0",
             "description": "Test manifest",
             "author": "Tester",
-            "tags": ["test", "demo"***REMOVED***,
-            "events_subscribed": ["test.*"***REMOVED***,
+            "tags": ["test", "demo"],
+            "events_subscribed": ["test.*"],
             "homepage": "https://example.com",
             "license": "MIT",
-        ***REMOVED***
+        }
         m = PluginManifest.from_dict(data)
         assert m.name == "test"
         assert m.version == "2.0.0"
         assert m.description == "Test manifest"
         assert m.author == "Tester"
-        assert m.tags == ["test", "demo"***REMOVED***
-        assert m.events_subscribed == ["test.*"***REMOVED***
+        assert m.tags == ["test", "demo"]
+        assert m.events_subscribed == ["test.*"]
         assert m.homepage == "https://example.com"
 
     def test_from_dict_empty(self):
-        m = PluginManifest.from_dict({***REMOVED***)
+        m = PluginManifest.from_dict({})
         assert m.name == "unknown"
         assert m.version == "1.0.0"
         assert m.description == ""
 
     def test_to_dict(self):
-        m = PluginManifest(name="my_plugin", version="1.5.0", tags=["ai", "tools"***REMOVED***)
+        m = PluginManifest(name="my_plugin", version="1.5.0", tags=["ai", "tools"])
         d = m.to_dict()
-        assert d["name"***REMOVED*** == "my_plugin"
-        assert d["version"***REMOVED*** == "1.5.0"
-        assert d["tags"***REMOVED*** == ["ai", "tools"***REMOVED***
+        assert d["name"] == "my_plugin"
+        assert d["version"] == "1.5.0"
+        assert d["tags"] == ["ai", "tools"]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -743,7 +743,7 @@ plugin = TempPlugin()
         manifest_file.write_text(json.dumps({
             "name": "temp_plugin",
             "version": "0.1.0",
-        ***REMOVED***))
+        ]))
 
         registry = PluginRegistry()
         loader = PluginLoader(registry)
@@ -788,13 +788,13 @@ plugin = TempPlugin()
         registry.enable("demo2")
 
         # Оба получают события
-        event_bus.publish(Event("demo.test", {***REMOVED***, source="test"))
+        event_bus.publish(Event("demo.test", {}, source="test"))
         assert len(p1.events_received) == 1
         assert len(p2.events_received) == 1
 
         # Отключаем один
         registry.disable("demo")
-        event_bus.publish(Event("demo.test", {***REMOVED***, source="test"))
+        event_bus.publish(Event("demo.test", {}, source="test"))
         assert len(p1.events_received) == 1  # больше не получает
         assert len(p2.events_received) == 2  # продолжает получать
 
@@ -829,22 +829,22 @@ class TestPluginRegistrar:
         registry.enable("hello_world")
 
         # Status
-        result = registry.execute("hello_world", "status", {***REMOVED***)
+        result = registry.execute("hello_world", "status", {})
         assert result.success
-        assert result.data["name"***REMOVED*** == "hello_world"
-        assert result.data["enabled"***REMOVED*** is True
-        assert result.data["greeting_count"***REMOVED*** == 0
+        assert result.data["name"] == "hello_world"
+        assert result.data["enabled"] is True
+        assert result.data["greeting_count"] == 0
 
         # Hello несколько раз
-        registry.execute("hello_world", "hello", {"name": "Alice"***REMOVED***)
-        registry.execute("hello_world", "hello", {"name": "Bob"***REMOVED***)
-        result = registry.execute("hello_world", "hello", {"name": "Charlie"***REMOVED***)
-        assert result.data["count"***REMOVED*** == 3
+        registry.execute("hello_world", "hello", {"name": "Alice"})
+        registry.execute("hello_world", "hello", {"name": "Bob"})
+        result = registry.execute("hello_world", "hello", {"name": "Charlie"})
+        assert result.data["count"] == 3
 
         # Reset
-        registry.execute("hello_world", "reset", {***REMOVED***)
-        result = registry.execute("hello_world", "status", {***REMOVED***)
-        assert result.data["greeting_count"***REMOVED*** == 0
+        registry.execute("hello_world", "reset", {})
+        result = registry.execute("hello_world", "status", {})
+        assert result.data["greeting_count"] == 0
 
     def test_event_subscription_hello_world(self, event_bus):
         """Проверяет, что hello_world получает system.* события."""
@@ -855,12 +855,12 @@ class TestPluginRegistrar:
 
         # Отправляем system события
         for i in range(3):
-            event_bus.publish(Event(f"system.event_{i***REMOVED***", {"n": i***REMOVED***, source="test"))
+            event_bus.publish(Event(f"system.event_{i}", {"n": i}, source="test"))
 
         # Проверяем через статус
-        result = registry.execute("hello_world", "status", {***REMOVED***)
+        result = registry.execute("hello_world", "status", {})
         assert result.success
-        assert result.data["events_received"***REMOVED*** >= 3
+        assert result.data["events_received"] >= 3
 
     def test_create_registrar_integration(self, event_bus):
         """create_plugin_registrar с полной интеграцией."""
@@ -877,9 +877,9 @@ class TestPluginRegistrar:
         registry.enable("hello_world")
 
         # Проверяем выполнение
-        result = registry.execute("hello_world", "echo", {"text": "integration works"***REMOVED***)
+        result = registry.execute("hello_world", "echo", {"text": "integration works"})
         assert result.success
-        assert result.data["echo"***REMOVED*** == "integration works"
+        assert result.data["echo"] == "integration works"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -903,14 +903,14 @@ class TestPythonMRun:
         """Запускает реальный `python -m` в свежем интерпретаторе (как в CLI).
 
         In-process runpy.run_module здесь не годится: в pytest-процессе
-        sys.modules['__main__'***REMOVED*** — это главный модуль pytest, а не исполняемый
+        sys.modules['__main__'] — это главный модуль pytest, а не исполняемый
         модуль, и фикс sys.modules.setdefault(...) зарегистрировал бы не тот
         объект. Субпроцесс воспроизводит настоящее окружение `python -m`.
         """
         import subprocess
 
         result = subprocess.run(
-            [sys.executable, "-m", "scripts_01.plugin_api", "list"***REMOVED***,
+            [sys.executable, "-m", "scripts_01.plugin_api", "list"],
             capture_output=True,
             text=True,
             encoding="utf-8",

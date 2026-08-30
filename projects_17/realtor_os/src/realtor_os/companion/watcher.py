@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-***REMOVED***
+}
 from typing import Any
 
 from realtor_os.companion.state import StateManager
@@ -18,7 +18,7 @@ class Watcher:
     def __init__(self, state_path: Path | None = None) -> None:
         self._state = StateManager(state_path)
 
-    def heartbeat(self, status: str = "healthy", components: dict[str, str***REMOVED*** | None = None) -> dict[str, Any***REMOVED***:
+    def heartbeat(self, status: str = "healthy", components: dict[str, str] | None = None) -> dict[str, Any]:
         """Обновить состояние системы.
 
         Args:
@@ -29,7 +29,7 @@ class Watcher:
             Актуальное состояние.
         """
         if components is None:
-            components = {"rag": "ok", "ocr": "ok", "llm": "ok"***REMOVED***
+            components = {"rag": "ok", "ocr": "ok", "llm": "ok"}
         return self._state.update(status=status, components=components)
 
     def run(self, interval: int = 300) -> None:

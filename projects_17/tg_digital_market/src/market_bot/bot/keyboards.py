@@ -52,9 +52,9 @@ class SellerAction(CallbackData, prefix="sell"):
 # ─── Reply-клавиатуры ───────────────────────────────────────────────────────
 
 MAIN_MENU_BTNS = [
-    [KeyboardButton(text="🛍 Каталог"), KeyboardButton(text="👤 Кабинет")***REMOVED***,
-    [KeyboardButton(text="📜 История"), KeyboardButton(text="ℹ️ Помощь")***REMOVED***,
-***REMOVED***
+    [KeyboardButton(text="🛍 Каталог"), KeyboardButton(text="👤 Кабинет")],
+    [KeyboardButton(text="📜 История"), KeyboardButton(text="ℹ️ Помощь")],
+]
 
 
 def main_menu_kb() -> ReplyKeyboardMarkup:
@@ -66,24 +66,24 @@ def main_menu_kb() -> ReplyKeyboardMarkup:
 # ─── Inline-клавиатуры ──────────────────────────────────────────────────────
 
 
-def catalog_root_kb(categories: list[str***REMOVED***) -> InlineKeyboardMarkup:
+def catalog_root_kb(categories: list[str]) -> InlineKeyboardMarkup:
     rows = [
-        [InlineKeyboardButton(text=f"📁 {c***REMOVED***", callback_data=CatalogAction(action="list", category=c, page=0).pack())***REMOVED***
+        [InlineKeyboardButton(text=f"📁 {c}", callback_data=CatalogAction(action="list", category=c, page=0).pack())]
         for c in categories
-    ***REMOVED*** or [[InlineKeyboardButton(text="Пусто", callback_data="noop")***REMOVED******REMOVED***
+    ] or [[InlineKeyboardButton(text="Пусто", callback_data="noop")]]
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
 def products_list_kb(products, category: str, page: int = 0, page_size: int = 8) -> InlineKeyboardMarkup:
-    rows = [***REMOVED***
-    for p in products[page * page_size:(page + 1) * page_size***REMOVED***:
+    rows = []
+    for p in products[page * page_size:(page + 1) * page_size]:
         rows.append([
             InlineKeyboardButton(
-                text=f"{p.name***REMOVED*** · ⭐{p.price_stars***REMOVED***",
+                text=f"{p.name} · ⭐{p.price_stars}",
                 callback_data=CatalogAction(action="open", product_id=p.id).pack(),
             )
-        ***REMOVED***)
-    nav: list[InlineKeyboardButton***REMOVED*** = [***REMOVED***
+        ])
+    nav: list[InlineKeyboardButton] = []
     if page > 0:
         nav.append(InlineKeyboardButton(
             text="◀", callback_data=CatalogAction(action="list", category=category, page=page - 1).pack()
@@ -97,23 +97,23 @@ def products_list_kb(products, category: str, page: int = 0, page_size: int = 8)
     rows.append([InlineKeyboardButton(
         text="⬅️ К категориям",
         callback_data=CatalogAction(action="category").pack(),
-    )***REMOVED***)
+    )])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
 def product_detail_kb(product_id: int, in_stock: bool) -> InlineKeyboardMarkup:
-    rows = [***REMOVED***
+    rows = []
     if in_stock:
         rows.append([InlineKeyboardButton(
             text="💳 Купить",
             callback_data=CartAction(action="confirm", product_id=product_id).pack(),
-        )***REMOVED***)
+        )])
     else:
-        rows.append([InlineKeyboardButton(text="⛔ Нет в наличии", callback_data="noop")***REMOVED***)
+        rows.append([InlineKeyboardButton(text="⛔ Нет в наличии", callback_data="noop")])
     rows.append([InlineKeyboardButton(
         text="⬅️ К списку",
         callback_data=CatalogAction(action="back").pack(),
-    )***REMOVED***)
+    )])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
@@ -122,27 +122,27 @@ def confirm_purchase_kb(product_id: int, order_id: int, payment_id: int, is_mock
         [InlineKeyboardButton(
             text="✅ Подтверждаю",
             callback_data=CartAction(action="pay_mock", order_id=order_id, payment_id=payment_id).pack(),
-        )***REMOVED***,
+        )],
         [InlineKeyboardButton(
             text="❌ Отмена",
             callback_data=CartAction(action="cancel", order_id=order_id).pack(),
-        )***REMOVED***,
-    ***REMOVED*** if is_mock else [
+        )],
+    ] if is_mock else [
         # Для Telegram Stars inline-кнопка "Оплатить" появится в reply-сообщении с invoice.
         [InlineKeyboardButton(
             text="❌ Отменить заказ",
             callback_data=CartAction(action="cancel", order_id=order_id).pack(),
-        )***REMOVED***,
-    ***REMOVED***
+        )],
+    ]
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
 def account_kb(is_seller: bool, is_admin: bool) -> InlineKeyboardMarkup:
-    rows = [[InlineKeyboardButton(text="📜 История заказов", callback_data=MenuAction(action="history").pack())***REMOVED******REMOVED***
+    rows = [[InlineKeyboardButton(text="📜 История заказов", callback_data=MenuAction(action="history").pack())]]
     if is_seller:
-        rows.append([InlineKeyboardButton(text="🏪 Кабинет продавца", callback_data=MenuAction(action="seller").pack())***REMOVED***)
+        rows.append([InlineKeyboardButton(text="🏪 Кабинет продавца", callback_data=MenuAction(action="seller").pack())])
     if is_admin:
-        rows.append([InlineKeyboardButton(text="🛠 Админ-панель", callback_data=MenuAction(action="admin").pack())***REMOVED***)
+        rows.append([InlineKeyboardButton(text="🛠 Админ-панель", callback_data=MenuAction(action="admin").pack())])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 
@@ -154,11 +154,11 @@ def admin_kb() -> InlineKeyboardMarkup:
     список в callback_data (фикс ревью #2 против «слёжки» строк).
     """
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="📊 Статистика", callback_data=AdminAction(action="stats").pack())***REMOVED***,
-    ***REMOVED***)
+        [InlineKeyboardButton(text="📊 Статистика", callback_data=AdminAction(action="stats").pack())],
+    ])
 
 
 def seller_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="➕ Добавить товар", callback_data=SellerAction(action="add").pack())***REMOVED***,
-    ***REMOVED***)
+        [InlineKeyboardButton(text="➕ Добавить товар", callback_data=SellerAction(action="add").pack())],
+    ])

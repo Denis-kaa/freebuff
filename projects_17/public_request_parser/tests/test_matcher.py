@@ -21,7 +21,7 @@ def make_publication(
     return Publication(
         source_id="fixture-source",
         item_id=item_id,
-        canonical_url=f"https://example.test/items/{item_id***REMOVED***",
+        canonical_url=f"https://example.test/items/{item_id}",
         title=title,
         summary=summary,
         content=content,
@@ -32,7 +32,7 @@ def make_publication(
 
 def make_profile(**overrides: object) -> SearchProfile:
     """Профиль по умолчанию для тестов."""
-    defaults: dict[str, object***REMOVED*** = {
+    defaults: dict[str, object] = {
         "profile_id": "profile-1",
         "owner_scope": "operator",
         "version": 1,
@@ -40,9 +40,9 @@ def make_profile(**overrides: object) -> SearchProfile:
         "required_terms": ("python",),
         "optional_terms": ("backend",),
         "intent_terms": ("ищу", "нужен"),
-    ***REMOVED***
+    }
     defaults.update(overrides)
-    return SearchProfile(**defaults)  # type: ignore[arg-type***REMOVED***
+    return SearchProfile(**defaults)  # type: ignore[arg-type]
 
 
 def test_normalize_text_and_stopwords() -> None:

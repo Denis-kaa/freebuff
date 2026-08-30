@@ -1,13 +1,13 @@
 """services_container.py — DI-контейнер для aiogram-обработчиков.
 
 Создаётся один раз при старте бота и кладётся в `dispatcher.workflow_data`,
-чтобы хэндлеры доставали зависимости через `workflow_data["services"***REMOVED***`.
+чтобы хэндлеры доставали зависимости через `workflow_data["services"]`.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-***REMOVED***
+}
 from typing import Optional
 
 from ..config import Config

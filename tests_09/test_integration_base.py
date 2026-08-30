@@ -14,7 +14,7 @@
 
 from __future__ import annotations
 
-***REMOVED***
+}
 from typing import Any, Dict, List
 
 import pytest
@@ -38,10 +38,10 @@ class _FakeEventBus:
     """Фейк event_bus для тестов наблюдаемости."""
 
     def __init__(self) -> None:
-        self.events: List[Dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+        self.events: List[Dict[str, Any]] = []
 
     def emit(self, event_type: str, **kwargs: Any) -> None:
-        self.events.append({"type": event_type, **kwargs***REMOVED***)
+        self.events.append({"type": event_type, **kwargs})
 
 
 class _FakeRouteDecision:
@@ -87,7 +87,7 @@ class _FailOpenAdapter(IntegrationAdapter):
         try:
             raise RuntimeError("platform offline")
         except RuntimeError as exc:
-            return self._err_response(request, errors=[str(exc)***REMOVED***)
+            return self._err_response(request, errors=[str(exc)])
 
 
 class _AuthAdapter(IntegrationAdapter):
@@ -99,7 +99,7 @@ class _AuthAdapter(IntegrationAdapter):
         *,
         event_bus: Any = None,
     ) -> AdapterResponse:
-        return self._ok_response(request, data={"auth_method": self.auth.method.value***REMOVED***)
+        return self._ok_response(request, data={"auth_method": self.auth.method.value})
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -132,7 +132,7 @@ class TestAuthSpec:
     def test_frozen(self) -> None:
         spec = AuthSpec(method=AuthMethod.NONE)
         with pytest.raises(Exception):  # dataclass frozen
-            spec.method = AuthMethod.BEARER  # type: ignore[misc***REMOVED***
+            spec.method = AuthMethod.BEARER  # type: ignore[misc]
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -145,34 +145,34 @@ class TestAdapterRequestResponse:
     def test_request_to_dict(self) -> None:
         req = AdapterRequest(
             intent="execute_project",
-            payload={"project": "demo"***REMOVED***,
-            meta={"chat_id": 123***REMOVED***,
+            payload={"project": "demo"},
+            meta={"chat_id": 123},
         )
         d = req.to_dict()
-        assert d["intent"***REMOVED*** == "execute_project"
-        assert d["payload"***REMOVED*** == {"project": "demo"***REMOVED***
-        assert d["meta"***REMOVED*** == {"chat_id": 123***REMOVED***
+        assert d["intent"] == "execute_project"
+        assert d["payload"] == {"project": "demo"}
+        assert d["meta"] == {"chat_id": 123}
 
     def test_response_ok(self) -> None:
         resp = AdapterResponse(
             status="ok",
             intent="report",
-            data={"lines": 42***REMOVED***,
+            data={"lines": 42},
             capability_used="summarize",
             model_used="deepseek-v4-flash",
         )
         assert resp.ok is True
         d = resp.to_dict()
-        assert d["status"***REMOVED*** == "ok"
-        assert d["capability_used"***REMOVED*** == "summarize"
-        assert d["model_used"***REMOVED*** == "deepseek-v4-flash"
+        assert d["status"] == "ok"
+        assert d["capability_used"] == "summarize"
+        assert d["model_used"] == "deepseek-v4-flash"
 
     def test_response_error(self) -> None:
         resp = AdapterResponse(
             status="error",
             intent="unknown_intent",
-            errors=["unsupported intent"***REMOVED***,
-            warnings=["deprecated"***REMOVED***,
+            errors=["unsupported intent"],
+            warnings=["deprecated"],
         )
         assert resp.ok is False
         d = resp.to_dict()
@@ -199,7 +199,7 @@ class TestIntentCapabilityMap:
         unknown = set(INTENT_CAPABILITY_MAP.values()) - KNOWN_CAPABILITIES
         assert not unknown, (
             f"INTENT_CAPABILITY_MAP содержит capability-токены вне "
-            f"KNOWN_CAPABILITIES: {sorted(unknown)***REMOVED***. "
+            f"KNOWN_CAPABILITIES: {sorted(unknown)}. "
             f"См. ANTI-6b / ADR-020 §Decision пункт 3."
         )
 
@@ -214,7 +214,7 @@ class TestIntentCapabilityMap:
             assert len(cap) > 0
 
     def test_fallback_capability_is_summarize(self) -> None:
-        assert INTENT_CAPABILITY_MAP["fallback"***REMOVED*** == "summarize"
+        assert INTENT_CAPABILITY_MAP["fallback"] == "summarize"
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -249,16 +249,16 @@ class TestCallPlatform:
 
     def test_call_platform_returns_dict_with_model(self) -> None:
         adapter = _ConcreteAdapter(adapter_id="tg")
-        result = adapter.call_platform("code", {"task": "test"***REMOVED***)
+        result = adapter.call_platform("code", {"task": "test"})
         assert isinstance(result, dict)
-        assert result["status"***REMOVED*** == "ok"
+        assert result["status"] == "ok"
         assert "model_used" in result
-        assert len(result["model_used"***REMOVED***) > 0
+        assert len(result["model_used"]) > 0
 
     def test_call_platform_with_different_capability(self) -> None:
         adapter = _ConcreteAdapter(adapter_id="http")
-        result = adapter.call_platform("review", {"file": "x.py"***REMOVED***)
-        assert result["status"***REMOVED*** == "ok"
+        result = adapter.call_platform("review", {"file": "x.py"})
+        assert result["status"] == "ok"
         assert "model_used" in result
 
     def test_call_platform_failsafe_on_import_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -271,13 +271,13 @@ class TestCallPlatform:
             return original_import(name, *args, **kwargs)
 
         monkeypatch.setattr("builtins.__import__", _fake_import)
-        result = adapter.call_platform("code", {"task": "test"***REMOVED***)
-        assert result["status"***REMOVED*** == "error"
+        result = adapter.call_platform("code", {"task": "test"})
+        assert result["status"] == "error"
         assert "error" in result
 
     def test_call_platform_uses_passed_capability(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Проверяет, что call_platform передаёт capability в router.route."""
-        captured_caps: List[List[str***REMOVED******REMOVED*** = [***REMOVED***
+        captured_caps: List[List[str]] = []
 
         class _FakeCatalog:
             @staticmethod
@@ -288,18 +288,18 @@ class TestCallPlatform:
             def __init__(self, catalog: Any) -> None:
                 pass
 
-            def route(self, required_capabilities: List[str***REMOVED*** | None = None, **kwargs: Any) -> _FakeRouteDecision:
-                captured_caps.append(list(required_capabilities or [***REMOVED***))
+            def route(self, required_capabilities: List[str] | None = None, **kwargs: Any) -> _FakeRouteDecision:
+                captured_caps.append(list(required_capabilities or []))
                 return _FakeRouteDecision(model="fake-model")
 
         monkeypatch.setattr("core_02.router.SmartRouter", _FakeRouter)
         monkeypatch.setattr("core_02.router.ModelCatalog", _FakeCatalog)
 
         adapter = _ConcreteAdapter(adapter_id="tg")
-        result = adapter.call_platform("review", {"file": "x.py"***REMOVED***)
-        assert result["model_used"***REMOVED*** == "fake-model"
+        result = adapter.call_platform("review", {"file": "x.py"})
+        assert result["model_used"] == "fake-model"
         assert len(captured_caps) == 1
-        assert captured_caps[0***REMOVED*** == ["review"***REMOVED***
+        assert captured_caps[0] == ["review"]
 
     def test_call_platform_marks_fallback_used(self, monkeypatch: pytest.MonkeyPatch) -> None:
         class _FakeCatalog:
@@ -318,8 +318,8 @@ class TestCallPlatform:
         monkeypatch.setattr("core_02.router.ModelCatalog", _FakeCatalog)
 
         adapter = _ConcreteAdapter(adapter_id="tg")
-        result = adapter.call_platform("code", {***REMOVED***)
-        assert result["fallback_used"***REMOVED*** is True
+        result = adapter.call_platform("code", {})
+        assert result["fallback_used"] is True
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -331,7 +331,7 @@ class TestConcreteAdapter:
 
     def test_handle_routes_and_calls_platform(self) -> None:
         adapter = _ConcreteAdapter(adapter_id="tg", direction=AdapterDirection.INBOUND)
-        request = AdapterRequest(intent="execute_project", payload={"project": "demo"***REMOVED***)
+        request = AdapterRequest(intent="execute_project", payload={"project": "demo"})
         response = adapter.handle(request)
         assert response.ok is True
         assert response.capability_used == "code"
@@ -340,7 +340,7 @@ class TestConcreteAdapter:
 
     def test_handle_unknown_intent_still_responds(self) -> None:
         adapter = _ConcreteAdapter(adapter_id="tg")
-        request = AdapterRequest(intent="weird_unknown_intent", payload={***REMOVED***)
+        request = AdapterRequest(intent="weird_unknown_intent", payload={})
         response = adapter.handle(request)
         assert response.ok is True
         assert response.capability_used == "summarize"  # fallback
@@ -350,7 +350,7 @@ class TestConcreteAdapter:
         request = AdapterRequest(intent="report")
         response = adapter.handle(request)
         assert response.ok is False
-        assert response.errors == ["platform offline"***REMOVED***
+        assert response.errors == ["platform offline"]
 
     def test_auth_adapter_has_correct_spec(self) -> None:
         auth = AuthSpec(method=AuthMethod.CHAT_ID_SCOPE, scope="Saved Messages")
@@ -362,7 +362,7 @@ class TestConcreteAdapter:
         assert adapter.auth.method == AuthMethod.CHAT_ID_SCOPE
         assert adapter.auth.scope == "Saved Messages"
         response = adapter.handle(AdapterRequest(intent="report"))
-        assert response.data["auth_method"***REMOVED*** == "chat_id_scope"
+        assert response.data["auth_method"] == "chat_id_scope"
 
     def test_adapter_repr(self) -> None:
         adapter = _ConcreteAdapter(adapter_id="tg_bot")
@@ -385,11 +385,11 @@ class TestEventBus:
         request = AdapterRequest(intent="report")
         response = adapter.handle(request, event_bus=bus)
         assert len(bus.events) == 1
-        evt = bus.events[0***REMOVED***
-        assert evt["type"***REMOVED*** == "adapter.inbound"
-        assert evt["adapter_id"***REMOVED*** == "tg"
-        assert evt["intent"***REMOVED*** == "report"
-        assert evt["status"***REMOVED*** == "ok"
+        evt = bus.events[0]
+        assert evt["type"] == "adapter.inbound"
+        assert evt["adapter_id"] == "tg"
+        assert evt["intent"] == "report"
+        assert evt["status"] == "ok"
 
     def test_log_event_noop_when_bus_is_none(self) -> None:
         adapter = _ConcreteAdapter(adapter_id="tg")
@@ -468,7 +468,7 @@ class TestBrowserUseConformance:
         )
         request = AdapterRequest(
             intent="mcp_request",
-            payload={"url": "https://example.com", "action": "navigate"***REMOVED***,
+            payload={"url": "https://example.com", "action": "navigate"},
         )
         response = adapter.handle(request)
         assert response.ok is True

@@ -8,7 +8,7 @@ and torn down at the end.
 from __future__ import annotations
 
 import shutil
-***REMOVED***
+}
 
 import pytest
 
@@ -43,22 +43,22 @@ def _seed_corpus(tmp_path: Path) -> Path:
             "    condition: always\n"
             "    triggers:\n"
             '      - "реализуй модуль"\n'
-            "    dependencies: [***REMOVED***\n"
+            "    dependencies: []\n"
             "    outputs:\n"
             "      - src/**/*.py\n"
             "project_types:\n"
             "  web:\n"
-            "    required_roles: [developer***REMOVED***\n"
-            "    skip_roles: [***REMOVED***\n"
+            "    required_roles: [developer]\n"
+            "    skip_roles: []\n"
             "  script:\n"
-            "    required_roles: [developer***REMOVED***\n"
-            "    skip_roles: [***REMOVED***\n"
+            "    required_roles: [developer]\n"
+            "    skip_roles: []\n"
             "complexity_routing:\n"
             "  small:\n"
-            "    required_roles: [developer***REMOVED***\n"
-            "    skip_roles: [***REMOVED***\n"
+            "    required_roles: [developer]\n"
+            "    skip_roles: []\n"
             "categories:\n"
-            "  implementation: [developer***REMOVED***\n"
+            "  implementation: [developer]\n"
             "metadata:\n"
             "  version: \"3.0.0\"\n",
             encoding="utf-8",
@@ -93,7 +93,7 @@ def corpus(tmp_path: Path) -> BlueprintCorpus:
 def test_list_roles_returns_all_known_ids(corpus: BlueprintCorpus) -> None:
     roles = corpus.list_roles()
     assert isinstance(roles, list)
-    ids = [r[0***REMOVED*** for r in roles***REMOVED***
+    ids = [r[0] for r in roles]
     # The real tree has 17 named roles; fixture has one.
     if (DEFAULT_BLUEPRINTS_DIR / "registry.yaml").exists():
         assert "developer" in ids
@@ -101,37 +101,37 @@ def test_list_roles_returns_all_known_ids(corpus: BlueprintCorpus) -> None:
         assert "tester" in ids
         assert len(ids) >= 17
     else:
-        assert ids == ["developer"***REMOVED***
+        assert ids == ["developer"]
 
 
 def test_list_by_type_filters_correctly(corpus: BlueprintCorpus) -> None:
     impl = corpus.list_by_type("implementation")
-    assert all(r[3***REMOVED*** == "implementation" for r in impl)
+    assert all(r[3] == "implementation" for r in impl)
     # developer + (frontend + devops + fixer) in real tree.
-    ids = [r[0***REMOVED*** for r in impl***REMOVED***
+    ids = [r[0] for r in impl]
     assert "developer" in ids
 
 
 def test_load_blueprint_returns_structured_blueprint(corpus: BlueprintCorpus) -> None:
-    if "developer" not in [r[0***REMOVED*** for r in corpus.list_roles()***REMOVED***:
+    if "developer" not in [r[0] for r in corpus.list_roles()]:
         pytest.skip("developer role not present in fixture")
     bp = corpus.load_blueprint("developer")
     assert isinstance(bp, Blueprint)
     # Every required section must be present on a well-formed v3 developer role.
     missing = corpus.validate_blueprint(bp)
-    assert missing == [***REMOVED***, f"developer missing required: {missing***REMOVED***"
+    assert missing == [], f"developer missing required: {missing}"
     # Header metadata extracted.
     assert "VERSION" in bp.header_meta
-    role_section = bp.sections["role"***REMOVED***
+    role_section = bp.sections["role"]
     # Regression: real tree has Russian role.section text (developer.md's <role>
     # body) AND synthetic seed has minimal "Implementation role." body — neither
     # contains English "Developer" literally. Split into two named assertions so
     # a future failure isolates which side regressed (per reviewer nit-1 v5.44.0).
     role_header = bp.header_meta.get("ROLE", "")
-    assert role_header, f"developer role has empty ROLE header: {bp.header_meta!r***REMOVED***"
+    assert role_header, f"developer role has empty ROLE header: {bp.header_meta!r}"
     assert "Developer" in role_header or "developer" in role_header.lower(), (
         f"developer role header lacks 'Developer' marker (English-title regression): "
-        f"HEADER={role_header!r***REMOVED***"
+        f"HEADER={role_header!r}"
     )
     assert role_section, "developer role section (`<role>` body) is empty"
     # Soft content-grade check (per reviewer nit-1 v5.44.0): catches placeholder
@@ -140,7 +140,7 @@ def test_load_blueprint_returns_structured_blueprint(corpus: BlueprintCorpus) ->
     # and Russian-titled canon fixtures.
     assert len(role_section) >= 20, (
         f"developer role section too short (placeholder regression?): "
-        f"SECTION={role_section!r***REMOVED***"
+        f"SECTION={role_section!r}"
     )
 
 
@@ -149,8 +149,8 @@ def test_validate_blueprint_flags_missing_sections(tmp_path: Path) -> None:
     corpus_dir = _seed_corpus(tmp_path)
     broken = Blueprint(
         file="99_broken.md",
-        header_meta={"ROLE": "Broken", "VERSION": "3.1.0"***REMOVED***,
-        sections={"role": "x"***REMOVED***,  # missing all other required
+        header_meta={"ROLE": "Broken", "VERSION": "3.1.0"},
+        sections={"role": "x"},  # missing all other required
     )
     missing = BlueprintCorpus(root=corpus_dir).validate_blueprint(broken)
     assert all(s in missing for s in REQUIRED_SECTIONS if s != "role")
@@ -159,7 +159,7 @@ def test_validate_blueprint_flags_missing_sections(tmp_path: Path) -> None:
 def test_resolve_pipeline_web_includes_frontend_when_present(
     corpus: BlueprintCorpus,
 ) -> None:
-    if "frontend" not in [r[0***REMOVED*** for r in corpus.list_roles()***REMOVED***:
+    if "frontend" not in [r[0] for r in corpus.list_roles()]:
         pytest.skip("frontend not in fixture")
     pipeline = corpus.resolve_pipeline(project_type="web", complexity="complex")
     assert "frontend" in pipeline
@@ -170,7 +170,7 @@ def test_resolve_pipeline_script_skips_frontend(corpus: BlueprintCorpus) -> None
     pipeline = corpus.resolve_pipeline(project_type="script", complexity="small")
     assert "developer" in pipeline
     # Frontend/DevOps should be skipped for script projects in the real tree.
-    if "frontend" in [r[0***REMOVED*** for r in corpus.list_roles()***REMOVED***:
+    if "frontend" in [r[0] for r in corpus.list_roles()]:
         assert "frontend" not in pipeline
 
 
@@ -185,10 +185,10 @@ def test_create_blueprint_scaffolds_required_sections(corpus: BlueprintCorpus) -
         role_type="implementation",
     )
     missing = corpus.validate_blueprint(bp)
-    assert missing == [***REMOVED***, f"newly-created blueprint missing {missing***REMOVED***"
+    assert missing == [], f"newly-created blueprint missing {missing}"
     # Marker text confirms scaffold was used.
-    assert "(allowed action)" in bp.sections["implementation_scope_rules"***REMOVED***
-    assert bp.header_meta["VERSION"***REMOVED*** == "3.1.0"
+    assert "(allowed action)" in bp.sections["implementation_scope_rules"]
+    assert bp.header_meta["VERSION"] == "3.1.0"
 
 
 def test_create_blueprint_extra_sections_override_stubs(corpus: BlueprintCorpus) -> None:
@@ -203,10 +203,10 @@ def test_create_blueprint_extra_sections_override_stubs(corpus: BlueprintCorpus)
                 "Реализовать consultative loop подбора стилистики комнаты на основе "
                 "размер/бюджет/предпочтения пользователя."
             ),
-        ***REMOVED***,
+        },
     )
-    assert "Senior" in bp.sections["role"***REMOVED***
-    assert "consultative loop" in bp.sections["main_objective"***REMOVED***
+    assert "Senior" in bp.sections["role"]
+    assert "consultative loop" in bp.sections["main_objective"]
 
 
 def test_create_blueprint_rejects_duplicate_id(corpus: BlueprintCorpus) -> None:
@@ -248,11 +248,11 @@ def test_blueprint_round_trip_markdown_is_stable(corpus: BlueprintCorpus) -> Non
         role_type="analysis",
         extra_sections={
             "response_style": "Технический тон, минимально многословный.",
-        ***REMOVED***,
+        },
     )
     md = bp.to_markdown()
     re_parsed = parse_blueprint_md(md)
-    assert re_parsed.header_meta.get("ROLE") == bp.header_meta["ROLE"***REMOVED***
+    assert re_parsed.header_meta.get("ROLE") == bp.header_meta["ROLE"]
     assert re_parsed.sections.get("response_style", "").strip().startswith(
         "Технический"
     )
@@ -271,7 +271,7 @@ def test_register_in_registry_dry_run_does_not_write(tmp_path: Path) -> None:
         role_title="Dry",
         role_type="analysis",
         description="dry",
-        triggers=["триггер"***REMOVED***,
+        triggers=["триггер"],
         dry_run=True,
     )
     after = (corpus_dir / "registry.yaml").read_text(encoding="utf-8")
@@ -288,13 +288,13 @@ def test_register_in_registry_writes_and_makes_role_visible(tmp_path: Path) -> N
         role_title="Telegram Correspondent",
         role_type="communication",
         description="Пишет ТГ-отчёты в Избранное и ведёт переписку с заказчиком.",
-        triggers=["отчёт", "переписка"***REMOVED***,
+        triggers=["отчёт", "переписка"],
     )
     # Timestamped backup exists (.bak.YYYYMMDDTHHMMSS pattern).
-    backups = [p for p in corpus_dir.iterdir() if p.name.startswith("registry.yaml.bak.")***REMOVED***
-    assert len(backups) == 1, f"ожидали 1 timestamped backup, нашли: {list(corpus_dir.iterdir())***REMOVED***"
+    backups = [p for p in corpus_dir.iterdir() if p.name.startswith("registry.yaml.bak.")]
+    assert len(backups) == 1, f"ожидали 1 timestamped backup, нашли: {list(corpus_dir.iterdir())}"
     # Role now resolvable.
-    ids = [r[0***REMOVED*** for r in corpus.list_roles()***REMOVED***
+    ids = [r[0] for r in corpus.list_roles()]
     assert "telegram_correspondent" in ids
 
 
@@ -321,7 +321,7 @@ def test_register_in_registry_rejects_invalid_yaml_splice(tmp_path: Path) -> Non
             role_title="Bad",
             role_type="analysis",
             description="bad",
-            triggers=["trigger\n      - \"'unbalanced"***REMOVED***,
+            triggers=["trigger\n      - \"'unbalanced"],
         )
     after = (corpus_dir / "registry.yaml").read_text(encoding="utf-8")
     assert before == after, "плохой сплис не должен трогать registry.yaml"
@@ -350,7 +350,7 @@ def test_register_in_registry_write_failure_restores_backup(
             role_title="Will fail",
             role_type="analysis",
             description="rollback test",
-            triggers=["триггер"***REMOVED***,
+            triggers=["триггер"],
         )
     # Original content preserved (either by restore-from-backup or by never
     # touching the file — both acceptable rollback paths).
@@ -414,13 +414,13 @@ def test_register_in_registry_without_marker_inserts_into_pipeline(
         role_title="Markerless",
         role_type="analysis",
         description="no marker present",
-        triggers=["триггер"***REMOVED***,
+        triggers=["триггер"],
     )
     text = (corpus_dir / "registry.yaml").read_text(encoding="utf-8")
     # Exactly ONE top-level pipeline section (no duplicate after metadata).
-    assert text.count("pipeline:") == 1, f"duplicate pipeline section: {text!r***REMOVED***"
+    assert text.count("pipeline:") == 1, f"duplicate pipeline section: {text!r}"
     # New role resolvable after reload.
-    ids = [r[0***REMOVED*** for r in corpus.list_roles()***REMOVED***
+    ids = [r[0] for r in corpus.list_roles()]
     assert "markerless_role" in ids
     assert "developer" in ids
 

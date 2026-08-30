@@ -40,7 +40,7 @@ def get_warn_alias():
 def get_members():
     """Return all members of the enum.
 
-    :return: list of tuples -  [(name1, value1), (name2, value2)***REMOVED***
+    :return: list of tuples -  [(name1, value1), (name2, value2)]
     """
 
     pass

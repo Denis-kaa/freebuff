@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import logging
-***REMOVED***
+}
 from html import unescape
 
 from app.adapters.base import AdapterError, BaseAdapter
@@ -19,17 +19,17 @@ logger = logging.getLogger(__name__)
 # блок сообщения: от data-post="..." до следующего блока/конца (толерантно к числу </div>)
 # ВАЖНО (Фаза 4, live-verify 2026-08-10): класс на живом t.me/s может содержать
 # дополнительные токены, напр. `tgme_widget_message text_not_supported_wrap
-# service_message js-widget_message`. Паттерн `tgme_widget_message(?:\s[^"***REMOVED****)?`
+# service_message js-widget_message`. Паттерн `tgme_widget_message(?:\s[^"]*)?`
 # требует ПОСЛЕ базового имени пробел (доп. классы) или закрывающую кавычку —
 # и НЕ матчит внутренние div'ы (`tgme_widget_message_user/_text/_wrap` и т.п.),
 # иначе lookahead обрывает блок до текста и лиды теряются.
 _MSG_BLOCK_RE = re.compile(
-    r'<div class="tgme_widget_message(?:\s[^"***REMOVED****)?"[^>***REMOVED****data-post="([^"***REMOVED***+)"(.*?)'
-    r'(?=<div class="tgme_widget_message(?:\s[^"***REMOVED****)?"|</body>|</html>|$)',
+    r'<div class="tgme_widget_message(?:\s[^"]*)?"[^>]*data-post="([^"]+)"(.*?)'
+    r'(?=<div class="tgme_widget_message(?:\s[^"]*)?"|</body>|</html>|$)',
     re.DOTALL,
 )
 _TEXT_RE = re.compile(
-    r'<div class="tgme_widget_message_text[^"***REMOVED****"[^>***REMOVED****>(.*?)</div>', re.DOTALL
+    r'<div class="tgme_widget_message_text[^"]*"[^>]*>(.*?)</div>', re.DOTALL
 )
 
 
@@ -48,14 +48,14 @@ class TGChannelAdapter(BaseAdapter):
         self.client = client
         self.channel = channel.strip().lstrip("@")
 
-    def _parse(self, html: str) -> list[Lead***REMOVED***:
-        leads: list[Lead***REMOVED*** = [***REMOVED***
+    def _parse(self, html: str) -> list[Lead]:
+        leads: list[Lead] = []
         for block in _MSG_BLOCK_RE.finditer(html):
             post_ref, body = block.group(1), block.group(2)
             text_match = _TEXT_RE.search(body)
             text = ""
             if text_match:
-                text = unescape(re.sub(r"<[^>***REMOVED***+>", " ", text_match.group(1)))
+                text = unescape(re.sub(r"<[^>)+>", " ", text_match.group(1)))
                 text = re.sub(r"\s+", " ", text).strip()
             if not text:
                 continue
@@ -65,16 +65,16 @@ class TGChannelAdapter(BaseAdapter):
                     source=self.name,
                     source_id=post_ref,
                     text=Normalizer.normalize(text),
-                    url=f"https://t.me/{self.channel***REMOVED***/{post_ref.split('/')[-1***REMOVED******REMOVED***",
+                    url=f"https://t.me/{self.channel}/{post_ref.split('/')[-1]}",
                 )
             )
         return leads
 
-    async def fetch(self, limit: int = 50) -> list[Lead***REMOVED***:
+    async def fetch(self, limit: int = 50) -> list[Lead]:
         try:
-            html = await self.client.get(f"https://t.me/s/{self.channel***REMOVED***")
+            html = await self.client.get(f"https://t.me/s/{self.channel}")
         except Exception as exc:  # noqa: BLE001
-            raise AdapterError(f"tg_channel {self.channel***REMOVED*** fetch failed: {exc***REMOVED***") from exc
-        leads = self._parse(html)[:limit***REMOVED***
+            raise AdapterError(f"tg_channel {self.channel} fetch failed: {exc}") from exc
+        leads = self._parse(html)[:limit]
         logger.info("tg_channel %s: parsed %d leads", self.channel, len(leads))
         return leads

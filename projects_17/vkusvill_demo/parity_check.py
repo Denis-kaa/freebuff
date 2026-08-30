@@ -26,7 +26,7 @@ from __future__ import annotations
 
 import json
 import sys
-***REMOVED***
+}
 from typing import Any
 
 # sys.path injection: разрешить `import excel_eval` из той же папки
@@ -43,7 +43,7 @@ REPORT = DEMO_DIR / "parity_report.md"
 TOL = 0.01  # float tolerance для сравнения
 
 
-def _load_json(path: Path) -> dict[str, Any***REMOVED***:
+def _load_json(path: Path) -> dict[str, Any]:
     """Read JSON dict (raw — no formula eval)."""
     return json.loads(path.read_text(encoding="utf-8"))
 
@@ -52,18 +52,18 @@ def _load_json(path: Path) -> dict[str, Any***REMOVED***:
 # Leg 1 — Python-consistency (snapshot vs python recompute)
 # ---------------------------------------------------------------------------
 
-def _compare_python(snapshot: dict, py_data: dict) -> tuple[bool, list[str***REMOVED******REMOVED***:
-    """Pure-Python parity-check: snapshot.forecasts vs py_data[****REMOVED***.forecast."""
+def _compare_python(snapshot: dict, py_data: dict) -> tuple[bool, list[str]]:
+    """Pure-Python parity-check: snapshot.forecasts vs py_data[*].forecast."""
     overall_ok = True
-    lines: list[str***REMOVED*** = [***REMOVED***
-    snapshot_forecasts = snapshot.get("forecasts", {***REMOVED***)
-    snapshot_orders = snapshot.get("orders", {***REMOVED***)
+    lines: list[str] = []
+    snapshot_forecasts = snapshot.get("forecasts", {})
+    snapshot_orders = snapshot.get("orders", {})
 
     for sku in sorted(snapshot_forecasts.keys()):
-        snap_fc = snapshot_forecasts[sku***REMOVED***
-        py_forecast = py_data.get(sku, {***REMOVED***).get("forecast", {***REMOVED***)
-        py_order = py_data.get(sku, {***REMOVED***).get("order", {***REMOVED***)
-        snap_order = snapshot_orders.get(sku, {***REMOVED***)
+        snap_fc = snapshot_forecasts[sku]
+        py_forecast = py_data.get(sku, {}).get("forecast", {})
+        py_order = py_data.get(sku, {}).get("order", {})
+        snap_order = snapshot_orders.get(sku, {})
 
         for key, snap_key in (
             ("sma", "sma"),
@@ -80,16 +80,16 @@ def _compare_python(snapshot: dict, py_data: dict) -> tuple[bool, list[str***REM
             else:
                 diff = abs(float(sv) - float(pv))
                 ok = diff <= TOL
-                diff_str = f"{diff:.4f***REMOVED***"
-            sv_str = f"{float(sv):.4f***REMOVED***" if sv is not None else "None"
-            pv_str = f"{float(pv):.4f***REMOVED***" if pv is not None else "None"
+                diff_str = f"{diff:.4f}"
+            sv_str = f"{float(sv):.4f}" if sv is not None else "None"
+            pv_str = f"{float(pv):.4f}" if pv is not None else "None"
             overall_ok = overall_ok and ok
             lines.append(
-                f"- {sku***REMOVED*** {key***REMOVED***: snapshot={sv_str***REMOVED***, python={pv_str***REMOVED***, "
-                f"diff={diff_str***REMOVED***, **{'PASS' if ok else 'FAIL'***REMOVED*****"
+                f"- {sku} {key}: snapshot={sv_str}, python={pv_str}, "
+                f"diff={diff_str}, **{'PASS' if ok else 'FAIL'}**"
             )
 
-        so = snapshot_orders.get(sku, {***REMOVED***).get("order_qty")
+        so = snapshot_orders.get(sku, {}).get("order_qty")
         po = py_order.get("order_qty")
         if so is None or po is None:
             ok = False
@@ -97,13 +97,13 @@ def _compare_python(snapshot: dict, py_data: dict) -> tuple[bool, list[str***REM
         else:
             diff = abs(float(so) - float(po))
             ok = diff <= TOL
-            diff_str = f"{diff:.4f***REMOVED***"
-        so_str = f"{float(so):.4f***REMOVED***" if so is not None else "None"
-        po_str = f"{float(po):.4f***REMOVED***" if po is not None else "None"
+            diff_str = f"{diff:.4f}"
+        so_str = f"{float(so):.4f}" if so is not None else "None"
+        po_str = f"{float(po):.4f}" if po is not None else "None"
         overall_ok = overall_ok and ok
         lines.append(
-            f"- {sku***REMOVED*** order.order_qty: snapshot={so_str***REMOVED***, python={po_str***REMOVED***, "
-            f"diff={diff_str***REMOVED***, **{'PASS' if ok else 'FAIL'***REMOVED*****"
+            f"- {sku} order.order_qty: snapshot={so_str}, python={po_str}, "
+            f"diff={diff_str}, **{'PASS' if ok else 'FAIL'}**"
         )
     return overall_ok, lines
 
@@ -115,22 +115,22 @@ def _compare_python(snapshot: dict, py_data: dict) -> tuple[bool, list[str***REM
 # NOTE: должен оставаться синхронизированным с порядком `CATEGORIES` в
 # build_model_xlsx.py (3 SKU, rows 4..6 в order/forecast листах). Если категории
 # изменятся — обновить обе структуры.
-SKU_BY_ROW = {4: "Молоко 3.2% 1л", 5: "Крупа гречневая 800г", 6: "Напиток газир. 1л"***REMOVED***
+SKU_BY_ROW = {4: "Молоко 3.2% 1л", 5: "Крупа гречневая 800г", 6: "Напиток газир. 1л"}
 
 
-def _compare_excel_eval(py_data: dict) -> tuple[bool, list[str***REMOVED******REMOVED***:
+def _compare_excel_eval(py_data: dict) -> tuple[bool, list[str]]:
     """Excel-eval: evaluate formulas from model_forecast.xlsx via excel_eval.py
     и сравнить с forecast_python.json (Python recompute)."""
     ev = ExcelEval(XLSX)
     overall_ok = True
-    lines: list[str***REMOVED*** = [***REMOVED***
+    lines: list[str] = []
 
     # order_qty (order!E4:E6) и final_forecast (forecast!G4:G6)
     for row, sku in sorted(SKU_BY_ROW.items()):
-        excel_order = ev.evaluate(f"order!E{row***REMOVED***")
-        excel_final = ev.evaluate(f"forecast!G{row***REMOVED***")
-        py_order = py_data.get(sku, {***REMOVED***).get("order", {***REMOVED***).get("order_qty")
-        py_final = py_data.get(sku, {***REMOVED***).get("forecast", {***REMOVED***).get("final_forecast")
+        excel_order = ev.evaluate(f"order!E{row}")
+        excel_final = ev.evaluate(f"forecast!G{row}")
+        py_order = py_data.get(sku, {}).get("order", {}).get("order_qty")
+        py_final = py_data.get(sku, {}).get("forecast", {}).get("final_forecast")
 
         for label, excel_v, py_v in (
             ("order_qty", excel_order, py_order),
@@ -142,23 +142,23 @@ def _compare_excel_eval(py_data: dict) -> tuple[bool, list[str***REMOVED******RE
             else:
                 diff = abs(float(excel_v) - float(py_v))
                 ok = diff <= TOL
-                diff_str = f"{diff:.4f***REMOVED***"
-            ex_str = f"{float(excel_v):.4f***REMOVED***" if excel_v is not None else "None"
-            py_str = f"{float(py_v):.4f***REMOVED***" if py_v is not None else "None"
+                diff_str = f"{diff:.4f}"
+            ex_str = f"{float(excel_v):.4f}" if excel_v is not None else "None"
+            py_str = f"{float(py_v):.4f}" if py_v is not None else "None"
             overall_ok = overall_ok and ok
             lines.append(
-                f"- {sku***REMOVED*** {label***REMOVED***: excel_eval={ex_str***REMOVED***, python={py_str***REMOVED***, "
-                f"diff={diff_str***REMOVED***, **{'PASS' if ok else 'FAIL'***REMOVED*****"
+                f"- {sku} {label}: excel_eval={ex_str}, python={py_str}, "
+                f"diff={diff_str}, **{'PASS' if ok else 'FAIL'}**"
             )
 
     # TOTAL (SUM order sheet) vs Python total — public helper, не лезем в _raw
     total_addr = None
     hit = ev.find_formula_cell("order", "E", prefix="=SUM(")
     if hit:
-        total_addr = f"order!{hit[0***REMOVED******REMOVED***{hit[1***REMOVED******REMOVED***"
+        total_addr = f"order!{hit[0]}{hit[1]}"
     excel_total = ev.evaluate(total_addr) if total_addr else None
     py_total = sum(
-        py_data.get(sku, {***REMOVED***).get("order", {***REMOVED***).get("order_qty", 0.0)
+        py_data.get(sku, {}).get("order", {}).get("order_qty", 0.0)
         for sku in SKU_BY_ROW.values()
     )
     if excel_total is None:
@@ -167,12 +167,12 @@ def _compare_excel_eval(py_data: dict) -> tuple[bool, list[str***REMOVED******RE
     else:
         diff = abs(float(excel_total) - float(py_total))
         ok = diff <= TOL
-        diff_str = f"{diff:.4f***REMOVED***"
+        diff_str = f"{diff:.4f}"
     overall_ok = overall_ok and ok
-    ex_str = f"{float(excel_total):.4f***REMOVED***" if excel_total is not None else "None"
+    ex_str = f"{float(excel_total):.4f}" if excel_total is not None else "None"
     lines.append(
-        f"- TOTAL order_qty ({total_addr or 'order!E?'***REMOVED***): excel_eval={ex_str***REMOVED***, "
-        f"python={py_total:.4f***REMOVED***, diff={diff_str***REMOVED***, **{'PASS' if ok else 'FAIL'***REMOVED*****"
+        f"- TOTAL order_qty ({total_addr or 'order!E?'}): excel_eval={ex_str}, "
+        f"python={py_total:.4f}, diff={diff_str}, **{'PASS' if ok else 'FAIL'}**"
     )
     return overall_ok, lines
 
@@ -183,13 +183,13 @@ def _compare_excel_eval(py_data: dict) -> tuple[bool, list[str***REMOVED******RE
 
 def main() -> int:
     if not SNAPSHOT.exists():
-        print(f"ERR: {SNAPSHOT***REMOVED*** not found. Run build_model_xlsx.py first.")
+        print(f"ERR: {SNAPSHOT} not found. Run build_model_xlsx.py first.")
         return 2
     if not PYTHON_OUT.exists():
-        print(f"ERR: {PYTHON_OUT***REMOVED*** not found. Run forecast.py first.")
+        print(f"ERR: {PYTHON_OUT} not found. Run forecast.py first.")
         return 2
     if not XLSX.exists():
-        print(f"ERR: {XLSX***REMOVED*** not found. Run build_model_xlsx.py first.")
+        print(f"ERR: {XLSX} not found. Run build_model_xlsx.py first.")
         return 2
 
     snapshot = _load_json(SNAPSHOT)
@@ -208,29 +208,29 @@ def main() -> int:
         "формул прямо из `model_forecast.xlsx` (data_only=False) vs `forecast_python.json`.",
         "**NO LibreOffice / Excel engine** — excel_eval.py парсит формулы сам "
         "(AVERAGE/STDEV.P/SQRT/IF/MAX/SUM, cross-sheet refs).",
-        f"Tolerance: ±{TOL***REMOVED*** (float rounding).",
+        f"Tolerance: ±{TOL} (float rounding).",
         "",
         "## Leg 1 — Python-consistency (per-row)",
         "",
-    ***REMOVED*** + lines_1 + [
+    ] + lines_1 + [
         "",
-        f"**Leg 1 OVERALL: {'✅ PASS' if ok_1 else '❌ FAIL'***REMOVED*****",
+        f"**Leg 1 OVERALL: {'✅ PASS' if ok_1 else '❌ FAIL'}**",
         "",
         "## Leg 2 — Excel-eval vs Python (per-row, formulas from .xlsx)",
         "",
-    ***REMOVED*** + lines_2 + [
+    ] + lines_2 + [
         "",
-        f"**Leg 2 OVERALL: {'✅ PASS' if ok_2 else '❌ FAIL'***REMOVED*****",
+        f"**Leg 2 OVERALL: {'✅ PASS' if ok_2 else '❌ FAIL'}**",
         "",
-        f"**OVERALL (Leg 1 AND Leg 2): {'✅ PASS' if overall_ok else '❌ FAIL'***REMOVED*****",
+        f"**OVERALL (Leg 1 AND Leg 2): {'✅ PASS' if overall_ok else '❌ FAIL'}**",
         "",
-    ***REMOVED***
+    ]
 
     REPORT.write_text("\n".join(lines_summary), encoding="utf-8")
-    print(f"OK: {REPORT***REMOVED*** written")
-    print(f"Leg1(Python-consistency): {'PASS' if ok_1 else 'FAIL'***REMOVED***")
-    print(f"Leg2(Excel-eval):         {'PASS' if ok_2 else 'FAIL'***REMOVED***")
-    print(f"OVERALL:                  {'PASS' if overall_ok else 'FAIL'***REMOVED***")
+    print(f"OK: {REPORT} written")
+    print(f"Leg1(Python-consistency): {'PASS' if ok_1 else 'FAIL'}")
+    print(f"Leg2(Excel-eval):         {'PASS' if ok_2 else 'FAIL'}")
+    print(f"OVERALL:                  {'PASS' if overall_ok else 'FAIL'}")
     return 0 if overall_ok else 1
 
 

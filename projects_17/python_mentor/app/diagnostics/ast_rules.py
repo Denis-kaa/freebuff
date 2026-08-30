@@ -28,7 +28,7 @@ class PatternMatch:
     message: str
 
 
-RuleFunction = Callable[[ast.AST, RuleContext***REMOVED***, Iterable[PatternMatch***REMOVED******REMOVED***
+RuleFunction = Callable[[ast.AST, RuleContext], Iterable[PatternMatch]]
 
 
 @dataclass(frozen=True)
@@ -40,8 +40,8 @@ class ASTRule:
     default_severity: DiagnosticSeverity
     detector: RuleFunction
 
-    def run(self, tree: ast.AST, context: RuleContext) -> tuple[Diagnostic, ...***REMOVED***:
-        findings = [***REMOVED***
+    def run(self, tree: ast.AST, context: RuleContext) -> tuple[Diagnostic, ...]:
+        findings = []
         for match in self.detector(tree, context):
             findings.append(
                 Diagnostic(
@@ -62,35 +62,35 @@ class ASTRule:
 class ASTRuleRegistry:
     """Ordered registry; duplicate rule ids are rejected."""
 
-    def __init__(self, rules: Iterable[ASTRule***REMOVED*** = ()) -> None:
-        self._rules: dict[str, ASTRule***REMOVED*** = {***REMOVED***
+    def __init__(self, rules: Iterable[ASTRule] = ()) -> None:
+        self._rules: dict[str, ASTRule] = {}
         for rule in rules:
             self.register(rule)
 
     def register(self, rule: ASTRule) -> None:
         if rule.rule_id in self._rules:
-            raise ValueError(f"duplicate AST rule: {rule.rule_id***REMOVED***")
-        self._rules[rule.rule_id***REMOVED*** = rule
+            raise ValueError(f"duplicate AST rule: {rule.rule_id}")
+        self._rules[rule.rule_id] = rule
 
     def get(self, rule_id: str) -> ASTRule:
         try:
-            return self._rules[rule_id***REMOVED***
+            return self._rules[rule_id]
         except KeyError as exc:
-            raise KeyError(f"unknown AST rule: {rule_id***REMOVED***") from exc
+            raise KeyError(f"unknown AST rule: {rule_id}") from exc
 
-    def rules(self) -> tuple[ASTRule, ...***REMOVED***:
+    def rules(self) -> tuple[ASTRule, ...]:
         return tuple(self._rules.values())
 
-    def analyze(self, source: str, context: RuleContext) -> tuple[Diagnostic, ...***REMOVED***:
+    def analyze(self, source: str, context: RuleContext) -> tuple[Diagnostic, ...]:
         tree = ast.parse(source, filename=context.filename)
-        findings: list[Diagnostic***REMOVED*** = [***REMOVED***
+        findings: list[Diagnostic] = []
         for rule in self.rules():
             findings.extend(rule.run(tree, context))
         return tuple(sorted(findings, key=Diagnostic.sort_key))
 
 
-def _walk_with_depth(tree: ast.AST) -> Iterable[tuple[ast.AST, int***REMOVED******REMOVED***:
-    def visit(node: ast.AST, depth: int) -> Iterable[tuple[ast.AST, int***REMOVED******REMOVED***:
+def _walk_with_depth(tree: ast.AST) -> Iterable[tuple[ast.AST, int]]:
+    def visit(node: ast.AST, depth: int) -> Iterable[tuple[ast.AST, int]]:
         yield node, depth
         for child in ast.iter_child_nodes(node):
             yield from visit(child, depth + (1 if isinstance(node, (ast.If, ast.For, ast.While, ast.Try, ast.With, ast.Match)) else 0))
@@ -98,11 +98,11 @@ def _walk_with_depth(tree: ast.AST) -> Iterable[tuple[ast.AST, int***REMOVED****
     return visit(tree, 0)
 
 
-def _mutable_default(tree: ast.AST, _: RuleContext) -> Iterable[PatternMatch***REMOVED***:
+def _mutable_default(tree: ast.AST, _: RuleContext) -> Iterable[PatternMatch]:
     for node in ast.walk(tree):
         if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             continue
-        defaults = [*node.args.defaults, *(item for item in node.args.kw_defaults if item is not None)***REMOVED***
+        defaults = [*node.args.defaults, *(item for item in node.args.kw_defaults if item is not None)]
         for default in defaults:
             if isinstance(default, (ast.List, ast.Dict, ast.Set)):
                 yield PatternMatch(
@@ -114,7 +114,7 @@ def _mutable_default(tree: ast.AST, _: RuleContext) -> Iterable[PatternMatch***R
                 )
 
 
-def _bare_except(tree: ast.AST, _: RuleContext) -> Iterable[PatternMatch***REMOVED***:
+def _bare_except(tree: ast.AST, _: RuleContext) -> Iterable[PatternMatch]:
     for node in ast.walk(tree):
         if isinstance(node, ast.ExceptHandler) and node.type is None:
             yield PatternMatch(
@@ -126,7 +126,7 @@ def _bare_except(tree: ast.AST, _: RuleContext) -> Iterable[PatternMatch***REMOV
             )
 
 
-def _excessive_nesting(tree: ast.AST, _: RuleContext) -> Iterable[PatternMatch***REMOVED***:
+def _excessive_nesting(tree: ast.AST, _: RuleContext) -> Iterable[PatternMatch]:
     threshold = 4
     for node, depth in _walk_with_depth(tree):
         if isinstance(node, (ast.If, ast.For, ast.While, ast.Try, ast.With, ast.Match)) and depth > threshold:
@@ -135,11 +135,11 @@ def _excessive_nesting(tree: ast.AST, _: RuleContext) -> Iterable[PatternMatch**
                 DiagnosticSeverity.MEDIUM,
                 node.lineno,
                 node.col_offset,
-                f"control-flow nesting depth {depth***REMOVED*** exceeds {threshold***REMOVED***",
+                f"control-flow nesting depth {depth} exceeds {threshold}",
             )
 
 
-def _suspicious_mutable_state(tree: ast.AST, _: RuleContext) -> Iterable[PatternMatch***REMOVED***:
+def _suspicious_mutable_state(tree: ast.AST, _: RuleContext) -> Iterable[PatternMatch]:
     if not isinstance(tree, ast.Module):
         return
     for node in tree.body:
@@ -157,14 +157,14 @@ def _suspicious_mutable_state(tree: ast.AST, _: RuleContext) -> Iterable[Pattern
             )
 
 
-def _shadowing(tree: ast.AST, _: RuleContext) -> Iterable[PatternMatch***REMOVED***:
-    builtin_names = {"list", "dict", "set", "str", "int", "float", "len", "sum", "id", "type", "input"***REMOVED***
+def _shadowing(tree: ast.AST, _: RuleContext) -> Iterable[PatternMatch]:
+    builtin_names = {"list", "dict", "set", "str", "int", "float", "len", "sum", "id", "type", "input"}
     for node in ast.walk(tree):
-        names: list[ast.Name***REMOVED*** = [***REMOVED***
+        names: list[ast.Name] = []
         if isinstance(node, ast.Assign):
-            names = [target for target in node.targets if isinstance(target, ast.Name)***REMOVED***
+            names = [target for target in node.targets if isinstance(target, ast.Name)]
         elif isinstance(node, ast.arg):
-            names = [ast.Name(id=node.arg, ctx=ast.Load(), lineno=node.lineno, col_offset=node.col_offset)***REMOVED***
+            names = [ast.Name(id=node.arg, ctx=ast.Load(), lineno=node.lineno, col_offset=node.col_offset)]
         for name in names:
             if name.id in builtin_names:
                 yield PatternMatch(
@@ -172,11 +172,11 @@ def _shadowing(tree: ast.AST, _: RuleContext) -> Iterable[PatternMatch***REMOVED
                     DiagnosticSeverity.LOW,
                     name.lineno,
                     name.col_offset,
-                    f"assignment shadows built-in name '{name.id***REMOVED***'",
+                    f"assignment shadows built-in name '{name.id}'",
                 )
 
 
-def _unreachable_code(tree: ast.AST, _: RuleContext) -> Iterable[PatternMatch***REMOVED***:
+def _unreachable_code(tree: ast.AST, _: RuleContext) -> Iterable[PatternMatch]:
     for node in ast.walk(tree):
         if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.For, ast.While, ast.If, ast.With, ast.Try)):
             continue
@@ -195,7 +195,7 @@ def _unreachable_code(tree: ast.AST, _: RuleContext) -> Iterable[PatternMatch***
                 terminated = True
 
 
-def _oversized_function(tree: ast.AST, _: RuleContext) -> Iterable[PatternMatch***REMOVED***:
+def _oversized_function(tree: ast.AST, _: RuleContext) -> Iterable[PatternMatch]:
     threshold = 40
     for node in ast.walk(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.end_lineno is not None:
@@ -206,7 +206,7 @@ def _oversized_function(tree: ast.AST, _: RuleContext) -> Iterable[PatternMatch*
                     DiagnosticSeverity.MEDIUM,
                     node.lineno,
                     node.col_offset,
-                    f"function spans {size***REMOVED*** lines and exceeds {threshold***REMOVED***",
+                    f"function spans {size} lines and exceeds {threshold}",
                 )
 
 

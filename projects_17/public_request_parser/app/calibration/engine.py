@@ -17,7 +17,7 @@ from dataclasses import dataclass
 from app.domain import SearchProfile
 from app.storage import SqliteStorage
 
-SAMPLE_ACTIONS = frozenset({"relevant", "irrelevant"***REMOVED***)
+SAMPLE_ACTIONS = frozenset({"relevant", "irrelevant"})
 DEFAULT_ACCEPT = 0.8
 DEFAULT_PENDING = 0.5
 DEFAULT_MIN_SAMPLES = 3
@@ -52,20 +52,20 @@ class CalibrationResult:
         """Краткое текстовое представление CLI/report."""
         status = "CHANGE" if self.changed else "KEEP"
         return (
-            f"calibration[{status***REMOVED******REMOVED*** profile={self.profile_id***REMOVED*** samples={self.samples***REMOVED*** "
-            f"pos={self.positive***REMOVED*** neg={self.negative***REMOVED*** "
-            f"accept {self.current_accept:.2f***REMOVED***→{self.suggested_accept:.2f***REMOVED*** "
-            f"pending {self.current_pending:.2f***REMOVED***→{self.suggested_pending:.2f***REMOVED*** "
-            f"precision={self.precision_at_suggested:.2f***REMOVED*** recall={self.recall_at_suggested:.2f***REMOVED***"
+            f"calibration[{status}] profile={self.profile_id} samples={self.samples} "
+            f"pos={self.positive} neg={self.negative} "
+            f"accept {self.current_accept:.2f}→{self.suggested_accept:.2f} "
+            f"pending {self.current_pending:.2f}→{self.suggested_pending:.2f} "
+            f"precision={self.precision_at_suggested:.2f} recall={self.recall_at_suggested:.2f}"
         )
 
 
-def optimal_accept_threshold(samples: list[_Sample***REMOVED***) -> float:
+def optimal_accept_threshold(samples: list[_Sample]) -> float:
     """Порог, максимизирующий accuracy; при пустой выборке — default."""
     if not samples:
         return DEFAULT_ACCEPT
-    candidates = sorted({round(sample.score, 6) for sample in samples***REMOVED***)
-    best_threshold = candidates[0***REMOVED***
+    candidates = sorted({round(sample.score, 6) for sample in samples})
+    best_threshold = candidates[0]
     best_accuracy = -1.0
     for threshold in candidates:
         accuracy = sum(
@@ -77,7 +77,7 @@ def optimal_accept_threshold(samples: list[_Sample***REMOVED***) -> float:
     return best_threshold
 
 
-def _precision_recall(samples: list[_Sample***REMOVED***, threshold: float) -> tuple[float, float***REMOVED***:
+def _precision_recall(samples: list[_Sample], threshold: float) -> tuple[float, float]:
     """Precision/recall для данного порога."""
     true_positive = sum(
         1 for sample in samples if sample.relevant and sample.score >= threshold
@@ -114,12 +114,12 @@ class ThresholdCalibrator:
         записей (нет evidence — нет рекомендации).
         """
         feedback = self._storage.list_feedback(profile.owner_scope)
-        samples: list[_Sample***REMOVED*** = [***REMOVED***
+        samples: list[_Sample] = []
         for entry in feedback:
-            action = str(entry["action"***REMOVED***)
+            action = str(entry["action"])
             if action not in SAMPLE_ACTIONS:
                 continue
-            publication_key = str(entry["publication_key"***REMOVED***)
+            publication_key = str(entry["publication_key"])
             decision = self._storage.get_decision(
                 publication_key, profile.profile_id, profile.version
             )
@@ -169,4 +169,4 @@ __all__ = [
     "CalibrationResult",
     "ThresholdCalibrator",
     "optimal_accept_threshold",
-***REMOVED***
+]

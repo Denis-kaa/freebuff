@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import stat
-***REMOVED***
+}
 
 import pytest
 
@@ -22,7 +22,7 @@ from app.diagnostics import (
 
 def test_registry_has_stable_initial_rule_set() -> None:
     registry = default_registry()
-    assert [rule.rule_id for rule in registry.rules()***REMOVED*** == [
+    assert [rule.rule_id for rule in registry.rules()] == [
         "AST001",
         "AST002",
         "AST003",
@@ -30,16 +30,16 @@ def test_registry_has_stable_initial_rule_set() -> None:
         "AST005",
         "AST006",
         "AST007",
-    ***REMOVED***
+    ]
     with pytest.raises(ValueError):
         registry.register(registry.get("AST001"))
 
 
 def test_ast_rules_report_expected_positive_findings() -> None:
     source = """\
-state = [***REMOVED***
+state = []
 
-def f(items=[***REMOVED***, list=1):
+def f(items=[], list=1):
     try:
         if items:
             for item in items:
@@ -55,7 +55,7 @@ def f(items=[***REMOVED***, list=1):
     print('never')
 """
     report = ASTAnalyzer().analyze_source(source, filename="student.py", competency_id="code-structure")
-    ***REMOVED***item.pattern_id for item in report.diagnostics***REMOVED***
+    ]item.pattern_id for item in report.diagnostics]
     assert report.status is SensorStatus.OK
     assert {
         "mutable-default-argument",
@@ -64,7 +64,7 @@ def f(items=[***REMOVED***, list=1):
         "bare-except",
         "unreachable-code",
         "mutable-module-state",
-    ***REMOVED*** <= patterns
+    ] <= patterns
     assert all(item.diagnostic_only for item in report.diagnostics)
     assert all(item.competency_id == "code-structure" for item in report.diagnostics)
 
@@ -73,7 +73,7 @@ def test_ast_rules_negative_and_edge_cases_do_not_flag_safe_code() -> None:
     source = """\
 def f(items=None):
     if items is None:
-        items = [***REMOVED***
+        items = []
     try:
         return len(items)
     except ValueError:
@@ -85,14 +85,14 @@ class Example:
 """
     report = ASTAnalyzer().analyze_source(source)
     assert report.status is SensorStatus.OK
-    assert {item.pattern_id for item in report.diagnostics***REMOVED*** == set()
+    assert {item.pattern_id for item in report.diagnostics} == set()
 
 
 def test_ast_syntax_error_is_normalized() -> None:
     report = ASTAnalyzer().analyze_source("def broken(:\n", filename="broken.py")
     assert report.status is SensorStatus.INVALID_OUTPUT
-    assert [item.pattern_id for item in report.diagnostics***REMOVED*** == ["syntax-error"***REMOVED***
-    assert report.diagnostics[0***REMOVED***.severity is DiagnosticSeverity.HIGH
+    assert [item.pattern_id for item in report.diagnostics] == ["syntax-error"]
+    assert report.diagnostics[0].severity is DiagnosticSeverity.HIGH
 
 
 def test_oversized_function_is_deterministic() -> None:
@@ -100,7 +100,7 @@ def test_oversized_function_is_deterministic() -> None:
     first = ASTAnalyzer().analyze_source(source).to_dict()
     second = ASTAnalyzer().analyze_source(source).to_dict()
     assert first == second
-    assert any(item["pattern_id"***REMOVED*** == "oversized-function" for item in first["diagnostics"***REMOVED***)
+    assert any(item["pattern_id"] == "oversized-function" for item in first["diagnostics"])
 
 
 def test_patterns_are_reference_metadata_only() -> None:
@@ -115,9 +115,9 @@ def test_patterns_are_reference_metadata_only() -> None:
         message="maintainability index: 42",
     )
     patterns = map_diagnostics((finding,))
-    assert patterns[0***REMOVED***.hint_key == "review-code-structure"
-    assert patterns[0***REMOVED***.diagnostic_only is True
-    assert not hasattr(patterns[0***REMOVED***, "evidence_candidates")
+    assert patterns[0].hint_key == "review-code-structure"
+    assert patterns[0].diagnostic_only is True
+    assert not hasattr(patterns[0], "evidence_candidates")
 
 
 def _make_fake_tool(tmp_path: Path, payload: str, exit_code: int = 0) -> Path:
@@ -125,8 +125,8 @@ def _make_fake_tool(tmp_path: Path, payload: str, exit_code: int = 0) -> Path:
     script.write_text(
         "#!/usr/bin/env python3\n"
         "import sys\n"
-        f"print({payload!r***REMOVED***)\n"
-        f"raise SystemExit({exit_code***REMOVED***)\n",
+        f"print({payload!r})\n"
+        f"raise SystemExit({exit_code})\n",
         encoding="utf-8",
     )
     script.chmod(script.stat().st_mode | stat.S_IXUSR)
@@ -144,14 +144,14 @@ def test_pylint_adapter_normalizes_json_and_nonzero_diagnostic_exit(tmp_path: Pa
             "message": "bad thing",
             "message-id": "W0612",
             "path": "student.py",
-        ***REMOVED***
-    ***REMOVED***)
+        }
+    ])
     tool = _make_fake_tool(tmp_path, payload, exit_code=4)
     report = PylintAdapter(executable=str(tool)).analyze(tmp_path / "student.py")
     assert report.status is SensorStatus.OK
     assert report.exit_code == 4
-    assert report.diagnostics[0***REMOVED***.rule_id == "W0612"
-    assert report.diagnostics[0***REMOVED***.severity is DiagnosticSeverity.MEDIUM
+    assert report.diagnostics[0].rule_id == "W0612"
+    assert report.diagnostics[0].severity is DiagnosticSeverity.MEDIUM
 
 
 def test_pylint_adapter_rejects_malformed_output(tmp_path: Path) -> None:
@@ -166,7 +166,7 @@ def test_flake8_adapter_parses_lines_and_rejects_malformed_output(tmp_path: Path
     tool = _make_fake_tool(tmp_path, "student.py:4:2: E302 expected 2 blank lines", exit_code=1)
     report = Flake8Adapter(executable=str(tool)).analyze(source)
     assert report.status is SensorStatus.OK
-    assert report.diagnostics[0***REMOVED***.rule_id == "E302"
+    assert report.diagnostics[0].rule_id == "E302"
 
     malformed = _make_fake_tool(tmp_path, "unexpected output", exit_code=0)
     malformed_report = Flake8Adapter(executable=str(malformed)).analyze(source)
@@ -178,22 +178,22 @@ def test_radon_adapter_normalizes_all_metric_families(tmp_path: Path) -> None:
     tool.write_text(
         "#!/usr/bin/env python3\n"
         "import json, sys\n"
-        "path = sys.argv[-1***REMOVED***\n"
-        "command = sys.argv[1***REMOVED***\n"
+        "path = sys.argv[-1]\n"
+        "command = sys.argv[1]\n"
         "payloads = {\n"
-        "  'cc': {path: [{'name': 'f', 'lineno': 2, 'complexity': 12***REMOVED******REMOVED******REMOVED***,\n"
-        "  'raw': {path: {'loc': 10, 'lloc': 8, 'sloc': 9, 'comments': 1***REMOVED******REMOVED***,\n"
-        "  'hal': {path: {'total': {'h1': 1, 'h2': 2, 'N1': 3, 'N2': 4, 'volume': 5***REMOVED******REMOVED******REMOVED***,\n"
-        "  'mi': {path: {'mi': 77.5***REMOVED******REMOVED***,\n"
-        "***REMOVED***\n"
-        "print(json.dumps(payloads[command***REMOVED***))\n",
+        "  'cc': {path: [{'name': 'f', 'lineno': 2, 'complexity': 12]]],\n"
+        "  'raw': {path: {'loc': 10, 'lloc': 8, 'sloc': 9, 'comments': 1]],\n"
+        "  'hal': {path: {'total': {'h1': 1, 'h2': 2, 'N1': 3, 'N2': 4, 'volume': 5]]],\n"
+        "  'mi': {path: {'mi': 77.5]],\n"
+        "]\n"
+        "print(json.dumps(payloads[command]))\n",
         encoding="utf-8",
     )
     tool.chmod(tool.stat().st_mode | stat.S_IXUSR)
     report = RadonAdapter(executable=str(tool)).analyze(tmp_path / "student.py")
     assert report.status is SensorStatus.OK
-    ***REMOVED***item.pattern_id for item in report.diagnostics***REMOVED***
-    assert {"cyclomatic-complexity", "lines-of-code", "halstead-volume", "maintainability-index"***REMOVED*** <= patterns
+    ]item.pattern_id for item in report.diagnostics]
+    assert {"cyclomatic-complexity", "lines-of-code", "halstead-volume", "maintainability-index"} <= patterns
     assert all(item.diagnostic_only for item in report.diagnostics)
 
 
@@ -207,17 +207,17 @@ def test_bandit_adapter_normalizes_security_findings(tmp_path: Path) -> None:
                 "filename": "student.py",
                 "line_number": 4,
                 "col_offset": 2,
-            ***REMOVED***
-        ***REMOVED***
-    ***REMOVED***)
+            }
+        ]
+    ])
     tool = _make_fake_tool(tmp_path, payload, exit_code=1)
     report = BanditAdapter(executable=str(tool)).analyze(
         tmp_path / "student.py",
         security_eligible=True,
     )
     assert report.status is SensorStatus.OK
-    assert report.diagnostics[0***REMOVED***.pattern_id == "bandit-b602"
-    assert report.diagnostics[0***REMOVED***.severity is DiagnosticSeverity.HIGH
+    assert report.diagnostics[0].pattern_id == "bandit-b602"
+    assert report.diagnostics[0].severity is DiagnosticSeverity.HIGH
 
 
 def test_bandit_security_gate_and_unavailable_tool(tmp_path: Path) -> None:

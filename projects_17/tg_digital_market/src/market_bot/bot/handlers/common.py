@@ -41,10 +41,10 @@ async def cmd_start(message: Message, services: Services) -> None:
     if role.value != user.role.value:
         await asyncio.to_thread(services.repo.set_role, user.id, role)
     await message.answer(
-        f"👋 Привет, {user.full_name***REMOVED***!\n"
+        f"👋 Привет, {user.full_name}!\n"
         f"Это маркетплейс цифровых товаров.\n"
         f"Выберите действие в меню ниже.\n\n"
-        f"Ваша роль: {role.value***REMOVED***",
+        f"Ваша роль: {role.value}",
         reply_markup=main_menu_kb(),
     )
 
@@ -100,26 +100,26 @@ async def cmd_mock_pay(message: Message, services: Services) -> Any:
         await message.answer("🚫 Команда доступна только админам.")
         return
     parts = (message.text or "").split()
-    if len(parts) != 2 or not parts[1***REMOVED***.isdigit():
+    if len(parts) != 2 or not parts[1].isdigit():
         await message.answer("Использование: /mock_pay <payment_id>")
         return
-    payment_id = int(parts[1***REMOVED***)
+    payment_id = int(parts[1])
     payment = await asyncio.to_thread(services.repo.get_payment, payment_id)
     if payment is None:
-        await message.answer(f"Платёж #{payment_id***REMOVED*** не найден.")
+        await message.answer(f"Платёж #{payment_id} не найден.")
         return
     if payment.status.value != "pending":
-        await message.answer(f"Платёж уже финализирован: {payment.status.value***REMOVED***.")
+        await message.answer(f"Платёж уже финализирован: {payment.status.value}.")
         return
     from ..services.payments import IncomingPayment
     incoming = IncomingPayment(
-        external_id=f"mock://{payment.id***REMOVED***",
+        external_id=f"mock://{payment.id}",
         expected_amount=payment.amount_stars,
     )
     try:
         await asyncio.to_thread(services.payments.finalize, payment, incoming)
     except Exception as exc:
-        await message.answer(f"❌ Ошибка: {exc!r***REMOVED***")
+        await message.answer(f"❌ Ошибка: {exc!r}")
         logger.exception("mock_pay finalize failed")
         return
     # Финализируем оплату и сразу публикуем доставку.
@@ -133,12 +133,12 @@ async def cmd_mock_pay(message: Message, services: Services) -> Any:
     await services.notifications.notify_user(
         user_id=user_id,
         kind=_kind("order_delivered"),
-        text=f"✅ Оплата прошла! Ваш код:\n\n<code>{code or '(код не найден)'***REMOVED***</code>",
+        text=f"✅ Оплата прошла! Ваш код:\n\n<code>{code or '(код не найден)'}</code>",
     )
     await asyncio.to_thread(services.orders._release_unfinished_keys, order_id)  # noqa: SLF001
     await message.answer(
-        f"✅ Платёж #{payment_id***REMOVED*** финализирован, ключ выдан.\n"
-        f"Заказ #{order_id***REMOVED*** → DELIVERED."
+        f"✅ Платёж #{payment_id} финализирован, ключ выдан.\n"
+        f"Заказ #{order_id} → DELIVERED."
     )
 
 

@@ -23,7 +23,7 @@ import shutil
 import subprocess
 import threading
 from dataclasses import dataclass
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional
 
 
@@ -32,7 +32,7 @@ class LightpandaResult:
     """Result of a Lightpanda worker operation."""
     success: bool
     data: str = ""
-    error: Optional[str***REMOVED*** = None
+    error: Optional[str] = None
     command: str = ""
     duration_ms: float = 0.0
 
@@ -42,14 +42,14 @@ class LightpandaWorker:
 
     def __init__(
         self,
-        binary_path: Optional[str***REMOVED*** = None,
-        workspace_root: Optional[str***REMOVED*** = None,
+        binary_path: Optional[str] = None,
+        workspace_root: Optional[str] = None,
     ) -> None:
         self._workspace_root = Path(workspace_root or str(Path(__file__).resolve().parent.parent.parent))
         self._binary_path = self._resolve_binary(binary_path)
-        self._cdp_process: Optional[subprocess.Popen***REMOVED*** = None
+        self._cdp_process: Optional[subprocess.Popen] = None
 
-    def _resolve_binary(self, override: Optional[str***REMOVED***) -> str:
+    def _resolve_binary(self, override: Optional[str]) -> str:
         if override:
             return override
 
@@ -67,12 +67,12 @@ class LightpandaWorker:
 
     def _run(
         self,
-        args: List[str***REMOVED***,
+        args: List[str],
         timeout: int = 60,
-        env: Optional[Dict[str, str***REMOVED******REMOVED*** = None,
+        env: Optional[Dict[str, str]] = None,
     ) -> LightpandaResult:
         """Run Lightpanda with the given arguments and return a LightpandaResult."""
-        cmd = [self._binary_path, *args***REMOVED***
+        cmd = [self._binary_path, *args]
         cmd_str = " ".join(shlex.quote(str(x)) for x in cmd)
 
         try:
@@ -81,7 +81,7 @@ class LightpandaWorker:
                 capture_output=True,
                 text=True,
                 timeout=timeout,
-                env={**os.environ, **(env or {***REMOVED***)***REMOVED***,
+                env={**os.environ, **(env or {})},
             )
 
             output = result.stdout or ""
@@ -91,21 +91,21 @@ class LightpandaWorker:
             return LightpandaResult(
                 success=success,
                 data=output if success else stderr,
-                error=None if success else f"Exit code {result.returncode***REMOVED***: {stderr[:500***REMOVED******REMOVED***",
+                error=None if success else f"Exit code {result.returncode}: {stderr[:500]}",
                 command=cmd_str,
             )
         except subprocess.TimeoutExpired:
             return LightpandaResult(
                 success=False,
                 data="",
-                error=f"Lightpanda timed out after {timeout***REMOVED***s",
+                error=f"Lightpanda timed out after {timeout}s",
                 command=cmd_str,
             )
         except FileNotFoundError:
             return LightpandaResult(
                 success=False,
                 data="",
-                error=f"Lightpanda binary not found: {self._binary_path***REMOVED***. Run scripts_01/install_lightpanda.sh",
+                error=f"Lightpanda binary not found: {self._binary_path}. Run scripts_01/install_lightpanda.sh",
                 command=cmd_str,
             )
         except Exception as e:
@@ -133,7 +133,7 @@ class LightpandaWorker:
             "agent",
             "--provider", provider,
             "--task", task,
-        ***REMOVED***
+        ]
         return self._run(args, timeout=timeout)
 
     def run_script(self, script_path: str, timeout: int = 60) -> LightpandaResult:
@@ -144,9 +144,9 @@ class LightpandaWorker:
             timeout: max seconds to wait
         """
         if not os.path.isfile(script_path):
-            return LightpandaResult(success=False, error=f"PandaScript not found: {script_path***REMOVED***")
+            return LightpandaResult(success=False, error=f"PandaScript not found: {script_path}")
 
-        return self._run(["agent", script_path***REMOVED***, timeout=timeout)
+        return self._run(["agent", script_path], timeout=timeout)
 
     def dump_url(
         self,
@@ -164,11 +164,11 @@ class LightpandaWorker:
         if not url:
             return LightpandaResult(success=False, error="URL cannot be empty")
 
-        supported = {"markdown", "html", "text"***REMOVED***
+        supported = {"markdown", "html", "text"}
         if output_format not in supported:
             return LightpandaResult(
                 success=False,
-                error=f"Unsupported output format '{output_format***REMOVED***'. Supported: {supported***REMOVED***",
+                error=f"Unsupported output format '{output_format}'. Supported: {supported}",
             )
 
         # Lightpanda doesn't have a native 'dump' subcommand yet, so we fall back
@@ -176,18 +176,18 @@ class LightpandaWorker:
         # the requested format. This keeps the worker functional even before
         # the command lands upstream.
         script = f"""
-const url = {shlex.quote(url)***REMOVED***;
-const format = {shlex.quote(output_format)***REMOVED***;
+const url = {shlex.quote(url)};
+const format = {shlex.quote(output_format)};
 const res = await fetch(url);
 const text = await res.text();
 if (format === 'html') {{
     console.log(text);
-***REMOVED******REMOVED*** else {{
-    const body = text.replace(/<[^>***REMOVED***+>/g, ' ').replace(/\\s+/g, ' ').trim();
+]] else {{
+    const body = text.replace(/<[^>]+>/g, ' ').replace(/\\s+/g, ' ').trim();
     console.log(body);
-***REMOVED******REMOVED***
+]]
 """
-        return self._run(["agent", "-e", script***REMOVED***, timeout=timeout)
+        return self._run(["agent", "-e", script], timeout=timeout)
 
     def serve_cdp(self, host: str = "127.0.0.1", port: int = 9222) -> LightpandaResult:
         """Start the Lightpanda CDP server.
@@ -197,7 +197,7 @@ if (format === 'html') {{
         if self._cdp_process is not None:
             return LightpandaResult(success=False, error="CDP server is already running")
 
-        cmd = [self._binary_path, "serve", "--host", host, "--port", str(port)***REMOVED***
+        cmd = [self._binary_path, "serve", "--host", host, "--port", str(port)]
         try:
             self._cdp_process = subprocess.Popen(
                 cmd,
@@ -207,13 +207,13 @@ if (format === 'html') {{
             )
             return LightpandaResult(
                 success=True,
-                data=f"CDP server started on {host***REMOVED***:{port***REMOVED***",
+                data=f"CDP server started on {host}:{port}",
                 command=" ".join(shlex.quote(str(x)) for x in cmd),
             )
         except FileNotFoundError:
             return LightpandaResult(
                 success=False,
-                error=f"Lightpanda binary not found: {self._binary_path***REMOVED***",
+                error=f"Lightpanda binary not found: {self._binary_path}",
                 command=" ".join(shlex.quote(str(x)) for x in cmd),
             )
         except Exception as e:

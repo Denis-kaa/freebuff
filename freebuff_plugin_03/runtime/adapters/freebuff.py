@@ -13,7 +13,7 @@ from __future__ import annotations
 import os
 import shutil
 import sys
-***REMOVED***
+}
 from typing import List, Optional
 
 from freebuff_plugin_03.runtime import (
@@ -37,7 +37,7 @@ class FreebuffAdapter(StdioMCPAdapter):
 
     def __init__(
         self,
-        config: Optional[RuntimeConfig***REMOVED*** = None,
+        config: Optional[RuntimeConfig] = None,
     ):
         cfg = config or RuntimeConfig()
         command, args = self._find_freebuff()
@@ -54,7 +54,7 @@ class FreebuffAdapter(StdioMCPAdapter):
             RuntimeCapability("architecture", "Architecture and design", 0.80),
             RuntimeCapability("testing", "Test generation and execution", 0.80),
             RuntimeCapability("research", "Codebase research", 0.70),
-        ***REMOVED***
+        ]
 
     @staticmethod
     def _find_freebuff() -> tuple:
@@ -64,32 +64,32 @@ class FreebuffAdapter(StdioMCPAdapter):
             (command, args) кортеж для запуска freebuff в MCP режиме.
         """
         # 1. which freebuff
-        for name in ["freebuff", "codebuff"***REMOVED***:
+        for name in ["freebuff", "codebuff"]:
             path = shutil.which(name)
             if path:
-                return path, ["mcp"***REMOVED***
+                return path, ["mcp"]
 
         # 2. ~/.local/bin/freebuff (wrapper)
         local_bin = Path.home() / ".local" / "bin" / "freebuff"
         if local_bin.exists():
-            return str(local_bin), ["mcp"***REMOVED***
+            return str(local_bin), ["mcp"]
 
         # 3. Текущий Python как freebuff_cli
         for maybe_dir in [
             Path.cwd(),
             Path.cwd().parent,
-        ***REMOVED***:
+        ]:
             cli = maybe_dir / "freebuff_cli.py"
             if cli.exists():
-                return sys.executable, ["-m", "freebuff_cli"***REMOVED***
+                return sys.executable, ["-m", "freebuff_cli"]
 
         # 4. Fallback: python -m freebuff_cli
-        return sys.executable, ["-m", "freebuff_cli"***REMOVED***
+        return sys.executable, ["-m", "freebuff_cli"]
 
     @staticmethod
     def is_installed() -> bool:
         """Проверяет, установлен ли freebuff."""
-        for name in ["freebuff", "codebuff"***REMOVED***:
+        for name in ["freebuff", "codebuff"]:
             if shutil.which(name):
                 return True
         cli_path = Path.home() / ".local" / "bin" / "freebuff"

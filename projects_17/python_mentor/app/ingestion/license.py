@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import sqlite3
 from dataclasses import dataclass
-***REMOVED***
+}
 
 import yaml
 
@@ -30,18 +30,18 @@ class ExerciseSource:
 
     @classmethod
     def from_dict(cls, raw: dict) -> "ExerciseSource":
-        status = str(raw["status"***REMOVED***).lower()
+        status = str(raw["status"]).lower()
         if status not in VALID_STATUSES:
-            raise ValueError(f"{raw.get('id')***REMOVED***: bad status {status!r***REMOVED***")
-        evidence = str(raw["license_evidence"***REMOVED***).strip()
+            raise ValueError(f"{raw.get('id')}: bad status {status!r}")
+        evidence = str(raw["license_evidence"]).strip()
         if status == "approved" and not evidence:
-            raise ValueError(f"{raw.get('id')***REMOVED***: approved без license_evidence — запрещено")
+            raise ValueError(f"{raw.get('id')}: approved без license_evidence — запрещено")
         return cls(
-            id=str(raw["id"***REMOVED***),
-            source_name=str(raw["source_name"***REMOVED***),
-            repository=str(raw["repository"***REMOVED***),
+            id=str(raw["id"]),
+            source_name=str(raw["source_name"]),
+            repository=str(raw["repository"]),
             source_url=str(raw.get("source_url", "")),
-            license=str(raw["license"***REMOVED***),
+            license=str(raw["license"]),
             license_evidence=evidence,
             redistribution_allowed=bool(raw.get("redistribution_allowed", False)),
             modification_allowed=bool(raw.get("modification_allowed", False)),
@@ -50,15 +50,15 @@ class ExerciseSource:
         )
 
 
-def load_sources(path: str | Path) -> list[ExerciseSource***REMOVED***:
+def load_sources(path: str | Path) -> list[ExerciseSource]:
     """Загрузить реестр источников из sources.yaml."""
     with open(path, encoding="utf-8") as f:
         raw = yaml.safe_load(f)
-    out: list[ExerciseSource***REMOVED*** = [***REMOVED***
-    for s in raw.get("sources", [***REMOVED***):
+    out: list[ExerciseSource] = []
+    for s in raw.get("sources", []):
         src = ExerciseSource.from_dict(s)
         if src.status == "approved" and not src.license_evidence:
-            raise ValueError(f"{src.id***REMOVED***: approved без license_evidence — запрещено")
+            raise ValueError(f"{src.id}: approved без license_evidence — запрещено")
         out.append(src)
     return out
 
@@ -68,7 +68,7 @@ def can_be_live(status: str) -> bool:
     return status == "approved"
 
 
-def register_sources(conn: sqlite3.Connection, sources: list[ExerciseSource***REMOVED***) -> int:
+def register_sources(conn: sqlite3.Connection, sources: list[ExerciseSource]) -> int:
     """Upsert реестра в exercise_sources. Возвращает число записей."""
     n = 0
     for s in sources:

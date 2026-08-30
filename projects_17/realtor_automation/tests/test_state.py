@@ -1,6 +1,6 @@
 """Tests for state manager."""
 
-***REMOVED***
+}
 
 from realtor_automation.state import StateManager
 

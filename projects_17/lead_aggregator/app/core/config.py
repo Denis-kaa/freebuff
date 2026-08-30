@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
-***REMOVED***
+}
 from typing import Any
 
 import yaml
@@ -15,12 +15,12 @@ import yaml
 PACKAGE_ROOT = Path(__file__).resolve().parent.parent.parent  # lead_aggregator/
 
 
-def _load_yaml(path: Path) -> dict[str, Any***REMOVED***:
+def _load_yaml(path: Path) -> dict[str, Any]:
     if not path.exists():
-        return {***REMOVED***
+        return {}
     with path.open(encoding="utf-8") as fh:
-        data = yaml.safe_load(fh) or {***REMOVED***
-    return data if isinstance(data, dict) else {***REMOVED***
+        data = yaml.safe_load(fh) or {}
+    return data if isinstance(data, dict) else {}
 
 
 def _load_env_file(path: Path) -> None:
@@ -28,7 +28,7 @@ def _load_env_file(path: Path) -> None:
 
     Фаза 4 (Deploy): CLI может запускаться без экспорта переменных —
     settings.env читается автоматически. Формат: строки KEY=VALUE,
-    комментарии # и секции [TEMPLATE***REMOVED*** игнорируются. Уже заданные env
+    комментарии # и секции [TEMPLATE] игнорируются. Уже заданные env
     имеют приоритет (не перезаписываем).
     """
     if not path.exists():
@@ -42,7 +42,7 @@ def _load_env_file(path: Path) -> None:
         key, _, value = line.partition("=")
         key = key.strip()
         if key and key not in os.environ:
-            os.environ[key***REMOVED*** = value.strip()
+            os.environ[key] = value.strip()
 
 
 # КРИТИЧНО: загрузить settings.env ДО вычисления дефолтов Config. Поля с
@@ -85,12 +85,12 @@ class Config:
     kwork_enabled: bool = field(
         default_factory=lambda: os.getenv("LA_KWORK_ENABLED", "1") == "1"
     )
-    tg_channels: list[str***REMOVED*** = field(
+    tg_channels: list[str] = field(
         default_factory=lambda: [
             ch.strip()
             for ch in os.getenv("LA_TG_CHANNELS", "freelance_tg,proger_orders").split(",")
             if ch.strip()
-        ***REMOVED***
+        ]
     )
 
     def __post_init__(self) -> None:
@@ -105,25 +105,25 @@ class Config:
 
     # ── сигнатуры запросов из competence_profile (W-8) ──────────────
     @property
-    def competence_signals(self) -> list[str***REMOVED***:
+    def competence_signals(self) -> list[str]:
         """Все сигнатуры компетенций (для L2-таргетинга и L3-скоринга)."""
-        signals: list[str***REMOVED*** = [***REMOVED***
-        for comp in self.profile.get("competencies", [***REMOVED***):
-            signals.extend(comp.get("signals", [***REMOVED***))
-        return [s.lower() for s in signals if s***REMOVED***
+        signals: list[str] = []
+        for comp in self.profile.get("competencies", []):
+            signals.extend(comp.get("signals", []))
+        return [s.lower() for s in signals if s]
 
     # ── стоп-слова L1 (W-7 policy-гейт: спам-зона исключена) ─────────
     @property
-    def stopwords(self) -> list[str***REMOVED***:
-        return [w.lower() for w in self.keywords.get("stopwords", [***REMOVED***)***REMOVED***
+    def stopwords(self) -> list[str]:
+        return [w.lower() for w in self.keywords.get("stopwords", [])]
 
     @property
-    def client_markers(self) -> list[str***REMOVED***:
-        return [w.lower() for w in self.keywords.get("client_markers", [***REMOVED***)***REMOVED***
+    def client_markers(self) -> list[str]:
+        return [w.lower() for w in self.keywords.get("client_markers", [])]
 
     @property
-    def seeker_markers(self) -> list[str***REMOVED***:
-        return [w.lower() for w in self.keywords.get("seeker_markers", [***REMOVED***)***REMOVED***
+    def seeker_markers(self) -> list[str]:
+        return [w.lower() for w in self.keywords.get("seeker_markers", [])]
 
 
 def load_config() -> Config:

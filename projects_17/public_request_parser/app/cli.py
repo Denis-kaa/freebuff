@@ -17,7 +17,7 @@ import json
 import os
 import sys
 from datetime import datetime, timezone
-***REMOVED***
+}
 
 from app.adapters.headhunter import API_BASE as HH_BASE
 from app.adapters.trudvsem import API_BASE as TRUDVSEM_BASE
@@ -50,7 +50,7 @@ def _policy_for_source(source_id: str) -> SourcePolicy:
         )
         access = "official_api"
     else:
-        raise ValueError(f"unknown live source: {source_id***REMOVED***")
+        raise ValueError(f"unknown live source: {source_id}")
     return SourcePolicy(
         source_id=source_id,
         status=SourcePolicyStatus.ALLOWED,
@@ -89,7 +89,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--canary", action="store_true", help="controlled live run (P10)")
     parser.add_argument("--maintenance", action="store_true", help="TTL cleanup + backup (P11)")
     parser.add_argument("--fixture", type=Path, help="path to RSS/Atom fixture")
-    parser.add_argument("--source", default="fixture", choices=["fixture","trudvsem","headhunter"***REMOVED***, help="source id")
+    parser.add_argument("--source", default="fixture", choices=["fixture","trudvsem","headhunter"], help="source id")
     parser.add_argument("--source-id", default="cli-fixture", help="source id fo fixture")
     parser.add_argument("--db", type=str, default="parser.db", help="path to SQLite")
     parser.add_argument("--owner", default="operator")
@@ -98,7 +98,7 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--required", default="python")
     parser.add_argument("--optional", default="backend")
     parser.add_argument("--intent", default="need,looking")
-    parser.add_argument("--mode", default="demand", choices=["demand", "supply"***REMOVED***, help="search direction: demand (who needs service) or supply (jobseek)")
+    parser.add_argument("--mode", default="demand", choices=["demand", "supply"], help="search direction: demand (who needs service) or supply (jobseek)")
     parser.add_argument("--schedule", action="store_true", help="schedule loop (P11)")
     parser.add_argument("--interval", type=float, default=60.0, help="poll interval seconds (P11)")
     parser.add_argument("--limit", type=int, default=50)
@@ -115,8 +115,8 @@ def run() -> int:
     try:
         if args.maintenance:
             expired = storage.expire_full_text(None)
-            backup = storage.backup_to(f"{args.db***REMOVED***.bak")
-            print(json.dumps({"expired_text_rows": expired, "backup": backup***REMOVED***))
+            backup = storage.backup_to(f"{args.db}.bak")
+            print(json.dumps({"expired_text_rows": expired, "backup": backup}))
             return 0
 
         if args.canary or args.schedule:
@@ -162,7 +162,7 @@ def run() -> int:
 
         # offline fixture slice
         if not args.fixture or not args.fixture.exists():
-            print(f"fixture not found: {args.fixture***REMOVED***", file=sys.stderr)
+            print(f"fixture not found: {args.fixture}", file=sys.stderr)
             return 2
         profile = _profile_from_args(args)
         adapter = FixtureFeedAdapter(args.source_id, args.fixture.read_bytes())

@@ -12,7 +12,7 @@ import threading
 import uuid
 from dataclasses import asdict
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional, Tuple
 
 from freebuff_plugin_03.event import EventEntry, EventQuery
@@ -30,11 +30,11 @@ class EventStore:
 
     Использование:
         store = EventStore()
-        store.store(Event(type="task.completed", source="orchestrator", data={...***REMOVED***))
+        store.store(Event(type="task.completed", source="orchestrator", data={...}))
         entries = store.query(EventQuery(event_type="task.*", limit=10))
     """
 
-    def __init__(self, db_path: Optional[Path***REMOVED*** = None):
+    def __init__(self, db_path: Optional[Path] = None):
         self._db_path = db_path or (WORKSPACE / DEFAULT_DB_PATH)
         self._lock = threading.Lock()
         self._init_db()
@@ -76,8 +76,8 @@ class EventStore:
             session_id      TEXT DEFAULT '',
             project         TEXT DEFAULT '',
             user_id         TEXT DEFAULT '',
-            data_json       TEXT DEFAULT '{***REMOVED***',
-            metadata_json   TEXT DEFAULT '{***REMOVED***',
+            data_json       TEXT DEFAULT '{}',
+            metadata_json   TEXT DEFAULT '{}',
             timestamp       TEXT NOT NULL
         );
         CREATE INDEX IF NOT EXISTS idx_es_type ON event_store(event_type);
@@ -109,12 +109,12 @@ class EventStore:
     # ══════════════════════════════════════════════════════════
 
     def store(self, event_type: str, source: str = "",
-              data: Optional[Dict[str, Any***REMOVED******REMOVED*** = None,
+              data: Optional[Dict[str, Any]] = None,
               correlation_id: str = "", session_id: str = "",
               project: str = "", user_id: str = "",
-              metadata: Optional[Dict[str, Any***REMOVED******REMOVED*** = None,
-              event_id: Optional[str***REMOVED*** = None,
-              timestamp: Optional[str***REMOVED*** = None) -> str:
+              metadata: Optional[Dict[str, Any]] = None,
+              event_id: Optional[str] = None,
+              timestamp: Optional[str] = None) -> str:
         """Сохранить событие в Event Store.
 
         Args:
@@ -132,9 +132,9 @@ class EventStore:
         Returns:
             event_id сохранённого события
         """
-        eid = event_id or uuid.uuid4().hex[:12***REMOVED***
+        eid = event_id or uuid.uuid4().hex[:12]
         ts = timestamp or datetime.now(timezone.utc).isoformat()
-        meta = metadata or {***REMOVED***
+        meta = metadata or {}
         correlation = meta.get("correlation_id", correlation_id)
         sess = meta.get("session_id", session_id)
         proj = meta.get("project", project)
@@ -153,7 +153,7 @@ class EventStore:
                     sess,
                     proj,
                     user_id,
-                    json.dumps(data or {***REMOVED***, ensure_ascii=False),
+                    json.dumps(data or {}, ensure_ascii=False),
                     json.dumps(meta, ensure_ascii=False),
                     ts,
                 ),
@@ -162,7 +162,7 @@ class EventStore:
         return eid
 
     def store_batch(
-        self, events: List[Dict[str, Any***REMOVED******REMOVED***
+        self, events: List[Dict[str, Any]]
     ) -> int:
         """Batch-сохранение для производительности.
 
@@ -175,10 +175,10 @@ class EventStore:
         with self._lock, self._connect() as conn:
             count = 0
             for ev in events:
-                eid = ev.get("event_id") or uuid.uuid4().hex[:12***REMOVED***
+                eid = ev.get("event_id") or uuid.uuid4().hex[:12]
                 ts = ev.get("timestamp") or datetime.now(timezone.utc).isoformat()
-                meta = ev.get("metadata", {***REMOVED***) or {***REMOVED***
-                data = ev.get("data", {***REMOVED***) or {***REMOVED***
+                meta = ev.get("metadata", {}) or {}
+                data = ev.get("data", {}) or {}
                 correlation = meta.get("correlation_id", ev.get("correlation_id", ""))
                 sess = meta.get("session_id", ev.get("session_id", ""))
                 proj = meta.get("project", ev.get("project", ""))
@@ -201,7 +201,7 @@ class EventStore:
                         ts,
                     ),
                 )
-                if conn.execute("SELECT changes()").fetchone()[0***REMOVED*** > 0:
+                if conn.execute("SELECT changes()").fetchone()[0] > 0:
                     count += 1
             conn.commit()
         return count
@@ -210,7 +210,7 @@ class EventStore:
     # Read Operations
     # ══════════════════════════════════════════════════════════
 
-    def get_by_id(self, event_id: str) -> Optional[EventEntry***REMOVED***:
+    def get_by_id(self, event_id: str) -> Optional[EventEntry]:
         """Получить событие по ID."""
         with self._connect() as conn:
             row = conn.execute(
@@ -223,25 +223,25 @@ class EventStore:
 
     def get_by_correlation_id(
         self, correlation_id: str
-    ) -> List[EventEntry***REMOVED***:
+    ) -> List[EventEntry]:
         """Получить все события в цепочке (task → step → result)."""
         with self._connect() as conn:
             rows = conn.execute(
                 "SELECT * FROM event_store WHERE correlation_id = ? ORDER BY timestamp ASC",
                 (correlation_id,),
             ).fetchall()
-        return [self._row_to_entry(r) for r in rows***REMOVED***
+        return [self._row_to_entry(r) for r in rows]
 
-    def get_by_session_id(self, session_id: str) -> List[EventEntry***REMOVED***:
+    def get_by_session_id(self, session_id: str) -> List[EventEntry]:
         """Получить все события сессии."""
         with self._connect() as conn:
             rows = conn.execute(
                 "SELECT * FROM event_store WHERE session_id = ? ORDER BY timestamp ASC",
                 (session_id,),
             ).fetchall()
-        return [self._row_to_entry(r) for r in rows***REMOVED***
+        return [self._row_to_entry(r) for r in rows]
 
-    def query(self, query: EventQuery) -> List[EventEntry***REMOVED***:
+    def query(self, query: EventQuery) -> List[EventEntry]:
         """Поиск событий с фильтрацией.
 
         Поддерживает:
@@ -257,8 +257,8 @@ class EventStore:
             return self._search_fts(query)
 
         sql = "SELECT * FROM event_store"
-        conditions: List[str***REMOVED*** = [***REMOVED***
-        params: List[Any***REMOVED*** = [***REMOVED***
+        conditions: List[str] = []
+        params: List[Any] = []
 
         if query.event_type:
             if "*" in query.event_type or "%" in query.event_type:
@@ -301,7 +301,7 @@ class EventStore:
             sql += " WHERE " + " AND ".join(conditions)
 
         order = "DESC" if query.order.lower() == "desc" else "ASC"
-        sql += f" ORDER BY timestamp {order***REMOVED***"
+        sql += f" ORDER BY timestamp {order}"
 
         sql += " LIMIT ? OFFSET ?"
         params.append(query.limit)
@@ -310,16 +310,16 @@ class EventStore:
         with self._connect() as conn:
             rows = conn.execute(sql, params).fetchall()
 
-        return [self._row_to_entry(r) for r in rows***REMOVED***
+        return [self._row_to_entry(r) for r in rows]
 
-    def _search_fts(self, query: EventQuery) -> List[EventEntry***REMOVED***:
+    def _search_fts(self, query: EventQuery) -> List[EventEntry]:
         """Полнотекстовый поиск через FTS5."""
         sql = """
             SELECT es.* FROM event_store es
             JOIN event_fts fts ON es.rowid = fts.rowid
             WHERE event_fts MATCH ?
         """
-        params: List[Any***REMOVED*** = [query.data_search***REMOVED***
+        params: List[Any] = [query.data_search]
 
         if query.event_type:
             if "*" in query.event_type:
@@ -351,7 +351,7 @@ class EventStore:
             params.append(query.until)
 
         order = "DESC" if query.order.lower() == "desc" else "ASC"
-        sql += f" ORDER BY es.timestamp {order***REMOVED***"
+        sql += f" ORDER BY es.timestamp {order}"
         sql += " LIMIT ? OFFSET ?"
         params.append(query.limit)
         params.append(query.offset)
@@ -359,16 +359,16 @@ class EventStore:
         with self._connect() as conn:
             rows = conn.execute(sql, params).fetchall()
 
-        return [self._row_to_entry(r) for r in rows***REMOVED***
+        return [self._row_to_entry(r) for r in rows]
 
     # ══════════════════════════════════════════════════════════
     # Aggregation
     # ══════════════════════════════════════════════════════════
 
-    def count_by_type(self, since: str = "") -> Dict[str, int***REMOVED***:
+    def count_by_type(self, since: str = "") -> Dict[str, int]:
         """Количество событий каждого типа за период."""
         sql = "SELECT event_type, COUNT(*) as cnt FROM event_store"
-        params: List[Any***REMOVED*** = [***REMOVED***
+        params: List[Any] = []
 
         if since:
             sql += " WHERE timestamp >= ?"
@@ -379,39 +379,39 @@ class EventStore:
         with self._connect() as conn:
             rows = conn.execute(sql, params).fetchall()
 
-        return {row["event_type"***REMOVED***: row["cnt"***REMOVED*** for row in rows***REMOVED***
+        return {row["event_type"]: row["cnt"] for row in rows}
 
-    def get_stats(self) -> Dict[str, Any***REMOVED***:
+    def get_stats(self) -> Dict[str, Any]:
         """Статистика Event Store."""
         with self._connect() as conn:
             total = conn.execute(
                 "SELECT COUNT(*) FROM event_store"
-            ).fetchone()[0***REMOVED***
+            ).fetchone()[0]
 
             # Типы
-            type_counts = {***REMOVED***
+            type_counts = {}
             for row in conn.execute(
                 "SELECT event_type, COUNT(*) as cnt FROM event_store GROUP BY event_type"
             ).fetchall():
-                type_counts[row["event_type"***REMOVED******REMOVED*** = row["cnt"***REMOVED***
+                type_counts[row["event_type"]] = row["cnt"]
 
             # FTS5 статистика
             fts_count = conn.execute(
                 "SELECT COUNT(*) FROM event_fts"
-            ).fetchone()[0***REMOVED***
+            ).fetchone()[0]
 
         return {
             "total_events": total,
             "event_types": type_counts,
             "unique_types": len(type_counts),
             "fts_indexed": fts_count,
-        ***REMOVED***
+        }
 
     # ══════════════════════════════════════════════════════════
     # Migration
     # ══════════════════════════════════════════════════════════
 
-    def migrate_from_event_log(self, old_db_path: Optional[Path***REMOVED*** = None) -> int:
+    def migrate_from_event_log(self, old_db_path: Optional[Path] = None) -> int:
         """Перенести данные из старого event_log в event_store.
 
         Идемпотентна — повторный запуск не создаёт дубликатов.
@@ -446,13 +446,13 @@ class EventStore:
             migrated = 0
             for row in rows:
                 r = dict(row)  # sqlite3.Row → dict (нет .get() на Android/Termux)
-                data = {***REMOVED***
+                data = {}
                 try:
-                    data = json.loads(r.get("data_json", "{***REMOVED***") or "{***REMOVED***")
+                    data = json.loads(r.get("data_json", "{)") or "{]")
                 except (json.JSONDecodeError, TypeError):
                     pass
 
-                eid = r.get("event_id") or uuid.uuid4().hex[:12***REMOVED***
+                eid = r.get("event_id") or uuid.uuid4().hex[:12]
 
                 with self._lock, self._connect() as conn:
                     conn.execute(
@@ -470,11 +470,11 @@ class EventStore:
                             r.get("project", ""),
                             r.get("user_id", ""),
                             json.dumps(data, ensure_ascii=False),
-                            "{***REMOVED***",
+                            "{]",
                             r.get("timestamp", ""),
                         ),
                     )
-                    if conn.execute("SELECT changes()").fetchone()[0***REMOVED*** > 0:
+                    if conn.execute("SELECT changes()").fetchone()[0] > 0:
                         migrated += 1
                     conn.commit()
 
@@ -494,7 +494,7 @@ class EventStore:
             количество удалённых записей
         """
         with self._lock, self._connect() as conn:
-            count = conn.execute("SELECT COUNT(*) FROM event_store").fetchone()[0***REMOVED***
+            count = conn.execute("SELECT COUNT(*) FROM event_store").fetchone()[0]
             conn.execute("DELETE FROM event_store")
             # FTS5 очищается триггером DELETE
             conn.commit()
@@ -518,27 +518,27 @@ class EventStore:
     @staticmethod
     def _row_to_entry(row: sqlite3.Row) -> EventEntry:
         """Преобразует строку SQLite в EventEntry."""
-        data = {***REMOVED***
+        data = {}
         try:
-            data = json.loads(row["data_json"***REMOVED*** or "{***REMOVED***")
+            data = json.loads(row["data_json"] or "{)")
         except (json.JSONDecodeError, TypeError):
             pass
 
-        metadata = {***REMOVED***
+        metadata = {}
         try:
-            metadata = json.loads(row["metadata_json"***REMOVED*** or "{***REMOVED***")
+            metadata = json.loads(row["metadata_json"] or "{)")
         except (json.JSONDecodeError, TypeError):
             pass
 
         return EventEntry(
-            event_id=row["event_id"***REMOVED***,
-            event_type=row["event_type"***REMOVED***,
-            source=row["source"***REMOVED***,
-            correlation_id=row["correlation_id"***REMOVED***,
-            session_id=row["session_id"***REMOVED***,
-            project=row["project"***REMOVED***,
-            user_id=row["user_id"***REMOVED***,
+            event_id=row["event_id"],
+            event_type=row["event_type"],
+            source=row["source"],
+            correlation_id=row["correlation_id"],
+            session_id=row["session_id"],
+            project=row["project"],
+            user_id=row["user_id"],
             data=data,
             metadata=metadata,
-            timestamp=row["timestamp"***REMOVED***,
+            timestamp=row["timestamp"],
         )

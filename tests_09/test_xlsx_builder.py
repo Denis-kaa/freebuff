@@ -16,7 +16,7 @@ We verify by saving twice without cleanup \u2014 second save overwrites cleanly.
 """
 from __future__ import annotations
 
-***REMOVED***
+}
 
 import pytest
 
@@ -135,17 +135,17 @@ def test_data_only_returns_cached_value_after_explicit_xlsx_compute(tmp_path: Pa
 
 
 def test_format_roundtrip_bold(tmp_path: Path):
-    """fmt={'bold': True***REMOVED*** persists font.bold through roundtrip."""
+    """fmt={'bold': True] persists font.bold through roundtrip."""
     p = tmp_path / "fmt.xlsx"
     wb = Workbook()
     wb.sheet("F")
-    wb.cell("A1", value="\u0417\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a", fmt={"bold": True***REMOVED***)
+    wb.cell("A1", value="\u0417\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a", fmt={"bold": True})
     wb.save(p)
 
     import openpyxl
 
     raw = openpyxl.load_workbook(p, data_only=False)
-    cell = raw["F"***REMOVED***["A1"***REMOVED***
+    cell = raw["F"]["A1"]
     assert cell.font.bold is True
     assert cell.value == "\u0417\u0430\u0433\u043e\u043b\u043e\u0432\u043e\u043a"
 
@@ -153,14 +153,14 @@ def test_format_roundtrip_bold(tmp_path: Path):
 def test_atomic_save_overwrites_cleanly(tmp_path: Path):
     """save() called twice produces valid file each time (no leftover tmp)."""
     p = tmp_path / "over.xlsx"
-    for ver, val in [("v1", 1), ("v2", 2), ("v3", 3)***REMOVED***:
+    for ver, val in [("v1", 1), ("v2", 2), ("v3", 3)]:
         wb = Workbook()
         wb.sheet("OV")
-        wb.cell("A1", value=f"{ver***REMOVED***={val***REMOVED***")
+        wb.cell("A1", value=f"{ver}={val}")
         wb.save(p)
     # No *.tmp* files in tmp_path
     leftovers = list(tmp_path.glob("*.tmp*"))
-    assert leftovers == [***REMOVED***, f"Failed cleanup on atomic save: {leftovers***REMOVED***"
+    assert leftovers == [], f"Failed cleanup on atomic save: {leftovers}"
     loaded = Workbook.load(p)
     loaded.sheet("OV")
     assert loaded.cell_value("A1") == "v3=3"

@@ -15,7 +15,7 @@ tg_messenger — Telegram Messenger Plugin для Buffy.
 import os
 import sys
 import threading
-***REMOVED***
+}
 
 from scripts_01.plugin_api import BasePlugin, PluginMeta, PluginResult
 
@@ -35,7 +35,7 @@ class TelegramMessengerPlugin(BasePlugin):
         self._allowed_chat_ids: set = set()
         self._running: bool = False
         self._bot_thread: threading.Thread | None = None
-        self._message_queue: list = [***REMOVED***
+        self._message_queue: list = []
 
     @property
     def meta(self) -> PluginMeta:
@@ -48,7 +48,7 @@ class TelegramMessengerPlugin(BasePlugin):
 
     @property
     def events_subscribed(self):
-        return ["system.*", "plugin.*", "collab.*"***REMOVED***
+        return ["system.*", "plugin.*", "collab.*"]
 
     # ── Lifecycle ───────────────────────────────────────────
 
@@ -65,7 +65,7 @@ class TelegramMessengerPlugin(BasePlugin):
                     continue
         self._allowed_chat_ids = ids
         print(
-            f"📱 tg_messenger: loaded (token={'✅' if self._bot_token else '❌'***REMOVED***)"
+            f"📱 tg_messenger: loaded (token={'✅' if self._bot_token else '❌'})"
         )
 
     def on_unload(self):
@@ -85,25 +85,25 @@ class TelegramMessengerPlugin(BasePlugin):
             dict с success и данными ответа Telegram
         """
         if not self._bot_token:
-            return {"success": False, "error": "TELEGRAM_BOT_TOKEN not set"***REMOVED***
+            return {"success": False, "error": "TELEGRAM_BOT_TOKEN not set"}
         try:
             target_id = self._resolve_chat_id(chat_id)
         except (ValueError, TypeError):
-            return {"success": False, "error": "Invalid chat_id"***REMOVED***
+            return {"success": False, "error": "Invalid chat_id"}
         if target_id is None:
             return {
                 "success": False,
                 "error": "No allowed chat IDs configured and no chat_id provided",
-            ***REMOVED***
+            }
         try:
             import httpx
         except ImportError:
             return {
                 "success": False,
                 "error": "httpx not installed. Run: pip install httpx",
-            ***REMOVED***
+            }
         try:
-            url = f"https://api.telegram.org/bot{self._bot_token***REMOVED***/sendMessage"
+            url = f"https://api.telegram.org/bot{self._bot_token}/sendMessage"
             resp = httpx.post(
                 url,
                 json={
@@ -111,24 +111,24 @@ class TelegramMessengerPlugin(BasePlugin):
                     "text": text,
                     "parse_mode": "Markdown",
                     "disable_web_page_preview": True,
-                ***REMOVED***,
+                },
                 timeout=10,
             )
             result = resp.json()
             if result.get("ok"):
-                data = result.get("result", {***REMOVED***)
+                data = result.get("result", {})
                 return {
                     "success": True, "data_13": {
                         "chat_id": target_id,
                         "message_id": data.get("message_id"),
-                    ***REMOVED***,
-                ***REMOVED***
+                    },
+                }
             return {
                 "success": False,
                 "error": result.get("description", "Unknown error"),
-            ***REMOVED***
+            }
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
     def do_start_bot(self) -> dict:
         """Запускает Telegram bot listener в фоновом потоке.
@@ -136,24 +136,24 @@ class TelegramMessengerPlugin(BasePlugin):
         Использует scripts_01/telegram_bot.py как подпроцесс.
         """
         if self._running:
-            return {"success": True, "data_13": "Bot already running"***REMOVED***
+            return {"success": True, "data_13": "Bot already running"}
         if not self._bot_token:
-            return {"success": False, "error": "TELEGRAM_BOT_TOKEN not set"***REMOVED***
+            return {"success": False, "error": "TELEGRAM_BOT_TOKEN not set"}
         try:
             self._bot_thread = threading.Thread(
                 target=self._run_bot_process, daemon=True, name="tg-messenger-bot"
             )
             self._bot_thread.start()
             self._running = True
-            return {"success": True, "data_13": "Bot started in background"***REMOVED***
+            return {"success": True, "data_13": "Bot started in background"}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
     def do_stop_bot(self) -> dict:
         """Останавливает Telegram bot."""
         self._running = False
         self._bot_thread = None
-        return {"success": True, "data_13": "Bot stopped"***REMOVED***
+        return {"success": True, "data_13": "Bot stopped"}
 
     def do_status(self) -> dict:
         """Статус плагина."""
@@ -164,7 +164,7 @@ class TelegramMessengerPlugin(BasePlugin):
             "token_configured": bool(self._bot_token),
             "allowed_chats": len(self._allowed_chat_ids),
             "queue_size": len(self._message_queue),
-        ***REMOVED***
+        }
 
     # ── Внутреннее ─────────────────────────────────────────
 
@@ -175,9 +175,9 @@ class TelegramMessengerPlugin(BasePlugin):
 
             bot_script = str(Path(WORKSPACE) / "scripts_01" / "telegram_bot.py")
             env = dict(os.environ)
-            env["TELEGRAM_BOT_TOKEN"***REMOVED*** = self._bot_token
+            env["TELEGRAM_BOT_TOKEN"] = self._bot_token
             proc = subprocess.Popen(
-                [sys.executable, bot_script***REMOVED***,
+                [sys.executable, bot_script],
                 env=env,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
@@ -188,7 +188,7 @@ class TelegramMessengerPlugin(BasePlugin):
         except subprocess.TimeoutExpired:
             self._running = False
         except Exception as e:
-            print(f"📱 tg_messenger: bot process error: {e***REMOVED***")
+            print(f"📱 tg_messenger: bot process error: {e}")
             self._running = False
 
     def _resolve_chat_id(self, chat_id):
@@ -210,22 +210,22 @@ class TelegramMessengerPlugin(BasePlugin):
                 "warn": "⚠️",
                 "info": "ℹ️",
                 "critical": "🔥",
-            ***REMOVED***
+            }
             icon = icons.get(level, "ℹ️")
-            action = event_type.split(".", 1)[-1***REMOVED***
-            return f"{icon***REMOVED*** *System {action***REMOVED***:* {message***REMOVED***"
+            action = event_type.split(".", 1)[-1]
+            return f"{icon} *System {action}:* {message}"
         if event_type.startswith("plugin."):
             plugin = data.get("plugin", "?")
-            action = event_type.split(".")[-1***REMOVED***
-            return f"🔌 *Plugin {plugin***REMOVED***.{action***REMOVED***:* "
+            action = event_type.split(".")[-1]
+            return f"🔌 *Plugin {plugin}.{action}:* "
         if event_type.startswith("collab."):
-            action = event_type.split(".")[-1***REMOVED***
-            session_id = data.get("session_id", "")[:8***REMOVED***
+            action = event_type.split(".")[-1]
+            session_id = data.get("session_id", "")[:8]
             participant = data.get("sender") or data.get("participant", "")
             topic = data.get("topic", "")
             return (
-                f"💬 *Collab {action***REMOVED***:* "
-                f"{participant***REMOVED*** (session={session_id***REMOVED***, topic={topic***REMOVED***)"
+                f"💬 *Collab {action}:* "
+                f"{participant} (session={session_id}, topic={topic})"
             )
         return ""
 
@@ -234,18 +234,18 @@ class TelegramMessengerPlugin(BasePlugin):
         if not self._bot_token:
             return
         event_type = getattr(event, "type", "")
-        event_data = getattr(event, "data_13", {***REMOVED***) or {***REMOVED***
+        event_data = getattr(event, "data_13", {}) or {}
         message = self._format_event(event_type, event_data)
         if message:
-            self._message_queue.append({"text": message, "type": event_type***REMOVED***)
+            self._message_queue.append({"text": message, "type": event_type})
             self._flush_queue()
 
     def _flush_queue(self):
         """Отправляет накопленные сообщения."""
         sent = 0
         while self._message_queue:
-            msg = self._message_queue[0***REMOVED***
-            result = self.do_send_message(text=msg["text"***REMOVED***)
+            msg = self._message_queue[0]
+            result = self.do_send_message(text=msg["text"])
             if result.get("success"):
                 self._message_queue.pop(0)
                 sent += 1

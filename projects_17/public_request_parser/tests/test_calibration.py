@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import datetime, timezone
-***REMOVED***
+}
 
 import pytest
 
@@ -39,8 +39,8 @@ def add_sample(
     publication = Publication(
         source_id="src",
         item_id=key,
-        canonical_url=f"https://x.test/{key***REMOVED***",
-        title=f"title {key***REMOVED***",
+        canonical_url=f"https://x.test/{key}",
+        title=f"title {key}",
         fetched_at=NOW,
     )
     storage.save_publication(publication)
@@ -52,13 +52,13 @@ def add_sample(
             outcome=MatchOutcome.REJECT if score < 0.5 else MatchOutcome.ACCEPT,
             score=score,
             reasons=("required term matched: python",),
-            rules_snapshot={"required_terms": ("python",)***REMOVED***,
+            rules_snapshot={"required_terms": ("python",)},
             decided_at=NOW,
         )
     )
     storage.record_feedback(
         owner_scope="operator",
-        delivery_key=f"operator:{publication.item_key***REMOVED***:p1",
+        delivery_key=f"operator:{publication.item_key}:p1",
         publication_key=publication.item_key,
         action=action,
         created_at=NOW,
@@ -66,7 +66,7 @@ def add_sample(
 
 
 @pytest.fixture()
-def storage(tmp_path: Path) -> Iterator[SqliteStorage***REMOVED***:
+def storage(tmp_path: Path) -> Iterator[SqliteStorage]:
     db = SqliteStorage(tmp_path / "calib.db")
     yield db
     db.close()
@@ -79,11 +79,11 @@ def test_optimal_threshold_maximizes_accuracy() -> None:
         _Sample(score=0.90, relevant=True),
         _Sample(score=0.45, relevant=False),
         _Sample(score=0.30, relevant=False),
-    ***REMOVED***
+    ]
     threshold = optimal_accept_threshold(samples)
 
     assert 0.45 < threshold <= 0.90
-    assert threshold in {0.9, 0.95***REMOVED***
+    assert threshold in {0.9, 0.95}
 
 
 def test_calibrator_returns_none_without_enough_samples(storage: SqliteStorage) -> None:
@@ -114,7 +114,7 @@ def test_calibrator_recommends_lowering_accept_when_missed_relevant(
     assert result.changed is True
     assert result.suggested_accept < 0.8
     assert result.suggested_pending < result.suggested_accept
-    assert result.summary().startswith("calibration[CHANGE***REMOVED***")
+    assert result.summary().startswith("calibration[CHANGE)")
 
 
 def test_calibrator_keeps_thresholds_when_already_optimal(
@@ -132,7 +132,7 @@ def test_calibrator_keeps_thresholds_when_already_optimal(
     assert result is not None
     assert result.suggested_accept == 0.8
     assert result.changed is False
-    assert result.summary().startswith("calibration[KEEP***REMOVED***")
+    assert result.summary().startswith("calibration[KEEP)")
 
 
 def test_calibration_ignores_feedback_without_decision(

@@ -15,7 +15,7 @@ from __future__ import annotations
 import json
 import os
 import sys
-***REMOVED***
+}
 from queue import Queue, Empty
 from unittest.mock import MagicMock, PropertyMock, patch
 
@@ -116,7 +116,7 @@ class TestBackgroundWriter:
         log_file = session_dir / "conversation.log"
         assert log_file.exists()
         content = log_file.read_text()
-        assert "[user***REMOVED***" in content
+        assert "[user]" in content
         assert "Hello, world!" in content
         assert "msg#1" in content
 
@@ -124,9 +124,9 @@ class TestBackgroundWriter:
         jsonl_file = session_dir / "raw.jsonl"
         assert jsonl_file.exists()
         entry = json.loads(jsonl_file.read_text().strip())
-        assert entry["role"***REMOVED*** == "user"
-        assert entry["msg_num"***REMOVED*** == 1
-        assert entry["content"***REMOVED*** == "Hello, world!"
+        assert entry["role"] == "user"
+        assert entry["msg_num"] == 1
+        assert entry["content"] == "Hello, world!"
 
     def test_handle_log_without_session_dir(self):
         """_handle_log with no session_dir doesn't crash."""
@@ -456,7 +456,7 @@ class TestAttachSession:
         # Create a session in ContextManager first
         snap = context_manager.start_session(project="test", topic="Attach Test")
 
-        result = attach_session(snap.session_id[:8***REMOVED***)
+        result = attach_session(snap.session_id[:8])
         assert result is not None
         assert result.exists()
         # Check .session_id file
@@ -523,10 +523,10 @@ class TestLogMessage:
         sid = sid_file.read_text().strip()
         messages = context_manager.get_messages(sid)
         assert len(messages) == 2
-        assert messages[0***REMOVED***["role"***REMOVED*** == "user"
-        assert messages[0***REMOVED***["content"***REMOVED*** == "Hello from test"
-        assert messages[1***REMOVED***["role"***REMOVED*** == "assistant"
-        assert messages[1***REMOVED***["content"***REMOVED*** == "Hi there!"
+        assert messages[0]["role"] == "user"
+        assert messages[0]["content"] == "Hello from test"
+        assert messages[1]["role"] == "assistant"
+        assert messages[1]["content"] == "Hi there!"
 
 
 # ================================================================
@@ -543,9 +543,9 @@ class TestPruneStreams:
 
         # Create 5 session directories
         for i in range(5):
-            d = tmp_path / f"session_{i***REMOVED***"
+            d = tmp_path / f"session_{i}"
             d.mkdir()
-            (d / "conversation.log").write_text(f"log {i***REMOVED***")
+            (d / "conversation.log").write_text(f"log {i}")
             (d / ".counter").write_text(str(i))
             # Set mtime to make them ordered
             import time
@@ -563,7 +563,7 @@ class TestPruneStreams:
         monkeypatch.setattr("scripts_01.stream_session.STREAMS_DIR", tmp_path)
 
         for i in range(5):
-            d = tmp_path / f"session_{i***REMOVED***"
+            d = tmp_path / f"session_{i}"
             d.mkdir()
 
         deleted = prune_streams(keep=3, dry_run=True)
@@ -584,7 +584,7 @@ class TestPruneStreams:
         _set_current_session("active_session")
 
         for i in range(2):
-            d = tmp_path / f"old_session_{i***REMOVED***"
+            d = tmp_path / f"old_session_{i}"
             d.mkdir()
             import time
             os.utime(str(d), (time.time() - 1000, time.time() - 1000))
@@ -606,16 +606,16 @@ class TestPruneStreams:
 
         # Create stream dirs
         for i in range(5):
-            d = tmp_path / f"stream_{i***REMOVED***"
+            d = tmp_path / f"stream_{i}"
             d.mkdir()
             (d / ".counter").write_text(str(i))
-            (d / "conversation.log").write_text(f"log {i***REMOVED***")
+            (d / "conversation.log").write_text(f"log {i}")
 
         result = prune_all(dry_run=False)
         assert isinstance(result, dict)
         assert "streams" in result
         assert "abandoned" in result
-        assert result["streams"***REMOVED*** >= 2  # at least 2 streams pruned
+        assert result["streams"] >= 2  # at least 2 streams pruned
 
 
 # ================================================================
@@ -733,7 +733,7 @@ class TestIntegration:
         assert len(messages) == 3
 
         # Resume by prefix
-        resumed = resume_session(sid[:8***REMOVED***)
+        resumed = resume_session(sid[:8])
         assert resumed is not None
         assert resumed.name == session_dir.name
 
@@ -750,10 +750,10 @@ class TestIntegration:
 
         # Create more sessions
         for i in range(3):
-            d = tmp_path / f"old_{i***REMOVED***"
+            d = tmp_path / f"old_{i}"
             d.mkdir()
             (d / ".counter").write_text("1")
-            (d / "conversation.log").write_text(f"log {i***REMOVED***")
+            (d / "conversation.log").write_text(f"log {i}")
             import time
             os.utime(str(d), (time.time() - 1000, time.time() - 1000))
 

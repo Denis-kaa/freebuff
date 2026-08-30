@@ -27,10 +27,10 @@ event_bus.py — Event Bus для Buffy DAP.
     bus = EventBus()
 
     def on_task_completed(event: Event):
-        print(f"Task done: {event.data***REMOVED***")
+        print(f"Task done: {event.data}")
 
     sub = bus.subscribe("task.completed", on_task_completed)
-    bus.publish(Event("task.completed", {"id": "wf1", "status": "ok"***REMOVED***))
+    bus.publish(Event("task.completed", {"id": "wf1", "status": "ok"}))
     bus.unsubscribe(sub)
 """
 
@@ -43,7 +43,7 @@ import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 
@@ -54,7 +54,7 @@ DEFAULT_DB_PATH = "context_12/events.db"
 # Default EventBus singleton (lazy init)
 # ═══════════════════════════════════════════════════════════════
 
-_DEFAULT_BUSES: Dict[str, "EventBus"***REMOVED*** = {***REMOVED***
+_DEFAULT_BUSES: Dict[str, "EventBus"] = {}
 _DEFAULT_BUS_LOCK = threading.Lock()
 
 
@@ -77,11 +77,11 @@ def get_default_event_bus(workspace_root: str | Path | None = None) -> "EventBus
         with _DEFAULT_BUS_LOCK:
             if key not in _DEFAULT_BUSES:
                 bus = EventBus(db_path=db_path)
-                from scripts_01.event_subscribers ***REMOVED***gister_all
+                from scripts_01.event_subscribers ]gister_all
                 register_all(bus, workspace_root)
-                _DEFAULT_BUSES[key***REMOVED*** = bus
+                _DEFAULT_BUSES[key] = bus
 
-    return _DEFAULT_BUSES[key***REMOVED***
+    return _DEFAULT_BUSES[key]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -93,26 +93,26 @@ def get_default_event_bus(workspace_root: str | Path | None = None) -> "EventBus
 class Event:
     """Одно событие в шине."""
     type: str                        # "task.completed", "memory.updated"
-    data: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    data: Dict[str, Any] = field(default_factory=dict)
     source: str = "system"            # кто опубликовал
     id: str = field(
-        default_factory=lambda: uuid.uuid4().hex[:12***REMOVED***
+        default_factory=lambda: uuid.uuid4().hex[:12]
     )
     timestamp: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
-    metadata: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class Subscription:
     """Подписка на события."""
     id: str = field(
-        default_factory=lambda: uuid.uuid4().hex[:8***REMOVED***
+        default_factory=lambda: uuid.uuid4().hex[:8]
     )
     event_type: str = ""              # полное имя или wildcard ("task.*")
-    handler: Optional[Callable***REMOVED*** = None
-    filter_fn: Optional[Callable***REMOVED*** = None  # доп. фильтр по Event
+    handler: Optional[Callable] = None
+    filter_fn: Optional[Callable] = None  # доп. фильтр по Event
 
 
 @dataclass
@@ -147,12 +147,12 @@ class EventBus:
         self._db_path = Path(db_path) if db_path else WORKSPACE / DEFAULT_DB_PATH
         self._lock = threading.Lock()
 
-        # Подписки: {id: Subscription***REMOVED***
-        self._subscriptions: Dict[str, Subscription***REMOVED*** = {***REMOVED***
+        # Подписки: {id: Subscription}
+        self._subscriptions: Dict[str, Subscription] = {}
 
         # Индекс: event_type → set(subscription_ids)
         # Для быстрого поиска по подпискам
-        self._type_index: Dict[str, Set[str***REMOVED******REMOVED*** = defaultdict(set)
+        self._type_index: Dict[str, Set[str]] = defaultdict(set)
 
         self._init_db()
 
@@ -165,7 +165,7 @@ class EventBus:
                     event_id TEXT PRIMARY KEY,
                     event_type TEXT NOT NULL,
                     source TEXT DEFAULT '',
-                    data_json TEXT DEFAULT '{***REMOVED***',
+                    data_json TEXT DEFAULT '{}',
                     timestamp TEXT NOT NULL,
                     delivered_to INTEGER DEFAULT 0
                 )
@@ -211,14 +211,14 @@ class EventBus:
                     delivered += 1
             except Exception as e:
                 # Не ломаем шину из-за ошибки в подписчике
-                print(f"⚠️ EventBus: handler error for {event.type***REMOVED***: {e***REMOVED***")
+                print(f"⚠️ EventBus: handler error for {event.type}: {e}")
 
         # Логируем под блокировкой
         self._log_event(event, delivered)
 
         return delivered
 
-    def _find_subscribers(self, event: Event) -> List[Subscription***REMOVED***:
+    def _find_subscribers(self, event: Event) -> List[Subscription]:
         """Находит подписчиков, которым нужно доставить событие.
 
         Учитывает:
@@ -226,16 +226,16 @@ class EventBus:
           - Wildcard ("task.*" → "task.completed")
           - Фильтр-функции
         """
-        matched: List[Subscription***REMOVED*** = [***REMOVED***
-        seen: Set[str***REMOVED*** = set()
+        matched: List[Subscription] = []
+        seen: Set[str] = set()
 
         # Разбиваем event_type на части для wildcard matching
         parts = event.type.split(".")
         # Возможные wildcard паттерны:
         # "task.completed" → ищем "task.completed" и "task.*" и "*"
-        ***REMOVED***event.type***REMOVED***
+        ]event.type]
         if len(parts) > 1:
-            patterns.append(f"{parts[0***REMOVED******REMOVED***.*")
+            patterns.append(f"{parts[0]}.*")
         patterns.append("*")
 
         for pattern in patterns:
@@ -257,7 +257,7 @@ class EventBus:
         self,
         event_type: str,
         handler: Callable,
-        filter_fn: Optional[Callable***REMOVED*** = None,
+        filter_fn: Optional[Callable] = None,
     ) -> Subscription:
         """Подписывается на события.
 
@@ -276,8 +276,8 @@ class EventBus:
         )
 
         with self._lock:
-            self._subscriptions[sub.id***REMOVED*** = sub
-            self._type_index[event_type***REMOVED***.add(sub.id)
+            self._subscriptions[sub.id] = sub
+            self._type_index[event_type].add(sub.id)
 
         return sub
 
@@ -291,13 +291,13 @@ class EventBus:
             if subscription.id not in self._subscriptions:
                 return False
 
-            del self._subscriptions[subscription.id***REMOVED***
+            del self._subscriptions[subscription.id]
 
             # Удаляем из индекса
             for event_type in list(self._type_index.keys()):
-                self._type_index[event_type***REMOVED***.discard(subscription.id)
-                if not self._type_index[event_type***REMOVED***:
-                    del self._type_index[event_type***REMOVED***
+                self._type_index[event_type].discard(subscription.id)
+                if not self._type_index[event_type]:
+                    del self._type_index[event_type]
 
         return True
 
@@ -331,7 +331,7 @@ class EventBus:
         event_type: str | None = None,
         limit: int = 50,
         since: str | None = None,
-    ) -> List[EventLogEntry***REMOVED***:
+    ) -> List[EventLogEntry]:
         """Читает события из лога.
 
         Args:
@@ -344,8 +344,8 @@ class EventBus:
         """
         with self._connect() as conn:
             query = "SELECT * FROM event_log"
-            params: List[Any***REMOVED*** = [***REMOVED***
-            conditions = [***REMOVED***
+            params: List[Any] = []
+            conditions = []
 
             if event_type:
                 conditions.append("event_type = ?")
@@ -364,45 +364,45 @@ class EventBus:
             rows = conn.execute(query, params).fetchall()
             return [
                 EventLogEntry(
-                    event_id=row["event_id"***REMOVED***,
-                    event_type=row["event_type"***REMOVED***,
-                    source=row["source"***REMOVED***,
-                    data_json=row["data_json"***REMOVED***,
-                    timestamp=row["timestamp"***REMOVED***,
-                    delivered_to=row["delivered_to"***REMOVED***,
+                    event_id=row["event_id"],
+                    event_type=row["event_type"],
+                    source=row["source"],
+                    data_json=row["data_json"],
+                    timestamp=row["timestamp"],
+                    delivered_to=row["delivered_to"],
                 )
                 for row in rows
-            ***REMOVED***
+            ]
 
     # ── Статистика ─────────────────────────────────────────
 
-    def get_stats(self) -> Dict[str, Any***REMOVED***:
+    def get_stats(self) -> Dict[str, Any]:
         """Статистика шины."""
         with self._connect() as conn:
             total_events = conn.execute(
                 "SELECT COUNT(*) FROM event_log"
-            ).fetchone()[0***REMOVED***
+            ).fetchone()[0]
 
             # Типы событий
-            type_counts = {***REMOVED***
+            type_counts = {}
             for row in conn.execute(
                 "SELECT event_type, COUNT(*) as cnt FROM event_log GROUP BY event_type"
             ).fetchall():
-                type_counts[row["event_type"***REMOVED******REMOVED*** = row["cnt"***REMOVED***
+                type_counts[row["event_type"]] = row["cnt"]
 
             # За последний час
-            one_hour_ago = datetime.now(timezone.utc).isoformat()[:13***REMOVED***  # час
+            one_hour_ago = datetime.now(timezone.utc).isoformat()[:13]  # час
             recent = conn.execute(
                 "SELECT COUNT(*) FROM event_log WHERE timestamp >= ?",
                 (one_hour_ago,),
-            ).fetchone()[0***REMOVED***
+            ).fetchone()[0]
 
         return {
             "total_events": total_events,
             "active_subscribers": len(self._subscriptions),
             "event_types": type_counts,
             "events_last_hour": recent,
-        ***REMOVED***
+        }
 
     def clear(self):
         """Очищает лог и подписки."""
@@ -423,34 +423,34 @@ class EventBus:
 def task_event(action: str, task_id: str, **data) -> Event:
     """Создаёт событие task.<action>."""
     return Event(
-        type=f"task.{action***REMOVED***",
+        type=f"task.{action}",
         source="orchestrator",
-        data={"task_id": task_id, **data***REMOVED***,
+        data={"task_id": task_id, **data},
     )
 
 
 def step_event(action: str, step_id: str, task_id: str, **data) -> Event:
     """Создаёт событие step.<action>."""
     return Event(
-        type=f"step.{action***REMOVED***",
+        type=f"step.{action}",
         source="orchestrator",
-        data={"step_id": step_id, "task_id": task_id, **data***REMOVED***,
+        data={"step_id": step_id, "task_id": task_id, **data},
     )
 
 
 def memory_event(action: str, level: str, key: str, **data) -> Event:
     """Создаёт событие memory.<action>."""
     return Event(
-        type=f"memory.{action***REMOVED***",
+        type=f"memory.{action}",
         source="memory_engine",
-        data={"level": level, "key": key, **data***REMOVED***,
+        data={"level": level, "key": key, **data},
     )
 
 
 def context_event(action: str, **data) -> Event:
     """Создаёт событие context.<action>."""
     return Event(
-        type=f"context.{action***REMOVED***",
+        type=f"context.{action}",
         source="context_builder",
         data=data,
     )
@@ -473,7 +473,7 @@ def main():
     # publish
     p_pub = sub.add_parser("publish", help="Опубликовать событие")
     p_pub.add_argument("type", help="Тип события")
-    p_pub.add_argument("--data", default="{***REMOVED***", help="JSON данные")
+    p_pub.add_argument("--data", default="{)", help="JSON данные")
     p_pub.add_argument("--source", default="cli", help="Источник")
 
     # events
@@ -494,10 +494,10 @@ def main():
         try:
             data = json.loads(args.data)
         except json.JSONDecodeError:
-            data = {***REMOVED***
+            data = {}
         event = Event(type=args.type, data=data, source=args.source)
         delivered = bus.publish(event)
-        print(f"📢 Published: {event.type***REMOVED*** (id={event.id[:8***REMOVED******REMOVED***, delivered={delivered***REMOVED***)")
+        print(f"📢 Published: {event.type} (id={event.id[:8]}, delivered={delivered})")
 
     elif args.command == "events":
         entries = bus.get_events(
@@ -507,20 +507,20 @@ def main():
         if not entries:
             print("📭 No events")
             return
-        print(f"📋 Events ({len(entries)***REMOVED***):")
+        print(f"📋 Events ({len(entries)}):")
         for e in entries:
-            print(f"  {e.timestamp[:19***REMOVED******REMOVED*** | {e.event_type:25***REMOVED*** | from={e.source***REMOVED*** | delivered={e.delivered_to***REMOVED***")
+            print(f"  {e.timestamp[:19]} | {e.event_type:25} | from={e.source} | delivered={e.delivered_to}")
 
     elif args.command == "stats":
         stats = bus.get_stats()
         print("📊 EVENT BUS STATS")
-        print(f"   Total events:      {stats['total_events'***REMOVED******REMOVED***")
-        print(f"   Active subscribers: {stats['active_subscribers'***REMOVED******REMOVED***")
-        print(f"   Events last hour:  {stats['events_last_hour'***REMOVED******REMOVED***")
-        if stats["event_types"***REMOVED***:
+        print(f"   Total events:      {stats['total_events']}")
+        print(f"   Active subscribers: {stats['active_subscribers']}")
+        print(f"   Events last hour:  {stats['events_last_hour']}")
+        if stats["event_types"]:
             print(f"   Event types:")
-            for etype, count in sorted(stats["event_types"***REMOVED***.items()):
-                print(f"     {etype***REMOVED***: {count***REMOVED***")
+            for etype, count in sorted(stats["event_types"].items()):
+                print(f"     {etype}: {count}")
 
     elif args.command == "clear":
         bus.clear()

@@ -16,21 +16,21 @@ class CatalogService:
     def __init__(self, repo: Repository) -> None:
         self._repo = repo
 
-    def list_active(self, category: Optional[str***REMOVED*** = None) -> list[Product***REMOVED***:
+    def list_active(self, category: Optional[str] = None) -> list[Product]:
         return self._repo.list_products(active_only=True, category=category)
 
-    def list_categories(self) -> list[str***REMOVED***:
+    def list_categories(self) -> list[str]:
         return self._repo.list_distinct_categories()
 
-    def get(self, product_id: int) -> Optional[Product***REMOVED***:
+    def get(self, product_id: int) -> Optional[Product]:
         return self._repo.get_product(product_id)
 
     def available_stock(self, product_id: int) -> int:
         return self._repo.count_available_keys(product_id)
 
-    def search(self, query: str, category: Optional[str***REMOVED*** = None) -> list[Product***REMOVED***:
+    def search(self, query: str, category: Optional[str] = None) -> list[Product]:
         """Поиск по подстроке в имени/описании (регистронезависимо)."""
-        needle = f"%{query.lower()***REMOVED***%"
+        needle = f"%{query.lower()}%"
         # SQL — Repository это не делает; добавим узкую функцию-фильтр.
         products = self._repo.list_products(active_only=True, category=category)
         q = query.lower()
@@ -38,9 +38,9 @@ class CatalogService:
             p
             for p in products
             if q in p.name.lower() or q in p.description.lower()
-        ***REMOVED***
+        ]
 
-    def bulk_add_keys(self, product_id: int, codes: Iterable[str***REMOVED***) -> int:
+    def bulk_add_keys(self, product_id: int, codes: Iterable[str]) -> int:
         return self._repo.add_keys(product_id, codes)
 
     # ── seller/CRUD ─────────────────────────────────────────────────────────
@@ -69,11 +69,11 @@ class CatalogService:
         self,
         product_id: int,
         *,
-        name: Optional[str***REMOVED*** = None,
-        description: Optional[str***REMOVED*** = None,
-        category: Optional[str***REMOVED*** = None,
-        price_stars: Optional[int***REMOVED*** = None,
-    ) -> Optional[Product***REMOVED***:
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        category: Optional[str] = None,
+        price_stars: Optional[int] = None,
+    ) -> Optional[Product]:
         return self._repo.update_product(
             product_id,
             name=name.strip() if name is not None else None,

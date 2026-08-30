@@ -18,13 +18,13 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-***REMOVED***
+}
 from typing import List
 
 import pytest
 
 # Path setup: scripts_01 is sibling of tests_09
-REPO_ROOT = Path(__file__).resolve().parents[1***REMOVED***
+REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS_DIR = REPO_ROOT / "scripts_01"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
@@ -82,18 +82,18 @@ def test_statuses_canonical():
 def test_valid_transitions_listed():
     """Per promt 079_19 §3.1 #5 + #7 (FAILED retry path)."""
     from opportunity_engine import _TRANSITIONS
-    assert set(_TRANSITIONS["ACTIVE"***REMOVED***) == {"DEFERRED", "READY", "FAILED"***REMOVED***
-    assert set(_TRANSITIONS["DEFERRED"***REMOVED***) == {"REACTIVATED", "FAILED"***REMOVED***
-    assert set(_TRANSITIONS["REACTIVATED"***REMOVED***) == {"READY", "DEFERRED", "FAILED"***REMOVED***
-    assert set(_TRANSITIONS["READY"***REMOVED***) == {"COMPLETED", "DEFERRED", "FAILED"***REMOVED***
-    assert tuple(_TRANSITIONS["COMPLETED"***REMOVED***) == ()
+    assert set(_TRANSITIONS["ACTIVE"]) == {"DEFERRED", "READY", "FAILED"}
+    assert set(_TRANSITIONS["DEFERRED"]) == {"REACTIVATED", "FAILED"}
+    assert set(_TRANSITIONS["REACTIVATED"]) == {"READY", "DEFERRED", "FAILED"}
+    assert set(_TRANSITIONS["READY"]) == {"COMPLETED", "DEFERRED", "FAILED"}
+    assert tuple(_TRANSITIONS["COMPLETED"]) == ()
     # FAILED is retry-allowed (NOT a hard terminal — promt §3.1 #7).
     # Forward retry path: FAILED → ACTIVE (back to start) or FAILED → READY (re-execute).
-    assert set(_TRANSITIONS["FAILED"***REMOVED***) == {"ACTIVE", "READY"***REMOVED***
+    assert set(_TRANSITIONS["FAILED"]) == {"ACTIVE", "READY"}
     # DEFERRED cannot jump directly to READY (thinker gotcha 1):
-    assert "READY" not in _TRANSITIONS["DEFERRED"***REMOVED***
+    assert "READY" not in _TRANSITIONS["DEFERRED"]
     # DEFERRED cannot jump to COMPLETED either
-    assert "COMPLETED" not in _TRANSITIONS["DEFERRED"***REMOVED***
+    assert "COMPLETED" not in _TRANSITIONS["DEFERRED"]
 
 
 def test_active_to_deferred_succeeds():
@@ -198,9 +198,9 @@ def test_store_roundtrip(tmp_path: Path):
 def test_store_filter_by_status(tmp_path: Path):
     data_file = tmp_path / "opportunities.yaml"
     store = OpportunityStore(data_file)
-    store.upsert(_make_opp(id="o1", **{"status": "ACTIVE"***REMOVED***))
-    store.upsert(_make_opp(id="o2", **{"status": "DEFERRED"***REMOVED***))
-    store.upsert(_make_opp(id="o3", **{"status": "ACTIVE"***REMOVED***))
+    store.upsert(_make_opp(id="o1", **{"status": "ACTIVE"}))
+    store.upsert(_make_opp(id="o2", **{"status": "DEFERRED"}))
+    store.upsert(_make_opp(id="o3", **{"status": "ACTIVE"}))
     assert len(store.by_status("ACTIVE")) == 2
     assert len(store.by_status("DEFERRED")) == 1
     assert len(store.by_status("COMPLETED")) == 0
@@ -222,7 +222,7 @@ def test_store_atomic_write_no_tmp_leak(tmp_path: Path):
     assert data_file.exists()
     # No leftover .tmp
     leftovers = list(tmp_path.glob("*.tmp"))
-    assert leftovers == [***REMOVED***, f"atomic write leaked: {leftovers***REMOVED***"
+    assert leftovers == [], f"atomic write leaked: {leftovers}"
 
 
 # ── 3. Dry-run safety (ForgeFacade not invoked) ──────────────────────────
@@ -237,10 +237,10 @@ def test_dry_run_does_not_invoke_forge_facade(monkeypatch, tmp_path: Path):
     # ``from core_02.forge_facade import ForgeFacade`` inside execute().
     # We pre-stub core_02.forge_facade so execute() finds our sentinel.
 
-    sentinel_calls: List[str***REMOVED*** = [***REMOVED***
+    sentinel_calls: List[str] = []
 
     class _SentinelForgeFacade:
-        PIPELINE_CHAIN = ["r1", "r2"***REMOVED***
+        PIPELINE_CHAIN = ["r1", "r2"]
         @staticmethod
         def run_chain(*args, **kwargs):
             sentinel_calls.append("called")
@@ -256,17 +256,17 @@ def test_dry_run_does_not_invoke_forge_facade(monkeypatch, tmp_path: Path):
     data_file = tmp_path / "opportunities.yaml"
     store = OpportunityStore(data_file)
     opp = _make_opp()
-    opp.scenario = {"scenario_id": "blueprint_v3", "role_id": "r1", "score": 1.0***REMOVED***
-    opp.roles = [{"role_id": "r1"***REMOVED***, {"role_id": "r2"***REMOVED******REMOVED***
+    opp.scenario = {"scenario_id": "blueprint_v3", "role_id": "r1", "score": 1.0}
+    opp.roles = [{"role_id": "r1"}, {"role_id": "r2"}]
     store.upsert(opp)
 
     rc = subprocess.run(
         [sys.executable, str(SCRIPTS_DIR / "opportunity_engine.py"),
-         "--data-path", str(data_file), "run", opp.id, "--dry-run"***REMOVED***,
+         "--data-path", str(data_file), "run", opp.id, "--dry-run"],
         capture_output=True, text=True,
     )
-    assert rc.returncode == 0, f"dry-run failed: stderr={rc.stderr***REMOVED***"
-    assert sentinel_calls == [***REMOVED***, "FORGE_FACADE MUST NOT be called during --dry-run"
+    assert rc.returncode == 0, f"dry-run failed: stderr={rc.stderr}"
+    assert sentinel_calls == [], "FORGE_FACADE MUST NOT be called during --dry-run"
     assert "dry-run" in rc.stdout or "dry_run" in rc.stdout
 
 
@@ -281,7 +281,7 @@ def test_discover_candidates_always_returns_list(tmp_path: Path):
             "pulse": tmp_path / "missing_pulse.db",
             "events": tmp_path / "missing_events.db",
             "memory": tmp_path / "missing_memory.db",
-        ***REMOVED***,
+        },
     )
     assert isinstance(cands, list)
     # Each candidate has minimal required fields
@@ -301,7 +301,7 @@ def test_discover_respects_max_results(tmp_path: Path):
             "pulse": tmp_path / "missing_pulse.db",
             "events": tmp_path / "missing_events.db",
             "memory": tmp_path / "missing_memory.db",
-        ***REMOVED***,
+        },
     )
     assert len(cands) <= 2
 
@@ -334,16 +334,16 @@ def test_discover_with_real_whim_source(tmp_path: Path):
             "pulse": tmp_path / "missing_pulse.db",
             "events": tmp_path / "missing_events.db",
             "memory": tmp_path / "missing_memory.db",
-        ***REMOVED***,
+        },
     )
     assert cands, "real whim source must produce candidates"
-    c = cands[0***REMOVED***
+    c = cands[0]
     assert c.source == "whim"
     assert c.project_id == "proj-real"
-    assert c.provenance["source_id"***REMOVED*** == w.id
-    assert c.provenance["evidence"***REMOVED*** == w.body
-    assert c.provenance["stub"***REMOVED*** is False
-    assert c.provenance["confidence"***REMOVED*** >= 0.5
+    assert c.provenance["source_id"] == w.id
+    assert c.provenance["evidence"] == w.body
+    assert c.provenance["stub"] is False
+    assert c.provenance["confidence"] >= 0.5
 
 
 def test_discover_dedup_by_provenance(tmp_path: Path):
@@ -363,7 +363,7 @@ def test_discover_dedup_by_provenance(tmp_path: Path):
         "pulse": tmp_path / "missing_pulse.db",
         "events": tmp_path / "missing_events.db",
         "memory": tmp_path / "missing_memory.db",
-    ***REMOVED***
+    }
     first = discover_candidates(
         "proj-dedup", max_results=5,
         source_paths=hermetic, store=opp_store,
@@ -404,11 +404,11 @@ def test_discover_knowledge_confidence_zero_not_promoted(tmp_path: Path):
             "pulse": tmp_path / "missing_pulse.db",
             "events": tmp_path / "missing_events.db",
             "memory": db,
-        ***REMOVED***,
+        },
     )
-    kn = [c for c in cands if c.source == "knowledge"***REMOVED***
+    kn = [c for c in cands if c.source == "knowledge"]
     assert kn, "knowledge source must produce a candidate"
-    assert kn[0***REMOVED***.provenance["confidence"***REMOVED*** == 0.0, (
+    assert kn[0].provenance["confidence"] == 0.0, (
         "confidence_score=0.0 must stay 0.0 (was promoted to 0.5 by `or 0.5` bug)"
     )
 
@@ -423,21 +423,21 @@ def test_cli_status_json_stdout_is_parseable(tmp_path: Path):
 
     rc = subprocess.run(
         [sys.executable, str(SCRIPTS_DIR / "opportunity_engine.py"),
-         "--data-path", str(data_file), "status", opp.id, "--json"***REMOVED***,
+         "--data-path", str(data_file), "status", opp.id, "--json"],
         capture_output=True, text=True,
     )
     assert rc.returncode == 0
     # stdout must be valid JSON (no human chatter leaking in)
     parsed = json.loads(rc.stdout)
     assert "opportunity" in parsed
-    assert parsed["opportunity"***REMOVED***["id"***REMOVED*** == opp.id
+    assert parsed["opportunity"]["id"] == opp.id
 
 
 def test_cli_list_json_stdout_is_parseable(tmp_path: Path):
     data_file = tmp_path / "opportunities.yaml"
     rc = subprocess.run(
         [sys.executable, str(SCRIPTS_DIR / "opportunity_engine.py"),
-         "--data-path", str(data_file), "list", "--json"***REMOVED***,
+         "--data-path", str(data_file), "list", "--json"],
         capture_output=True, text=True,
     )
     assert rc.returncode == 0
@@ -467,12 +467,12 @@ def test_cli_run_dry_run_exit_zero(tmp_path: Path):
     # Pre-seed with proposed opp (already has scenario + roles)
     store = OpportunityStore(data_file)
     opp = _make_opp()
-    opp.scenario = {"scenario_id": "blueprint_v3", "role_id": "novella_struct", "score": 0.0***REMOVED***
-    opp.roles = [{"role_id": "novella_struct"***REMOVED******REMOVED***
+    opp.scenario = {"scenario_id": "blueprint_v3", "role_id": "novella_struct", "score": 0.0}
+    opp.roles = [{"role_id": "novella_struct"}]
     store.upsert(opp)
     rc = subprocess.run(
         [sys.executable, str(SCRIPTS_DIR / "opportunity_engine.py"),
-         "--data-path", str(data_file), "run", opp.id, "--dry-run"***REMOVED***,
+         "--data-path", str(data_file), "run", opp.id, "--dry-run"],
         capture_output=True, text=True,
     )
     assert rc.returncode == 0
@@ -497,10 +497,10 @@ def test_cli_discover_creates_records(tmp_path: Path):
          "--whim-path", str(whims_yaml),
          "--pulse-db", str(tmp_path / "missing_pulse.db"),
          "--event-db", str(tmp_path / "missing_events.db"),
-         "--memory-db", str(tmp_path / "missing_memory.db")***REMOVED***,
+         "--memory-db", str(tmp_path / "missing_memory.db")],
         capture_output=True, text=True,
     )
-    assert rc.returncode == 0, f"stderr={rc.stderr***REMOVED***"
+    assert rc.returncode == 0, f"stderr={rc.stderr}"
     assert data_file.exists()
     store = OpportunityStore(data_file)
     assert store.count() >= 1
@@ -527,7 +527,7 @@ def test_module_import_produces_no_exceptions():
     """Smoke: import side-effects free (lazy G0 imports per additivity)."""
     import importlib
     if "opportunity_engine" in sys.modules:
-        importlib.reload(sys.modules["opportunity_engine"***REMOVED***)
+        importlib.reload(sys.modules["opportunity_engine"])
     else:
         importlib.import_module("opportunity_engine")
 
@@ -535,7 +535,7 @@ def test_module_import_produces_no_exceptions():
 # ── 8. CLI subcommand surface completeness ───────────────────────────────
 
 def test_main_missing_command_returns_error():
-    rc = main([***REMOVED***)
+    rc = main([])
     # argparse exits 2 on missing subcommand
     assert rc == 2
 
@@ -544,7 +544,7 @@ def test_main_run_unknown_id_returns_1(tmp_path: Path):
     rc = main([
         "--data-path", str(tmp_path / "opp.yaml"),
         "run", "opp-does-not-exist",
-    ***REMOVED***)
+    ])
     assert rc == 1
 
 
@@ -552,7 +552,7 @@ def test_main_propose_unknown_id_returns_1(tmp_path: Path):
     rc = main([
         "--data-path", str(tmp_path / "opp.yaml"),
         "propose", "opp-does-not-exist",
-    ***REMOVED***)
+    ])
     assert rc == 1
 
 
@@ -581,7 +581,7 @@ def test_cli_helpers_clear_stale_warnings_at_invocation_start(tmp_path: Path):
         data_path=str(data_file), opportunity_id=opp.id, json=False,
     )
     assert _cli_status(args) == 0
-    assert oe_mod._LAZY_IMPORT_ERRORS == [***REMOVED***, (
+    assert oe_mod._LAZY_IMPORT_ERRORS == [], (
         "_cli_status must clear stale warnings at invocation start"
     )
 
@@ -589,17 +589,17 @@ def test_cli_helpers_clear_stale_warnings_at_invocation_start(tmp_path: Path):
     oe_mod._LAZY_IMPORT_ERRORS.append("stale")
     args = argparse.Namespace(data_path=str(data_file), status=None, json=False)
     assert _cli_list(args) == 0
-    assert oe_mod._LAZY_IMPORT_ERRORS == [***REMOVED***
+    assert oe_mod._LAZY_IMPORT_ERRORS == []
 
     # 3. _cli_rank
     oe_mod._LAZY_IMPORT_ERRORS.append("stale")
     args = argparse.Namespace(data_path=str(data_file), json=False)
     assert _cli_rank(args) == 0
-    assert oe_mod._LAZY_IMPORT_ERRORS == [***REMOVED***
+    assert oe_mod._LAZY_IMPORT_ERRORS == []
 
     # 4. _cli_propose (real SI/registry path, fail-safe) — execution-path helper:
     #    may legitimately append warnings during the invocation, so assert only
-    #    that the PRE-POLLUTED marker is gone (boundary clear), not `== [***REMOVED***`
+    #    that the PRE-POLLUTED marker is gone (boundary clear), not `== []`
     #    (which would conflate boundary with "no warnings generated at all" —
     #    reviewer nit).
     oe_mod._LAZY_IMPORT_ERRORS.append("stale")
@@ -623,8 +623,8 @@ def test_cli_helpers_clear_stale_warnings_at_invocation_start(tmp_path: Path):
     )
 
     # 6. _cli_discover (hermetic: all source paths missing → 0 candidates; the
-    #    discover-source functions return [***REMOVED*** on missing modules WITHOUT appending,
-    #    so `== [***REMOVED***` is the precise assertion here — micro-nit from reviewer).
+    #    discover-source functions return [] on missing modules WITHOUT appending,
+    #    so `== []` is the precise assertion here — micro-nit from reviewer).
     oe_mod._LAZY_IMPORT_ERRORS.append("stale")
     args = argparse.Namespace(
         data_path=str(data_file), project_id="proj-x", json=False,
@@ -633,7 +633,7 @@ def test_cli_helpers_clear_stale_warnings_at_invocation_start(tmp_path: Path):
         memory_db=str(tmp_path / "no.db"), rank=False,
     )
     assert _cli_discover(args) == 0
-    assert oe_mod._LAZY_IMPORT_ERRORS == [***REMOVED***, (
+    assert oe_mod._LAZY_IMPORT_ERRORS == [], (
         "_cli_discover is hermetic (0 candidates) — must end with empty warnings "
         "(Option B3 boundary)"
     )
@@ -652,16 +652,16 @@ def test_cli_json_payloads_include_import_warnings(tmp_path: Path, capsys):
     def _run_json(fn, args) -> dict:
         capsys.readouterr()  # flush
         rc = fn(args)
-        assert rc == 0, f"{fn.__name__***REMOVED*** failed: rc={rc***REMOVED***"
+        assert rc == 0, f"{fn.__name__} failed: rc={rc}"
         return _json.loads(capsys.readouterr().out)
 
     payload = _run_json(_cli_status, argparse.Namespace(
         data_path=str(data_file), opportunity_id=opp.id, json=True))
-    assert "import_warnings" in payload and isinstance(payload["import_warnings"***REMOVED***, list)
+    assert "import_warnings" in payload and isinstance(payload["import_warnings"], list)
 
     payload = _run_json(_cli_list, argparse.Namespace(
         data_path=str(data_file), status=None, json=True))
-    assert "import_warnings" in payload and payload["import_warnings"***REMOVED*** == [***REMOVED***
+    assert "import_warnings" in payload and payload["import_warnings"] == []
 
     payload = _run_json(_cli_rank, argparse.Namespace(
         data_path=str(data_file), json=True))
@@ -680,7 +680,7 @@ def test_cli_json_payloads_include_import_warnings(tmp_path: Path, capsys):
         max_results=5, whim_path=str(tmp_path / "no.yaml"),
         pulse_db=str(tmp_path / "no.db"), event_db=str(tmp_path / "no.db"),
         memory_db=str(tmp_path / "no.db"), rank=False))
-    assert "import_warnings" in payload and payload["import_warnings"***REMOVED*** == [***REMOVED***
+    assert "import_warnings" in payload and payload["import_warnings"] == []
 
 
 def test_cli_invocation_warnings_do_not_leak_across_invocations(
@@ -700,7 +700,7 @@ def test_cli_invocation_warnings_do_not_leak_across_invocations(
     data_file = tmp_path / "opportunities.yaml"
     store = OpportunityStore(data_file)
     opp = _make_opp()
-    opp.provenance = {"source": "hand", "capability": "code"***REMOVED***
+    opp.provenance = {"source": "hand", "capability": "code"}
     store.upsert(opp)
 
     # All lazy imports fail → execute() appends factory_registry + forge_facade.
@@ -713,8 +713,8 @@ def test_cli_invocation_warnings_do_not_leak_across_invocations(
         data_path=str(data_file), opportunity_id=opp.id, dry_run=False, json=True))
     assert rc == 1, "execute with unavailable forge_facade must FAIL (exit 1)"
     out_a = _json.loads(capsys.readouterr().out)
-    assert "factory_registry: unavailable" in out_a["import_warnings"***REMOVED***, out_a
-    assert "forge_facade: unavailable" in out_a["import_warnings"***REMOVED***, out_a
+    assert "factory_registry: unavailable" in out_a["import_warnings"], out_a
+    assert "forge_facade: unavailable" in out_a["import_warnings"], out_a
 
     # ─── Invocation B: status → must NOT inherit A's warnings ───
     capsys.readouterr()  # flush
@@ -722,6 +722,6 @@ def test_cli_invocation_warnings_do_not_leak_across_invocations(
         data_path=str(data_file), opportunity_id=opp.id, json=True))
     assert rc == 0
     out_b = _json.loads(capsys.readouterr().out)
-    assert out_b["import_warnings"***REMOVED*** == [***REMOVED***, (
-        f"invocation B must not inherit invocation A's import warnings: {out_b***REMOVED***"
+    assert out_b["import_warnings"] == [], (
+        f"invocation B must not inherit invocation A's import warnings: {out_b}"
     )

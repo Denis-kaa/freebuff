@@ -11,7 +11,7 @@ Covers:
 from __future__ import annotations
 
 import sys
-***REMOVED***
+}
 
 # Add workspace root to path for imports
 WORKSPACE = Path(__file__).resolve().parent.parent
@@ -71,18 +71,18 @@ class TestValidateManifest:
     def test_valid_manifest_no_violations(self):
         m = PluginManifest(name="my_plugin", version="1.2.3", description="Desc")
         violations = validate_manifest(m)
-        assert violations == [***REMOVED***
+        assert violations == []
 
     def test_none_manifest_error(self):
         violations = validate_manifest(None)
         assert len(violations) == 1
-        assert violations[0***REMOVED***.severity == ContractSeverity.ERROR
-        assert violations[0***REMOVED***.field == "manifest"
+        assert violations[0].severity == ContractSeverity.ERROR
+        assert violations[0].field == "manifest"
 
     def test_missing_name_error(self):
         m = PluginManifest(name="", version="1.0.0", description="Desc")
         violations = validate_manifest(m)
-        names = [v.field for v in violations***REMOVED***
+        names = [v.field for v in violations]
         assert "manifest.name" in names
         assert all(v.severity == ContractSeverity.ERROR for v in violations)
 
@@ -110,12 +110,12 @@ class TestValidateManifest:
     def test_invalid_event_pattern_warn(self):
         m = PluginManifest(
             name="ok", version="1.0.0", description="D",
-            events_subscribed=["Invalid Event", "valid.event", "system.*"***REMOVED***,
+            events_subscribed=["Invalid Event", "valid.event", "system.*"],
         )
         violations = validate_manifest(m)
-        event_fields = [v for v in violations if "events_subscribed" in v.field***REMOVED***
+        event_fields = [v for v in violations if "events_subscribed" in v.field]
         assert len(event_fields) == 1  # только Invalid Event
-        assert event_fields[0***REMOVED***.severity == ContractSeverity.WARN
+        assert event_fields[0].severity == ContractSeverity.WARN
 
     def test_python_version_incompatible_warn(self):
         m = PluginManifest(
@@ -141,7 +141,7 @@ class TestValidatePluginEntry:
             manifest=PluginManifest(name="demo", version="1.0.0", description="D"),
             instance=DemoPlugin(),
         )
-        assert validate_plugin_entry(entry) == [***REMOVED***
+        assert validate_plugin_entry(entry) == []
 
     def test_entry_without_instance_error(self):
         entry = _make_entry(manifest=PluginManifest(name="demo", version="1.0.0", description="D"))
@@ -174,7 +174,7 @@ class TestValidatePluginEntry:
             instance=DemoPlugin(),
         )
         violations = validate_plugin_entry(entry)
-        fields = {v.field for v in violations***REMOVED***
+        fields = {v.field for v in violations}
         assert "manifest.name" in fields
         assert "manifest.version" in fields
 
@@ -186,19 +186,19 @@ class TestValidatePluginEntry:
 
 class TestHelpers:
     def test_has_errors(self):
-        assert not has_errors([***REMOVED***)
-        assert not has_errors([ContractViolation("f", "m", ContractSeverity.WARN)***REMOVED***)
-        assert has_errors([ContractViolation("f", "m", ContractSeverity.ERROR)***REMOVED***)
+        assert not has_errors([])
+        assert not has_errors([ContractViolation("f", "m", ContractSeverity.WARN)])
+        assert has_errors([ContractViolation("f", "m", ContractSeverity.ERROR)])
 
     def test_format_violations_ok(self):
-        out = format_violations("demo", [***REMOVED***)
+        out = format_violations("demo", [])
         assert "✅" in out
         assert "demo" in out
 
     def test_format_violations_with_errors(self):
         out = format_violations("demo", [
             ContractViolation("manifest.name", "bad name", ContractSeverity.ERROR),
-        ***REMOVED***)
+        ])
         assert "❌" in out
         assert "manifest.name" in out
         assert "ERROR" in out

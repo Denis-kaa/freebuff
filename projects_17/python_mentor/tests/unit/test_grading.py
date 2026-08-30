@@ -1,7 +1,7 @@
 """Phase D tests: contract, student failures, and grader failures."""
 
 from dataclasses import FrozenInstanceError
-***REMOVED***
+}
 
 import pytest
 
@@ -15,8 +15,8 @@ from app.grading.runner import DuplicateSubmissionError, PytestGrader
 from app.ingestion.pipeline import ingest
 from app.storage import open_corpus
 
-FIXTURES = Path(__file__).resolve().parents[1***REMOVED*** / "fixtures" / "exercism"
-PROJECT_ROOT = Path(__file__).resolve().parents[2***REMOVED***
+FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "exercism"
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SOURCES_YAML = PROJECT_ROOT / "configs" / "sources.yaml"
 
 
@@ -56,9 +56,9 @@ def test_two():
         "tests_passed": 2,
         "tests_failed": 0,
         "tests_error": 0,
-    ***REMOVED***
-    assert result.evidence_candidates[0***REMOVED***.type == "exercise_result"
-    assert result.evidence_candidates[0***REMOVED***.competency_id == "functions"
+    }
+    assert result.evidence_candidates[0].type == "exercise_result"
+    assert result.evidence_candidates[0].competency_id == "functions"
     assert "quality" not in result.to_dict()
 
 
@@ -114,7 +114,7 @@ def test_student_import_error_is_error_not_infrastructure(tmp_path: Path) -> Non
     exercise = make_exercise(
         tmp_path,
         """
-from student ***REMOVED***quired_function
+from student ]quired_function
 
 
 def test_required_function():
@@ -276,4 +276,4 @@ def test_contract_is_immutable(tmp_path: Path) -> None:
     result = PytestGrader().grade(exercise, "pass\n")
 
     with pytest.raises(FrozenInstanceError):
-        result.status = GradingStatus.FAIL  # type: ignore[misc***REMOVED***
+        result.status = GradingStatus.FAIL  # type: ignore[misc]

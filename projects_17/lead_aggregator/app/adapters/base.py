@@ -28,5 +28,5 @@ class BaseAdapter(ABC):
     ordered: bool = False
 
     @abstractmethod
-    async def fetch(self, limit: int = 50) -> list[Lead***REMOVED***:
+    async def fetch(self, limit: int = 50) -> list[Lead]:
         """Получить свежие лиды из источника."""

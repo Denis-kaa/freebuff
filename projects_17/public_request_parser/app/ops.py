@@ -37,7 +37,7 @@ class AlertHook(Protocol):
 
 async def _stderr_alert(level: str, message: str) -> None:
     """Alert-хук по умолчанию: в stderr (без сетевых вызовов)."""
-    print(f"[prp-ops:{level***REMOVED******REMOVED*** {message***REMOVED***", file=sys.stderr)
+    print(f"[prp-ops:{level}] {message}", file=sys.stderr)
 
 
 @dataclass(frozen=True, slots=True)
@@ -83,19 +83,19 @@ class IterationStats:
         status = "ok" if self.ok else "fail"
         when = self.ts.isoformat() if self.ts is not None else "?"
         return (
-            f"[{when***REMOVED******REMOVED*** src={self.source_id***REMOVED*** iter={self.iteration***REMOVED*** "
-            f"status={status***REMOVED*** fail_streak={self.consecutive_failures***REMOVED*** {self.detail***REMOVED***"
+            f"[{when}] src={self.source_id} iter={self.iteration} "
+            f"status={status} fail_streak={self.consecutive_failures} {self.detail}"
         ).strip()
 
 
 async def run_schedule(
     *,
     config: ScheduleConfig,
-    run_once: Callable[[***REMOVED***, Awaitable[str***REMOVED******REMOVED***,
+    run_once: Callable[[], Awaitable[str]],
     alert: AlertHook | None = None,
     stop_event: asyncio.Event | None = None,
     max_iterations: int | None = None,
-) -> list[IterationStats***REMOVED***:
+) -> list[IterationStats]:
     """Цикл: run_once → пауза → повтор; сбои: backoff и alert.
 
     `run_once` — корутина, возвращающая одноесотровую сводку (например
@@ -103,7 +103,7 @@ async def run_schedule(
     `max_iterations` используется в тестах/одноразовых прогонах.
     """
     alert = alert or _stderr_alert
-    stats: list[IterationStats***REMOVED*** = [***REMOVED***
+    stats: list[IterationStats] = []
     failures = 0
     iteration = 0
 
@@ -118,12 +118,12 @@ async def run_schedule(
         except Exception as exc:  # noqa: BLE001 — цикл обязан продолжаться
             ok = False
             failures += 1
-            detail = f"error: {exc***REMOVED***"
+            detail = f"error: {exc}"
             backoff = run_backoff(failures, config=config)
             await alert(
                 "warning",
-                f"{config.source_id***REMOVED***: iteration {iteration***REMOVED*** failed ({exc***REMOVED***); "
-                f"backoff={backoff***REMOVED***s",
+                f"{config.source_id}: iteration {iteration} failed ({exc}); "
+                f"backoff={backoff}s",
             )
         item = IterationStats(
             source_id=config.source_id,
@@ -169,4 +169,4 @@ __all__ = [
     "ScheduleConfig",
     "run_backoff",
     "run_schedule",
-***REMOVED***
+]

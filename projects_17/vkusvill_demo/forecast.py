@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import datetime
 import json
-***REMOVED***
+}
 from statistics import pstdev
 
 from openpyxl import load_workbook
@@ -23,7 +23,7 @@ from openpyxl import load_workbook
 # doesn't add cwd to sys.path; inject project root so `projects_17/...` resolves.
 # Minimal-invasive option (d): NO __init__.py markers added.
 import sys as _sys_for_path
-***REMOVED*** as _Path_for_path
+] as _Path_for_path
 _sys_for_path.path.insert(
     0, str(_Path_for_path(__file__).resolve().parent.parent.parent)
 )
@@ -39,38 +39,38 @@ XLSX_PATH = Path("projects_17/vkusvill_demo/model_forecast.xlsx")
 OUT_JSON = Path("projects_17/vkusvill_demo/forecast_python.json")
 
 
-def load_history_from_xlsx(xlsx_path: Path) -> tuple[datetime.date, dict[str, list[int***REMOVED******REMOVED******REMOVED***:
+def load_history_from_xlsx(xlsx_path: Path) -> tuple[datetime.date, dict[str, list[int]]]:
     """Pure-Python read of history sheet — ТОЛЬКО raw sales_qty (no formula eval).
 
     Per Q1 variant (b): use data_only=True (read cached values), NEVER eval formulas.
     """
     wb = load_workbook(str(xlsx_path), data_only=True, read_only=True)
-    hist = wb["history"***REMOVED***
-    sku_sales: dict[str, list[int***REMOVED******REMOVED*** = {***REMOVED***
+    hist = wb["history"]
+    sku_sales: dict[str, list[int]] = {}
     cur_sku = None
     for row in hist.iter_rows(min_row=4, values_only=True):
-        if row[2***REMOVED*** is None:  # blank separator line между категориями
+        if row[2] is None:  # blank separator line между категориями
             continue
-        week, _date_str, sku, qty = row[0***REMOVED***, row[1***REMOVED***, row[2***REMOVED***, row[3***REMOVED***
+        week, _date_str, sku, qty = row[0], row[1], row[2], row[3]
         if cur_sku != sku:
-            sku_sales[sku***REMOVED*** = [***REMOVED***
+            sku_sales[sku] = []
             cur_sku = sku
-        sku_sales[sku***REMOVED***.append(int(qty))
+        sku_sales[sku].append(int(qty))
     wb.close()
     return BASE_DATE, sku_sales
 
 
-def compute_forecast(sku_sales: list[int***REMOVED***, cat: dict, base: datetime.date) -> dict:
+def compute_forecast(sku_sales: list[int], cat: dict, base: datetime.date) -> dict:
     """Apply 4 принципа in pure Python (mirror build_model formulas).
 
     Returns dict with forecast components + final_forecast.
     """
-    last4 = sku_sales[-SMA_WINDOW:***REMOVED***
+    last4 = sku_sales[-SMA_WINDOW:]
     sma = sum(last4) / SMA_WINDOW
     sigma = pstdev(last4)
-    wd_factor = cat["wd"***REMOVED***[(base.weekday() + WEEKS) % 7***REMOVED***
-    safety = sigma * SERVICE_LEVEL_Z * (cat["lead_time"***REMOVED*** ** 0.5)
-    shelf = 0.5 if cat["shelf_life"***REMOVED*** < cat["lead_time"***REMOVED*** * SHELF_CRITICAL_RATIO else 1.0
+    wd_factor = cat["wd"][(base.weekday() + WEEKS) % 7]
+    safety = sigma * SERVICE_LEVEL_Z * (cat["lead_time"] ** 0.5)
+    shelf = 0.5 if cat["shelf_life"] < cat["lead_time"] * SHELF_CRITICAL_RATIO else 1.0
     final = ((sma * wd_factor) + safety) * shelf
     return {
         "sma": sma,
@@ -78,7 +78,7 @@ def compute_forecast(sku_sales: list[int***REMOVED***, cat: dict, base: datetime
         "safety_buffer": safety,
         "shelf_correction": shelf,
         "final_forecast": final,
-    ***REMOVED***
+    }
 
 
 def compute_order(forecast: dict, cat: dict, current_stock: int) -> dict:
@@ -87,29 +87,29 @@ def compute_order(forecast: dict, cat: dict, current_stock: int) -> dict:
     NON_OBVIOUS_2: для категории `dairy` дополнительно применяется
     INCIDENT_2024_CORRECTION (legacy -8% rule post-инцидента 2024).
     """
-    final = forecast["final_forecast"***REMOVED***
+    final = forecast["final_forecast"]
     order_qty = max(
         0,
-        (final * cat["lead_time"***REMOVED***) - current_stock + (final * ORDER_BUFFER),
+        (final * cat["lead_time"]) - current_stock + (final * ORDER_BUFFER),
     )
-    if cat["cat"***REMOVED*** == "dairy":
+    if cat["cat"] == "dairy":
         order_qty *= INCIDENT_2024_CORRECTION
-    return {"current_stock": current_stock, "order_qty": order_qty***REMOVED***
+    return {"current_stock": current_stock, "order_qty": order_qty}
 
 
 def main() -> None:
     if not XLSX_PATH.exists():
-        raise SystemExit(f"ERR: {XLSX_PATH***REMOVED*** not found. Run build_model_xlsx.py first.")
+        raise SystemExit(f"ERR: {XLSX_PATH} not found. Run build_model_xlsx.py first.")
     base, sku_sales = load_history_from_xlsx(XLSX_PATH)
-    out: dict[str, dict***REMOVED*** = {***REMOVED***
+    out: dict[str, dict] = {}
     for cat in CATEGORIES:
-        forecast = compute_forecast(sku_sales[cat["sku"***REMOVED******REMOVED***, cat, base)
-        order = compute_order(forecast, cat, DEFAULT_STOCK[cat["sku"***REMOVED******REMOVED***)
-        out[cat["sku"***REMOVED******REMOVED*** = {"forecast": forecast, "order": order***REMOVED***
+        forecast = compute_forecast(sku_sales[cat["sku"]], cat, base)
+        order = compute_order(forecast, cat, DEFAULT_STOCK[cat["sku"]])
+        out[cat["sku"]] = {"forecast": forecast, "order": order}
     OUT_JSON.write_text(json.dumps(out, ensure_ascii=False, indent=2), encoding="utf-8")
-    total = sum(o["order"***REMOVED***["order_qty"***REMOVED*** for o in out.values())
-    print(f"OK: {OUT_JSON***REMOVED***")
-    print(f"Total order_qty (Python recompute) = {total:.2f***REMOVED***")
+    total = sum(o["order"]["order_qty"] for o in out.values())
+    print(f"OK: {OUT_JSON}")
+    print(f"Total order_qty (Python recompute) = {total:.2f}")
 
 
 if __name__ == "__main__":

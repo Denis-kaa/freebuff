@@ -35,8 +35,8 @@ def parse_log_level(message):
     """
 
     str_split = message.split(':')
-    lvl = str_split[0***REMOVED***[1:-1***REMOVED***
-    if lvl in [level.value for level in LogLevel***REMOVED***:
+    lvl = str_split[0][1:-1]
+    if lvl in [level.value for level in LogLevel]:
         return LogLevel(lvl)
     return LogLevel('UKN')
 
@@ -49,7 +49,7 @@ def convert_to_short_log(log_level, message):
     :return: enum -  'LogLevelInt.<value>` e.g. 'LogLevelInt.5'
     """
 
-    return f'{LogLevelInt[log_level.name***REMOVED***.value***REMOVED***:{message***REMOVED***'
+    return f'{LogLevelInt[log_level.name].value}:{message}'
 
 
 def get_warn_alias():
@@ -64,10 +64,10 @@ def get_warn_alias():
 def get_members():
     """Return all members of the enum.
 
-    :return: list of tuples -  [(name1, value1), (name2, value2)***REMOVED***
+    :return: list of tuples -  [(name1, value1), (name2, value2)]
     """
 
-    out_list = [***REMOVED***
+    out_list = []
     for member in LogLevel:
         out_list.append((member.name, member.value))
     return out_list

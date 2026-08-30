@@ -17,7 +17,7 @@ from typing import AsyncIterator
 from app.domain import AdapterError, SourceItem, SourcePolicy, SourcePolicyStatus
 from app.rss_atom import RSSAtomParser
 
-HttpGetter = Callable[[str***REMOVED***, Awaitable[bytes***REMOVED******REMOVED***
+HttpGetter = Callable[[str], Awaitable[bytes]]
 
 
 async def _default_http_get(url: str) -> bytes:
@@ -53,7 +53,7 @@ class HttpFeedAdapter:
     def _ensure_allowed_live(self) -> None:
         if self._policy.status is not SourcePolicyStatus.ALLOWED:
             raise AdapterError(
-                f"live polling requires ALLOWED source policy, got {self._policy.status.value***REMOVED***"
+                f"live polling requires ALLOWED source policy, got {self._policy.status.value}"
             )
         if not self._policy.can_poll:
             raise AdapterError("live polling disabled by source policy (can_poll=False)")
@@ -63,7 +63,7 @@ class HttpFeedAdapter:
         *,
         limit: int = 50,
         checkpoint: str | None = None,
-    ) -> AsyncIterator[SourceItem***REMOVED***:
+    ) -> AsyncIterator[SourceItem]:
         """Загрузить фид и отдать bounded items после checkpoint."""
         if limit < 1:
             raise AdapterError("limit must be >= 1")
@@ -76,7 +76,7 @@ class HttpFeedAdapter:
                 if item.item_id == checkpoint:
                     start = index + 1
                     break
-        for item in result.items[start : start + limit***REMOVED***:
+        for item in result.items[start : start + limit]:
             yield item
 
     async def health(self) -> bool:
@@ -90,4 +90,4 @@ class HttpFeedAdapter:
         return True
 
 
-__all__ = ["HttpFeedAdapter", "HttpGetter"***REMOVED***
+__all__ = ["HttpFeedAdapter", "HttpGetter"]

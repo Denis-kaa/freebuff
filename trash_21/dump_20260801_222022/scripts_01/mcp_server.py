@@ -23,10 +23,10 @@ Design decision: pure Python без официального `mcp` SDK, т.к. �
       "mcpServers": {
         "buffy": {
           "command": "python",
-          "args": ["/path/to/freebuff/scripts_01/mcp_server.py"***REMOVED***
-        ***REMOVED***
-      ***REMOVED***
-    ***REMOVED***
+          "args": ["/path/to/freebuff/scripts_01/mcp_server.py"]
+        }
+      }
+    }
 
   HTTP (Streamable HTTP transport):
     python scripts_01/mcp_server.py --http --port 8765
@@ -40,7 +40,7 @@ Design decision: pure Python без официального `mcp` SDK, т.к. �
     python scripts_01/mcp_server.py --http             # HTTP режим (port 8765)
     python scripts_01/mcp_server.py --tools            # список MCP tools
     python scripts_01/mcp_server.py --resources        # список MCP resources
-    python scripts_01/mcp_server.py --call knowledge_search '{"query": "router"***REMOVED***'
+    python scripts_01/mcp_server.py --call knowledge_search '{"query": "router"]'
 """
 
 from __future__ import annotations
@@ -55,7 +55,7 @@ import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-***REMOVED***
+}
 from queue import Queue, Empty
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -89,8 +89,8 @@ class McpTool:
     """MCP tool definition."""
     name: str
     description: str
-    input_schema: Dict[str, Any***REMOVED*** = field(default_factory=lambda: {"type": "object", "properties": {***REMOVED******REMOVED***)
-    handler: Optional[Callable***REMOVED*** = None
+    input_schema: Dict[str, Any] = field(default_factory=lambda: {"type": "object", "properties": {}})
+    handler: Optional[Callable] = None
     category: str = "general"
 
 
@@ -101,7 +101,7 @@ class McpResource:
     name: str
     description: str
     mime_type: str = "text/plain"
-    handler: Optional[Callable***REMOVED*** = None
+    handler: Optional[Callable] = None
 
 
 @dataclass
@@ -109,8 +109,8 @@ class McpPrompt:
     """MCP prompt template."""
     name: str
     description: str
-    arguments: List[Dict[str, Any***REMOVED******REMOVED*** = field(default_factory=list)
-    handler: Optional[Callable***REMOVED*** = None
+    arguments: List[Dict[str, Any]] = field(default_factory=list)
+    handler: Optional[Callable] = None
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -124,28 +124,28 @@ def rpc_response(req_id: Any, result: Any) -> str:
         "jsonrpc": "2.0",
         "id": req_id,
         "result": result,
-    ***REMOVED***, ensure_ascii=False)
+    ], ensure_ascii=False)
 
 
 def rpc_error(req_id: Any, code: int, message: str, data: Any = None) -> str:
     """Создаёт JSON-RPC error response."""
-    err: Dict[str, Any***REMOVED*** = {"code": code, "message": message***REMOVED***
+    err: Dict[str, Any] = {"code": code, "message": message}
     if data is not None:
-        err["data"***REMOVED*** = data
+        err["data"] = data
     return json.dumps({
         "jsonrpc": "2.0",
         "id": req_id,
         "error": err,
-    ***REMOVED***, ensure_ascii=False)
+    ], ensure_ascii=False)
 
 
-def rpc_notification(method: str, params: Dict[str, Any***REMOVED***) -> str:
+def rpc_notification(method: str, params: Dict[str, Any]) -> str:
     """Создаёт JSON-RPC notification (no id, no response expected)."""
     return json.dumps({
         "jsonrpc": "2.0",
         "method": method,
         "params": params,
-    ***REMOVED***, ensure_ascii=False)
+    ], ensure_ascii=False)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -172,17 +172,17 @@ class McpSessionManager:
     """Thread-safe session manager for Streamable HTTP transport."""
 
     def __init__(self):
-        self._sessions: Dict[str, McpSession***REMOVED*** = {***REMOVED***
+        self._sessions: Dict[str, McpSession] = {}
         self._lock = threading.Lock()
 
     def create_session(self) -> str:
         """Create a new session and return its ID."""
         session_id = str(uuid.uuid4())
         with self._lock:
-            self._sessions[session_id***REMOVED*** = McpSession(session_id)
+            self._sessions[session_id] = McpSession(session_id)
         return session_id
 
-    def get_session(self, session_id: str) -> Optional[McpSession***REMOVED***:
+    def get_session(self, session_id: str) -> Optional[McpSession]:
         """Get a session by ID."""
         with self._lock:
             return self._sessions.get(session_id)
@@ -235,11 +235,11 @@ class BuffyMcpServer:
 
     def __init__(self, workspace_root: str | Path | None = None):
         self.workspace = Path(workspace_root) if workspace_root else WORKSPACE
-        self._tools: Dict[str, McpTool***REMOVED*** = {***REMOVED***
-        self._resources: Dict[str, McpResource***REMOVED*** = {***REMOVED***
-        self._prompts: Dict[str, McpPrompt***REMOVED*** = {***REMOVED***
+        self._tools: Dict[str, McpTool] = {}
+        self._resources: Dict[str, McpResource] = {}
+        self._prompts: Dict[str, McpPrompt] = {}
         self._initialized = False
-        self._client_info: Dict[str, Any***REMOVED*** = {***REMOVED***
+        self._client_info: Dict[str, Any] = {}
 
         # Lazy-loaded components
         self._tool_registry = None
@@ -278,9 +278,9 @@ class BuffyMcpServer:
             )
             self._tool_registry = ToolRegistry(
                 event_bus=self._get_event_bus(),
-                default_context={"workspace": str(self.workspace)***REMOVED***,
+                default_context={"workspace": str(self.workspace)},
             )
-            for cls in [GitTool, SQLiteTool, HTTPTool, FileTool, ShellTool***REMOVED***:
+            for cls in [GitTool, SQLiteTool, HTTPTool, FileTool, ShellTool]:
                 self._tool_registry.register(cls())
         return self._tool_registry
 
@@ -327,10 +327,10 @@ class BuffyMcpServer:
                 )
                 self._bridge_layer.start()
             except ImportError as e:
-                print(f"⚠️ MCP: BridgeLayer unavailable (plugin not loaded): {e***REMOVED***", file=sys.stderr)
+                print(f"⚠️ MCP: BridgeLayer unavailable (plugin not loaded): {e}", file=sys.stderr)
                 return None
             except Exception as e:
-                print(f"⚠️ MCP: BridgeLayer init failed: {e***REMOVED***", file=sys.stderr)
+                print(f"⚠️ MCP: BridgeLayer init failed: {e}", file=sys.stderr)
                 return None
         return self._bridge_layer
 
@@ -345,10 +345,10 @@ class BuffyMcpServer:
                     event_bus=bus or None,
                 )
             except ImportError as e:
-                print(f"⚠️ MCP: BootstrapEngine unavailable (plugin not loaded): {e***REMOVED***", file=sys.stderr)
+                print(f"⚠️ MCP: BootstrapEngine unavailable (plugin not loaded): {e}", file=sys.stderr)
                 return None
             except Exception as e:
-                print(f"⚠️ MCP: BootstrapEngine init failed: {e***REMOVED***", file=sys.stderr)
+                print(f"⚠️ MCP: BootstrapEngine init failed: {e}", file=sys.stderr)
                 return None
         return self._bootstrap_engine
 
@@ -362,10 +362,10 @@ class BuffyMcpServer:
                 self._runtime_registry.load()
                 self._runtime_capability_registry = RuntimeCapabilityRegistry(self._runtime_registry)
             except ImportError as e:
-                print(f"⚠️ MCP: RuntimeRegistry unavailable (plugin not loaded): {e***REMOVED***", file=sys.stderr)
+                print(f"⚠️ MCP: RuntimeRegistry unavailable (plugin not loaded): {e}", file=sys.stderr)
                 return None
             except Exception as e:
-                print(f"⚠️ MCP: RuntimeRegistry init failed: {e***REMOVED***", file=sys.stderr)
+                print(f"⚠️ MCP: RuntimeRegistry init failed: {e}", file=sys.stderr)
                 return None
         return self._runtime_registry
 
@@ -380,14 +380,14 @@ class BuffyMcpServer:
                     return None
                 self._policy_engine = PolicyEngine(registry, cap_reg)
             except ImportError as e:
-                print(f"⚠️ MCP: PolicyEngine unavailable (plugin not loaded): {e***REMOVED***", file=sys.stderr)
+                print(f"⚠️ MCP: PolicyEngine unavailable (plugin not loaded): {e}", file=sys.stderr)
                 return None
             except Exception as e:
-                print(f"⚠️ MCP: PolicyEngine init failed: {e***REMOVED***", file=sys.stderr)
+                print(f"⚠️ MCP: PolicyEngine init failed: {e}", file=sys.stderr)
                 return None
         return self._policy_engine
 
-    def _publish(self, event_type: str, data: Dict[str, Any***REMOVED***) -> None:
+    def _publish(self, event_type: str, data: Dict[str, Any]) -> None:
         """Publish MCP event to EventBus."""
         bus = self._get_event_bus()
         if bus is None:
@@ -395,7 +395,7 @@ class BuffyMcpServer:
         try:
             from scripts_01.event_bus import Event
             bus.publish(Event(
-                type=f"mcp.{event_type***REMOVED***",
+                type=f"mcp.{event_type}",
                 source="mcp_server",
                 data=data,
             ))
@@ -412,7 +412,7 @@ class BuffyMcpServer:
 
                 self._roles_engine = RoleEngine()
             except Exception as e:
-                print(f"⚠️ MCP: RoleEngine init failed: {e***REMOVED***", file=sys.stderr)
+                print(f"⚠️ MCP: RoleEngine init failed: {e}", file=sys.stderr)
                 return None
         return self._roles_engine
 
@@ -424,7 +424,7 @@ class BuffyMcpServer:
 
                 self._presence_engine = PresenceEngine()
             except Exception as e:
-                print(f"⚠️ MCP: PresenceEngine init failed: {e***REMOVED***", file=sys.stderr)
+                print(f"⚠️ MCP: PresenceEngine init failed: {e}", file=sys.stderr)
                 return None
         return self._presence_engine
 
@@ -438,7 +438,7 @@ class BuffyMcpServer:
                     event_bus=self._get_event_bus(),
                 )
             except Exception as e:
-                print(f"⚠️ MCP: CollaborationEngine init failed: {e***REMOVED***", file=sys.stderr)
+                print(f"⚠️ MCP: CollaborationEngine init failed: {e}", file=sys.stderr)
                 return None
         return self._collaboration_engine
 
@@ -452,7 +452,7 @@ class BuffyMcpServer:
                     event_bus=self._get_event_bus(),
                 )
             except Exception as e:
-                print(f"⚠️ MCP: DistributedCoordinator init failed: {e***REMOVED***", file=sys.stderr)
+                print(f"⚠️ MCP: DistributedCoordinator init failed: {e}", file=sys.stderr)
                 return None
         return self._distributed_coordinator
 
@@ -464,7 +464,7 @@ class BuffyMcpServer:
 
                 self._rag_engine = RAGEngine(workspace_root=str(self.workspace))
             except Exception as e:
-                print(f"⚠️ MCP: RAGEngine init failed: {e***REMOVED***", file=sys.stderr)
+                print(f"⚠️ MCP: RAGEngine init failed: {e}", file=sys.stderr)
                 return None
         return self._rag_engine
 
@@ -479,7 +479,7 @@ class BuffyMcpServer:
                     event_bus=self._get_event_bus(),
                 )
             except Exception as e:
-                print(f"⚠️ MCP: ProjectPulse init failed: {e***REMOVED***", file=sys.stderr)
+                print(f"⚠️ MCP: ProjectPulse init failed: {e}", file=sys.stderr)
                 return None
         return self._project_pulse
 
@@ -491,10 +491,10 @@ class BuffyMcpServer:
 
                 self._event_store = EventStore(db_path=self.workspace / "context_12" / "events.db")
             except ImportError as e:
-                print(f"⚠️ MCP: EventStore unavailable (plugin not loaded): {e***REMOVED***", file=sys.stderr)
+                print(f"⚠️ MCP: EventStore unavailable (plugin not loaded): {e}", file=sys.stderr)
                 return None
             except Exception as e:
-                print(f"⚠️ MCP: EventStore init failed: {e***REMOVED***", file=sys.stderr)
+                print(f"⚠️ MCP: EventStore init failed: {e}", file=sys.stderr)
                 return None
         return self._event_store
 
@@ -503,202 +503,202 @@ class BuffyMcpServer:
     def _register_phase7_tools(self) -> None:
         """Регистрирует MCP tools восстановленных Phase 7 модулей."""
         # ── Roles ──
-        self._tools["roles_list"***REMOVED*** = McpTool(
+        self._tools["roles_list"] = McpTool(
             name="roles_list",
             description="List role definitions and assignments (RoleEngine).",
-            input_schema={"type": "object", "properties": {"definitions": {"type": "boolean", "description": "Show role definitions", "default": False***REMOVED******REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {"definitions": {"type": "boolean", "description": "Show role definitions", "default": False}}},
             handler=self._handle_roles_list,
             category="roles",
         )
-        self._tools["roles_get"***REMOVED*** = McpTool(
+        self._tools["roles_get"] = McpTool(
             name="roles_get",
             description="Get roles assigned to an agent.",
-            input_schema={"type": "object", "properties": {"agent": {"type": "string", "description": "Agent name"***REMOVED******REMOVED***, "required": ["agent"***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {"agent": {"type": "string", "description": "Agent name"}}, "required": ["agent"]},
             handler=self._handle_roles_get,
             category="roles",
         )
-        self._tools["roles_assign"***REMOVED*** = McpTool(
+        self._tools["roles_assign"] = McpTool(
             name="roles_assign",
             description="Assign a role to an agent.",
-            input_schema={"type": "object", "properties": {"agent": {"type": "string"***REMOVED***, "role": {"type": "string"***REMOVED******REMOVED***, "required": ["agent", "role"***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {"agent": {"type": "string"}, "role": {"type": "string"}}, "required": ["agent", "role"]},
             handler=self._handle_roles_assign,
             category="roles",
         )
-        self._tools["roles_unassign"***REMOVED*** = McpTool(
+        self._tools["roles_unassign"] = McpTool(
             name="roles_unassign",
             description="Remove a role from an agent.",
-            input_schema={"type": "object", "properties": {"agent": {"type": "string"***REMOVED***, "role": {"type": "string"***REMOVED******REMOVED***, "required": ["agent", "role"***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {"agent": {"type": "string"}, "role": {"type": "string"}}, "required": ["agent", "role"]},
             handler=self._handle_roles_unassign,
             category="roles",
         )
-        self._tools["roles_stats"***REMOVED*** = McpTool(
+        self._tools["roles_stats"] = McpTool(
             name="roles_stats",
             description="Role engine statistics.",
-            input_schema={"type": "object", "properties": {***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {}},
             handler=self._handle_roles_stats,
             category="roles",
         )
 
         # ── Presence ──
-        self._tools["presence_list"***REMOVED*** = McpTool(
+        self._tools["presence_list"] = McpTool(
             name="presence_list",
             description="List registered agents with optional status/capability filters.",
-            input_schema={"type": "object", "properties": {"status": {"type": "string"***REMOVED***, "capability": {"type": "string"***REMOVED******REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {"status": {"type": "string"}, "capability": {"type": "string"}}},
             handler=self._handle_presence_list,
             category="presence",
         )
-        self._tools["presence_get"***REMOVED*** = McpTool(
+        self._tools["presence_get"] = McpTool(
             name="presence_get",
             description="Get presence details of a single agent.",
-            input_schema={"type": "object", "properties": {"agent": {"type": "string", "description": "Agent name"***REMOVED******REMOVED***, "required": ["agent"***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {"agent": {"type": "string", "description": "Agent name"}}, "required": ["agent"]},
             handler=self._handle_presence_get,
             category="presence",
         )
-        self._tools["presence_history"***REMOVED*** = McpTool(
+        self._tools["presence_history"] = McpTool(
             name="presence_history",
             description="Get presence status-change history.",
-            input_schema={"type": "object", "properties": {"agent": {"type": "string", "description": "Agent name"***REMOVED***, "limit": {"type": "integer", "default": 50***REMOVED******REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {"agent": {"type": "string", "description": "Agent name"}, "limit": {"type": "integer", "default": 50}}},
             handler=self._handle_presence_history,
             category="presence",
         )
 
         # ── Collaboration ──
-        self._tools["collab_create"***REMOVED*** = McpTool(
+        self._tools["collab_create"] = McpTool(
             name="collab_create",
             description="Create a collaboration session.",
-            input_schema={"type": "object", "properties": {"topic": {"type": "string"***REMOVED***, "owner": {"type": "string"***REMOVED***, "participants": {"type": "array", "items": {"type": "string"***REMOVED******REMOVED******REMOVED***, "required": ["topic", "owner"***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {"topic": {"type": "string"}, "owner": {"type": "string"}, "participants": {"type": "array", "items": {"type": "string"}}}, "required": ["topic", "owner"]},
             handler=self._handle_collab_create,
             category="collaboration",
         )
-        self._tools["collab_list"***REMOVED*** = McpTool(
+        self._tools["collab_list"] = McpTool(
             name="collab_list",
             description="List collaboration sessions.",
-            input_schema={"type": "object", "properties": {"status": {"type": "string"***REMOVED******REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {"status": {"type": "string"}}},
             handler=self._handle_collab_list,
             category="collaboration",
         )
-        self._tools["collab_get"***REMOVED*** = McpTool(
+        self._tools["collab_get"] = McpTool(
             name="collab_get",
             description="Get collaboration session details.",
-            input_schema={"type": "object", "properties": {"session_id": {"type": "string"***REMOVED******REMOVED***, "required": ["session_id"***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {"session_id": {"type": "string"}}, "required": ["session_id"]},
             handler=self._handle_collab_get,
             category="collaboration",
         )
-        self._tools["collab_join"***REMOVED*** = McpTool(
+        self._tools["collab_join"] = McpTool(
             name="collab_join",
             description="Join a collaboration session.",
-            input_schema={"type": "object", "properties": {"session_id": {"type": "string"***REMOVED***, "participant": {"type": "string"***REMOVED***, "role": {"type": "string"***REMOVED******REMOVED***, "required": ["session_id", "participant"***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {"session_id": {"type": "string"}, "participant": {"type": "string"}, "role": {"type": "string"}}, "required": ["session_id", "participant"]},
             handler=self._handle_collab_join,
             category="collaboration",
         )
-        self._tools["collab_leave"***REMOVED*** = McpTool(
+        self._tools["collab_leave"] = McpTool(
             name="collab_leave",
             description="Leave a collaboration session.",
-            input_schema={"type": "object", "properties": {"session_id": {"type": "string"***REMOVED***, "participant": {"type": "string"***REMOVED******REMOVED***, "required": ["session_id", "participant"***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {"session_id": {"type": "string"}, "participant": {"type": "string"}}, "required": ["session_id", "participant"]},
             handler=self._handle_collab_leave,
             category="collaboration",
         )
-        self._tools["collab_send"***REMOVED*** = McpTool(
+        self._tools["collab_send"] = McpTool(
             name="collab_send",
             description="Send a message to a collaboration session.",
-            input_schema={"type": "object", "properties": {"session_id": {"type": "string"***REMOVED***, "sender": {"type": "string"***REMOVED***, "content": {"type": "string"***REMOVED***, "msg_type": {"type": "string", "default": "text"***REMOVED******REMOVED***, "required": ["session_id", "sender", "content"***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {"session_id": {"type": "string"}, "sender": {"type": "string"}, "content": {"type": "string"}, "msg_type": {"type": "string", "default": "text"}}, "required": ["session_id", "sender", "content"]},
             handler=self._handle_collab_send,
             category="collaboration",
         )
-        self._tools["collab_history"***REMOVED*** = McpTool(
+        self._tools["collab_history"] = McpTool(
             name="collab_history",
             description="Get message history of a session.",
-            input_schema={"type": "object", "properties": {"session_id": {"type": "string"***REMOVED***, "limit": {"type": "integer", "default": 50***REMOVED******REMOVED***, "required": ["session_id"***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {"session_id": {"type": "string"}, "limit": {"type": "integer", "default": 50}}, "required": ["session_id"]},
             handler=self._handle_collab_history,
             category="collaboration",
         )
-        self._tools["collab_status"***REMOVED*** = McpTool(
+        self._tools["collab_status"] = McpTool(
             name="collab_status",
             description="Collaboration engine diagnostics.",
-            input_schema={"type": "object", "properties": {***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {}},
             handler=self._handle_collab_status,
             category="collaboration",
         )
 
         # ── Distributed Agents ──
-        self._tools["distributed_list"***REMOVED*** = McpTool(
+        self._tools["distributed_list"] = McpTool(
             name="distributed_list",
             description="List distributed agent mesh and coordinator status.",
-            input_schema={"type": "object", "properties": {***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {}},
             handler=self._handle_distributed_list,
             category="distributed",
         )
-        self._tools["distributed_spawn"***REMOVED*** = McpTool(
+        self._tools["distributed_spawn"] = McpTool(
             name="distributed_spawn",
             description="Spawn/register a distributed agent.",
-            input_schema={"type": "object", "properties": {"name": {"type": "string"***REMOVED***, "command": {"type": "string"***REMOVED***, "capabilities": {"type": "object"***REMOVED******REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {"name": {"type": "string"}, "command": {"type": "string"}, "capabilities": {"type": "object"}}},
             handler=self._handle_distributed_spawn,
             category="distributed",
         )
-        self._tools["distributed_run"***REMOVED*** = McpTool(
+        self._tools["distributed_run"] = McpTool(
             name="distributed_run",
             description="Run a distributed workflow plan.",
-            input_schema={"type": "object", "properties": {"goal": {"type": "string"***REMOVED***, "steps": {"type": "array", "items": {"type": "object"***REMOVED******REMOVED******REMOVED***, "required": ["goal", "steps"***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {"goal": {"type": "string"}, "steps": {"type": "array", "items": {"type": "object"}}}, "required": ["goal", "steps"]},
             handler=self._handle_distributed_run,
             category="distributed",
         )
-        self._tools["distributed_status"***REMOVED*** = McpTool(
+        self._tools["distributed_status"] = McpTool(
             name="distributed_status",
             description="Distributed system status.",
-            input_schema={"type": "object", "properties": {***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {}},
             handler=self._handle_distributed_status,
             category="distributed",
         )
-        self._tools["distributed_broadcast"***REMOVED*** = McpTool(
+        self._tools["distributed_broadcast"] = McpTool(
             name="distributed_broadcast",
             description="Broadcast a message to all distributed agents.",
-            input_schema={"type": "object", "properties": {"message": {"type": "string"***REMOVED******REMOVED***, "required": ["message"***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {"message": {"type": "string"}}, "required": ["message"]},
             handler=self._handle_distributed_broadcast,
             category="distributed",
         )
 
         # ── RAG ──
-        self._tools["rag_search"***REMOVED*** = McpTool(
+        self._tools["rag_search"] = McpTool(
             name="rag_search",
             description="RAG 2.0 semantic search with ranking.",
-            input_schema={"type": "object", "properties": {"query": {"type": "string"***REMOVED***, "top_k": {"type": "integer", "default": 10***REMOVED***, "mode": {"type": "string", "default": "hybrid_rrf"***REMOVED******REMOVED***, "required": ["query"***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {"query": {"type": "string"}, "top_k": {"type": "integer", "default": 10}, "mode": {"type": "string", "default": "hybrid_rrf"}}, "required": ["query"]},
             handler=self._handle_rag_search,
             category="rag",
         )
-        self._tools["rag_hybrid"***REMOVED*** = McpTool(
+        self._tools["rag_hybrid"] = McpTool(
             name="rag_hybrid",
             description="Quick hybrid RRF search.",
-            input_schema={"type": "object", "properties": {"query": {"type": "string"***REMOVED***, "top_k": {"type": "integer", "default": 10***REMOVED******REMOVED***, "required": ["query"***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {"query": {"type": "string"}, "top_k": {"type": "integer", "default": 10}}, "required": ["query"]},
             handler=self._handle_rag_hybrid,
             category="rag",
         )
-        self._tools["rag_rerank"***REMOVED*** = McpTool(
+        self._tools["rag_rerank"] = McpTool(
             name="rag_rerank",
             description="Feature-based re-ranking of candidates.",
-            input_schema={"type": "object", "properties": {"query": {"type": "string"***REMOVED***, "top_k": {"type": "integer", "default": 10***REMOVED******REMOVED***, "required": ["query"***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {"query": {"type": "string"}, "top_k": {"type": "integer", "default": 10}}, "required": ["query"]},
             handler=self._handle_rag_rerank,
             category="rag",
         )
 
         # ── Project Pulse ──
-        self._tools["pulse_list"***REMOVED*** = McpTool(
+        self._tools["pulse_list"] = McpTool(
             name="pulse_list",
             description="List project pulse entries.",
-            input_schema={"type": "object", "properties": {"limit": {"type": "integer", "default": 50***REMOVED***, "event_type": {"type": "string"***REMOVED***, "source": {"type": "string"***REMOVED******REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {"limit": {"type": "integer", "default": 50}, "event_type": {"type": "string"}, "source": {"type": "string"}}},
             handler=self._handle_pulse_list,
             category="pulse",
         )
-        self._tools["pulse_stats"***REMOVED*** = McpTool(
+        self._tools["pulse_stats"] = McpTool(
             name="pulse_stats",
             description="Project pulse statistics.",
-            input_schema={"type": "object", "properties": {***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {}},
             handler=self._handle_pulse_stats,
             category="pulse",
         )
-        self._tools["pulse_scan"***REMOVED*** = McpTool(
+        self._tools["pulse_scan"] = McpTool(
             name="pulse_scan",
             description="Run full project scan (git + files) into the pulse.",
-            input_schema={"type": "object", "properties": {***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {}},
             handler=self._handle_pulse_scan,
             category="pulse",
         )
@@ -707,312 +707,312 @@ class BuffyMcpServer:
 
     def _register_event_tools(self) -> None:
         """Регистрирует MCP tools Event Platform (event_search/timeline/replay/audit/pulse)."""
-        self._tools["event_search"***REMOVED*** = McpTool(
+        self._tools["event_search"] = McpTool(
             name="event_search",
             description="Поиск событий в Event Store по типу, сессии, тексту.",
             input_schema={
                 "type": "object",
                 "properties": {
-                    "event_type": {"type": "string", "description": "Фильтр по типу (task.*, audit.decision)"***REMOVED***,
-                    "session_id": {"type": "string", "description": "Фильтр по сессии"***REMOVED***,
-                    "data_search": {"type": "string", "description": "Полнотекстовый поиск"***REMOVED***,
-                    "limit": {"type": "integer", "description": "Max results", "default": 20***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
+                    "event_type": {"type": "string", "description": "Фильтр по типу (task.*, audit.decision)"},
+                    "session_id": {"type": "string", "description": "Фильтр по сессии"},
+                    "data_search": {"type": "string", "description": "Полнотекстовый поиск"},
+                    "limit": {"type": "integer", "description": "Max results", "default": 20},
+                },
+            },
             handler=self._handle_event_search,
             category="event",
         )
-        self._tools["event_timeline"***REMOVED*** = McpTool(
+        self._tools["event_timeline"] = McpTool(
             name="event_timeline",
             description="Временная шкала событий проекта.",
             input_schema={
                 "type": "object",
                 "properties": {
-                    "project": {"type": "string", "description": "Фильтр по проекту"***REMOVED***,
-                    "limit": {"type": "integer", "description": "Max entries", "default": 30***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
+                    "project": {"type": "string", "description": "Фильтр по проекту"},
+                    "limit": {"type": "integer", "description": "Max entries", "default": 30},
+                },
+            },
             handler=self._handle_event_timeline,
             category="event",
         )
-        self._tools["event_replay"***REMOVED*** = McpTool(
+        self._tools["event_replay"] = McpTool(
             name="event_replay",
             description="Воспроизвести события из Event Store (для восстановления состояния).",
             input_schema={
                 "type": "object",
                 "properties": {
-                    "event_type": {"type": "string", "description": "Фильтр по типу"***REMOVED***,
-                    "session_id": {"type": "string", "description": "Фильтр по сессии"***REMOVED***,
-                    "speed": {"type": "string", "enum": ["instant", "realtime"***REMOVED***, "default": "instant"***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
+                    "event_type": {"type": "string", "description": "Фильтр по типу"},
+                    "session_id": {"type": "string", "description": "Фильтр по сессии"},
+                    "speed": {"type": "string", "enum": ["instant", "realtime"], "default": "instant"},
+                },
+            },
             handler=self._handle_event_replay,
             category="event",
         )
-        self._tools["event_audit"***REMOVED*** = McpTool(
+        self._tools["event_audit"] = McpTool(
             name="event_audit",
             description="Аудит решений Policy Engine и действий пользователя.",
             input_schema={
                 "type": "object",
                 "properties": {
-                    "target_type": {"type": "string", "enum": ["decision", "action", "config_change"***REMOVED***, "description": "Тип аудита"***REMOVED***,
-                    "limit": {"type": "integer", "description": "Max entries", "default": 20***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
+                    "target_type": {"type": "string", "enum": ["decision", "action", "config_change"], "description": "Тип аудита"},
+                    "limit": {"type": "integer", "description": "Max entries", "default": 20},
+                },
+            },
             handler=self._handle_event_audit,
             category="event",
         )
-        self._tools["event_pulse"***REMOVED*** = McpTool(
+        self._tools["event_pulse"] = McpTool(
             name="event_pulse",
             description="Лента активных событий проекта.",
             input_schema={
                 "type": "object",
                 "properties": {
-                    "project": {"type": "string", "description": "Фильтр по проекту"***REMOVED***,
-                    "limit": {"type": "integer", "description": "Max entries", "default": 10***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
+                    "project": {"type": "string", "description": "Фильтр по проекту"},
+                    "limit": {"type": "integer", "description": "Max entries", "default": 10},
+                },
+            },
             handler=self._handle_event_pulse,
             category="event",
         )
 
     # ── Phase 7 handlers: Roles ───────────────────────────────────────
 
-    def _handle_roles_list(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_roles_list(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """List role definitions and assignments."""
         engine = self._get_roles_engine()
         if engine is None:
-            return {"success": False, "error": "RoleEngine not available"***REMOVED***
+            return {"success": False, "error": "RoleEngine not available"}
         try:
             data = {
-                "roles": [r.to_dict() for r in engine.list_roles()***REMOVED***,
-                "assignments": [a.to_dict() for a in engine.list_assignments()***REMOVED***,
-            ***REMOVED***
-            self._publish("roles.listed", {"roles": len(data["roles"***REMOVED***), "assignments": len(data["assignments"***REMOVED***)***REMOVED***)
-            return {"success": True, "data": data***REMOVED***
+                "roles": [r.to_dict() for r in engine.list_roles()],
+                "assignments": [a.to_dict() for a in engine.list_assignments()],
+            }
+            self._publish("roles.listed", {"roles": len(data["roles"]), "assignments": len(data["assignments"])})
+            return {"success": True, "data": data}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_roles_get(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_roles_get(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Get roles of an agent."""
         engine = self._get_roles_engine()
         if engine is None:
-            return {"success": False, "error": "RoleEngine not available"***REMOVED***
+            return {"success": False, "error": "RoleEngine not available"}
         agent = arguments.get("agent", "")
         if not agent:
-            return {"success": False, "error": "Missing required parameter: agent"***REMOVED***
+            return {"success": False, "error": "Missing required parameter: agent"}
         try:
-            return {"success": True, "data": {"agent": agent, "roles": engine.get_roles(agent)***REMOVED******REMOVED***
+            return {"success": True, "data": {"agent": agent, "roles": engine.get_roles(agent)}}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_roles_assign(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_roles_assign(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Assign a role to an agent."""
         engine = self._get_roles_engine()
         if engine is None:
-            return {"success": False, "error": "RoleEngine not available"***REMOVED***
+            return {"success": False, "error": "RoleEngine not available"}
         agent = arguments.get("agent", "")
         role = arguments.get("role", "")
         if not agent or not role:
-            return {"success": False, "error": "Missing required parameters: agent, role"***REMOVED***
+            return {"success": False, "error": "Missing required parameters: agent, role"}
         try:
             ok = engine.assign_role(agent, role)
             if not ok:
-                return {"success": False, "error": f"Unknown role: {role***REMOVED***"***REMOVED***
-            return {"success": True, "data": {"agent": agent, "role": role***REMOVED******REMOVED***
+                return {"success": False, "error": f"Unknown role: {role}"}
+            return {"success": True, "data": {"agent": agent, "role": role}}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_roles_unassign(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_roles_unassign(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Remove a role from an agent."""
         engine = self._get_roles_engine()
         if engine is None:
-            return {"success": False, "error": "RoleEngine not available"***REMOVED***
+            return {"success": False, "error": "RoleEngine not available"}
         agent = arguments.get("agent", "")
         role = arguments.get("role", "")
         if not agent or not role:
-            return {"success": False, "error": "Missing required parameters: agent, role"***REMOVED***
+            return {"success": False, "error": "Missing required parameters: agent, role"}
         try:
             ok = engine.unassign_role(agent, role)
-            return {"success": True, "data": {"agent": agent, "role": role, "removed": ok***REMOVED******REMOVED***
+            return {"success": True, "data": {"agent": agent, "role": role, "removed": ok}}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_roles_stats(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_roles_stats(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Role engine statistics."""
         engine = self._get_roles_engine()
         if engine is None:
-            return {"success": False, "error": "RoleEngine not available"***REMOVED***
+            return {"success": False, "error": "RoleEngine not available"}
         try:
-            return {"success": True, "data": engine.get_stats()***REMOVED***
+            return {"success": True, "data": engine.get_stats()}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
     # ── Phase 7 handlers: Presence ────────────────────────────────────
 
-    def _handle_presence_list(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_presence_list(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """List agents with filters."""
         engine = self._get_presence_engine()
         if engine is None:
-            return {"success": False, "error": "PresenceEngine not available"***REMOVED***
+            return {"success": False, "error": "PresenceEngine not available"}
         try:
             data = engine.list_agents_json(
                 status=arguments.get("status"), capability=arguments.get("capability")
             )
-            self._publish("presence.listed", {"total": data.get("total", 0)***REMOVED***)
-            return {"success": True, "data": data***REMOVED***
+            self._publish("presence.listed", {"total": data.get("total", 0)})
+            return {"success": True, "data": data}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_presence_get(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_presence_get(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Get agent presence details."""
         engine = self._get_presence_engine()
         if engine is None:
-            return {"success": False, "error": "PresenceEngine not available"***REMOVED***
+            return {"success": False, "error": "PresenceEngine not available"}
         agent_name = arguments.get("agent") or arguments.get("agent_name", "")
         if not agent_name:
-            return {"success": False, "error": "agent is required"***REMOVED***
+            return {"success": False, "error": "agent is required"}
         try:
-            return {"success": True, "data": engine.get_agent_json(agent_name)***REMOVED***
+            return {"success": True, "data": engine.get_agent_json(agent_name)}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_presence_history(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_presence_history(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Get presence history."""
         engine = self._get_presence_engine()
         if engine is None:
-            return {"success": False, "error": "PresenceEngine not available"***REMOVED***
+            return {"success": False, "error": "PresenceEngine not available"}
         try:
             return {"success": True, "data": engine.get_history_json(
                 agent_name=arguments.get("agent") or arguments.get("agent_name"),
                 limit=int(arguments.get("limit", 50)),
-            )***REMOVED***
+            )]
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
     # ── Phase 7 handlers: Collaboration ───────────────────────────────
 
-    def _handle_collab_create(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_collab_create(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Create a collaboration session."""
         engine = self._get_collaboration_engine()
         if engine is None:
-            return {"success": False, "error": "CollaborationEngine not available"***REMOVED***
+            return {"success": False, "error": "CollaborationEngine not available"}
         topic = arguments.get("topic", "")
         owner = arguments.get("owner", "")
         if not topic or not owner:
-            return {"success": False, "error": "Missing required parameters: topic, owner"***REMOVED***
+            return {"success": False, "error": "Missing required parameters: topic, owner"}
         try:
             session = engine.create_session(topic, owner, arguments.get("participants"))
-            return {"success": True, "data": session.to_dict()***REMOVED***
+            return {"success": True, "data": session.to_dict()}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_collab_list(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_collab_list(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """List collaboration sessions."""
         engine = self._get_collaboration_engine()
         if engine is None:
-            return {"success": False, "error": "CollaborationEngine not available"***REMOVED***
+            return {"success": False, "error": "CollaborationEngine not available"}
         try:
             sessions = engine.list_sessions(status=arguments.get("status"))
-            return {"success": True, "data": {"sessions": [s.to_dict() for s in sessions***REMOVED******REMOVED******REMOVED***
+            return {"success": True, "data": {"sessions": [s.to_dict() for s in sessions]}}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_collab_get(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_collab_get(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Get session details."""
         engine = self._get_collaboration_engine()
         if engine is None:
-            return {"success": False, "error": "CollaborationEngine not available"***REMOVED***
+            return {"success": False, "error": "CollaborationEngine not available"}
         session_id = arguments.get("session_id", "")
         if not session_id:
-            return {"success": False, "error": "Missing required parameter: session_id"***REMOVED***
+            return {"success": False, "error": "Missing required parameter: session_id"}
         try:
             session = engine.get_session(session_id)
             if session is None:
-                return {"success": False, "error": f"Session not found: {session_id***REMOVED***"***REMOVED***
-            return {"success": True, "data": session.to_dict()***REMOVED***
+                return {"success": False, "error": f"Session not found: {session_id}"}
+            return {"success": True, "data": session.to_dict()}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_collab_join(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_collab_join(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Join a session."""
         engine = self._get_collaboration_engine()
         if engine is None:
-            return {"success": False, "error": "CollaborationEngine not available"***REMOVED***
+            return {"success": False, "error": "CollaborationEngine not available"}
         session_id = arguments.get("session_id", "")
         participant = arguments.get("participant", "")
         if not session_id or not participant:
-            return {"success": False, "error": "Missing required parameters: session_id, participant"***REMOVED***
+            return {"success": False, "error": "Missing required parameters: session_id, participant"}
         try:
             ok = engine.join_session(session_id, participant, arguments.get("role", "editor"))
-            return {"success": True, "data": {"joined": ok, "session_id": session_id, "participant": participant***REMOVED******REMOVED***
+            return {"success": True, "data": {"joined": ok, "session_id": session_id, "participant": participant}}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_collab_leave(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_collab_leave(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Leave a session."""
         engine = self._get_collaboration_engine()
         if engine is None:
-            return {"success": False, "error": "CollaborationEngine not available"***REMOVED***
+            return {"success": False, "error": "CollaborationEngine not available"}
         session_id = arguments.get("session_id", "")
         participant = arguments.get("participant", "")
         if not session_id or not participant:
-            return {"success": False, "error": "Missing required parameters: session_id, participant"***REMOVED***
+            return {"success": False, "error": "Missing required parameters: session_id, participant"}
         try:
             ok = engine.leave_session(session_id, participant)
-            return {"success": True, "data": {"left": ok***REMOVED******REMOVED***
+            return {"success": True, "data": {"left": ok}}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_collab_send(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_collab_send(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Send a message to a session."""
         engine = self._get_collaboration_engine()
         if engine is None:
-            return {"success": False, "error": "CollaborationEngine not available"***REMOVED***
+            return {"success": False, "error": "CollaborationEngine not available"}
         session_id = arguments.get("session_id", "")
         sender = arguments.get("sender", "")
         content = arguments.get("content", "")
         if not session_id or not sender or not content:
-            return {"success": False, "error": "Missing required parameters: session_id, sender, content"***REMOVED***
+            return {"success": False, "error": "Missing required parameters: session_id, sender, content"}
         try:
             msg = engine.send_message(session_id, sender, content, arguments.get("msg_type", "text"))
             if msg is None:
-                return {"success": False, "error": "Session not found or closed"***REMOVED***
-            return {"success": True, "data": asdict(msg)***REMOVED***
+                return {"success": False, "error": "Session not found or closed"}
+            return {"success": True, "data": asdict(msg)}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_collab_history(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_collab_history(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Get session history."""
         engine = self._get_collaboration_engine()
         if engine is None:
-            return {"success": False, "error": "CollaborationEngine not available"***REMOVED***
+            return {"success": False, "error": "CollaborationEngine not available"}
         session_id = arguments.get("session_id", "")
         if not session_id:
-            return {"success": False, "error": "Missing required parameter: session_id"***REMOVED***
+            return {"success": False, "error": "Missing required parameter: session_id"}
         try:
             messages = engine.get_history(session_id, limit=int(arguments.get("limit", 50)))
-            return {"success": True, "data": {"messages": [asdict(m) for m in messages***REMOVED******REMOVED******REMOVED***
+            return {"success": True, "data": {"messages": [asdict(m) for m in messages]}}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_collab_status(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_collab_status(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Collaboration engine diagnostics."""
         engine = self._get_collaboration_engine()
         if engine is None:
-            return {"success": False, "error": "CollaborationEngine not available"***REMOVED***
+            return {"success": False, "error": "CollaborationEngine not available"}
         try:
-            return {"success": True, "data": engine.get_status()***REMOVED***
+            return {"success": True, "data": engine.get_status()}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
     # ── Phase 7 handlers: Distributed ─────────────────────────────────
 
-    def _handle_distributed_list(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_distributed_list(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """List distributed mesh."""
         coord = self._get_distributed_coordinator()
         if coord is None:
-            return {"success": False, "error": "DistributedCoordinator not available"***REMOVED***
+            return {"success": False, "error": "DistributedCoordinator not available"}
         try:
             agents = coord.list_agents()
             # total берём из mesh.get_summary() (контракт теста с mock-координатором).
@@ -1021,159 +1021,159 @@ class BuffyMcpServer:
                 total = int(mesh_summary.get("total", len(agents))) if isinstance(mesh_summary, dict) else len(agents)
             except Exception:
                 total = len(agents)
-            data = {"agents": agents, "total": total, "status": coord.get_status()***REMOVED***
-            self._publish("distributed.listed", {"agents": total***REMOVED***)
-            return {"success": True, "data": data***REMOVED***
+            data = {"agents": agents, "total": total, "status": coord.get_status()}
+            self._publish("distributed.listed", {"agents": total})
+            return {"success": True, "data": data}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_distributed_spawn(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_distributed_spawn(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Spawn a distributed agent."""
         coord = self._get_distributed_coordinator()
         if coord is None:
-            return {"success": False, "error": "DistributedCoordinator not available"***REMOVED***
+            return {"success": False, "error": "DistributedCoordinator not available"}
         try:
             result = coord.spawn_agent(
                 name=arguments.get("name"),
                 command=arguments.get("command", "python"),
                 capabilities=arguments.get("capabilities"),
             )
-            return {"success": True, "data": result***REMOVED***
+            return {"success": True, "data": result}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_distributed_run(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_distributed_run(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Run a distributed workflow."""
         coord = self._get_distributed_coordinator()
         if coord is None:
-            return {"success": False, "error": "DistributedCoordinator not available"***REMOVED***
+            return {"success": False, "error": "DistributedCoordinator not available"}
         goal = arguments.get("goal", "")
         steps = arguments.get("steps")
         if not goal or not steps:
-            return {"success": False, "error": "Missing required parameters: goal, steps"***REMOVED***
+            return {"success": False, "error": "Missing required parameters: goal, steps"}
         try:
             plan = coord.run_distributed_workflow(goal=goal, steps=steps)
-            return {"success": True, "data": plan.to_dict()***REMOVED***
+            return {"success": True, "data": plan.to_dict()}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_distributed_status(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_distributed_status(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Distributed system status."""
         coord = self._get_distributed_coordinator()
         if coord is None:
-            return {"success": False, "error": "DistributedCoordinator not available"***REMOVED***
+            return {"success": False, "error": "DistributedCoordinator not available"}
         try:
-            return {"success": True, "data": coord.get_status()***REMOVED***
+            return {"success": True, "data": coord.get_status()}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_distributed_broadcast(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_distributed_broadcast(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Broadcast to all agents."""
         coord = self._get_distributed_coordinator()
         if coord is None:
-            return {"success": False, "error": "DistributedCoordinator not available"***REMOVED***
+            return {"success": False, "error": "DistributedCoordinator not available"}
         message = arguments.get("message", "")
         if not message:
-            return {"success": False, "error": "Missing required parameter: message"***REMOVED***
+            return {"success": False, "error": "Missing required parameter: message"}
         try:
             recipients = coord.broadcast_to_all(message, arguments.get("data"))
-            return {"success": True, "data": {"recipients": recipients, "agents_notified": recipients, "message": message***REMOVED******REMOVED***
+            return {"success": True, "data": {"recipients": recipients, "agents_notified": recipients, "message": message}}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
     # ── Phase 7 handlers: RAG ─────────────────────────────────────────
 
-    def _handle_rag_search(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_rag_search(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """RAG search."""
         rag = self._get_rag_engine()
         if rag is None:
-            return {"success": False, "error": "RAGEngine not available"***REMOVED***
+            return {"success": False, "error": "RAGEngine not available"}
         query = arguments.get("query", "")
         if not query:
-            return {"success": False, "error": "Missing required parameter: query"***REMOVED***
+            return {"success": False, "error": "Missing required parameter: query"}
         try:
             report = rag.search(
                 query,
                 top_k=int(arguments.get("top_k", 10)),
                 mode=arguments.get("mode", "hybrid_rrf"),
             )
-            return {"success": True, "data": report.to_dict()***REMOVED***
+            return {"success": True, "data": report.to_dict()}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_rag_hybrid(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_rag_hybrid(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Hybrid RRF search."""
         rag = self._get_rag_engine()
         if rag is None:
-            return {"success": False, "error": "RAGEngine not available"***REMOVED***
+            return {"success": False, "error": "RAGEngine not available"}
         query = arguments.get("query", "")
         if not query:
-            return {"success": False, "error": "Missing required parameter: query"***REMOVED***
+            return {"success": False, "error": "Missing required parameter: query"}
         try:
             report = rag.hybrid_search(query, top_k=int(arguments.get("top_k", 10)))
-            return {"success": True, "data": report.to_dict()***REMOVED***
+            return {"success": True, "data": report.to_dict()}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_rag_rerank(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_rag_rerank(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Re-rank candidates."""
         rag = self._get_rag_engine()
         if rag is None:
-            return {"success": False, "error": "RAGEngine not available"***REMOVED***
+            return {"success": False, "error": "RAGEngine not available"}
         query = arguments.get("query", "")
         if not query:
-            return {"success": False, "error": "Missing required parameter: query"***REMOVED***
+            return {"success": False, "error": "Missing required parameter: query"}
         try:
             report = rag.search(query, top_k=int(arguments.get("top_k", 30)) * 3, mode="hybrid_rrf", rerank_results=False)
             reranked = rag.rerank(query, report.results)
-            return {"success": True, "data": [r.to_dict() for r in reranked[: int(arguments.get("top_k", 10))***REMOVED******REMOVED******REMOVED***
+            return {"success": True, "data": [r.to_dict() for r in reranked[: int(arguments.get("top_k", 10))]]}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
     # ── Phase 7 handlers: Project Pulse ───────────────────────────────
 
-    def _handle_pulse_list(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_pulse_list(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """List pulse entries."""
         pulse = self._get_project_pulse()
         if pulse is None:
-            return {"success": False, "error": "ProjectPulse not available"***REMOVED***
+            return {"success": False, "error": "ProjectPulse not available"}
         try:
             data = pulse.list_json(
                 limit=int(arguments.get("limit", 50)),
                 event_type=arguments.get("event_type"),
                 source=arguments.get("source"),
             )
-            return {"success": True, "data": data***REMOVED***
+            return {"success": True, "data": data}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_pulse_stats(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_pulse_stats(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Pulse statistics."""
         pulse = self._get_project_pulse()
         if pulse is None:
-            return {"success": False, "error": "ProjectPulse not available"***REMOVED***
+            return {"success": False, "error": "ProjectPulse not available"}
         try:
-            return {"success": True, "data": pulse.get_stats()***REMOVED***
+            return {"success": True, "data": pulse.get_stats()}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_pulse_scan(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_pulse_scan(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Run full project scan."""
         pulse = self._get_project_pulse()
         if pulse is None:
-            return {"success": False, "error": "ProjectPulse not available"***REMOVED***
+            return {"success": False, "error": "ProjectPulse not available"}
         try:
-            return {"success": True, "data": pulse.full_scan()***REMOVED***
+            return {"success": True, "data": pulse.full_scan()}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
     # ── Event Platform handlers ───────────────────────────────────────
 
-    def _handle_event_search(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_event_search(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Поиск событий в Event Store."""
         store = self._get_event_store()
         if store is None:
-            return {"success": False, "error": "EventStore not available"***REMOVED***
+            return {"success": False, "error": "EventStore not available"}
         try:
             from freebuff_plugin_03.event import EventQuery
             query = EventQuery(
@@ -1188,18 +1188,18 @@ class BuffyMcpServer:
                 "type": e.event_type,
                 "source": e.source,
                 "data": e.data,
-                "timestamp": e.timestamp[:19***REMOVED***,
-            ***REMOVED*** for e in entries***REMOVED***
-            self._publish("event.searched", {"total": len(data)***REMOVED***)
-            return {"success": True, "data": data***REMOVED***
+                "timestamp": e.timestamp[:19],
+            ] for e in entries]
+            self._publish("event.searched", {"total": len(data)})
+            return {"success": True, "data": data}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_event_timeline(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_event_timeline(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Временная шкала событий проекта."""
         store = self._get_event_store()
         if store is None:
-            return {"success": False, "error": "EventStore not available"***REMOVED***
+            return {"success": False, "error": "EventStore not available"}
         try:
             from freebuff_plugin_03.event.timeline import TimelineEngine
             timeline = TimelineEngine(store)
@@ -1212,20 +1212,20 @@ class BuffyMcpServer:
                 "data": {
                     "text": timeline.format_timeline_text(result),
                     "entries": [
-                        {"timestamp": e.timestamp, "event_type": e.event_type, "icon": e.icon, "title": e.title***REMOVED***
+                        {"timestamp": e.timestamp, "event_type": e.event_type, "icon": e.icon, "title": e.title}
                         for e in result.entries
-                    ***REMOVED***,
+                    ],
                     "total": result.total,
-                ***REMOVED***,
-            ***REMOVED***
+                },
+            }
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_event_replay(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_event_replay(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Воспроизвести события из Event Store."""
         store = self._get_event_store()
         if store is None:
-            return {"success": False, "error": "EventStore not available"***REMOVED***
+            return {"success": False, "error": "EventStore not available"}
         try:
             from freebuff_plugin_03.event import EventQuery
             from freebuff_plugin_03.event.replay import EventReplay
@@ -1243,16 +1243,16 @@ class BuffyMcpServer:
                     "delivered": result.delivered,
                     "errors": result.errors,
                     "duration_ms": result.duration_ms,
-                ***REMOVED***,
-            ***REMOVED***
+                },
+            }
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_event_audit(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_event_audit(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Аудит решений и действий."""
         store = self._get_event_store()
         if store is None:
-            return {"success": False, "error": "EventStore not available"***REMOVED***
+            return {"success": False, "error": "EventStore not available"}
         try:
             from freebuff_plugin_03.event.audit import AuditEngine
             audit = AuditEngine(store)
@@ -1265,19 +1265,19 @@ class BuffyMcpServer:
                 "data": {
                     "text": audit.format_audit_log(trail),
                     "entries": [
-                        {"id": e.id, "type": e.type, "timestamp": e.timestamp, "data": e.data***REMOVED***
+                        {"id": e.id, "type": e.type, "timestamp": e.timestamp, "data": e.data}
                         for e in trail
-                    ***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***
+                    ],
+                },
+            }
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_event_pulse(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_event_pulse(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Лента событий проекта."""
         store = self._get_event_store()
         if store is None:
-            return {"success": False, "error": "EventStore not available"***REMOVED***
+            return {"success": False, "error": "EventStore not available"}
         try:
             from freebuff_plugin_03.event.pulse import PulseEngine
             pulse = PulseEngine(bus=None, store=store)
@@ -1291,12 +1291,12 @@ class BuffyMcpServer:
                     "icon": e.icon,
                     "title": e.title,
                     "description": e.description,
-                    "timestamp": e.timestamp[:19***REMOVED***,
+                    "timestamp": e.timestamp[:19],
                     "severity": e.severity,
-                ***REMOVED*** for e in feed***REMOVED***,
-            ***REMOVED***
+                ] for e in feed],
+            }
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
     # ── Tool registration ──────────────────────────────────
 
@@ -1306,97 +1306,97 @@ class BuffyMcpServer:
         self._register_toolregistry_tools()
 
         # 2. Knowledge tools
-        self._tools["knowledge_search"***REMOVED*** = McpTool(
+        self._tools["knowledge_search"] = McpTool(
             name="knowledge_search",
             description="Search the Knowledge Engine (FTS5 + TF-IDF + semantic). Returns ranked results with snippets.",
             input_schema={
                 "type": "object",
                 "properties": {
-                    "query": {"type": "string", "description": "Search query"***REMOVED***,
-                    "mode": {"type": "string", "description": "Search mode: keyword, semantic, hybrid", "default": "hybrid"***REMOVED***,
-                    "top_k": {"type": "integer", "description": "Max results", "default": 10***REMOVED***,
-                ***REMOVED***,
-                "required": ["query"***REMOVED***,
-            ***REMOVED***,
+                    "query": {"type": "string", "description": "Search query"},
+                    "mode": {"type": "string", "description": "Search mode: keyword, semantic, hybrid", "default": "hybrid"},
+                    "top_k": {"type": "integer", "description": "Max results", "default": 10},
+                },
+                "required": ["query"],
+            },
             handler=self._handle_knowledge_search,
             category="knowledge",
         )
 
         # 3. Memory tools
-        self._tools["memory_store"***REMOVED*** = McpTool(
+        self._tools["memory_store"] = McpTool(
             name="memory_store",
             description="Store a memory entry in Buffy's Memory Engine (5 levels: working, project, knowledge, personal, archive).",
             input_schema={
                 "type": "object",
                 "properties": {
-                    "level": {"type": "string", "description": "Memory level", "enum": ["working", "project", "knowledge", "personal", "archive"***REMOVED******REMOVED***,
-                    "key": {"type": "string", "description": "Memory key (unique within level)"***REMOVED***,
-                    "content": {"type": "string", "description": "Content to store"***REMOVED***,
-                    "summary": {"type": "string", "description": "Short summary", "default": ""***REMOVED***,
-                ***REMOVED***,
-                "required": ["level", "key", "content"***REMOVED***,
-            ***REMOVED***,
+                    "level": {"type": "string", "description": "Memory level", "enum": ["working", "project", "knowledge", "personal", "archive"]},
+                    "key": {"type": "string", "description": "Memory key (unique within level)"},
+                    "content": {"type": "string", "description": "Content to store"},
+                    "summary": {"type": "string", "description": "Short summary", "default": ""},
+                },
+                "required": ["level", "key", "content"],
+            },
             handler=self._handle_memory_store,
             category="memory",
         )
 
-        self._tools["memory_retrieve"***REMOVED*** = McpTool(
+        self._tools["memory_retrieve"] = McpTool(
             name="memory_retrieve",
             description="Retrieve a memory entry from Buffy's Memory Engine by level and key.",
             input_schema={
                 "type": "object",
                 "properties": {
-                    "level": {"type": "string", "description": "Memory level", "enum": ["working", "project", "knowledge", "personal", "archive"***REMOVED******REMOVED***,
-                    "key": {"type": "string", "description": "Memory key"***REMOVED***,
-                ***REMOVED***,
-                "required": ["level", "key"***REMOVED***,
-            ***REMOVED***,
+                    "level": {"type": "string", "description": "Memory level", "enum": ["working", "project", "knowledge", "personal", "archive"]},
+                    "key": {"type": "string", "description": "Memory key"},
+                },
+                "required": ["level", "key"],
+            },
             handler=self._handle_memory_retrieve,
             category="memory",
         )
 
-        self._tools["memory_list"***REMOVED*** = McpTool(
+        self._tools["memory_list"] = McpTool(
             name="memory_list",
             description="List all memory entries at a given level.",
             input_schema={
                 "type": "object",
                 "properties": {
-                    "level": {"type": "string", "description": "Memory level", "enum": ["working", "project", "knowledge", "personal", "archive"***REMOVED******REMOVED***,
-                ***REMOVED***,
-                "required": ["level"***REMOVED***,
-            ***REMOVED***,
+                    "level": {"type": "string", "description": "Memory level", "enum": ["working", "project", "knowledge", "personal", "archive"]},
+                },
+                "required": ["level"],
+            },
             handler=self._handle_memory_list,
             category="memory",
         )
 
         # 4. Context/Session tools
-        self._tools["session_status"***REMOVED*** = McpTool(
+        self._tools["session_status"] = McpTool(
             name="session_status",
             description="Get the status of the current/last Buffy session (messages, tokens, context usage).",
-            input_schema={"type": "object", "properties": {***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {}},
             handler=self._handle_session_status,
             category="context",
         )
 
-        self._tools["context_resume"***REMOVED*** = McpTool(
+        self._tools["context_resume"] = McpTool(
             name="context_resume",
             description="Get the last session conspect for context restoration. Returns markdown summary of previous session.",
-            input_schema={"type": "object", "properties": {***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {}},
             handler=self._handle_context_resume,
             category="context",
         )
 
         # 5. Plugin tools
-        self._tools["plugins_list"***REMOVED*** = McpTool(
+        self._tools["plugins_list"] = McpTool(
             name="plugins_list",
             description="List all loaded plugins and their states.",
-            input_schema={"type": "object", "properties": {***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {}},
             handler=self._handle_plugins_list,
             category="plugins",
         )
 
         # 6. Bridge Layer tools (Phase 6: CoWork/Companion)
-        self._tools["bridge_connect"***REMOVED*** = McpTool(
+        self._tools["bridge_connect"] = McpTool(
             name="bridge_connect",
             description="Connect to an external MCP server via stdio or HTTP. The server's tools become available as ACP capabilities.",
             input_schema={
@@ -1405,40 +1405,40 @@ class BuffyMcpServer:
                     "transport": {
                         "type": "string",
                         "description": "Transport type",
-                        "enum": ["stdio", "http"***REMOVED***,
-                    ***REMOVED***,
+                        "enum": ["stdio", "http"],
+                    },
                     "command": {
                         "type": "string",
                         "description": "Command for stdio transport (e.g., 'python')",
-                    ***REMOVED***,
+                    },
                     "args": {
                         "type": "string",
                         "description": "Space-separated args for stdio (e.g., 'scripts_01/mcp_server.py')",
-                    ***REMOVED***,
+                    },
                     "endpoint": {
                         "type": "string",
                         "description": "HTTP endpoint (e.g., 'http://127.0.0.1:8765/mcp')",
-                    ***REMOVED***,
+                    },
                     "name": {
                         "type": "string",
                         "description": "Optional custom name for the server",
-                    ***REMOVED***,
-                ***REMOVED***,
-                "required": ["transport"***REMOVED***,
-            ***REMOVED***,
+                    },
+                },
+                "required": ["transport"],
+            },
             handler=self._handle_bridge_connect,
             category="bridge",
         )
 
-        self._tools["bridge_list"***REMOVED*** = McpTool(
+        self._tools["bridge_list"] = McpTool(
             name="bridge_list",
             description="List all connected MCP servers and their available tools.",
-            input_schema={"type": "object", "properties": {***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {}},
             handler=self._handle_bridge_list,
             category="bridge",
         )
 
-        self._tools["bridge_disconnect"***REMOVED*** = McpTool(
+        self._tools["bridge_disconnect"] = McpTool(
             name="bridge_disconnect",
             description="Disconnect a connected MCP server by name.",
             input_schema={
@@ -1447,15 +1447,15 @@ class BuffyMcpServer:
                     "name": {
                         "type": "string",
                         "description": "Server name to disconnect (from bridge_list)",
-                    ***REMOVED***,
-                ***REMOVED***,
-                "required": ["name"***REMOVED***,
-            ***REMOVED***,
+                    },
+                },
+                "required": ["name"],
+            },
             handler=self._handle_bridge_disconnect,
             category="bridge",
         )
 
-        self._tools["bridge_rpc"***REMOVED*** = McpTool(
+        self._tools["bridge_rpc"] = McpTool(
             name="bridge_rpc",
             description="Send a JSON-RPC request to a connected MCP server (e.g., tools/call, resources/list, ping).",
             input_schema={
@@ -1464,28 +1464,28 @@ class BuffyMcpServer:
                     "server": {
                         "type": "string",
                         "description": "Server name (from bridge_list)",
-                    ***REMOVED***,
+                    },
                     "method": {
                         "type": "string",
                         "description": "MCP JSON-RPC method (tools/list, resources/list, tools/call, ping)",
-                    ***REMOVED***,
+                    },
                     "tool": {
                         "type": "string",
                         "description": "Tool name for tools/call",
-                    ***REMOVED***,
+                    },
                     "arguments": {
                         "type": "string",
                         "description": "JSON arguments for tools/call",
-                    ***REMOVED***,
-                ***REMOVED***,
-                "required": ["server", "method"***REMOVED***,
-            ***REMOVED***,
+                    },
+                },
+                "required": ["server", "method"],
+            },
             handler=self._handle_bridge_rpc,
             category="bridge",
         )
 
         # 7. Bootstrap Engine tools
-        self._tools["bootstrap_check"***REMOVED*** = McpTool(
+        self._tools["bootstrap_check"] = McpTool(
             name="bootstrap_check",
             description="Check the current environment state (OS, Python, Node, Git, Disk, RAM, packages). Returns detailed environment report.",
             input_schema={
@@ -1495,14 +1495,14 @@ class BuffyMcpServer:
                         "type": "boolean",
                         "description": "Quick check (OS, Python, Git, Disk only)",
                         "default": False,
-                    ***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
+                    },
+                },
+            },
             handler=self._handle_bootstrap_check,
             category="bootstrap",
         )
 
-        self._tools["bootstrap_run"***REMOVED*** = McpTool(
+        self._tools["bootstrap_run"] = McpTool(
             name="bootstrap_run",
             description="Run full bootstrap: check environment → load profile → install components → diagnose → report. Idempotent — skips already-installed components.",
             input_schema={
@@ -1512,31 +1512,31 @@ class BuffyMcpServer:
                         "type": "string",
                         "description": "Profile name: minimal, developer, offline, cloud, android",
                         "default": "minimal",
-                    ***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
+                    },
+                },
+            },
             handler=self._handle_bootstrap_run,
             category="bootstrap",
         )
 
-        self._tools["bootstrap_status"***REMOVED*** = McpTool(
+        self._tools["bootstrap_status"] = McpTool(
             name="bootstrap_status",
             description="Get Bootstrap Engine status — whether bootstrap was ever run, last profile, warnings, errors.",
-            input_schema={"type": "object", "properties": {***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {}},
             handler=self._handle_bootstrap_status,
             category="bootstrap",
         )
 
         # 8. Runtime Abstraction Layer tools
-        self._tools["runtime_list"***REMOVED*** = McpTool(
+        self._tools["runtime_list"] = McpTool(
             name="runtime_list",
             description="List all discovered AI runtimes, their connection status, capabilities, and the active runtime.",
-            input_schema={"type": "object", "properties": {***REMOVED******REMOVED***,
+            input_schema={"type": "object", "properties": {}},
             handler=self._handle_runtime_list,
             category="runtime",
         )
 
-        self._tools["runtime_connect"***REMOVED*** = McpTool(
+        self._tools["runtime_connect"] = McpTool(
             name="runtime_connect",
             description="Connect to a registered AI runtime by name (e.g., freebuff, claude-code). Performs MCP handshake.",
             input_schema={
@@ -1545,15 +1545,15 @@ class BuffyMcpServer:
                     "name": {
                         "type": "string",
                         "description": "Runtime name to connect",
-                    ***REMOVED***,
-                ***REMOVED***,
-                "required": ["name"***REMOVED***,
-            ***REMOVED***,
+                    },
+                },
+                "required": ["name"],
+            },
             handler=self._handle_runtime_connect,
             category="runtime",
         )
 
-        self._tools["runtime_disconnect"***REMOVED*** = McpTool(
+        self._tools["runtime_disconnect"] = McpTool(
             name="runtime_disconnect",
             description="Disconnect an active AI runtime by name.",
             input_schema={
@@ -1562,15 +1562,15 @@ class BuffyMcpServer:
                     "name": {
                         "type": "string",
                         "description": "Runtime name to disconnect",
-                    ***REMOVED***,
-                ***REMOVED***,
-                "required": ["name"***REMOVED***,
-            ***REMOVED***,
+                    },
+                },
+                "required": ["name"],
+            },
             handler=self._handle_runtime_disconnect,
             category="runtime",
         )
 
-        self._tools["runtime_select"***REMOVED*** = McpTool(
+        self._tools["runtime_select"] = McpTool(
             name="runtime_select",
             description="Select the active default AI runtime by name.",
             input_schema={
@@ -1579,15 +1579,15 @@ class BuffyMcpServer:
                     "name": {
                         "type": "string",
                         "description": "Runtime name to set as active",
-                    ***REMOVED***,
-                ***REMOVED***,
-                "required": ["name"***REMOVED***,
-            ***REMOVED***,
+                    },
+                },
+                "required": ["name"],
+            },
             handler=self._handle_runtime_select,
             category="runtime",
         )
 
-        self._tools["runtime_generate"***REMOVED*** = McpTool(
+        self._tools["runtime_generate"] = McpTool(
             name="runtime_generate",
             description="Generate a response from an AI runtime. Selects runtime by capability, explicit name, or active runtime.",
             input_schema={
@@ -1596,40 +1596,40 @@ class BuffyMcpServer:
                     "prompt": {
                         "type": "string",
                         "description": "Single prompt/message to send",
-                    ***REMOVED***,
+                    },
                     "messages": {
                         "type": "array",
-                        "description": "Optional list of {role, content***REMOVED*** messages (overrides prompt)",
-                    ***REMOVED***,
+                        "description": "Optional list of {role, content] messages (overrides prompt)",
+                    },
                     "name": {
                         "type": "string",
                         "description": "Explicit runtime name (optional)",
-                    ***REMOVED***,
+                    },
                     "capability": {
                         "type": "string",
                         "description": "Select runtime by capability, e.g. coding (optional)",
-                    ***REMOVED***,
+                    },
                     "system": {
                         "type": "string",
                         "description": "System prompt (optional)",
-                    ***REMOVED***,
+                    },
                     "temperature": {
                         "type": "number",
                         "description": "Generation temperature",
                         "default": 0.7,
-                    ***REMOVED***,
+                    },
                     "max_tokens": {
                         "type": "integer",
                         "description": "Maximum tokens to generate",
-                    ***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
+                    },
+                },
+            },
             handler=self._handle_runtime_generate,
             category="runtime",
         )
 
         # Правило 11 (User-Choice Override): диалоговое переопределение «используй X вместо Y»
-        self._tools["policy_override"***REMOVED*** = McpTool(
+        self._tools["policy_override"] = McpTool(
             name="policy_override",
             description=(
                 "Apply conversational user override (правило 11): parse a natural-language "
@@ -1643,10 +1643,10 @@ class BuffyMcpServer:
                     "message": {
                         "type": "string",
                         "description": "Natural-language override phrase, e.g. \"use deepseek instead of claude for coding\", \"используй freebuff для research\", \"switch coding to claude-code\"",
-                    ***REMOVED***,
-                ***REMOVED***,
-                "required": ["message"***REMOVED***,
-            ***REMOVED***,
+                    },
+                },
+                "required": ["message"],
+            },
             handler=self._handle_policy_override,
             category="policy",
         )
@@ -1657,48 +1657,48 @@ class BuffyMcpServer:
             registry = self._get_tool_registry()
             for tool_info in registry.list_tools():
                 # Convert ToolRegistry params to JSON Schema
-                properties: Dict[str, Any***REMOVED*** = {***REMOVED***
-                required: List[str***REMOVED*** = [***REMOVED***
-                for p in tool_info.get("parameters", [***REMOVED***):
-                    prop: Dict[str, Any***REMOVED*** = {"type": p["type"***REMOVED***, "description": p["description"***REMOVED******REMOVED***
+                properties: Dict[str, Any] = {}
+                required: List[str] = []
+                for p in tool_info.get("parameters", []):
+                    prop: Dict[str, Any] = {"type": p["type"], "description": p["description"]}
                     if p.get("default") is not None:
-                        prop["default"***REMOVED*** = p["default"***REMOVED***
+                        prop["default"] = p["default"]
                     if p.get("enum"):
-                        prop["enum"***REMOVED*** = p["enum"***REMOVED***
-                    properties[p["name"***REMOVED******REMOVED*** = prop
+                        prop["enum"] = p["enum"]
+                    properties[p["name"]] = prop
                     if p.get("required"):
-                        required.append(p["name"***REMOVED***)
+                        required.append(p["name"])
 
-                schema: Dict[str, Any***REMOVED*** = {
+                schema: Dict[str, Any] = {
                     "type": "object",
                     "properties": properties,
-                ***REMOVED***
+                }
                 if required:
-                    schema["required"***REMOVED*** = required
+                    schema["required"] = required
 
-                tool_name = tool_info["name"***REMOVED***
-                self._tools[tool_name***REMOVED*** = McpTool(
+                tool_name = tool_info["name"]
+                self._tools[tool_name] = McpTool(
                     name=tool_name,
-                    description=tool_info["description"***REMOVED***,
+                    description=tool_info["description"],
                     input_schema=schema,
                     handler=self._make_toolregistry_handler(tool_name),
                     category=tool_info.get("category", "general"),
                 )
         except Exception as e:
-            print(f"⚠️ MCP: ToolRegistry discovery failed: {e***REMOVED***", file=sys.stderr)
+            print(f"⚠️ MCP: ToolRegistry discovery failed: {e}", file=sys.stderr)
 
     def _make_toolregistry_handler(self, tool_name: str) -> Callable:
         """Creates a handler that delegates to ToolRegistry.execute()."""
-        def handler(arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+        def handler(arguments: Dict[str, Any]) -> Dict[str, Any]:
             registry = self._get_tool_registry()
             result = registry.execute(tool_name, arguments)
-            self._publish("tool.called", {"tool": tool_name, "success": result.success***REMOVED***)
+            self._publish("tool.called", {"tool": tool_name, "success": result.success})
             return {
                 "success": result.success,
                 "data": result.data,
                 "error": result.error,
                 "duration_ms": result.duration_ms,
-            ***REMOVED***
+            }
         return handler
 
     # ── Resource registration ──────────────────────────────
@@ -1714,9 +1714,9 @@ class BuffyMcpServer:
             ("buffy://task", "buffy_task", "TASK.md — current task", "TASK.md"),
             ("buffy://inventory", "buffy_inventory", "SYSTEM_INVENTORY.md — full component catalog", "docs_10/core/SYSTEM_INVENTORY.md"),
             ("buffy://decisions", "buffy_decisions", "DECISIONS.md — index of architecture decision records", "docs_10/decisions/DECISIONS.md"),
-        ***REMOVED***
+        ]
         for uri, name, desc, rel_path in doc_resources:
-            self._resources[uri***REMOVED*** = McpResource(
+            self._resources[uri] = McpResource(
                 uri=uri,
                 name=name,
                 description=desc,
@@ -1725,146 +1725,146 @@ class BuffyMcpServer:
             )
 
         # 2. Dynamic resources (knowledge, memory) — handled via URI patterns
-        self._resources["buffy://knowledge"***REMOVED*** = McpResource(
+        self._resources["buffy://knowledge"] = McpResource(
             uri="buffy://knowledge",
             name="knowledge_index",
-            description="Knowledge Engine index — use knowledge_search tool to query, or buffy://knowledge/{key***REMOVED*** to read specific entry",
+            description="Knowledge Engine index — use knowledge_search tool to query, or buffy://knowledge/{key] to read specific entry",
             mime_type="application/json",
             handler=self._handle_knowledge_resource,
         )
 
-        self._resources["buffy://memory"***REMOVED*** = McpResource(
+        self._resources["buffy://memory"] = McpResource(
             uri="buffy://memory",
             name="memory_overview",
-            description="Memory Engine overview — use buffy://memory/{level***REMOVED***/{key***REMOVED*** to read specific entry",
+            description="Memory Engine overview — use buffy://memory/{level]/{key] to read specific entry",
             mime_type="application/json",
             handler=self._handle_memory_resource,
         )
 
     def _make_file_resource_handler(self, rel_path: str) -> Callable:
         """Creates a handler that reads a project file."""
-        def handler(uri: str) -> Tuple[str, str***REMOVED***:
+        def handler(uri: str) -> Tuple[str, str]:
             full_path = self.workspace / rel_path
             if not full_path.exists():
-                return "", f"File not found: {rel_path***REMOVED***"
+                return "", f"File not found: {rel_path}"
             content = full_path.read_text(encoding="utf-8")
             return content, "text/markdown"
         return handler
 
-    def _handle_knowledge_resource(self, uri: str) -> Tuple[str, str***REMOVED***:
-        """Handle buffy://knowledge or buffy://knowledge/{key***REMOVED***."""
+    def _handle_knowledge_resource(self, uri: str) -> Tuple[str, str]:
+        """Handle buffy://knowledge or buffy://knowledge/{key]."""
         parts = uri.replace("buffy://knowledge", "").strip("/").split("/", 1)
-        if not parts or parts[0***REMOVED*** == "":
+        if not parts or parts[0] == "":
             # List all knowledge entries
             from scripts_01.memory_engine import MemoryLevel
             me = self._get_memory_engine()
             entries = me.list_entries(MemoryLevel.KNOWLEDGE)
-            data = [{"key": e.key, "summary": e.summary[:100***REMOVED******REMOVED*** for e in entries***REMOVED***
+            data = [{"key": e.key, "summary": e.summary[:100]} for e in entries]
             return json.dumps(data, ensure_ascii=False, indent=2), "application/json"
         else:
-            key = parts[0***REMOVED***
+            key = parts[0]
             from scripts_01.memory_engine import MemoryLevel
             me = self._get_memory_engine()
             entry = me.retrieve(MemoryLevel.KNOWLEDGE, key)
             if entry is None:
-                return "", f"Knowledge entry not found: {key***REMOVED***"
+                return "", f"Knowledge entry not found: {key}"
             return entry.content, "text/markdown"
 
-    def _handle_memory_resource(self, uri: str) -> Tuple[str, str***REMOVED***:
-        """Handle buffy://memory or buffy://memory/{level***REMOVED***/{key***REMOVED***."""
+    def _handle_memory_resource(self, uri: str) -> Tuple[str, str]:
+        """Handle buffy://memory or buffy://memory/{level]/{key]."""
         from scripts_01.memory_engine import MemoryLevel
         parts = uri.replace("buffy://memory", "").strip("/").split("/", 1)
         me = self._get_memory_engine()
 
-        if not parts or parts[0***REMOVED*** == "":
+        if not parts or parts[0] == "":
             # Overview: list all levels with counts
-            overview = {***REMOVED***
+            overview = {}
             for level in MemoryLevel:
                 entries = me.list_entries(level)
-                overview[level.value***REMOVED*** = len(entries)
+                overview[level.value] = len(entries)
             return json.dumps(overview, ensure_ascii=False, indent=2), "application/json"
         elif len(parts) >= 2:
-            level_str, key = parts[0***REMOVED***, parts[1***REMOVED***
+            level_str, key = parts[0], parts[1]
             try:
                 level = MemoryLevel(level_str)
             except ValueError:
-                return "", f"Invalid memory level: {level_str***REMOVED***"
+                return "", f"Invalid memory level: {level_str}"
             entry = me.retrieve(level, key)
             if entry is None:
-                return "", f"Memory entry not found: {level***REMOVED***/{key***REMOVED***"
+                return "", f"Memory entry not found: {level}/{key}"
             return entry.content, "text/markdown"
         else:
-            # buffy://memory/{level***REMOVED*** — list entries at level
-            level_str = parts[0***REMOVED***
+            # buffy://memory/{level} — list entries at level
+            level_str = parts[0]
             try:
                 level = MemoryLevel(level_str)
             except ValueError:
-                return "", f"Invalid memory level: {level_str***REMOVED***"
+                return "", f"Invalid memory level: {level_str}"
             entries = me.list_entries(level)
-            data = [{"key": e.key, "summary": e.summary[:100***REMOVED******REMOVED*** for e in entries***REMOVED***
+            data = [{"key": e.key, "summary": e.summary[:100]} for e in entries]
             return json.dumps(data, ensure_ascii=False, indent=2), "application/json"
 
     # ── Prompt registration ────────────────────────────────
 
     def _register_prompts(self) -> None:
         """Регистрирует MCP prompts."""
-        self._prompts["context_resume"***REMOVED*** = McpPrompt(
+        self._prompts["context_resume"] = McpPrompt(
             name="context_resume",
             description="Restore Buffy's context from the last session. Returns a prompt for starting a new session with previous context.",
-            arguments=[***REMOVED***,
+            arguments=[],
             handler=self._handle_prompt_context_resume,
         )
 
-        self._prompts["knowledge_search"***REMOVED*** = McpPrompt(
+        self._prompts["knowledge_search"] = McpPrompt(
             name="knowledge_search",
             description="Search the Knowledge Engine and format results as a context prompt.",
             arguments=[
-                {"name": "query", "description": "Search query", "required": True***REMOVED***,
-                {"name": "mode", "description": "Search mode: keyword, semantic, hybrid", "default": "hybrid"***REMOVED***,
-            ***REMOVED***,
+                {"name": "query", "description": "Search query", "required": True},
+                {"name": "mode", "description": "Search mode: keyword, semantic, hybrid", "default": "hybrid"},
+            ],
             handler=self._handle_prompt_knowledge_search,
         )
 
-        self._prompts["task_start"***REMOVED*** = McpPrompt(
+        self._prompts["task_start"] = McpPrompt(
             name="task_start",
             description="Start a new task with context. Returns a structured prompt for beginning work on a task.",
             arguments=[
-                {"name": "task", "description": "Task description", "required": True***REMOVED***,
-                {"name": "project", "description": "Project name", "default": "freebuff"***REMOVED***,
-            ***REMOVED***,
+                {"name": "task", "description": "Task description", "required": True},
+                {"name": "project", "description": "Project name", "default": "freebuff"},
+            ],
             handler=self._handle_prompt_task_start,
         )
 
-    def _handle_prompt_context_resume(self, args: Dict[str, Any***REMOVED***) -> str:
+    def _handle_prompt_context_resume(self, args: Dict[str, Any]) -> str:
         """Generate context resume prompt."""
-        conspect = self._handle_context_resume({***REMOVED***)["data"***REMOVED*** or ""
+        conspect = self._handle_context_resume({})["data"] or ""
         return (
             "I am starting a new session. Here is the context from my previous session:\n\n"
-            f"{conspect***REMOVED***\n\n"
+            f"{conspect}\n\n"
             "Please read BUFFY.md, restore context, and briefly tell me "
             "what was done in the previous session and what we are continuing."
         )
 
-    def _handle_prompt_knowledge_search(self, args: Dict[str, Any***REMOVED***) -> str:
+    def _handle_prompt_knowledge_search(self, args: Dict[str, Any]) -> str:
         """Generate knowledge search prompt."""
         query = args.get("query", "")
         mode = args.get("mode", "hybrid")
-        result = self._handle_knowledge_search({"query": query, "mode": mode***REMOVED***)
-        results = result.get("data", [***REMOVED***)
-        lines = [f"## Knowledge Search Results for: '{query***REMOVED***'", ""***REMOVED***
+        result = self._handle_knowledge_search({"query": query, "mode": mode})
+        results = result.get("data", [])
+        lines = [f"## Knowledge Search Results for: '{query}'", ""]
         for r in results:
-            lines.append(f"### [{r.get('score', 0):.3f***REMOVED******REMOVED*** {r.get('doc_id', '?')***REMOVED***")
-            lines.append(r.get("snippet", "")[:300***REMOVED***)
+            lines.append(f"### [{r.get('score', 0):.3f}] {r.get('doc_id', '?')}")
+            lines.append(r.get("snippet", "")[:300])
             lines.append("")
         return "\n".join(lines) if lines else "No results found."
 
-    def _handle_prompt_task_start(self, args: Dict[str, Any***REMOVED***) -> str:
+    def _handle_prompt_task_start(self, args: Dict[str, Any]) -> str:
         """Generate task start prompt."""
         task = args.get("task", "")
         project = args.get("project", "freebuff")
         return (
-            f"TASK: {task***REMOVED***\n"
-            f"PROJECT: {project***REMOVED***\n\n"
+            f"TASK: {task}\n"
+            f"PROJECT: {project}\n\n"
             "Please:\n"
             "1. Read BUFFY.md and relevant docs\n"
             "2. Create a plan with TODO steps\n"
@@ -1875,19 +1875,19 @@ class BuffyMcpServer:
 
     # ── Tool handlers ──────────────────────────────────────
 
-    def _handle_knowledge_search(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_knowledge_search(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Search Knowledge Engine."""
         query = arguments.get("query", "")
         mode = arguments.get("mode", "hybrid")
         top_k = arguments.get("top_k", 10)
 
         if not query:
-            return {"success": False, "error": "query is required"***REMOVED***
+            return {"success": False, "error": "query is required"}
 
         try:
             ke = self._get_knowledge_engine()
             results = ke.search(query, top_k=top_k, mode=mode)
-            self._publish("knowledge.searched", {"query": query, "results": len(results)***REMOVED***)
+            self._publish("knowledge.searched", {"query": query, "results": len(results)})
             return {
                 "success": True,
                 "data": [
@@ -1896,14 +1896,14 @@ class BuffyMcpServer:
                         "score": r.score,
                         "snippet": r.snippet,
                         "metadata": r.metadata,
-                    ***REMOVED***
+                    }
                     for r in results
-                ***REMOVED***,
-            ***REMOVED***
+                ],
+            }
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_memory_store(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_memory_store(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Store memory entry."""
         from scripts_01.memory_engine import MemoryEngine, MemoryLevel, ContentType
 
@@ -1912,13 +1912,13 @@ class BuffyMcpServer:
         content = arguments.get("content", "")
         summary = arguments.get("summary", "")
 
-        if not all([level_str, key, content***REMOVED***):
-            return {"success": False, "error": "level, key, content are required"***REMOVED***
+        if not all([level_str, key, content]):
+            return {"success": False, "error": "level, key, content are required"}
 
         try:
             level = MemoryLevel(level_str)
         except ValueError:
-            return {"success": False, "error": f"Invalid level: {level_str***REMOVED***"***REMOVED***
+            return {"success": False, "error": f"Invalid level: {level_str}"}
 
         try:
             me = self._get_memory_engine()
@@ -1929,31 +1929,31 @@ class BuffyMcpServer:
                 content_type=ContentType.TEXT,
                 summary=summary,
             )
-            self._publish("memory.stored", {"level": level_str, "key": key***REMOVED***)
-            return {"success": True, "data": f"Stored {level_str***REMOVED***/{key***REMOVED***"***REMOVED***
+            self._publish("memory.stored", {"level": level_str, "key": key})
+            return {"success": True, "data": f"Stored {level_str}/{key}"}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_memory_retrieve(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_memory_retrieve(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Retrieve memory entry."""
         from scripts_01.memory_engine import MemoryLevel
 
         level_str = arguments.get("level", "")
         key = arguments.get("key", "")
 
-        if not all([level_str, key***REMOVED***):
-            return {"success": False, "error": "level and key are required"***REMOVED***
+        if not all([level_str, key]):
+            return {"success": False, "error": "level and key are required"}
 
         try:
             level = MemoryLevel(level_str)
         except ValueError:
-            return {"success": False, "error": f"Invalid level: {level_str***REMOVED***"***REMOVED***
+            return {"success": False, "error": f"Invalid level: {level_str}"}
 
         try:
             me = self._get_memory_engine()
             entry = me.retrieve(level, key)
             if entry is None:
-                return {"success": False, "error": f"Not found: {level_str***REMOVED***/{key***REMOVED***"***REMOVED***
+                return {"success": False, "error": f"Not found: {level_str}/{key}"}
             return {
                 "success": True,
                 "data": {
@@ -1962,23 +1962,23 @@ class BuffyMcpServer:
                     "summary": entry.summary,
                     "content_type": entry.content_type.value if hasattr(entry.content_type, 'value') else str(entry.content_type),
                     "metadata": entry.metadata,
-                ***REMOVED***,
-            ***REMOVED***
+                },
+            }
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_memory_list(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_memory_list(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """List memory entries at a level."""
         from scripts_01.memory_engine import MemoryLevel
 
         level_str = arguments.get("level", "")
         if not level_str:
-            return {"success": False, "error": "level is required"***REMOVED***
+            return {"success": False, "error": "level is required"}
 
         try:
             level = MemoryLevel(level_str)
         except ValueError:
-            return {"success": False, "error": f"Invalid level: {level_str***REMOVED***"***REMOVED***
+            return {"success": False, "error": f"Invalid level: {level_str}"}
 
         try:
             me = self._get_memory_engine()
@@ -1988,51 +1988,51 @@ class BuffyMcpServer:
                 "data": [
                     {
                         "key": e.key,
-                        "summary": e.summary[:100***REMOVED***,
+                        "summary": e.summary[:100],
                         "content_type": e.content_type.value if hasattr(e.content_type, 'value') else str(e.content_type),
-                    ***REMOVED***
+                    }
                     for e in entries
-                ***REMOVED***,
-            ***REMOVED***
+                ],
+            }
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_session_status(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_session_status(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Get session status."""
         try:
             cm = self._get_context_manager()
             from scripts_01.context_manager import SessionStatus
             active = cm.list_sessions(SessionStatus.ACTIVE)
             if active:
-                s = active[0***REMOVED***
-                status = cm.get_context_status(s["session_id"***REMOVED***)
-                return {"success": True, "data": {"session": s, "context": status***REMOVED******REMOVED***
+                s = active[0]
+                status = cm.get_context_status(s["session_id"])
+                return {"success": True, "data": {"session": s, "context": status}}
             else:
-                return {"success": True, "data": {"session": None, "message": "No active sessions"***REMOVED******REMOVED***
+                return {"success": True, "data": {"session": None, "message": "No active sessions"}}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_context_resume(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_context_resume(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Get last conspect for context restoration."""
         summaries_dir = self.workspace / "context_12" / "summaries"
         if not summaries_dir.is_dir():
-            return {"success": True, "data": ""***REMOVED***
+            return {"success": True, "data": ""}
 
         files = sorted(
-            [f for f in summaries_dir.iterdir() if f.name.endswith(".md")***REMOVED***,
+            [f for f in summaries_dir.iterdir() if f.name.endswith(".md")],
             key=lambda f: f.stat().st_mtime,
             reverse=True,
         )
         if not files:
-            return {"success": True, "data": ""***REMOVED***
+            return {"success": True, "data": ""}
 
         try:
-            content = files[0***REMOVED***.read_text(encoding="utf-8")
-            return {"success": True, "data": content, "metadata": {"file": files[0***REMOVED***.name***REMOVED******REMOVED***
+            content = files[0].read_text(encoding="utf-8")
+            return {"success": True, "data": content, "metadata": {"file": files[0].name}}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_plugins_list(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_plugins_list(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """List loaded plugins."""
         try:
             from scripts_01.plugin_api import PluginRegistry, PluginLoader
@@ -2040,17 +2040,17 @@ class BuffyMcpServer:
             loader = PluginLoader(registry)
             loader.load_all()
             state = registry.get_state()
-            return {"success": True, "data": state***REMOVED***
+            return {"success": True, "data": state}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
     # ── Bridge Layer handlers ──────────────────────────────
 
-    def _handle_bridge_connect(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_bridge_connect(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Connect to an external MCP server."""
         bridge = self._get_bridge_layer()
         if bridge is None:
-            return {"success": False, "error": "BridgeLayer not available"***REMOVED***
+            return {"success": False, "error": "BridgeLayer not available"}
 
         transport = arguments.get("transport", "")
         name = arguments.get("name")
@@ -2059,10 +2059,10 @@ class BuffyMcpServer:
             if transport == "stdio":
                 command = arguments.get("command", "")
                 args_str = arguments.get("args", "")
-                args_list = args_str.split() if args_str else [***REMOVED***
+                args_list = args_str.split() if args_str else []
 
                 if not command:
-                    return {"success": False, "error": "command is required for stdio transport"***REMOVED***
+                    return {"success": False, "error": "command is required for stdio transport"}
 
                 result = bridge.connect_mcp_stdio(
                     command=command,
@@ -2070,32 +2070,32 @@ class BuffyMcpServer:
                     cwd=str(self.workspace),
                     name=name,
                 )
-                self._publish("bridge.connected", {"transport": "stdio", "server": result.get("server", command), "tools": result.get("tools", 0)***REMOVED***)
+                self._publish("bridge.connected", {"transport": "stdio", "server": result.get("server", command), "tools": result.get("tools", 0)})
                 return result
 
             elif transport == "http":
                 endpoint = arguments.get("endpoint", "")
                 if not endpoint:
-                    return {"success": False, "error": "endpoint is required for http transport"***REMOVED***
+                    return {"success": False, "error": "endpoint is required for http transport"}
 
                 result = bridge.connect_mcp_http(
                     endpoint=endpoint,
                     name=name,
                 )
-                self._publish("bridge.connected", {"transport": "http", "server": result.get("server", endpoint), "tools": result.get("tools", 0)***REMOVED***)
+                self._publish("bridge.connected", {"transport": "http", "server": result.get("server", endpoint), "tools": result.get("tools", 0)})
                 return result
 
             else:
-                return {"success": False, "error": f"Unknown transport: {transport***REMOVED***. Use 'stdio' or 'http'."***REMOVED***
+                return {"success": False, "error": f"Unknown transport: {transport}. Use 'stdio' or 'http'."}
 
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_bridge_list(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_bridge_list(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """List connected MCP servers."""
         bridge = self._get_bridge_layer()
         if bridge is None:
-            return {"success": False, "error": "BridgeLayer not available"***REMOVED***
+            return {"success": False, "error": "BridgeLayer not available"}
 
         servers = bridge.list_mcp_servers()
         return {
@@ -2103,65 +2103,65 @@ class BuffyMcpServer:
             "data": {
                 "servers": servers,
                 "total": len(servers),
-            ***REMOVED***,
-        ***REMOVED***
+            },
+        }
 
-    def _handle_bridge_disconnect(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_bridge_disconnect(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Disconnect an MCP server."""
         bridge = self._get_bridge_layer()
         if bridge is None:
-            return {"success": False, "error": "BridgeLayer not available"***REMOVED***
+            return {"success": False, "error": "BridgeLayer not available"}
 
         name = arguments.get("name", "")
         if not name:
-            return {"success": False, "error": "name is required"***REMOVED***
+            return {"success": False, "error": "name is required"}
 
         ok = bridge.disconnect_mcp(name)
-        self._publish("bridge.disconnected", {"server": name, "success": ok***REMOVED***)
+        self._publish("bridge.disconnected", {"server": name, "success": ok})
         return {
             "success": ok,
-            "data": {"disconnected": ok, "server": name***REMOVED***,
-            "error": None if ok else f"Server not found: {name***REMOVED***",
-        ***REMOVED***
+            "data": {"disconnected": ok, "server": name},
+            "error": None if ok else f"Server not found: {name}",
+        }
 
-    def _handle_bridge_rpc(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_bridge_rpc(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Send JSON-RPC to a connected MCP server."""
         bridge = self._get_bridge_layer()
         if bridge is None:
-            return {"success": False, "error": "BridgeLayer not available"***REMOVED***
+            return {"success": False, "error": "BridgeLayer not available"}
 
         server_name = arguments.get("server", "")
         method = arguments.get("method", "")
 
         if not server_name:
-            return {"success": False, "error": "server is required"***REMOVED***
+            return {"success": False, "error": "server is required"}
         if not method:
-            return {"success": False, "error": "method is required"***REMOVED***
+            return {"success": False, "error": "method is required"}
 
         # Build params based on method
         if method == "tools/call":
             tool = arguments.get("tool", "")
-            args_str = arguments.get("arguments", "{***REMOVED***")
+            args_str = arguments.get("arguments", "{)")
             try:
                 args_dict = json.loads(args_str)
             except json.JSONDecodeError:
-                args_dict = {***REMOVED***
+                args_dict = {}
 
-            params = {"name": tool, "arguments": args_dict***REMOVED***
+            params = {"name": tool, "arguments": args_dict}
         else:
-            params = {***REMOVED***
+            params = {}
 
         result = bridge._rpc_to_server(server_name, method, params)
-        self._publish("bridge.rpc", {"server": server_name, "method": method, "success": result.get("success", False)***REMOVED***)
+        self._publish("bridge.rpc", {"server": server_name, "method": method, "success": result.get("success", False)})
         return result
 
     # ── Bootstrap Engine handlers ──────────────────────────
 
-    def _handle_bootstrap_check(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_bootstrap_check(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Check environment state via Bootstrap Engine."""
         engine = self._get_bootstrap_engine()
         if engine is None:
-            return {"success": False, "error": "BootstrapEngine not available"***REMOVED***
+            return {"success": False, "error": "BootstrapEngine not available"}
 
         try:
             quick = arguments.get("quick", False)
@@ -2170,7 +2170,7 @@ class BuffyMcpServer:
             else:
                 env = engine.check()
 
-            self._publish("bootstrap.checked", {"quick": quick, "os": env.os_type***REMOVED***)
+            self._publish("bootstrap.checked", {"quick": quick, "os": env.os_type})
 
             return {
                 "success": True,
@@ -2187,12 +2187,12 @@ class BuffyMcpServer:
                     "has_git": env.has_git,
                     "has_env_file": env.has_env_file,
                     "workspace": env.workspace,
-                ***REMOVED***,
-            ***REMOVED***
+                },
+            }
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_bootstrap_run(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_bootstrap_run(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Run full bootstrap cycle."""
         profile = arguments.get("profile", "minimal")
 
@@ -2211,7 +2211,7 @@ class BuffyMcpServer:
                 "success": report.success,
                 "duration_ms": report.duration_ms,
                 "steps": len(report.steps),
-            ***REMOVED***)
+            ])
 
             return {
                 "success": report.success,
@@ -2224,116 +2224,116 @@ class BuffyMcpServer:
                             "status": s.status,
                             "duration_ms": s.duration_ms,
                             "error": s.error,
-                        ***REMOVED***
+                        }
                         for s in report.steps
-                    ***REMOVED***,
-                    "warnings": report.warnings[:10***REMOVED***,
-                    "errors": report.errors[:10***REMOVED***,
+                    ],
+                    "warnings": report.warnings[:10],
+                    "errors": report.errors[:10],
                     "diagnosis": {
                         "health_score": report.diagnosis.health_score if report.diagnosis else None,
-                        "path_issues": report.diagnosis.path_issues if report.diagnosis else [***REMOVED***,
-                        "runtime_issues": report.diagnosis.runtime_issues if report.diagnosis else [***REMOVED***,
-                        "dependency_issues": report.diagnosis.dependency_issues if report.diagnosis else [***REMOVED***,
-                        "key_issues": report.diagnosis.key_issues if report.diagnosis else [***REMOVED***,
-                    ***REMOVED*** if report.diagnosis else None,
+                        "path_issues": report.diagnosis.path_issues if report.diagnosis else [],
+                        "runtime_issues": report.diagnosis.runtime_issues if report.diagnosis else [],
+                        "dependency_issues": report.diagnosis.dependency_issues if report.diagnosis else [],
+                        "key_issues": report.diagnosis.key_issues if report.diagnosis else [],
+                    ] if report.diagnosis else None,
                     "environment": {
                         "os": report.environment.os_type if report.environment else "unknown",
                         "python": report.environment.python_version if report.environment else "",
                         "git": report.environment.git_available if report.environment else False,
-                    ***REMOVED*** if report.environment else None,
-                ***REMOVED***,
-            ***REMOVED***
+                    ] if report.environment else None,
+                },
+            }
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_bootstrap_status(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_bootstrap_status(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Get bootstrap status."""
         engine = self._get_bootstrap_engine()
         if engine is None:
-            return {"success": False, "error": "BootstrapEngine not available"***REMOVED***
+            return {"success": False, "error": "BootstrapEngine not available"}
 
         try:
             status = engine.get_status()
             return {
                 "success": True,
                 "data": status,
-            ***REMOVED***
+            }
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
     # ── Runtime Abstraction Layer handlers ─────────────────
 
-    def _handle_runtime_list(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_runtime_list(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """List discovered runtimes and active runtime."""
         registry = self._get_runtime_registry()
         if registry is None:
-            return {"success": False, "error": "RuntimeRegistry not available"***REMOVED***
+            return {"success": False, "error": "RuntimeRegistry not available"}
 
         try:
             status = registry.get_status()
-            self._publish("runtime.listed", {"total": status.get("total", 0), "active": status.get("active")***REMOVED***)
-            return {"success": True, "data": status***REMOVED***
+            self._publish("runtime.listed", {"total": status.get("total", 0), "active": status.get("active")})
+            return {"success": True, "data": status}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_runtime_connect(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_runtime_connect(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Connect to a runtime by name."""
         registry = self._get_runtime_registry()
         if registry is None:
-            return {"success": False, "error": "RuntimeRegistry not available"***REMOVED***
+            return {"success": False, "error": "RuntimeRegistry not available"}
 
         name = arguments.get("name", "")
         if not name:
-            return {"success": False, "error": "name is required"***REMOVED***
+            return {"success": False, "error": "name is required"}
 
         try:
             ok, msg = registry.connect(name)
-            self._publish("runtime.connected", {"runtime": name, "success": ok, "message": msg***REMOVED***)
-            return {"success": ok, "data": {"runtime": name, "connected": ok, "message": msg***REMOVED******REMOVED***
+            self._publish("runtime.connected", {"runtime": name, "success": ok, "message": msg})
+            return {"success": ok, "data": {"runtime": name, "connected": ok, "message": msg}}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_runtime_disconnect(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_runtime_disconnect(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Disconnect a runtime by name."""
         registry = self._get_runtime_registry()
         if registry is None:
-            return {"success": False, "error": "RuntimeRegistry not available"***REMOVED***
+            return {"success": False, "error": "RuntimeRegistry not available"}
 
         name = arguments.get("name", "")
         if not name:
-            return {"success": False, "error": "name is required"***REMOVED***
+            return {"success": False, "error": "name is required"}
 
         try:
             ok = registry.disconnect(name)
-            self._publish("runtime.disconnected", {"runtime": name, "success": ok***REMOVED***)
-            return {"success": ok, "data": {"runtime": name, "disconnected": ok***REMOVED******REMOVED***
+            self._publish("runtime.disconnected", {"runtime": name, "success": ok})
+            return {"success": ok, "data": {"runtime": name, "disconnected": ok}}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_runtime_select(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_runtime_select(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Set active runtime by name."""
         registry = self._get_runtime_registry()
         if registry is None:
-            return {"success": False, "error": "RuntimeRegistry not available"***REMOVED***
+            return {"success": False, "error": "RuntimeRegistry not available"}
 
         name = arguments.get("name", "")
         if not name:
-            return {"success": False, "error": "name is required"***REMOVED***
+            return {"success": False, "error": "name is required"}
 
         try:
             ok = registry.set_active(name)
             if not ok:
-                return {"success": False, "error": f"Runtime not registered: {name***REMOVED***"***REMOVED***
-            self._publish("runtime.selected", {"runtime": name***REMOVED***)
-            return {"success": True, "data": {"runtime": name, "active": True***REMOVED******REMOVED***
+                return {"success": False, "error": f"Runtime not registered: {name}"}
+            self._publish("runtime.selected", {"runtime": name})
+            return {"success": True, "data": {"runtime": name, "active": True}}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_runtime_generate(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_runtime_generate(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Generate a response from a runtime."""
         registry = self._get_runtime_registry()
         if registry is None:
-            return {"success": False, "error": "RuntimeRegistry not available"***REMOVED***
+            return {"success": False, "error": "RuntimeRegistry not available"}
 
         capability = arguments.get("capability")
         explicit_name = arguments.get("name")
@@ -2343,25 +2343,25 @@ class BuffyMcpServer:
         try:
             temperature = float(arguments.get("temperature", 0.7))
         except (TypeError, ValueError):
-            return {"success": False, "error": "temperature must be a number"***REMOVED***
+            return {"success": False, "error": "temperature must be a number"}
         max_tokens = arguments.get("max_tokens")
         if max_tokens is not None:
             try:
                 max_tokens = int(max_tokens)
                 if max_tokens <= 0:
-                    return {"success": False, "error": "max_tokens must be positive"***REMOVED***
+                    return {"success": False, "error": "max_tokens must be positive"}
             except (TypeError, ValueError):
-                return {"success": False, "error": "max_tokens must be an integer"***REMOVED***
+                return {"success": False, "error": "max_tokens must be an integer"}
 
         # Build and validate messages list
         if messages is None:
             if not prompt:
-                return {"success": False, "error": "prompt or messages is required"***REMOVED***
-            messages = [{"role": "user", "content": prompt***REMOVED******REMOVED***
+                return {"success": False, "error": "prompt or messages is required"}
+            messages = [{"role": "user", "content": prompt}]
         elif not isinstance(messages, list) or not all(
             isinstance(m, dict) and "role" in m and "content" in m for m in messages
         ):
-            return {"success": False, "error": "messages must be a list of dicts with role and content"***REMOVED***
+            return {"success": False, "error": "messages must be a list of dicts with role and content"}
 
         # Determine target runtime
         runtime_name = None
@@ -2374,31 +2374,31 @@ class BuffyMcpServer:
             if runtime_name is None:
                 cap_reg = self._runtime_capability_registry
                 if cap_reg is None:
-                    return {"success": False, "error": "RuntimeCapabilityRegistry not available"***REMOVED***
+                    return {"success": False, "error": "RuntimeCapabilityRegistry not available"}
                 best = cap_reg.get_runtime_for_capability(capability)
                 if best is None:
-                    return {"success": False, "error": f"No runtime available for capability: {capability***REMOVED***"***REMOVED***
-                runtime_name = best["runtime"***REMOVED***
+                    return {"success": False, "error": f"No runtime available for capability: {capability}"}
+                runtime_name = best["runtime"]
             if registry.get(runtime_name) is None:
-                return {"success": False, "error": f"Runtime selected for capability is not registered: {runtime_name***REMOVED***"***REMOVED***
+                return {"success": False, "error": f"Runtime selected for capability is not registered: {runtime_name}"}
         else:
             active = registry.get_active()
             if active is None:
-                return {"success": False, "error": "No active runtime. Use runtime_select or provide name/capability."***REMOVED***
+                return {"success": False, "error": "No active runtime. Use runtime_select or provide name/capability."}
             runtime_name = active.name
 
         if not runtime_name or not isinstance(runtime_name, str):
-            return {"success": False, "error": "Could not determine target runtime"***REMOVED***
+            return {"success": False, "error": "Could not determine target runtime"}
 
         # Ensure connected
         adapter = registry.get_adapter(runtime_name)
         if adapter is None or not adapter.is_connected():
             ok, msg = registry.connect(runtime_name)
             if not ok:
-                return {"success": False, "error": f"Could not connect to runtime {runtime_name***REMOVED***: {msg***REMOVED***"***REMOVED***
+                return {"success": False, "error": f"Could not connect to runtime {runtime_name}: {msg}"}
             adapter = registry.get_adapter(runtime_name)
             if adapter is None:
-                return {"success": False, "error": f"Runtime adapter unavailable after connect: {runtime_name***REMOVED***"***REMOVED***
+                return {"success": False, "error": f"Runtime adapter unavailable after connect: {runtime_name}"}
 
         try:
             result = adapter.generate(
@@ -2411,9 +2411,9 @@ class BuffyMcpServer:
                 "runtime": runtime_name,
                 "success": result.error is None,
                 "model_used": result.model_used,
-            ***REMOVED***)
+            ])
             if result.error:
-                return {"success": False, "error": result.error, "data": {"runtime": runtime_name***REMOVED******REMOVED***
+                return {"success": False, "error": result.error, "data": {"runtime": runtime_name}}
             return {
                 "success": True,
                 "data": {
@@ -2424,12 +2424,12 @@ class BuffyMcpServer:
                     "latency_ms": result.latency_ms,
                     "usage": result.usage,
                     "finish_reason": result.finish_reason,
-                ***REMOVED***,
-            ***REMOVED***
+                },
+            }
         except Exception as e:
-            return {"success": False, "error": str(e), "data": {"runtime": runtime_name***REMOVED******REMOVED***
+            return {"success": False, "error": str(e), "data": {"runtime": runtime_name}}
 
-    def _handle_policy_override(self, arguments: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def _handle_policy_override(self, arguments: Dict[str, Any]) -> Dict[str, Any]:
         """Применить диалоговое переопределение «используй X вместо Y» (правило 11).
 
         Распознаёт естественно-языковую фразу и назначает Runtime на capability
@@ -2437,20 +2437,20 @@ class BuffyMcpServer:
         """
         message = arguments.get("message", "")
         if not message or not isinstance(message, str):
-            return {"success": False, "error": "message is required"***REMOVED***
+            return {"success": False, "error": "message is required"}
 
         policy_engine = self._get_policy_engine()
         if policy_engine is None:
             return {
                 "success": False,
                 "error": "PolicyEngine not available — override not applied",
-            ***REMOVED***
+            }
 
         try:
             from freebuff_plugin_03.policy import apply_override
             result = apply_override(message, policy_engine)
         except Exception as e:
-            return {"success": False, "error": f"Policy override failed: {e***REMOVED***"***REMOVED***
+            return {"success": False, "error": f"Policy override failed: {e}"}
 
         if result is None:
             return {
@@ -2460,64 +2460,64 @@ class BuffyMcpServer:
                     "Examples: \"use deepseek instead of claude for coding\", "
                     "\"используй freebuff для research\""
                 ),
-            ***REMOVED***
+            }
 
         self._publish("policy.override", {
             "capability": result.get("capability"),
             "runtime": result.get("runtime"),
             "previous_runtime": result.get("previous_runtime"),
             "applied": result.get("applied", True),
-        ***REMOVED***)
+        ])
 
-        return {"success": True, "data": result***REMOVED***
+        return {"success": True, "data": result}
 
     # ── MCP protocol handlers ──────────────────────────────
 
-    def handle_initialize(self, params: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def handle_initialize(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Handle initialize request."""
-        self._client_info = params.get("clientInfo", {***REMOVED***)
+        self._client_info = params.get("clientInfo", {})
         self._initialized = True
 
         self._publish("server.initialized", {
             "client": self._client_info.get("name", "unknown"),
             "protocol_version": PROTOCOL_VERSION,
-        ***REMOVED***)
+        ])
 
         return {
             "protocolVersion": PROTOCOL_VERSION,
             "serverInfo": {
                 "name": SERVER_NAME,
                 "version": SERVER_VERSION,
-            ***REMOVED***,
+            },
             "capabilities": {
-                "tools": {"listChanged": True***REMOVED***,
-                "resources": {"listChanged": True, "subscribe": False***REMOVED***,
-                "prompts": {"listChanged": True***REMOVED***,
-            ***REMOVED***,
-        ***REMOVED***
+                "tools": {"listChanged": True},
+                "resources": {"listChanged": True, "subscribe": False},
+                "prompts": {"listChanged": True},
+            },
+        }
 
-    def handle_tools_list(self, params: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def handle_tools_list(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Handle tools/list request."""
-        tools = [***REMOVED***
+        tools = []
         for name, tool in sorted(self._tools.items()):
             tools.append({
                 "name": tool.name,
                 "description": tool.description,
                 "inputSchema": tool.input_schema,
-            ***REMOVED***)
-        return {"tools": tools***REMOVED***
+            ])
+        return {"tools": tools}
 
-    def handle_tools_call(self, params: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def handle_tools_call(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Handle tools/call request."""
         name = params.get("name", "")
-        arguments = params.get("arguments", {***REMOVED***)
+        arguments = params.get("arguments", {})
 
         tool = self._tools.get(name)
         if tool is None:
-            raise ValueError(f"Unknown tool: {name***REMOVED***")
+            raise ValueError(f"Unknown tool: {name}")
 
         if tool.handler is None:
-            raise ValueError(f"Tool has no handler: {name***REMOVED***")
+            raise ValueError(f"Tool has no handler: {name}")
 
         try:
             result = tool.handler(arguments)
@@ -2525,10 +2525,10 @@ class BuffyMcpServer:
             # Tool handler raised — return MCP tool error (not protocol error)
             return {
                 "content": [{"type": "text", "text": json.dumps(
-                    {"success": False, "error": str(e)***REMOVED***, ensure_ascii=False,
-                )***REMOVED******REMOVED***,
+                    {"success": False, "error": str(e)}, ensure_ascii=False,
+                )]],
                 "isError": True,
-            ***REMOVED***
+            }
 
         # MCP expects content array with TextContent
         if isinstance(result, dict):
@@ -2537,23 +2537,23 @@ class BuffyMcpServer:
             content_text = str(result)
 
         return {
-            "content": [{"type": "text", "text": content_text***REMOVED******REMOVED***,
+            "content": [{"type": "text", "text": content_text}],
             "isError": isinstance(result, dict) and not result.get("success", True),
-        ***REMOVED***
+        }
 
-    def handle_resources_list(self, params: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def handle_resources_list(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Handle resources/list request."""
-        resources = [***REMOVED***
+        resources = []
         for uri, res in sorted(self._resources.items()):
             resources.append({
                 "uri": res.uri,
                 "name": res.name,
                 "description": res.description,
                 "mimeType": res.mime_type,
-            ***REMOVED***)
-        return {"resources": resources***REMOVED***
+            ])
+        return {"resources": resources}
 
-    def handle_resources_read(self, params: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def handle_resources_read(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Handle resources/read request."""
         uri = params.get("uri", "")
         res = self._resources.get(uri)
@@ -2566,7 +2566,7 @@ class BuffyMcpServer:
                 res = self._resources.get("buffy://memory")
 
         if res is None or res.handler is None:
-            raise ValueError(f"Unknown resource: {uri***REMOVED***")
+            raise ValueError(f"Unknown resource: {uri}")
 
         content, mime_type = res.handler(uri)
         return {
@@ -2575,29 +2575,29 @@ class BuffyMcpServer:
                     "uri": uri,
                     "mimeType": mime_type,
                     "text": content,
-                ***REMOVED***
-            ***REMOVED***
-        ***REMOVED***
+                }
+            ]
+        }
 
-    def handle_prompts_list(self, params: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def handle_prompts_list(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Handle prompts/list request."""
-        prompts = [***REMOVED***
+        prompts = []
         for name, p in sorted(self._prompts.items()):
             prompts.append({
                 "name": p.name,
                 "description": p.description,
                 "arguments": p.arguments,
-            ***REMOVED***)
-        return {"prompts": prompts***REMOVED***
+            ])
+        return {"prompts": prompts}
 
-    def handle_prompts_get(self, params: Dict[str, Any***REMOVED***) -> Dict[str, Any***REMOVED***:
+    def handle_prompts_get(self, params: Dict[str, Any]) -> Dict[str, Any]:
         """Handle prompts/get request."""
         name = params.get("name", "")
-        arguments = params.get("arguments", {***REMOVED***)
+        arguments = params.get("arguments", {})
 
         prompt = self._prompts.get(name)
         if prompt is None:
-            raise ValueError(f"Unknown prompt: {name***REMOVED***")
+            raise ValueError(f"Unknown prompt: {name}")
 
         if prompt.handler:
             text = prompt.handler(arguments)
@@ -2609,14 +2609,14 @@ class BuffyMcpServer:
             "messages": [
                 {
                     "role": "user",
-                    "content": {"type": "text", "text": text***REMOVED***,
-                ***REMOVED***
-            ***REMOVED***,
-        ***REMOVED***
+                    "content": {"type": "text", "text": text},
+                }
+            ],
+        }
 
     # ── JSON-RPC message dispatch ──────────────────────────
 
-    def dispatch(self, message: Dict[str, Any***REMOVED***) -> Optional[str***REMOVED***:
+    def dispatch(self, message: Dict[str, Any]) -> Optional[str]:
         """Dispatch a JSON-RPC message and return response (or None for notifications).
 
         Args:
@@ -2627,7 +2627,7 @@ class BuffyMcpServer:
         """
         req_id = message.get("id")
         method = message.get("method", "")
-        params = message.get("params", {***REMOVED***)
+        params = message.get("params", {})
 
         # Notifications (no id) — don't send response
         is_notification = req_id is None
@@ -2642,7 +2642,7 @@ class BuffyMcpServer:
                 return None
 
             elif method == "ping":
-                return rpc_response(req_id, {***REMOVED***) if not is_notification else None
+                return rpc_response(req_id, {}) if not is_notification else None
 
             elif method == "tools/list":
                 result = self.handle_tools_list(params)
@@ -2662,7 +2662,7 @@ class BuffyMcpServer:
 
             elif method == "resources/templates/list":
                 # Return empty list (no URI templates for now)
-                return rpc_response(req_id, {"resourceTemplates": [***REMOVED******REMOVED***) if not is_notification else None
+                return rpc_response(req_id, {"resourceTemplates": []}) if not is_notification else None
 
             elif method == "prompts/list":
                 result = self.handle_prompts_list(params)
@@ -2674,17 +2674,17 @@ class BuffyMcpServer:
 
             elif method == "logging/setLevel":
                 # Accept any log level, no response data needed
-                return rpc_response(req_id, {***REMOVED***) if not is_notification else None
+                return rpc_response(req_id, {}) if not is_notification else None
 
             elif method == "shutdown":
                 # MCP shutdown — signal readiness to stop (no actual exit here)
-                self._publish("server.shutdown", {***REMOVED***)
-                return rpc_response(req_id, {***REMOVED***) if not is_notification else None
+                self._publish("server.shutdown", {})
+                return rpc_response(req_id, {}) if not is_notification else None
 
             else:
                 if is_notification:
                     return None
-                return rpc_error(req_id, METHOD_NOT_FOUND, f"Method not found: {method***REMOVED***")
+                return rpc_error(req_id, METHOD_NOT_FOUND, f"Method not found: {method}")
 
         except ValueError as e:
             if is_notification:
@@ -2693,8 +2693,8 @@ class BuffyMcpServer:
         except Exception as e:
             if is_notification:
                 return None
-            trace = traceback.format_exc()[:500***REMOVED***
-            return rpc_error(req_id, INTERNAL_ERROR, str(e), {"trace": trace***REMOVED***)
+            trace = traceback.format_exc()[:500]
+            return rpc_error(req_id, INTERNAL_ERROR, str(e), {"trace": trace})
 
     # ── stdio transport ─────────────────────────────────────
 
@@ -2727,13 +2727,13 @@ class BuffyMcpServer:
                     message = json.loads(line_str)
                 except json.JSONDecodeError as e:
                     # Send parse error
-                    sys.stdout.write(rpc_error(None, PARSE_ERROR, f"Parse error: {e***REMOVED***") + "\n")
+                    sys.stdout.write(rpc_error(None, PARSE_ERROR, f"Parse error: {e}") + "\n")
                     sys.stdout.flush()
                     continue
 
                 # Handle batch requests
                 if isinstance(message, list):
-                    responses = [***REMOVED***
+                    responses = []
                     for msg in message:
                         resp = self.dispatch(msg)
                         if resp:
@@ -2750,7 +2750,7 @@ class BuffyMcpServer:
                     sys.stdout.flush()
 
             except Exception as e:
-                print(f"⚠️ MCP server error: {e***REMOVED***", file=sys.stderr)
+                print(f"⚠️ MCP server error: {e}", file=sys.stderr)
                 traceback.print_exc(file=sys.stderr)
 
     def run_sync(self) -> None:
@@ -2766,13 +2766,13 @@ class BuffyMcpServer:
             try:
                 message = json.loads(line)
             except json.JSONDecodeError as e:
-                sys.stdout.write(rpc_error(None, PARSE_ERROR, f"Parse error: {e***REMOVED***") + "\n")
+                sys.stdout.write(rpc_error(None, PARSE_ERROR, f"Parse error: {e}") + "\n")
                 sys.stdout.flush()
                 continue
 
             # Batch request
             if isinstance(message, list):
-                responses = [***REMOVED***
+                responses = []
                 for msg in message:
                     resp = self.dispatch(msg)
                     if resp:
@@ -2789,7 +2789,7 @@ class BuffyMcpServer:
 
     # ── Status / introspection ─────────────────────────────
 
-    def get_status(self) -> Dict[str, Any***REMOVED***:
+    def get_status(self) -> Dict[str, Any]:
         """Return server status for CLI."""
         return {
             "server": SERVER_NAME,
@@ -2803,9 +2803,9 @@ class BuffyMcpServer:
             "tool_names": sorted(self._tools.keys()),
             "resource_uris": sorted(self._resources.keys()),
             "prompt_names": sorted(self._prompts.keys()),
-        ***REMOVED***
+        }
 
-    def list_tools_info(self) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    def list_tools_info(self) -> List[Dict[str, Any]]:
         """List all tools with full info (for CLI)."""
         return [
             {
@@ -2813,11 +2813,11 @@ class BuffyMcpServer:
                 "description": t.description,
                 "category": t.category,
                 "input_schema": t.input_schema,
-            ***REMOVED***
+            }
             for t in sorted(self._tools.values(), key=lambda x: x.name)
-        ***REMOVED***
+        ]
 
-    def list_resources_info(self) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    def list_resources_info(self) -> List[Dict[str, Any]]:
         """List all resources with full info (for CLI)."""
         return [
             {
@@ -2825,9 +2825,9 @@ class BuffyMcpServer:
                 "name": r.name,
                 "description": r.description,
                 "mime_type": r.mime_type,
-            ***REMOVED***
+            }
             for r in sorted(self._resources.values(), key=lambda x: x.uri)
-        ***REMOVED***
+        ]
 
     # ── Streamable HTTP transport ──────────────────────────
 
@@ -2849,9 +2849,9 @@ class BuffyMcpServer:
             self,
             session_manager,
         )
-        print(f"🌐 MCP HTTP Server: http://{host***REMOVED***:{port***REMOVED***/mcp", file=sys.stderr)
-        print(f"   Protocol: {PROTOCOL_VERSION***REMOVED***", file=sys.stderr)
-        print(f"   Tools: {len(self._tools)***REMOVED*** | Resources: {len(self._resources)***REMOVED*** | Prompts: {len(self._prompts)***REMOVED***", file=sys.stderr)
+        print(f"🌐 MCP HTTP Server: http://{host}:{port}/mcp", file=sys.stderr)
+        print(f"   Protocol: {PROTOCOL_VERSION}", file=sys.stderr)
+        print(f"   Tools: {len(self._tools)} | Resources: {len(self._resources)} | Prompts: {len(self._prompts)}", file=sys.stderr)
         print(f"   Press Ctrl+C to stop", file=sys.stderr)
         try:
             httpd.serve_forever()
@@ -2905,7 +2905,7 @@ class McpHTTPRequestHandler(BaseHTTPRequestHandler):
     # ── Response helpers ───────────────────────────────────
 
     def _send_json(self, status: int, body: str,
-                   extra_headers: Optional[Dict[str, str***REMOVED******REMOVED*** = None) -> None:
+                   extra_headers: Optional[Dict[str, str]] = None) -> None:
         """Send a JSON HTTP response."""
         data = body.encode("utf-8")
         self.send_response(status)
@@ -2919,7 +2919,7 @@ class McpHTTPRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(data)
 
     def _send_status(self, status: int,
-                     extra_headers: Optional[Dict[str, str***REMOVED******REMOVED*** = None) -> None:
+                     extra_headers: Optional[Dict[str, str]] = None) -> None:
         """Send a status-only response (no body).
 
         Per RFC 7230 §3.3.2, 204 responses MUST NOT include Content-Length.
@@ -2959,7 +2959,7 @@ class McpHTTPRequestHandler(BaseHTTPRequestHandler):
 
     def do_POST(self) -> None:
         if self.path != "/mcp":
-            self._send_error_json(404, INVALID_REQUEST, f"Unknown path: {self.path***REMOVED***")
+            self._send_error_json(404, INVALID_REQUEST, f"Unknown path: {self.path}")
             return
 
         if not self._validate_origin():
@@ -2972,7 +2972,7 @@ class McpHTTPRequestHandler(BaseHTTPRequestHandler):
         try:
             message = json.loads(raw_body)
         except json.JSONDecodeError as e:
-            self._send_error_json(400, PARSE_ERROR, f"Parse error: {e***REMOVED***")
+            self._send_error_json(400, PARSE_ERROR, f"Parse error: {e}")
             return
 
         # initialize → create new session, return Mcp-Session-Id
@@ -2980,9 +2980,9 @@ class McpHTTPRequestHandler(BaseHTTPRequestHandler):
             session_id = self._sessions.create_session()
             response = self._mcp.dispatch(message)
             if response:
-                self._send_json(200, response, {"Mcp-Session-Id": session_id***REMOVED***)
+                self._send_json(200, response, {"Mcp-Session-Id": session_id})
             else:
-                self._send_status(202, {"Mcp-Session-Id": session_id***REMOVED***)
+                self._send_status(202, {"Mcp-Session-Id": session_id})
             return
 
         # Non-initialize POSTs require valid Mcp-Session-Id
@@ -2993,7 +2993,7 @@ class McpHTTPRequestHandler(BaseHTTPRequestHandler):
 
         # Batch request
         if isinstance(message, list):
-            responses = [***REMOVED***
+            responses = []
             for msg in message:
                 resp = self._mcp.dispatch(msg)
                 if resp:
@@ -3017,7 +3017,7 @@ class McpHTTPRequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         if self.path != "/mcp":
-            self._send_error_json(404, INVALID_REQUEST, f"Unknown path: {self.path***REMOVED***")
+            self._send_error_json(404, INVALID_REQUEST, f"Unknown path: {self.path}")
             return
 
         if not self._validate_origin():
@@ -3046,7 +3046,7 @@ class McpHTTPRequestHandler(BaseHTTPRequestHandler):
             while session.active:
                 try:
                     msg = session.notification_queue.get(timeout=30)
-                    self.wfile.write(f"data: {msg***REMOVED***\n\n".encode("utf-8"))
+                    self.wfile.write(f"data: {msg}\n\n".encode("utf-8"))
                     self.wfile.flush()
                 except Empty:
                     # Heartbeat to keep connection alive
@@ -3059,7 +3059,7 @@ class McpHTTPRequestHandler(BaseHTTPRequestHandler):
 
     def do_DELETE(self) -> None:
         if self.path != "/mcp":
-            self._send_error_json(404, INVALID_REQUEST, f"Unknown path: {self.path***REMOVED***")
+            self._send_error_json(404, INVALID_REQUEST, f"Unknown path: {self.path}")
             return
 
         if not self._validate_origin():
@@ -3098,10 +3098,10 @@ Claude integration (claude_desktop_config.json) — stdio:
     "mcpServers": {
       "buffy": {
         "command": "python",
-        "args": ["scripts_01/mcp_server.py"***REMOVED***
-      ***REMOVED***
-    ***REMOVED***
-  ***REMOVED***
+        "args": ["scripts_01/mcp_server.py"]
+      }
+    }
+  }
 
 HTTP integration (Streamable HTTP transport):
   python scripts_01/mcp_server.py --http --port 8765
@@ -3114,7 +3114,7 @@ Examples:
   python scripts_01/mcp_server.py --status         # server status
   python scripts_01/mcp_server.py --tools          # list MCP tools
   python scripts_01/mcp_server.py --resources      # list MCP resources
-  python scripts_01/mcp_server.py --call knowledge_search '{"query": "router"***REMOVED***'
+  python scripts_01/mcp_server.py --call knowledge_search '{"query": "router"]'
         """,
     )
     parser.add_argument("--status", action="store_true", help="Show server status")
@@ -3137,69 +3137,69 @@ Examples:
     if args.status:
         status = server.get_status()
         print(f"📊 MCP SERVER STATUS")
-        print(f"   Server:     {status['server'***REMOVED******REMOVED*** v{status['version'***REMOVED******REMOVED***")
-        print(f"   Protocol:   {status['protocol'***REMOVED******REMOVED***")
-        print(f"   Workspace:  {status['workspace'***REMOVED******REMOVED***")
-        print(f"   Tools:      {status['tools'***REMOVED******REMOVED***")
-        print(f"   Resources:  {status['resources'***REMOVED******REMOVED***")
-        print(f"   Prompts:    {status['prompts'***REMOVED******REMOVED***")
-        print(f"\n   Tool names: {', '.join(status['tool_names'***REMOVED***)***REMOVED***")
-        print(f"   Resources:  {', '.join(status['resource_uris'***REMOVED***)***REMOVED***")
-        print(f"   Prompts:    {', '.join(status['prompt_names'***REMOVED***)***REMOVED***")
+        print(f"   Server:     {status['server']} v{status['version']}")
+        print(f"   Protocol:   {status['protocol']}")
+        print(f"   Workspace:  {status['workspace']}")
+        print(f"   Tools:      {status['tools']}")
+        print(f"   Resources:  {status['resources']}")
+        print(f"   Prompts:    {status['prompts']}")
+        print(f"\n   Tool names: {', '.join(status['tool_names'])}")
+        print(f"   Resources:  {', '.join(status['resource_uris'])}")
+        print(f"   Prompts:    {', '.join(status['prompt_names'])}")
 
     elif args.tools:
         tools = server.list_tools_info()
-        print(f"🔧 MCP TOOLS ({len(tools)***REMOVED***):")
+        print(f"🔧 MCP TOOLS ({len(tools)}):")
         for t in tools:
-            print(f"\n  {t['name'***REMOVED******REMOVED*** [{t['category'***REMOVED******REMOVED******REMOVED***")
-            print(f"    {t['description'***REMOVED***[:100***REMOVED******REMOVED***")
-            props = t['input_schema'***REMOVED***.get('properties', {***REMOVED***)
-            required = t['input_schema'***REMOVED***.get('required', [***REMOVED***)
+            print(f"\n  {t['name']} [{t['category']}]")
+            print(f"    {t['description'][:100]}")
+            props = t['input_schema'].get('properties', {})
+            required = t['input_schema'].get('required', [])
             for pname, pschema in props.items():
                 req = "*" if pname in required else ""
                 ptype = pschema.get('type', 'any')
-                desc = pschema.get('description', '')[:60***REMOVED***
-                print(f"    - {pname***REMOVED***{req***REMOVED*** ({ptype***REMOVED***): {desc***REMOVED***")
+                desc = pschema.get('description', '')[:60]
+                print(f"    - {pname}{req} ({ptype}): {desc}")
 
     elif args.resources:
         resources = server.list_resources_info()
-        print(f"📄 MCP RESOURCES ({len(resources)***REMOVED***):")
+        print(f"📄 MCP RESOURCES ({len(resources)}):")
         for r in resources:
-            print(f"\n  {r['uri'***REMOVED******REMOVED***")
-            print(f"    {r['name'***REMOVED******REMOVED***: {r['description'***REMOVED***[:100***REMOVED******REMOVED***")
-            print(f"    mime: {r['mime_type'***REMOVED******REMOVED***")
+            print(f"\n  {r['uri']}")
+            print(f"    {r['name']}: {r['description'][:100]}")
+            print(f"    mime: {r['mime_type']}")
 
     elif args.prompts:
-        print(f"💬 MCP PROMPTS ({len(server._prompts)***REMOVED***):")
+        print(f"💬 MCP PROMPTS ({len(server._prompts)}):")
         for name, p in sorted(server._prompts.items()):
-            print(f"\n  {p.name***REMOVED***")
-            print(f"    {p.description[:100***REMOVED******REMOVED***")
+            print(f"\n  {p.name}")
+            print(f"    {p.description[:100]}")
             for arg in p.arguments:
                 req = "*" if arg.get("required") else ""
-                print(f"    - {arg['name'***REMOVED******REMOVED***{req***REMOVED***: {arg.get('description', '')[:60***REMOVED******REMOVED***")
+                print(f"    - {arg['name']}{req}: {arg.get('description', '')[:60]}")
 
     elif args.call:
         tool_name, args_str = args.call
         try:
             arguments = json.loads(args_str)
         except json.JSONDecodeError as e:
-            print(f"❌ Invalid JSON args: {e***REMOVED***")
+            print(f"❌ Invalid JSON args: {e}")
             return
-        result = server.handle_tools_call({"name": tool_name, "arguments": arguments***REMOVED***)
+        result = server.handle_tools_call({"name": tool_name, "arguments": arguments})
         if result.get("isError"):
             print(f"❌ Tool error")
         else:
             print(f"✅ Tool result")
-        for content in result.get("content", [***REMOVED***):
+        for content in result.get("content", []):
             print(content.get("text", ""))
 
     elif args.read:
         try:
-            result = server.handle_resources_read({"uri": args.read***REMOVED***)
-            for content in result.get("contents", [***REMOVED***):
+            result = server.handle_resources_read({"uri": args.read})
+            for content in result.get("contents", []):
                 print(content.get("text", ""))
         except ValueError as e:
-            print(f"❌ {e***REMOVED***")
+            print(f"❌ {e}")
 
     else:
         # Default: run MCP server
@@ -3209,7 +3209,7 @@ Examples:
         if args.fastapi:
             try:
                 from scripts_01.mcp_fastapi import main as fastapi_main
-                sys.argv = [sys.argv[0***REMOVED***, "--host", args.host, "--port", str(args.port)***REMOVED***
+                sys.argv = [sys.argv[0], "--host", args.host, "--port", str(args.port)]
                 if args.tunnel:
                     sys.argv.append("--tunnel")
                 fastapi_main()

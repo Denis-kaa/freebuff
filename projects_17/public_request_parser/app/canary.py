@@ -41,15 +41,15 @@ class CanaryReport:
     def summary(self) -> str:
         if self.error:
             return (
-                f"canary {self.source_id***REMOVED*** ERROR: {self.error***REMOVED*** "
-                f"(at {self.ran_at.isoformat()***REMOVED***)"
+                f"canary {self.source_id} ERROR: {self.error} "
+                f"(at {self.ran_at.isoformat()})"
             )
         return (
-            f"canary {self.source_id***REMOVED*** status={self.source_status***REMOVED*** "
-            f"fetched={self.fetched***REMOVED*** new={self.new_publications***REMOVED*** "
-            f"accepted={self.accepted***REMOVED*** pending={self.pending***REMOVED*** "
-            f"rejected={self.rejected***REMOVED*** delivered={self.delivered***REMOVED*** "
-            f"checkpoint={self.checkpoint!r***REMOVED***"
+            f"canary {self.source_id} status={self.source_status} "
+            f"fetched={self.fetched} new={self.new_publications} "
+            f"accepted={self.accepted} pending={self.pending} "
+            f"rejected={self.rejected} delivered={self.delivered} "
+            f"checkpoint={self.checkpoint!r}"
         )
 
 
@@ -66,7 +66,7 @@ def build_source_adapter(
     if source_id == "headhunter":
         http_get = http_get or (make_token_http_get(token) if token else None)
         return HeadhunterAdapter(source_id, policy=policy, http_get=http_get)
-    raise ValueError(f"unknown live source: {source_id***REMOVED***")
+    raise ValueError(f"unknown live source: {source_id}")
 
 
 async def run_canary(
@@ -129,4 +129,4 @@ async def run_canary(
     )
 
 
-__all__ = ["CanaryReport", "build_source_adapter", "run_canary"***REMOVED***
+__all__ = ["CanaryReport", "build_source_adapter", "run_canary"]

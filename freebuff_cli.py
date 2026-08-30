@@ -33,7 +33,7 @@ import os
 import shutil
 import sys
 from datetime import datetime, timezone
-***REMOVED***
+}
 
 WORKSPACE = os.environ.get("FREEBUFF_ROOT", os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, WORKSPACE)
@@ -45,7 +45,7 @@ from scripts_01.system_monitor import health_check
 from scripts_01.context_builder import ContextBuilder
 from scripts_01.event_bus import get_default_event_bus
 from scripts_01.seed_knowledge import seed as seed_knowledge
-from scripts_01.session_utils ***REMOVED***solve_session_id
+from scripts_01.session_utils ]solve_session_id
 
 # MANDATORY RUNTIME CONTRACT (v5.24.0): системные уведомления о завершении CLI-задач.
 # Graceful degradation: если notification-модуль недоступен (FREEBUFF_NO_NOTIFY=1
@@ -72,7 +72,7 @@ def _archive_task_path() -> Path:
     archive_dir = Path(WORKSPACE) / "docs_10" / "task_archive"
     archive_dir.mkdir(parents=True, exist_ok=True)
     ts = datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%S")
-    return archive_dir / f"TASK_{ts***REMOVED***.md"
+    return archive_dir / f"TASK_{ts}.md"
 
 
 def _archive_current_task() -> Path | None:
@@ -95,9 +95,9 @@ def _load_project_book() -> str:
         return ""
 
 
-def _project_book_headings(text: str) -> list[str***REMOVED***:
+def _project_book_headings(text: str) -> list[str]:
     """Извлекает список заголовков второго уровня (##) из Project Book."""
-    return [line.strip()[3:***REMOVED***.strip() for line in text.splitlines() if line.strip().startswith("## ")***REMOVED***
+    return [line.strip()[3:].strip() for line in text.splitlines() if line.strip().startswith("## ")]
 
 
 def _project_book_chapter(text: str, chapter_query: str) -> str:
@@ -124,8 +124,8 @@ def _project_book_chapter(text: str, chapter_query: str) -> str:
         heading = line.strip()
         if not heading.startswith("## "):
             continue
-        title = heading[3:***REMOVED***.strip().lower()
-        if is_number and f"глава {query_lower***REMOVED***" in title:
+        title = heading[3:].strip().lower()
+        if is_number and f"глава {query_lower}" in title:
             start_idx = i
             break
         if query_lower in title:
@@ -138,11 +138,11 @@ def _project_book_chapter(text: str, chapter_query: str) -> str:
     # Идём до следующего заголовка второго уровня
     end_idx = len(lines)
     for j in range(start_idx + 1, len(lines)):
-        if lines[j***REMOVED***.strip().startswith("## "):
+        if lines[j].strip().startswith("## "):
             end_idx = j
             break
 
-    return "\n".join(lines[start_idx:end_idx***REMOVED***).strip()
+    return "\n".join(lines[start_idx:end_idx]).strip()
 
 
 def _project_book_context(text: str, query: str, limit: int = 10) -> str:
@@ -161,23 +161,23 @@ def _project_book_context(text: str, query: str, limit: int = 10) -> str:
 
     query_lower = query.lower()
     # Разбиваем на абзацы по пустым строкам, сохраняя позицию в тексте
-    paragraphs = [***REMOVED***
-    current = [***REMOVED***
+    paragraphs = []
+    current = []
     for line in text.splitlines():
         if line.strip():
             current.append(line)
         else:
             if current:
                 paragraphs.append("\n".join(current))
-                current = [***REMOVED***
+                current = []
     if current:
         paragraphs.append("\n".join(current))
 
-    matches = [p for p in paragraphs if query_lower in p.lower()***REMOVED***
+    matches = [p for p in paragraphs if query_lower in p.lower()]
     if not matches:
         return ""
 
-    return "\n\n".join(matches[:limit***REMOVED***)
+    return "\n\n".join(matches[:limit])
 
 
 def cmd_task_start(title: str, description: str = "") -> None:
@@ -188,11 +188,11 @@ def cmd_task_start(title: str, description: str = "") -> None:
 
     archive = _archive_current_task()
 
-    task_md = f"""# TASK: {title***REMOVED***
+    task_md = f"""# TASK: {title}
 
 **Статус:** активна  
-**Создана:** {datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")***REMOVED***  
-**Описание:** {description or '(нет)'***REMOVED***  
+**Создана:** {datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")}  
+**Описание:** {description or '(нет)'}  
 
 ## Цель
 
@@ -200,7 +200,7 @@ def cmd_task_start(title: str, description: str = "") -> None:
 
 ## Шаги
 
-- [ ***REMOVED*** Шаг 1
+- [ ] Шаг 1
 
 ## Связанные файлы
 
@@ -214,8 +214,8 @@ def cmd_task_start(title: str, description: str = "") -> None:
     _task_path().write_text(task_md, encoding="utf-8")
 
     if archive:
-        print(f"📦 Предыдущая TASK.md архивирована: {archive***REMOVED***")
-    print(f"📝 Новая TASK.md создана: {title***REMOVED***")
+        print(f"📦 Предыдущая TASK.md архивирована: {archive}")
+    print(f"📝 Новая TASK.md создана: {title}")
 
 
 def cmd_task_archive() -> None:
@@ -224,16 +224,16 @@ def cmd_task_archive() -> None:
     if archive is None:
         print("⚠️ TASK.md не найден, нечего архивировать.")
         return
-    print(f"📦 TASK.md архивирована: {archive***REMOVED***")
+    print(f"📦 TASK.md архивирована: {archive}")
 
 
 def cmd_start(project: str, topic: str = "") -> str:
     """Начинает новую сессию. Возвращает session_id."""
     cm = ContextManager(WORKSPACE)
     snap = cm.start_session(project=project, topic=topic)
-    print(f"🟢 Сессия начата: {snap.session_id[:8***REMOVED******REMOVED***")
-    print(f"   Проект: {snap.project***REMOVED***")
-    print(f"   Тема: {snap.topic or '(без темы)'***REMOVED***")
+    print(f"🟢 Сессия начата: {snap.session_id[:8]}")
+    print(f"   Проект: {snap.project}")
+    print(f"   Тема: {snap.topic or '(без темы)'}")
     return snap.session_id
 
 
@@ -246,31 +246,31 @@ def cmd_status() -> dict:
     paused = cm.list_sessions(SessionStatus.PAUSED)
 
     print("📊 СТАТУС FREEBUFF")
-    print(f"   Активных сессий: {len(active)***REMOVED***")
-    for s in active[:5***REMOVED***:
-        print(f"   • {s['session_id'***REMOVED***[:8***REMOVED******REMOVED*** | {s['project'***REMOVED******REMOVED*** | {s['topic'***REMOVED******REMOVED*** | {s['message_count'***REMOVED******REMOVED*** msgs")
+    print(f"   Активных сессий: {len(active)}")
+    for s in active[:5]:
+        print(f"   • {s['session_id'][:8]} | {s['project']} | {s['topic']} | {s['message_count']} msgs")
 
     if paused:
-        print(f"   Приостановлено: {len(paused)***REMOVED***")
+        print(f"   Приостановлено: {len(paused)}")
 
     # Последний конспект
     summaries_dir = os.path.join(WORKSPACE, "context_12", "summaries")
     if os.path.isdir(summaries_dir):
         files = sorted(
-            [f for f in os.listdir(summaries_dir) if f.endswith(".md")***REMOVED***,
+            [f for f in os.listdir(summaries_dir) if f.endswith(".md")],
             reverse=True,
         )
         if files:
-            print(f"   Последний конспект: {files[0***REMOVED******REMOVED***")
+            print(f"   Последний конспект: {files[0]}")
 
     # Здоровье системы
     health = health_check()
-    print(f"\n💚 Здоровье: {'OK' if all(health.values()) else '⚠️ ПРОБЛЕМЫ'***REMOVED***")
+    print(f"\n💚 Здоровье: {'OK' if all(health.values()) else '⚠️ ПРОБЛЕМЫ'}")
     for k, v in health.items():
         icon = "✅" if v else "❌"
-        print(f"   {icon***REMOVED*** {k***REMOVED***")
+        print(f"   {icon} {k}")
 
-    return {"active_sessions": len(active), "health": health***REMOVED***
+    return {"active_sessions": len(active), "health": health}
 
 
 def cmd_resume() -> str | None:
@@ -278,21 +278,21 @@ def cmd_resume() -> str | None:
     cm = ContextManager(WORKSPACE)
 
     # Ищем последнюю ACTIVE или CHECKPOINT сессию
-    for status in [SessionStatus.ACTIVE, SessionStatus.CHECKPOINT***REMOVED***:
+    for status in [SessionStatus.ACTIVE, SessionStatus.CHECKPOINT]:
         sessions = cm.list_sessions(status)
         if sessions:
-            s = sessions[0***REMOVED***
-            print(f"🔄 Восстановлена сессия: {s['session_id'***REMOVED***[:8***REMOVED******REMOVED***")
-            print(f"   Проект: {s['project'***REMOVED******REMOVED***")
-            print(f"   Тема: {s['topic'***REMOVED******REMOVED***")
-            print(f"   Сообщений: {s['message_count'***REMOVED******REMOVED***")
+            s = sessions[0]
+            print(f"🔄 Восстановлена сессия: {s['session_id'][:8]}")
+            print(f"   Проект: {s['project']}")
+            print(f"   Тема: {s['topic']}")
+            print(f"   Сообщений: {s['message_count']}")
 
             # Показываем последний конспект
-            summary = cm.get_last_summary(s['session_id'***REMOVED***)
+            summary = cm.get_last_summary(s['session_id'])
             if summary:
-                print(f"   Последнее: {summary[:100***REMOVED******REMOVED***")
+                print(f"   Последнее: {summary[:100]}")
 
-            return str(s['session_id'***REMOVED***)
+            return str(s['session_id'])
 
     print("⚠️ Нет активных сессий для восстановления.")
     return None
@@ -307,24 +307,24 @@ def cmd_conspect(session_id: str | None = None) -> str:
         if not active:
             print("⚠️ Нет активных сессий.")
             return ""
-        session_id = active[0***REMOVED***['session_id'***REMOVED***
+        session_id = active[0]['session_id']
 
     full_id = resolve_session_id(cm, session_id)
     if full_id is None:
-        print(f"❌ Сессия не найдена: {session_id[:8***REMOVED*** if session_id else '?'***REMOVED***")
+        print(f"❌ Сессия не найдена: {session_id[:8] if session_id else '?'}")
         return ""
     session_id = full_id
 
     conspect = cm.export_checkpoint_summary(session_id)
     if not conspect:
-        print(f"❌ Конспект пуст для сессии {session_id[:8***REMOVED******REMOVED***.")
+        print(f"❌ Конспект пуст для сессии {session_id[:8]}.")
         return ""
 
     print(conspect)
     return conspect
 
 
-def cmd_list(status: str | None = None) -> list[dict***REMOVED***:
+def cmd_list(status: str | None = None) -> list[dict]:
     """Список сессий с фильтром по статусу."""
     cm = ContextManager(WORKSPACE)
     status_enum = SessionStatus(status) if status else None
@@ -332,16 +332,16 @@ def cmd_list(status: str | None = None) -> list[dict***REMOVED***:
 
     if not sessions:
         print("📭 Сессий нет.")
-        return [***REMOVED***
+        return []
 
-    print(f"📋 Сессии ({len(sessions)***REMOVED***):")
+    print(f"📋 Сессии ({len(sessions)}):")
     for s in sessions:
-        icon = {"active": "🟢", "completed": "✅", "paused": "⏸️", "abandoned": "💤"***REMOVED***.get(
-            s['status'***REMOVED***, "❓"
+        icon = {"active": "🟢", "completed": "✅", "paused": "⏸️", "abandoned": "💤"}.get(
+            s['status'], "❓"
         )
         print(
-            f"   {icon***REMOVED*** {s['session_id'***REMOVED***[:8***REMOVED******REMOVED*** | {s['status'***REMOVED***:10***REMOVED*** | "
-            f"{s['project'***REMOVED***:20***REMOVED*** | {s['topic'***REMOVED***[:30***REMOVED******REMOVED*** | {s['message_count'***REMOVED******REMOVED*** msgs"
+            f"   {icon} {s['session_id'][:8]} | {s['status']:10} | "
+            f"{s['project']:20} | {s['topic'][:30]} | {s['message_count']} msgs"
         )
     return sessions
 
@@ -353,7 +353,7 @@ def cmd_checkpoint(session_id: str | None, summary: str) -> None:
     if session_id is not None:
         full_id = resolve_session_id(cm, session_id)
         if full_id is None:
-            print(f"❌ Сессия не найдена: {session_id[:8***REMOVED******REMOVED***")
+            print(f"❌ Сессия не найдена: {session_id[:8]}")
             return
         session_id = full_id
 
@@ -362,10 +362,10 @@ def cmd_checkpoint(session_id: str | None, summary: str) -> None:
         if not active:
             print("⚠️ Нет активных сессий. Создайте сессию: python freebuff_cli.py start <project>")
             return
-        session_id = active[0***REMOVED***['session_id'***REMOVED***
+        session_id = active[0]['session_id']
 
     cm.save_checkpoint(session_id, summary, ctype=CheckpointType.MANUAL)
-    print(f"📌 Чекпоинт сохранён: {summary[:80***REMOVED******REMOVED***")
+    print(f"📌 Чекпоинт сохранён: {summary[:80]}")
 
 
 def cmd_seed() -> None:
@@ -377,9 +377,9 @@ def cmd_seed() -> None:
     try:
         bus = get_default_event_bus(WORKSPACE)
         count = seed_knowledge(workspace_root=WORKSPACE, event_bus=bus, rebuild=False)
-        print(f"✅ Knowledge Memory синхронизирована: {count***REMOVED*** записей.")
+        print(f"✅ Knowledge Memory синхронизирована: {count} записей.")
     except Exception as e:
-        print(f"❌ Ошибка при заполнении Knowledge Memory: {e***REMOVED***")
+        print(f"❌ Ошибка при заполнении Knowledge Memory: {e}")
 
 
 def cmd_project_book(chapter: str | None = None) -> str:
@@ -400,10 +400,10 @@ def cmd_project_book(chapter: str | None = None) -> str:
     if chapter:
         chapter_text = _project_book_chapter(text, chapter)
         if not chapter_text:
-            print(f"❌ Глава не найдена: {chapter***REMOVED***")
+            print(f"❌ Глава не найдена: {chapter}")
             print("Доступные главы:")
             for h in _project_book_headings(text):
-                print(f"  • {h***REMOVED***")
+                print(f"  • {h}")
             return ""
         print(chapter_text)
         return chapter_text
@@ -422,9 +422,9 @@ def _project_book_summary() -> str:
     headings = _project_book_headings(text)
     if not headings:
         return ""
-    summary = "\n".join(f"  • {h***REMOVED***" for h in headings[:12***REMOVED***)
-    return f"""Книга проекта ({PROJECT_BOOK_PATH***REMOVED***):
-{summary***REMOVED***
+    summary = "\n".join(f"  • {h}" for h in headings[:12])
+    return f"""Книга проекта ({PROJECT_BOOK_PATH}):
+{summary}
 Запросить главу: python freebuff_cli.py project-book '<глава>'
 Запросить контекст: python freebuff_cli.py project-context '<запрос>'"""
 
@@ -450,10 +450,10 @@ def cmd_project_context(query: str, limit: int = 10) -> str:
 
     result = _project_book_context(text, query, limit=limit)
     if not result:
-        print(f"🔍 По запросу '{query***REMOVED***' ничего не найдено.")
+        print(f"🔍 По запросу '{query}' ничего не найдено.")
         return ""
 
-    print(f"🔍 Результаты для '{query***REMOVED***':\n")
+    print(f"🔍 Результаты для '{query}':\n")
     print(result)
     return result
 
@@ -487,9 +487,9 @@ def cmd_buffy() -> None:
     health = health_check()
 
     system_status = f"""📊 СИСТЕМА FREEBUFF
-   Активных сессий: {len(active)***REMOVED***
-   Приостановлено: {len(paused)***REMOVED***
-   Здоровье: {'✅ OK' if all(health.values()) else '⚠️ ПРОБЛЕМЫ'***REMOVED***
+   Активных сессий: {len(active)}
+   Приостановлено: {len(paused)}
+   Здоровье: {'✅ OK' if all(health.values()) else '⚠️ ПРОБЛЕМЫ'}
 """
 
     # Сохраняем Unified Context в файл
@@ -515,8 +515,8 @@ def cmd_buffy() -> None:
         print("=" * 60)
         print()
         print(system_status)
-        print(f"💾 Контекст сохранён: {ctx_path***REMOVED***")
-        print(f"   Размер: {len(unified_ctx)***REMOVED*** chars, ~{len(unified_ctx) // 4***REMOVED*** токенов")
+        print(f"💾 Контекст сохранён: {ctx_path}")
+        print(f"   Размер: {len(unified_ctx)} chars, ~{len(unified_ctx) // 4} токенов")
         if project_book_summary:
             print()
             print(project_book_summary)
@@ -557,7 +557,7 @@ def _get_policy_engine():
         cap_reg = RuntimeCapabilityRegistry(registry)
         return PolicyEngine(registry, cap_reg)
     except Exception as e:
-        print(f"❌ PolicyEngine недоступен: {e***REMOVED***")
+        print(f"❌ PolicyEngine недоступен: {e}")
         return None
 
 
@@ -582,20 +582,20 @@ def cmd_policy(action: str | None, arg1: str | None = None, arg2: str | None = N
 
     if action == "list":
         policies = engine.list_policies()
-        print(f"🎯 User Preferences ({len(policies)***REMOVED***):")
+        print(f"🎯 User Preferences ({len(policies)}):")
         if not policies:
             print("   (нет назначенных предпочтений — система выбирает автоматически)")
             return
         for cap, p in sorted(policies.items()):
             fb = ", ".join(p.fallback_chain) if p.fallback_chain else "—"
-            print(f"   • {cap***REMOVED***: preferred={p.preferred_runtime or '—'***REMOVED*** | fallback=[{fb***REMOVED******REMOVED***")
+            print(f"   • {cap}: preferred={p.preferred_runtime or '—'} | fallback=[{fb}]")
 
     elif action == "set":
         if not arg1 or not arg2:
             print("❌ Укажи capability и runtime: python freebuff_cli.py policy set <capability> <runtime>")
             return
         engine.set_preference(arg1, arg2)
-        print(f"✅ Назначено: {arg1***REMOVED*** → {arg2***REMOVED*** (сохранено в runtime_05/policies.json)")
+        print(f"✅ Назначено: {arg1} → {arg2} (сохранено в runtime_05/policies.json)")
 
     elif action == "get":
         if not arg1:
@@ -603,13 +603,13 @@ def cmd_policy(action: str | None, arg1: str | None = None, arg2: str | None = N
             return
         p = engine.get_policy(arg1)
         if p is None:
-            print(f"ℹ️ Для '{arg1***REMOVED***' предпочтение не назначено (система выберет автоматически).")
+            print(f"ℹ️ Для '{arg1}' предпочтение не назначено (система выберет автоматически).")
             return
         fb = ", ".join(p.fallback_chain) if p.fallback_chain else "—"
-        print(f"🎯 Политика '{arg1***REMOVED***':")
-        print(f"   preferred = {p.preferred_runtime or '—'***REMOVED***")
-        print(f"   fallback  = [{fb***REMOVED******REMOVED***")
-        print(f"   constraints = {len(p.constraints)***REMOVED***")
+        print(f"🎯 Политика '{arg1}':")
+        print(f"   preferred = {p.preferred_runtime or '—'}")
+        print(f"   fallback  = [{fb}]")
+        print(f"   constraints = {len(p.constraints)}")
 
     elif action == "unset":
         if not arg1:
@@ -617,9 +617,9 @@ def cmd_policy(action: str | None, arg1: str | None = None, arg2: str | None = N
             return
         cleared = engine.unset_preference(arg1)
         if cleared:
-            print(f"🗑  Предпочтение сброшено: {arg1***REMOVED*** (вернётся авто-выбор системы)")
+            print(f"🗑  Предпочтение сброшено: {arg1} (вернётся авто-выбор системы)")
         else:
-            print(f"ℹ️ Для '{arg1***REMOVED***' предпочтение не было назначено.")
+            print(f"ℹ️ Для '{arg1}' предпочтение не было назначено.")
 
     elif action == "resolve":
         if not arg1:
@@ -627,9 +627,9 @@ def cmd_policy(action: str | None, arg1: str | None = None, arg2: str | None = N
             return
         runtime = engine.select_runtime(arg1)
         if runtime:
-            print(f"🎯 Для '{arg1***REMOVED***' система выберет: {runtime***REMOVED***")
+            print(f"🎯 Для '{arg1}' система выберет: {runtime}")
         else:
-            print(f"⚠️ Для '{arg1***REMOVED***' подходящий Runtime не найден.")
+            print(f"⚠️ Для '{arg1}' подходящий Runtime не найден.")
 
     elif action == "override":
         # Conversational User-Choice Override (правило 11): «используй X вместо Y»
@@ -640,10 +640,10 @@ def cmd_policy(action: str | None, arg1: str | None = None, arg2: str | None = N
         result = apply_override(arg1, engine)
         if result and result.get("applied"):
             prev = result.get("previous_runtime") or "авто-выбор системы"
-            print(f"✅ User-Choice Override: {result['capability'***REMOVED******REMOVED*** → {result['runtime'***REMOVED******REMOVED*** "
-                  f"(было: {prev***REMOVED***, сохранено в runtime_05/policies.json)")
+            print(f"✅ User-Choice Override: {result['capability']} → {result['runtime']} "
+                  f"(было: {prev}, сохранено в runtime_05/policies.json)")
         else:
-            print(f"⚠️ Не удалось распознать переопределение в: \"{arg1***REMOVED***\"")
+            print(f"⚠️ Не удалось распознать переопределение в: \"{arg1}\"")
             print("   Примеры: \"use deepseek instead of claude for coding\",")
             print("            \"используй freebuff для research\", \"switch coding to claude-code\"")
 
@@ -683,14 +683,14 @@ def cmd_resource(action: str | None, arg1: str | None = None, arg2: str | None =
             print("❌ Укажи проект и ресурс: python freebuff_cli.py resource link <project> <resource>")
             return
         created = wav_link(arg1, arg2)
-        print(f"🔗 {'Связь создана' if created else 'Связь уже существует'***REMOVED***: {arg1***REMOVED*** ↔ {arg2***REMOVED***")
+        print(f"🔗 {'Связь создана' if created else 'Связь уже существует'}: {arg1} ↔ {arg2}")
 
     elif action == "unlink":
         if not arg1 or not arg2:
             print("❌ Укажи проект и ресурс: python freebuff_cli.py resource unlink <project> <resource>")
             return
         removed = wav_unlink(arg1, arg2)
-        print(f"🗑 {'Связь удалена' if removed else 'Связь не найдена'***REMOVED***: {arg1***REMOVED*** ↔ {arg2***REMOVED***")
+        print(f"🗑 {'Связь удалена' if removed else 'Связь не найдена'}: {arg1} ↔ {arg2}")
 
     elif action == "projects":
         if not arg1:
@@ -703,21 +703,21 @@ def cmd_resource(action: str | None, arg1: str | None = None, arg2: str | None =
             print("❌ Укажи проект: python freebuff_cli.py resource resources <project_name>")
             return
         resources = resources_for_project(arg1)
-        print(f"Ресурсы, связанные с {arg1***REMOVED***:")
+        print(f"Ресурсы, связанные с {arg1}:")
         if not resources:
             print("  (нет связей)")
             return
         for r in resources:
-            print(f"  - {r['resource_id'***REMOVED******REMOVED***")
+            print(f"  - {r['resource_id']}")
 
     elif action == "list":
         links = list_links()
-        print(f"Связи проект ↔ ресурс ({len(links)***REMOVED***):")
+        print(f"Связи проект ↔ ресурс ({len(links)}):")
         if not links:
             print("  (нет связей)")
             return
         for l in links:
-            print(f"  - {l['project_id'***REMOVED******REMOVED*** ↔ {l['resource_id'***REMOVED******REMOVED***")
+            print(f"  - {l['project_id']} ↔ {l['resource_id']}")
 
     else:
         print("Использование:")
@@ -745,36 +745,36 @@ def cmd_qwen_resume(session_id: str) -> None:
                     session_id = d
                     break
         if not os.path.isdir(session_dir):
-            print(f"❌ Qwen-сессия не найдена: {session_id[:8***REMOVED******REMOVED***")
+            print(f"❌ Qwen-сессия не найдена: {session_id[:8]}")
             return
 
     files = sorted(os.listdir(session_dir))
-    print(f"📂 Qwen Session: {session_id***REMOVED***")
-    print(f"   Файлов: {len(files)***REMOVED***")
+    print(f"📂 Qwen Session: {session_id}")
+    print(f"   Файлов: {len(files)}")
     print()
 
-    for fname in files[:20***REMOVED***:  # лимит на вывод
+    for fname in files[:20]:  # лимит на вывод
         fpath = os.path.join(session_dir, fname)
         try:
             with open(fpath, encoding='utf-8') as f:
-                content = f.read()[:2000***REMOVED***
+                content = f.read()[:2000]
             if len(content) == 2000:
-                content += "\n... [truncated***REMOVED***"
+                content += "\n... [truncated]"
             version = ""
             if "@v" in fname:
                 base, ver = fname.rsplit("@", 1)
-                version = f" ({ver***REMOVED***)"
+                version = f" ({ver})"
                 fname = base
-            print(f"### {fname***REMOVED***{version***REMOVED***")
+            print(f"### {fname}{version}")
             print(f"```")
             print(content)
             print(f"```")
             print()
         except Exception as e:
-            print(f"   ⚠️ Ошибка чтения {fname***REMOVED***: {e***REMOVED***")
+            print(f"   ⚠️ Ошибка чтения {fname}: {e}")
 
     if len(files) > 20:
-        print(f"   ... и ещё {len(files) - 20***REMOVED*** файлов")
+        print(f"   ... и ещё {len(files) - 20} файлов")
 
 
 # ── CLI Entry Point ────────────────────────────────────────────
@@ -808,29 +808,29 @@ def _main_with_notification() -> int:
         if exit_code != 0 and _HAS_NOTIFICATION:
             notify_error(
                 "Freebuff CLI",
-                error=f"Команда завершилась с кодом {exit_code***REMOVED***: {' '.join(sys.argv[1:***REMOVED***)***REMOVED***",
-                stage=sys.argv[1***REMOVED*** if len(sys.argv) > 1 else "",
+                error=f"Команда завершилась с кодом {exit_code}: {' '.join(sys.argv[1:])}",
+                stage=sys.argv[1] if len(sys.argv) > 1 else "",
             )
     except Exception as e:  # noqa: BLE001
-        print(f"❌ Ошибка: {e***REMOVED***")
+        print(f"❌ Ошибка: {e}")
         exit_code = 1
         if _HAS_NOTIFICATION:
             notify_error(
                 "Freebuff CLI",
                 error=str(e),
-                stage=sys.argv[1***REMOVED*** if len(sys.argv) > 1 else "",
+                stage=sys.argv[1] if len(sys.argv) > 1 else "",
             )
     finally:
         # Успешное завершение (нормальное или SystemExit(0)):
         # отправляем уведомление о завершении задачи.
         if exit_code == 0 and _HAS_NOTIFICATION:
-            duration = f"{_time.monotonic() - started:.0f***REMOVED***s"
+            duration = f"{_time.monotonic() - started:.0f}s"
             try:
                 notify_task_complete(
                     task_name="Freebuff CLI",
                     status="Успешно",
                     duration=duration,
-                    details=" ".join(sys.argv[1:***REMOVED***) or "(без аргументов)",
+                    details=" ".join(sys.argv[1:]) or "(без аргументов)",
                 )
             except Exception:  # noqa: BLE001
                 pass
@@ -843,12 +843,12 @@ def main():
         print(__doc__)
         sys.exit(1)
 
-    cmd = sys.argv[1***REMOVED***
+    cmd = sys.argv[1]
 
     try:
         if cmd == "start":
-            project = sys.argv[2***REMOVED*** if len(sys.argv) > 2 else "freebuff"
-            topic = sys.argv[3***REMOVED*** if len(sys.argv) > 3 else ""
+            project = sys.argv[2] if len(sys.argv) > 2 else "freebuff"
+            topic = sys.argv[3] if len(sys.argv) > 3 else ""
             cmd_start(project, topic)
 
         elif cmd == "status":
@@ -858,26 +858,26 @@ def main():
             cmd_resume()
 
         elif cmd == "conspect":
-            sid = sys.argv[2***REMOVED*** if len(sys.argv) > 2 else None
+            sid = sys.argv[2] if len(sys.argv) > 2 else None
             cmd_conspect(sid)
 
         elif cmd == "list":
-            status_filter = sys.argv[2***REMOVED*** if len(sys.argv) > 2 else None
+            status_filter = sys.argv[2] if len(sys.argv) > 2 else None
             cmd_list(status_filter)
 
         elif cmd == "checkpoint":
-            summary = sys.argv[2***REMOVED*** if len(sys.argv) > 2 else "Manual checkpoint"
-            sid = sys.argv[3***REMOVED*** if len(sys.argv) > 3 else None
+            summary = sys.argv[2] if len(sys.argv) > 2 else "Manual checkpoint"
+            sid = sys.argv[3] if len(sys.argv) > 3 else None
             cmd_checkpoint(sid, summary)
 
         elif cmd == "restore":
-            sid = sys.argv[2***REMOVED*** if len(sys.argv) > 2 else None
+            sid = sys.argv[2] if len(sys.argv) > 2 else None
             conspect = cmd_conspect(sid)
             if conspect:
                 print("\n📋 Для инжекта в контекст — скопируй вывод выше.")
 
         elif cmd == "qwen-resume":
-            sid = sys.argv[2***REMOVED*** if len(sys.argv) > 2 else None
+            sid = sys.argv[2] if len(sys.argv) > 2 else None
             if sid is None:
                 print("❌ Укажи ID сессии: python freebuff_cli.py qwen-resume 9667a0ca")
                 sys.exit(1)
@@ -887,37 +887,37 @@ def main():
             cmd_seed()
 
         elif cmd == "task":
-            sub = sys.argv[2***REMOVED*** if len(sys.argv) > 2 else None
+            sub = sys.argv[2] if len(sys.argv) > 2 else None
             if sub == "start":
-                title = sys.argv[3***REMOVED*** if len(sys.argv) > 3 else ""
-                description = sys.argv[4***REMOVED*** if len(sys.argv) > 4 else ""
+                title = sys.argv[3] if len(sys.argv) > 3 else ""
+                description = sys.argv[4] if len(sys.argv) > 4 else ""
                 cmd_task_start(title, description)
             elif sub == "archive":
                 cmd_task_archive()
             else:
                 print("Использование:")
-                print("  python freebuff_cli.py task start 'Название задачи' ['Описание'***REMOVED***")
+                print("  python freebuff_cli.py task start 'Название задачи' ['Описание')")
                 print("  python freebuff_cli.py task archive")
                 sys.exit(1)
 
         elif cmd == "project-book":
-            chapter = sys.argv[2***REMOVED*** if len(sys.argv) > 2 else None
+            chapter = sys.argv[2] if len(sys.argv) > 2 else None
             cmd_project_book(chapter)
 
         elif cmd == "project-context":
-            query = " ".join(sys.argv[2:***REMOVED***) if len(sys.argv) > 2 else ""
+            query = " ".join(sys.argv[2:]) if len(sys.argv) > 2 else ""
             cmd_project_context(query)
 
         elif cmd == "resource":
-            action = sys.argv[2***REMOVED*** if len(sys.argv) > 2 else None
-            arg1 = sys.argv[3***REMOVED*** if len(sys.argv) > 3 else None
-            arg2 = sys.argv[4***REMOVED*** if len(sys.argv) > 4 else None
+            action = sys.argv[2] if len(sys.argv) > 2 else None
+            arg1 = sys.argv[3] if len(sys.argv) > 3 else None
+            arg2 = sys.argv[4] if len(sys.argv) > 4 else None
             cmd_resource(action, arg1, arg2)
 
         elif cmd == "policy":
-            action = sys.argv[2***REMOVED*** if len(sys.argv) > 2 else None
-            arg1 = sys.argv[3***REMOVED*** if len(sys.argv) > 3 else None
-            arg2 = sys.argv[4***REMOVED*** if len(sys.argv) > 4 else None
+            action = sys.argv[2] if len(sys.argv) > 2 else None
+            arg1 = sys.argv[3] if len(sys.argv) > 3 else None
+            arg2 = sys.argv[4] if len(sys.argv) > 4 else None
             cmd_policy(action, arg1, arg2)
 
         elif cmd == "buffy":
@@ -931,12 +931,12 @@ def main():
             cmd_buffy()
 
         else:
-            print(f"❌ Неизвестная команда: {cmd***REMOVED***")
+            print(f"❌ Неизвестная команда: {cmd}")
             print("Доступные: start, status, resume, conspect, list, checkpoint, restore, qwen-resume, task, buffy, seed, project-book, project-context, resource, policy")
             sys.exit(1)
 
     except Exception as e:
-        print(f"❌ Ошибка: {e***REMOVED***")
+        print(f"❌ Ошибка: {e}")
         sys.exit(1)
 
 

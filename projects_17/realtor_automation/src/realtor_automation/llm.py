@@ -49,20 +49,20 @@ class LLMClient:
         if not self._model:
             raise LLMError("LLM model is not configured")
 
-        payload: dict[str, Any***REMOVED*** = {
+        payload: dict[str, Any] = {
             "model": self._model,
             "prompt": prompt,
             "stream": False,
-        ***REMOVED***
+        }
         if system:
-            payload["system"***REMOVED*** = system
+            payload["system"] = system
 
-        url = f"{self._base_url***REMOVED***/api/generate"
+        url = f"{self._base_url}/api/generate"
         try:
             req = urllib.request.Request(
                 url,
                 data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"***REMOVED***,
+                headers={"Content-Type": "application/json"},
                 method="POST",
             )
             with urllib.request.urlopen(req, timeout=self._timeout) as resp:
@@ -74,15 +74,15 @@ class LLMClient:
             )
         except urllib.error.URLError as exc:
             raise LLMError(
-                f"Cannot connect to LLM at {self._base_url***REMOVED***: {exc***REMOVED***"
+                f"Cannot connect to LLM at {self._base_url}: {exc}"
             ) from exc
         except json.JSONDecodeError as exc:
-            raise LLMError(f"Invalid JSON response from LLM: {exc***REMOVED***") from exc
+            raise LLMError(f"Invalid JSON response from LLM: {exc}") from exc
 
 
-def get_client(config: dict[str, Any***REMOVED***) -> LLMClient:
+def get_client(config: dict[str, Any]) -> LLMClient:
     """Build an LLM client from the configuration."""
-    llm_cfg = config.get("llm", {***REMOVED***)
+    llm_cfg = config.get("llm", {})
     base_url = os.environ.get("OLLAMA_URL", llm_cfg.get("url", "http://127.0.0.1:11434"))
     model = os.environ.get("LLM_MODEL", llm_cfg.get("model", "qwen2.5:7b"))
     timeout = llm_cfg.get("timeout", 300)

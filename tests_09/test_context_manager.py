@@ -45,18 +45,18 @@ class TestContextManagerMigrations:
                     DROP TABLE IF EXISTS invariants;
                     """
                 )
-            conn.execute(f"PRAGMA user_version = {version***REMOVED***")
+            conn.execute(f"PRAGMA user_version = {version}")
             conn.commit()
         finally:
             conn.close()
 
     @staticmethod
-    def _table_columns(conn: sqlite3.Connection, table: str) -> set[str***REMOVED***:
-        return {row[1***REMOVED*** for row in conn.execute(f"PRAGMA table_info({table***REMOVED***)")***REMOVED***
+    def _table_columns(conn: sqlite3.Connection, table: str) -> set[str]:
+        return {row[1] for row in conn.execute(f"PRAGMA table_info({table})")}
 
     @staticmethod
-    def _table_indexes(conn: sqlite3.Connection, table: str) -> set[str***REMOVED***:
-        return {row[1***REMOVED*** for row in conn.execute(f"PRAGMA index_list({table***REMOVED***)")***REMOVED***
+    def _table_indexes(conn: sqlite3.Connection, table: str) -> set[str]:
+        return {row[1] for row in conn.execute(f"PRAGMA index_list({table})")}
 
     def test_fresh_db_has_full_v5_schema(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -65,12 +65,12 @@ class TestContextManagerMigrations:
             conn = sqlite3.connect(db_path)
             try:
                 tables = {
-                    row[0***REMOVED***
+                    row[0]
                     for row in conn.execute(
                         "SELECT name FROM sqlite_master WHERE type='table'"
                     )
-                ***REMOVED***
-                version = conn.execute("PRAGMA user_version").fetchone()[0***REMOVED***
+                }
+                version = conn.execute("PRAGMA user_version").fetchone()[0]
 
                 assert version == 5
                 assert {
@@ -80,7 +80,7 @@ class TestContextManagerMigrations:
                     "arch_decisions",
                     "invariants",
                     "action_verifications",
-                ***REMOVED*** <= tables
+                } <= tables
 
                 # Verify shape of migrated/new tables
                 assert "title" in self._table_columns(conn, "arch_decisions")
@@ -117,12 +117,12 @@ class TestContextManagerMigrations:
             conn = sqlite3.connect(db_path)
             try:
                 tables = {
-                    row[0***REMOVED***
+                    row[0]
                     for row in conn.execute(
                         "SELECT name FROM sqlite_master WHERE type='table'"
                     )
-                ***REMOVED***
-                version = conn.execute("PRAGMA user_version").fetchone()[0***REMOVED***
+                }
+                version = conn.execute("PRAGMA user_version").fetchone()[0]
                 session = conn.execute(
                     "SELECT session_id FROM sessions WHERE session_id = ?", ("s1",)
                 ).fetchone()
@@ -132,7 +132,7 @@ class TestContextManagerMigrations:
                 assert "invariants" in tables
                 assert "action_verifications" in tables
                 assert session is not None
-                assert session[0***REMOVED*** == "s1"
+                assert session[0] == "s1"
 
                 # Indexes were created too
                 assert "idx_arch_decisions_session" in self._table_indexes(conn, "arch_decisions")
@@ -151,12 +151,12 @@ class TestContextManagerMigrations:
             conn = sqlite3.connect(db_path)
             try:
                 tables = {
-                    row[0***REMOVED***
+                    row[0]
                     for row in conn.execute(
                         "SELECT name FROM sqlite_master WHERE type='table'"
                     )
-                ***REMOVED***
-                version = conn.execute("PRAGMA user_version").fetchone()[0***REMOVED***
+                }
+                version = conn.execute("PRAGMA user_version").fetchone()[0]
 
                 assert version == 5
                 assert "action_verifications" in tables
@@ -187,13 +187,13 @@ class TestContextManagerMigrations:
 
             conn = sqlite3.connect(db_path)
             try:
-                version = conn.execute("PRAGMA user_version").fetchone()[0***REMOVED***
+                version = conn.execute("PRAGMA user_version").fetchone()[0]
                 tables = {
-                    row[0***REMOVED***
+                    row[0]
                     for row in conn.execute(
                         "SELECT name FROM sqlite_master WHERE type='table'"
                     )
-                ***REMOVED***
+                }
             finally:
                 conn.close()
 
@@ -215,7 +215,7 @@ class TestContextManagerMigrations:
                 ContextManager._migrate_v4_to_v5(conn)
                 ContextManager._migrate_v4_to_v5(conn)
 
-                version = conn.execute("PRAGMA user_version").fetchone()[0***REMOVED***
+                version = conn.execute("PRAGMA user_version").fetchone()[0]
             finally:
                 conn.close()
 

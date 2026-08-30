@@ -31,7 +31,7 @@ class TimelineEngine:
         self,
         project: str = "",
         limit: int = 50,
-        event_types: Optional[List[str***REMOVED******REMOVED*** = None,
+        event_types: Optional[List[str]] = None,
     ) -> Timeline:
         """Получить временную шкалу."""
         query = EventQuery(
@@ -46,10 +46,10 @@ class TimelineEngine:
             entries = [
                 e for e in entries
                 if any(e.event_type.startswith(et) for et in event_types)
-            ***REMOVED***
+            ]
 
         return Timeline(
-            entries=[self._format_entry(e) for e in entries***REMOVED***,
+            entries=[self._format_entry(e) for e in entries],
             total=len(entries),
             project=project,
         )
@@ -58,7 +58,7 @@ class TimelineEngine:
         """Шкала для конкретной сессии."""
         entries = self._store.get_by_session_id(session_id)
         return Timeline(
-            entries=[self._format_entry(e) for e in entries***REMOVED***,
+            entries=[self._format_entry(e) for e in entries],
             total=len(entries),
         )
 
@@ -69,7 +69,7 @@ class TimelineEngine:
         query = EventQuery(user_id=user_id, limit=limit, order="desc")
         entries = self._store.query(query)
         return Timeline(
-            entries=[self._format_entry(e) for e in entries***REMOVED***,
+            entries=[self._format_entry(e) for e in entries],
             total=len(entries),
         )
 
@@ -88,7 +88,7 @@ class TimelineEngine:
         )
         entries = self._store.query(query)
         return Timeline(
-            entries=[self._format_entry(e) for e in entries***REMOVED***,
+            entries=[self._format_entry(e) for e in entries],
             total=len(entries),
             project=project,
         )
@@ -105,7 +105,7 @@ class TimelineEngine:
         description = _default_description(event)
 
         return TimelineEntry(
-            timestamp=event.timestamp[:19***REMOVED***,  # Обрезаем до секунд
+            timestamp=event.timestamp[:19],  # Обрезаем до секунд
             event_type=event.event_type,
             icon=icon,
             title=title,
@@ -117,14 +117,14 @@ class TimelineEngine:
 
     def format_timeline_text(self, timeline: Timeline) -> str:
         """Форматирует Timeline в текст для CLI/UI."""
-        lines = [***REMOVED***
+        lines = []
         for entry in timeline.entries:
-            time_str = entry.timestamp[11:19***REMOVED***  # HH:MM:SS
+            time_str = entry.timestamp[11:19]  # HH:MM:SS
             lines.append(
-                f"{entry.icon***REMOVED*** {time_str***REMOVED*** — {entry.title***REMOVED***"
+                f"{entry.icon} {time_str} — {entry.title}"
             )
             if entry.description:
-                lines.append(f"   {entry.description***REMOVED***")
+                lines.append(f"   {entry.description}")
 
         if not lines:
             lines.append("📭 Нет событий в временной шкале.")
@@ -142,29 +142,29 @@ def _default_title(event: EventEntry) -> str:
     titles = {
         "system.startup": "System startup",
         "system.shutdown": "System shutdown",
-        "system.error": f"System error: {event.data.get('error', 'unknown')***REMOVED***",
-        "session.created": f"Session started: {event.data.get('topic', '')***REMOVED***",
+        "system.error": f"System error: {event.data.get('error', 'unknown')}",
+        "session.created": f"Session started: {event.data.get('topic', '')}",
         "session.completed": "Session completed",
-        "session.checkpoint": f"Checkpoint: {event.data.get('summary', '')[:50***REMOVED******REMOVED***",
-        "task.created": f"Task created: {event.data.get('task_id', '')***REMOVED***",
-        "task.completed": f"Task completed: {event.data.get('task_id', '')***REMOVED***",
-        "task.failed": f"Task failed: {event.data.get('task_id', '')***REMOVED***",
-        "step.started": f"Step started: {event.data.get('step_id', '')***REMOVED***",
-        "step.completed": f"Step completed: {event.data.get('step_id', '')***REMOVED***",
-        "step.failed": f"Step failed: {event.data.get('step_id', '')***REMOVED***",
-        "memory.stored": f"Memory stored: {event.data.get('key', '')***REMOVED***",
-        "memory.deleted": f"Memory deleted: {event.data.get('key', '')***REMOVED***",
-        "knowledge.indexed": f"Knowledge indexed: {event.data.get('doc_id', '')[:30***REMOVED******REMOVED***",
-        "knowledge.searched": f"Search: {event.data.get('query', '')[:30***REMOVED******REMOVED***",
-        "mcp.server.initialized": f"MCP server: {event.data.get('name', '')***REMOVED***",
-        "mcp.tool.called": f"MCP tool: {event.data.get('tool', '')***REMOVED***",
-        "bridge.connected": f"Bridge connected: {event.data.get('server', '')***REMOVED***",
-        "policy.evaluated": f"Policy: {event.data.get('policy_name', '')***REMOVED***",
-        "audit.decision": f"Decision: {event.data.get('capability', '')***REMOVED*** → {event.data.get('runtime_selected', '')***REMOVED***",
-        "audit.action": f"Action: {event.data.get('actor', '')***REMOVED*** → {event.data.get('action', '')***REMOVED***",
-        "audit.config_change": f"Config: {event.data.get('setting', '')***REMOVED*** changed",
-        "checkpoint.created": f"Checkpoint: {event.data.get('summary', '')[:50***REMOVED******REMOVED***",
-    ***REMOVED***
+        "session.checkpoint": f"Checkpoint: {event.data.get('summary', '')[:50]}",
+        "task.created": f"Task created: {event.data.get('task_id', '')}",
+        "task.completed": f"Task completed: {event.data.get('task_id', '')}",
+        "task.failed": f"Task failed: {event.data.get('task_id', '')}",
+        "step.started": f"Step started: {event.data.get('step_id', '')}",
+        "step.completed": f"Step completed: {event.data.get('step_id', '')}",
+        "step.failed": f"Step failed: {event.data.get('step_id', '')}",
+        "memory.stored": f"Memory stored: {event.data.get('key', '')}",
+        "memory.deleted": f"Memory deleted: {event.data.get('key', '')}",
+        "knowledge.indexed": f"Knowledge indexed: {event.data.get('doc_id', '')[:30]}",
+        "knowledge.searched": f"Search: {event.data.get('query', '')[:30]}",
+        "mcp.server.initialized": f"MCP server: {event.data.get('name', '')}",
+        "mcp.tool.called": f"MCP tool: {event.data.get('tool', '')}",
+        "bridge.connected": f"Bridge connected: {event.data.get('server', '')}",
+        "policy.evaluated": f"Policy: {event.data.get('policy_name', '')}",
+        "audit.decision": f"Decision: {event.data.get('capability', '')} → {event.data.get('runtime_selected', '')}",
+        "audit.action": f"Action: {event.data.get('actor', '')} → {event.data.get('action', '')}",
+        "audit.config_change": f"Config: {event.data.get('setting', '')} changed",
+        "checkpoint.created": f"Checkpoint: {event.data.get('summary', '')[:50]}",
+    }
 
     title = titles.get(event.event_type)
     if title:
@@ -173,9 +173,9 @@ def _default_title(event: EventEntry) -> str:
     # Wildcard fallback
     parts = event.event_type.split(".")
     if len(parts) >= 2:
-        return f"{parts[0***REMOVED***.capitalize()***REMOVED*** {parts[1***REMOVED******REMOVED***: {event.event_type***REMOVED***"
+        return f"{parts[0].capitalize()} {parts[1]}: {event.event_type}"
 
-    return f"Event: {event.event_type***REMOVED***"
+    return f"Event: {event.event_type}"
 
 
 def _default_description(event: EventEntry) -> str:
@@ -185,12 +185,12 @@ def _default_description(event: EventEntry) -> str:
         return ""
 
     desc_fields = {
-        "task.completed": f"Duration: {data.get('duration_ms', '?')***REMOVED***ms",
-        "step.completed": f"Duration: {data.get('duration_ms', '?')***REMOVED***ms",
-        "step.failed": f"Error: {data.get('error', 'unknown')***REMOVED***",
-        "memory.stored": f"Level: {data.get('level', '?')***REMOVED***",
-        "audit.decision": f"Policy: {data.get('policy_name', '?')***REMOVED***, Cost: ${data.get('cost_estimate', 0):.2f***REMOVED***",
-        "audit.action": f"Target: {data.get('target', '?')***REMOVED***",
-    ***REMOVED***
+        "task.completed": f"Duration: {data.get('duration_ms', '?')}ms",
+        "step.completed": f"Duration: {data.get('duration_ms', '?')}ms",
+        "step.failed": f"Error: {data.get('error', 'unknown')}",
+        "memory.stored": f"Level: {data.get('level', '?')}",
+        "audit.decision": f"Policy: {data.get('policy_name', '?')}, Cost: ${data.get('cost_estimate', 0):.2f}",
+        "audit.action": f"Target: {data.get('target', '?')}",
+    }
 
     return desc_fields.get(event.event_type, "")

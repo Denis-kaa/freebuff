@@ -2,7 +2,7 @@
 
 Verifies that the cron script never invokes auto_conspect in demo mode.
 """
-***REMOVED***
+}
 
 
 class TestCronConspect:
@@ -38,7 +38,7 @@ class TestCronConspect:
                     "auto_conspect invocation line must not be commented out"
                 )
                 assert "--demo" not in stripped, (
-                    f"auto_conspect invocation must not include --demo: {stripped!r***REMOVED***"
+                    f"auto_conspect invocation must not include --demo: {stripped!r}"
                 )
                 return
         raise AssertionError("cron_conspect.sh should invoke python scripts_01/auto_conspect.py")

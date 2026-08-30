@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-***REMOVED***
+}
 
 from app.localization.contract import SourceDocument, TranslationDraft, TranslationStatus
 from app.localization.extractor import iter_source_documents, write_manifest
@@ -62,8 +62,8 @@ def write_translation_draft(
 
     metadata_path = draft_metadata_path(source, draft_root)
     metadata = draft.to_dict()
-    metadata["source_relpath"***REMOVED*** = source.source_relpath
-    metadata["validation_errors"***REMOVED*** = list(errors)
+    metadata["source_relpath"] = source.source_relpath
+    metadata["validation_errors"] = list(errors)
     metadata_path.write_text(
         json.dumps(metadata, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
@@ -80,13 +80,13 @@ class TranslationStatusRow:
     target_relpath: str
     status: TranslationStatus
 
-    def to_dict(self) -> dict[str, str***REMOVED***:
+    def to_dict(self) -> dict[str, str]:
         return {
             "document_id": self.document_id,
             "source_relpath": self.source_relpath,
             "target_relpath": self.target_relpath,
             "status": self.status.value,
-        ***REMOVED***
+        }
 
 
 def target_path(source: SourceDocument, target_root: str | Path) -> Path:
@@ -100,7 +100,7 @@ def scan_source(
     manifest_path: str | Path,
     *,
     target_locale: str = "ru",
-) -> dict[str, object***REMOVED***:
+) -> dict[str, object]:
     """Extract source docs and write a deterministic manifest."""
 
     from app.localization.extractor import build_manifest
@@ -112,12 +112,12 @@ def scan_source(
 
 
 def translation_status_rows(
-    documents: tuple[SourceDocument, ...***REMOVED***,
+    documents: tuple[SourceDocument, ...],
     target_root: str | Path,
-) -> tuple[TranslationStatusRow, ...***REMOVED***:
+) -> tuple[TranslationStatusRow, ...]:
     """Classify target files by source-hash sidecar freshness."""
 
-    rows: list[TranslationStatusRow***REMOVED*** = [***REMOVED***
+    rows: list[TranslationStatusRow] = []
     for source in documents:
         destination = target_path(source, target_root)
         sidecar = destination.with_suffix(destination.suffix + ".source_hash")

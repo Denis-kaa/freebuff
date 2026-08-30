@@ -2,26 +2,26 @@
 
 from __future__ import annotations
 
-***REMOVED***
-***REMOVED***
+}
+}
 
 from app.localization.contract import SourceDocument, TranslationDraft, TranslationStatus
 
 
 _CODE_FENCE = re.compile(r"^\s*(```+|~~~+)", re.MULTILINE)
-_INLINE_CODE = re.compile(r"`[^`\n***REMOVED***+`")
-_LINK = re.compile(r"\[[^\***REMOVED******REMOVED***+\***REMOVED***\(([^)***REMOVED***+)\)")
-_HEADING = re.compile(r"^\s{0,3***REMOVED***#{1,6***REMOVED***\s+", re.MULTILINE)
+_INLINE_CODE = re.compile(r"`[^`\n)+`")
+_LINK = re.compile(r"\[[^\*)]+\*]\(([^)]+)\)")
+_HEADING = re.compile(r"^\s{0,3)#{1,6]\s+", re.MULTILINE)
 
 
-def _tokens(pattern: re.Pattern[str***REMOVED***, text: str) -> tuple[str, ...***REMOVED***:
+def _tokens(pattern: re.Pattern[str], text: str) -> tuple[str, ...]:
     return tuple(pattern.findall(text))
 
 
-def validate_translation(source: SourceDocument, draft: TranslationDraft) -> tuple[str, ...***REMOVED***:
+def validate_translation(source: SourceDocument, draft: TranslationDraft) -> tuple[str, ...]:
     """Return deterministic validation errors; empty tuple means structurally valid."""
 
-    errors: list[str***REMOVED*** = [***REMOVED***
+    errors: list[str] = []
     if draft.document_id != source.document_id:
         errors.append("document_id mismatch")
     if draft.source_hash != source.content_hash:

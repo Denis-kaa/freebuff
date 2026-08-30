@@ -21,7 +21,7 @@ from app.localization.contract import SourceDocument, TranslationDraft, Translat
 from app.localization.keys import GeminiKeyPool
 from app.localization.provider import TranslationProvider
 
-GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta/models/{model***REMOVED***:generateContent"
+GEMINI_API_BASE = "https://generativelanguage.googleapis.com/v1beta/models/{model]:generateContent"
 DEFAULT_MODEL = "gemini-2.5-flash"
 
 
@@ -51,10 +51,10 @@ class GeminiTranslationProvider(TranslationProvider):
 
     def translate(
         self,
-        documents: Iterable[SourceDocument***REMOVED***,
+        documents: Iterable[SourceDocument],
         target_locale: str,
-    ) -> tuple[TranslationDraft, ...***REMOVED***:
-        drafts: list[TranslationDraft***REMOVED*** = [***REMOVED***
+    ) -> tuple[TranslationDraft, ...]:
+        drafts: list[TranslationDraft] = []
         for source in documents:
             drafts.append(self._translate_one(source, target_locale))
         return tuple(drafts)
@@ -81,29 +81,29 @@ class GeminiTranslationProvider(TranslationProvider):
                 attempts += 1
                 if attempts > self._max_retries:
                     raise RuntimeError(
-                        f"all Gemini keys exhausted translating {source.document_id***REMOVED***: {exc***REMOVED***"
+                        f"all Gemini keys exhausted translating {source.document_id}: {exc}"
                     ) from exc
                 time.sleep(min(2 ** attempts, 8))
             except Exception as exc:  # non-retryable (e.g. malformed response)
                 raise RuntimeError(
-                    f"Gemini translation failed for {source.document_id***REMOVED***: {exc***REMOVED***"
+                    f"Gemini translation failed for {source.document_id}: {exc}"
                 ) from exc
-        raise RuntimeError(f"Gemini translation failed for {source.document_id***REMOVED***")
+        raise RuntimeError(f"Gemini translation failed for {source.document_id}")
 
     def _call(self, key: str, source_text: str, target_locale: str) -> str:
         endpoint = self._api_base.format(model=urllib.parse.quote(self._model, safe=""))
-        url = f"{endpoint***REMOVED***?key={urllib.parse.quote(key, safe='')***REMOVED***"
+        url = f"{endpoint}?key={urllib.parse.quote(key, safe='')}"
         prompt = self._build_prompt(source_text, target_locale)
         payload = json.dumps(
             {
-                "contents": [{"parts": [{"text": prompt***REMOVED******REMOVED******REMOVED******REMOVED***,
-                "generationConfig": {"temperature": 0.2, "maxOutputTokens": 4096***REMOVED***,
-            ***REMOVED***
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"temperature": 0.2, "maxOutputTokens": 4096},
+            }
         ).encode("utf-8")
         request = urllib.request.Request(
             url,
             data=payload,
-            headers={"Content-Type": "application/json"***REMOVED***,
+            headers={"Content-Type": "application/json"},
             method="POST",
         )
         try:
@@ -111,12 +111,12 @@ class GeminiTranslationProvider(TranslationProvider):
                 body = json.loads(response.read().decode("utf-8"))
         except urllib.error.HTTPError as exc:
             if exc.code in (401, 403, 404, 429, 500, 503):
-                raise _RetryableError(f"HTTP {exc.code***REMOVED***") from exc
+                raise _RetryableError(f"HTTP {exc.code}") from exc
             raise
         except (urllib.error.URLError, TimeoutError, OSError) as exc:
-            raise _RetryableError(f"{type(exc).__name__***REMOVED***") from exc
+            raise _RetryableError(f"{type(exc).__name__}") from exc
 
-        parts = body.get("candidates", [{***REMOVED******REMOVED***)[0***REMOVED***.get("content", {***REMOVED***).get("parts", [***REMOVED***)
+        parts = body.get("candidates", [{}])[0].get("content", {}).get("parts", [])
         text = "".join(part.get("text", "") for part in parts if isinstance(part, dict)).strip()
         if not text:
             raise RuntimeError("empty Gemini response")
@@ -126,7 +126,7 @@ class GeminiTranslationProvider(TranslationProvider):
     def _build_prompt(source_text: str, target_locale: str) -> str:
         return (
             "Translate the following Markdown document verbatim into locale "
-            f"'{target_locale***REMOVED***'. Preserve exactly: all Markdown structure, code "
+            f"'{target_locale}'. Preserve exactly: all Markdown structure, code "
             "fences, inline-code spans, links, headings and list nesting. Translate "
             "only prose content; do not translate code, identifiers or URLs. "
             "Return ONLY the translated document, no commentary.\n\n"
@@ -139,10 +139,10 @@ def _strip_markers(text: str) -> str:
     stripped = text.strip()
     if stripped.startswith("```") and stripped.endswith("```"):
         lines = stripped.splitlines()
-        if lines and lines[0***REMOVED***.startswith("```"):
-            lines = lines[1:***REMOVED***
-        if lines and lines[-1***REMOVED***.strip().startswith("```"):
-            lines = lines[:-1***REMOVED***
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip().startswith("```"):
+            lines = lines[:-1]
         stripped = "\n".join(lines).strip()
     return stripped
 

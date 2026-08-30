@@ -19,26 +19,26 @@ class LearningPlan:
     """Structured learning plan for a given topic."""
 
     topic: str
-    fundamentals: list[LearningSource***REMOVED*** = field(default_factory=list)
-    videos: list[LearningSource***REMOVED*** = field(default_factory=list)
-    services: list[LearningSource***REMOVED*** = field(default_factory=list)
-    strategies: list[LearningSource***REMOVED*** = field(default_factory=list)
-    legal: list[LearningSource***REMOVED*** = field(default_factory=list)
+    fundamentals: list[LearningSource] = field(default_factory=list)
+    videos: list[LearningSource] = field(default_factory=list)
+    services: list[LearningSource] = field(default_factory=list)
+    strategies: list[LearningSource] = field(default_factory=list)
+    legal: list[LearningSource] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return asdict(self)
 
     def format(self) -> str:  # noqa: A003
         """Return a formatted markdown representation."""
-        lines = [f"# План обучения: {self.topic***REMOVED***", ""***REMOVED***
+        lines = [f"# План обучения: {self.topic}", ""]
 
-        def section(title: str, items: list[LearningSource***REMOVED***) -> None:
-            lines.append(f"## {title***REMOVED***")
+        def section(title: str, items: list[LearningSource]) -> None:
+            lines.append(f"## {title}")
             if not items:
                 lines.append("_нет данных_")
             for item in items:
-                lines.append(f"- **{item.title***REMOVED***** — {item.description***REMOVED***")
-                lines.append(f"  *Почему важно:* {item.why***REMOVED***")
+                lines.append(f"- **{item.title}** — {item.description}")
+                lines.append(f"  *Почему важно:* {item.why}")
             lines.append("")
 
         section("Фундаментальная литература", self.fundamentals)

@@ -10,18 +10,18 @@ from __future__ import annotations
 import logging
 import os
 from dataclasses import dataclass, field
-***REMOVED***
+}
 from typing import FrozenSet
 
 from .models import UserRole
 
 
-def _split_csv(raw: str) -> list[str***REMOVED***:
-    return [x.strip() for x in raw.split(",") if x.strip()***REMOVED***
+def _split_csv(raw: str) -> list[str]:
+    return [x.strip() for x in raw.split(",") if x.strip()]
 
 
-def _split_csv_ints(raw: str) -> list[int***REMOVED***:
-    out: list[int***REMOVED*** = [***REMOVED***
+def _split_csv_ints(raw: str) -> list[int]:
+    out: list[int] = []
     for x in _split_csv(raw):
         try:
             out.append(int(x))
@@ -47,7 +47,7 @@ def _read_env_file(path: Path) -> None:
 @dataclass(frozen=True)
 class Config:
     bot_token: str
-    admin_ids: FrozenSet[int***REMOVED***
+    admin_ids: FrozenSet[int]
     database_path: str
     payment_provider: str
     payment_provider_token: str
@@ -62,7 +62,7 @@ class Config:
         return self.payment_provider.lower()
 
     @property
-    def admin_id_list(self) -> list[int***REMOVED***:
+    def admin_id_list(self) -> list[int]:
         return sorted(self.admin_ids)
 
     def role_for_user_id(self, user_id: int) -> UserRole:

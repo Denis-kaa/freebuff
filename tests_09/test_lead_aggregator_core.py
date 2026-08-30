@@ -6,7 +6,7 @@ IntentClassifier (L1/L2), Deduplicator, Scorer, KworkAdapter/TGChannelAdapter п
 from __future__ import annotations
 
 import sys
-***REMOVED***
+}
 
 import pytest
 
@@ -68,16 +68,16 @@ class TestRetryPolicy:
 
     def test_retry_eventual_success(self):
         rp = RetryPolicy(max_attempts=3, base_delay=0.0, failure_threshold=10)
-        calls = {"n": 0***REMOVED***
+        calls = {"n": 0}
 
         async def flaky():
-            calls["n"***REMOVED*** += 1
-            if calls["n"***REMOVED*** < 3:
+            calls["n"] += 1
+            if calls["n"] < 3:
                 raise ConnectionError("retry")
             return "ok"
 
         assert asyncio_run(rp.run, flaky) == "ok"
-        assert calls["n"***REMOVED*** == 3
+        assert calls["n"] == 3
 
 
 # ── CheckpointStore ──────────────────────────────────────────────────
@@ -106,9 +106,9 @@ class TestCheckpointStore:
 class TestIntentClassifier:
     def make(self):
         return IntentClassifier(
-            stopwords=["казино", "реклама"***REMOVED***,
-            client_markers=["ищу", "нужен", "сделать"***REMOVED***,
-            seeker_markers=["ищу работу", "предлагаю услуги"***REMOVED***,
+            stopwords=["казино", "реклама"],
+            client_markers=["ищу", "нужен", "сделать"],
+            seeker_markers=["ищу работу", "предлагаю услуги"],
         )
 
     def test_l1_filters_spam(self):
@@ -161,13 +161,13 @@ class TestDeduplicator:
 # ── Scorer (L3) ──────────────────────────────────────────────────────
 class TestScorer:
     def test_client_intent_scores_higher(self):
-        sc = Scorer(signals=["телеграм бот"***REMOVED***)
+        sc = Scorer(signals=["телеграм бот"])
         client = Lead(source="t", source_id="1", text="нужен телеграм бот", intent="client")
         seeker = Lead(source="t", source_id="2", text="ищу работу", intent="seeker")
         assert sc.score(client) > sc.score(seeker)
 
     def test_relevance_boosts_score(self):
-        sc = Scorer(signals=["телеграм бот", "лендинг"***REMOVED***)
+        sc = Scorer(signals=["телеграм бот", "лендинг"])
         generic = Lead(source="t", source_id="1", text="нужен исполнитель", intent="client")
         relevant = Lead(
             source="t", source_id="2", text="нужен телеграм бот и лендинг", intent="client"

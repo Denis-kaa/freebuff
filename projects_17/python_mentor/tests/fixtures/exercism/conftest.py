@@ -1,5 +1,5 @@
 # Это fixture-данные, не тесты: pytest не должен собирать файлы из этой директории.
-collect_ignore = ["config.json"***REMOVED***
+collect_ignore = ["config.json"]
 
 # Также игнорируем любые .py внутри поддиректорий fixtures.
 import pathlib as _pl

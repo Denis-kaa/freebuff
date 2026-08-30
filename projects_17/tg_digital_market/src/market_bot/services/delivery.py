@@ -25,7 +25,7 @@ class DeliveryService:
     def __init__(self, repo: Repository) -> None:
         self._repo = repo
 
-    def get_reserved_key_for_order(self, order_id: int) -> Optional[ProductKey***REMOVED***:
+    def get_reserved_key_for_order(self, order_id: int) -> Optional[ProductKey]:
         """Найти зарезервированный ключ по order_id."""
         row = self._repo.raw_conn.execute(
             "SELECT * FROM product_keys WHERE order_id = ? AND status = 'reserved' LIMIT 1",
@@ -38,10 +38,10 @@ class DeliveryService:
     def publish(self, order_id: int) -> Delivery:
         order = self._repo.get_order(order_id)
         if order is None:
-            raise DeliveryError(f"Заказ #{order_id***REMOVED*** не найден.")
+            raise DeliveryError(f"Заказ #{order_id} не найден.")
         if order.status != OrderStatus.PAID:
             raise DeliveryNotReadyError(
-                f"Заказ #{order_id***REMOVED*** ещё не оплачен: статус {order.status.value***REMOVED***."
+                f"Заказ #{order_id} ещё не оплачен: статус {order.status.value}."
             )
         # Проверим, что доставка ещё не произошла.
         existing = self._repo.get_delivery_for_order(order_id)
@@ -50,12 +50,12 @@ class DeliveryService:
         key = self.get_reserved_key_for_order(order_id)
         if key is None:
             raise DeliveryNotReadyError(
-                f"Для заказа #{order_id***REMOVED*** нет зарезервированного ключа."
+                f"Для заказа #{order_id} нет зарезервированного ключа."
             )
         items = self._repo.get_order_items(order_id)
         if not items:
-            raise DeliveryError(f"Заказ #{order_id***REMOVED*** без позиций.")
-        product_id = items[0***REMOVED***.product_id
+            raise DeliveryError(f"Заказ #{order_id} без позиций.")
+        product_id = items[0].product_id
 
         self._repo.mark_key_delivered(key.id)
         delivery = self._repo.create_delivery(
@@ -64,7 +64,7 @@ class DeliveryService:
         self._repo.set_order_status(order_id, OrderStatus.DELIVERED, delivered=True)
         return delivery
 
-    def code_for_order(self, order_id: int) -> Optional[str***REMOVED***:
+    def code_for_order(self, order_id: int) -> Optional[str]:
         """Получить код для доставленного заказа (для UI/уведомления)."""
         delivery = self._repo.get_delivery_for_order(order_id)
         if delivery is None:

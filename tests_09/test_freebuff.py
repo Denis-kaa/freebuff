@@ -5,7 +5,7 @@ import json
 import os
 import subprocess
 import sys
-***REMOVED***
+}
 
 import pytest
 from unittest.mock import MagicMock, patch, mock_open
@@ -24,15 +24,15 @@ class TestSystemMonitor:
     @patch("builtins.open", new_callable=mock_open, read_data="MemTotal: 8000000 kB\nMemAvailable: 4000000 kB\n")
     def test_get_memory_ok(self, mock_file):
         result = get_memory()
-        assert result["available_mb"***REMOVED*** == 3906  # 4000000 // 1024
-        assert result["total_mb"***REMOVED*** == 7812       # 8000000 // 1024
-        assert result["percent"***REMOVED*** > 0
+        assert result["available_mb"] == 3906  # 4000000 // 1024
+        assert result["total_mb"] == 7812       # 8000000 // 1024
+        assert result["percent"] > 0
 
     @patch("builtins.open", side_effect=OSError("no file"))
     def test_get_memory_error(self, mock_file):
         result = get_memory()
-        assert result["available_mb"***REMOVED*** == 0
-        assert result["total_mb"***REMOVED*** == 0
+        assert result["available_mb"] == 0
+        assert result["total_mb"] == 0
 
     def test_get_cpu(self):
         result = get_cpu()
@@ -69,7 +69,7 @@ class TestContextManager:
         manager._lock = threading.Lock()
         manager._event_bus = None
 
-        for d in [manager._sessions_dir, manager._checkpoints_dir, manager._summaries_dir***REMOVED***:
+        for d in [manager._sessions_dir, manager._checkpoints_dir, manager._summaries_dir]:
             os.makedirs(d, exist_ok=True)
 
         manager._init_db()
@@ -86,8 +86,8 @@ class TestContextManager:
         cm.add_message(snap.session_id, "user", "Hello", token_count=5)
         msgs = cm.get_messages(snap.session_id)
         assert len(msgs) == 1
-        assert msgs[0***REMOVED***["role"***REMOVED*** == "user"
-        assert msgs[0***REMOVED***["content"***REMOVED*** == "Hello"
+        assert msgs[0]["role"] == "user"
+        assert msgs[0]["content"] == "Hello"
 
     def test_add_message_auto_token(self, cm):
         """Тест авто-оценки токенов."""
@@ -96,14 +96,14 @@ class TestContextManager:
         msgs = cm.get_messages(snap.session_id)
         assert len(msgs) == 1
         # token_count > 0, т.к. оценка "Hello, world!"
-        assert msgs[0***REMOVED***["token_count"***REMOVED*** > 0
+        assert msgs[0]["token_count"] > 0
         assert result is None  # без чекпоинта
 
     def test_save_checkpoint(self, cm):
         snap = cm.start_session(project="test")
         cm.add_message(snap.session_id, "user", "msg", token_count=2)
         cp = cm.save_checkpoint(snap.session_id, "Test checkpoint", ctype=CheckpointType.MANUAL)
-        assert cp["summary"***REMOVED*** == "Test checkpoint"
+        assert cp["summary"] == "Test checkpoint"
 
         checkpoints = cm.get_checkpoints(snap.session_id)
         assert len(checkpoints) == 1
@@ -145,11 +145,11 @@ class TestContextManager:
     def test_auto_checkpoint(self, cm):
         snap = cm.start_session(project="test")
         for i in range(10):
-            cm.add_message(snap.session_id, "user", f"msg {i***REMOVED***", token_count=1,
+            cm.add_message(snap.session_id, "user", f"msg {i}", token_count=1,
                           auto_checkpoint_interval=10)
         checkpoints = cm.get_checkpoints(snap.session_id)
         assert len(checkpoints) == 1
-        assert "Auto-checkpoint" in checkpoints[0***REMOVED***["summary"***REMOVED***
+        assert "Auto-checkpoint" in checkpoints[0]["summary"]
 
     def test_session_not_found(self, cm):
         with pytest.raises(ValueError, match="Session not found"):
@@ -160,10 +160,10 @@ class TestContextManager:
         snap = cm.start_session(project="test", topic="Status test")
         cm.add_message(snap.session_id, "user", "Hello", token_count=100)
         status = cm.get_context_status(snap.session_id)
-        assert status["message_count"***REMOVED*** == 1
-        assert status["token_estimate"***REMOVED*** > 0
+        assert status["message_count"] == 1
+        assert status["token_estimate"] > 0
         assert "usage_percent" in status
-        assert status["is_full"***REMOVED*** is False
+        assert status["is_full"] is False
 
     def test_context_full_trigger(self, cm):
         """Тест CONTEXT_FULL триггера."""
@@ -176,10 +176,10 @@ class TestContextManager:
         # Второе сообщение — превышает порог
         r2 = cm.add_message(snap.session_id, "user", "longer message here", token_count=10)
         assert r2 is not None
-        assert r2["checkpoint_type"***REMOVED*** == CheckpointType.CONTEXT_FULL.value
+        assert r2["checkpoint_type"] == CheckpointType.CONTEXT_FULL.value
         # Проверяем через get_context_status
         status = cm.get_context_status(snap.session_id)
-        assert status["is_full"***REMOVED*** is True
+        assert status["is_full"] is True
 
     def test_estimate_tokens(self):
         """Тест оценки токенов."""
@@ -230,12 +230,12 @@ class TestBootstrap:
         """Bootstrap с новой сессией (без конспектов)."""
         from scripts_01.bootstrap import bootstrap
 
-        mock_listdir.return_value = [***REMOVED***
+        mock_listdir.return_value = []
 
         with patch("scripts_01.bootstrap.ContextManager") as MockCM, \
              patch("scripts_01.bootstrap.StreamBridge") as MockBridge:
             mock_cm = MagicMock()
-            mock_cm.list_sessions.return_value = [***REMOVED***  # нет активных
+            mock_cm.list_sessions.return_value = []  # нет активных
             mock_snap = MagicMock()
             mock_snap.session_id = "test-1234"
             mock_snap.project = "test"
@@ -249,8 +249,8 @@ class TestBootstrap:
 
             result = bootstrap(project="test", topic="bootstrap test", quiet=True, start_stream=True)
 
-            assert result["session_id"***REMOVED*** == "test-1234"
-            assert "Я начинаю новую сессию" in result["buffy_prompt"***REMOVED***
+            assert result["session_id"] == "test-1234"
+            assert "Я начинаю новую сессию" in result["buffy_prompt"]
 
 
 class TestFreebuffCLI:
@@ -259,7 +259,7 @@ class TestFreebuffCLI:
     def test_cli_status(self):
         import subprocess
         result = subprocess.run(
-            ["python", "freebuff_cli.py", "status"***REMOVED***,
+            ["python", "freebuff_cli.py", "status"],
             capture_output=True, text=True,
             cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
         )
@@ -276,9 +276,9 @@ class TestTaskCLI:
 
     def _run_task(self, project_root: Path, workspace: Path, *args: str) -> subprocess.CompletedProcess:
         env = os.environ.copy()
-        env["FREEBUFF_ROOT"***REMOVED*** = str(workspace)
+        env["FREEBUFF_ROOT"] = str(workspace)
         return subprocess.run(
-            [sys.executable, str(project_root / "freebuff_cli.py"), "task", *args***REMOVED***,
+            [sys.executable, str(project_root / "freebuff_cli.py"), "task", *args],
             capture_output=True,
             text=True,
             cwd=str(project_root),
@@ -300,7 +300,7 @@ class TestTaskCLI:
         assert "архивирована" in result.stdout
         archives = list((tmp_path / "docs_10" / "task_archive").glob("TASK_*.md"))
         assert len(archives) == 1
-        assert archives[0***REMOVED***.read_text(encoding="utf-8") == "# Old task\n"
+        assert archives[0].read_text(encoding="utf-8") == "# Old task\n"
 
     def test_task_archive_requires_existing_task(self, project_root, tmp_path):
         result = self._run_task(project_root, tmp_path, "archive")
@@ -317,7 +317,7 @@ class TestProjectBookCLI:
 
     def _run(self, project_root: Path, *args: str) -> subprocess.CompletedProcess:
         return subprocess.run(
-            [sys.executable, str(project_root / "freebuff_cli.py"), *args***REMOVED***,
+            [sys.executable, str(project_root / "freebuff_cli.py"), *args],
             capture_output=True,
             text=True,
             cwd=str(project_root),

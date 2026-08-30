@@ -29,4 +29,4 @@ class Lead:
     intent: str = "unknown"
     score: float = 0.0
     legal_ok: bool = True
-    raw: dict[str, Any***REMOVED*** = field(default_factory=dict)
+    raw: dict[str, Any] = field(default_factory=dict)

@@ -15,7 +15,7 @@
 import asyncio
 import os
 import sys
-***REMOVED***
+}
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -28,16 +28,16 @@ async def _show_profile_and_dialogs(client: TGClient) -> bool:
     """Показать профиль и диалоги. Возвращает False если ключ протух."""
     try:
         me = await client.get_me()
-        print(f"\n👤 {me.first_name***REMOVED*** {me.last_name or ''***REMOVED***" if me else "\n👤 ???")
+        print(f"\n👤 {me.first_name} {me.last_name or ''}" if me else "\n👤 ???")
         if me:
-            print(f"   Username: @{me.username or 'нет'***REMOVED***")
-            print(f"   Phone: {me.phone or 'скрыт'***REMOVED***")
+            print(f"   Username: @{me.username or 'нет'}")
+            print(f"   Phone: {me.phone or 'скрыт'}")
 
         print(f"\n💬 Последние 5 диалогов:")
         dialogs = await client.get_dialogs(limit=5)
         for d in dialogs:
-            unread = f"[{d.unread_count***REMOVED******REMOVED***" if d.unread_count else ""
-            print(f"   {unread***REMOVED*** {d.name***REMOVED***")
+            unread = f"[{d.unread_count}]" if d.unread_count else ""
+            print(f"   {unread} {d.name}")
         return True
     except AuthKeyUnregisteredError:
         return False

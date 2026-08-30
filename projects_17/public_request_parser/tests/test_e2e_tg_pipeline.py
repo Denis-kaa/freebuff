@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import datetime, timezone
-***REMOVED***
+}
 
 import pytest
 
@@ -19,7 +19,7 @@ from app.pipeline import run_offline_slice
 from app.storage import SqliteCheckpointStore, SqliteStorage
 from app.tgpreview import TelegramWebPreviewAdapter
 
-FIXTURES = Path(__file__).parents[1***REMOVED*** / "fixtures"
+FIXTURES = Path(__file__).parents[1] / "fixtures"
 NOW = datetime(2026, 8, 23, 12, 0, tzinfo=timezone.utc)
 
 
@@ -69,7 +69,7 @@ def copywriter_profile() -> SearchProfile:
 
 
 @pytest.fixture()
-def storage(tmp_path: Path) -> Iterator[SqliteStorage***REMOVED***:
+def storage(tmp_path: Path) -> Iterator[SqliteStorage]:
     db = SqliteStorage(tmp_path / "e2e_tg.db")
     yield db
     db.close()
@@ -229,7 +229,7 @@ async def test_e2e_delivery_card_rendered_without_author(
     """Dry-run доставка рендерит карточку; в тексте нет author-полей."""
     adapter = tg_adapter()
     checkpoint = SqliteCheckpointStore(storage)
-    sent_cards: list[str***REMOVED*** = [***REMOVED***
+    sent_cards: list[str] = []
 
     class CollectingTransport:
         """Захват готовых карточек (dry-run + capture для проверки)."""
@@ -242,7 +242,7 @@ async def test_e2e_delivery_card_rendered_without_author(
             disable_web_page_preview: bool = True,
         ) -> str:
             sent_cards.append(text)
-            return f"msg-{len(sent_cards)***REMOVED***"
+            return f"msg-{len(sent_cards)}"
 
     delivery = TelegramDelivery(storage=storage, transport=CollectingTransport())
 
@@ -258,6 +258,6 @@ async def test_e2e_delivery_card_rendered_without_author(
 
     assert result.delivered == 1
     assert len(sent_cards) == 1
-    assert "Ищу python" in sent_cards[0***REMOVED***
-    assert "author" not in sent_cards[0***REMOVED***.lower()
-    assert "https://t.me/s/demo_channel/101" in sent_cards[0***REMOVED***
+    assert "Ищу python" in sent_cards[0]
+    assert "author" not in sent_cards[0].lower()
+    assert "https://t.me/s/demo_channel/101" in sent_cards[0]

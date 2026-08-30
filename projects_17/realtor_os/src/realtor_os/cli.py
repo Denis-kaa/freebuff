@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-***REMOVED***
+}
 from typing import Any, Sequence
 
 from realtor_os import __version__
@@ -27,7 +27,7 @@ def _build_parser() -> argparse.ArgumentParser:
         prog="realtor_os",
         description="Локальная автономная система для риелтора.",
     )
-    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__***REMOVED***")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     parser.add_argument("--debug", action="store_true", help="Включить DEBUG логирование")
     parser.add_argument("--quiet", action="store_true", help="Тихий режим")
 
@@ -58,7 +58,7 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _init(args: argparse.Namespace) -> tuple[Config, Any***REMOVED***:
+def _init(args: argparse.Namespace) -> tuple[Config, Any]:
     log_level = "DEBUG" if args.debug else "INFO"
     quiet = args.quiet
     logger = setup_logger(level=log_level, quiet=quiet)
@@ -102,7 +102,7 @@ def _cmd_ask(args: argparse.Namespace) -> int:
     config, logger = _init(args)
     rag = RAGEngine()
     results = rag.search(args.query)
-    context = "\n".join(r["content"***REMOVED*** for r in results)
+    context = "\n".join(r["content"] for r in results)
     logger.info("Context:\n%s", context)
     logger.info("Answer: use local LLM (not available in v0.1 foundation)")
     return 0
@@ -124,8 +124,8 @@ def _cmd_learn(args: argparse.Namespace) -> int:
     config, logger = _init(args)
     curator = KnowledgeCurator()
     sources = [
-        {"title": "Example source", "url": "https://example.com", "why": "Placeholder for /learn"***REMOVED***
-    ***REMOVED***
+        {"title": "Example source", "url": "https://example.com", "why": "Placeholder for /learn"}
+    ]
     curator.learn(args.topic, sources)
     logger.info("Learned topic: %s", args.topic)
     return 0
@@ -138,7 +138,7 @@ def _cmd_manifest(args: argparse.Namespace) -> int:
     return 0
 
 
-def main(argv: Sequence[str***REMOVED*** | None = None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
 

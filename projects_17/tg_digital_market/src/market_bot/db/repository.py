@@ -11,7 +11,7 @@ Repository инкапсулирует SQL и преобразование стр
 from __future__ import annotations
 
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Iterable, Optional, Sequence
 
 from ..models import (
@@ -36,7 +36,7 @@ def _iso(dt: datetime) -> str:
     return dt.astimezone(timezone.utc).replace(microsecond=0).isoformat()
 
 
-def _parse_iso(s: Optional[str***REMOVED***) -> Optional[datetime***REMOVED***:
+def _parse_iso(s: Optional[str]) -> Optional[datetime]:
     if not s:
         return None
     try:
@@ -72,17 +72,17 @@ class Repository:
     @staticmethod
     def _user_from_row(row) -> User:
         return User(
-            id=row["id"***REMOVED***,
-            username=row["username"***REMOVED***,
-            full_name=row["full_name"***REMOVED***,
-            role=UserRole(row["role"***REMOVED***),
-            created_at=_parse_iso(row["created_at"***REMOVED***) or _now(),
+            id=row["id"],
+            username=row["username"],
+            full_name=row["full_name"],
+            role=UserRole(row["role"]),
+            created_at=_parse_iso(row["created_at"]) or _now(),
         )
 
     def upsert_user(
         self,
         telegram_id: int,
-        username: Optional[str***REMOVED***,
+        username: Optional[str],
         full_name: str,
     ) -> User:
         """Вставить пользователя, если нет, и вернуть актуальное состояние."""
@@ -101,40 +101,40 @@ class Repository:
         assert row is not None
         return self._user_from_row(row)
 
-    def get_user(self, user_id: int) -> Optional[User***REMOVED***:
+    def get_user(self, user_id: int) -> Optional[User]:
         row = self._db.query_one("SELECT * FROM users WHERE id = ?", (user_id,))
         return self._user_from_row(row) if row else None
 
-    def list_admins(self) -> list[User***REMOVED***:
+    def list_admins(self) -> list[User]:
         rows = self._db.query(
             "SELECT * FROM users WHERE role = ? ORDER BY id", (UserRole.ADMIN.value,)
         )
-        return [self._user_from_row(r) for r in rows***REMOVED***
+        return [self._user_from_row(r) for r in rows]
 
     def set_role(self, user_id: int, role: UserRole) -> None:
         self._db.execute(
             "UPDATE users SET role = ? WHERE id = ?", (role.value, user_id)
         )
 
-    def list_sellers(self) -> list[User***REMOVED***:
+    def list_sellers(self) -> list[User]:
         rows = self._db.query(
             "SELECT * FROM users WHERE role = ? ORDER BY id", (UserRole.SELLER.value,)
         )
-        return [self._user_from_row(r) for r in rows***REMOVED***
+        return [self._user_from_row(r) for r in rows]
 
     # ─── products ───────────────────────────────────────────────────────────
 
     @staticmethod
     def _product_from_row(row) -> Product:
         return Product(
-            id=row["id"***REMOVED***,
-            seller_id=row["seller_id"***REMOVED***,
-            name=row["name"***REMOVED***,
-            description=row["description"***REMOVED***,
-            category=row["category"***REMOVED***,
-            price_stars=row["price_stars"***REMOVED***,
-            is_active=bool(row["is_active"***REMOVED***),
-            created_at=_parse_iso(row["created_at"***REMOVED***) or _now(),
+            id=row["id"],
+            seller_id=row["seller_id"],
+            name=row["name"],
+            description=row["description"],
+            category=row["category"],
+            price_stars=row["price_stars"],
+            is_active=bool(row["is_active"]),
+            created_at=_parse_iso(row["created_at"]) or _now(),
         )
 
     def create_product(
@@ -156,7 +156,7 @@ class Repository:
         assert cur is not None
         return self._product_from_row(cur)
 
-    def get_product(self, product_id: int) -> Optional[Product***REMOVED***:
+    def get_product(self, product_id: int) -> Optional[Product]:
         row = self._db.query_one("SELECT * FROM products WHERE id = ?", (product_id,))
         return self._product_from_row(row) if row else None
 
@@ -164,13 +164,13 @@ class Repository:
         self,
         product_id: int,
         *,
-        name: Optional[str***REMOVED*** = None,
-        description: Optional[str***REMOVED*** = None,
-        category: Optional[str***REMOVED*** = None,
-        price_stars: Optional[int***REMOVED*** = None,
-    ) -> Optional[Product***REMOVED***:
-        sets: list[str***REMOVED*** = [***REMOVED***
-        params: list = [***REMOVED***
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        category: Optional[str] = None,
+        price_stars: Optional[int] = None,
+    ) -> Optional[Product]:
+        sets: list[str] = []
+        params: list = []
         if name is not None:
             sets.append("name = ?"); params.append(name)
         if description is not None:
@@ -182,7 +182,7 @@ class Repository:
         if not sets:
             return self.get_product(product_id)
         params.append(product_id)
-        self._db.execute(f"UPDATE products SET {', '.join(sets)***REMOVED*** WHERE id = ?", params)
+        self._db.execute(f"UPDATE products SET {', '.join(sets)} WHERE id = ?", params)
         return self.get_product(product_id)
 
     def set_product_active(self, product_id: int, is_active: bool) -> None:
@@ -195,12 +195,12 @@ class Repository:
         self,
         *,
         active_only: bool = True,
-        category: Optional[str***REMOVED*** = None,
-        seller_id: Optional[int***REMOVED*** = None,
-    ) -> list[Product***REMOVED***:
+        category: Optional[str] = None,
+        seller_id: Optional[int] = None,
+    ) -> list[Product]:
         sql = "SELECT * FROM products"
-        clauses: list[str***REMOVED*** = [***REMOVED***
-        params: list = [***REMOVED***
+        clauses: list[str] = []
+        params: list = []
         if active_only:
             clauses.append("is_active = 1")
         if category:
@@ -210,30 +210,30 @@ class Repository:
         if clauses:
             sql += " WHERE " + " AND ".join(clauses)
         sql += " ORDER BY created_at DESC"
-        return [self._product_from_row(r) for r in self._db.query(sql, params)***REMOVED***
+        return [self._product_from_row(r) for r in self._db.query(sql, params)]
 
-    def list_distinct_categories(self) -> list[str***REMOVED***:
+    def list_distinct_categories(self) -> list[str]:
         rows = self._db.query(
             "SELECT DISTINCT category FROM products WHERE is_active = 1 ORDER BY category"
         )
-        return [r["category"***REMOVED*** for r in rows***REMOVED***
+        return [r["category"] for r in rows]
 
     # ─── keys ───────────────────────────────────────────────────────────────
 
-    def add_keys(self, product_id: int, codes: Iterable[str***REMOVED***) -> int:
+    def add_keys(self, product_id: int, codes: Iterable[str]) -> int:
         """Добавить набор ключей к товару. Возвращает количество вставленных."""
-        codes = [c.strip() for c in codes if c and c.strip()***REMOVED***
+        codes = [c.strip() for c in codes if c and c.strip()]
         if not codes:
             return 0
         with self._db.transaction() as conn:
             conn.executemany(
                 "INSERT OR IGNORE INTO product_keys (product_id, code, status) VALUES (?, ?, 'available')",
-                [(product_id, c) for c in codes***REMOVED***,
+                [(product_id, c) for c in codes],
             )
             cnt = conn.execute(
                 "SELECT COUNT(*) FROM product_keys WHERE product_id = ? AND status = 'available'",
                 (product_id,),
-            ).fetchone()[0***REMOVED***
+            ).fetchone()[0]
         return cnt
 
     def count_available_keys(self, product_id: int) -> int:
@@ -248,16 +248,16 @@ class Repository:
     @staticmethod
     def _key_from_row(row) -> ProductKey:
         return ProductKey(
-            id=row["id"***REMOVED***,
-            product_id=row["product_id"***REMOVED***,
-            code=row["code"***REMOVED***,
-            status=KeyStatus(row["status"***REMOVED***),
-            order_id=row["order_id"***REMOVED***,
+            id=row["id"],
+            product_id=row["product_id"],
+            code=row["code"],
+            status=KeyStatus(row["status"]),
+            order_id=row["order_id"],
         )
 
     def reserve_key_for_order(
         self, product_id: int, order_id: int
-    ) -> Optional[ProductKey***REMOVED***:
+    ) -> Optional[ProductKey]:
         """Атомарно зарезервировать один доступный ключ под заказ.
 
         Один UPDATE с подзапросом (атомарно по построению — см. STEPS.md шаг 5):
@@ -291,7 +291,7 @@ class Repository:
                 return None
             return self._key_from_row(row)
 
-    def get_key(self, key_id: int) -> Optional[ProductKey***REMOVED***:
+    def get_key(self, key_id: int) -> Optional[ProductKey]:
         row = self._db.query_one("SELECT * FROM product_keys WHERE id = ?", (key_id,))
         return self._key_from_row(row) if row else None
 
@@ -315,16 +315,16 @@ class Repository:
     @staticmethod
     def _order_from_row(row) -> Order:
         return Order(
-            id=row["id"***REMOVED***,
-            user_id=row["user_id"***REMOVED***,
-            total_stars=row["total_stars"***REMOVED***,
-            status=OrderStatus(row["status"***REMOVED***),
-            payment_provider=row["payment_provider"***REMOVED***,
-            payment_external_id=row["payment_external_id"***REMOVED***,
-            created_at=_parse_iso(row["created_at"***REMOVED***) or _now(),
-            paid_at=_parse_iso(row["paid_at"***REMOVED***),
-            delivered_at=_parse_iso(row["delivered_at"***REMOVED***),
-            cancelled_at=_parse_iso(row["cancelled_at"***REMOVED***),
+            id=row["id"],
+            user_id=row["user_id"],
+            total_stars=row["total_stars"],
+            status=OrderStatus(row["status"]),
+            payment_provider=row["payment_provider"],
+            payment_external_id=row["payment_external_id"],
+            created_at=_parse_iso(row["created_at"]) or _now(),
+            paid_at=_parse_iso(row["paid_at"]),
+            delivered_at=_parse_iso(row["delivered_at"]),
+            cancelled_at=_parse_iso(row["cancelled_at"]),
         )
 
     def create_order(
@@ -341,7 +341,7 @@ class Repository:
         assert cur is not None
         return self._order_from_row(cur)
 
-    def get_order(self, order_id: int) -> Optional[Order***REMOVED***:
+    def get_order(self, order_id: int) -> Optional[Order]:
         row = self._db.query_one("SELECT * FROM orders WHERE id = ?", (order_id,))
         return self._order_from_row(row) if row else None
 
@@ -350,14 +350,14 @@ class Repository:
         order_id: int,
         status: OrderStatus,
         *,
-        payment_provider: Optional[str***REMOVED*** = None,
-        payment_external_id: Optional[str***REMOVED*** = None,
+        payment_provider: Optional[str] = None,
+        payment_external_id: Optional[str] = None,
         paid: bool = False,
         delivered: bool = False,
         cancelled: bool = False,
     ) -> None:
-        sets = ["status = ?"***REMOVED***
-        params: list = [status.value***REMOVED***
+        sets = ["status = ?"]
+        params: list = [status.value]
         if payment_provider is not None:
             sets.append("payment_provider = ?"); params.append(payment_provider)
         if payment_external_id is not None:
@@ -369,16 +369,16 @@ class Repository:
         if cancelled:
             sets.append("cancelled_at = ?"); params.append(_iso(_now()))
         params.append(order_id)
-        self._db.execute(f"UPDATE orders SET {', '.join(sets)***REMOVED*** WHERE id = ?", params)
+        self._db.execute(f"UPDATE orders SET {', '.join(sets)} WHERE id = ?", params)
 
-    def list_user_orders(self, user_id: int, limit: int = 20) -> list[Order***REMOVED***:
+    def list_user_orders(self, user_id: int, limit: int = 20) -> list[Order]:
         rows = self._db.query(
             "SELECT * FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT ?",
             (user_id, limit),
         )
-        return [self._order_from_row(r) for r in rows***REMOVED***
+        return [self._order_from_row(r) for r in rows]
 
-    def list_pending_orders_older_than(self, ttl_seconds: int) -> list[Order***REMOVED***:
+    def list_pending_orders_older_than(self, ttl_seconds: int) -> list[Order]:
         """Заказы в статусе pending, у которых TTL истёк."""
         cutoff = _iso(
             datetime.fromtimestamp(_now().timestamp() - ttl_seconds, tz=timezone.utc)
@@ -387,13 +387,13 @@ class Repository:
             "SELECT * FROM orders WHERE status = 'pending' AND created_at < ? ORDER BY created_at",
             (cutoff,),
         )
-        return [self._order_from_row(r) for r in rows***REMOVED***
+        return [self._order_from_row(r) for r in rows]
 
-    def list_all_orders_for_admin(self, limit: int = 50) -> list[Order***REMOVED***:
+    def list_all_orders_for_admin(self, limit: int = 50) -> list[Order]:
         rows = self._db.query(
             "SELECT * FROM orders ORDER BY created_at DESC LIMIT ?", (limit,)
         )
-        return [self._order_from_row(r) for r in rows***REMOVED***
+        return [self._order_from_row(r) for r in rows]
 
     # ─── order items ────────────────────────────────────────────────────────
 
@@ -407,46 +407,46 @@ class Repository:
         )
         assert cur is not None
         return OrderItem(
-            id=cur["id"***REMOVED***,
-            order_id=cur["order_id"***REMOVED***,
-            product_id=cur["product_id"***REMOVED***,
-            product_name=cur["product_name"***REMOVED***,
-            price_stars=cur["price_stars"***REMOVED***,
+            id=cur["id"],
+            order_id=cur["order_id"],
+            product_id=cur["product_id"],
+            product_name=cur["product_name"],
+            price_stars=cur["price_stars"],
         )
 
-    def get_order_items(self, order_id: int) -> list[OrderItem***REMOVED***:
+    def get_order_items(self, order_id: int) -> list[OrderItem]:
         rows = self._db.query(
             "SELECT * FROM order_items WHERE order_id = ? ORDER BY id", (order_id,)
         )
         return [
             OrderItem(
-                id=r["id"***REMOVED***,
-                order_id=r["order_id"***REMOVED***,
-                product_id=r["product_id"***REMOVED***,
-                product_name=r["product_name"***REMOVED***,
-                price_stars=r["price_stars"***REMOVED***,
+                id=r["id"],
+                order_id=r["order_id"],
+                product_id=r["product_id"],
+                product_name=r["product_name"],
+                price_stars=r["price_stars"],
             )
             for r in rows
-        ***REMOVED***
+        ]
 
     # ─── payments ───────────────────────────────────────────────────────────
 
     @staticmethod
     def _payment_from_row(row) -> Payment:
         return Payment(
-            id=row["id"***REMOVED***,
-            order_id=row["order_id"***REMOVED***,
-            provider=row["provider"***REMOVED***,
-            external_id=row["external_id"***REMOVED***,
-            amount_stars=row["amount_stars"***REMOVED***,
-            status=PaymentStatus(row["status"***REMOVED***),
-            payload=row["payload"***REMOVED***,
-            created_at=_parse_iso(row["created_at"***REMOVED***) or _now(),
-            finished_at=_parse_iso(row["finished_at"***REMOVED***),
+            id=row["id"],
+            order_id=row["order_id"],
+            provider=row["provider"],
+            external_id=row["external_id"],
+            amount_stars=row["amount_stars"],
+            status=PaymentStatus(row["status"]),
+            payload=row["payload"],
+            created_at=_parse_iso(row["created_at"]) or _now(),
+            finished_at=_parse_iso(row["finished_at"]),
         )
 
     def create_payment(
-        self, order_id: int, provider: str, amount_stars: int, payload: Optional[str***REMOVED*** = None
+        self, order_id: int, provider: str, amount_stars: int, payload: Optional[str] = None
     ) -> Payment:
         now = _iso(_now())
         cur = self._db.query_one(
@@ -457,14 +457,14 @@ class Repository:
         assert cur is not None
         return self._payment_from_row(cur)
 
-    def get_payment_by_order(self, order_id: int) -> Optional[Payment***REMOVED***:
+    def get_payment_by_order(self, order_id: int) -> Optional[Payment]:
         row = self._db.query_one(
             "SELECT * FROM payments WHERE order_id = ? ORDER BY id DESC LIMIT 1",
             (order_id,),
         )
         return self._payment_from_row(row) if row else None
 
-    def get_payment(self, payment_id: int) -> Optional[Payment***REMOVED***:
+    def get_payment(self, payment_id: int) -> Optional[Payment]:
         row = self._db.query_one("SELECT * FROM payments WHERE id = ?", (payment_id,))
         return self._payment_from_row(row) if row else None
 
@@ -473,17 +473,17 @@ class Repository:
         payment_id: int,
         status: PaymentStatus,
         *,
-        external_id: Optional[str***REMOVED*** = None,
-        payload: Optional[str***REMOVED*** = None,
+        external_id: Optional[str] = None,
+        payload: Optional[str] = None,
     ) -> None:
-        sets = ["status = ?", "finished_at = ?"***REMOVED***
-        params: list = [status.value, _iso(_now())***REMOVED***
+        sets = ["status = ?", "finished_at = ?"]
+        params: list = [status.value, _iso(_now())]
         if external_id is not None:
             sets.append("external_id = ?"); params.append(external_id)
         if payload is not None:
             sets.append("payload = ?"); params.append(payload)
         params.append(payment_id)
-        self._db.execute(f"UPDATE payments SET {', '.join(sets)***REMOVED*** WHERE id = ?", params)
+        self._db.execute(f"UPDATE payments SET {', '.join(sets)} WHERE id = ?", params)
 
     # ─── deliveries ─────────────────────────────────────────────────────────
 
@@ -497,25 +497,25 @@ class Repository:
         )
         assert cur is not None
         return Delivery(
-            id=cur["id"***REMOVED***,
-            order_id=cur["order_id"***REMOVED***,
-            product_id=cur["product_id"***REMOVED***,
-            product_key_id=cur["product_key_id"***REMOVED***,
-            delivered_at=_parse_iso(cur["delivered_at"***REMOVED***) or _now(),
+            id=cur["id"],
+            order_id=cur["order_id"],
+            product_id=cur["product_id"],
+            product_key_id=cur["product_key_id"],
+            delivered_at=_parse_iso(cur["delivered_at"]) or _now(),
         )
 
-    def get_delivery_for_order(self, order_id: int) -> Optional[Delivery***REMOVED***:
+    def get_delivery_for_order(self, order_id: int) -> Optional[Delivery]:
         row = self._db.query_one(
             "SELECT * FROM deliveries WHERE order_id = ?", (order_id,)
         )
         if not row:
             return None
         return Delivery(
-            id=row["id"***REMOVED***,
-            order_id=row["order_id"***REMOVED***,
-            product_id=row["product_id"***REMOVED***,
-            product_key_id=row["product_key_id"***REMOVED***,
-            delivered_at=_parse_iso(row["delivered_at"***REMOVED***) or _now(),
+            id=row["id"],
+            order_id=row["order_id"],
+            product_id=row["product_id"],
+            product_key_id=row["product_key_id"],
+            delivered_at=_parse_iso(row["delivered_at"]) or _now(),
         )
 
     # ─── notifications ──────────────────────────────────────────────────────
@@ -525,9 +525,9 @@ class Repository:
         text: str,
         kind: NotificationKind,
         *,
-        user_id: Optional[int***REMOVED*** = None,
+        user_id: Optional[int] = None,
         broadcast_to_admins: bool = False,
-        payload: Optional[str***REMOVED*** = None,
+        payload: Optional[str] = None,
     ) -> Notification:
         now = _iso(_now())
         cur = self._db.query_one(
@@ -537,16 +537,16 @@ class Repository:
         )
         assert cur is not None
         return Notification(
-            id=cur["id"***REMOVED***,
-            user_id=cur["user_id"***REMOVED***,
-            broadcast_to_admins=bool(cur["broadcast_to_admins"***REMOVED***),
-            kind=NotificationKind(cur["kind"***REMOVED***),
-            text=cur["text"***REMOVED***,
-            payload=cur["payload"***REMOVED***,
-            created_at=_parse_iso(cur["created_at"***REMOVED***) or _now(),
+            id=cur["id"],
+            user_id=cur["user_id"],
+            broadcast_to_admins=bool(cur["broadcast_to_admins"]),
+            kind=NotificationKind(cur["kind"]),
+            text=cur["text"],
+            payload=cur["payload"],
+            created_at=_parse_iso(cur["created_at"]) or _now(),
         )
 
-    def list_notifications_for_user(self, user_id: int, limit: int = 20) -> list[Notification***REMOVED***:
+    def list_notifications_for_user(self, user_id: int, limit: int = 20) -> list[Notification]:
         rows = self._db.query(
             "SELECT * FROM notifications WHERE user_id = ? "
             "ORDER BY created_at DESC LIMIT ?",
@@ -554,16 +554,16 @@ class Repository:
         )
         return [
             Notification(
-                id=r["id"***REMOVED***,
-                user_id=r["user_id"***REMOVED***,
-                broadcast_to_admins=bool(r["broadcast_to_admins"***REMOVED***),
-                kind=NotificationKind(r["kind"***REMOVED***),
-                text=r["text"***REMOVED***,
-                payload=r["payload"***REMOVED***,
-                created_at=_parse_iso(r["created_at"***REMOVED***) or _now(),
+                id=r["id"],
+                user_id=r["user_id"],
+                broadcast_to_admins=bool(r["broadcast_to_admins"]),
+                kind=NotificationKind(r["kind"]),
+                text=r["text"],
+                payload=r["payload"],
+                created_at=_parse_iso(r["created_at"]) or _now(),
             )
             for r in rows
-        ***REMOVED***
+        ]
 
     # ─── статистика для админки ─────────────────────────────────────────────
 
@@ -590,4 +590,4 @@ class Repository:
             "orders_delivered": orders_delivered,
             "revenue_stars": revenue_stars,
             "keys_available": keys_available,
-        ***REMOVED***
+        }

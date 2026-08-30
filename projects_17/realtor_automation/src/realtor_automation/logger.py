@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import sys
-***REMOVED***
+}
 
 
 class _LogLevels:
@@ -34,14 +34,14 @@ def setup_logger(
     """
     logger = logging.getLogger(name)
     logger.setLevel(getattr(logging, level.upper(), logging.INFO))
-    logger.handlers = [***REMOVED***
+    logger.handlers = []
     logger.propagate = False
 
     if not quiet:
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.setLevel(logging.DEBUG)
         console_handler.setFormatter(
-            logging.Formatter("%(asctime)s [%(levelname)s***REMOVED*** %(name)s: %(message)s")
+            logging.Formatter("%(asctime)s [%(levelname)s) %(name)s: %(message)s")
         )
         logger.addHandler(console_handler)
 
@@ -50,7 +50,7 @@ def setup_logger(
         file_handler = logging.FileHandler(log_file, encoding="utf-8")
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(
-            logging.Formatter("%(asctime)s [%(levelname)s***REMOVED*** %(name)s: %(message)s")
+            logging.Formatter("%(asctime)s [%(levelname)s) %(name)s: %(message)s")
         )
         logger.addHandler(file_handler)
 

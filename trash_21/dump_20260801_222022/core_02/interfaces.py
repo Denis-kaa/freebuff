@@ -28,15 +28,15 @@ class AgentResult:
     agent: str
     task: str
     data: Any = None
-    warnings: List[str***REMOVED*** = field(default_factory=list)
-    errors: List[str***REMOVED*** = field(default_factory=list)
-    meta: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    warnings: List[str] = field(default_factory=list)
+    errors: List[str] = field(default_factory=list)
+    meta: Dict[str, Any] = field(default_factory=dict)
 
     @property
     def ok(self) -> bool:
         return self.status == TaskStatus.OK
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "status": self.status.value,
             "agent": self.agent,
@@ -44,7 +44,7 @@ class AgentResult:
             "warnings": self.warnings,
             "errors": self.errors,
             "meta": self.meta,
-        ***REMOVED***
+        }
 
 
 class IAgent(ABC):
@@ -76,7 +76,7 @@ class IAgent(ABC):
             meta=meta,
         )
 
-    def err(self, task: str, errors: List[str***REMOVED***, data: Any = None, **meta) -> AgentResult:
+    def err(self, task: str, errors: List[str], data: Any = None, **meta) -> AgentResult:
         return AgentResult(
             status=TaskStatus.ERROR,
             agent=self.name,
@@ -86,7 +86,7 @@ class IAgent(ABC):
             meta=meta,
         )
 
-    def warn(self, task: str, warnings: List[str***REMOVED***, data: Any = None, **meta) -> AgentResult:
+    def warn(self, task: str, warnings: List[str], data: Any = None, **meta) -> AgentResult:
         return AgentResult(
             status=TaskStatus.WARN,
             agent=self.name,

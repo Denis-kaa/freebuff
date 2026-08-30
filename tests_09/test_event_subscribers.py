@@ -6,7 +6,7 @@ Tests for event_subscribers.py — auto-indexing and logging hooks.
 from __future__ import annotations
 
 import sys
-***REMOVED***
+}
 
 import pytest
 
@@ -14,7 +14,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts_01.event_bus import EventBus, Event
-from scripts_01.event_subscribers ***REMOVED***gister_all
+from scripts_01.event_subscribers ]gister_all
 from scripts_01.memory_engine import MemoryEngine, MemoryLevel, ContentType
 from scripts_01.knowledge_engine import KnowledgeEngine
 
@@ -43,7 +43,7 @@ class TestAutoIndex:
 
         results = ke.search("capability router", mode="hybrid", top_k=5)
         assert any("router_doc" in r.doc_id for r in results), \
-            f"Expected auto-indexed router_doc, got: {[r.doc_id for r in results***REMOVED******REMOVED***"
+            f"Expected auto-indexed router_doc, got: {[r.doc_id for r in results]}"
 
     def test_personal_memory_not_auto_indexed(self, bus: EventBus, tmp_path: Path):
         """personal level should not be indexed into public knowledge."""
@@ -88,7 +88,7 @@ class TestCheckpointLogger:
             data={
                 "checkpoint_type": "post_step",
                 "summary": "Test checkpoint summary",
-            ***REMOVED***,
+            },
         )
         # Should not raise
         delivered = bus.publish(event)
@@ -111,13 +111,13 @@ class TestEMAutoTriggers:
                 "task_name": "Long task",
                 "duration_seconds": 900,
                 "details": "done",
-            ***REMOVED***,
+            },
         )
         delivered = bus.publish(event)
         assert delivered >= 1
 
         drafts = em.list_drafts()
-        assert any(d["type"***REMOVED*** == "task_retrospective" for d in drafts)
+        assert any(d["type"] == "task_retrospective" for d in drafts)
 
     def test_task_completed_short_duration_does_not_create_retrospective(self, bus: EventBus, tmp_path: Path):
         """task.completed with short duration does not create a retrospective draft."""
@@ -132,12 +132,12 @@ class TestEMAutoTriggers:
                 "task_name": "Short task",
                 "duration_seconds": 5,
                 "details": "done",
-            ***REMOVED***,
+            },
         )
         bus.publish(event)
 
         drafts = em.list_drafts()
-        assert not any(d["type"***REMOVED*** == "task_retrospective" for d in drafts)
+        assert not any(d["type"] == "task_retrospective" for d in drafts)
 
     def test_task_failed_creates_incident(self, bus: EventBus, tmp_path: Path):
         """task.failed creates an incident draft."""
@@ -151,12 +151,12 @@ class TestEMAutoTriggers:
                 "task_id": "t3",
                 "task_name": "Failing task",
                 "error": "something went wrong",
-            ***REMOVED***,
+            },
         )
         bus.publish(event)
 
         drafts = em.list_drafts()
-        assert any(d["type"***REMOVED*** == "incident_report" for d in drafts)
+        assert any(d["type"] == "incident_report" for d in drafts)
 
     def test_git_merge_creates_retrospective(self, bus: EventBus, tmp_path: Path):
         """git.merge creates a retrospective draft."""
@@ -169,12 +169,12 @@ class TestEMAutoTriggers:
             data={
                 "branch": "feature-42",
                 "commit": "abc123",
-            ***REMOVED***,
+            },
         )
         bus.publish(event)
 
         drafts = em.list_drafts()
-        assert any(d["type"***REMOVED*** == "task_retrospective" and "feature-42" in d["title"***REMOVED*** for d in drafts)
+        assert any(d["type"] == "task_retrospective" and "feature-42" in d["title"] for d in drafts)
 
     def test_system_error_creates_incident(self, bus: EventBus, tmp_path: Path):
         """system.error creates an incident draft."""
@@ -188,12 +188,12 @@ class TestEMAutoTriggers:
                 "error_id": "db-conn",
                 "component": "database",
                 "summary": "DB connection lost",
-            ***REMOVED***,
+            },
         )
         bus.publish(event)
 
         drafts = em.list_drafts()
-        assert any(d["type"***REMOVED*** == "incident_report" for d in drafts)
+        assert any(d["type"] == "incident_report" for d in drafts)
 
     def test_duplicate_task_event_is_idempotent(self, bus: EventBus, tmp_path: Path):
         """Publishing the same task event twice creates only one EM draft."""
@@ -207,10 +207,10 @@ class TestEMAutoTriggers:
                 "task_id": "t4",
                 "task_name": "Long task",
                 "duration_seconds": 900,
-            ***REMOVED***,
+            },
         )
         bus.publish(event)
         bus.publish(event)
 
         drafts = em.list_drafts()
-        assert len([d for d in drafts if d["type"***REMOVED*** == "task_retrospective"***REMOVED***) == 1
+        assert len([d for d in drafts if d["type"] == "task_retrospective"]) == 1

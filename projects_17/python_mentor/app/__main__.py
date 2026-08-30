@@ -1,9 +1,9 @@
 """CLI: corpus ingestion, reports, and learner-content localization.
 
 Команды:
-  ingest exercism [--source DIR***REMOVED*** [--db PATH***REMOVED*** [--dry-run***REMOVED*** [--with-refs***REMOVED*** [--report***REMOVED***
-  report [--db PATH***REMOVED*** {coverage|gaps|low-confidence|license***REMOVED***
-  localize {scan|status|update***REMOVED*** [options***REMOVED***
+  ingest exercism [--source DIR] [--db PATH] [--dry-run] [--with-refs] [--report]
+  report [--db PATH] {coverage|gaps|low-confidence|license}
+  localize {scan|status|update} [options]
 
 Exit codes: 0 = ok, 2 = ошибка (аргументы/данные).
 """
@@ -102,12 +102,12 @@ def _cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
-def main(argv: list[str***REMOVED*** | None = None) -> int:
+def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(prog="python -m app", description="python_mentor B+C CLI")
     sub = p.add_subparsers(dest="cmd", required=True)
 
     ingest_p = sub.add_parser("ingest", help="import Exercism corpus")
-    ingest_p.add_argument("exercism", choices=["exercism"***REMOVED***)
+    ingest_p.add_argument("exercism", choices=["exercism"])
     ingest_p.add_argument("--source", default=DEFAULT_SOURCE)
     ingest_p.add_argument("--db", default=DEFAULT_DB)
     ingest_p.add_argument("--dry-run", action="store_true")
@@ -116,7 +116,7 @@ def main(argv: list[str***REMOVED*** | None = None) -> int:
     ingest_p.set_defaults(func=_cmd_ingest)
 
     rep_p = sub.add_parser("report", help="отчёты по corpus")
-    rep_p.add_argument("kind", choices=["coverage", "gaps", "low-confidence", "license"***REMOVED***)
+    rep_p.add_argument("kind", choices=["coverage", "gaps", "low-confidence", "license"])
     rep_p.add_argument("--db", default=DEFAULT_DB)
     rep_p.set_defaults(func=_cmd_report)
 

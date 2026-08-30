@@ -6,7 +6,7 @@ import os
 import json
 import sys
 import pytest
-***REMOVED***
+}
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -56,11 +56,11 @@ class TestMemoryEngineStore:
             "Проект переведён на 5-слойную архитектуру",
             content_type=ContentType.MARKDOWN,
             summary="Архитектурное решение v2",
-            metadata={"importance": "high", "tags": ["architecture", "v2"***REMOVED******REMOVED***,
+            metadata={"importance": "high", "tags": ["architecture", "v2"]},
         )
         assert entry.summary == "Архитектурное решение v2"
-        assert entry.metadata["importance"***REMOVED*** == "high"
-        assert "v2" in entry.metadata["tags"***REMOVED***
+        assert entry.metadata["importance"] == "high"
+        assert "v2" in entry.metadata["tags"]
 
     def test_store_overwrite_false(self, engine):
         engine.store(MemoryLevel.WORKING, "test_key", "original", overwrite=True)
@@ -105,12 +105,12 @@ class TestMemoryEngineRetrieve:
             MemoryLevel.PERSONAL, "prefs",
             "Предпочитаю Python",
             summary="Языки",
-            metadata={"since": 2020***REMOVED***,
+            metadata={"since": 2020},
         )
         entry = engine.retrieve(MemoryLevel.PERSONAL, "prefs")
         assert entry.key == "prefs"
         assert entry.summary == "Языки"
-        assert entry.metadata["since"***REMOVED*** == 2020
+        assert entry.metadata["since"] == 2020
         assert entry.content_type == ContentType.TEXT
 
 
@@ -149,25 +149,25 @@ class TestMemoryEngineList:
         assert all(e.level == MemoryLevel.WORKING for e in entries)
 
     def test_list_empty(self, engine):
-        assert engine.list_entries() == [***REMOVED***
+        assert engine.list_entries() == []
 
     def test_list_filter_by_metadata(self, engine):
         engine.store(
             MemoryLevel.PROJECT, "high_priority",
             "Important",
-            metadata={"priority": "high"***REMOVED***,
+            metadata={"priority": "high"},
         )
         engine.store(
             MemoryLevel.PROJECT, "low_priority",
             "Not important",
-            metadata={"priority": "low"***REMOVED***,
+            metadata={"priority": "low"},
         )
         high = engine.list_entries(
             level=MemoryLevel.PROJECT,
-            filter_metadata={"priority": "high"***REMOVED***,
+            filter_metadata={"priority": "high"},
         )
         assert len(high) == 1
-        assert high[0***REMOVED***.key == "high_priority"
+        assert high[0].key == "high_priority"
 
     def test_list_sorted_by_updated(self, engine):
         e1 = engine.store(MemoryLevel.WORKING, "first", "old")
@@ -175,7 +175,7 @@ class TestMemoryEngineList:
         time.sleep(0.01)
         e2 = engine.store(MemoryLevel.WORKING, "second", "new")
         entries = engine.list_entries(level=MemoryLevel.WORKING)
-        assert entries[0***REMOVED***.key == "second"  # new first
+        assert entries[0].key == "second"  # new first
 
 
 class TestMemoryEngineSearch:
@@ -186,7 +186,7 @@ class TestMemoryEngineSearch:
         engine.store(MemoryLevel.PROJECT, "architecture", "5 слоёв")
         results = engine.search("TUI")
         assert len(results) == 1
-        assert results[0***REMOVED***.key == "refactor_tui"
+        assert results[0].key == "refactor_tui"
 
     def test_search_case_insensitive(self, engine):
         engine.store(MemoryLevel.WORKING, "test", "Hello World")
@@ -219,7 +219,7 @@ class TestMemoryEngineContext:
     def test_build_context_with_working_memory(self, engine):
         engine.store(MemoryLevel.WORKING, "task", "Рефакторинг TUI")
         engine.store(MemoryLevel.WORKING, "status", "В процессе")
-        ctx = engine.build_context(levels=[MemoryLevel.WORKING***REMOVED***)
+        ctx = engine.build_context(levels=[MemoryLevel.WORKING])
         assert "WORKING MEMORY" in ctx
         assert "Рефакторинг TUI" in ctx
         assert "В процессе" in ctx
@@ -236,7 +236,7 @@ class TestMemoryEngineContext:
             summary="Кратко: архитектура v2",
         )
         ctx = engine.build_context(
-            levels=[MemoryLevel.PROJECT***REMOVED***,
+            levels=[MemoryLevel.PROJECT],
             include_summary_only=True,
         )
         assert "Кратко: архитектура v2" in ctx
@@ -247,7 +247,7 @@ class TestMemoryEngineContext:
         engine.store(MemoryLevel.PROJECT, "doc", "README update")
         engine.store(MemoryLevel.PERSONAL, "style", "PEP8")
         ctx = engine.build_context(
-            levels=[MemoryLevel.WORKING, MemoryLevel.PROJECT, MemoryLevel.PERSONAL***REMOVED***,
+            levels=[MemoryLevel.WORKING, MemoryLevel.PROJECT, MemoryLevel.PERSONAL],
         )
         assert "WORKING MEMORY" in ctx
         assert "PROJECT MEMORY" in ctx
@@ -260,7 +260,7 @@ class TestMemoryEngineContext:
         # Добавляем много контента
         for i in range(5):
             engine.store(
-                MemoryLevel.WORKING, f"long_entry_{i***REMOVED***",
+                MemoryLevel.WORKING, f"long_entry_{i}",
                 "X" * 5000,  # ~1250 токенов каждый
             )
         ctx = engine.build_context(max_tokens=1000)
@@ -273,15 +273,15 @@ class TestMemoryEngineStats:
 
     def test_get_stats_empty(self, engine):
         stats = engine.get_stats()
-        assert stats["total"***REMOVED*** == 0
+        assert stats["total"] == 0
 
     def test_get_stats_with_data(self, engine):
         engine.store(MemoryLevel.WORKING, "a", "1")
         engine.store(MemoryLevel.PROJECT, "b", "2")
         stats = engine.get_stats()
-        assert stats["total"***REMOVED*** == 2
-        assert stats["working"***REMOVED***["count"***REMOVED*** == 1
-        assert stats["project"***REMOVED***["count"***REMOVED*** == 1
+        assert stats["total"] == 2
+        assert stats["working"]["count"] == 1
+        assert stats["project"]["count"] == 1
 
     def test_count_entries(self, engine):
         assert engine.count_entries() == 0

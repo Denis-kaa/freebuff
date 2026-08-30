@@ -62,12 +62,12 @@ class RuntimeConfig:
     max_concurrent: int = 1
     timeout_seconds: int = 300
     max_retries: int = 3
-    env_vars: Dict[str, str***REMOVED*** = field(default_factory=dict)
-    args: List[str***REMOVED*** = field(default_factory=list)
-    work_dir: Optional[str***REMOVED*** = None
-    endpoint: Optional[str***REMOVED*** = None       # Для HTTP Runtime
-    api_key: Optional[str***REMOVED*** = None        # Для HTTP Runtime
-    command: Optional[str***REMOVED*** = None        # Для stdio Runtime
+    env_vars: Dict[str, str] = field(default_factory=dict)
+    args: List[str] = field(default_factory=list)
+    work_dir: Optional[str] = None
+    endpoint: Optional[str] = None       # Для HTTP Runtime
+    api_key: Optional[str] = None        # Для HTTP Runtime
+    command: Optional[str] = None        # Для stdio Runtime
     auto_reconnect: bool = True
 
 
@@ -82,10 +82,10 @@ class RuntimeDefinition:
     version: str = "0.0.0"
     adapter_type: str = AdapterType.STDIO_MCP.value  # Тип адаптера
     status: RuntimeStatus = RuntimeStatus.UNKNOWN
-    config: Optional[RuntimeConfig***REMOVED*** = None
-    capabilities: List[str***REMOVED*** = field(default_factory=list)
-    bin_path: Optional[str***REMOVED*** = None           # Путь к бинарнику
-    error: Optional[str***REMOVED*** = None              # Последняя ошибка
+    config: Optional[RuntimeConfig] = None
+    capabilities: List[str] = field(default_factory=list)
+    bin_path: Optional[str] = None           # Путь к бинарнику
+    error: Optional[str] = None              # Последняя ошибка
 
 
 @dataclass
@@ -94,13 +94,13 @@ class RuntimeResult:
     content: str = ""
     runtime: str = ""
     finish_reason: str = "stop"
-    usage: Dict[str, int***REMOVED*** = field(default_factory=dict)
+    usage: Dict[str, int] = field(default_factory=dict)
     latency_ms: int = 0
-    model_used: Optional[str***REMOVED*** = None
-    provider_used: Optional[str***REMOVED*** = None
+    model_used: Optional[str] = None
+    provider_used: Optional[str] = None
     cached: bool = False
     fallback_used: bool = False
-    error: Optional[str***REMOVED*** = None
+    error: Optional[str] = None
 
 
 @dataclass
@@ -109,7 +109,7 @@ class RuntimeCapability:
     name: str = ""                           # "coding", "planning", "review"
     description: str = ""
     confidence: float = 1.0                  # 0.0 - 1.0
-    models: List[str***REMOVED*** = field(default_factory=list)
+    models: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -121,11 +121,11 @@ class RuntimeSession:
     """
     runtime: str = ""
     session_id: str = ""
-    context: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    context: Dict[str, Any] = field(default_factory=dict)
     message_count: int = 0
     token_estimate: int = 0
     status: SessionStatus = SessionStatus.IDLE
-    error: Optional[str***REMOVED*** = None
+    error: Optional[str] = None
 
 
 @dataclass
@@ -136,7 +136,7 @@ class RuntimeHealth:
     latency_ms: int = 0
     connected: bool = False
     tools_count: int = 0
-    error: Optional[str***REMOVED*** = None
+    error: Optional[str] = None
 
 
 __all__ = [
@@ -151,7 +151,7 @@ __all__ = [
     "RuntimeHealth",
     "RuntimeRegistry",
     "RuntimeCapabilityRegistry",
-***REMOVED***
+]
 
 
 # Lazy re-export to avoid circular imports: registry.py imports types from this module
@@ -163,4 +163,4 @@ def __getattr__(name: str) -> Any:
     if name == "RuntimeCapabilityRegistry":
         from freebuff_plugin_03.runtime.registry import RuntimeCapabilityRegistry
         return RuntimeCapabilityRegistry
-    raise AttributeError(f"module {__name__!r***REMOVED*** has no attribute {name!r***REMOVED***")
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

@@ -12,7 +12,7 @@ import sys
 from typing import Any
 
 # Map of public names -> (module_path, attribute_name)
-_IMPORT_MAP: dict[str, tuple[str, str***REMOVED******REMOVED*** = {
+_IMPORT_MAP: dict[str, tuple[str, str]] = {
     "AgentContextBridge": ("scripts.agent_context_bridge", "AgentContextBridge"),
     "get_context_bridge": ("scripts.agent_context_bridge", "get_context_bridge"),
     "auto_conspect": ("scripts.auto_conspect", "auto_conspect"),
@@ -37,21 +37,21 @@ _IMPORT_MAP: dict[str, tuple[str, str***REMOVED******REMOVED*** = {
     "seed_knowledge": ("scripts.seed_knowledge", "seed"),
     "health_check": ("services.system.monitor", "health_check"),
     "ToolRegistry": ("scripts.tool_runtime", "ToolRegistry"),
-***REMOVED***
+}
 
 __all__ = list(_IMPORT_MAP.keys())
 
 
 def __getattr__(name: str) -> Any:
     if name not in _IMPORT_MAP:
-        raise AttributeError(f"module {__name__!r***REMOVED*** has no attribute {name!r***REMOVED***")
-    module_path, attr_name = _IMPORT_MAP[name***REMOVED***
-    module = __import__(module_path, fromlist=[attr_name***REMOVED***)
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    module_path, attr_name = _IMPORT_MAP[name]
+    module = __import__(module_path, fromlist=[attr_name])
     attr = getattr(module, attr_name)
     # Cache the attribute on the module so repeated lookups are cheap.
-    setattr(sys.modules[__name__***REMOVED***, name, attr)
+    setattr(sys.modules[__name__], name, attr)
     return attr
 
 
-def __dir__() -> list[str***REMOVED***:
+def __dir__() -> list[str]:
     return list(__all__)

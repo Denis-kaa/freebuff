@@ -17,11 +17,11 @@ ANTI-11 lesson: holistic patches — both constants AND docstring defaults updat
 from __future__ import annotations
 
 import os
-***REMOVED***
+}
 import shutil
 import subprocess
 import sys
-***REMOVED***
+}
 
 ROOT = Path("/storage/emulated/0/PROJECTS/workstation/freebuff")
 
@@ -41,9 +41,9 @@ if not marker_file.exists():
         "Do NOT delete — CAN-8 closure + scripts depend on this.\n"
         "(Created v5.53.0 2026-08-03)\n"
     )
-    print(f"  ✓ Created {marker_file***REMOVED***")
+    print(f"  ✓ Created {marker_file}")
 else:
-    print(f"  - {marker_file***REMOVED*** already exists")
+    print(f"  - {marker_file} already exists")
 
 
 # === STEP 2: write _interior_planner_home.py helper ===
@@ -54,13 +54,13 @@ Mirrors `_freebuff_locator.py` pattern but for a different project:
 
 1. ``$INTERIOR_PLANNER_HOME`` env override (preferred for portability)
 2. Canonical hardcode fallback for Termux (most user installs)
-3. RuntimeError with [InteriorPlannerHomeLocator***REMOVED*** marker if `_marker.txt` not found
+3. RuntimeError with [InteriorPlannerHomeLocator] marker if `_marker.txt` not found
 
 Marker file: `_marker.txt` AT the root of interior_planner_e2e/ — explicit,
 machine-readable, immune to refactoring (unlike script names or human-stable docs).
 """
 import os
-***REMOVED***
+}
 
 INTERIOR_PLANNER_HOME_CANONICAL = Path(
     "/storage/emulated/0/PROJECTS/workstation/interior_planner_e2e"
@@ -84,7 +84,7 @@ def resolve_interior_planner_home() -> Path:
     marker = home / "_marker.txt"
     if not marker.is_file():
         raise RuntimeError(
-            f"[InteriorPlannerHomeLocator***REMOVED*** marker missing at {marker***REMOVED***. "
+            f"[InteriorPlannerHomeLocator] marker missing at {marker}. "
             f"Set INTERIOR_PLANNER_HOME=/path/to/interior_planner_e2e "
             f"or create _marker.txt at canonical location."
         )
@@ -93,35 +93,35 @@ def resolve_interior_planner_home() -> Path:
 locator_path = SCRIPTS_DIR / "_interior_planner_home.py"
 if not locator_path.exists():
     locator_path.write_text(LOCATOR)
-    print(f"  ✓ Created {locator_path***REMOVED***")
+    print(f"  ✓ Created {locator_path}")
 else:
-    print(f"  - {locator_path***REMOVED*** already exists (idempotent — not overwriting)")
+    print(f"  - {locator_path} already exists (idempotent — not overwriting)")
 
 
 # === STEP 3: patch e2e_promt47.py ===
 print("\n=== STEP 3: patch e2e_promt47.py ===")
 e2e_path = SCRIPTS_DIR / "e2e_promt47.py"
 e2e_txt = e2e_path.read_text()
-e2e_replacements = [***REMOVED***
+e2e_replacements = []
 
 # Patch A: import + sys.path extension (after _freebuff_locator block)
 old_e2e_a = (
-    "from _freebuff_locator ***REMOVED***solve_freebuff_root\n"
+    "from _freebuff_locator ]solve_freebuff_root\n"
     "_FREEBUFF_ROOT = resolve_freebuff_root()\n"
     "if str(_FREEBUFF_ROOT) not in sys.path:\n"
     "    sys.path.insert(0, str(_FREEBUFF_ROOT))\n"
-    "# Backward-compat: keep `ROOT` name -> freebuff root (was parents[1***REMOVED***; now projects use freebuff)\n"
+    "# Backward-compat: keep `ROOT` name -> freebuff root (was parents[1]; now projects use freebuff)\n"
     "ROOT = _FREEBUFF_ROOT"
 )
 new_e2e_a = (
-    "from _freebuff_locator ***REMOVED***solve_freebuff_root\n"
+    "from _freebuff_locator ]solve_freebuff_root\n"
     "_FREEBUFF_ROOT = resolve_freebuff_root()\n"
     "if str(_FREEBUFF_ROOT) not in sys.path:\n"
     "    sys.path.insert(0, str(_FREEBUFF_ROOT))\n"
     "# v5.53.0 CAN-8 closure: project-home locator (sibling helper)\n"
-    "from _interior_planner_home ***REMOVED***solve_interior_planner_home\n"
+    "from _interior_planner_home ]solve_interior_planner_home\n"
     "_INTERIOR_PLANNER_HOME = resolve_interior_planner_home()\n"
-    "# Backward-compat: keep `ROOT` name -> freebuff root (was parents[1***REMOVED***; now projects use freebuff)\n"
+    "# Backward-compat: keep `ROOT` name -> freebuff root (was parents[1]; now projects use freebuff)\n"
     "ROOT = _FREEBUFF_ROOT"
 )
 if old_e2e_a in e2e_txt:
@@ -140,8 +140,8 @@ else:
     e2e_replacements.append(("DEFAULT_WORKSPACE", "✗ pattern not found"))
 
 # Patch C: docstring default
-old_e2e_c = "[--workspace PATH***REMOVED***        # default /tmp/interior_planner_e2e"
-new_e2e_c = "[--workspace PATH***REMOVED***        # default = $INTERIOR_PLANNER_HOME (or canonical /storage/.../interior_planner_e2e)"
+old_e2e_c = "[--workspace PATH]        # default /tmp/interior_planner_e2e"
+new_e2e_c = "[--workspace PATH]        # default = $INTERIOR_PLANNER_HOME (or canonical /storage/.../interior_planner_e2e)"
 if old_e2e_c in e2e_txt:
     e2e_txt = e2e_txt.replace(old_e2e_c, new_e2e_c)
     e2e_replacements.append(("docstring_workspace", "✓"))
@@ -159,26 +159,26 @@ else:
 
 e2e_path.write_text(e2e_txt)
 for name, status in e2e_replacements:
-    print(f"  {name***REMOVED***: {status***REMOVED***")
+    print(f"  {name}: {status}")
 
 
 # === STEP 4: patch interior_consultant_register.py ===
 print("\n=== STEP 4: patch interior_consultant_register.py ===")
 reg_path = SCRIPTS_DIR / "interior_consultant_register.py"
 reg_txt = reg_path.read_text()
-reg_replacements = [***REMOVED***
+reg_replacements = []
 
 # Patch A: import + sys.path injection (similar to e2e_promt47)
 old_reg_a = (
-    "from _freebuff_locator ***REMOVED***solve_freebuff_root\n"
+    "from _freebuff_locator ]solve_freebuff_root\n"
 )
 new_reg_a = (
-    "from _freebuff_locator ***REMOVED***solve_freebuff_root\n"
+    "from _freebuff_locator ]solve_freebuff_root\n"
     "_FREEBUFF_ROOT = resolve_freebuff_root()\n"
     "if str(_FREEBUFF_ROOT) not in sys.path:\n"
     "    sys.path.insert(0, str(_FREEBUFF_ROOT))\n"
     "# v5.53.0 CAN-8 closure: project-home locator (sibling helper)\n"
-    "from _interior_planner_home ***REMOVED***solve_interior_planner_home\n"
+    "from _interior_planner_home ]solve_interior_planner_home\n"
 )
 if old_reg_a in reg_txt:
     reg_txt = reg_txt.replace(old_reg_a, new_reg_a, 1)
@@ -221,16 +221,16 @@ if old_reg_d1 in reg_txt:
 else:
     reg_replacements.append(("seed_dir comment", "✗ pattern not found"))
 
-old_reg_d2 = "[--artifact PATH***REMOVED***                  # default /tmp/interior_planner_e2e/interior_planner/roles/18_interior_consultant.md"
-new_reg_d2 = "[--artifact PATH***REMOVED***                  # default = $INTERIOR_PLANNER_HOME/interior_planner/roles/18_interior_consultant.md"
+old_reg_d2 = "[--artifact PATH]                  # default /tmp/interior_planner_e2e/interior_planner/roles/18_interior_consultant.md"
+new_reg_d2 = "[--artifact PATH]                  # default = $INTERIOR_PLANNER_HOME/interior_planner/roles/18_interior_consultant.md"
 if old_reg_d2 in reg_txt:
     reg_txt = reg_txt.replace(old_reg_d2, new_reg_d2)
     reg_replacements.append(("docstring artifact", "✓"))
 else:
     reg_replacements.append(("docstring artifact", "✗ pattern not found"))
 
-old_reg_d3 = "[--seed-dir PATH***REMOVED***                  # default /tmp/interior_planner_seed"
-new_reg_d3 = "[--seed-dir PATH***REMOVED***                  # default = $INTERIOR_PLANNER_HOME/interior_planner_seed"
+old_reg_d3 = "[--seed-dir PATH]                  # default /tmp/interior_planner_seed"
+new_reg_d3 = "[--seed-dir PATH]                  # default = $INTERIOR_PLANNER_HOME/interior_planner_seed"
 if old_reg_d3 in reg_txt:
     reg_txt = reg_txt.replace(old_reg_d3, new_reg_d3)
     reg_replacements.append(("docstring seed", "✓"))
@@ -239,15 +239,15 @@ else:
 
 reg_path.write_text(reg_txt)
 for name, status in reg_replacements:
-    print(f"  {name***REMOVED***: {status***REMOVED***")
+    print(f"  {name}: {status}")
 
 
 # === STEP 5: verify NO /tmp/interior_planner_e2e/ runtime paths remain ===
 print("\n=== STEP 5: verify NO runtime /tmp/interior_planner_e2e/ paths remain ===")
-def _runtime_paths_remaining(file_path: Path) -> list[str***REMOVED***:
+def _runtime_paths_remaining(file_path: Path) -> list[str]:
     """Return list of lines containing /tmp/interior_planner_e2e/ as runtime path."""
     txt = file_path.read_text()
-    suspects = [***REMOVED***
+    suspects = []
     for lineno, line in enumerate(txt.splitlines(), 1):
         # Skip pure comments mentioning historical /tmp/...
         if "/tmp/interior" not in line:
@@ -257,78 +257,78 @@ def _runtime_paths_remaining(file_path: Path) -> list[str***REMOVED***:
         if stripped.startswith("#"):
             continue
         # Skip docstring lines (""" ... """ inside triple quotes)
-        suspects.append(f"  L{lineno***REMOVED***: {line.strip()[:120***REMOVED******REMOVED***")
+        suspects.append(f"  L{lineno}: {line.strip()[:120]}")
     return suspects
 
 
-for fname in ["e2e_promt47.py", "interior_consultant_register.py"***REMOVED***:
+for fname in ["e2e_promt47.py", "interior_consultant_register.py"]:
     suspects = _runtime_paths_remaining(SCRIPTS_DIR / fname)
     if suspects:
-        print(f"  ✗ {fname***REMOVED***: remaining runtime /tmp/interior refs:")
+        print(f"  ✗ {fname}: remaining runtime /tmp/interior refs:")
         for s in suspects:
             print(s)
     else:
-        print(f"  ✓ {fname***REMOVED***: no runtime /tmp/interior refs (comments OK)")
+        print(f"  ✓ {fname}: no runtime /tmp/interior refs (comments OK)")
 
 # Also check that all /tmp/interior references in both files are COMMENT-only now
 print("\n=== STEP 5b: only comments mention /tmp/interior now? ===")
-for fname in ["e2e_promt47.py", "interior_consultant_register.py"***REMOVED***:
+for fname in ["e2e_promt47.py", "interior_consultant_register.py"]:
     txt = (SCRIPTS_DIR / fname).read_text()
     all_lines_with_tmp = [
         (i, l.strip())
         for i, l in enumerate(txt.splitlines(), 1)
         if "/tmp/interior" in l
-    ***REMOVED***
+    ]
     if all_lines_with_tmp:
-        print(f"  {fname***REMOVED***: {len(all_lines_with_tmp)***REMOVED*** historical-reference lines (expect comments only):")
+        print(f"  {fname}: {len(all_lines_with_tmp)} historical-reference lines (expect comments only):")
         for ln, l in all_lines_with_tmp:
             kind = "comment" if l.lstrip().startswith("#") else "RUNTIME-LIKE"
-            print(f"    L{ln***REMOVED*** [{kind***REMOVED******REMOVED***: {l[:100***REMOVED******REMOVED***")
+            print(f"    L{ln} [{kind}]: {l[:100]}")
     else:
-        print(f"  ✓ {fname***REMOVED***: no /tmp/interior references at all")
+        print(f"  ✓ {fname}: no /tmp/interior references at all")
 
 
 # === STEP 6: real run of both scripts (verify locator resolves correctly) ===
 print("\n=== STEP 6: real run of both scripts (locator test) ===")
-env = {**os.environ, "PATH": os.environ.get("PATH", "")***REMOVED***
+env = {**os.environ, "PATH": os.environ.get("PATH", "")}
 
 # Test resolve_interior_planner_home() via inline import
 test_script = """
 import sys
 sys.path.insert(0, %r)
-from _interior_planner_home ***REMOVED***solve_interior_planner_home
+from _interior_planner_home ]solve_interior_planner_home
 home = resolve_interior_planner_home()
-print(f"  ✓ locator resolved: {home***REMOVED***")
-print(f"  ✓ marker exists: {(home / '_marker.txt').is_file()***REMOVED***")
+print(f"  ✓ locator resolved: {home}")
+print(f"  ✓ marker exists: {(home / '_marker.txt').is_file()}")
 """ % str(SCRIPTS_DIR)
-r = subprocess.run(["python3", "-c", test_script***REMOVED***, capture_output=True, text=True, env=env, timeout=30)
-print(f"  locator-test exit={r.returncode***REMOVED***")
-print(f"  stdout: {(r.stdout or '').strip()***REMOVED***")
-print(f"  stderr: {(r.stderr or '').strip()[:400***REMOVED******REMOVED***")
+r = subprocess.run(["python3", "-c", test_script], capture_output=True, text=True, env=env, timeout=30)
+print(f"  locator-test exit={r.returncode}")
+print(f"  stdout: {(r.stdout or '').strip()}")
+print(f"  stderr: {(r.stderr or '').strip()[:400]}")
 
 # Test e2e_promt47.py with --skip-tg --silent (sys_inj pass + business = N/A already true)
 r2 = subprocess.run(
-    ["python3", str(SCRIPTS_DIR / "e2e_promt47.py"), "--skip-tg", "--silent"***REMOVED***,
+    ["python3", str(SCRIPTS_DIR / "e2e_promt47.py"), "--skip-tg", "--silent"],
     capture_output=True, text=True, cwd=str(SCRIPTS_DIR), env=env, timeout=120,
 )
-print(f"  e2e_promt47.py exit={r2.returncode***REMOVED***")
-print(f"  stderr (last 400): {(r2.stderr or '')[-400:***REMOVED***.strip()***REMOVED***")
+print(f"  e2e_promt47.py exit={r2.returncode}")
+print(f"  stderr (last 400): {(r2.stderr or '')[-400:].strip()}")
 sys_inj_ok = not any(
     marker in (r2.stderr or "") for marker in
     ("ModuleNotFoundError", "ImportError", "SyntaxError", "IndentationError", "NameError",
-     "[FreebuffLocator***REMOVED***", "[InteriorPlannerHomeLocator***REMOVED***")
+     "[FreebuffLocator]", "[InteriorPlannerHomeLocator]")
 )
-print(f"  sysinj_pass={sys_inj_ok***REMOVED***")
+print(f"  sysinj_pass={sys_inj_ok}")
 
 # CAN-8: verify DEFAULT_WORKSPACE is now resolved home, not /tmp/...
 r3 = subprocess.run(
-    ["python3", "-c", f"import sys; sys.path.insert(0, r'{SCRIPTS_DIR***REMOVED***'); "
-                     f"import e2e_promt47; print('DEFAULT_WORKSPACE:', e2e_promt47.DEFAULT_WORKSPACE)"***REMOVED***,
+    ["python3", "-c", f"import sys; sys.path.insert(0, r'{SCRIPTS_DIR}'); "
+                     f"import e2e_promt47; print('DEFAULT_WORKSPACE:', e2e_promt47.DEFAULT_WORKSPACE)"],
     capture_output=True, text=True, env=env, timeout=30,
 )
-print(f"  DEFAULT_WORKSPACE check exit={r3.returncode***REMOVED***")
-print(f"  stdout: {(r3.stdout or '').strip()***REMOVED***")
-print(f"  stderr: {(r3.stderr or '').strip()[:400***REMOVED******REMOVED***")
+print(f"  DEFAULT_WORKSPACE check exit={r3.returncode}")
+print(f"  stdout: {(r3.stdout or '').strip()}")
+print(f"  stderr: {(r3.stderr or '').strip()[:400]}")
 
 
 # === STEP 7: TG message (HUMAN FORMAT) ===
@@ -385,40 +385,40 @@ else:
 
 TG_MSG_PATH = Path("/tmp/tg_v553_messages.txt")
 TG_MSG_PATH.write_text(
-    f"=== Saved Messages (7709651193) ===\n{SAVED_TEXT***REMOVED***\n\n"
-    f"=== Alexander Litvinov (1063827731) ===\n{ALEX_TEXT***REMOVED***\n"
+    f"=== Saved Messages (7709651193) ===\n{SAVED_TEXT}\n\n"
+    f"=== Alexander Litvinov (1063827731) ===\n{ALEX_TEXT}\n"
 )
-print(f"  ✓ TG body saved to {TG_MSG_PATH***REMOVED***")
+print(f"  ✓ TG body saved to {TG_MSG_PATH}")
 
 
 # === STEP 8: best-effort TG send ===
 print("\n=== STEP 8: best-effort TG send ===")
 try:
     sys.path.insert(0, str(ROOT))
-    from core_02.telegram_contract ***REMOVED***port_to_saved_messages, report_to_litvinov
+    from core_02.telegram_contract ]port_to_saved_messages, report_to_litvinov
     import asyncio
     saved_id = asyncio.run(report_to_saved_messages(SAVED_TEXT))
     if isinstance(saved_id, int):
-        print(f"  ✓ Saved Messages (7709651193): msg_id={saved_id***REMOVED***")
+        print(f"  ✓ Saved Messages (7709651193): msg_id={saved_id}")
     else:
         print(f"  ✗ Saved Messages send FAILED (returned None). Body at /tmp/tg_v553_messages.txt")
     alex_id = asyncio.run(report_to_litvinov(ALEX_TEXT))
     if isinstance(alex_id, int):
-        print(f"  ✓ Alexander Litvinov (1063827731): msg_id={alex_id***REMOVED***")
+        print(f"  ✓ Alexander Litvinov (1063827731): msg_id={alex_id}")
     else:
         print(f"  ✗ Litvinov send FAILED (returned None). Body at /tmp/tg_v553_messages.txt")
 except Exception as e:
-    print(f"  ✗ TG send best-effort EXCEPTION ({type(e).__name__***REMOVED***: {e***REMOVED***)")
+    print(f"  ✗ TG send best-effort EXCEPTION ({type(e).__name__}: {e})")
 
 
 # === SUMMARY ===
 print("\n=== SUMMARY ===")
-print(f"helper: _interior_planner_home.py at {locator_path***REMOVED***")
-print(f"marker: _marker.txt at {marker_file***REMOVED***")
-print(f"e2e_promt47.py patches: {sum(1 for _, s in e2e_replacements if s.startswith('✓'))***REMOVED***/{len(e2e_replacements)***REMOVED*** applied")
-print(f"register.py patches: {sum(1 for _, s in reg_replacements if s.startswith('✓'))***REMOVED***/{len(reg_replacements)***REMOVED*** applied")
-print(f"locator-test: exit={r.returncode***REMOVED***")
-print(f"e2e_promt47.py --skip-tg --silent: exit={r2.returncode***REMOVED*** sysinj_pass={sys_inj_ok***REMOVED***")
-print(f"DEFAULT_WORKSPACE output: {(r3.stdout or '').strip() or '(empty)'***REMOVED***")
-print(f"TG body: {TG_MSG_PATH***REMOVED***")
+print(f"helper: _interior_planner_home.py at {locator_path}")
+print(f"marker: _marker.txt at {marker_file}")
+print(f"e2e_promt47.py patches: {sum(1 for _, s in e2e_replacements if s.startswith('✓'))}/{len(e2e_replacements)} applied")
+print(f"register.py patches: {sum(1 for _, s in reg_replacements if s.startswith('✓'))}/{len(reg_replacements)} applied")
+print(f"locator-test: exit={r.returncode}")
+print(f"e2e_promt47.py --skip-tg --silent: exit={r2.returncode} sysinj_pass={sys_inj_ok}")
+print(f"DEFAULT_WORKSPACE output: {(r3.stdout or '').strip() or '(empty)'}")
+print(f"TG body: {TG_MSG_PATH}")
 print(f"v5.53.0 PARTIAL ship — CAN-8 closure attempted; verify above")

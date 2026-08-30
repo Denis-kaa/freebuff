@@ -84,7 +84,7 @@ if not os.environ.get("GEMINI_API_KEY"):
         "Запустите: GEMINI_API_KEY=... uvicorn main:app --host 0.0.0.0 --port 8000"
     )
 
-_client = genai.Client(api_key=os.environ["GEMINI_API_KEY"***REMOVED***)
+_client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
 
 # ---------------------------------------------------------------------------
@@ -102,7 +102,7 @@ DB_PATH = os.environ.get("SEVERNY_CHAY_DB", "severny_chay.db")
 # Одиночное подключение к SQLite, разделяемое между вызовами и защищённое
 # мьютексом (check_same_thread=False, т.к. обращаемся из разных контекстов).
 _db_path = DB_PATH
-_db_conn: Optional[sqlite3.Connection***REMOVED*** = None
+_db_conn: Optional[sqlite3.Connection] = None
 _db_lock = threading.Lock()
 
 _SCHEMA = """
@@ -144,7 +144,7 @@ def _touch_session(conn: sqlite3.Connection, session_id: str) -> None:
     )
 
 
-def _get_session_history(session_id: str) -> List[genai_types.Content***REMOVED***:
+def _get_session_history(session_id: str) -> List[genai_types.Content]:
     """Возвращает историю сессии из БД (хвост последних реплик)."""
     conn = _get_db()
     with _db_lock:
@@ -157,9 +157,9 @@ def _get_session_history(session_id: str) -> List[genai_types.Content***REMOVED*
         _touch_session(conn, session_id)
         conn.commit()
     return [
-        genai_types.Content(role=role, parts=[genai_types.Part(text=content)***REMOVED***)
+        genai_types.Content(role=role, parts=[genai_types.Part(text=content)])
         for role, content in rows
-    ***REMOVED***
+    ]
 
 
 def _append_turn(session_id: str, user_text: str, assistant_text: str) -> None:
@@ -192,13 +192,13 @@ def _cleanup_expired_sessions() -> None:
         stale = conn.execute(
             "SELECT session_id FROM sessions WHERE last_seen < ?", (cutoff,)
         ).fetchall()
-        ids = [row[0***REMOVED*** for row in stale***REMOVED***
+        ids = [row[0] for row in stale]
         if ids:
             conn.executemany(
-                "DELETE FROM messages WHERE session_id=?", [(i,) for i in ids***REMOVED***
+                "DELETE FROM messages WHERE session_id=?", [(i,) for i in ids]
             )
             conn.executemany(
-                "DELETE FROM sessions WHERE session_id=?", [(i,) for i in ids***REMOVED***
+                "DELETE FROM sessions WHERE session_id=?", [(i,) for i in ids]
             )
             conn.commit()
     # возвращаем удалённые для тестов
@@ -211,7 +211,7 @@ def _cleanup_expired_sessions() -> None:
 
 class ChatRequest(BaseModel):
     message: str
-    session_id: Optional[str***REMOVED*** = None
+    session_id: Optional[str] = None
 
 
 class ChatResponse(BaseModel):
@@ -228,8 +228,8 @@ app = FastAPI(title="Северный чай — AI-ассистент")
 
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest) -> ChatResponse:
-    """Принимает { "message": "текст", "session_id": "..." ***REMOVED*** и возвращает
-    { "reply": "текст", "session_id": "..." ***REMOVED***.
+    """Принимает { "message": "текст", "session_id": "..." ] и возвращает
+    { "reply": "текст", "session_id": "..." }.
 
     Если session_id не передан — создаётся новая сессия. Вся история диалога
     сессии отправляется модели, так что ассистент помнит предыдущие реплики.
@@ -246,9 +246,9 @@ async def chat(req: ChatRequest) -> ChatResponse:
     user_text = _guard_prompt(req.message.strip())
 
     # История сессии + текущий ход пользователя
-    contents: List[genai_types.Content***REMOVED*** = list(history)
+    contents: List[genai_types.Content] = list(history)
     contents.append(
-        genai_types.Content(role="user", parts=[genai_types.Part(text=user_text)***REMOVED***)
+        genai_types.Content(role="user", parts=[genai_types.Part(text=user_text)])
     )
 
     try:
@@ -269,7 +269,7 @@ async def chat(req: ChatRequest) -> ChatResponse:
     except Exception as exc:  # noqa: BLE001 — внешний API, ошибки разные
         raise HTTPException(
             status_code=502,
-            detail=f"Ошибка обращения к модели Gemini: {exc***REMOVED***",
+            detail=f"Ошибка обращения к модели Gemini: {exc}",
         ) from exc
 
     # Запоминаем пару user+model в истории сессии
@@ -296,13 +296,13 @@ HTML_PAGE = """<!DOCTYPE html>
       --user-bubble: #c8e6c9;
       --bg: #f5f5f0;
       --radius: 16px;
-    ***REMOVED***
-    * { box-sizing: border-box; margin: 0; padding: 0; ***REMOVED***
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
       background: var(--bg);
       min-height: 100vh;
-    ***REMOVED***
+    }
 
     /* ---------- Плавающая кнопка виджета ---------- */
     .fab {
@@ -323,9 +323,9 @@ HTML_PAGE = """<!DOCTYPE html>
       font-size: 28px;
       z-index: 999;
       transition: transform .15s ease, box-shadow .15s ease;
-    ***REMOVED***
-    .fab:active { transform: scale(0.94); ***REMOVED***
-    .fab.hidden { display: none; ***REMOVED***
+    }
+    .fab:active { transform: scale(0.94); }
+    .fab.hidden { display: none; }
 
     /* ---------- Окно чата ---------- */
     .chat {
@@ -347,12 +347,12 @@ HTML_PAGE = """<!DOCTYPE html>
       opacity: 1;
       transition: transform .2s ease, opacity .2s ease;
       font-size: 15px;
-    ***REMOVED***
+    }
     .chat.closed {
       transform: translateY(30px);
       opacity: 0;
       pointer-events: none;
-    ***REMOVED***
+    }
 
     .chat-header {
       background: linear-gradient(135deg, var(--accent), var(--accent-dark));
@@ -361,9 +361,9 @@ HTML_PAGE = """<!DOCTYPE html>
       display: flex;
       justify-content: space-between;
       align-items: center;
-    ***REMOVED***
-    .chat-header .title { font-weight: 700; font-size: 16px; ***REMOVED***
-    .chat-header .subtitle { font-size: 12px; opacity: .9; margin-top: 2px; ***REMOVED***
+    }
+    .chat-header .title { font-weight: 700; font-size: 16px; }
+    .chat-header .subtitle { font-size: 12px; opacity: .9; margin-top: 2px; }
     .chat-close {
       background: rgba(255, 255, 255, 0.2);
       border: none;
@@ -374,7 +374,7 @@ HTML_PAGE = """<!DOCTYPE html>
       cursor: pointer;
       font-size: 16px;
       line-height: 1;
-    ***REMOVED***
+    }
 
     .messages {
       flex: 1;
@@ -384,7 +384,7 @@ HTML_PAGE = """<!DOCTYPE html>
       flex-direction: column;
       gap: 10px;
       -webkit-overflow-scrolling: touch;
-    ***REMOVED***
+    }
     .msg {
       max-width: 82%;
       padding: 10px 13px;
@@ -392,20 +392,20 @@ HTML_PAGE = """<!DOCTYPE html>
       line-height: 1.45;
       white-space: pre-wrap;
       word-wrap: break-word;
-    ***REMOVED***
+    }
     .msg.bot {
       background: var(--bot-bubble);
       align-self: flex-start;
       border-bottom-left-radius: 4px;
       color: #1b1b1b;
-    ***REMOVED***
+    }
     .msg.user {
       background: var(--user-bubble);
       align-self: flex-end;
       border-bottom-right-radius: 4px;
       color: #1b1b1b;
-    ***REMOVED***
-    .msg.error { background: #ffebee; color: #b71c1c; align-self: flex-start; ***REMOVED***
+    }
+    .msg.error { background: #ffebee; color: #b71c1c; align-self: flex-start; }
 
     .typing {
       align-self: flex-start;
@@ -415,23 +415,23 @@ HTML_PAGE = """<!DOCTYPE html>
       border-bottom-left-radius: 4px;
       display: inline-flex;
       gap: 5px;
-    ***REMOVED***
+    }
     .typing span {
       width: 8px; height: 8px;
       border-radius: 50%;
       background: var(--accent);
       animation: blink 1.2s infinite;
-    ***REMOVED***
-    .typing span:nth-child(2) { animation-delay: .2s; ***REMOVED***
-    .typing span:nth-child(3) { animation-delay: .4s; ***REMOVED***
-    @keyframes blink { 0%, 80%, 100% { opacity: .3; ***REMOVED*** 40% { opacity: 1; ***REMOVED*** ***REMOVED***
+    }
+    .typing span:nth-child(2) { animation-delay: .2s; }
+    .typing span:nth-child(3) { animation-delay: .4s; }
+    @keyframes blink { 0%, 80%, 100% { opacity: .3; } 40% { opacity: 1; } }
 
     /* ---------- Постоянная кнопка «Заказать» ---------- */
     .order-bar {
       padding: 10px;
       border-top: 1px solid #ececec;
       background: #fafafa;
-    ***REMOVED***
+    }
     .order-btn {
       width: 100%;
       padding: 12px;
@@ -443,8 +443,8 @@ HTML_PAGE = """<!DOCTYPE html>
       font-weight: 700;
       cursor: pointer;
       box-shadow: 0 4px 12px rgba(245, 124, 0, 0.4);
-    ***REMOVED***
-    .order-btn:active { transform: scale(0.98); ***REMOVED***
+    }
+    .order-btn:active { transform: scale(0.98); }
 
     /* ---------- Поле ввода ---------- */
     .input-bar {
@@ -453,7 +453,7 @@ HTML_PAGE = """<!DOCTYPE html>
       padding: 10px;
       border-top: 1px solid #ececec;
       background: #fff;
-    ***REMOVED***
+    }
     .input-bar input {
       flex: 1;
       padding: 11px 14px;
@@ -461,8 +461,8 @@ HTML_PAGE = """<!DOCTYPE html>
       border-radius: 22px;
       font-size: 15px;
       outline: none;
-    ***REMOVED***
-    .input-bar input:focus { border-color: var(--accent); ***REMOVED***
+    }
+    .input-bar input:focus { border-color: var(--accent); }
     .send-btn {
       border: none;
       width: 44px;
@@ -473,8 +473,8 @@ HTML_PAGE = """<!DOCTYPE html>
       font-size: 18px;
       cursor: pointer;
       flex-shrink: 0;
-    ***REMOVED***
-    .send-btn:active { transform: scale(0.94); ***REMOVED***
+    }
+    .send-btn:active { transform: scale(0.94); }
 
     /* ---------- Адаптив: мобильные ---------- */
     @media (max-width: 480px) {
@@ -486,12 +486,12 @@ HTML_PAGE = """<!DOCTYPE html>
         height: 100dvh;
         max-height: 100dvh;
         border-radius: 0;
-      ***REMOVED***
+      }
       .fab {
         right: 14px;
         bottom: 14px;
-      ***REMOVED***
-    ***REMOVED***
+      }
+    }
   </style>
 </head>
 <body>
@@ -540,8 +540,8 @@ HTML_PAGE = """<!DOCTYPE html>
       if (newId && newId !== sessionId) {
         sessionId = newId;
         localStorage.setItem(SID_KEY, newId);
-      ***REMOVED***
-    ***REMOVED***
+      }
+    }
 
     // Открыть / закрыть виджет
     fab.addEventListener('click', () => toggleChat(true));
@@ -550,13 +550,13 @@ HTML_PAGE = """<!DOCTYPE html>
     function toggleChat(open) {
       chat.classList.toggle('closed', !open);
       fab.classList.toggle('hidden', open);
-      if (open) { input.focus(); scrollBottom(); ***REMOVED***
-    ***REMOVED***
+      if (open) { input.focus(); scrollBottom(); }
+    }
 
     // Постоянная кнопка «Заказать»
     orderBtn.addEventListener('click', () => {
       alert('Переход в каталог');
-    ***REMOVED***);
+    ]);
 
     // Добавить сообщение в окно
     function addMsg(text, who) {
@@ -565,7 +565,7 @@ HTML_PAGE = """<!DOCTYPE html>
       div.textContent = text;
       messages.appendChild(div);
       scrollBottom();
-    ***REMOVED***
+    }
 
     function showTyping() {
       const t = document.createElement('div');
@@ -574,16 +574,16 @@ HTML_PAGE = """<!DOCTYPE html>
       t.innerHTML = '<span></span><span></span><span></span>';
       messages.appendChild(t);
       scrollBottom();
-    ***REMOVED***
+    }
 
     function removeTyping() {
       const t = document.getElementById('typing');
       if (t) t.remove();
-    ***REMOVED***
+    }
 
     function scrollBottom() {
       messages.scrollTop = messages.scrollHeight;
-    ***REMOVED***
+    }
 
     // Отправка сообщения на /api/chat (с идентификатором сессии)
     async function send() {
@@ -592,31 +592,31 @@ HTML_PAGE = """<!DOCTYPE html>
       input.value = '';
       addMsg(text, 'user');
 
-      const payload = { message: text ***REMOVED***;
+      const payload = { message: text };
       if (sessionId) payload.session_id = sessionId;
 
       showTyping();
       try {
         const res = await fetch('/api/chat', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' ***REMOVED***,
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
-        ***REMOVED***);
+        ]);
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || 'Ошибка сервера');
         ensureSessionId(data.session_id);
         addMsg(data.reply, 'bot');
-      ***REMOVED*** catch (err) {
+      ] catch (err) {
         addMsg('Не удалось получить ответ: ' + err.message, 'error');
-      ***REMOVED*** finally {
+      ] finally {
         removeTyping();
-      ***REMOVED***
-    ***REMOVED***
+      }
+    }
 
     sendBtn.addEventListener('click', send);
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') send();
-    ***REMOVED***);
+    ]);
   </script>
 </body>
 </html>
@@ -642,9 +642,9 @@ def _default_port() -> int:
     try:
         port = int(raw)
     except ValueError:
-        raise ValueError(f"PORT должен быть целым числом, получено: {raw!r***REMOVED***")
+        raise ValueError(f"PORT должен быть целым числом, получено: {raw!r}")
     if not (0 <= port <= 65535):
-        raise ValueError(f"PORT вне допустимого диапазона 0-65535: {port***REMOVED***")
+        raise ValueError(f"PORT вне допустимого диапазона 0-65535: {port}")
     return port
 
 

@@ -21,7 +21,7 @@ import asyncio
 import sqlite3
 import threading
 import time
-***REMOVED***
+}
 from typing import Any, Iterable
 
 try:
@@ -95,7 +95,7 @@ class _SQLite:
 
             await asyncio.to_thread(_run)
 
-    async def executemany(self, sql: str, rows: list[tuple***REMOVED***) -> None:
+    async def executemany(self, sql: str, rows: list[tuple]) -> None:
         if not rows:
             return
         if self._use_aiosqlite:
@@ -109,7 +109,7 @@ class _SQLite:
 
             await asyncio.to_thread(_run)
 
-    async def fetchall(self, sql: str, params: tuple = ()) -> list[tuple***REMOVED***:
+    async def fetchall(self, sql: str, params: tuple = ()) -> list[tuple]:
         if self._use_aiosqlite:
             cur = await self._conn.execute(sql, params)
             rows = await cur.fetchall()
@@ -151,30 +151,30 @@ class MessageCache:
 
     # ── диалоги ─────────────────────────────────────────────
 
-    async def save_dialogs(self, dialogs: Iterable[Any***REMOVED***) -> None:
+    async def save_dialogs(self, dialogs: Iterable[Any]) -> None:
         """dialogs — любые объекты с .id/.name/.unread_count (Telethon Dialog и др.)."""
         rows = [
             (int(d.id), str(d.name or ""), int(d.unread_count or 0))
             for d in dialogs
-        ***REMOVED***
+        ]
         await self._db.executemany(
             "INSERT OR REPLACE INTO dialogs(chat_id, name, unread) VALUES(?,?,?)",
             rows,
         )
 
-    async def get_dialogs(self, limit: int = 50) -> list[dict***REMOVED***:
+    async def get_dialogs(self, limit: int = 50) -> list[dict]:
         rows = await self._db.fetchall(
             "SELECT chat_id, name, unread FROM dialogs "
             "ORDER BY unread DESC, chat_id LIMIT ?",
             (int(limit),),
         )
         return [
-            {"id": r[0***REMOVED***, "name": r[1***REMOVED***, "unread_count": r[2***REMOVED******REMOVED*** for r in rows
-        ***REMOVED***
+            {"id": r[0], "name": r[1], "unread_count": r[2]} for r in rows
+        ]
 
     # ── сообщения ───────────────────────────────────────────
 
-    async def save_messages(self, chat_id: int, rows: Iterable[tuple***REMOVED***, cap: int | None = None) -> None:
+    async def save_messages(self, chat_id: int, rows: Iterable[tuple], cap: int | None = None) -> None:
         """rows: (msg_id, sender, ts, text, media) — подготавливает вызывающий код.
 
         cap — лимит сообщений на чат в кэше (None — без лимита). После вставки
@@ -184,14 +184,14 @@ class MessageCache:
         data = [
             (
                 int(chat_id),
-                int(r[0***REMOVED***),
-                str(r[1***REMOVED*** or ""),
-                float(r[2***REMOVED*** or 0),
-                str(r[3***REMOVED*** or ""),
-                (r[4***REMOVED*** if len(r) > 4 else None),
+                int(r[0]),
+                str(r[1] or ""),
+                float(r[2] or 0),
+                str(r[3] or ""),
+                (r[4] if len(r) > 4 else None),
             )
             for r in rows
-        ***REMOVED***
+        ]
         await self._db.executemany(
             "INSERT OR REPLACE INTO messages(chat_id, msg_id, sender, ts, text, media) "
             "VALUES(?,?,?,?,?,?)",
@@ -206,7 +206,7 @@ class MessageCache:
                 (int(chat_id), int(chat_id), int(cap)),
             )
 
-    async def get_messages(self, chat_id: int, limit: int = 50) -> list[dict***REMOVED***:
+    async def get_messages(self, chat_id: int, limit: int = 50) -> list[dict]:
         rows = await self._db.fetchall(
             "SELECT msg_id, sender, ts, text, media FROM messages "
             "WHERE chat_id=? ORDER BY ts DESC LIMIT ?",
@@ -214,9 +214,9 @@ class MessageCache:
         )
         # возвращаем в хронологическом порядке (старые сверху)
         return [
-            {'msg_id': r[0***REMOVED***, 'sender': r[1***REMOVED***, 'ts': r[2***REMOVED***, 'text': r[3***REMOVED***, 'media': r[4***REMOVED******REMOVED***
+            {'msg_id': r[0], 'sender': r[1], 'ts': r[2], 'text': r[3], 'media': r[4]}
             for r in reversed(rows)
-        ***REMOVED***
+        ]
 
     async def prune_older_than(self, days: int) -> int:
         """Удалить сообщения старше days дней. Возвращает число удалённых строк.
@@ -235,9 +235,9 @@ class MessageCache:
         await self._db.execute(
             "DELETE FROM messages WHERE ts < ?", (cutoff,)
         )
-        return int(rows[0***REMOVED***[0***REMOVED***) if rows else 0
+        return int(rows[0][0]) if rows else 0
 
-    async def get_messages_before(self, chat_id: int, before_ts: float, limit: int = 30) -> list[dict***REMOVED***:
+    async def get_messages_before(self, chat_id: int, before_ts: float, limit: int = 30) -> list[dict]:
         """Сообщения старше before_ts (для подгрузки истории скроллом вверх)."""
         rows = await self._db.fetchall(
             'SELECT msg_id, sender, ts, text, media FROM messages '
@@ -245,6 +245,6 @@ class MessageCache:
             (int(chat_id), float(before_ts), int(limit)),
         )
         return [
-            {'msg_id': r[0***REMOVED***, 'sender': r[1***REMOVED***, 'ts': r[2***REMOVED***, 'text': r[3***REMOVED***, 'media': r[4***REMOVED******REMOVED***
+            {'msg_id': r[0], 'sender': r[1], 'ts': r[2], 'text': r[3], 'media': r[4]}
             for r in reversed(rows)
-        ***REMOVED***
+        ]

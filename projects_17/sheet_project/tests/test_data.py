@@ -46,7 +46,7 @@ def test_empty_task_project_id_rejected():
 def test_frozen_immutability():
     p = Project(id="p1", name="Сайт", status="in_progress")
     with pytest.raises(FrozenInstanceError):
-        p.name = "Другое"  # type: ignore[misc***REMOVED***
+        p.name = "Другое"  # type: ignore[misc]
 
 
 # ── источник данных (sample_data) ──
@@ -69,18 +69,18 @@ def test_get_rows_unknown_collection_rejected():
 
 
 def test_get_collections_has_expected_keys():
-    assert set(get_collections()) == {"projects", "tasks"***REMOVED***
+    assert set(get_collections()) == {"projects", "tasks"}
 
 
 def test_sample_ids_unique():
     for name, rows in get_collections().items():
-        ids = [r.id for r in rows***REMOVED***
-        assert len(ids) == len(set(ids)), f"дубли id в коллекции '{name***REMOVED***'"
+        ids = [r.id for r in rows]
+        assert len(ids) == len(set(ids)), f"дубли id в коллекции '{name}'"
 
 
 def test_tasks_reference_existing_projects():
-    project_ids = {r.id for r in get_rows("projects")***REMOVED***
+    project_ids = {r.id for r in get_rows("projects")}
     for t in get_rows("tasks"):
         assert t.project_id in project_ids, (
-            f"задача '{t.id***REMOVED***' ссылается на несуществующий проект '{t.project_id***REMOVED***'"
+            f"задача '{t.id}' ссылается на несуществующий проект '{t.project_id}'"
         )

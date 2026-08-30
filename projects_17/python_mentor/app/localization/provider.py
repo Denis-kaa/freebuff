@@ -18,7 +18,7 @@ class TranslationProvider(ABC):
     provider_id: str
 
     @abstractmethod
-    def translate(self, documents: Iterable[SourceDocument***REMOVED***, target_locale: str) -> tuple[TranslationDraft, ...***REMOVED***:
+    def translate(self, documents: Iterable[SourceDocument], target_locale: str) -> tuple[TranslationDraft, ...]:
         raise NotImplementedError
 
 
@@ -31,7 +31,7 @@ class ExternalLLMTranslationProvider(TranslationProvider):
 
     provider_id = "external_llm"
 
-    def translate(self, documents: Iterable[SourceDocument***REMOVED***, target_locale: str) -> tuple[TranslationDraft, ...***REMOVED***:
+    def translate(self, documents: Iterable[SourceDocument], target_locale: str) -> tuple[TranslationDraft, ...]:
         raise RuntimeError(
             "external LLM provider is not configured; inject a provider explicitly "
             "to create translation drafts"

@@ -4,4 +4,4 @@
 валидатор на ацикличность prerequisites, unit-тесты.
 """
 
-__all__: list[str***REMOVED*** = [***REMOVED***
+__all__: list[str] = []

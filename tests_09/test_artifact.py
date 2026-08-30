@@ -10,7 +10,7 @@ ChainRun/ExecutionRequest (fixture-стиль, как test_adr018_factory_forge_
 
 from __future__ import annotations
 
-***REMOVED***
+}
 from typing import Any, Dict
 
 import pytest
@@ -28,13 +28,13 @@ class _FakeChainStage:
         self.status = status
         self.details = details
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "role_id": self.role_id,
             "mode": self.mode,
             "status": self.status,
             "details": self.details,
-        ***REMOVED***
+        }
 
 
 class _FakeChainRun:
@@ -63,7 +63,7 @@ class _FakeRequest:
         self.output_spec = kw.get("output_spec", {
             "artifact_kind": "content_artifact",
             "target": "projects_17/p1/forge/",
-        ***REMOVED***)
+        ])
 
 
 def _make_run(**kw) -> _FakeChainRun:
@@ -100,7 +100,7 @@ def test_from_chain_run_maps_all_fields():
     assert a.overall == "ok"
     assert a.stage_count == 2
     assert len(a.chain) == 2
-    assert a.chain[0***REMOVED***["role_id"***REMOVED*** == "explainer"
+    assert a.chain[0]["role_id"] == "explainer"
     assert a.capability == "article_generation"
     assert a.factory_id == "content"
     assert a.forge_id == "writing"
@@ -119,10 +119,10 @@ def test_to_dict_is_superset_of_legacy_dict():
         "id", "kind", "opportunity_id", "project_id", "capability",
         "factory_id", "forge_id", "target", "overall", "validation",
         "created_at",
-    ***REMOVED***
+    }
     assert legacy_keys <= set(d.keys())
     # новые ключи (надмножество)
-    assert {"chain", "stage_count", "files", "project_root"***REMOVED*** <= set(d.keys())
+    assert {"chain", "stage_count", "files", "project_root"} <= set(d.keys())
 
 
 def test_to_chain_run_dict_is_1to1():
@@ -134,13 +134,13 @@ def test_to_chain_run_dict_is_1to1():
     req = _make_request()
     a = Artifact.from_chain_run(run, req)
     cr = a.to_chain_run_dict()
-    assert cr["project_id"***REMOVED*** == "p1"
-    assert cr["stage_count"***REMOVED*** == 2
-    assert cr["chain"***REMOVED***[0***REMOVED***["role_id"***REMOVED*** == "explainer"
-    assert cr["validation_registry_status"***REMOVED*** == "loaded"
-    assert cr["started_at"***REMOVED*** == "2026-08-22T12:00:00+00:00"
-    assert cr["finished_at"***REMOVED*** == "2026-08-22T12:01:00+00:00"
-    assert cr["overall"***REMOVED*** == "ok"
+    assert cr["project_id"] == "p1"
+    assert cr["stage_count"] == 2
+    assert cr["chain"][0]["role_id"] == "explainer"
+    assert cr["validation_registry_status"] == "loaded"
+    assert cr["started_at"] == "2026-08-22T12:00:00+00:00"
+    assert cr["finished_at"] == "2026-08-22T12:01:00+00:00"
+    assert cr["overall"] == "ok"
 
 
 def test_round_trip_dict():
@@ -170,7 +170,7 @@ def test_resolve_files_only_existing(tmp_path: Path):
     a = Artifact.from_chain_run(run, req, files=("RUNNABLE.md", "MISSING.md"))
     resolved = a.resolve_files(tmp_path)
     assert len(resolved) == 1
-    assert resolved[0***REMOVED***.name == "RUNNABLE.md"
+    assert resolved[0].name == "RUNNABLE.md"
 
 
 def test_from_chain_run_accepts_dict_run():
@@ -178,18 +178,18 @@ def test_from_chain_run_accepts_dict_run():
         "project_id": "p1",
         "project_root": "/tmp/p1",
         "stage_count": 1,
-        "chain": [{"role_id": "explainer", "mode": "check_only", "status": "ok", "details": "d"***REMOVED******REMOVED***,
+        "chain": [{"role_id": "explainer", "mode": "check_only", "status": "ok", "details": "d"}],
         "overall": "partial",
         "validation_summary": None,
-    ***REMOVED***
+    }
     req_d = {
         "opportunity_id": "opp-1",
         "project_id": "p1",
         "capability": "cap",
         "factory_id": "fac",
         "forge_id": "for",
-        "output_spec": {"artifact_kind": "generic_artifact", "target": "t/"***REMOVED***,
-    ***REMOVED***
+        "output_spec": {"artifact_kind": "generic_artifact", "target": "t/"},
+    }
     a = Artifact.from_chain_run(run_d, req_d)
     assert a.overall == "partial"
     assert a.stage_count == 1
@@ -213,7 +213,7 @@ def test_resolve_files_rejects_path_traversal(tmp_path: Path):
         capability="c", factory_id="f", forge_id="g", overall="ok",
         files=("../outside-artifact.md",),
     )
-    assert a.resolve_files(tmp_path) == [***REMOVED***
+    assert a.resolve_files(tmp_path) == []
 
 
 def test_factory_normalize_output_uses_artifact_contract():
@@ -223,19 +223,19 @@ def test_factory_normalize_output_uses_artifact_contract():
         validation_registry_status="loaded",
     )
     result = BaseFactory().normalize_output(run, object(), _make_request())
-    assert result["kind"***REMOVED*** == "content_artifact"
-    assert result["factory_id"***REMOVED*** == "content"
-    assert result["chain"***REMOVED***[0***REMOVED***["role_id"***REMOVED*** == "explainer"
-    assert result["started_at"***REMOVED*** == "2026-08-22T12:00:00+00:00"
-    assert result["validation_registry_status"***REMOVED*** == "loaded"
+    assert result["kind"] == "content_artifact"
+    assert result["factory_id"] == "content"
+    assert result["chain"][0]["role_id"] == "explainer"
+    assert result["started_at"] == "2026-08-22T12:00:00+00:00"
+    assert result["validation_registry_status"] == "loaded"
 
 
 def test_from_chain_run_validation_summary_projection():
     class _VS:
         def to_dict(self):
-            return {"overall": "ok", "role_reports": [***REMOVED******REMOVED***
+            return {"overall": "ok", "role_reports": []}
 
     run = _make_run(validation_summary=_VS())
     req = _make_request()
     a = Artifact.from_chain_run(run, req)
-    assert a.validation == {"overall": "ok", "role_reports": [***REMOVED******REMOVED***
+    assert a.validation == {"overall": "ok", "role_reports": []}

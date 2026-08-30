@@ -11,7 +11,7 @@ Hermetic: фейковые Registry/ForgeFacade/MemoryStore, без side-effect 
 from __future__ import annotations
 
 import sys
-***REMOVED***
+}
 
 import pytest
 
@@ -32,7 +32,7 @@ class _FakeScenario:
         self.scenario_id = scenario_id
         self.display_name = scenario_id
         self.capabilities = list(capabilities)
-        self.capability = capabilities[0***REMOVED*** if capabilities else None
+        self.capability = capabilities[0] if capabilities else None
 
 
 class _FakeRole:
@@ -51,45 +51,45 @@ class _FakeRegistry:
         if isinstance(query, str) and query:
             matched = [
                 (s, r, sc) for s, r, sc in self._proposals
-                if query in (s.capabilities or [***REMOVED***)
-            ***REMOVED***
+                if query in (s.capabilities or [])
+            ]
             if matched:
-                return matched[:top_n***REMOVED***
-        return list(self._proposals)[:top_n***REMOVED***
+                return matched[:top_n]
+        return list(self._proposals)[:top_n]
 
     def list_scenarios(self):
-        return [s for s, _r, _sc in self._proposals***REMOVED***
+        return [s for s, _r, _sc in self._proposals]
 
 
 class _FakeChainRun:
     def __init__(self, overall: str = "ok"):
         self.overall = overall
-        self.validation_summary = {"ok": True, "passed": 1***REMOVED***
+        self.validation_summary = {"ok": True, "passed": 1}
 
 
 class _FakeForgeFacade:
     def __init__(self, overall: str = "ok"):
-        self.calls: list = [***REMOVED***
+        self.calls: list = []
         self.overall = overall
 
     def run_chain(self, project, role_ids=None, **kw):
         self.calls.append({"project_root": getattr(project, "root", None),
-                           "role_ids": role_ids***REMOVED***)
+                           "role_ids": role_ids])
         return _FakeChainRun(self.overall)
 
 
 class _FakeMemoryStore:
     def __init__(self):
-        self.kos: list = [***REMOVED***
-        self.events: list = [***REMOVED***
+        self.kos: list = []
+        self.events: list = []
 
     def store_knowledge(self, **kw) -> str:
-        kid = f"ko-{len(self.kos) + 1***REMOVED***"
+        kid = f"ko-{len(self.kos) + 1}"
         self.kos.append(kw)
         return kid
 
     def record_learning_event(self, **kw) -> str:
-        eid = f"ev-{len(self.events) + 1***REMOVED***"
+        eid = f"ev-{len(self.events) + 1}"
         self.events.append(kw)
         return eid
 
@@ -105,8 +105,8 @@ class _FakeFactoryRegistry:
         if pair is None:
             return None
         fp, fg = pair
-        return (type("FP", (), {"factory_id": fp***REMOVED***)(),
-                type("FG", (), {"forge_id": fg***REMOVED***)())
+        return (type("FP", (), {"factory_id": fp})(),
+                type("FG", (), {"forge_id": fg})())
 
 
 def _make_opp(opp_id="opp-test1", project_id="proj-test", capability="code",
@@ -129,13 +129,13 @@ def _make_opp(opp_id="opp-test1", project_id="proj-test", capability="code",
                 "assertion": "selected_factory == 'test'",
                 "expected_outcome": "ok",
                 "context": "Phase 11 third domain universality",
-            ***REMOVED***,
-        ***REMOVED***,
-        "scenario": {"capability": capability***REMOVED***,
+            },
+        },
+        "scenario": {"capability": capability},
         "source_path": "data_13/opportunities.yaml",
         "evidence_path": "",
-        "related_whims": [***REMOVED***,
-    ***REMOVED***)()
+        "related_whims": [],
+    ])()
 
 
 # ─── 1. Capability resolution (§16 unit) ────────────────────────────────────
@@ -144,23 +144,23 @@ def test_1_capabilities_registered_in_closed_vocab():
     """Code-токен должен быть в KNOWN_CAPABILITIES (register-first, ANTI-6b)."""
     from core_02.blueprint_v3 import KNOWN_CAPABILITIES
     for cap in TEST_CAPABILITIES:
-        assert cap in KNOWN_CAPABILITIES, f"{cap***REMOVED*** отсутствует в KNOWN_CAPABILITIES"
+        assert cap in KNOWN_CAPABILITIES, f"{cap} отсутствует в KNOWN_CAPABILITIES"
 
 
 def test_2_resolve_code_capability_via_fake_registry():
     tf = TestFactory(factory_registry=_FakeFactoryRegistry({
         "code": ("test", "verifier"),
-    ***REMOVED***))
+    ]))
     pair = tf.resolve("code")
     assert pair is not None
-    assert pair[0***REMOVED***.factory_id == "test"
-    assert pair[1***REMOVED***.forge_id == "verifier"
+    assert pair[0].factory_id == "test"
+    assert pair[1].forge_id == "verifier"
 
 
 def test_3_resolve_unknown_capability_returns_none():
     tf = TestFactory(factory_registry=_FakeFactoryRegistry({
         "code": ("test", "verifier"),
-    ***REMOVED***))
+    ]))
     # Не из нашего домена.
     assert tf.resolve("article_generation") is None
     assert tf.resolve("research") is None
@@ -181,26 +181,26 @@ def test_5_normalize_input_test_specific_fields():
         "assertion": "selected_factory == 'test'",
         "expected_outcome": "ok",
         "context": "Phase 11 verification",
-    ***REMOVED***)
+    ])
     inp = tf.normalize_input(opp)
-    assert inp["requested_code"***REMOVED*** == "select_forge_test"
-    assert inp["test_assertion"***REMOVED*** == "selected_factory == 'test'"
-    assert inp["expected_outcome"***REMOVED*** == "ok"
-    assert inp["verification_context"***REMOVED*** == "Phase 11 verification"
-    assert inp["title"***REMOVED***.startswith("Run test:")
-    assert inp["source"***REMOVED*** == "forge-test"
-    assert inp["provenance"***REMOVED***["capability"***REMOVED*** == "code"
+    assert inp["requested_code"] == "select_forge_test"
+    assert inp["test_assertion"] == "selected_factory == 'test'"
+    assert inp["expected_outcome"] == "ok"
+    assert inp["verification_context"] == "Phase 11 verification"
+    assert inp["title"].startswith("Run test:")
+    assert inp["source"] == "forge-test"
+    assert inp["provenance"]["capability"] == "code"
 
 
 def test_5b_normalize_input_no_test_block_falls_back():
     """Без test-блока — fallback на title/description (fail-safe)."""
     tf = TestFactory()
     opp = _make_opp(test_block=None)
-    opp.provenance = {"source": "forge-test", "capability": "code"***REMOVED***
+    opp.provenance = {"source": "forge-test", "capability": "code"}
     inp = tf.normalize_input(opp)
-    assert inp["requested_code"***REMOVED*** == opp.title  # fallback на title
-    assert "pending" in inp["test_assertion"***REMOVED***  # дефолт assertion
-    assert inp["expected_outcome"***REMOVED*** == "ok"  # дефолт outcome
+    assert inp["requested_code"] == opp.title  # fallback на title
+    assert "pending" in inp["test_assertion"]  # дефолт assertion
+    assert inp["expected_outcome"] == "ok"  # дефолт outcome
 
 
 # ─── 3. Execution request (§16 unit) ────────────────────────────────────────
@@ -208,7 +208,7 @@ def test_5b_normalize_input_no_test_block_falls_back():
 def test_6_build_execution_request():
     tf = TestFactory(factory_registry=_FakeFactoryRegistry({
         "code": ("test", "verifier"),
-    ***REMOVED***))
+    ]))
     opp = _make_opp()
     req = tf.build_execution_request(opp, "code")
     assert isinstance(req, ExecutionRequest)
@@ -216,12 +216,12 @@ def test_6_build_execution_request():
     assert req.forge_id == "verifier"
     assert req.capability == "code"
     assert req.role_ids == TEST_ROLE_IDS
-    assert req.inputs["requested_code"***REMOVED*** == "deterministic_test_request"
-    assert "projects_17/proj-test/forge/" in req.output_spec["target"***REMOVED***
+    assert req.inputs["requested_code"] == "deterministic_test_request"
+    assert "projects_17/proj-test/forge/" in req.output_spec["target"]
 
 
 def test_7_build_request_missing_factory_returns_none():
-    tf = TestFactory(factory_registry=_FakeFactoryRegistry({***REMOVED***))
+    tf = TestFactory(factory_registry=_FakeFactoryRegistry({}))
     opp = _make_opp()
     assert tf.build_execution_request(opp, "code") is None
 
@@ -230,15 +230,15 @@ def test_8_execute_dry_run_no_forge_call():
     """dry_run=True формирует request, НЕ вызывает ForgeFacade."""
     facade = _FakeForgeFacade()
     tf = TestFactory(
-        factory_registry=_FakeFactoryRegistry({"code": ("test", "verifier")***REMOVED***),
+        factory_registry=_FakeFactoryRegistry({"code": ("test", "verifier")}),
         forge_facade=facade,
     )
     opp = _make_opp()
     result = tf.execute(opp, dry_run=True)
-    assert result["ok"***REMOVED*** is True
-    assert result["dry_run"***REMOVED*** is True
-    assert result["request"***REMOVED***["factory_id"***REMOVED*** == "test"
-    assert facade.calls == [***REMOVED***  # ForgeFacade не вызывался
+    assert result["ok"] is True
+    assert result["dry_run"] is True
+    assert result["request"]["factory_id"] == "test"
+    assert facade.calls == []  # ForgeFacade не вызывался
 
 
 # ─── 4. Integration vertical slice (§16 integration) ────────────────────────
@@ -248,65 +248,65 @@ def test_9_execute_full_slice_artifact_and_feedback():
     facade = _FakeForgeFacade(overall="ok")
     memory = _FakeMemoryStore()
     tf = TestFactory(
-        factory_registry=_FakeFactoryRegistry({"code": ("test", "verifier")***REMOVED***),
+        factory_registry=_FakeFactoryRegistry({"code": ("test", "verifier")}),
         forge_facade=facade,
         memory_store=memory,
     )
     opp = _make_opp()
     tf._resolve_project = lambda opp, project_root=None: type(
-        "Proj", (), {"root": Path("/tmp/fake_test_proj")***REMOVED***)()
+        "Proj", (), {"root": Path("/tmp/fake_test_proj")})()
     result = tf.execute(opp)
-    assert result["ok"***REMOVED*** is True
-    art = result["artifact"***REMOVED***
-    assert art["kind"***REMOVED*** == "verifier_report"
-    assert art["factory_id"***REMOVED*** == "test"
-    assert art["forge_id"***REMOVED*** == "verifier"
-    assert art["overall"***REMOVED*** == "ok"
-    assert facade.calls and facade.calls[0***REMOVED***["role_ids"***REMOVED*** == TEST_ROLE_IDS
-    assert memory.kos and memory.kos[0***REMOVED***["kind"***REMOVED*** == "candidate"
-    assert "test_factory" in memory.kos[0***REMOVED***["tags"***REMOVED***
-    assert "code" in memory.kos[0***REMOVED***["tags"***REMOVED***
-    assert memory.events and memory.events[0***REMOVED***["outcome"***REMOVED*** == "success"
+    assert result["ok"] is True
+    art = result["artifact"]
+    assert art["kind"] == "verifier_report"
+    assert art["factory_id"] == "test"
+    assert art["forge_id"] == "verifier"
+    assert art["overall"] == "ok"
+    assert facade.calls and facade.calls[0]["role_ids"] == TEST_ROLE_IDS
+    assert memory.kos and memory.kos[0]["kind"] == "candidate"
+    assert "test_factory" in memory.kos[0]["tags"]
+    assert "code" in memory.kos[0]["tags"]
+    assert memory.events and memory.events[0]["outcome"] == "success"
 
 
 def test_10_execute_failed_run_marks_raw_and_failure():
     facade = _FakeForgeFacade(overall="failed")
     memory = _FakeMemoryStore()
     tf = TestFactory(
-        factory_registry=_FakeFactoryRegistry({"code": ("test", "verifier")***REMOVED***),
+        factory_registry=_FakeFactoryRegistry({"code": ("test", "verifier")}),
         forge_facade=facade,
         memory_store=memory,
     )
     opp = _make_opp()
     tf._resolve_project = lambda opp, project_root=None: type(
-        "Proj", (), {"root": Path("/tmp/fake_test_proj")***REMOVED***)()
+        "Proj", (), {"root": Path("/tmp/fake_test_proj")})()
     result = tf.execute(opp)
-    assert result["ok"***REMOVED*** is True  # fail-safe
-    assert result["artifact"***REMOVED***["overall"***REMOVED*** == "failed"
-    assert memory.kos[0***REMOVED***["lifecycle_stage"***REMOVED*** == "raw"
-    assert memory.events[0***REMOVED***["outcome"***REMOVED*** == "failure"
+    assert result["ok"] is True  # fail-safe
+    assert result["artifact"]["overall"] == "failed"
+    assert memory.kos[0]["lifecycle_stage"] == "raw"
+    assert memory.events[0]["outcome"] == "failure"
 
 
 def test_11_execute_no_capability_returns_error():
     tf = TestFactory()
     opp = _make_opp(capability=None)
-    opp.provenance = {"source": "forge-test"***REMOVED***
+    opp.provenance = {"source": "forge-test"}
     opp.scenario = None
     result = tf.execute(opp)
-    assert result["ok"***REMOVED*** is False
-    assert "no capability" in result["error"***REMOVED***
+    assert result["ok"] is False
+    assert "no capability" in result["error"]
 
 
 def test_12_execute_unresolvable_project_fails_safe():
     tf = TestFactory(
-        factory_registry=_FakeFactoryRegistry({"code": ("test", "verifier")***REMOVED***),
+        factory_registry=_FakeFactoryRegistry({"code": ("test", "verifier")}),
         forge_facade=_FakeForgeFacade(),
     )
     opp = _make_opp(project_id="nonexistent_test_project_xyz")
     tf._resolve_project = lambda opp, project_root=None: None
     result = tf.execute(opp)
-    assert result["ok"***REMOVED*** is False
-    assert "unresolved" in result["error"***REMOVED***
+    assert result["ok"] is False
+    assert "unresolved" in result["error"]
 
 
 # ─── 5. Negative domain-isolation (§17) ──────────────────────────────────────
@@ -329,10 +329,10 @@ def test_13a_domain_isolation_si_agnostic(tmp_path):
         "code": ("test", "verifier"),
         "article_generation": ("content", "writing"),
         "research": ("research", "analysis"),
-    ***REMOVED***)
-    assert factory_registry.select_forge("code")[0***REMOVED***.factory_id == "test"
-    assert factory_registry.select_forge("article_generation")[0***REMOVED***.factory_id == "content"
-    assert factory_registry.select_forge("research")[0***REMOVED***.factory_id == "research"
+    ])
+    assert factory_registry.select_forge("code")[0].factory_id == "test"
+    assert factory_registry.select_forge("article_generation")[0].factory_id == "content"
+    assert factory_registry.select_forge("research")[0].factory_id == "research"
 
 
 @pytest.mark.xfail(
@@ -352,11 +352,11 @@ def test_13b_si_routes_code_opp_to_test_factory(tmp_path):
 
     factory_registry = _FakeFactoryRegistry({
         "code": ("test", "verifier"),
-    ***REMOVED***)
+    ])
     scenarios = [
-        (_FakeScenario("scenario_test", ["code"***REMOVED***), _FakeRole("verifier"), 0.9),
-        (_FakeScenario("scenario_other", ["x"***REMOVED***), _FakeRole("other"), 0.6),
-    ***REMOVED***
+        (_FakeScenario("scenario_test", ["code"]), _FakeRole("verifier"), 0.9),
+        (_FakeScenario("scenario_other", ["x"]), _FakeRole("other"), 0.6),
+    ]
     registry = _FakeRegistry(scenarios)
     si = ScenarioIntelligence(registry=registry, factory_registry=factory_registry)
     opp_code = _make_opp(opp_id="opp-c", capability="code")
@@ -372,8 +372,8 @@ def test_14_real_factory_registry_resolves_test_manifests():
     reg = FactoryRegistry(Path("runtime_05/factories"))
     pair = reg.select_forge("code")
     assert pair is not None
-    assert pair[0***REMOVED***.factory_id == "test"
-    assert pair[1***REMOVED***.forge_id == "verifier"
+    assert pair[0].factory_id == "test"
+    assert pair[1].forge_id == "verifier"
 
 
 # ─── 6. THIRD-CLIENT UNIVERSALITY meta-test (Phase 11 ключевой) ──────────────
@@ -393,26 +393,26 @@ def test_15_universal_factory_registry_routes_three_domains(tmp_path):
     # Content domain (Phase 9).
     pair_content = reg.select_forge("article_generation")
     assert pair_content is not None, "Phase 9 capability article_generation не резолвится"
-    assert pair_content[0***REMOVED***.factory_id == "content"
-    assert pair_content[1***REMOVED***.forge_id == "writing"
+    assert pair_content[0].factory_id == "content"
+    assert pair_content[1].forge_id == "writing"
 
     # Research domain (Phase 10).
     pair_research = reg.select_forge("research")
     assert pair_research is not None, "Phase 10 capability research не резолвится"
-    assert pair_research[0***REMOVED***.factory_id == "research"
-    assert pair_research[1***REMOVED***.forge_id == "analysis"
+    assert pair_research[0].factory_id == "research"
+    assert pair_research[1].forge_id == "analysis"
 
     # Test domain (Phase 11).
     pair_test = reg.select_forge("code")
     assert pair_test is not None, "Phase 11 capability code не резолвится"
-    assert pair_test[0***REMOVED***.factory_id == "test"
-    assert pair_test[1***REMOVED***.forge_id == "verifier"
+    assert pair_test[0].factory_id == "test"
+    assert pair_test[1].forge_id == "verifier"
 
     # ALL THREE domains distinguishable.
-    factories = {pair_content[0***REMOVED***.factory_id, pair_research[0***REMOVED***.factory_id, pair_test[0***REMOVED***.factory_id***REMOVED***
+    factories = {pair_content[0].factory_id, pair_research[0].factory_id, pair_test[0].factory_id}
     # EXACTLY-3 strict set equality (Phase 12 G-11.5 close): any 4th factory OR rename fails this.
-    assert factories == {"content", "research", "test"***REMOVED***, (
-        f"ожидалось EXACTLY {{content, research, test***REMOVED******REMOVED*** — получили {factories***REMOVED***. "
+    assert factories == {"content", "research", "test"}, (
+        f"ожидалось EXACTLY {{content, research, test}} — получили {factories}. "
         f"Это либо Phase 12 BaseFactory subclass добавил новый домен и не обновил §20 row 25 / CHANGELOG, "            f"либо G-11.5 нарушен (test_15 стал lenient)."
         )
 
@@ -448,25 +448,25 @@ def test_16_per_instance_warnings_no_cross_pollution():
 
         # Three instances, each in turn triggers the lazy-load failure.
         inst_t = TestFactory(factory_registry=None, forge_facade=None)
-        assert inst_t._import_warnings == [***REMOVED***
+        assert inst_t._import_warnings == []
         inst_t._lazy_factory_registry()
-        assert inst_t._import_warnings == ["factory_registry: unavailable"***REMOVED***
+        assert inst_t._import_warnings == ["factory_registry: unavailable"]
 
         inst_c = ContentFactory(factory_registry=None, forge_facade=None)
-        assert inst_c._import_warnings == [***REMOVED***
+        assert inst_c._import_warnings == []
         inst_c._lazy_factory_registry()
-        assert inst_c._import_warnings == ["factory_registry: unavailable"***REMOVED***
+        assert inst_c._import_warnings == ["factory_registry: unavailable"]
 
         inst_r = ResearchFactory(factory_registry=None, forge_facade=None)
-        assert inst_r._import_warnings == [***REMOVED***
+        assert inst_r._import_warnings == []
         inst_r._lazy_factory_registry()
-        assert inst_r._import_warnings == ["factory_registry: unavailable"***REMOVED***
+        assert inst_r._import_warnings == ["factory_registry: unavailable"]
 
         # After all 3 forced lazy-loads, NO instance appended to the others'
         # warnings lists — per-instance isolation preserved.
-        assert inst_t._import_warnings == ["factory_registry: unavailable"***REMOVED***
-        assert inst_c._import_warnings == ["factory_registry: unavailable"***REMOVED***
-        assert inst_r._import_warnings == ["factory_registry: unavailable"***REMOVED***
+        assert inst_t._import_warnings == ["factory_registry: unavailable"]
+        assert inst_c._import_warnings == ["factory_registry: unavailable"]
+        assert inst_r._import_warnings == ["factory_registry: unavailable"]
 
         # Deprecated singleton untouched (per-instance migration complete).
         # Deprecated singleton untouched (per-instance migration complete) —
@@ -476,7 +476,7 @@ def test_16_per_instance_warnings_no_cross_pollution():
             depr_after = list(fb._LAZY_IMPORT_ERRORS)
         assert depr_after == depr_before, (
             f"DEPRECATED module-level singleton must NOT receive appends from "
-            f"per-instance lazy methods. before={depr_before!r***REMOVED*** after={depr_after!r***REMOVED***"
+            f"per-instance lazy methods. before={depr_before!r} after={depr_after!r}"
         )
     finally:
         fb._lazy_import = original_lazy_import

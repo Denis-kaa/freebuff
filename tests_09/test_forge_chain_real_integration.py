@@ -7,7 +7,7 @@ Real integration smoke test для `forge chain` CLI на demo-проектах 
 (vkusvill_demo + interior_planner + vkusvill_research), закрывает FWD-1 +
 FWD-2 из v5.158/v5.161/v5.162 OPEN_QUESTIONS.
 
-Запускает `python scripts_01/forge.py chain <project> [--resume***REMOVED*** --json`
+Запускает `python scripts_01/forge.py chain <project> [--resume] --json`
 через subprocess.run, парсит JSON output, asserts на:
 - exit code == 0
 - JSON parse passes (well-formed)
@@ -15,7 +15,7 @@ FWD-2 из v5.158/v5.161/v5.162 OPEN_QUESTIONS.
   chain, overall, started_at, finished_at, validation_registry_status,
   validation_summary
 - chain length >= 1 (in practice == 14 per PIPELINE_CHAIN)
-- statuses ∈ {ok, run_ok, missing, run_failed, partial, skipped, init_error***REMOVED***
+- statuses ∈ {ok, run_ok, missing, run_failed, partial, skipped, init_error}
 - project_id matches directory stem (case-insensitive, hyphen/underscore agnostic)
 - duration < 90s per subprocess invocation (CI budget)
 """
@@ -25,7 +25,7 @@ import json
 import subprocess
 import sys
 from collections import Counter
-***REMOVED***
+}
 
 import pytest
 
@@ -43,7 +43,7 @@ from core_02.forge_facade import PIPELINE_CHAIN  # noqa: E402
 pytestmark = [
     pytest.mark.slow,
     pytest.mark.xdist_group("forge_real_registry"),
-***REMOVED***
+]
 
 # Project root = repo root (parent of tests_09/)
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -70,7 +70,7 @@ EXPECTED_JSON_KEYS = {
     "finished_at",
     "validation_registry_status",
     "validation_summary",
-***REMOVED***
+}
 
 # Status whitelist (per ForgeFacade.run_chain semantics).
 ALLOWED_STATUSES = frozenset({
@@ -81,7 +81,7 @@ ALLOWED_STATUSES = frozenset({
     "partial",
     "skipped",
     "init_error",
-***REMOVED***)
+])
 
 
 def _project_id_canonical(directory: Path) -> str:
@@ -114,7 +114,7 @@ def _run_chain(
     resume: bool = False,
     timeout_s: int = SUBPROCESS_TIMEOUT_S,
 ) -> subprocess.CompletedProcess:
-    """Run `python scripts_01/forge.py chain <project> [--resume***REMOVED*** --json`.
+    """Run `python scripts_01/forge.py chain <project> [--resume] --json`.
 
     Returns CompletedProcess with stdout (JSON) + stderr + returncode.
     """
@@ -124,7 +124,7 @@ def _run_chain(
         "chain",
         str(project_path),
         "--json",
-    ***REMOVED***
+    ]
     if resume:
         cmd.append("--resume")
 
@@ -144,20 +144,20 @@ def _parse_chain_json(result: subprocess.CompletedProcess) -> dict:
     `forge.py chain --resume` prints a diagnostical line in STDOUT BEFORE the
     JSON payload when there is no prior ok/run_ok в registry.last_pipeline
     (e.g. first-run project), вида:
-        "  [resume***REMOVED*** нет prior ok/run_ok в last_pipeline; running from scratch\n"
+        "  [resume] нет prior ok/run_ok в last_pipeline; running from scratch\n"
     Such preamble breaks strict `json.loads(stdout)`, поэтому мы находим first
     JSON delimiter ("{" или "[") и slice stdout оттуда.
     """
     stdout = result.stdout
     # Find first '{' — JSON object delimiter — to skip any informational
     # preamble that forge.py may emit to stdout (e.g. --resume diagnostic
-    # message prefixed with "[resume***REMOVED*** ...").
+    # message prefixed with "[resume] ...").
     #
     # IMPORTANT: do NOT also look for '['! Such a scan would falsely match
-    # the leading '[' of the "[resume***REMOVED*** ..." preamble text itself, returning
+    # the leading '[' of the "[resume] ..." preamble text itself, returning
     # a position BEFORE the actual JSON object opens (after '\n{'). Verified
     # in v5.164.0 third fix-up iteration: `find('[')` returned position of
-    # `[resume***REMOVED***` bracket, slice returned preamble string, JSONDecodeError.
+    # `[resume]` bracket, slice returned preamble string, JSONDecodeError.
     #
     # We rely on object shape since forge.py chain --json always emits a
     # JSON object (not array) — confirmed by 9-key schema pre-flight.
@@ -165,34 +165,34 @@ def _parse_chain_json(result: subprocess.CompletedProcess) -> dict:
     if json_start < 0:
         pytest.fail(
             f"No JSON object found in forge.py chain --json stdout:\n"
-            f"  exitcode={result.returncode***REMOVED***\n"
-            f"  stdout={stdout[:500***REMOVED***!r***REMOVED***\n"
-            f"  stderr={result.stderr[:500***REMOVED***!r***REMOVED***"
+            f"  exitcode={result.returncode}\n"
+            f"  stdout={stdout[:500]!r}\n"
+            f"  stderr={result.stderr[:500]!r}"
         )
-    json_payload = stdout[json_start:***REMOVED***
+    json_payload = stdout[json_start:]
     try:
         return json.loads(json_payload)
     except json.JSONDecodeError as exc:
         pytest.fail(
             f"Malformed JSON stdout from forge.py chain --json:\n"
-            f"  exitcode={result.returncode***REMOVED***\n"
-            f"  json_start_offset={json_start***REMOVED***\n"
-            f"  payload_first300={json_payload[:300***REMOVED***!r***REMOVED***\n"
-            f"  stderr_first200={result.stderr[:200***REMOVED***!r***REMOVED***\n"
-            f"  json_error={exc!r***REMOVED***"
+            f"  exitcode={result.returncode}\n"
+            f"  json_start_offset={json_start}\n"
+            f"  payload_first300={json_payload[:300]!r}\n"
+            f"  stderr_first200={result.stderr[:200]!r}\n"
+            f"  json_error={exc!r}"
         )
 
 
 def _ensure_preconditions() -> None:
     if not FORGE_CLI.exists():
-        pytest.skip(f"forge CLI not found at {FORGE_CLI***REMOVED***")
+        pytest.skip(f"forge CLI not found at {FORGE_CLI}")
     if not VKUSVILL_DEMO.exists():
-        pytest.skip(f"vkusvill_demo project missing at {VKUSVILL_DEMO***REMOVED***")
+        pytest.skip(f"vkusvill_demo project missing at {VKUSVILL_DEMO}")
     if not INTERIOR_PLANNER.exists():
-        pytest.skip(f"interior_planner project missing at {INTERIOR_PLANNER***REMOVED***")
+        pytest.skip(f"interior_planner project missing at {INTERIOR_PLANNER}")
     # v5.166.0: also verify vkusvill_research (originally-specified FWD-1 target).
     if not VKUSVILL_RESEARCH.exists():
-        pytest.skip(f"vkusvill_research project missing at {VKUSVILL_RESEARCH***REMOVED***")
+        pytest.skip(f"vkusvill_research project missing at {VKUSVILL_RESEARCH}")
 
 
 # Session-scoped autouse fixture: runs once at module setup to verify all
@@ -211,9 +211,9 @@ def vkusvill_first_run() -> dict:
     """First-run subprocess for vkusvill_demo (no --resume). JSON-decoded."""
     result = _run_chain(VKUSVILL_DEMO, resume=False)
     assert result.returncode == 0, (
-        f"forge chain exited {result.returncode***REMOVED*** on vkusvill_demo first-run:\n"
-        f"  stdout={result.stdout[:300***REMOVED***!r***REMOVED***\n"
-        f"  stderr={result.stderr[:300***REMOVED***!r***REMOVED***"
+        f"forge chain exited {result.returncode} on vkusvill_demo first-run:\n"
+        f"  stdout={result.stdout[:300]!r}\n"
+        f"  stderr={result.stderr[:300]!r}"
     )
     return _parse_chain_json(result)
 
@@ -231,9 +231,9 @@ def vkusvill_resume_run(vkusvill_first_run: dict) -> dict:
     """
     result = _run_chain(VKUSVILL_DEMO, resume=True)
     assert result.returncode == 0, (
-        f"forge chain --resume exited {result.returncode***REMOVED***:\n"
-        f"  stdout={result.stdout[:300***REMOVED***!r***REMOVED***\n"
-        f"  stderr={result.stderr[:300***REMOVED***!r***REMOVED***"
+        f"forge chain --resume exited {result.returncode}:\n"
+        f"  stdout={result.stdout[:300]!r}\n"
+        f"  stderr={result.stderr[:300]!r}"
     )
     return _parse_chain_json(result)
 
@@ -243,9 +243,9 @@ def interior_first_run() -> dict:
     """First-run subprocess for interior_planner (no --resume)."""
     result = _run_chain(INTERIOR_PLANNER, resume=False)
     assert result.returncode == 0, (
-        f"forge chain exited {result.returncode***REMOVED*** on interior_planner first-run:\n"
-        f"  stdout={result.stdout[:300***REMOVED***!r***REMOVED***\n"
-        f"  stderr={result.stderr[:300***REMOVED***!r***REMOVED***"
+        f"forge chain exited {result.returncode} on interior_planner first-run:\n"
+        f"  stdout={result.stdout[:300]!r}\n"
+        f"  stderr={result.stderr[:300]!r}"
     )
     return _parse_chain_json(result)
 
@@ -255,9 +255,9 @@ def vkusvill_research_first_run() -> dict:
     """First-run subprocess for vkusvill_research (no --resume, originally-specified FWD-1 target)."""
     result = _run_chain(VKUSVILL_RESEARCH, resume=False)
     assert result.returncode == 0, (
-        f"forge chain exited {result.returncode***REMOVED*** on vkusvill_research first-run:\n"
-        f"  stdout={result.stdout[:300***REMOVED***!r***REMOVED***\n"
-        f"  stderr={result.stderr[:300***REMOVED***!r***REMOVED***"
+        f"forge chain exited {result.returncode} on vkusvill_research first-run:\n"
+        f"  stdout={result.stdout[:300]!r}\n"
+        f"  stderr={result.stderr[:300]!r}"
     )
     return _parse_chain_json(result)
 
@@ -271,9 +271,9 @@ def vkusvill_research_resume_run(vkusvill_research_first_run: dict) -> dict:
     """
     result = _run_chain(VKUSVILL_RESEARCH, resume=True)
     assert result.returncode == 0, (
-        f"forge chain --resume exited {result.returncode***REMOVED*** on vkusvill_research:\n"
-        f"  stdout={result.stdout[:300***REMOVED***!r***REMOVED***\n"
-        f"  stderr={result.stderr[:300***REMOVED***!r***REMOVED***"
+        f"forge chain --resume exited {result.returncode} on vkusvill_research:\n"
+        f"  stdout={result.stdout[:300]!r}\n"
+        f"  stderr={result.stderr[:300]!r}"
     )
     return _parse_chain_json(result)
 
@@ -294,31 +294,31 @@ class TestRealChainIntegration:
 
         missing_keys = EXPECTED_JSON_KEYS - set(data.keys())
         assert not missing_keys, (
-            f"vkusvill_demo first-run JSON missing keys: {sorted(missing_keys)***REMOVED***"
+            f"vkusvill_demo first-run JSON missing keys: {sorted(missing_keys)}"
         )
 
-        chain = data.get("chain") or [***REMOVED***
+        chain = data.get("chain") or []
         assert len(chain) >= 1, (
-            f"vkusvill_demo first-run chain empty: {chain!r***REMOVED***"
+            f"vkusvill_demo first-run chain empty: {chain!r}"
         )
 
         statuses = Counter(r.get("status", "?") for r in chain)
         invalid = set(statuses.keys()) - ALLOWED_STATUSES
         assert not invalid, (
-            f"vkusvill_demo first-run has invalid statuses: {invalid***REMOVED***\n"
-            f"  full_counter={dict(statuses)***REMOVED***"
+            f"vkusvill_demo first-run has invalid statuses: {invalid}\n"
+            f"  full_counter={dict(statuses)}"
         )
 
         # Project identification: tolerate hyphen/underscore variant (registry.yaml
         # может объявлять `vkusvill-demo` или `vkusvill_demo` — обе OK).
-        assert _matches_project_id(data["project_id"***REMOVED***, VKUSVILL_DEMO), (
-            f"vkusvill_demo project_id mismatch: {data['project_id'***REMOVED***!r***REMOVED*** "
-            f"(directory stem={VKUSVILL_DEMO.name!r***REMOVED***)"
+        assert _matches_project_id(data["project_id"], VKUSVILL_DEMO), (
+            f"vkusvill_demo project_id mismatch: {data['project_id']!r} "
+            f"(directory stem={VKUSVILL_DEMO.name!r})"
         )
 
-        assert data["stage_count"***REMOVED*** == len(chain), (
-            f"vkusvill_demo stage_count={data['stage_count'***REMOVED******REMOVED*** != "
-            f"len(chain)={len(chain)***REMOVED***"
+        assert data["stage_count"] == len(chain), (
+            f"vkusvill_demo stage_count={data['stage_count']} != "
+            f"len(chain)={len(chain)}"
         )
 
     def test_vkusvill_demo_resume_emits_well_formed_json(
@@ -338,23 +338,23 @@ class TestRealChainIntegration:
         data_resume = vkusvill_resume_run
         data_first = vkusvill_first_run
 
-        chain = data_resume.get("chain") or [***REMOVED***
+        chain = data_resume.get("chain") or []
         assert len(chain) >= 1, (
-            f"--resume on vkusvill_demo collapsed to empty chain: {chain!r***REMOVED***"
+            f"--resume on vkusvill_demo collapsed to empty chain: {chain!r}"
         )
 
         # Schema correctness (same as first-run)
         missing_keys = EXPECTED_JSON_KEYS - set(data_resume.keys())
         assert not missing_keys, (
-            f"--resume JSON missing keys: {sorted(missing_keys)***REMOVED***"
+            f"--resume JSON missing keys: {sorted(missing_keys)}"
         )
 
         # Resume is a subset-or-equal of the full chain (partial continuation
         # after FWD-1 bugfix; full fallback only when no prior ok/run_ok).
-        assert data_resume["stage_count"***REMOVED*** <= data_first["stage_count"***REMOVED***, (
+        assert data_resume["stage_count"] <= data_first["stage_count"], (
             f"--resume produced MORE stages than first-run: "
-            f"stage_count_resume={data_resume['stage_count'***REMOVED******REMOVED*** > "
-            f"stage_count_first={data_first['stage_count'***REMOVED******REMOVED*** "
+            f"stage_count_resume={data_resume['stage_count']} > "
+            f"stage_count_first={data_first['stage_count']} "
             f"(resume must be a subset-or-equal of the full chain)"
         )
 
@@ -366,30 +366,30 @@ class TestRealChainIntegration:
 
         missing_keys = EXPECTED_JSON_KEYS - set(data.keys())
         assert not missing_keys, (
-            f"interior_planner first-run JSON missing keys: {sorted(missing_keys)***REMOVED***"
+            f"interior_planner first-run JSON missing keys: {sorted(missing_keys)}"
         )
 
-        chain = data.get("chain") or [***REMOVED***
+        chain = data.get("chain") or []
         assert len(chain) >= 1, (
-            f"interior_planner first-run chain empty: {chain!r***REMOVED***"
+            f"interior_planner first-run chain empty: {chain!r}"
         )
 
         statuses = Counter(r.get("status", "?") for r in chain)
         invalid = set(statuses.keys()) - ALLOWED_STATUSES
         assert not invalid, (
-            f"interior_planner first-run has invalid statuses: {invalid***REMOVED***\n"
-            f"  full_counter={dict(statuses)***REMOVED***"
+            f"interior_planner first-run has invalid statuses: {invalid}\n"
+            f"  full_counter={dict(statuses)}"
         )
 
         # Project identification (interior_planner directory stem vs registry name).
-        assert _matches_project_id(data["project_id"***REMOVED***, INTERIOR_PLANNER), (
-            f"interior_planner project_id mismatch: {data['project_id'***REMOVED***!r***REMOVED*** "
-            f"(directory stem={INTERIOR_PLANNER.name!r***REMOVED***)"
+        assert _matches_project_id(data["project_id"], INTERIOR_PLANNER), (
+            f"interior_planner project_id mismatch: {data['project_id']!r} "
+            f"(directory stem={INTERIOR_PLANNER.name!r})"
         )
 
-        assert data["stage_count"***REMOVED*** == len(chain), (
-            f"interior_planner stage_count={data['stage_count'***REMOVED******REMOVED*** != "
-            f"len(chain)={len(chain)***REMOVED***"
+        assert data["stage_count"] == len(chain), (
+            f"interior_planner stage_count={data['stage_count']} != "
+            f"len(chain)={len(chain)}"
         )
 
     def test_vkusvill_research_first_run_emits_well_formed_json(
@@ -405,30 +405,30 @@ class TestRealChainIntegration:
 
         missing_keys = EXPECTED_JSON_KEYS - set(data.keys())
         assert not missing_keys, (
-            f"vkusvill_research first-run JSON missing keys: {sorted(missing_keys)***REMOVED***"
+            f"vkusvill_research first-run JSON missing keys: {sorted(missing_keys)}"
         )
 
-        chain = data.get("chain") or [***REMOVED***
+        chain = data.get("chain") or []
         assert len(chain) >= 1, (
-            f"vkusvill_research first-run chain empty: {chain!r***REMOVED***"
+            f"vkusvill_research first-run chain empty: {chain!r}"
         )
 
         statuses = Counter(r.get("status", "?") for r in chain)
         invalid = set(statuses.keys()) - ALLOWED_STATUSES
         assert not invalid, (
-            f"vkusvill_research first-run has invalid statuses: {invalid***REMOVED***\n"
-            f"  full_counter={dict(statuses)***REMOVED***"
+            f"vkusvill_research first-run has invalid statuses: {invalid}\n"
+            f"  full_counter={dict(statuses)}"
         )
 
         # Project identification (HYPHEN/UNDERSCORE agnostic).
-        assert _matches_project_id(data["project_id"***REMOVED***, VKUSVILL_RESEARCH), (
-            f"vkusvill_research project_id mismatch: {data['project_id'***REMOVED***!r***REMOVED*** "
-            f"(directory stem={VKUSVILL_RESEARCH.name!r***REMOVED***)"
+        assert _matches_project_id(data["project_id"], VKUSVILL_RESEARCH), (
+            f"vkusvill_research project_id mismatch: {data['project_id']!r} "
+            f"(directory stem={VKUSVILL_RESEARCH.name!r})"
         )
 
-        assert data["stage_count"***REMOVED*** == len(chain), (
-            f"vkusvill_research stage_count={data['stage_count'***REMOVED******REMOVED*** != "
-            f"len(chain)={len(chain)***REMOVED***"
+        assert data["stage_count"] == len(chain), (
+            f"vkusvill_research stage_count={data['stage_count']} != "
+            f"len(chain)={len(chain)}"
         )
 
     def test_vkusvill_research_resume_emits_well_formed_json(
@@ -443,21 +443,21 @@ class TestRealChainIntegration:
         data_resume = vkusvill_research_resume_run
         data_first = vkusvill_research_first_run
 
-        chain = data_resume.get("chain") or [***REMOVED***
+        chain = data_resume.get("chain") or []
         assert len(chain) >= 1, (
-            f"--resume on vkusvill_research collapsed: {chain!r***REMOVED***"
+            f"--resume on vkusvill_research collapsed: {chain!r}"
         )
 
         missing_keys = EXPECTED_JSON_KEYS - set(data_resume.keys())
         assert not missing_keys, (
-            f"vkusvill_research --resume JSON missing keys: {sorted(missing_keys)***REMOVED***"
+            f"vkusvill_research --resume JSON missing keys: {sorted(missing_keys)}"
         )
 
         # Resume is a subset-or-equal of the full chain (partial continuation).
-        assert data_resume["stage_count"***REMOVED*** <= data_first["stage_count"***REMOVED***, (
+        assert data_resume["stage_count"] <= data_first["stage_count"], (
             f"vkusvill_research --resume produced MORE stages than first-run: "
-            f"stage_count_resume={data_resume['stage_count'***REMOVED******REMOVED*** > "
-            f"stage_count_first={data_first['stage_count'***REMOVED******REMOVED***"
+            f"stage_count_resume={data_resume['stage_count']} > "
+            f"stage_count_first={data_first['stage_count']}"
         )
 
     def test_all_three_projects_share_canonical_schema(
@@ -477,12 +477,12 @@ class TestRealChainIntegration:
 
         assert vk_keys == ip_keys == vr_keys, (
             f"canonical schema divergence:\n"
-            f"  vkusvill_demo={sorted(vk_keys)***REMOVED***\n"
-            f"  interior_planner={sorted(ip_keys)***REMOVED***\n"
-            f"  vkusvill_research={sorted(vr_keys)***REMOVED***\n"
-            f"  diff_vk_minus_ip={sorted(vk_keys - ip_keys)***REMOVED***\n"
-            f"  diff_ip_minus_vk={sorted(ip_keys - vk_keys)***REMOVED***\n"
-            f"  diff_vr={sorted(vr_keys ^ (vk_keys | ip_keys))***REMOVED***"
+            f"  vkusvill_demo={sorted(vk_keys)}\n"
+            f"  interior_planner={sorted(ip_keys)}\n"
+            f"  vkusvill_research={sorted(vr_keys)}\n"
+            f"  diff_vk_minus_ip={sorted(vk_keys - ip_keys)}\n"
+            f"  diff_ip_minus_vk={sorted(ip_keys - vk_keys)}\n"
+            f"  diff_vr={sorted(vr_keys ^ (vk_keys | ip_keys))}"
         )
 
         # All 3 supersets of EXPECTED_JSON_KEYS.
@@ -492,8 +492,8 @@ class TestRealChainIntegration:
             ("vkusvill_research", vr_keys),
         ):
             assert EXPECTED_JSON_KEYS <= keys, (
-                f"{name***REMOVED*** schema missing core keys: "
-                f"{sorted(EXPECTED_JSON_KEYS - keys)***REMOVED***"
+                f"{name} schema missing core keys: "
+                f"{sorted(EXPECTED_JSON_KEYS - keys)}"
             )
 
     def test_chain_partial_resume_continues_from_last_ok(
@@ -505,14 +505,14 @@ class TestRealChainIntegration:
 
         Sequence:
           1. `vkusvill_first_run` (forge chain vkusvill_demo) → JSON N stages,
-             registry.last_pipeline['chain'***REMOVED*** populated with statuses.
+             registry.last_pipeline['chain'] populated with statuses.
           2. `vkusvill_resume_run` (forge chain vkusvill_demo --resume) → CLI
-             reads registry.last_pipeline['chain'***REMOVED***, ищет LAST stage со status
-             ∈ {\"ok\", \"run_ok\"***REMOVED*** (v5.162.0 FWD-1), вычисляет remaining =
-             PIPELINE_CHAIN[last_ok_idx+1:***REMOVED*** и facade.run_chain(role_ids=remaining).
+             reads registry.last_pipeline['chain'], ищет LAST stage со status
+             ∈ {\"ok\", \"run_ok\"} (v5.162.0 FWD-1), вычисляет remaining =
+             PIPELINE_CHAIN[last_ok_idx+1:] и facade.run_chain(role_ids=remaining).
 
         Assert: resume JSON stage_count == len(remaining) И first stage role_id
-        == expected_remaining[0***REMOVED*** (semantic continuity check).
+        == expected_remaining[0] (semantic continuity check).
 
         Если first run НЕ содержит ни одной ok/run_ok стадии (все missing /
         partial / failed / skipped) → resume должен full-fallback к полному
@@ -528,14 +528,14 @@ class TestRealChainIntegration:
         # Step 1: scan first run's chain В ОБРАТНОМ порядке — LAST ok/run_ok роль.
         # resume logic в forge.py cmd_chain делает то же самое (reversed iter),
         # так что test couples точно с production logic.
-        last_ok_role_id: Optional[str***REMOVED*** = None
+        last_ok_role_id: Optional[str] = None
         last_ok_position_in_chain = None
-        for idx_from_end, stage in enumerate(reversed(data_first["chain"***REMOVED***)):
+        for idx_from_end, stage in enumerate(reversed(data_first["chain"])):
             status = stage.get("status", "")
             if status in ("ok", "run_ok"):
                 last_ok_role_id = stage.get("role_id")
                 last_ok_position_in_chain = (
-                    len(data_first["chain"***REMOVED***) - 1 - idx_from_end
+                    len(data_first["chain"]) - 1 - idx_from_end
                 )
                 break
 
@@ -543,65 +543,65 @@ class TestRealChainIntegration:
             # ── Fallback path: ни одной completion-стадии в first run ─────────
             # resume logic падает в fallback (running from scratch) → resume
             # output должен иметь ту же длину chain, что и first.
-            assert data_resume["stage_count"***REMOVED*** == data_first["stage_count"***REMOVED***, (
+            assert data_resume["stage_count"] == data_first["stage_count"], (
                 f"No ok/run_ok в first run → expected resume full fallback "
                 f"(running from scratch); but stage_count mismatch: "
-                f"resume={data_resume['stage_count'***REMOVED******REMOVED*** != "
-                f"first={data_first['stage_count'***REMOVED******REMOVED*** "
+                f"resume={data_resume['stage_count']} != "
+                f"first={data_first['stage_count']} "
                 f"(first run statuses="
-                f"{Counter(r.get('status', '?') for r in data_first['chain'***REMOVED***)***REMOVED***)"
+                f"{Counter(r.get('status', '?') for r in data_first['chain'])})"
             )
             # Sanity: resume не должен collapsed к empty chain.
-            assert data_resume["stage_count"***REMOVED*** >= 1, (
+            assert data_resume["stage_count"] >= 1, (
                 f"Resume fallback collapsed to empty chain: "
-                f"{data_resume.get('chain', [***REMOVED***)!r***REMOVED***"
+                f"{data_resume.get('chain', [])!r}"
             )
         else:
             # ── Partial semantic path: --resume picks LAST ok role ────────────
-            # remaining = PIPELINE_CHAIN[last_ok_index_in_pipeline + 1:***REMOVED***
+            # remaining = PIPELINE_CHAIN[last_ok_index_in_pipeline + 1:]
             try:
                 last_ok_idx_in_pipeline = _PC_RUN.index(last_ok_role_id)
             except ValueError:
                 pytest.fail(
-                    f"last_ok_role_id={last_ok_role_id!r***REMOVED*** not found in "
-                    f"PIPELINE_CHAIN ({list(_PC_RUN)***REMOVED***); "
+                    f"last_ok_role_id={last_ok_role_id!r} not found in "
+                    f"PIPELINE_CHAIN ({list(_PC_RUN)}); "
                     f"resume logic should have rejected this scenario"
                 )
-            expected_remaining: tuple[str, ...***REMOVED*** = (
-                _PC_RUN[last_ok_idx_in_pipeline + 1:***REMOVED***
+            expected_remaining: tuple[str, ...] = (
+                _PC_RUN[last_ok_idx_in_pipeline + 1:]
             )
             expected_stage_count = len(expected_remaining)
 
             # PRIME ASSERTION: resume JSON stage_count == len(remaining)
             # Это confirms facade.run_chain получил role_ids = expected_remaining
             # (CLI маршалит --resume semantic в facade.run_chain correctly).
-            assert data_resume["stage_count"***REMOVED*** == expected_stage_count, (
-                f"--resume did NOT continue from LAST ok={last_ok_role_id!r***REMOVED*** "
-                f"(PIPELINE_CHAIN idx={last_ok_idx_in_pipeline***REMOVED***/{len(_PC_RUN)-1***REMOVED***): "
-                f"resume.stage_count={data_resume['stage_count'***REMOVED******REMOVED*** != "
-                f"expected={expected_stage_count***REMOVED*** (remaining={expected_remaining***REMOVED***) "
+            assert data_resume["stage_count"] == expected_stage_count, (
+                f"--resume did NOT continue from LAST ok={last_ok_role_id!r} "
+                f"(PIPELINE_CHAIN idx={last_ok_idx_in_pipeline}/{len(_PC_RUN)-1}): "
+                f"resume.stage_count={data_resume['stage_count']} != "
+                f"expected={expected_stage_count} (remaining={expected_remaining}) "
                 f"first.run.last_ok at chain position "
-                f"{last_ok_position_in_chain***REMOVED***/{len(data_first['chain'***REMOVED***)***REMOVED***"
+                f"{last_ok_position_in_chain}/{len(data_first['chain'])}"
             )
 
             # Secondary assertion (semantic continuity): если есть remaining,
-            # first stage of resume должен == expected_remaining[0***REMOVED***.
+            # first stage of resume должен == expected_remaining[0].
             if expected_remaining:
                 resume_first_role_id = (
-                    data_resume["chain"***REMOVED***[0***REMOVED***["role_id"***REMOVED***
+                    data_resume["chain"][0]["role_id"]
                 )
-                assert resume_first_role_id == expected_remaining[0***REMOVED***, (
+                assert resume_first_role_id == expected_remaining[0], (
                     f"Resume first stage role continuity broken: "
-                    f"{resume_first_role_id!r***REMOVED*** != expected "
-                    f"{expected_remaining[0***REMOVED***!r***REMOVED*** "
-                    f"(after LAST ok={last_ok_role_id!r***REMOVED***)"
+                    f"{resume_first_role_id!r} != expected "
+                    f"{expected_remaining[0]!r} "
+                    f"(after LAST ok={last_ok_role_id!r})"
                 )
 
             # Tertiary invariant: resume всегда ≤ first (resume не добавляет
             # новые роли, только продолжает existing chain).
-            assert data_resume["stage_count"***REMOVED*** <= data_first["stage_count"***REMOVED***, (
+            assert data_resume["stage_count"] <= data_first["stage_count"], (
                 f"Resume produced MORE stages than first run: "
-                f"resume={data_resume['stage_count'***REMOVED******REMOVED*** > "
-                f"first={data_first['stage_count'***REMOVED******REMOVED*** "
+                f"resume={data_resume['stage_count']} > "
+                f"first={data_first['stage_count']} "
                 f"(semantic violation: partial should be subset)"
             )

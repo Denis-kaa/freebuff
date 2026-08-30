@@ -19,7 +19,7 @@ import json
 import subprocess
 import sys
 import threading
-***REMOVED***
+}
 from typing import Any, Dict, List
 
 import pytest
@@ -73,25 +73,25 @@ def _isolate_ledger_root(monkeypatch, tmp_path) -> None:
 
 class TestAddHypothesis:
     def test_add_new_hypothesis_starts_open(self):
-        """New hypothesis → status=open, tags=[***REMOVED***, confidence=0.5, kill_criteria=[***REMOVED***, stable id."""
+        """New hypothesis → status=open, tags=[], confidence=0.5, kill_criteria=[], stable id."""
         result = add_hypothesis(
             "StarMaker аудитория готова платить за вокал-обучение",
-            tags=["pricing", "starmaker"***REMOVED***,
+            tags=["pricing", "starmaker"],
         )
         assert isinstance(result, HypothesisSummary)
         assert result.status == HypothesisStatus.OPEN
         assert result.text == "StarMaker аудитория готова платить за вокал-обучение"
         assert result.confidence == 0.5
-        assert result.tags == ["pricing", "starmaker"***REMOVED***
-        assert result.kill_criteria == [***REMOVED***
+        assert result.tags == ["pricing", "starmaker"]
+        assert result.kill_criteria == []
         # ID format: h_<sha8>_<slug>.
         assert result.hid.startswith("h_")
         parts = result.hid.split("_", 2)
         assert len(parts) == 3
-        assert len(parts[1***REMOVED***) == 8  # sha8 = sha256(normalized)[:8***REMOVED***
-        assert parts[1***REMOVED***.isalnum()
+        assert len(parts[1]) == 8  # sha8 = sha256(normalized)[:8]
+        assert parts[1].isalnum()
         # Slug contains "starmaker" or similar (lowercase, dash-separated).
-        assert "starmaker" in parts[2***REMOVED*** or len(parts[2***REMOVED***) > 0
+        assert "starmaker" in parts[2] or len(parts[2]) > 0
 
     def test_add_idempotent_text_normalization(self):
         """Same text → same ID (text-normalization idempotent); whitespace-different texts collapse."""
@@ -103,7 +103,7 @@ class TestAddHypothesis:
         # Whitespace+case-different same content → same hid (text normalization).
         r3 = add_hypothesis("  pricing   TIER   matters  ")
         assert r1.hid == r3.hid, (
-            f"text-normalization broken: r1={r1.hid***REMOVED***, r3={r3.hid***REMOVED***"
+            f"text-normalization broken: r1={r1.hid}, r3={r3.hid}"
         )
 
     def test_add_rejects_empty_text(self):
@@ -125,17 +125,17 @@ class TestAddHypothesis:
         """Tags: lowercase, sorted, dedupe."""
         result = add_hypothesis(
             "Test",
-            tags=["Starmaker", "STARMAKER", "pricing"***REMOVED***,
+            tags=["Starmaker", "STARMAKER", "pricing"],
         )
         # Only 2 unique after dedupe, sorted alphabetically.
-        assert result.tags == ["pricing", "starmaker"***REMOVED***
+        assert result.tags == ["pricing", "starmaker"]
 
     def test_add_atomic_no_tmp_leftover(self):
         """After successful add, no .tmp files remain в DEFAULT_LEDGER_DIR."""
         from scripts_01 import hypothesis_ledger as h_mod
         add_hypothesis("Test atomic write")
         tmp_files = list(h_mod.DEFAULT_LEDGER_DIR.glob("*.tmp"))
-        assert tmp_files == [***REMOVED***, f"atomic write leaked tmp files: {tmp_files***REMOVED***"
+        assert tmp_files == [], f"atomic write leaked tmp files: {tmp_files}"
 
 
 # ─── TestTransitionDag ──────────────────────────────────────────────────────
@@ -144,13 +144,13 @@ class TestAddHypothesis:
 class TestTransitionDag:
     def test_valid_open_to_supported(self):
         h = add_hypothesis("H1", kill_criteria=[
-            {"criterion": "criterion X", "met": False***REMOVED***,
-        ***REMOVED***)
+            {"criterion": "criterion X", "met": False},
+        ])
         updated = update_status(
             h.hid, HypothesisStatus.SUPPORTED, evidence_url="https://example.com",
         )
         assert updated.status == HypothesisStatus.SUPPORTED
-        assert updated.kill_criteria[0***REMOVED***.met is False  # не-changed by transition
+        assert updated.kill_criteria[0].met is False  # не-changed by transition
 
     def test_valid_open_to_refuted(self):
         h = add_hypothesis("H1")
@@ -168,8 +168,8 @@ class TestTransitionDag:
         # Create, transition to supported, then try refuted → kill_criteria_met works,
         # but kill_criteria_met → open MUST raise.
         h = add_hypothesis("H1", kill_criteria=[
-            {"criterion": "x", "met": True***REMOVED***,
-        ***REMOVED***)
+            {"criterion": "x", "met": True},
+        ])
         update_status(h.hid, HypothesisStatus.SUPPORTED)
         update_status(h.hid, HypothesisStatus.KILL_CRITERIA_MET)
         # Now attempt backward transition: terminal → open.
@@ -185,8 +185,8 @@ class TestTransitionDag:
         """open → kill_criteria_met allowed ONLY if kill_criteria aggregate met."""
         h = add_hypothesis(
             "H1", kill_criteria=[
-                {"criterion": "x", "met": False***REMOVED***,  # NOT met.
-            ***REMOVED***,
+                {"criterion": "x", "met": False},  # NOT met.
+            ],
         )
         with pytest.raises(ValueError, match="kill_criteria"):
             update_status(h.hid, HypothesisStatus.KILL_CRITERIA_MET)
@@ -202,9 +202,9 @@ class TestTransitionDag:
 class TestKillCriteria:
     def test_kill_criteria_met_only_when_all_met(self):
         h = add_hypothesis("H1", kill_criteria=[
-            {"criterion": "a", "met": False***REMOVED***,
-            {"criterion": "b", "met": False***REMOVED***,
-        ***REMOVED***)
+            {"criterion": "a", "met": False},
+            {"criterion": "b", "met": False},
+        ])
         # Try terminal transition: kill_criteria aggregate NOT met → ValueError.
         with pytest.raises(ValueError):
             update_status(h.hid, HypothesisStatus.KILL_CRITERIA_MET)
@@ -218,7 +218,7 @@ class TestKillCriteria:
     def test_single_met_criterion_allows_terminal(self):
         h = add_hypothesis(
             "H1",
-            kill_criteria=[{"criterion": "single", "met": True***REMOVED******REMOVED***,
+            kill_criteria=[{"criterion": "single", "met": True}],
         )
         # Open → kill_criteria_met works: only 1 criterion met, list non-empty.
         updated = update_status(h.hid, HypothesisStatus.KILL_CRITERIA_MET)
@@ -230,7 +230,7 @@ class TestKillCriteria:
 
 class TestQuery:
     def test_query_by_id_returns_full_history(self):
-        h = add_hypothesis("H1", tags=["x"***REMOVED***)
+        h = add_hypothesis("H1", tags=["x"])
         update_status(h.hid, HypothesisStatus.SUPPORTED,
                       evidence_url="https://example.com/evidence")
         full = query_by_id(h.hid)
@@ -239,10 +239,10 @@ class TestQuery:
         assert full.summary.hid == h.hid
         # History: create + update_status events.
         assert len(full.history) == 2
-        assert full.history[0***REMOVED***.event_type == "create"
-        assert full.history[1***REMOVED***.event_type == "update_status"
-        assert full.history[1***REMOVED***.from_status == HypothesisStatus.OPEN
-        assert full.history[1***REMOVED***.evidence_url == "https://example.com/evidence"
+        assert full.history[0].event_type == "create"
+        assert full.history[1].event_type == "update_status"
+        assert full.history[1].from_status == HypothesisStatus.OPEN
+        assert full.history[1].evidence_url == "https://example.com/evidence"
 
     def test_query_by_id_nonexistent_returns_none(self):
         assert query_by_id("h_nonexistent") is None
@@ -254,22 +254,22 @@ class TestQuery:
         open_h = query_by_status(HypothesisStatus.OPEN)
         supported_h = query_by_status(HypothesisStatus.SUPPORTED)
         # h1 = supported (transitioned); h2 = open.
-        assert {s.hid for s in open_h***REMOVED*** == {h2.hid***REMOVED***
-        assert {s.hid for s in supported_h***REMOVED*** == {h1.hid***REMOVED***
+        assert {s.hid for s in open_h} == {h2.hid}
+        assert {s.hid for s in supported_h} == {h1.hid}
 
     def test_list_all_returns_everything(self):
         h1 = add_hypothesis("H1")
         h2 = add_hypothesis("H2")
         h3 = add_hypothesis("H3")
         all_h = list_all()
-        assert {s.hid for s in all_h***REMOVED*** >= {h1.hid, h2.hid, h3.hid***REMOVED***
+        assert {s.hid for s in all_h} >= {h1.hid, h2.hid, h3.hid}
 
     def test_stats_counts_per_status(self):
         for i in range(3):
-            add_hypothesis(f"H{i***REMOVED***")
+            add_hypothesis(f"H{i}")
         s = stats()
         # At least 3 in "open" (other categories default 0).
-        assert s["open"***REMOVED*** >= 3
+        assert s["open"] >= 3
         assert "supported" in s
         assert "refuted" in s
         assert "kill_criteria_met" in s
@@ -282,8 +282,8 @@ class TestConcurrency:
     def test_concurrent_writes_under_file_lock(self):
         """10 threads simultaneously creating + updating same hid — final state coherent."""
         h = add_hypothesis("Concurrent test", kill_criteria=[
-            {"criterion": "x", "met": True***REMOVED***,
-        ***REMOVED***)
+            {"criterion": "x", "met": True},
+        ])
 
         def _do_work() -> None:
             # Each thread attempts to UPDATE; some races will fail (DAG invariant violation).
@@ -292,7 +292,7 @@ class TestConcurrency:
             except ValueError:
                 pass  # Expected: terminal state blocks further transitions.
 
-        threads: List[threading.Thread***REMOVED*** = [***REMOVED***
+        threads: List[threading.Thread] = []
         for _ in range(10):
             t = threading.Thread(target=_do_work)
             threads.append(t)
@@ -340,7 +340,7 @@ class TestCLI:
             sys.executable, "-m", "scripts_01.hypothesis_ledger",
             "--root", str(root),
             *args,
-        ***REMOVED***
+        ]
         return subprocess.run(
             cmd, capture_output=True, text=True, timeout=30,
             cwd=str(Path(__file__).resolve().parent.parent),
@@ -356,7 +356,7 @@ class TestCLI:
             "--confidence", "0.7",
             root=root,
         )
-        assert r.returncode == 0, f"add failed: {r.stderr***REMOVED***"
+        assert r.returncode == 0, f"add failed: {r.stderr}"
         assert "added hypothesis h_" in r.stdout
 
         # list
@@ -368,10 +368,10 @@ class TestCLI:
         r = self._run_cli("stats", "--json", root=root)
         assert r.returncode == 0
         payload = json.loads(r.stdout)
-        assert payload["open"***REMOVED*** >= 1
+        assert payload["open"] >= 1
 
     def test_cli_version(self):
-        cmd = [sys.executable, "-m", "scripts_01.hypothesis_ledger", "--version"***REMOVED***
+        cmd = [sys.executable, "-m", "scripts_01.hypothesis_ledger", "--version"]
         r = subprocess.run(
             cmd, capture_output=True, text=True, timeout=10,
             cwd=str(Path(__file__).resolve().parent.parent),
@@ -400,14 +400,14 @@ class TestIdempotency:
         """Calling add twice with same text returns existing summary (no duplicate create)."""
         from scripts_01 import hypothesis_ledger as h_mod
         root = h_mod.DEFAULT_LEDGER_DIR
-        first = add_hypothesis("Same text idempotent test", tags=["a"***REMOVED***)
-        second = add_hypothesis("Same text idempotent test", tags=["b"***REMOVED***)
+        first = add_hypothesis("Same text idempotent test", tags=["a"])
+        second = add_hypothesis("Same text idempotent test", tags=["b"])
         # Same HID (idempotent), and event_type=create is unique в history.
         assert first.hid == second.hid
         full = query_by_id(first.hid)
         # Only one create event (даже though мы called add 2x).
-        creates = [e for e in full.history if e.event_type == "create"***REMOVED***
+        creates = [e for e in full.history if e.event_type == "create"]
         assert len(creates) == 1, (
-            f"expected exactly 1 create event; got {len(creates)***REMOVED***. "
+            f"expected exactly 1 create event; got {len(creates)}. "
             f"Idempotency broken."
         )

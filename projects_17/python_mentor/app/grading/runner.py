@@ -18,7 +18,7 @@ import sys
 import tempfile
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Iterable
 
 from app.execution import ExecutionJob, ExecutionPolicy, ExecutionStatus, TermuxSubprocessBackend
@@ -56,7 +56,7 @@ class PytestGrader:
         self.max_output_bytes = max_output_bytes
         self.python_executable = str(python_executable or sys.executable)
         self.execution_backend = execution_backend or TermuxSubprocessBackend()
-        self._seen: set[tuple[str, str***REMOVED******REMOVED*** = set()
+        self._seen: set[tuple[str, str]] = set()
 
     def grade(self, exercise: ExerciseSpec, student_code: str) -> GradingResult:
         """Grade source and return a frozen, normalized result."""
@@ -66,7 +66,7 @@ class PytestGrader:
         duplicate_key = (exercise.exercise_id, code_hash)
         if duplicate_key in self._seen:
             raise DuplicateSubmissionError(
-                f"duplicate submission for {exercise.exercise_id***REMOVED***: {code_hash[:12***REMOVED******REMOVED***"
+                f"duplicate submission for {exercise.exercise_id}: {code_hash[:12]}"
             )
         self._seen.add(duplicate_key)
 
@@ -84,14 +84,14 @@ class PytestGrader:
                 GradingStatus.INFRASTRUCTURE_ERROR,
                 FailureKind.GRADER_FAILURE,
                 Correctness("infrastructure_error", 0, 0, 0, 0),
-                (f"grader process could not start: {type(exc).__name__***REMOVED***",),
+                (f"grader process could not start: {type(exc).__name__}",),
             )
         return result
 
     @staticmethod
     def _submission_id(exercise_id: str, code_hash: str) -> str:
-        digest = hashlib.sha256(f"{exercise_id***REMOVED***\0{code_hash***REMOVED***".encode()).hexdigest()
-        return f"sub_{digest[:24***REMOVED******REMOVED***"
+        digest = hashlib.sha256(f"{exercise_id}\0{code_hash}".encode()).hexdigest()
+        return f"sub_{digest[:24]}"
 
     def _run(
         self,
@@ -131,7 +131,7 @@ class PytestGrader:
                 "--junitxml",
                 str(junit_path),
                 tests_path.name,
-            ***REMOVED***
+            ]
             execution = self.execution_backend.execute(
                 ExecutionJob(command=tuple(command), workspace=workspace, environment=env),
                 ExecutionPolicy(
@@ -233,12 +233,12 @@ class PytestGrader:
             if isinstance(node, ast.ImportFrom) and node.module == student_module
             for alias in node.names
             if alias.name != "*"
-        ***REMOVED***
+        }
         defined_names = {
             node.name
             for node in student_tree.body
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef))
-        ***REMOVED***
+        }
         missing = sorted(imported_names - defined_names)
         if missing:
             return self._result(
@@ -259,9 +259,9 @@ class PytestGrader:
         return None
 
     @staticmethod
-    def _sanitized_environment(workspace: Path) -> dict[str, str***REMOVED***:
-        allowed = {"PATH", "LANG", "LC_ALL", "TZ"***REMOVED***
-        env = {key: value for key, value in os.environ.items() if key in allowed***REMOVED***
+    def _sanitized_environment(workspace: Path) -> dict[str, str]:
+        allowed = {"PATH", "LANG", "LC_ALL", "TZ"}
+        env = {key: value for key, value in os.environ.items() if key in allowed}
         env.update(
             {
                 "HOME": str(workspace),
@@ -271,7 +271,7 @@ class PytestGrader:
                 "PYTHONNOUSERSITE": "1",
                 "PYTHONDONTWRITEBYTECODE": "1",
                 "PYTEST_DISABLE_PLUGIN_AUTOLOAD": "1",
-            ***REMOVED***
+            }
         )
         return env
 
@@ -287,7 +287,7 @@ class PytestGrader:
         if returncode == 0:
             status = GradingStatus.PASS
             kind = FailureKind.NONE
-            diagnostics: tuple[str, ...***REMOVED*** = ()
+            diagnostics: tuple[str, ...] = ()
         elif returncode == 1 and failed > 0:
             status = GradingStatus.FAIL
             kind = FailureKind.STUDENT_FAILURE
@@ -313,8 +313,8 @@ class PytestGrader:
             GradingStatus.ERROR: "error",
             GradingStatus.TIMEOUT: "timeout",
             GradingStatus.INFRASTRUCTURE_ERROR: "infrastructure_error",
-        ***REMOVED***[status***REMOVED***
-        candidates: tuple[EvidenceCandidate, ...***REMOVED*** = ()
+        ][status]
+        candidates: tuple[EvidenceCandidate, ...] = ()
         if status in (GradingStatus.PASS, GradingStatus.FAIL, GradingStatus.ERROR):
             strength = "strong" if status is GradingStatus.PASS else "weak"
             candidates = (
@@ -340,9 +340,9 @@ class PytestGrader:
         status: GradingStatus,
         failure_kind: FailureKind,
         correctness: Correctness,
-        diagnostics: Iterable[str***REMOVED***,
+        diagnostics: Iterable[str],
         *,
-        evidence_candidates: tuple[EvidenceCandidate, ...***REMOVED*** = (),
+        evidence_candidates: tuple[EvidenceCandidate, ...] = (),
     ) -> GradingResult:
         return GradingResult(
             identity=identity,
@@ -354,14 +354,14 @@ class PytestGrader:
         )
 
 
-def _parse_junit(path: Path) -> tuple[int, int, int, int***REMOVED***:
+def _parse_junit(path: Path) -> tuple[int, int, int, int]:
     if not path.is_file():
         return 0, 0, 0, 0
     try:
         root = ET.parse(path).getroot()
     except ET.ParseError:
         return 0, 0, 0, 0
-    suites = [root***REMOVED*** if root.tag == "testsuite" else list(root.findall("testsuite"))
+    suites = [root] if root.tag == "testsuite" else list(root.findall("testsuite"))
     total = passed = failed = errors = 0
     for suite in suites:
         for case in suite.findall("testcase"):

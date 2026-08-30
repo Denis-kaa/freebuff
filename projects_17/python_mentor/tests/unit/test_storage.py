@@ -33,26 +33,26 @@ def _seed(conn: sqlite3.Connection) -> None:
 
 def test_foreign_keys_pragma_on(conn: sqlite3.Connection) -> None:
     row = conn.execute("PRAGMA foreign_keys").fetchone()
-    assert row[0***REMOVED*** == 1
+    assert row[0] == 1
 
 
 def test_schema_version(conn: sqlite3.Connection) -> None:
     row = conn.execute("PRAGMA user_version").fetchone()
-    assert row[0***REMOVED*** == 1
+    assert row[0] == 1
 
 
 def test_tables_exist(conn: sqlite3.Connection) -> None:
     rows = conn.execute(
         "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"
     ).fetchall()
-    names = {r[0***REMOVED*** for r in rows***REMOVED***
+    names = {r[0] for r in rows}
     assert names == {
         "competencies",
         "competency_prerequisites",
         "exercise_sources",
         "exercises",
         "exercise_competencies",
-    ***REMOVED***, names
+    }, names
 
 
 def test_fk_violation_raises(conn: sqlite3.Connection) -> None:
@@ -110,4 +110,4 @@ def test_no_future_tables(conn: sqlite3.Connection) -> None:
         " name IN ('submissions','evidence','review_states','learning_events',"
         " 'student_competencies')"
     ).fetchall()
-    assert rows == [***REMOVED***
+    assert rows == []

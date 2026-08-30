@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 import tempfile
-***REMOVED***
+}
 from unittest.mock import patch, MagicMock, mock_open
 
 import pytest
@@ -45,7 +45,7 @@ def test_get_fs_type_stat_fallback_to_df():
                 stdout="Filesystem   Type  1K-blocks  Used Available Use% Mounted on\n/dev/sda1    ext4   100000  50000   50000   50% /\n",
                 stderr="",
             ),
-        ***REMOVED***
+        ]
         result = _get_fs_type(Path("/tmp"))
         assert result == "ext4"
 
@@ -154,7 +154,7 @@ def test_port_used_ss_fallback_netstat():
                 stdout="tcp 0 0 0.0.0.0:8080 0.0.0.0:* LISTEN 1234/node\n",
                 stderr="",
             ),
-        ***REMOVED***
+        ]
         assert _is_port_used(8080) is True
 
 
@@ -218,9 +218,9 @@ def test_diagnose_perfect_environment():
             for f in ("RUNNABLE.md", "CHECKLIST.md", "README.md"):
                 (Path(tmp) / f).write_text("# test")
             result = diagnose(Path(tmp))
-            assert result["ok"***REMOVED*** is True
-            assert len(result["blockers"***REMOVED***) == 0
-            assert len(result["warnings"***REMOVED***) == 0
+            assert result["ok"] is True
+            assert len(result["blockers"]) == 0
+            assert len(result["warnings"]) == 0
         finally:
             import shutil
             shutil.rmtree(tmp, ignore_errors=True)
@@ -236,10 +236,10 @@ def test_diagnose_fat32_without_runcheck():
         tmp = tempfile.mkdtemp()
         try:
             result = diagnose(Path(tmp))
-            assert result["ok"***REMOVED*** is False
-            assert any("RUNNABLE.md" in b for b in result["blockers"***REMOVED***)
-            assert any("CHECKLIST.md" in b for b in result["blockers"***REMOVED***)
-            assert any("symlinks" in b.lower() for b in result["blockers"***REMOVED***)
+            assert result["ok"] is False
+            assert any("RUNNABLE.md" in b for b in result["blockers"])
+            assert any("CHECKLIST.md" in b for b in result["blockers"])
+            assert any("symlinks" in b.lower() for b in result["blockers"])
         finally:
             import shutil
             shutil.rmtree(tmp, ignore_errors=True)
@@ -257,8 +257,8 @@ def test_diagnose_low_memory_warning():
             for f in ("RUNNABLE.md", "CHECKLIST.md", "README.md"):
                 (Path(tmp) / f).write_text("# test")
             result = diagnose(Path(tmp))
-            assert result["ok"***REMOVED*** is True  # warning, not blocker
-            assert any("памят" in w.lower() or "mb" in w.lower() for w in result["warnings"***REMOVED***)
+            assert result["ok"] is True  # warning, not blocker
+            assert any("памят" in w.lower() or "mb" in w.lower() for w in result["warnings"])
         finally:
             import shutil
             shutil.rmtree(tmp, ignore_errors=True)
@@ -276,8 +276,8 @@ def test_diagnose_node_too_old():
             for f in ("RUNNABLE.md", "CHECKLIST.md", "README.md"):
                 (Path(tmp) / f).write_text("# test")
             result = diagnose(Path(tmp))
-            assert result["ok"***REMOVED*** is False
-            assert any("20" in b for b in result["blockers"***REMOVED***)
+            assert result["ok"] is False
+            assert any("20" in b for b in result["blockers"])
         finally:
             import shutil
             shutil.rmtree(tmp, ignore_errors=True)

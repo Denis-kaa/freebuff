@@ -1,6 +1,6 @@
 """Тесты загрузки конфигурации."""
 
-***REMOVED***
+}
 
 import pytest
 
@@ -34,5 +34,5 @@ def test_missing_config(tmp_path: Path) -> None:
 
 
 def test_config_get_default() -> None:
-    config = Config({***REMOVED***)
+    config = Config({})
     assert config.get("app", "name", default="Default") == "Default"

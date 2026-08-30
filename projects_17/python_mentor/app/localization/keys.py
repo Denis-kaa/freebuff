@@ -12,14 +12,14 @@ must be git-ignored and readable only by the owner.
 from __future__ import annotations
 
 import threading
-***REMOVED***
+}
 from typing import Sequence
 
 
-def _read_keys(path: str | Path) -> list[str***REMOVED***:
+def _read_keys(path: str | Path) -> list[str]:
     """Read one credential per non-empty, non-comment line."""
     raw = Path(path).read_text(encoding="utf-8", errors="replace")
-    keys: list[str***REMOVED*** = [***REMOVED***
+    keys: list[str] = []
     for raw_line in raw.splitlines():
         line = raw_line.strip()
         if not line or line.startswith("#"):
@@ -32,7 +32,7 @@ def _read_keys(path: str | Path) -> list[str***REMOVED***:
         if line:
             keys.append(line)
     if not keys:
-        raise ValueError(f"no credentials found in {path***REMOVED***")
+        raise ValueError(f"no credentials found in {path}")
     return keys
 
 
@@ -43,9 +43,9 @@ class GeminiKeyPool:
     ``mark_failed()`` advances rotation so the next call uses another key.
     """
 
-    def __init__(self, keys: Sequence[str***REMOVED*** | None = None, *, active_file: str | Path | None = None) -> None:
+    def __init__(self, keys: Sequence[str] | None = None, *, active_file: str | Path | None = None) -> None:
         if keys is not None:
-            self._keys: list[str***REMOVED*** = list(keys)
+            self._keys: list[str] = list(keys)
         elif active_file is not None:
             self._keys = _read_keys(active_file)
         else:
@@ -54,30 +54,30 @@ class GeminiKeyPool:
             raise ValueError("GeminiKeyPool has no keys")
         self._index = 0
         self._lock = threading.Lock()
-        self._state: dict[int, int***REMOVED*** = {***REMOVED***  # key_index -> consecutive failures
+        self._state: dict[int, int] = {}  # key_index -> consecutive failures
 
     @property
     def key_count(self) -> int:
         return len(self._keys)
 
-    def acquire(self) -> tuple[int, str***REMOVED***:
+    def acquire(self) -> tuple[int, str]:
         """Return (key_index, credential) for the current rotation slot."""
         with self._lock:
-            return self._index, self._keys[self._index***REMOVED***
+            return self._index, self._keys[self._index]
 
     def mark_failed(self, key_index: int) -> None:
         """Advance rotation away from a failed key (thread-safe)."""
         with self._lock:
-            self._state[key_index***REMOVED*** = self._state.get(key_index, 0) + 1
+            self._state[key_index] = self._state.get(key_index, 0) + 1
             self._index = (self._index + 1) % len(self._keys)
 
     def mark_success(self, key_index: int) -> None:
         with self._lock:
-            self._state[key_index***REMOVED*** = 0
+            self._state[key_index] = 0
 
     def failures(self, key_index: int) -> int:
         with self._lock:
             return self._state.get(key_index, 0)
 
     def __repr__(self) -> str:  # never leak credentials
-        return f"GeminiKeyPool(count={len(self._keys)***REMOVED***)"
+        return f"GeminiKeyPool(count={len(self._keys)})"

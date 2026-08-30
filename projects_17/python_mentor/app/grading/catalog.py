@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
-***REMOVED***
+}
 
 from app.grading.contract import ExerciseSpec
 
@@ -25,17 +25,17 @@ def exercise_from_corpus(
         (exercise_id,),
     ).fetchone()
     if row is None:
-        raise KeyError(f"exercise not found: {exercise_id***REMOVED***")
-    if row["status"***REMOVED*** != "approved":
-        raise ValueError(f"exercise source is not approved: {exercise_id***REMOVED***")
-    if not row["tests_relpath"***REMOVED*** or not row["stub_relpath"***REMOVED***:
-        raise ValueError(f"exercise has incomplete test/stub references: {exercise_id***REMOVED***")
+        raise KeyError(f"exercise not found: {exercise_id}")
+    if row["status"] != "approved":
+        raise ValueError(f"exercise source is not approved: {exercise_id}")
+    if not row["tests_relpath"] or not row["stub_relpath"]:
+        raise ValueError(f"exercise has incomplete test/stub references: {exercise_id}")
 
     root = Path(source_root).resolve()
-    tests_path = _contained_path(root, root / row["tests_relpath"***REMOVED***)
-    student_filename = Path(row["stub_relpath"***REMOVED***).name
+    tests_path = _contained_path(root, root / row["tests_relpath"])
+    student_filename = Path(row["stub_relpath"]).name
     return ExerciseSpec(
-        exercise_id=str(row["id"***REMOVED***),
+        exercise_id=str(row["id"]),
         tests_path=tests_path,
         student_filename=student_filename,
     )

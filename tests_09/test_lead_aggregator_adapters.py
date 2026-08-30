@@ -7,7 +7,7 @@ LeadPipeline: полный конвейер (fetch → L1/L2 → dedup → score
 from __future__ import annotations
 
 import sys
-***REMOVED***
+}
 
 import pytest
 
@@ -91,9 +91,9 @@ class TestKworkAdapter:
         adapter = KworkAdapter(FakeClient(KWORK_HTML))
         leads = await adapter.fetch()
         assert len(leads) == 3
-        assert leads[0***REMOVED***.source == "kwork"
-        assert "telegram-bot-dlya-magazina" in leads[0***REMOVED***.url
-        assert leads[0***REMOVED***.source_id == "telegram-bot-dlya-magazina"
+        assert leads[0].source == "kwork"
+        assert "telegram-bot-dlya-magazina" in leads[0].url
+        assert leads[0].source_id == "telegram-bot-dlya-magazina"
 
 
 class TestTGChannelAdapter:
@@ -102,9 +102,9 @@ class TestTGChannelAdapter:
         adapter = TGChannelAdapter(FakeClient(TG_HTML), "freelance_tg")
         leads = await adapter.fetch()
         assert len(leads) == 2
-        assert leads[0***REMOVED***.source_id == "freelance_tg/138170"
-        assert leads[0***REMOVED***.url == "https://t.me/freelance_tg/138170"
-        assert "телеграм бота" in leads[0***REMOVED***.text
+        assert leads[0].source_id == "freelance_tg/138170"
+        assert leads[0].url == "https://t.me/freelance_tg/138170"
+        assert "телеграм бота" in leads[0].text
 
     @pytest.mark.asyncio
     async def test_parse_live_class_variants(self):
@@ -112,8 +112,8 @@ class TestTGChannelAdapter:
         adapter = TGChannelAdapter(FakeClient(TG_HTML_LIVE_CLASSES), "freelance_tg")
         leads = await adapter.fetch()
         assert len(leads) == 2
-        assert leads[0***REMOVED***.source_id == "freelance_tg/200001"
-        assert leads[1***REMOVED***.source_id == "freelance_tg/200002"
+        assert leads[0].source_id == "freelance_tg/200001"
+        assert leads[1].source_id == "freelance_tg/200002"
 
 
 class TestKworkSpaShell:
@@ -122,7 +122,7 @@ class TestKworkSpaShell:
         """Регрессия W-16: SPA-скелет Kwork → 0 лидов + warning, без падения."""
         adapter = KworkAdapter(FakeClient(KWORK_SPA_SHELL_HTML))
         leads = await adapter.fetch()
-        assert leads == [***REMOVED***
+        assert leads == []
 
 
 class TestBuildDefaultAdapters:
@@ -132,9 +132,9 @@ class TestBuildDefaultAdapters:
 
         cfg = Config(checkpoint_db=tmp_path / "cp.db")
         cfg.kwork_enabled = True
-        cfg.tg_channels = ["freelance_tg", "proger_orders"***REMOVED***
+        cfg.tg_channels = ["freelance_tg", "proger_orders"]
         adapters = build_default_adapters(cfg, TLSClient())
-        names = [a.name for a in adapters***REMOVED***
+        names = [a.name for a in adapters]
         assert names.count("kwork") == 1
         assert names.count("tg_channel") == 2
 
@@ -144,8 +144,8 @@ class TestBuildDefaultAdapters:
 
         cfg = Config(checkpoint_db=tmp_path / "cp.db")
         cfg.kwork_enabled = False
-        cfg.tg_channels = [***REMOVED***
-        assert build_default_adapters(cfg, TLSClient()) == [***REMOVED***
+        cfg.tg_channels = []
+        assert build_default_adapters(cfg, TLSClient()) == []
 
 
 class TestTelegramDelivery:
@@ -169,7 +169,7 @@ class TestPipeline:
         adapter = TGChannelAdapter(FakeClient(TG_HTML), "freelance_tg")
         pipeline = LeadPipeline(
             config=cfg,
-            adapters=[adapter***REMOVED***,
+            adapters=[adapter],
             classifier=IntentClassifier(
                 stopwords=cfg.stopwords,
                 client_markers=cfg.client_markers,
@@ -181,8 +181,8 @@ class TestPipeline:
         )
         stats = await pipeline.run_once()
         # 2 лида из TG; seeker отсеивается L2; client проходит
-        assert stats["fetched"***REMOVED*** == 2
-        assert stats["new"***REMOVED*** == 1
+        assert stats["fetched"] == 2
+        assert stats["new"] == 1
         assert pipeline.checkpoint.get_last("tg_channel") is not None
         await pipeline.aclose()
 
@@ -202,21 +202,21 @@ class TestPipeline:
             ordered = False
 
             async def fetch(self, limit: int = 50):  # noqa: ARG002
-                return [Lead(source="good", source_id="1", text="нужен бот")***REMOVED***
+                return [Lead(source="good", source_id="1", text="нужен бот")]
 
         cfg = Config(checkpoint_db=tmp_path / "cp.db")
         cfg.lead_score_threshold = 40
         pipeline = LeadPipeline(
             config=cfg,
-            adapters=[BrokenAdapter(), GoodAdapter()***REMOVED***,
+            adapters=[BrokenAdapter(), GoodAdapter()],
             classifier=IntentClassifier(
-                stopwords=[***REMOVED***, client_markers=["нужен"***REMOVED***, seeker_markers=[***REMOVED***
+                stopwords=[], client_markers=["нужен"], seeker_markers=[]
             ),
-            scorer=Scorer(signals=[***REMOVED***),
+            scorer=Scorer(signals=[]),
             checkpoint=CheckpointStore(tmp_path / "cp.db"),
             retry=RetryPolicy(max_attempts=1, failure_threshold=10),
         )
         stats = await pipeline.run_once()
-        assert stats["errors"***REMOVED*** == 1  # broken упал, но good отработал
-        assert stats["new"***REMOVED*** == 1
+        assert stats["errors"] == 1  # broken упал, но good отработал
+        assert stats["new"] == 1
         await pipeline.aclose()

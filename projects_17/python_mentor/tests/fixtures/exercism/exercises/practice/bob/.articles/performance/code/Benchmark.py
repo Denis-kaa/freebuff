@@ -20,7 +20,7 @@ def response(hey_bob):
 
 """, number=loops) / loops
 
-print(f"if statements: {val***REMOVED***")
+print(f"if statements: {val}")
 
 
 val = timeit.timeit("""response("I really don't have anything to say.")""",
@@ -41,13 +41,13 @@ def response(hey_bob):
 
 """, number=loops) / loops
 
-print(f"if statements nested: {val***REMOVED***")
+print(f"if statements nested: {val}")
 
 val = timeit.timeit("""response("I really don't have anything to say.")""",
                     """
 
 ANSWERS = ['Whatever.', 'Sure.', 'Whoa, chill out!',
-            "Calm down, I know what I'm doing!"***REMOVED***
+            "Calm down, I know what I'm doing!"]
 
 
 def response(hey_bob):
@@ -56,9 +56,9 @@ def response(hey_bob):
         return 'Fine. Be that way!'
     is_shout = 2 if hey_bob.isupper() else 0
     is_question = 1 if hey_bob.endswith('?') else 0
-    return ANSWERS[is_shout + is_question***REMOVED***
+    return ANSWERS[is_shout + is_question]
     
 
 """, number=loops) / loops
 
-print(f"answer list: {val***REMOVED***")
+print(f"answer list: {val}")

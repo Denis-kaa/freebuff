@@ -6,7 +6,7 @@ import os
 from dataclasses import dataclass
 from typing import Any
 
-***REMOVED***quests
+]quests
 
 from realtor_os.logger import setup_logger
 
@@ -42,20 +42,20 @@ class LocalLLM:
             Ответ LLM.
         """
         full_prompt = self._build_prompt(prompt, context)
-        payload: dict[str, Any***REMOVED*** = {
+        payload: dict[str, Any] = {
             "model": self.model,
             "prompt": full_prompt,
             "stream": False,
-        ***REMOVED***
+        }
         try:
             response = requests.post(
-                f"{self.base_url***REMOVED***/api/generate",
+                f"{self.base_url}/api/generate",
                 json=payload,
                 timeout=self.timeout,
             )
             response.raise_for_status()
         except requests.RequestException as exc:
-            raise LLMError(f"LLM request failed: {exc***REMOVED***") from exc
+            raise LLMError(f"LLM request failed: {exc}") from exc
 
         data = response.json()
         return LLMResponse(content=data.get("response", "").strip())
@@ -63,6 +63,6 @@ class LocalLLM:
     def _build_prompt(self, prompt: str, context: str) -> str:
         return (
             "Ты — ассистент риелтора. Отвечай на основе контекста.\n\n"
-            f"Контекст:\n{context***REMOVED***\n\n"
-            f"Вопрос:\n{prompt***REMOVED***\n"
+            f"Контекст:\n{context}\n\n"
+            f"Вопрос:\n{prompt}\n"
         )

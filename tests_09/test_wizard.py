@@ -8,7 +8,7 @@ and is read-only from this environment).
 from __future__ import annotations
 
 import json
-***REMOVED***
+}
 
 import pytest
 
@@ -55,15 +55,15 @@ def _seed_corpus(tmp_path: Path) -> Path:
         '      - "тест"\n'
         "project_types:\n"
         "  web:\n"
-        "    required_roles: [developer***REMOVED***\n"
-        "    skip_roles: [***REMOVED***\n"
+        "    required_roles: [developer]\n"
+        "    skip_roles: []\n"
         "complexity_routing:\n"
         "  small:\n"
-        "    required_roles: [developer***REMOVED***\n"
-        "    skip_roles: [***REMOVED***\n"
+        "    required_roles: [developer]\n"
+        "    skip_roles: []\n"
         "categories:\n"
-        "  implementation: [developer***REMOVED***\n"
-        "  validation: [tester***REMOVED***\n"
+        "  implementation: [developer]\n"
+        "  validation: [tester]\n"
         "metadata:\n"
         "  version: \"3.0.0\"\n",
         encoding="utf-8",
@@ -107,63 +107,63 @@ def corpus(tmp_path: Path):
 
 
 def test_deep_merge_copies_base_with_overrides() -> None:
-    base = {"a": 1, "b": {"c": 1, "d": 2***REMOVED******REMOVED***
-    override = {"b": {"d": 99, "e": 3***REMOVED***, "f": 4***REMOVED***
+    base = {"a": 1, "b": {"c": 1, "d": 2}}
+    override = {"b": {"d": 99, "e": 3}, "f": 4}
     merged = deep_merge(base, override)
-    assert merged == {"a": 1, "b": {"c": 1, "d": 99, "e": 3***REMOVED***, "f": 4***REMOVED***
+    assert merged == {"a": 1, "b": {"c": 1, "d": 99, "e": 3}, "f": 4}
     # Mutating merged doesn't affect originals.
-    merged["b"***REMOVED***["c"***REMOVED*** = "X"
-    assert base["b"***REMOVED***["c"***REMOVED*** == 1
+    merged["b"]["c"] = "X"
+    assert base["b"]["c"] == 1
 
 
 def test_deep_merge_replaces_scalar_with_dict() -> None:
-    out = deep_merge({"a": "string"***REMOVED***, {"a": {"nested": True***REMOVED******REMOVED***)
-    assert out == {"a": {"nested": True***REMOVED******REMOVED***
+    out = deep_merge({"a": "string"}, {"a": {"nested": True}})
+    assert out == {"a": {"nested": True}}
 
 
 def test_cascade_merge_in_level_order() -> None:
     levels = {
-        "system":    {"platform": "freebuff", "scenarios": {"x": "v1"***REMOVED******REMOVED***,
-        "workspace": {"mode": "single"***REMOVED***,
-        "agent":     {"role_id": "developer"***REMOVED***,
-    ***REMOVED***
+        "system":    {"platform": "freebuff", "scenarios": {"x": "v1"}},
+        "workspace": {"mode": "single"},
+        "agent":     {"role_id": "developer"},
+    }
     merged = CascadeContract.merge(levels)
-    assert merged["platform"***REMOVED*** == "freebuff"
-    assert merged["mode"***REMOVED*** == "single"
-    assert merged["role_id"***REMOVED*** == "developer"
-    assert merged["scenarios"***REMOVED*** == {"x": "v1"***REMOVED***
+    assert merged["platform"] == "freebuff"
+    assert merged["mode"] == "single"
+    assert merged["role_id"] == "developer"
+    assert merged["scenarios"] == {"x": "v1"}
 
 
 def test_cascade_merge_skips_unknown_levels() -> None:
     merged = CascadeContract.merge(
-        {"system": {"a": 1***REMOVED***, "phantom": {"b": 2***REMOVED***, "task": {"c": 3***REMOVED******REMOVED***
+        {"system": {"a": 1}, "phantom": {"b": 2}, "task": {"c": 3}}
     )
-    assert merged == {"a": 1, "c": 3***REMOVED***
+    assert merged == {"a": 1, "c": 3}
 
 
 def test_cascade_validate_levels_flags_missing_required() -> None:
-    errors = CascadeContract.validate_levels({"system": {"a": 1***REMOVED******REMOVED***)
+    errors = CascadeContract.validate_levels({"system": {"a": 1}})
     assert any("missing level 'workspace'" in e for e in errors)
 
 
 def test_cascade_validate_levels_flags_task_required_fields() -> None:
     errors = CascadeContract.validate_levels({
-        "system": {***REMOVED***, "workspace": {***REMOVED***, "project": {***REMOVED***, "agent": {***REMOVED***,
-        "task": {"goal": "x"***REMOVED***,  # missing assigned_role + routing_hint
-    ***REMOVED***)
+        "system": {}, "workspace": {}, "project": {}, "agent": {},
+        "task": {"goal": "x"},  # missing assigned_role + routing_hint
+    ])
     assert any("assigned_role" in e for e in errors)
     assert any("routing_hint" in e for e in errors)
 
 
 def test_resolve_assigned_model_passthrough_when_explicit() -> None:
-    assert resolve_assigned_model({"assigned_model": "claude-opus"***REMOVED***) == "claude-opus"
+    assert resolve_assigned_model({"assigned_model": "claude-opus"}) == "claude-opus"
 
 
 def test_resolve_assigned_model_auto_resolves_via_router() -> None:
     from core_02.router import SmartRouter, ModelCatalog
     router = SmartRouter(catalog=ModelCatalog.default())
     decision = resolve_assigned_model(
-        {"assigned_model": "auto", "routing_hint": ["code"***REMOVED******REMOVED***,
+        {"assigned_model": "auto", "routing_hint": ["code"]},
         router=router,
     )
     assert decision != "auto"
@@ -209,7 +209,7 @@ def test_propose_roles_returns_local_top_match(corpus) -> None:
     scored = propose_roles(corpus, "надо реализовать backend код", top_n=3)
     assert scored
     # developer should win (text overlap with "backend" + "code").
-    assert scored[0***REMOVED***[0***REMOVED*** == "developer"
+    assert scored[0][0] == "developer"
 
 
 def test_propose_roles_falls_back_when_no_match(corpus) -> None:
@@ -219,13 +219,13 @@ def test_propose_roles_falls_back_when_no_match(corpus) -> None:
     # Fallback ensures non-empty.
     assert scored
     # It's the first registered role with score 0.0 head.
-    assert scored[0***REMOVED***[2***REMOVED*** == 0.0
+    assert scored[0][2] == 0.0
 
 
 def test_build_agent_json_includes_routing_hint(corpus) -> None:
     agent = build_agent_json(corpus, "developer")
-    assert agent["role_id"***REMOVED*** == "developer"
-    assert agent["routing_hint"***REMOVED***
+    assert agent["role_id"] == "developer"
+    assert agent["routing_hint"]
     assert "missing_required_sections" in agent
 
 
@@ -250,13 +250,13 @@ def test_run_wizard_writes_all_levels_and_merged(tmp_path, corpus) -> None:
     )
     project_dir = ws / "demo_app"
     for level in CASCADE_LEVELS:
-        path = project_dir / f"{level***REMOVED***.json"
-        assert path.exists(), f"{level***REMOVED***.json missing"
+        path = project_dir / f"{level}.json"
+        assert path.exists(), f"{level}.json missing"
         json.loads(path.read_text(encoding="utf-8"))
     merged = json.loads(project_dir.joinpath("merged.json").read_text(encoding="utf-8"))
-    assert merged["platform"***REMOVED*** == "freebuff"
-    assert merged["name"***REMOVED*** == "demo_app"
-    assert merged["role_id"***REMOVED*** == "developer"
+    assert merged["platform"] == "freebuff"
+    assert merged["name"] == "demo_app"
+    assert merged["role_id"] == "developer"
 
 
 def test_run_wizard_resolves_assigned_model_via_smartrouter(tmp_path, corpus) -> None:
@@ -270,9 +270,9 @@ def test_run_wizard_resolves_assigned_model_via_smartrouter(tmp_path, corpus) ->
         task_goal="write code",
         force_role_id="developer",
     )
-    task = json.loads(Path(result["paths"***REMOVED***["task"***REMOVED***).read_text(encoding="utf-8"))
-    assert task["assigned_model"***REMOVED*** != "auto"
-    assert task["assigned_role"***REMOVED*** == "developer"
+    task = json.loads(Path(result["paths"]["task"]).read_text(encoding="utf-8"))
+    assert task["assigned_model"] != "auto"
+    assert task["assigned_role"] == "developer"
 
 
 def test_run_wizard_picks_best_available_role_for_query(tmp_path, corpus) -> None:
@@ -285,10 +285,10 @@ def test_run_wizard_picks_best_available_role_for_query(tmp_path, corpus) -> Non
         project_goal="qa audit test coverage",  # tester should win
         task_goal="plan tests",
     )
-    assert result["selected_role_id"***REMOVED*** == "tester"
-    agent = json.loads(Path(result["paths"***REMOVED***["agent"***REMOVED***).read_text(encoding="utf-8"))
+    assert result["selected_role_id"] == "tester"
+    agent = json.loads(Path(result["paths"]["agent"]).read_text(encoding="utf-8"))
     # Tester has no <capabilities> → fallback to override.
-    assert agent["routing_hint"***REMOVED***
+    assert agent["routing_hint"]
 
 
 def test_run_wizard_force_role_unknown_raises(tmp_path, corpus) -> None:
@@ -316,14 +316,14 @@ def test_router_last_resort_fallback_uses_configured_model() -> None:
     from core_02.router import ModelCatalog, ModelEntry, Provider, SmartRouter
 
     class EmptyMatchCatalog(ModelCatalog):
-        def match(self, required, max_tokens=0):  # type: ignore[override***REMOVED***
-            return [***REMOVED***  # simulate no capability match AND no context match
+        def match(self, required, max_tokens=0):  # type: ignore[override]
+            return []  # simulate no capability match AND no context match
 
     catalog = EmptyMatchCatalog(
-        [ModelEntry("gemini-2.5-flash", Provider.GEMINI, capabilities=["code"***REMOVED***)***REMOVED***
+        [ModelEntry("gemini-2.5-flash", Provider.GEMINI, capabilities=["code"])]
     )
     router = SmartRouter(catalog=catalog, fallback="gemini-2.5-flash")
-    decision = router.route(required_capabilities=["vision"***REMOVED***)
+    decision = router.route(required_capabilities=["vision"])
     assert decision.model == "gemini-2.5-flash"
     assert decision.fallback_used is True
     assert decision.reason == "fallback:last_resort"
@@ -335,7 +335,7 @@ def test_router_empty_catalog_raises_no_models() -> None:
 
     router = SmartRouter(catalog=ModelCatalog(), fallback="missing-model")
     with pytest.raises(RuntimeError, match="No models available"):
-        router.route(required_capabilities=["code"***REMOVED***)
+        router.route(required_capabilities=["code"])
 
 
 def test_known_capabilities_subset_of_actual_catalog() -> None:
@@ -345,18 +345,18 @@ def test_known_capabilities_subset_of_actual_catalog() -> None:
     'vocab can silently demote routing to qwen2.5:1.5b' (see LESSONS PB-7).
     """
     from core_02.router import ModelCatalog
-    catalog_caps: set[str***REMOVED*** = set()
+    catalog_caps: set[str] = set()
     for entry in ModelCatalog.default().all:
         catalog_caps.update(entry.capabilities)
     missing_in_known = catalog_caps - set(bpv3.KNOWN_CAPABILITIES)
     extra_in_known = set(bpv3.KNOWN_CAPABILITIES) - catalog_caps
     assert not missing_in_known, (
         f"ModelCatalog has caps not declared in KNOWN_CAPABILITIES: "
-        f"{missing_in_known***REMOVED*** — update core_02/blueprint_v3.py:KNOWN_CAPABILITIES"
+        f"{missing_in_known} — update core_02/blueprint_v3.py:KNOWN_CAPABILITIES"
     )
     assert not extra_in_known, (
         f"KNOWN_CAPABILITIES has dead entries not in ModelCatalog: "
-        f"{extra_in_known***REMOVED*** — prune them"
+        f"{extra_in_known} — prune them"
     )
 
 
@@ -371,7 +371,7 @@ def test_capabilities_override_now_routing_safe(tmp_path) -> None:
        our seed corpus.
 
     Caught as a regression in code-review (tester role used to have
-    ['test','qa','verify','audit'***REMOVED*** — all 4 tokens absent from ModelCatalog,
+    ['test','qa','verify','audit'] — all 4 tokens absent from ModelCatalog,
     so SmartRouter.route() fell through to fallback, picking qwen2.5:1.5b
     for QA work). Fix: override now uses only catalog-overlapping tokens.
     """
@@ -399,7 +399,7 @@ def test_capabilities_override_init_rejects_unknown_token(tmp_path, monkeypatch)
     bp_dir = _seed_corpus(tmp_path)
     monkeypatch.setitem(
         bpv3.CAPABILITIES_OVERRIDE, "future_unregistered_role",
-        ["nonexistent_capability_token", "another_unknown"***REMOVED***,
+        ["nonexistent_capability_token", "another_unknown"],
     )
     with pytest.raises(ValueError, match="nonexistent_capability_token"):
         bpv3.BlueprintCorpus(root=bp_dir)
@@ -421,10 +421,10 @@ def test_run_wizard_records_missing_required_sections_in_agent(tmp_path) -> None
         "    role: Low\n"
         "    description: x\n"
         "    condition: always\n"
-        "    triggers: ['x'***REMOVED***\n"
-        "project_types: {***REMOVED***\n"
-        "complexity_routing: {***REMOVED***\n"
-        "categories: {***REMOVED***\n"
+        "    triggers: ['x']\n"
+        "project_types: {]\n"
+        "complexity_routing: {]\n"
+        "categories: {]\n"
         "metadata:\n"
         "  version: '3.0.0'\n",
         encoding="utf-8",
@@ -446,10 +446,10 @@ def test_run_wizard_records_missing_required_sections_in_agent(tmp_path) -> None
         task_goal="y",
         force_role_id="low_role",
     )
-    agent = json.loads(Path(result["paths"***REMOVED***["agent"***REMOVED***).read_text(encoding="utf-8"))
-    assert agent["missing_required_sections"***REMOVED***
+    agent = json.loads(Path(result["paths"]["agent"]).read_text(encoding="utf-8"))
+    assert agent["missing_required_sections"]
     expected = {
         "system_role", "input", "main_objective",
         "priority_order", "implementation_scope_rules",
-    ***REMOVED***
-    assert set(agent["missing_required_sections"***REMOVED***) >= expected
+    }
+    assert set(agent["missing_required_sections"]) >= expected

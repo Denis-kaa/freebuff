@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
-***REMOVED***
+}
 
 from realtor_os.constants import DATA_DIR, DEFAULT_CHUNK_SIZE, DEFAULT_MAX_RESULTS, DEFAULT_OVERLAP
 from realtor_os.logger import setup_logger
@@ -60,9 +60,9 @@ class RAGEngine:
             conn.commit()
         return len(chunks)
 
-    def search(self, query: str, max_results: int = DEFAULT_MAX_RESULTS) -> list[dict[str, str***REMOVED******REMOVED***:
+    def search(self, query: str, max_results: int = DEFAULT_MAX_RESULTS) -> list[dict[str, str]]:
         """Поиск по индексу."""
-        rows: list[tuple[str, str***REMOVED******REMOVED*** = [***REMOVED***
+        rows: list[tuple[str, str]] = []
         if self._fts_enabled:
             with sqlite3.connect(self._db_path) as conn:
                 rows = conn.execute(
@@ -76,17 +76,17 @@ class RAGEngine:
             with sqlite3.connect(self._db_path) as conn:
                 rows = conn.execute(
                     "SELECT source, content FROM documents WHERE content LIKE ? LIMIT ?",
-                    (f"%{query***REMOVED***%", max_results),
+                    (f"%{query}%", max_results),
                 ).fetchall()
-        return [{"source": source, "content": content***REMOVED*** for source, content in rows***REMOVED***
+        return [{"source": source, "content": content} for source, content in rows]
 
     @staticmethod
-    def _chunk(text: str, chunk_size: int, overlap: int) -> list[str***REMOVED***:
+    def _chunk(text: str, chunk_size: int, overlap: int) -> list[str]:
         words = text.split()
         if not words:
-            return [***REMOVED***
+            return []
         step = max(1, chunk_size - overlap)
-        chunks: list[str***REMOVED*** = [***REMOVED***
+        chunks: list[str] = []
         for i in range(0, len(words), step):
-            chunks.append(" ".join(words[i : i + chunk_size***REMOVED***))
+            chunks.append(" ".join(words[i : i + chunk_size]))
         return chunks

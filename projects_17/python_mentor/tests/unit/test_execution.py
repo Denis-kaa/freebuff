@@ -1,7 +1,7 @@
 """Phase E tests for the replaceable MVP execution backend."""
 
 import sys
-***REMOVED***
+}
 
 from app.execution import (
     ExecutionJob,
@@ -12,13 +12,13 @@ from app.execution import (
 )
 
 
-def make_job(tmp_path: Path, code: str, env: dict[str, str***REMOVED*** | None = None) -> ExecutionJob:
+def make_job(tmp_path: Path, code: str, env: dict[str, str] | None = None) -> ExecutionJob:
     script = tmp_path / "job.py"
     script.write_text(code, encoding="utf-8")
     return ExecutionJob(
         command=(sys.executable, str(script)),
         workspace=tmp_path,
-        environment=env or {"PATH": "/usr/bin:/bin", "PYTHONNOUSERSITE": "1"***REMOVED***,
+        environment=env or {"PATH": "/usr/bin:/bin", "PYTHONNOUSERSITE": "1"},
     )
 
 
@@ -39,7 +39,7 @@ def test_timeout_terminates_process_group(tmp_path: Path) -> None:
         make_job(
             tmp_path,
             "import subprocess\nimport sys\nimport time\n"
-            "child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(10)'***REMOVED***)\n"
+            "child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(10)'])\n"
             "while True:\n    time.sleep(0.01)",
         ),
         ExecutionPolicy(timeout_seconds=0.1, cpu_seconds=None, address_space_bytes=None),
@@ -85,7 +85,7 @@ def test_environment_is_owned_by_job(tmp_path: Path) -> None:
 
 def test_working_directory_is_the_job_workspace(tmp_path: Path) -> None:
     result = TermuxSubprocessBackend().execute(
-        make_job(tmp_path, "***REMOVED***\nprint(Path.cwd() == Path.cwd())"),
+        make_job(tmp_path, ")\nprint(Path.cwd() == Path.cwd())"),
         ExecutionPolicy(cpu_seconds=None, address_space_bytes=None),
     )
 
@@ -98,7 +98,7 @@ def test_address_space_policy_is_applied_to_direct_job(tmp_path: Path) -> None:
     result = TermuxSubprocessBackend().execute(
         make_job(
             tmp_path,
-            "***REMOVED***\n"
+            "]\n"
             "for line in Path('/proc/self/limits').read_text().splitlines():\n"
             "    if line.startswith('Max address space'):\n"
             "        print(line)\n",

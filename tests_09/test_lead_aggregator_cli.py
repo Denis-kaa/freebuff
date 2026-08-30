@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 import sys
-***REMOVED***
+}
 
 import pytest
 
@@ -27,13 +27,13 @@ class _FakeAdapter(BaseAdapter):
 
     name = "fake"
 
-    def __init__(self, leads: list[Lead***REMOVED***, name: str = "fake") -> None:
+    def __init__(self, leads: list[Lead], name: str = "fake") -> None:
         self.name = name
         self.ordered = False
         self._leads = leads
 
-    async def fetch(self, limit: int = 50) -> list[Lead***REMOVED***:
-        return self._leads[:limit***REMOVED***
+    async def fetch(self, limit: int = 50) -> list[Lead]:
+        return self._leads[:limit]
 
 
 @pytest.fixture
@@ -45,40 +45,40 @@ def config(tmp_path):
 # ── parser ───────────────────────────────────────────────────────────
 class TestParser:
     def test_default_is_once(self):
-        args = build_parser().parse_args([***REMOVED***)
+        args = build_parser().parse_args([])
         assert not args.dry_run and not args.forever
 
     def test_dry_run_flag(self):
-        args = build_parser().parse_args(["--dry-run"***REMOVED***)
+        args = build_parser().parse_args(["--dry-run"])
         assert args.dry_run
 
     def test_forever_flag(self):
-        args = build_parser().parse_args(["--forever"***REMOVED***)
+        args = build_parser().parse_args(["--forever"])
         assert args.forever
 
     def test_mutually_exclusive_modes(self):
         with pytest.raises(SystemExit):
-            build_parser().parse_args(["--dry-run", "--forever"***REMOVED***)
+            build_parser().parse_args(["--dry-run", "--forever"])
 
     def test_sources_alias_tg(self):
-        assert _parse_sources("kwork,tg") == ["kwork", "tg_channel"***REMOVED***
-        assert _parse_sources("tg") == ["tg_channel"***REMOVED***
+        assert _parse_sources("kwork,tg") == ["kwork", "tg_channel"]
+        assert _parse_sources("tg") == ["tg_channel"]
         assert _parse_sources(None) is None
 
 
 # ── select_adapters ──────────────────────────────────────────────────
 class TestSelectAdapters:
     def test_filter_by_source(self, config, monkeypatch):
-        kwork = _FakeAdapter([***REMOVED***, name="kwork")
-        tg = _FakeAdapter([***REMOVED***, name="tg_channel")
-        monkeypatch.setattr("app.cli.build_default_adapters", lambda c, cl: [kwork, tg***REMOVED***)
-        picked = _select_adapters(config, None, ["tg_channel"***REMOVED***)
-        assert [a.name for a in picked***REMOVED*** == ["tg_channel"***REMOVED***
+        kwork = _FakeAdapter([], name="kwork")
+        tg = _FakeAdapter([], name="tg_channel")
+        monkeypatch.setattr("app.cli.build_default_adapters", lambda c, cl: [kwork, tg])
+        picked = _select_adapters(config, None, ["tg_channel"])
+        assert [a.name for a in picked] == ["tg_channel"]
 
     def test_all_when_no_filter(self, config, monkeypatch):
-        kwork = _FakeAdapter([***REMOVED***, name="kwork")
-        tg = _FakeAdapter([***REMOVED***, name="tg_channel")
-        monkeypatch.setattr("app.cli.build_default_adapters", lambda c, cl: [kwork, tg***REMOVED***)
+        kwork = _FakeAdapter([], name="kwork")
+        tg = _FakeAdapter([], name="tg_channel")
+        monkeypatch.setattr("app.cli.build_default_adapters", lambda c, cl: [kwork, tg])
         picked = _select_adapters(config, None, None)
         assert len(picked) == 2
 
@@ -100,19 +100,19 @@ class TestEnvFile:
     def test_load_env_file_sets_environ(self, tmp_path, monkeypatch):
         env = tmp_path / "settings.env"
         env.write_text(
-            "# comment\nLA_POLL_INTERVAL=123\n\n[TEMPLATE***REMOVED***\nLA_KWORK_ENABLED=1\n",
+            "# comment\nLA_POLL_INTERVAL=123\n\n[TEMPLATE]\nLA_KWORK_ENABLED=1\n",
             encoding="utf-8",
         )
         monkeypatch.delenv("LA_POLL_INTERVAL", raising=False)
         _load_env_file(env)
-        assert os.environ["LA_POLL_INTERVAL"***REMOVED*** == "123"
+        assert os.environ["LA_POLL_INTERVAL"] == "123"
 
     def test_env_file_does_not_override_existing(self, tmp_path, monkeypatch):
         env = tmp_path / "settings.env"
         env.write_text("LA_POLL_INTERVAL=999\n", encoding="utf-8")
         monkeypatch.setenv("LA_POLL_INTERVAL", "1")
         _load_env_file(env)
-        assert os.environ["LA_POLL_INTERVAL"***REMOVED*** == "1"
+        assert os.environ["LA_POLL_INTERVAL"] == "1"
 
     def test_load_config_uses_real_settings_env(self, monkeypatch):
         # settings.env проекта существует → load_config() не падает

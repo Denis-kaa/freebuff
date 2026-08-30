@@ -8,7 +8,7 @@ dedup → RuleMatcher → explainable MatchDecision. Никаких сетевы
 from __future__ import annotations
 
 from datetime import datetime, timezone
-***REMOVED***
+}
 
 import pytest
 
@@ -21,11 +21,11 @@ from app.rss_atom import (
     normalize_source_item,
 )
 
-FIXTURES = Path(__file__).parents[1***REMOVED*** / "fixtures"
+FIXTURES = Path(__file__).parents[1] / "fixtures"
 NOW = datetime(2026, 8, 23, 12, 0, tzinfo=timezone.utc)
 
 
-def _parse_and_normalize(relative_path: str, source_id: str) -> tuple[Publication, ...***REMOVED***:
+def _parse_and_normalize(relative_path: str, source_id: str) -> tuple[Publication, ...]:
     """Parsing + normalization без сети (sync срез pipeline)."""
     result = RSSAtomParser(source_id).parse((FIXTURES / relative_path).read_bytes())
     return deduplicate_publications(
@@ -54,21 +54,21 @@ def test_full_slice_rss_fixture_to_match_decisions() -> None:
     assert len(publications) == 2
 
     matcher = RuleMatcher(_python_profile())
-    decisions = [matcher.match(p, decided_at=NOW) for p in publications***REMOVED***
+    decisions = [matcher.match(p, decided_at=NOW) for p in publications]
 
-    accepted = [d for d in decisions if d.outcome is MatchOutcome.ACCEPT***REMOVED***
-    assert [d.publication_key for d in accepted***REMOVED*** == ["rss-fixture:request-1"***REMOVED***
-    decision = accepted[0***REMOVED***
+    accepted = [d for d in decisions if d.outcome is MatchOutcome.ACCEPT]
+    assert [d.publication_key for d in accepted] == ["rss-fixture:request-1"]
+    decision = accepted[0]
     assert decision.score >= 0.8
     assert "required term matched: python" in decision.reasons
     assert any(r.startswith("intent term matched") for r in decision.reasons)
     assert decision.profile_version == 3
     # Explenability: snapshot правил профиля в decision.
-    assert decision.rules_snapshot["required_terms"***REMOVED*** == ("python",)
+    assert decision.rules_snapshot["required_terms"] == ("python",)
 
-    rejected = [d for d in decisions if d.outcome is MatchOutcome.REJECT***REMOVED***
+    rejected = [d for d in decisions if d.outcome is MatchOutcome.REJECT]
     assert len(rejected) == 1
-    assert rejected[0***REMOVED***.publication_key == "rss-fixture:https://example.test/requests/2"
+    assert rejected[0].publication_key == "rss-fixture:https://example.test/requests/2"
 
 
 def test_atom_fixture_matches_different_profile_and_skips_missing_link() -> None:
@@ -81,8 +81,8 @@ def test_atom_fixture_matches_different_profile_and_skips_missing_link() -> None
     # Оба entry имеют абсолютные https-ссылки; request-4 без даты проходит
     # с invalid_date warning, но остаётся в pipeline (дата необязательна).
     assert len(publications) == 2
-    assert publications[0***REMOVED***.item_key == "atom-fixture:tag:example.test,2026:request-3"
-    assert publications[1***REMOVED***.published_at is None
+    assert publications[0].item_key == "atom-fixture:tag:example.test,2026:request-3"
+    assert publications[1].published_at is None
 
     profile = SearchProfile(
         profile_id="profile-copy",
@@ -93,8 +93,8 @@ def test_atom_fixture_matches_different_profile_and_skips_missing_link() -> None
         intent_terms=("нужен", "need"),
     )
     matcher = RuleMatcher(profile)
-    decision = matcher.match(publications[0***REMOVED***, decided_at=NOW)
-    other = matcher.match(publications[1***REMOVED***, decided_at=NOW)
+    decision = matcher.match(publications[0], decided_at=NOW)
+    other = matcher.match(publications[1], decided_at=NOW)
 
     assert decision.outcome is MatchOutcome.ACCEPT
     assert decision.matched_terms == ("copywriter",)
@@ -108,8 +108,8 @@ async def test_fixture_adapter_async_pipeline_is_idempotent() -> None:
     """Async FixtureFeedAdapter → normalize → dedup → match: повторный прогон не создаёт дублей."""
     adapter = FixtureFeedAdapter("rss-fixture", (FIXTURES / "rss/sample_rss.xml").read_bytes())
 
-    async def run() -> tuple[tuple[Publication, ...***REMOVED***, tuple[MatchDecision, ...***REMOVED******REMOVED***:
-        items = [item async for item in adapter.fetch()***REMOVED***
+    async def run() -> tuple[tuple[Publication, ...], tuple[MatchDecision, ...]]:
+        items = [item async for item in adapter.fetch()]
         publications = deduplicate_publications(
             normalize_source_item("rss-fixture", item, fetched_at=NOW)
             for item in items
@@ -124,7 +124,7 @@ async def test_fixture_adapter_async_pipeline_is_idempotent() -> None:
 
     assert len(first_publications) == 2
     assert len(second_publications) == 2
-    assert [p.item_key for p in first_publications***REMOVED*** == [p.item_key for p in second_publications***REMOVED***
+    assert [p.item_key for p in first_publications] == [p.item_key for p in second_publications]
     assert first_decisions == second_decisions
     assert sum(1 for d in first_decisions if d.outcome is MatchOutcome.ACCEPT) == 1
 
@@ -144,7 +144,7 @@ def test_exclusion_rule_filters_out_noise_in_pipeline() -> None:
         )
     )
 
-    decision = RuleMatcher(profile).match(noise[0***REMOVED***, decided_at=NOW)
+    decision = RuleMatcher(profile).match(noise[0], decided_at=NOW)
 
     assert decision.outcome is MatchOutcome.REJECT
     assert decision.score == 0.0

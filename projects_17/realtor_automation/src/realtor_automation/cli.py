@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
-***REMOVED***
+}
 from typing import Any, cast
 
 from realtor_automation.config import ConfigError, load_config
@@ -24,19 +24,19 @@ class CLI:
     def __init__(self) -> None:
         self._project_root = Path(__file__).resolve().parent.parent.parent
         self._config = self._load_config()
-        self._paths = self._config.get("paths", {***REMOVED***)
+        self._paths = self._config.get("paths", {})
         self._logger = self._setup_logger()
         self._state = self._setup_state()
 
-    def _load_config(self) -> dict[str, Any***REMOVED***:
+    def _load_config(self) -> dict[str, Any]:
         try:
-            return cast(dict[str, Any***REMOVED***, load_config(self._project_root))
+            return cast(dict[str, Any], load_config(self._project_root))
         except ConfigError as exc:
-            print(f"Configuration error: {exc***REMOVED***", file=sys.stderr)
+            print(f"Configuration error: {exc}", file=sys.stderr)
             sys.exit(1)
 
     def _setup_logger(self) -> logging.Logger:
-        app_cfg = self._config.get("app", {***REMOVED***)
+        app_cfg = self._config.get("app", {})
         log_level = app_cfg.get("log_level", "INFO")
         quiet = app_cfg.get("quiet", False)
         logs_dir = Path(self._paths.get("logs", "logs"))
@@ -55,13 +55,13 @@ class CLI:
         return StateManager(self._project_root / state_file)
 
     def _knowledge_base(self) -> KnowledgeBase:
-        db_path = self._project_root / self._config.get("rag", {***REMOVED***).get("db_path", "data/knowledge.db")
+        db_path = self._project_root / self._config.get("rag", {}).get("db_path", "data/knowledge.db")
         return KnowledgeBase(db_path)
 
     def _encryptor(self) -> PIIEncryptor:
         return PIIEncryptor()
 
-    def run(self, args: list[str***REMOVED***) -> int:
+    def run(self, args: list[str]) -> int:
         parser = self._build_parser()
         parsed = parser.parse_args(args)
         if not hasattr(parsed, "func"):
@@ -128,7 +128,7 @@ class CLI:
         content = file_path.read_text(encoding="utf-8")
         kb = self._knowledge_base()
         count = kb.ingest(source=str(file_path), content=content, tag=parsed.tag)
-        self._state.add_installed(f"doc:{file_path.name***REMOVED***")
+        self._state.add_installed(f"doc:{file_path.name}")
         self._logger.info("Ingested %s (rows=%d)", file_path, count)
         return 0
 
@@ -140,7 +140,7 @@ class CLI:
             return 0
 
         context = "\n\n".join(
-            f"[{doc['tag'***REMOVED*** or 'general'***REMOVED******REMOVED*** {doc['source'***REMOVED******REMOVED***:\n{doc['content'***REMOVED***[:300***REMOVED******REMOVED***"
+            f"[{doc['tag'] or 'general'}] {doc['source']}:\n{doc['content'][:300]}"
             for doc in results
         )
 
@@ -148,7 +148,7 @@ class CLI:
             client = get_client(self._config)
             prompt = (
                 f"Ответь на вопрос риелтора, используя только предоставленный контекст:\n\n"
-                f"Вопрос: {parsed.query***REMOVED***\n\nКонтекст:\n{context***REMOVED***\n\nОтвет:"
+                f"Вопрос: {parsed.query}\n\nКонтекст:\n{context}\n\nОтвет:"
             )
             response = client.ask(prompt)
             print(response.content)
@@ -187,7 +187,7 @@ class CLI:
 
 def main() -> int:
     """Entry point for the CLI."""
-    return CLI().run(sys.argv[1:***REMOVED***)
+    return CLI().run(sys.argv[1:])
 
 
 if __name__ == "__main__":

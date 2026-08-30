@@ -44,7 +44,7 @@ class TestPipelineRoleGate:
             "explainer", "lisa", "risk", "decomposer", "architect", "auditor",
             "developer", "frontend", "devops", "tester", "fixer",
             "acceptance", "documenter", "retrospective",
-        ***REMOVED***)
+        })
 
     def test_can_initiate_gate(self, registry):
         facade = ForgeFacade(registry=registry)
@@ -71,7 +71,7 @@ class TestForgeFacadeInitiate:
         result = facade.initiate_forge(project, requested_by_role="tester")
         history = registry.get_pipeline_history(result.project_id)
         assert len(history) == 1
-        assert history[0***REMOVED***["overall"***REMOVED*** == result.overall
+        assert history[0]["overall"] == result.overall
 
     def test_initiate_forge_rejects_reference_role(self, project, registry):
         facade = ForgeFacade(registry=registry, dry_run=True)
@@ -87,9 +87,9 @@ class TestForgeFacadeInitiate:
     def test_initiate_forge_returns_stages_summary(self, project, registry):
         facade = ForgeFacade(registry=registry, dry_run=True)
         result = facade.initiate_forge(project, requested_by_role="developer")
-        names = [s["name"***REMOVED*** for s in result.stages***REMOVED***
-        assert names == ["FORGE", "CHECK", "BUILD", "TEST", "DEPLOY", "REPORT"***REMOVED***
-        assert all(s["status"***REMOVED*** in ("ok", "skipped", "failed") for s in result.stages)
+        names = [s["name"] for s in result.stages]
+        assert names == ["FORGE", "CHECK", "BUILD", "TEST", "DEPLOY", "REPORT"]
+        assert all(s["status"] in ("ok", "skipped", "failed") for s in result.stages)
 
     def test_get_status_readonly(self, project, registry):
         facade = ForgeFacade(registry=registry, dry_run=True)
@@ -133,8 +133,8 @@ class TestForgeFacadeRecordRun:
         sentinel = self._make_sentinel(project_id, str(project.root))
         facade = ForgeFacade(registry=registry)
         status = facade.record_run(project.name, sentinel)
-        # Sentinel persisted в last_pipeline['chain'***REMOVED***.
-        assert status.last_pipeline.get("chain") == sentinel.to_dict()["chain"***REMOVED***
+        # Sentinel persisted в last_pipeline['chain'].
+        assert status.last_pipeline.get("chain") == sentinel.to_dict()["chain"]
 
     def test_record_run_returns_updated_status_with_last_run_at(
         self, project, registry
@@ -209,7 +209,7 @@ class TestForgeFacadeRecordRun:
         status = facade.record_run(project.name, degraded)
         assert status.status == DEPLOYED  # не даунгрейд
         assert status.last_pipeline.get("overall") == "degraded"
-        assert registry.validate_schema() == [***REMOVED***
+        assert registry.validate_schema() == []
 
     def test_record_run_unregistered_project_raises_keyerror(self, tmp_path):
         """record_run нерегистрированного проекта → KeyError (per registry.record_run)."""
@@ -238,21 +238,21 @@ class TestForgeFacadeRecordRun:
         sentinel = self._make_sentinel(project_id, str(project.root))
         facade = ForgeFacade(registry=registry)
         # Spy: подсчитываем количество вызовов registry.record_run.
-        call_count = {"n": 0***REMOVED***
-        captured = {"args": None***REMOVED***
+        call_count = {"n": 0}
+        captured = {"args": None}
         original_record_run = registry.record_run
         def _spy(project_id_arg, run_arg):
-            call_count["n"***REMOVED*** += 1
-            captured["args"***REMOVED*** = (project_id_arg, run_arg)
+            call_count["n"] += 1
+            captured["args"] = (project_id_arg, run_arg)
             return original_record_run(project_id_arg, run_arg)
         # monkeypatch.setattr: pytest гарантирует cleanup attribute restoration
         # после test (включая failure paths). Замена raw attribute assignment
         # из v5.173.0 (CR micro-nit).
         monkeypatch.setattr(facade.registry, "record_run", _spy)
         facade.record_run(project.name, sentinel)
-        assert call_count["n"***REMOVED*** == 1
-        assert captured["args"***REMOVED***[0***REMOVED*** == project_id  # project_id = slug(project.name)
-        assert captured["args"***REMOVED***[1***REMOVED*** is sentinel    # ChainRun passed by reference
+        assert call_count["n"] == 1
+        assert captured["args"][0] == project_id  # project_id = slug(project.name)
+        assert captured["args"][1] is sentinel    # ChainRun passed by reference
 
 
 class TestS73Invariant:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-***REMOVED***
+}
 
 import pytest
 
@@ -27,21 +27,21 @@ def test_extractor_is_deterministic_and_classifies_learner_documents(fixture_roo
     assert first == second
     assert first
     assert all(document.locale == "en" for document in first)
-    assert {document.content_kind for document in first***REMOVED*** <= {
+    assert {document.content_kind for document in first} <= {
         "exercise_instructions",
         "exercise_introduction",
         "exercise_hints",
         "concept_about",
         "concept_introduction",
-    ***REMOVED***
+    }
     manifest = build_manifest(first, target_locale="ru")
-    assert manifest["source_locale"***REMOVED*** == "en"
-    assert manifest["target_locale"***REMOVED*** == "ru"
-    assert manifest["document_count"***REMOVED*** == len(first)
+    assert manifest["source_locale"] == "en"
+    assert manifest["target_locale"] == "ru"
+    assert manifest["document_count"] == len(first)
 
 
 def test_translation_validation_preserves_markdown_contract() -> None:
-    source_text = """# Урок\n\nИспользуй `str.format()`:\n\n```python\nprint('hello')\n```\n\n[Документация***REMOVED***(https://example.test/python)\n"""
+    source_text = """# Урок\n\nИспользуй `str.format()`:\n\n```python\nprint('hello')\n```\n\n[Документация](https://example.test/python)\n"""
     source = SourceDocument(
         document_id="exercism:concepts/demo/about",
         source_relpath="concepts/demo/about.md",
@@ -55,7 +55,7 @@ def test_translation_validation_preserves_markdown_contract() -> None:
         source_hash=source.content_hash,
         source_locale="en",
         target_locale="ru",
-        text="""# Урок\n\nИспользуй `str.format()`:\n\n```python\nprint('hello')\n```\n\n[Документация***REMOVED***(https://example.test/python)\n""",
+        text="""# Урок\n\nИспользуй `str.format()`:\n\n```python\nprint('hello')\n```\n\n[Документация](https://example.test/python)\n""",
         provider="test",
         model="fixture",
         status=TranslationStatus.REVIEWED,
@@ -187,18 +187,18 @@ def test_translation_status_rows_detect_missing_and_stale(tmp_path: Path) -> Non
         text="# Original\n",
     )
     rows = translation_status_rows((source,), tmp_path)
-    assert rows[0***REMOVED***.status is TranslationStatus.DRAFT
+    assert rows[0].status is TranslationStatus.DRAFT
 
     destination = tmp_path / source.source_relpath
     destination.parent.mkdir(parents=True)
     destination.write_text("# Old\n", encoding="utf-8")
     destination.with_suffix(".md.source_hash").write_text("stale\n", encoding="utf-8")
     rows = translation_status_rows((source,), tmp_path)
-    assert rows[0***REMOVED***.status is TranslationStatus.STALE
+    assert rows[0].status is TranslationStatus.STALE
 
 
 def test_external_llm_provider_fails_closed_without_configuration(fixture_root: Path) -> None:
-    document = iter_source_documents(fixture_root)[0***REMOVED***
+    document = iter_source_documents(fixture_root)[0]
     provider = ExternalLLMTranslationProvider()
     with pytest.raises(RuntimeError, match="not configured"):
         provider.translate((document,), "ru")

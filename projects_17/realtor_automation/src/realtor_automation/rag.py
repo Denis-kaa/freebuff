@@ -6,7 +6,7 @@ import os
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any
 
 
@@ -105,7 +105,7 @@ class KnowledgeBase:
             conn.commit()
             return int(cur.rowcount)
 
-    def search(self, query: str, limit: int = 5) -> list[dict[str, Any***REMOVED******REMOVED***:
+    def search(self, query: str, limit: int = 5) -> list[dict[str, Any]]:
         """Search documents for the given query.
 
         Falls back to a simple LIKE search if FTS5 is unavailable.
@@ -114,7 +114,7 @@ class KnowledgeBase:
             return self._search_fts(query, limit)
         return self._search_like(query, limit)
 
-    def _search_fts(self, query: str, limit: int) -> list[dict[str, Any***REMOVED******REMOVED***:
+    def _search_fts(self, query: str, limit: int) -> list[dict[str, Any]]:
         with self._connect() as conn:
             rows = conn.execute(
                 """
@@ -127,12 +127,12 @@ class KnowledgeBase:
                 """,
                 (query, limit),
             ).fetchall()
-        return [dict(row) for row in rows***REMOVED***
+        return [dict(row) for row in rows]
 
-    def _search_like(self, query: str, limit: int) -> list[dict[str, Any***REMOVED******REMOVED***:
+    def _search_like(self, query: str, limit: int) -> list[dict[str, Any]]:
         with self._connect() as conn:
             rows = conn.execute(
                 "SELECT * FROM documents WHERE content LIKE ? ORDER BY created_at DESC LIMIT ?",
-                (f"%{query***REMOVED***%", limit),
+                (f"%{query}%", limit),
             ).fetchall()
-        return [dict(row) for row in rows***REMOVED***
+        return [dict(row) for row in rows]

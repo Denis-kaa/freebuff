@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-***REMOVED***
+}
 
 import pytest
 
@@ -18,17 +18,17 @@ def sample_policy_file(tmp_path: Path):
   \"policies\": {
     \"coding\": {
       \"preferred_runtime\": \"claude-code\",
-      \"fallback_chain\": [\"freebuff\", \"openclaw\"***REMOVED***,
+      \"fallback_chain\": [\"freebuff\", \"openclaw\"],
       \"constraints\": [
-        {\"rule_type\": \"min_confidence\", \"params\": {\"value\": 0.7***REMOVED******REMOVED***
-      ***REMOVED***
-    ***REMOVED***,
+        {\"rule_type\": \"min_confidence\", \"params\": {\"value\": 0.7}]
+      }
+    },
     \"research\": {
       \"preferred_runtime\": \"openclaw\",
-      \"fallback_chain\": [\"freebuff\"***REMOVED***
-    ***REMOVED***
-  ***REMOVED***
-***REMOVED***""",
+      \"fallback_chain\": [\"freebuff\"]
+    }
+  }
+]""",
         encoding="utf-8",
     )
     return path
@@ -45,7 +45,7 @@ class MockRuntimeRegistry:
             class Status:
                 value = "connected"
             status = Status()
-            capabilities = ["coding"***REMOVED***
+            capabilities = ["coding"]
         return FakeRuntime()
 
     def is_connected(self, name: str) -> bool:
@@ -63,7 +63,7 @@ class MockCapabilityRegistry:
             "runtime": "freebuff",
             "confidence": self._score,
             "connected": True,
-        ***REMOVED***
+        }
 
     def score_runtime(self, runtime_name: str, capability: str) -> float:
         return self._score
@@ -71,9 +71,9 @@ class MockCapabilityRegistry:
 
 class TestPolicyConfig:
     def test_policy_rule_creation(self):
-        rule = PolicyRule(rule_type="max_latency", params={"value": 2000***REMOVED***)
+        rule = PolicyRule(rule_type="max_latency", params={"value": 2000})
         assert rule.rule_type == "max_latency"
-        assert rule.params["value"***REMOVED*** == 2000
+        assert rule.params["value"] == 2000
 
     def test_policy_rule_empty_type_raises(self):
         with pytest.raises(ValueError):
@@ -82,14 +82,14 @@ class TestPolicyConfig:
     def test_capability_policy_defaults(self):
         policy = CapabilityPolicy(preferred_runtime="freebuff")
         assert policy.preferred_runtime == "freebuff"
-        assert policy.fallback_chain == [***REMOVED***
-        assert policy.constraints == [***REMOVED***
+        assert policy.fallback_chain == []
+        assert policy.constraints == []
 
     def test_policy_context_defaults(self):
         ctx = PolicyContext()
         assert ctx.max_latency_ms == 5000
-        assert ctx.required_flags == [***REMOVED***
-        assert ctx.exclude == [***REMOVED***
+        assert ctx.required_flags == []
+        assert ctx.exclude == []
 
 
 class TestPolicyEngine:
@@ -102,7 +102,7 @@ class TestPolicyEngine:
         policies = engine.list_policies()
         assert "coding" in policies
         assert "research" in policies
-        assert policies["coding"***REMOVED***.preferred_runtime == "claude-code"
+        assert policies["coding"].preferred_runtime == "claude-code"
 
     def test_select_runtime_preferred(self, sample_policy_file: Path):
         engine = PolicyEngine(
@@ -124,7 +124,7 @@ class TestPolicyEngine:
 
     def test_set_preference(self, tmp_path: Path):
         policy_file = tmp_path / "policies.json"
-        policy_file.write_text('{"version": "1.0", "policies": {***REMOVED******REMOVED***')
+        policy_file.write_text('{"version": "1.0", "policies": {)]')
         engine = PolicyEngine(
             MockRuntimeRegistry(),
             MockCapabilityRegistry(),
@@ -135,7 +135,7 @@ class TestPolicyEngine:
 
     def test_unset_preference_clears(self, tmp_path: Path):
         policy_file = tmp_path / "policies.json"
-        policy_file.write_text('{"version": "1.0", "policies": {***REMOVED******REMOVED***')
+        policy_file.write_text('{"version": "1.0", "policies": {)]')
         engine = PolicyEngine(
             MockRuntimeRegistry(),
             MockCapabilityRegistry(),
@@ -149,7 +149,7 @@ class TestPolicyEngine:
 
     def test_unset_preference_missing_capability(self, tmp_path: Path):
         policy_file = tmp_path / "policies.json"
-        policy_file.write_text('{"version": "1.0", "policies": {***REMOVED******REMOVED***')
+        policy_file.write_text('{"version": "1.0", "policies": {)]')
         engine = PolicyEngine(
             MockRuntimeRegistry(),
             MockCapabilityRegistry(),
@@ -168,7 +168,7 @@ class TestPolicyEngine:
         assert engine.unset_preference("research") is True
         # повторный unset — уже нет preferred
         assert engine.unset_preference("research") is False
-        assert engine.get_policy("research").fallback_chain == ["freebuff"***REMOVED***
+        assert engine.get_policy("research").fallback_chain == ["freebuff"]
 
     def test_constraint_filters_low_confidence(self, tmp_path: Path):
         policy_file = tmp_path / "policies.json"
@@ -178,13 +178,13 @@ class TestPolicyEngine:
   \"policies\": {
     \"coding\": {
       \"preferred_runtime\": \"claude-code\",
-      \"fallback_chain\": [\"freebuff\"***REMOVED***,
+      \"fallback_chain\": [\"freebuff\"],
       \"constraints\": [
-        {\"rule_type\": \"min_confidence\", \"params\": {\"value\": 0.9***REMOVED******REMOVED***
-      ***REMOVED***
-    ***REMOVED***
-  ***REMOVED***
-***REMOVED***""",
+        {\"rule_type\": \"min_confidence\", \"params\": {\"value\": 0.9}]
+      }
+    }
+  }
+]""",
             encoding="utf-8",
         )
         engine = PolicyEngine(
@@ -202,7 +202,7 @@ class TestPolicyEngine:
             MockCapabilityRegistry(),
             policy_file=str(policy_file),
         )
-        assert engine.list_policies() == {***REMOVED***
+        assert engine.list_policies() == {}
 
     def test_malformed_policy_file_ignored(self, tmp_path: Path):
         policy_file = tmp_path / "bad.json"
@@ -212,7 +212,7 @@ class TestPolicyEngine:
             MockCapabilityRegistry(),
             policy_file=str(policy_file),
         )
-        assert engine.list_policies() == {***REMOVED***
+        assert engine.list_policies() == {}
 
 
 class TestPolicyCLI:
@@ -221,7 +221,7 @@ class TestPolicyCLI:
     def _make_cli_engine(self, tmp_path: Path):
         """PolicyEngine с мок-реестрами и временным policy-файлом."""
         policy_file = tmp_path / "policies.json"
-        policy_file.write_text('{"version": "1.0", "policies": {***REMOVED******REMOVED***')
+        policy_file.write_text('{"version": "1.0", "policies": {)]')
         return PolicyEngine(
             MockRuntimeRegistry(),
             MockCapabilityRegistry(),
@@ -306,35 +306,35 @@ class TestPolicyCLI:
 class TestPolicyRules:
     def test_max_latency_rule(self):
         from freebuff_plugin_03.policy.rules import evaluate_rule
-        rule = PolicyRule("max_latency", {"value": 1000***REMOVED***)
+        rule = PolicyRule("max_latency", {"value": 1000})
         context = PolicyContext()
-        assert evaluate_rule(rule, {"name": "fast", "latency_ms": 500***REMOVED***, context)
-        assert not evaluate_rule(rule, {"name": "slow", "latency_ms": 2000***REMOVED***, context)
+        assert evaluate_rule(rule, {"name": "fast", "latency_ms": 500}, context)
+        assert not evaluate_rule(rule, {"name": "slow", "latency_ms": 2000}, context)
 
     def test_exclude_rule(self):
         from freebuff_plugin_03.policy.rules import evaluate_rule
-        rule = PolicyRule("exclude", {"runtimes": ["bad"***REMOVED******REMOVED***)
-        context = PolicyContext(exclude=["unstable"***REMOVED***)
-        assert evaluate_rule(rule, {"name": "good"***REMOVED***, context)
-        assert not evaluate_rule(rule, {"name": "bad"***REMOVED***, context)
-        assert not evaluate_rule(rule, {"name": "unstable"***REMOVED***, context)
+        rule = PolicyRule("exclude", {"runtimes": ["bad"]})
+        context = PolicyContext(exclude=["unstable"])
+        assert evaluate_rule(rule, {"name": "good"}, context)
+        assert not evaluate_rule(rule, {"name": "bad"}, context)
+        assert not evaluate_rule(rule, {"name": "unstable"}, context)
 
     def test_required_flags_rule(self):
         from freebuff_plugin_03.policy.rules import evaluate_rule
-        rule = PolicyRule("required_flags", {"flags": ["gpu"***REMOVED******REMOVED***)
+        rule = PolicyRule("required_flags", {"flags": ["gpu"]})
         context = PolicyContext()
-        assert evaluate_rule(rule, {"name": "gpu-runtime", "flags": ["gpu", "fast"***REMOVED******REMOVED***, context)
-        assert not evaluate_rule(rule, {"name": "cpu-runtime", "flags": [***REMOVED******REMOVED***, context)
+        assert evaluate_rule(rule, {"name": "gpu-runtime", "flags": ["gpu", "fast"]}, context)
+        assert not evaluate_rule(rule, {"name": "cpu-runtime", "flags": []}, context)
 
     def test_min_confidence_rule(self):
         from freebuff_plugin_03.policy.rules import evaluate_rule
-        rule = PolicyRule("min_confidence", {"value": 0.8***REMOVED***)
+        rule = PolicyRule("min_confidence", {"value": 0.8})
         context = PolicyContext()
-        assert evaluate_rule(rule, {"name": "good", "confidence": 0.9***REMOVED***, context)
-        assert not evaluate_rule(rule, {"name": "bad", "confidence": 0.5***REMOVED***, context)
+        assert evaluate_rule(rule, {"name": "good", "confidence": 0.9}, context)
+        assert not evaluate_rule(rule, {"name": "bad", "confidence": 0.5}, context)
 
     def test_unknown_rule_type_fails_closed(self):
         from freebuff_plugin_03.policy.rules import evaluate_rule
-        rule = PolicyRule("unknown", {***REMOVED***)
+        rule = PolicyRule("unknown", {})
         context = PolicyContext()
-        assert not evaluate_rule(rule, {"name": "any"***REMOVED***, context)
+        assert not evaluate_rule(rule, {"name": "any"}, context)

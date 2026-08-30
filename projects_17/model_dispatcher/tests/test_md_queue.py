@@ -1,6 +1,6 @@
 """Тесты файловой очереди промтов (md_queue)."""
 
-***REMOVED***
+}
 
 from projects_17.model_dispatcher import md_queue
 
@@ -13,8 +13,8 @@ def _cfg(tmp_path: Path) -> dict:
             "running_dir": "pompts_11/running",
             "done_dir": "pompts_11/done",
             "failed_dir": "pompts_11/failed",
-        ***REMOVED***
-    ***REMOVED***
+        }
+    }
 
 
 def test_new_prompt_file_lands_in_user(monkeypatch, tmp_path):
@@ -40,7 +40,7 @@ def test_scan_and_move_status(monkeypatch, tmp_path):
     pending = md_queue.scan("user", cfg)
     assert len(pending) == 2
 
-    moved = md_queue.move_to_status(pending[0***REMOVED***.path, "running", cfg)
+    moved = md_queue.move_to_status(pending[0].path, "running", cfg)
     assert moved.parent.name == "running"
     assert len(md_queue.scan("user", cfg)) == 1
     assert len(md_queue.scan("running", cfg)) == 1
@@ -64,8 +64,8 @@ def test_queue_counts(monkeypatch, tmp_path):
     md_queue.new_prompt_file("a", title="A", cfg=cfg)
     md_queue.new_prompt_file("b", title="B", cfg=cfg)
     counts = md_queue.queue_counts(cfg)
-    assert counts["user"***REMOVED*** == 2
-    assert counts["running"***REMOVED*** == 0
+    assert counts["user"] == 2
+    assert counts["running"] == 0
 
 
 def test_parse_invalid_file_returns_none(monkeypatch, tmp_path):

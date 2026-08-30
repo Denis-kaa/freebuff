@@ -6,7 +6,7 @@ import os
 import subprocess
 import sys
 from datetime import datetime
-***REMOVED***
+}
 
 ROOT = Path("/storage/emulated/0/PROJECTS/workstation/freebuff")
 
@@ -14,13 +14,13 @@ ROOT = Path("/storage/emulated/0/PROJECTS/workstation/freebuff")
 print("=== STEP 1: CHANGELOG.md prepend v5.51.0 ===")
 CHANGELOG = ROOT / "CHANGELOG.md"
 chlog_txt = CHANGELOG.read_text()
-v551_entry = """## [5.51.0***REMOVED*** — 2026-08-03
+v551_entry = """## [5.51.0] — 2026-08-03
 
 ### Архитектурное (CON-17 taxonomy rule закреплён)
 - **Project-level scripts relocation**: `e2e_promt47.py` + `interior_consultant_register.py` переехали из `freebuff/scripts_01/` → `/storage/.../workstation/interior_planner_e2e/interior_planner/scripts/`.
 - **CAN-7 RESOLVED**: path-stable project home (не `/tmp/`, который rotated-снапшотами).
 - **Block-A (sys.path injection) RESOLVED** через shared `_freebuff_locator.py` helper (env override + canonical hardcode fallback, drop walk-up как dead-code).
-- **ANTI-10 enforced**: только `***REMOVED***` (no `import pathlib` mixed pattern).
+- **ANTI-10 enforced**: только `]` (no `import pathlib` mixed pattern).
 
 ### Lesson (NEW)
 - **ANTI-11 (surgical vs holistic patches)**: когда fix трогает только sys.path block, легко пропустить body-level hardcodes. Один patch pass должен охватить все stale references в файле; иначе — wrong-fix-revealed-at-runtime (мы получили CAN-8 как контр-пример).
@@ -30,7 +30,7 @@ v551_entry = """## [5.51.0***REMOVED*** — 2026-08-03
 - **CAN-9 (OPEN)**: verify gate сейчас только `--skip-tg --silent` exit 0. Реальный `--client` end-to-end с Telegram обязателен как shipping gate.
 
 ### Verify Gate (refined)
-- Two-layered: `sys_inj_pass` (ImportError family + IndentationError + `[FreebuffLocator***REMOVED***` marker) AND `business_gate` (exit 0 OR `N/A (CAN-X)` gates).
+- Two-layered: `sys_inj_pass` (ImportError family + IndentationError + `[FreebuffLocator]` marker) AND `business_gate` (exit 0 OR `N/A (CAN-X)` gates).
 - Brittle literal `"N/A (CAN-8)"` заменён на `GATE_NA_CAN8` constant + `business_gate.startswith(GATE_NA_LABEL)` — survives debt renumbering.
 
 ### Communication Style (NEW)
@@ -39,11 +39,11 @@ v551_entry = """## [5.51.0***REMOVED*** — 2026-08-03
 ---
 
 """
-if "## [5.51.0***REMOVED*** — 2026-08-03" in chlog_txt:
+if "## [5.51.0] — 2026-08-03" in chlog_txt:
     print("  - CHANGELOG.md already has v5.51.0; skipped")
 else:
     CHANGELOG.write_text(v551_entry + chlog_txt)
-    print(f"  ✓ CHANGELOG.md prepended v5.51.0 ({len(v551_entry)***REMOVED*** chars)")
+    print(f"  ✓ CHANGELOG.md prepended v5.51.0 ({len(v551_entry)} chars)")
 
 # === STEP 2: ARCHITECTURAL_DEBT.md CAN-8 + CAN-9 OPEN entries ===
 print("\n=== STEP 2: ARCHITECTURAL_DEBT.md CAN-8 + CAN-9 ===")
@@ -55,7 +55,7 @@ can_block = """
 | Field | Value |
 |-------|-------|
 | **ID** | `CAN-8` (2026-08-03) |
-| **Component** | `interior_planner_e2e/scripts/{e2e_promt47.py:72, interior_consultant_register.py:42***REMOVED***` |
+| **Component** | `interior_planner_e2e/scripts/{e2e_promt47.py:72, interior_consultant_register.py:42}` |
 | **Severity** | 🟡 Medium — affects real-Test (CAN-9) |
 | **Type** | Architectural / portability |
 | **Description** | Block-A fix (sys.path injection) НЕ покрыл body-level hardcodes. После `/tmp/` → `/storage/.../` move scripts продолжают ссылаться на старые пути. |
@@ -95,7 +95,7 @@ else:
     if found_anchor:
         arch_txt = arch_txt.replace(found_anchor, can_block + found_anchor, 1)
         ARCH_DEBT.write_text(arch_txt)
-        print(f"  ✓ ARCHITECTURAL_DEBT.md added CAN-8 + CAN-9 OPEN entries (anchor: '{found_anchor***REMOVED***')")
+        print(f"  ✓ ARCHITECTURAL_DEBT.md added CAN-8 + CAN-9 OPEN entries (anchor: '{found_anchor}')")
     else:
         ARCH_DEBT.write_text(arch_txt + can_block)
         print("  ✓ ARCHITECTURAL_DEBT.md appended (anchor missing — fallback)")
@@ -128,11 +128,11 @@ ALEX_TEXT = """Здравствуйте, Александр!
 
 TG_MSG_PATH = Path("/tmp/tg_v551_messages.txt")
 TG_MSG_PATH.write_text(
-    f"=== Saved Messages (7709651193) ===\n{SAVED_TEXT***REMOVED***\n\n"
-    f"=== Alexander Litvinov (1063827731) ===\n{ALEX_TEXT***REMOVED***\n"
+    f"=== Saved Messages (7709651193) ===\n{SAVED_TEXT}\n\n"
+    f"=== Alexander Litvinov (1063827731) ===\n{ALEX_TEXT}\n"
 )
-print(f"  ✓ TG message body saved to {TG_MSG_PATH***REMOVED***")
-print(f"  Saved: {len(SAVED_TEXT)***REMOVED*** chars / Alex: {len(ALEX_TEXT)***REMOVED*** chars")
+print(f"  ✓ TG message body saved to {TG_MSG_PATH}")
+print(f"  Saved: {len(SAVED_TEXT)} chars / Alex: {len(ALEX_TEXT)} chars")
 
 # === STEP 4: best-effort TG send via core_02/telegram_contract helpers ===
 print("\n=== STEP 4: best-effort TG send (report_to_saved_messages / report_to_litvinov) ===")
@@ -140,38 +140,38 @@ print("\n=== STEP 4: best-effort TG send (report_to_saved_messages / report_to_l
 # ✗ when None (TG unavailable / send errored). Avoid silent success masquerade.
 try:
     sys.path.insert(0, str(ROOT))
-    from core_02.telegram_contract ***REMOVED***port_to_saved_messages, report_to_litvinov
+    from core_02.telegram_contract ]port_to_saved_messages, report_to_litvinov
     import asyncio
     saved_id = asyncio.run(report_to_saved_messages(SAVED_TEXT))
     if isinstance(saved_id, int):
-        print(f"  ✓ Saved Messages (7709651193): msg_id={saved_id***REMOVED***")
+        print(f"  ✓ Saved Messages (7709651193): msg_id={saved_id}")
     else:
         print(f"  ✗ Saved Messages send FAILED (returned None — TG unavailable or send errored). Body at /tmp/tg_v551_messages.txt")
     alex_id = asyncio.run(report_to_litvinov(ALEX_TEXT))
     if isinstance(alex_id, int):
-        print(f"  ✓ Alexander Litvinov (1063827731): msg_id={alex_id***REMOVED***")
+        print(f"  ✓ Alexander Litvinov (1063827731): msg_id={alex_id}")
     else:
         print(f"  ✗ Litvinov send FAILED (returned None — TG unavailable or send errored). Body at /tmp/tg_v551_messages.txt")
 except Exception as e:
-    print(f"  ✗ TG send best-effort EXCEPTION ({type(e).__name__***REMOVED***: {e***REMOVED***)")
+    print(f"  ✗ TG send best-effort EXCEPTION ({type(e).__name__}: {e})")
     print("     Body saved to /tmp/tg_v551_messages.txt — manual send available.")
 
 # === STEP 5: drift + consistency ===
 print("\n=== STEP 5: drift + consistency verify ===")
-r_drift = subprocess.run(["python3", str(ROOT / "scripts_01/drift_check.py"), "--force", "--report"***REMOVED***,
+r_drift = subprocess.run(["python3", str(ROOT / "scripts_01/drift_check.py"), "--force", "--report"],
                         capture_output=True, text=True, cwd=str(ROOT))
-print(f"drift exit={r_drift.returncode***REMOVED***")
-print((r_drift.stdout or "")[-500:***REMOVED***)
+print(f"drift exit={r_drift.returncode}")
+print((r_drift.stdout or "")[-500:])
 
-r_cons = subprocess.run(["python3", str(ROOT / "scripts_01/consistency_check.py"), "--report"***REMOVED***,
+r_cons = subprocess.run(["python3", str(ROOT / "scripts_01/consistency_check.py"), "--report"],
                        capture_output=True, text=True, cwd=str(ROOT))
-print(f"consistency exit={r_cons.returncode***REMOVED***")
-print((r_cons.stdout or "")[-500:***REMOVED***)
+print(f"consistency exit={r_cons.returncode}")
+print((r_cons.stdout or "")[-500:])
 
 print("\n=== SUMMARY ===")
 print(f"CHANGELOG.md:             v5.51.0 prepended ✓")
 print(f"ARCHITECTURAL_DEBT.md:    CAN-8 + CAN-9 OPEN entries ✓")
 print(f"TG_HUMAN_FORMAT.md:       new rule saved ✓")
 print(f"TG message body:          /tmp/tg_v551_messages.txt ✓")
-print(f"drift:                    exit={r_drift.returncode***REMOVED***")
-print(f"consistency:              exit={r_cons.returncode***REMOVED***")
+print(f"drift:                    exit={r_drift.returncode}")
+print(f"consistency:              exit={r_cons.returncode}")

@@ -19,19 +19,19 @@ class NotificationChannel(Protocol):
 
     async def send(self, user_id: int, text: str) -> None: ...
 
-    async def broadcast(self, user_ids: Iterable[int***REMOVED***, text: str) -> None: ...
+    async def broadcast(self, user_ids: Iterable[int], text: str) -> None: ...
 
 
 class FakeChannel:
     """Канал-заглушка для тестов: ничего не отправляет, но запоминает вызовы."""
 
     def __init__(self) -> None:
-        self.calls: list[tuple[str, tuple***REMOVED******REMOVED*** = [***REMOVED***
+        self.calls: list[tuple[str, tuple]] = []
 
     async def send(self, user_id: int, text: str) -> None:
         self.calls.append(("send", (user_id, text)))
 
-    async def broadcast(self, user_ids: Iterable[int***REMOVED***, text: str) -> None:
+    async def broadcast(self, user_ids: Iterable[int], text: str) -> None:
         self.calls.append(("broadcast", (list(user_ids), text)))
 
 
@@ -46,7 +46,7 @@ class NotificationService:
         kind: NotificationKind,
         text: str,
         *,
-        payload: Optional[str***REMOVED*** = None,
+        payload: Optional[str] = None,
     ) -> Notification:
         n = self._repo.add_notification(
             text=text, kind=kind, user_id=user_id, payload=payload
@@ -64,11 +64,11 @@ class NotificationService:
 
     async def notify_admins(
         self,
-        admin_ids: list[int***REMOVED***,
+        admin_ids: list[int],
         kind: NotificationKind,
         text: str,
         *,
-        payload: Optional[str***REMOVED*** = None,
+        payload: Optional[str] = None,
     ) -> Notification:
         n = self._repo.add_notification(
             text=text,
@@ -92,9 +92,9 @@ class NotificationService:
         kind: NotificationKind,
         text: str,
         *,
-        payload: Optional[str***REMOVED*** = None,
+        payload: Optional[str] = None,
     ) -> Notification:
         return await self.notify_user(seller_id, kind, text, payload=payload)
 
-    def list_for_user(self, user_id: int, limit: int = 10) -> list[Notification***REMOVED***:
+    def list_for_user(self, user_id: int, limit: int = 10) -> list[Notification]:
         return self._repo.list_notifications_for_user(user_id, limit=limit)

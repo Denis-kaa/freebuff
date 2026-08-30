@@ -25,13 +25,13 @@ class ErrorPattern:
         if not self.diagnostic_only:
             raise ValueError("error patterns from Phase F must remain diagnostic_only")
 
-    def to_dict(self) -> dict[str, Any***REMOVED***:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "pattern_id": self.pattern_id,
             "competency_id": self.competency_id,
             "hint_key": self.hint_key,
             "diagnostic_only": self.diagnostic_only,
-        ***REMOVED***
+        }
 
 
 _DEFAULT_HINT_KEYS = {
@@ -44,13 +44,13 @@ _DEFAULT_HINT_KEYS = {
     "oversized-function": "decompose-function",
     "maintainability-index": "review-code-structure",
     "cyclomatic-complexity": "reduce-branching-complexity",
-***REMOVED***
+}
 
 
-def map_diagnostics(diagnostics: Iterable[Diagnostic***REMOVED***) -> tuple[ErrorPattern, ...***REMOVED***:
+def map_diagnostics(diagnostics: Iterable[Diagnostic]) -> tuple[ErrorPattern, ...]:
     """Return unique, deterministic pattern metadata for diagnostics."""
 
-    patterns: dict[tuple[str, str | None***REMOVED***, ErrorPattern***REMOVED*** = {***REMOVED***
+    patterns: dict[tuple[str, str | None], ErrorPattern] = {}
     for diagnostic in diagnostics:
         hint_key = _DEFAULT_HINT_KEYS.get(diagnostic.pattern_id, diagnostic.pattern_id)
         pattern = ErrorPattern(
@@ -58,5 +58,5 @@ def map_diagnostics(diagnostics: Iterable[Diagnostic***REMOVED***) -> tuple[Erro
             competency_id=diagnostic.competency_id,
             hint_key=hint_key,
         )
-        patterns[(pattern.pattern_id, pattern.competency_id)***REMOVED*** = pattern
-    return tuple(patterns[key***REMOVED*** for key in sorted(patterns))
+        patterns[(pattern.pattern_id, pattern.competency_id)] = pattern
+    return tuple(patterns[key] for key in sorted(patterns))

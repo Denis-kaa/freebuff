@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import sys
-***REMOVED***
+}
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -18,7 +18,7 @@ def test_parse_markdown_tables_simple() -> None:
 """
     tables = dc._parse_markdown_tables(text)
     assert len(tables) == 1
-    assert tables[0***REMOVED*** == [["Name", "Status"***REMOVED***, ["A", "OK"***REMOVED***, ["B", "Bad"***REMOVED******REMOVED***
+    assert tables[0] == [["Name", "Status"], ["A", "OK"], ["B", "Bad"]]
 
 
 def test_status_emoji() -> None:
@@ -39,9 +39,9 @@ freebuff/
 ```
 """, encoding="utf-8")
     issues = dc.check_directory_structure(tmp_path)
-    described = {i["dir"***REMOVED*** for i in issues***REMOVED***
+    described = {i["dir"] for i in issues}
     assert "missing" in described
-    assert all(i["issue"***REMOVED*** == "described but does not exist" for i in issues if i["dir"***REMOVED*** == "missing")
+    assert all(i["issue"] == "described but does not exist" for i in issues if i["dir"] == "missing")
 
 
 def test_check_knowledge_index(tmp_path) -> None:
@@ -99,7 +99,7 @@ freebuff/
 ```
 """
     paths = dc._extract_tree_paths(text)
-    names = [p for p, _ in paths***REMOVED***
+    names = [p for p, _ in paths]
     assert "docs_10" in names
     assert "docs_10/architecture" in names
     assert "docs_10/RULES.md" in names
@@ -130,7 +130,7 @@ def test_extract_tree_paths_no_root_block() -> None:
 ```
 """
     paths = dc._extract_tree_paths(text)
-    names = [p for p, _ in paths***REMOVED***
+    names = [p for p, _ in paths]
     assert "docs_10" in names
     assert "README.md" in names
     assert all(root == "" for _, root in paths)
@@ -145,7 +145,7 @@ freebuff/
         └── RULES.md
 ```
 """
-    names = [p for p, _ in dc._extract_tree_paths(text)***REMOVED***
+    names = [p for p, _ in dc._extract_tree_paths(text)]
     assert "docs_10/core/RULES.md" in names
     assert "docs_10/core" in names
 
@@ -165,7 +165,7 @@ docs_10/
 ```
 """, encoding="utf-8")
     issues = dc.check_directory_structure(tmp_path)
-    dirs = {i["dir"***REMOVED*** for i in issues***REMOVED***
+    dirs = {i["dir"] for i in issues}
     assert "docs_10/INDEX.md" not in dirs
     assert "docs_10/audits" not in dirs
     # and the subtree root itself is not flagged as undocumented
@@ -179,7 +179,7 @@ def test_check_knowledge_index_excludes_runtime_docs(tmp_path) -> None:
     (tmp_path / "context_12").mkdir()
     (tmp_path / "context_12" / "summary.md").write_text("# S", encoding="utf-8")
     result = dc.check_knowledge_index(tmp_path)
-    assert result == [***REMOVED***
+    assert result == []
 
 
 def test_extract_tree_paths_strips_comments() -> None:
@@ -191,18 +191,18 @@ freebuff/
 ```
 """
     paths = dc._extract_tree_paths(text)
-    names = {p for p, _ in paths***REMOVED***
+    names = {p for p, _ in paths}
     assert "docs_10" in names
     assert "src_06" in names
     assert "#" not in "\n".join(names)
 
 
 def test_extract_markdown_links_finds_links() -> None:
-    text = "See [the rules***REMOVED***(../core_02/RULES.md) and [image***REMOVED***(../img/icon.png)."
+    text = "See [the rules](../core_02/RULES.md) and [image](../img/icon.png)."
     links = dc._extract_markdown_links(text)
     assert len(links) == 2
-    assert links[0***REMOVED*** == (1, "the rules", "../core_02/RULES.md")
-    assert links[1***REMOVED*** == (1, "image", "../img/icon.png")
+    assert links[0] == (1, "the rules", "../core_02/RULES.md")
+    assert links[1] == (1, "image", "../img/icon.png")
 
 
 def test_is_external_link_skips_urls_and_anchors() -> None:
@@ -216,36 +216,36 @@ def test_is_external_link_skips_urls_and_anchors() -> None:
 def test_check_markdown_links_reports_broken_link(tmp_path) -> None:
     (tmp_path / "docs_10").mkdir()
     md = tmp_path / "docs_10" / "index.md"
-    md.write_text("[broken***REMOVED***(../missing/file.md)", encoding="utf-8")
+    md.write_text("[broken)(../missing/file.md)", encoding="utf-8")
     issues = dc.check_markdown_links(tmp_path)
     assert len(issues) == 1
-    assert issues[0***REMOVED***["file"***REMOVED*** == "docs_10/index.md"
-    assert issues[0***REMOVED***["target"***REMOVED*** == "../missing/file.md"
-    assert issues[0***REMOVED***["issue"***REMOVED*** == "broken relative link"
+    assert issues[0]["file"] == "docs_10/index.md"
+    assert issues[0]["target"] == "../missing/file.md"
+    assert issues[0]["issue"] == "broken relative link"
 
 
 def test_check_markdown_links_ignores_external_and_anchors(tmp_path) -> None:
     (tmp_path / "docs_10").mkdir()
     md = tmp_path / "docs_10" / "index.md"
-    md.write_text("[external***REMOVED***(https://example.com) and [anchor***REMOVED***(#section)", encoding="utf-8")
+    md.write_text("[external)(https://example.com) and [anchor](#section)", encoding="utf-8")
     issues = dc.check_markdown_links(tmp_path)
-    assert issues == [***REMOVED***
+    assert issues == []
 
 
 def test_check_markdown_links_ignores_existing_files(tmp_path) -> None:
     (tmp_path / "docs_10").mkdir()
     (tmp_path / "docs_10" / "RULES.md").write_text("# Rules", encoding="utf-8")
     md = tmp_path / "docs_10" / "index.md"
-    md.write_text("[rules***REMOVED***(./RULES.md)", encoding="utf-8")
+    md.write_text("[rules)(./RULES.md)", encoding="utf-8")
     issues = dc.check_markdown_links(tmp_path)
-    assert issues == [***REMOVED***
+    assert issues == []
 
 
 def test_check_markdown_links_includes_root_level_md(tmp_path) -> None:
     (tmp_path / "README.md").write_text("# README", encoding="utf-8")
-    (tmp_path / "index.md").write_text("[README***REMOVED***(./README.md)", encoding="utf-8")
+    (tmp_path / "index.md").write_text("[README)(./README.md)", encoding="utf-8")
     issues = dc.check_markdown_links(tmp_path)
-    assert issues == [***REMOVED***
+    assert issues == []
 
 
 def test_directory_structure_respects_adr_redirect(tmp_path) -> None:
@@ -262,7 +262,7 @@ freebuff/
     adr_dir.mkdir(parents=True)
     adr_dir.joinpath("ADR_001_test.md").write_text("# Test", encoding="utf-8")
     issues = dc.check_directory_structure(tmp_path)
-    dirs = {i["dir"***REMOVED*** for i in issues***REMOVED***
+    dirs = {i["dir"] for i in issues}
     assert "docs_10/decisions" not in dirs
 
 
@@ -281,7 +281,7 @@ freebuff/
     adr_dir.mkdir(parents=True)
     adr_dir.joinpath("ADR_001_test.md").write_text("# Test", encoding="utf-8")
     issues = dc.check_directory_structure(tmp_path)
-    dirs = {i["dir"***REMOVED*** for i in issues***REMOVED***
+    dirs = {i["dir"] for i in issues}
     assert "docs_10/decisions" not in dirs
 
 
@@ -292,13 +292,13 @@ def test_check_adr_canonical_location_passes(tmp_path) -> None:
     (tmp_path / "docs_10" / "decisions" / "DECISIONS.md").parent.mkdir(parents=True)
     (tmp_path / "docs_10" / "decisions" / "DECISIONS.md").write_text("# Index", encoding="utf-8")
     issues = dc.check_adr_canonical_location(tmp_path)
-    assert issues == [***REMOVED***
+    assert issues == []
 
 
 def test_check_adr_canonical_location_fails_missing_dir(tmp_path) -> None:
     issues = dc.check_adr_canonical_location(tmp_path)
     assert len(issues) == 1
-    assert issues[0***REMOVED***["dir"***REMOVED*** == "docs_10/engineering-memory/decisions"
+    assert issues[0]["dir"] == "docs_10/engineering-memory/decisions"
 
 
 def test_check_adr_canonical_location_fails_empty(tmp_path) -> None:
@@ -308,13 +308,13 @@ def test_check_adr_canonical_location_fails_empty(tmp_path) -> None:
     (tmp_path / "docs_10" / "decisions" / "DECISIONS.md").write_text("# Index", encoding="utf-8")
     issues = dc.check_adr_canonical_location(tmp_path)
     assert len(issues) == 1
-    assert "empty" in issues[0***REMOVED***["issue"***REMOVED***
+    assert "empty" in issues[0]["issue"]
 
 
 def test_check_markdown_links_ignores_links_in_code_blocks(tmp_path) -> None:
     (tmp_path / "docs_10").mkdir()
     md = tmp_path / "docs_10" / "index.md"
-    md.write_text("```\n[link***REMOVED***(../missing.md)\n```\n[ok***REMOVED***(./existing.md)", encoding="utf-8")
+    md.write_text("```\n[link)(../missing.md)\n```\n[ok](./existing.md)", encoding="utf-8")
     (tmp_path / "docs_10" / "existing.md").write_text("# OK", encoding="utf-8")
     issues = dc.check_markdown_links(tmp_path)
     assert len(issues) == 0
@@ -324,18 +324,18 @@ def test_check_markdown_links_handles_absolute_paths(tmp_path) -> None:
     (tmp_path / "docs_10").mkdir()
     (tmp_path / "docs_10" / "RULES.md").write_text("# Rules", encoding="utf-8")
     md = tmp_path / "docs_10" / "index.md"
-    md.write_text("[rules***REMOVED***(/docs_10/RULES.md)", encoding="utf-8")
+    md.write_text("[rules)(/docs_10/RULES.md)", encoding="utf-8")
     issues = dc.check_markdown_links(tmp_path)
-    assert issues == [***REMOVED***
+    assert issues == []
 
 
 def test_check_markdown_links_reports_absolute_broken_link(tmp_path) -> None:
     (tmp_path / "docs_10").mkdir()
     md = tmp_path / "docs_10" / "index.md"
-    md.write_text("[rules***REMOVED***(/docs_10/MISSING.md)", encoding="utf-8")
+    md.write_text("[rules)(/docs_10/MISSING.md)", encoding="utf-8")
     issues = dc.check_markdown_links(tmp_path)
     assert len(issues) == 1
-    assert issues[0***REMOVED***["target"***REMOVED*** == "/docs_10/MISSING.md"
+    assert issues[0]["target"] == "/docs_10/MISSING.md"
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -353,7 +353,7 @@ def test_legacy_redirect_satisfied_when_canonical_exists(tmp_path) -> None:
     # Empty BUFFY.md → describes nothing; every real top-level dir is "undeclared"
     (tmp_path / "BUFFY.md").write_text("", encoding="utf-8")
     issues = dc.check_directory_structure(tmp_path)
-    dirs = {i["dir"***REMOVED*** for i in issues***REMOVED***
+    dirs = {i["dir"] for i in issues}
     assert "freebuff_plugin" not in dirs
 
 
@@ -368,11 +368,11 @@ def test_legacy_redirect_flagged_when_canonical_missing(tmp_path) -> None:
     # freebuff_plugin_03 intentionally missing
     (tmp_path / "BUFFY.md").write_text("", encoding="utf-8")
     issues = dc.check_directory_structure(tmp_path)
-    dirs = {i["dir"***REMOVED*** for i in issues***REMOVED***
+    dirs = {i["dir"] for i in issues}
     assert "freebuff_plugin" in dirs
     assert any(
-        i["dir"***REMOVED*** == "freebuff_plugin"
-        and i["issue"***REMOVED*** == "exists but not described in BUFFY.md/RULES.md"
+        i["dir"] == "freebuff_plugin"
+        and i["issue"] == "exists but not described in BUFFY.md/RULES.md"
         for i in issues
     )
 
@@ -382,7 +382,7 @@ def test_non_legacy_undeclared_dir_still_flagged(tmp_path) -> None:
     (tmp_path / "totally_random_dir").mkdir()
     (tmp_path / "BUFFY.md").write_text("", encoding="utf-8")
     issues = dc.check_directory_structure(tmp_path)
-    dirs = {i["dir"***REMOVED*** for i in issues***REMOVED***
+    dirs = {i["dir"] for i in issues}
     assert "totally_random_dir" in dirs
 
 
@@ -408,7 +408,7 @@ def test_legacy_redirect_helper_unit(tmp_path) -> None:
 def test_legacy_redirect_multi_target_tuple(tmp_path, monkeypatch) -> None:
     """Multi-target redirects: real monkeypatch + actual helper call.
 
-    The data structure is ``tuple[str, ...***REMOVED***``. The default
+    The data structure is ``tuple[str, ...]``. The default
     `_LEGACY_TOP_LEVEL_REDIRECTS` constant has only single-target entries;
     monkeypatch lets us inject a multi-target dict to exercise branches the
     default config can't reach.
@@ -421,7 +421,7 @@ def test_legacy_redirect_multi_target_tuple(tmp_path, monkeypatch) -> None:
     # Positive: 1 of 3 targets is a real directory → satisfied.
     monkeypatch.setattr(
         dc, "_LEGACY_TOP_LEVEL_REDIRECTS",
-        {"legacy_multi_a": ("does_not_exist_1", "does_not_exist_2", "freebuff_plugin_03")***REMOVED***,
+        {"legacy_multi_a": ("does_not_exist_1", "does_not_exist_2", "freebuff_plugin_03")},
     )
     (tmp_path / "freebuff_plugin_03").mkdir()
     assert dc._is_legacy_redirect_satisfied(tmp_path, "legacy_multi_a") is True
@@ -429,7 +429,7 @@ def test_legacy_redirect_multi_target_tuple(tmp_path, monkeypatch) -> None:
     # Negative: all 3 targets missing → not satisfied.
     monkeypatch.setattr(
         dc, "_LEGACY_TOP_LEVEL_REDIRECTS",
-        {"legacy_multi_b": ("missing_a", "missing_b", "missing_c")***REMOVED***,
+        {"legacy_multi_b": ("missing_a", "missing_b", "missing_c")},
     )
     assert dc._is_legacy_redirect_satisfied(tmp_path, "legacy_multi_b") is False
 
@@ -437,7 +437,7 @@ def test_legacy_redirect_multi_target_tuple(tmp_path, monkeypatch) -> None:
     # Locks in the `.is_dir()` semantic precision (vs. `.exists()`).
     monkeypatch.setattr(
         dc, "_LEGACY_TOP_LEVEL_REDIRECTS",
-        {"legacy_multi_c": ("stale_file_target",)***REMOVED***,
+        {"legacy_multi_c": ("stale_file_target",)},
     )
     (tmp_path / "stale_file_target").write_text("not a directory", encoding="utf-8")
     assert dc._is_legacy_redirect_satisfied(tmp_path, "legacy_multi_c") is False
@@ -445,6 +445,6 @@ def test_legacy_redirect_multi_target_tuple(tmp_path, monkeypatch) -> None:
     # Degenerate: empty target tuple → not satisfied.
     monkeypatch.setattr(
         dc, "_LEGACY_TOP_LEVEL_REDIRECTS",
-        {"legacy_multi_d": ()***REMOVED***,
+        {"legacy_multi_d": ()},
     )
     assert dc._is_legacy_redirect_satisfied(tmp_path, "legacy_multi_d") is False

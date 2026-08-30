@@ -20,7 +20,7 @@ import asyncio
 import json
 import sqlite3
 from datetime import datetime, timedelta, timezone
-***REMOVED***
+}
 from typing import Any
 
 from app.domain import (
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS publications (
     content           TEXT,
     published_at      TEXT,
     fetched_at        TEXT NOT NULL,
-    metadata_json     TEXT NOT NULL DEFAULT '{***REMOVED***',
+    metadata_json     TEXT NOT NULL DEFAULT '{}',
     status            TEXT NOT NULL DEFAULT 'new',
     text_expires_at   TEXT,
     created_at        TEXT NOT NULL
@@ -68,11 +68,11 @@ CREATE TABLE IF NOT EXISTS decisions (
     profile_version     INTEGER NOT NULL,
     outcome             TEXT NOT NULL,
     score               REAL NOT NULL,
-    matched_terms_json  TEXT NOT NULL DEFAULT '[***REMOVED***',
-    matched_synonyms_json TEXT NOT NULL DEFAULT '[***REMOVED***',
-    rejected_terms_json TEXT NOT NULL DEFAULT '[***REMOVED***',
-    reasons_json        TEXT NOT NULL DEFAULT '[***REMOVED***',
-    rules_snapshot_json TEXT NOT NULL DEFAULT '{***REMOVED***',
+    matched_terms_json  TEXT NOT NULL DEFAULT '[]',
+    matched_synonyms_json TEXT NOT NULL DEFAULT '[]',
+    rejected_terms_json TEXT NOT NULL DEFAULT '[]',
+    reasons_json        TEXT NOT NULL DEFAULT '[]',
+    rules_snapshot_json TEXT NOT NULL DEFAULT '{}',
     decided_at          TEXT NOT NULL,
     UNIQUE (publication_key, profile_id, profile_version)
 );
@@ -137,7 +137,7 @@ def _json_bytes(value: object) -> str:
 
 def _decision_to_row(
     decision: MatchDecision,
-) -> dict[str, Any***REMOVED***:
+) -> dict[str, Any]:
     """Разложить decision в строку с JSON-колонками."""
     return {
         "publication_key": decision.publication_key,
@@ -150,30 +150,30 @@ def _decision_to_row(
         "rejected_terms_json": _json_bytes(list(decision.rejected_terms)),
         "reasons_json": _json_bytes(list(decision.reasons)),
         "rules_snapshot_json": _json_bytes(
-            {key: list(value) for key, value in decision.rules_snapshot.items()***REMOVED***
+            {key: list(value) for key, value in decision.rules_snapshot.items()}
         ),
         "decided_at": _to_iso(decision.decided_at),
-    ***REMOVED***
+    }
 
 
 def _row_to_decision(row: sqlite3.Row) -> MatchDecision:
     """Собрать MatchDecision из строки decisions."""
     data = dict(row)
     return MatchDecision(
-        publication_key=data["publication_key"***REMOVED***,
-        profile_id=data["profile_id"***REMOVED***,
-        profile_version=data["profile_version"***REMOVED***,
-        outcome=MatchOutcome(data["outcome"***REMOVED***),
-        score=data["score"***REMOVED***,
-        matched_terms=tuple(json.loads(data["matched_terms_json"***REMOVED***)),
-        matched_synonyms=tuple(json.loads(data["matched_synonyms_json"***REMOVED***)),
-        rejected_terms=tuple(json.loads(data["rejected_terms_json"***REMOVED***)),
-        reasons=tuple(json.loads(data["reasons_json"***REMOVED***)),
+        publication_key=data["publication_key"],
+        profile_id=data["profile_id"],
+        profile_version=data["profile_version"],
+        outcome=MatchOutcome(data["outcome"]),
+        score=data["score"],
+        matched_terms=tuple(json.loads(data["matched_terms_json"])),
+        matched_synonyms=tuple(json.loads(data["matched_synonyms_json"])),
+        rejected_terms=tuple(json.loads(data["rejected_terms_json"])),
+        reasons=tuple(json.loads(data["reasons_json"])),
         rules_snapshot={
             key: tuple(values)
-            for key, values in json.loads(data["rules_snapshot_json"***REMOVED***).items()
-        ***REMOVED***,
-        decided_at=datetime.fromisoformat(data["decided_at"***REMOVED***).astimezone(timezone.utc),
+            for key, values in json.loads(data["rules_snapshot_json"]).items()
+        },
+        decided_at=datetime.fromisoformat(data["decided_at"]).astimezone(timezone.utc),
     )
 
 
@@ -181,18 +181,18 @@ def _row_to_profile(row: sqlite3.Row) -> SearchProfile | None:
     """Собрать SearchProfile из строки profiles (JSON body)."""
     data = dict(row)
     try:
-        body = json.loads(data["body_json"***REMOVED***)
+        body = json.loads(data["body_json"])
     except (TypeError, ValueError):
         return None
     synonyms = tuple(
         (canonical, tuple(values))
-        for canonical, values in body.get("synonyms", [***REMOVED***)
+        for canonical, values in body.get("synonyms", [])
     )
     return SearchProfile(
-        profile_id=data["profile_id"***REMOVED***,
-        owner_scope=data["owner_scope"***REMOVED***,
-        version=int(data["version"***REMOVED***),
-        service_name=data["service_name"***REMOVED***,
+        profile_id=data["profile_id"],
+        owner_scope=data["owner_scope"],
+        version=int(data["version"]),
+        service_name=data["service_name"],
         required_terms=tuple(body.get("required_terms", ())),
         optional_terms=tuple(body.get("optional_terms", ())),
         synonyms=synonyms,
@@ -202,9 +202,9 @@ def _row_to_profile(row: sqlite3.Row) -> SearchProfile | None:
         pending_threshold=float(body.get("pending_threshold", 0.5)),
         source_ids=tuple(body.get("source_ids", ())),
         rules_snapshot={
-            key: tuple(values) for key, values in body.get("rules_snapshot", {***REMOVED***).items()
-        ***REMOVED***,
-        mode=SearchMode(body["mode"***REMOVED***) if body.get("mode") else SearchMode.DEMAND,
+            key: tuple(values) for key, values in body.get("rules_snapshot", {}).items()
+        },
+        mode=SearchMode(body["mode"]) if body.get("mode") else SearchMode.DEMAND,
     )
 
 
@@ -212,16 +212,16 @@ def _row_to_publication(row: sqlite3.Row) -> Publication:
     """Собрать Publication из строки (metadata остаётся даже после TTL)."""
     data = dict(row)
     return Publication(
-        source_id=data["source_id"***REMOVED***,
-        item_id=data["item_id"***REMOVED***,
-        canonical_url=data["canonical_url"***REMOVED***,
-        title=data["title"***REMOVED***,
-        published_at=_from_iso(data["published_at"***REMOVED***),
-        summary=data["summary"***REMOVED***,
-        content=data["content"***REMOVED***,
-        fetched_at=datetime.fromisoformat(data["fetched_at"***REMOVED***).astimezone(timezone.utc),
-        metadata=json.loads(data["metadata_json"***REMOVED***),
-        status=PublicationStatus(data["status"***REMOVED***),
+        source_id=data["source_id"],
+        item_id=data["item_id"],
+        canonical_url=data["canonical_url"],
+        title=data["title"],
+        published_at=_from_iso(data["published_at"]),
+        summary=data["summary"],
+        content=data["content"],
+        fetched_at=datetime.fromisoformat(data["fetched_at"]).astimezone(timezone.utc),
+        metadata=json.loads(data["metadata_json"]),
+        status=PublicationStatus(data["status"]),
     )
 
 
@@ -245,12 +245,12 @@ class SqliteStorage:
         with self._conn:
             self._conn.executescript(_SCHEMA)
             # user_version не принимает параметры; число — константа схемы.
-            self._conn.execute(f"PRAGMA user_version = {int(_SCHEMA_VERSION)***REMOVED***")
+            self._conn.execute(f"PRAGMA user_version = {int(_SCHEMA_VERSION)}")
 
     def schema_version(self) -> int:
         """Текущая версия схемы (PRAGMA user_version)."""
         row = self._conn.execute("PRAGMA user_version").fetchone()
-        return int(row[0***REMOVED***) if row else 0
+        return int(row[0]) if row else 0
 
     # ------------------------------------------------------------------
     # Publications
@@ -274,7 +274,7 @@ class SqliteStorage:
         if not allow_full_text:
             content = None
         elif max_text_chars is not None:
-            content = content[:max_text_chars***REMOVED*** if content else content
+            content = content[:max_text_chars] if content else content
 
         text_expires_at = None
         if content is not None and text_ttl is not None:
@@ -318,19 +318,19 @@ class SqliteStorage:
 
     def list_publications(
         self, *, source_id: str | None = None, limit: int = 100
-    ) -> list[Publication***REMOVED***:
+    ) -> list[Publication]:
         """Список публикаций (без полного текста из TTL-контента не выдаётся)."""
         if limit < 1:
             raise ValueError("limit must be >= 1")
         query = "SELECT * FROM publications"
-        params: list[str***REMOVED*** = [***REMOVED***
+        params: list[str] = []
         if source_id is not None:
             query += " WHERE source_id = ?"
             params.append(source_id)
         query += " ORDER BY fetched_at DESC LIMIT ?"
         params.append(str(limit))
         rows = self._conn.execute(query, tuple(params)).fetchall()
-        return [_row_to_publication(row) for row in rows***REMOVED***
+        return [_row_to_publication(row) for row in rows]
 
     def expire_full_text(self, now: datetime | None = None) -> int:
         """Обнулить истёкший полный текст; вернуть число изменённых строк.
@@ -359,7 +359,7 @@ class SqliteStorage:
         row = self._conn.execute(
             "SELECT last_item_id FROM checkpoints WHERE source_id = ?", (source_id,)
         ).fetchone()
-        return str(row["last_item_id"***REMOVED***) if row else None
+        return str(row["last_item_id"]) if row else None
 
     def set_checkpoint(self, source_id: str, item_id: str) -> None:
         """Атомарно подтвердить обработанный item (upsert)."""
@@ -435,7 +435,7 @@ class SqliteStorage:
                     "SELECT status FROM delivery_attempts WHERE delivery_key = ?",
                     (attempt.delivery_key,),
                 ).fetchone()
-                if existing is not None and existing["status"***REMOVED*** == DeliveryStatus.FAILED.value:
+                if existing is not None and existing["status"] == DeliveryStatus.FAILED.value:
                     self._conn.execute(
                         """
                         UPDATE delivery_attempts
@@ -482,22 +482,22 @@ class SqliteStorage:
             return None
         data = dict(row)
         return DeliveryAttempt(
-            delivery_key=data["delivery_key"***REMOVED***,
-            status=DeliveryStatus(data["status"***REMOVED***),
-            attempted_at=datetime.fromisoformat(data["attempted_at"***REMOVED***).astimezone(timezone.utc),
-            provider_message_id=data["provider_message_id"***REMOVED***,
-            error_code=data["error_code"***REMOVED***,
+            delivery_key=data["delivery_key"],
+            status=DeliveryStatus(data["status"]),
+            attempted_at=datetime.fromisoformat(data["attempted_at"]).astimezone(timezone.utc),
+            provider_message_id=data["provider_message_id"],
+            error_code=data["error_code"],
         )
 
     def count_publications(self) -> int:
         """Число строк публикаций (для тестов/метрик)."""
         row = self._conn.execute("SELECT COUNT(*) AS c FROM publications").fetchone()
-        return int(row["c"***REMOVED***)
+        return int(row["c"])
 
     def count_decisions(self) -> int:
         """Число строк решений (для тестов/метрик)."""
         row = self._conn.execute("SELECT COUNT(*) AS c FROM decisions").fetchone()
-        return int(row["c"***REMOVED***)
+        return int(row["c"])
 
     def backup_to(self, dst_path: str | Path) -> str:
         """Сделать онлайн-бэкап базы через sqlite backup API."""
@@ -519,7 +519,7 @@ class SqliteStorage:
             "service_name": profile.service_name,
             "required_terms": list(profile.required_terms),
             "optional_terms": list(profile.optional_terms),
-            "synonyms": [[canonical, list(values)***REMOVED*** for canonical, values in profile.synonyms***REMOVED***,
+            "synonyms": [[canonical, list(values)] for canonical, values in profile.synonyms],
             "excluded_terms": list(profile.excluded_terms),
             "intent_terms": list(profile.intent_terms),
             "accept_threshold": profile.accept_threshold,
@@ -527,9 +527,9 @@ class SqliteStorage:
             "source_ids": list(profile.source_ids),
             "rules_snapshot": {
                 key: list(values) for key, values in profile.rules_snapshot.items()
-            ***REMOVED***,
+            },
             "mode": profile.mode.value,
-        ***REMOVED***
+        }
         now = _to_iso(datetime.now(timezone.utc))
         with self._conn:
             cursor = self._conn.execute(
@@ -556,13 +556,13 @@ class SqliteStorage:
         ).fetchone()
         return _row_to_profile(row) if row else None
 
-    def list_profiles(self, owner_scope: str) -> list[SearchProfile***REMOVED***:
+    def list_profiles(self, owner_scope: str) -> list[SearchProfile]:
         """Все профили конкретного владельца (изоляция по scope)."""
         rows = self._conn.execute(
             "SELECT * FROM profiles WHERE owner_scope = ? ORDER BY created_at",
             (owner_scope,),
         ).fetchall()
-        profiles: list[SearchProfile***REMOVED*** = [***REMOVED***
+        profiles: list[SearchProfile] = []
         for row in rows:
             profile = _row_to_profile(row)
             if profile is not None:
@@ -591,7 +591,7 @@ class SqliteStorage:
         created_at: datetime | None = None,
     ) -> bool:
         """Записать feedback (relevant/irrelevant) идемпотентно по ключу."""
-        if action not in {"relevant", "irrelevant"***REMOVED***:
+        if action not in {"relevant", "irrelevant"}:
             raise ValueError("action must be relevant or irrelevant")
         when = created_at or datetime.now(timezone.utc)
         with self._conn:
@@ -605,15 +605,15 @@ class SqliteStorage:
             )
         return cursor.rowcount == 1
 
-    def feedback_stats(self, owner_scope: str) -> dict[str, int***REMOVED***:
+    def feedback_stats(self, owner_scope: str) -> dict[str, int]:
         """Счётчики feedback владельца (для quality reports)."""
         rows = self._conn.execute(
             "SELECT action, COUNT(*) AS c FROM feedback WHERE owner_scope = ? GROUP BY action",
             (owner_scope,),
         ).fetchall()
-        return {str(row["action"***REMOVED***): int(row["c"***REMOVED***) for row in rows***REMOVED***
+        return {str(row["action"]): int(row["c"]) for row in rows}
 
-    def list_feedback(self, owner_scope: str, *, limit: int = 100) -> list[dict[str, object***REMOVED******REMOVED***:
+    def list_feedback(self, owner_scope: str, *, limit: int = 100) -> list[dict[str, object]]:
         """Итерация по feedback владельца для калибровки (P14)."""
         if limit < 1:
             raise ValueError("limit must be >= 1")
@@ -627,7 +627,7 @@ class SqliteStorage:
             """,
             (owner_scope, limit),
         ).fetchall()
-        return [dict(row) for row in rows***REMOVED***
+        return [dict(row) for row in rows]
 
     def close(self) -> None:
         """Закрыть соединение."""
@@ -658,4 +658,4 @@ class SqliteCheckpointStore:
 __all__ = [
     "SqliteCheckpointStore",
     "SqliteStorage",
-***REMOVED***
+]

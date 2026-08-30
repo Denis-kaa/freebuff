@@ -12,7 +12,7 @@ knowledge_sync — Knowledge Sync Plugin для Buffy.
 import json
 import threading
 import time
-***REMOVED***
+}
 
 from scripts_01.plugin_api import BasePlugin, PluginMeta, PluginResult
 
@@ -47,8 +47,8 @@ class KnowledgeSyncPlugin(BasePlugin):
             "total_synced": 0,
             "errors": 0,
             "last_sync": None,
-            "synced_levels": [***REMOVED***,
-        ***REMOVED***
+            "synced_levels": [],
+        }
 
     @property
     def meta(self) -> PluginMeta:
@@ -61,13 +61,13 @@ class KnowledgeSyncPlugin(BasePlugin):
 
     @property
     def events_subscribed(self):
-        return ["memory.stored", "memory.deleted", "knowledge.*"***REMOVED***
+        return ["memory.stored", "memory.deleted", "knowledge.*"]
 
     # ── Lifecycle ───────────────────────────────────────────
 
     def on_load(self):
         print(
-            f"🧠 knowledge_sync: loaded (memory={_has_memory***REMOVED***, knowledge={_has_knowledge***REMOVED***)"
+            f"🧠 knowledge_sync: loaded (memory={_has_memory}, knowledge={_has_knowledge})"
         )
 
     def on_unload(self):
@@ -82,7 +82,7 @@ class KnowledgeSyncPlugin(BasePlugin):
             try:
                 self._memory_engine = MemoryEngine()
             except Exception as e:
-                print(f"🧠 knowledge_sync: MemoryEngine init failed: {e***REMOVED***")
+                print(f"🧠 knowledge_sync: MemoryEngine init failed: {e}")
         return self._memory_engine
 
     def _get_knowledge(self):
@@ -91,7 +91,7 @@ class KnowledgeSyncPlugin(BasePlugin):
             try:
                 self._knowledge_engine = KnowledgeEngine()
             except Exception as e:
-                print(f"📚 knowledge_sync: KnowledgeEngine init failed: {e***REMOVED***")
+                print(f"📚 knowledge_sync: KnowledgeEngine init failed: {e}")
         return self._knowledge_engine
 
     # ── Действия ───────────────────────────────────────────
@@ -107,7 +107,7 @@ class KnowledgeSyncPlugin(BasePlugin):
         """
         mem = self._get_memory()
         knw = self._get_knowledge()
-        missing = [***REMOVED***
+        missing = []
         if mem is None:
             missing.append("MemoryEngine")
         if knw is None:
@@ -116,34 +116,34 @@ class KnowledgeSyncPlugin(BasePlugin):
             return {
                 "success": False,
                 "error": "Required engines not available: " + ", ".join(missing),
-            ***REMOVED***
+            }
 
         try:
             if levels == "all":
-                target_levels = [l for l in MemoryLevel***REMOVED***
+                target_levels = [l for l in MemoryLevel]
             else:
-                level_names = [n.strip() for n in levels.split(",")***REMOVED***
-                target_levels = [***REMOVED***
+                level_names = [n.strip() for n in levels.split(",")]
+                target_levels = []
                 for name in level_names:
                     try:
                         target_levels.append(MemoryLevel(name))
                     except ValueError:
                         return {
                             "success": False,
-                            "error": f"Unknown level: {name***REMOVED***",
-                        ***REMOVED***
+                            "error": f"Unknown level: {name}",
+                        }
 
-            results = {***REMOVED***
+            results = {}
             total = 0
             errors = 0
-            synced_levels = [***REMOVED***
+            synced_levels = []
             for level in target_levels:
                 try:
                     entries = mem.list_entries(level=level)
                     synced = 0
                     for entry in entries:
                         try:
-                            doc_id = f"{entry.key***REMOVED***:{level.value***REMOVED***"
+                            doc_id = f"{entry.key}:{level.value}"
                             metadata = {
                                 "source": "memory_engine",
                                 "level": level.value,
@@ -155,7 +155,7 @@ class KnowledgeSyncPlugin(BasePlugin):
                                     and hasattr(entry.content_type, "value")
                                     else str(getattr(entry, "content_type", ""))
                                 ),
-                            ***REMOVED***
+                            }
                             knw.add_document(
                                 doc_id=doc_id,
                                 content=entry.content,
@@ -164,7 +164,7 @@ class KnowledgeSyncPlugin(BasePlugin):
                             synced += 1
                         except Exception:
                             errors += 1
-                    results[level.value***REMOVED*** = {"total": len(entries), "synced": synced, "errors": errors***REMOVED***
+                    results[level.value] = {"total": len(entries), "synced": synced, "errors": errors}
                     total += synced
                     synced_levels.append(level.value)
                 except Exception:
@@ -173,23 +173,23 @@ class KnowledgeSyncPlugin(BasePlugin):
             try:
                 knw.rebuild_index()
             except Exception as e:
-                return {"success": False, "error": f"Index rebuild failed: {e***REMOVED***"***REMOVED***
+                return {"success": False, "error": f"Index rebuild failed: {e}"}
 
             with self._sync_lock:
-                self._sync_stats["total_synced"***REMOVED*** += total
-                self._sync_stats["last_sync"***REMOVED*** = str(__import__("datetime").datetime.now())
-                self._sync_stats["errors"***REMOVED*** += errors
-                self._sync_stats["synced_levels"***REMOVED*** = synced_levels
+                self._sync_stats["total_synced"] += total
+                self._sync_stats["last_sync"] = str(__import__("datetime").datetime.now())
+                self._sync_stats["errors"] += errors
+                self._sync_stats["synced_levels"] = synced_levels
 
             return {
                 "success": True, "data_13": {
                     "total_synced": total,
                     "errors": errors,
                     "levels": results,
-                ***REMOVED***,
-            ***REMOVED***
+                },
+            }
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
     def do_stats(self) -> dict:
         """Детальная статистика синхронизации."""
@@ -197,8 +197,8 @@ class KnowledgeSyncPlugin(BasePlugin):
             "success": True, "data_13": {
                 "memory_levels": self._get_memory_levels_stats(),
                 **self._sync_stats,
-            ***REMOVED***,
-        ***REMOVED***
+            },
+        }
 
     def do_force_reindex(self) -> dict:
         """Полная перестройка индекса знаний.
@@ -208,12 +208,12 @@ class KnowledgeSyncPlugin(BasePlugin):
         """
         knw = self._get_knowledge()
         if knw is None:
-            return {"success": False, "error": "KnowledgeEngine not available"***REMOVED***
+            return {"success": False, "error": "KnowledgeEngine not available"}
         try:
             knw.rebuild_index()
-            return {"success": True, "data_13": "Knowledge index rebuilt"***REMOVED***
+            return {"success": True, "data_13": "Knowledge index rebuilt"}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
     def do_status(self) -> dict:
         """Статус плагина и статистика синхронизации."""
@@ -225,16 +225,16 @@ class KnowledgeSyncPlugin(BasePlugin):
             "memory_available": mem is not None,
             "knowledge_available": knw is not None,
             "sync_stats": self._sync_stats,
-        ***REMOVED***
-        level_counts = {***REMOVED***
+        }
+        level_counts = {}
         if mem is not None:
             try:
                 for level in MemoryLevel:
                     entries = mem.list_entries(level=level)
-                    level_counts[level.value***REMOVED*** = len(entries)
+                    level_counts[level.value] = len(entries)
             except Exception:
                 pass
-        return {"success": True, "data_13": {**status, "memory_levels": level_counts***REMOVED******REMOVED***
+        return {"success": True, "data_13": {**status, "memory_levels": level_counts}}
 
     # ── Внутреннее ─────────────────────────────────────────
 
@@ -242,13 +242,13 @@ class KnowledgeSyncPlugin(BasePlugin):
         """Возвращает количество записей по уровням памяти."""
         mem = self._get_memory()
         if mem is None:
-            return {***REMOVED***
-        counts = {***REMOVED***
+            return {}
+        counts = {}
         try:
             for level in MemoryLevel:
-                counts[level.value***REMOVED*** = len(mem.list_entries(level=level))
+                counts[level.value] = len(mem.list_entries(level=level))
         except Exception:
-            return {***REMOVED***
+            return {}
         return counts
 
     def _sync_single_entry(self, level: str, key: str):
@@ -262,7 +262,7 @@ class KnowledgeSyncPlugin(BasePlugin):
             entry = mem.retrieve(key=key, level=mem_level)
             if entry is None:
                 return
-            doc_id = f"{key***REMOVED***:{level***REMOVED***"
+            doc_id = f"{key}:{level}"
             knw.add_document(
                 doc_id=doc_id,
                 content=entry.content,
@@ -271,19 +271,19 @@ class KnowledgeSyncPlugin(BasePlugin):
                     "level": level,
                     "key": key,
                     "summary": getattr(entry, "summary", ""),
-                ***REMOVED***,
+                },
             )
             with self._sync_lock:
-                self._sync_stats["total_synced"***REMOVED*** += 1
+                self._sync_stats["total_synced"] += 1
         except Exception:
             with self._sync_lock:
-                self._sync_stats["errors"***REMOVED*** += 1
+                self._sync_stats["errors"] += 1
 
     def on_event(self, event):
         """Авто-синхронизация при событиях памяти."""
         try:
             event_type = getattr(event, "type", "")
-            event_data = getattr(event, "data_13", {***REMOVED***) or {***REMOVED***
+            event_data = getattr(event, "data_13", {}) or {}
             if event_type == "memory.stored":
                 level = event_data.get("level", "")
                 key = event_data.get("key", "")

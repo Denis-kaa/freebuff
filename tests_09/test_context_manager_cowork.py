@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-***REMOVED***
+}
 from unittest.mock import MagicMock
 
 import pytest
@@ -30,8 +30,8 @@ def mock_remote() -> MagicMock:
     mock = MagicMock(spec=RemoteDB)
     mock.remote_url = "http://fake:4001"
     mock.local_path = Path("/tmp/fake.db")
-    mock.execute.return_value = [***REMOVED***
-    mock.fetchall.return_value = [***REMOVED***
+    mock.execute.return_value = []
+    mock.fetchall.return_value = []
     mock.fetchone.return_value = None
     mock.executescript = MagicMock()
     mock.commit = MagicMock()
@@ -77,7 +77,7 @@ class TestCoworkMode:
         assert cm.is_remote is True
 
     def test_start_session_uses_remote(self, mock_remote: MagicMock, tmp_path: Path) -> None:
-        mock_remote.execute.return_value = [***REMOVED***  # SELECT returns nothing → new session
+        mock_remote.execute.return_value = []  # SELECT returns nothing → new session
         cm = ContextManager(str(tmp_path / "ws"), remote_db=mock_remote)
         mock_remote.execute.reset_mock()
 
@@ -87,7 +87,7 @@ class TestCoworkMode:
         assert "INSERT" in calls or "sessions" in calls
 
     def test_add_message_uses_remote(self, mock_remote: MagicMock, tmp_path: Path) -> None:
-        mock_remote.execute.return_value = [***REMOVED***  # SELECT returns nothing
+        mock_remote.execute.return_value = []  # SELECT returns nothing
         cm = ContextManager(str(tmp_path / "ws"), remote_db=mock_remote)
         mock_remote.execute.reset_mock()
 
@@ -96,10 +96,10 @@ class TestCoworkMode:
 
         # Simulate session exists
         mock_remote.execute.side_effect = [
-            [***REMOVED***,  # INSERT message
-            [***REMOVED***,  # UPDATE sessions
-            [_FakeRow(["message_count", "token_estimate"***REMOVED***, [1, 10***REMOVED***)***REMOVED***,  # SELECT after update
-        ***REMOVED***
+            [],  # INSERT message
+            [],  # UPDATE sessions
+            [_FakeRow(["message_count", "token_estimate"], [1, 10])],  # SELECT after update
+        ]
 
         cm.add_message(snap.session_id, "user", "Hello cowork!")
         assert mock_remote.execute.call_count >= 2
@@ -117,33 +117,33 @@ class TestCoworkWrappers:
     """Внутренние классы-обёртки."""
 
     def test_cursor_fetchone_empty(self) -> None:
-        cur = _CoworkCursor([***REMOVED***)
+        cur = _CoworkCursor([])
         assert cur.fetchone() is None
 
     def test_cursor_fetchone_with_data(self) -> None:
-        row = _FakeRow(["a", "b"***REMOVED***, [1, 2***REMOVED***)
-        cur = _CoworkCursor([row***REMOVED***)
+        row = _FakeRow(["a", "b"], [1, 2])
+        cur = _CoworkCursor([row])
         result = cur.fetchone()
         assert result is not None
-        assert result["a"***REMOVED*** == 1
+        assert result["a"] == 1
 
     def test_cursor_fetchall(self) -> None:
         rows = [
-            _FakeRow(["x"***REMOVED***, [10***REMOVED***),
-            _FakeRow(["x"***REMOVED***, [20***REMOVED***),
-        ***REMOVED***
+            _FakeRow(["x"], [10]),
+            _FakeRow(["x"], [20]),
+        ]
         cur = _CoworkCursor(rows)
         assert len(cur.fetchall()) == 2
 
     def test_cursor_rowcount(self) -> None:
-        assert _CoworkCursor([***REMOVED***).rowcount == 0
-        assert _CoworkCursor([_FakeRow(["a"***REMOVED***, [1***REMOVED***)***REMOVED***).rowcount == 1
+        assert _CoworkCursor([]).rowcount == 0
+        assert _CoworkCursor([_FakeRow(["a"], [1])]).rowcount == 1
 
     def test_conn_execute_delegates(self, mock_remote: MagicMock) -> None:
-        mock_remote.execute.return_value = [_FakeRow(["col"***REMOVED***, [42***REMOVED***)***REMOVED***
+        mock_remote.execute.return_value = [_FakeRow(["col"], [42])]
         conn = _CoworkConn(mock_remote)
         cur = conn.execute("SELECT 1")
-        assert cur.fetchone()["col"***REMOVED*** == 42
+        assert cur.fetchone()["col"] == 42
         mock_remote.execute.assert_called_once()
 
     def test_conn_executescript_delegates(self, mock_remote: MagicMock) -> None:
@@ -170,7 +170,7 @@ class TestIntegrationRqlite:
     def cowork_cm(self, tmp_path: Path) -> ContextManager:
         import urllib.request
         try:
-            req = urllib.request.Request(f"{self.RQLITE_URL***REMOVED***/status?pretty=false")
+            req = urllib.request.Request(f"{self.RQLITE_URL}/status?pretty=false")
             urllib.request.urlopen(req, timeout=2)
         except Exception:
             pytest.skip("rqlite not available")
@@ -183,7 +183,7 @@ class TestIntegrationRqlite:
     def test_start_and_list(self, cowork_cm: ContextManager) -> None:
         snap = cowork_cm.start_session(project="cowork", topic="integration test")
         sessions = cowork_cm.list_sessions()
-        assert any(s["session_id"***REMOVED*** == snap.session_id for s in sessions)
+        assert any(s["session_id"] == snap.session_id for s in sessions)
 
     def test_add_message_and_checkpoint(self, cowork_cm: ContextManager) -> None:
         snap = cowork_cm.start_session(project="test", topic="cp")
@@ -194,4 +194,4 @@ class TestIntegrationRqlite:
             snap.session_id, "user", "msg3", auto_checkpoint_interval=3
         )
         assert result is not None
-        assert result["checkpoint_type"***REMOVED*** == CheckpointType.AUTO_INTERVAL.value
+        assert result["checkpoint_type"] == CheckpointType.AUTO_INTERVAL.value

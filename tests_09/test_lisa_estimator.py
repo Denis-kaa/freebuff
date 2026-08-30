@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 import sys
-***REMOVED***
+}
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -49,27 +49,27 @@ def test_lisa_estimator_no_save_dry_run(tmp_path) -> None:
 
 
 def test_json_schema_keys() -> None:
-    """DoD §5.2: JSON содержит description, scores{...***REMOVED***, verdict, calibrated, degraded."""
+    """DoD §5.2: JSON содержит description, scores{...], verdict, calibrated, degraded."""
     report = le.lisa_estimator("каталог товаров с оплатой", save=False)
     payload = report.to_dict()
     for key in ("description", "scores", "verdict", "calibrated", "degraded"):
-        assert key in payload, f"missing JSON key: {key***REMOVED***"
-    assert isinstance(payload["scores"***REMOVED***, dict)
+        assert key in payload, f"missing JSON key: {key}"
+    assert isinstance(payload["scores"], dict)
     for axis in ("engineering_complexity", "ai_native_complexity",
                  "verification_burden", "operational_risk",
                  "production_risk", "ai_suitability"):
-        assert axis in payload["scores"***REMOVED***, f"missing score axis: {axis***REMOVED***"
-        assert 0.0 <= payload["scores"***REMOVED***[axis***REMOVED*** <= 10.0
+        assert axis in payload["scores"], f"missing score axis: {axis}"
+        assert 0.0 <= payload["scores"][axis] <= 10.0
 
 
 def test_cli_json_stdout(monkeypatch, capsys) -> None:
     """CLI --json печатает валидный JSON со schema-ключами."""
-    monkeypatch.setattr(sys, "argv", ["lisa_estimator", "веб-платформа", "--json", "--no-save"***REMOVED***)
+    monkeypatch.setattr(sys, "argv", ["lisa_estimator", "веб-платформа", "--json", "--no-save"])
     assert le.main() == 0
     captured = capsys.readouterr()
     payload = json.loads(captured.out)
-    assert payload["description"***REMOVED*** == "веб-платформа"
-    assert payload["verdict"***REMOVED*** in ("GO", "COND", "NO-GO")
+    assert payload["description"] == "веб-платформа"
+    assert payload["verdict"] in ("GO", "COND", "NO-GO")
     assert "scores" in payload
 
 
@@ -77,10 +77,10 @@ def test_cli_input_file(tmp_path, monkeypatch, capsys) -> None:
     """--input brief.md: вход из файла (DoD §3.1 #3)."""
     brief = tmp_path / "brief.md"
     brief.write_text("мобильное приложение с интеграцией API и оплатой", encoding="utf-8")
-    monkeypatch.setattr(sys, "argv", ["lisa_estimator", "--input", str(brief), "--json", "--no-save"***REMOVED***)
+    monkeypatch.setattr(sys, "argv", ["lisa_estimator", "--input", str(brief), "--json", "--no-save"])
     assert le.main() == 0
     payload = json.loads(capsys.readouterr().out)
-    assert "оплатой" in payload["description"***REMOVED***
+    assert "оплатой" in payload["description"]
 
 
 # ─── fail-safe: пустой/битый вход ──────────────────────────────────────────────
@@ -105,11 +105,11 @@ def test_whitespace_input_degraded() -> None:
 def test_cli_empty_stdin_degraded(monkeypatch, capsys) -> None:
     """CLI без аргументов и без stdin (tty) → degraded, exit 0 (не краш)."""
     monkeypatch.setattr(le.sys, "stdin", _FakeStdin(tty=True))
-    monkeypatch.setattr(sys, "argv", ["lisa_estimator", "--json", "--no-save"***REMOVED***)
+    monkeypatch.setattr(sys, "argv", ["lisa_estimator", "--json", "--no-save"])
     assert le.main() == 0
     payload = json.loads(capsys.readouterr().out)
-    assert payload["degraded"***REMOVED*** is True
-    assert payload["estimated"***REMOVED*** is False
+    assert payload["degraded"] is True
+    assert payload["estimated"] is False
 
 
 class _FakeStdin:
@@ -150,7 +150,7 @@ def test_scores_differ_for_complex_input() -> None:
 def test_rationale_lists_matched_signals() -> None:
     """Каждая оценка обоснована списком сработавших сигналов (§3.1 #6)."""
     report = le.lisa_estimator("платформа с оплатой и интеграцией API", save=False)
-    assert report.rationale["engineering_complexity"***REMOVED***  # оплата/интеграция
+    assert report.rationale["engineering_complexity"]  # оплата/интеграция
     for axis in le.AXES:
         assert axis in report.rationale
 
@@ -252,13 +252,13 @@ def test_canonical_store_exists_parses_and_has_xlsx_domain() -> None:
     """Integration (read-only): каноничное data_13/lisa_calibration.yaml существует,
     парсится и содержит домен xlsx (герметично: без мутации реального хранилища)."""
     store = le.DEFAULT_CALIBRATION_STORE
-    assert store.is_file(), f"каноничное хранилище отсутствует: {store***REMOVED***"
+    assert store.is_file(), f"каноничное хранилище отсутствует: {store}"
     weights, domains = le._load_calibration_store(store)
     assert isinstance(weights, dict)
     assert isinstance(domains, dict)
-    assert "xlsx" in domains, f"домен xlsx отсутствует в {store***REMOVED***"
+    assert "xlsx" in domains, f"домен xlsx отсутствует в {store}"
     # XLSX-домен поднимает ai_suitability выше нейтрального 1.0 (см. data_13/lisa_calibration.yaml)
-    assert domains["xlsx"***REMOVED***.get("ai_suitability", 0.0) > 1.0
+    assert domains["xlsx"].get("ai_suitability", 0.0) > 1.0
 
 
 # ─── vocabulary-drift (ANTI-6b / CON-8) ────────────────────────────────────────
@@ -275,7 +275,7 @@ def test_estimation_token_in_model_catalog() -> None:
     """Токен `estimation` есть в ModelCatalog → drift-тест не сломается."""
     from core_02.router import ModelCatalog
 
-    caps: set[str***REMOVED*** = set()
+    caps: set[str] = set()
     for entry in ModelCatalog.default().all:
         caps.update(entry.capabilities)
     assert "estimation" in caps
@@ -292,7 +292,7 @@ def test_lisa_role_override_valid() -> None:
     """Роль lisa использует только закрытые токены (summarize + estimation)."""
     from core_02.blueprint_v3 import CAPABILITIES_OVERRIDE, KNOWN_CAPABILITIES
 
-    assert set(CAPABILITIES_OVERRIDE["lisa"***REMOVED***) <= set(KNOWN_CAPABILITIES)
+    assert set(CAPABILITIES_OVERRIDE["lisa"]) <= set(KNOWN_CAPABILITIES)
 
 
 # ─── helper-уровень ────────────────────────────────────────────────────────────
@@ -312,4 +312,4 @@ def test_score_axis_negative_allowed_for_suitability() -> None:
     """ai_suitability: негативные сигналы (security/hardware) понижают оценку."""
     friendly = le._score_axis("каталог лендинг блог", "ai_suitability")
     risky = le._score_axis("hardware embedded критичная безопасность", "ai_suitability")
-    assert friendly[0***REMOVED*** > risky[0***REMOVED***
+    assert friendly[0] > risky[0]

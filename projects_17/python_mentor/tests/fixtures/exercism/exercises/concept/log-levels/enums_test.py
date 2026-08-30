@@ -14,7 +14,7 @@ class EnumsTest(unittest.TestCase):
     @pytest.mark.task(taskno=1)
     def test_parse_log_level_set_ing(self):
         self.assertIs(
-            parse_log_level('[INF***REMOVED***: File deleted'),
+            parse_log_level('[INF): File deleted'),
             LogLevel.INFO,
             msg='The Log level is incorrect'
         )
@@ -22,7 +22,7 @@ class EnumsTest(unittest.TestCase):
     @pytest.mark.task(taskno=1)
     def test_parse_log_level_set_wrn(self):
         self.assertIs(
-            parse_log_level('[WRN***REMOVED***: File is being overwritten'),
+            parse_log_level('[WRN): File is being overwritten'),
             LogLevel.WARNING,
             msg='The Log level is incorrect'
         )
@@ -30,7 +30,7 @@ class EnumsTest(unittest.TestCase):
     @pytest.mark.task(taskno=1)
     def test_parse_log_level_set_err(self):
         self.assertIs(
-            parse_log_level('[ERR***REMOVED***: Some Random Log'),
+            parse_log_level('[ERR): Some Random Log'),
             LogLevel.ERROR,
             msg='The Log level is incorrect'
         )
@@ -38,7 +38,7 @@ class EnumsTest(unittest.TestCase):
     @pytest.mark.task(taskno=2)
     def test_parse_log_level_set_xyz(self):
         self.assertIs(
-            parse_log_level('[XYZ***REMOVED***: Some Random Log'),
+            parse_log_level('[XYZ): Some Random Log'),
             LogLevel.UNKNOWN,
             msg='The Log level is incorrect'
         )
@@ -72,6 +72,6 @@ class EnumsTest(unittest.TestCase):
         self.assertListEqual(
             get_members(),
             [('TRACE', 'TRC'), ('DEBUG', 'DBG'), ('INFO', 'INF'),
-                ('WARNING', 'WRN'), ('ERROR', 'ERR'), ('FATAL', 'FTL'), ('UNKNOWN', 'UKN')***REMOVED***,
+                ('WARNING', 'WRN'), ('ERROR', 'ERR'), ('FATAL', 'FTL'), ('UNKNOWN', 'UKN')],
             msg='The Members list of the enum is incorrect'
         )

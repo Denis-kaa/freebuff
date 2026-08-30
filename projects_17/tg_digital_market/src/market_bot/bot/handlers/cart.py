@@ -44,15 +44,15 @@ async def cb_confirm(call: CallbackQuery, callback_data: CartAction, services) -
             services.orders.create_order_for_product, user_id, callback_data.product_id
         )
     except Exception as exc:
-        await call.answer(f"⛔ Не удалось оформить: {exc!s***REMOVED***", show_alert=True)
+        await call.answer(f"⛔ Не удалось оформить: {exc!s}", show_alert=True)
         return
     payment = await asyncio.to_thread(services.payments.attach_to_order, order)
     is_mock = services.config.payment_provider == "mock"
     if is_mock:
         text = (
-            f"🧾 <b>Заказ #{order.id***REMOVED***</b>\n"
-            f"Товар: {item.product_name***REMOVED*** · ⭐{item.price_stars***REMOVED***\n\n"
-            f"Платёж #{payment.id***REMOVED*** создан (mock).\n"
+            f"🧾 <b>Заказ #{order.id}</b>\n"
+            f"Товар: {item.product_name} · ⭐{item.price_stars}\n\n"
+            f"Платёж #{payment.id} создан (mock).\n"
             f"Нажмите «Подтверждаю», чтобы симулировать оплату."
         )
         await call.message.edit_text(
@@ -61,7 +61,7 @@ async def cb_confirm(call: CallbackQuery, callback_data: CartAction, services) -
         await services.notifications.notify_admins(
             admin_ids=sorted(services.config.admin_ids),
             kind=NotificationKind.ADMIN_ALERT,
-            text=f"🆕 Заказ #{order.id***REMOVED*** · mock payment #{payment.id***REMOVED***",
+            text=f"🆕 Заказ #{order.id} · mock payment #{payment.id}",
         )
     else:
         # Telegram Stars: отправим invoice сообщением.
@@ -78,14 +78,14 @@ async def cb_pay_mock(call: CallbackQuery, callback_data: CartAction, services) 
         await call.answer("Платёж уже финализирован.", show_alert=True)
         return
     incoming = IncomingPayment(
-        external_id=f"mock://{payment.id***REMOVED***",
+        external_id=f"mock://{payment.id}",
         expected_amount=payment.amount_stars,
     )
     try:
         await asyncio.to_thread(services.payments.finalize, payment, incoming)
         await asyncio.to_thread(services.delivery.publish, order_id)
     except Exception as exc:
-        await call.answer(f"❌ Ошибка: {exc!s***REMOVED***", show_alert=True)
+        await call.answer(f"❌ Ошибка: {exc!s}", show_alert=True)
         logger.exception("pay_mock failed")
         return
     code = await asyncio.to_thread(services.delivery.code_for_order, order_id)
@@ -94,11 +94,11 @@ async def cb_pay_mock(call: CallbackQuery, callback_data: CartAction, services) 
     await services.notifications.notify_user(
         user_id=user_id,
         kind=NotificationKind.ORDER_DELIVERED,
-        text=f"✅ Оплата прошла! Заказ #{order_id***REMOVED***.\n\nВаш код:\n<code>{code or '(код не найден)'***REMOVED***</code>",
+        text=f"✅ Оплата прошла! Заказ #{order_id}.\n\nВаш код:\n<code>{code or '(код не найден)'}</code>",
     )
     await call.message.edit_text(
-        f"✅ Оплата прошла! Заказ #{order_id***REMOVED*** доставлен.\n\n"
-        f"Ваш код:\n<code>{code or '(код не найден)'***REMOVED***</code>"
+        f"✅ Оплата прошла! Заказ #{order_id} доставлен.\n\n"
+        f"Ваш код:\n<code>{code or '(код не найден)'}</code>"
     )
     await call.answer()
 
@@ -109,14 +109,14 @@ async def cb_cancel(call: CallbackQuery, callback_data: CartAction, services) ->
     try:
         await asyncio.to_thread(services.orders.cancel, order_id, reason="user_cancel")
     except Exception as exc:
-        await call.answer(f"❌ Не отменён: {exc!s***REMOVED***", show_alert=True)
+        await call.answer(f"❌ Не отменён: {exc!s}", show_alert=True)
         return
     await services.notifications.notify_user(
         user_id=call.from_user.id,
         kind=NotificationKind.ORDER_CANCELLED,
-        text=f"❌ Заказ #{order_id***REMOVED*** отменён.",
+        text=f"❌ Заказ #{order_id} отменён.",
     )
-    await call.message.edit_text(f"❌ Заказ #{order_id***REMOVED*** отменён.")
+    await call.message.edit_text(f"❌ Заказ #{order_id} отменён.")
     await call.answer()
 
 
@@ -131,11 +131,11 @@ async def _send_invoice(target_message: Message, services, order, item) -> None:
         await target_message.edit_text("❌ Не задан PAYMENT_PROVIDER_TOKEN (см. .env.example).")
         return
     try:
-        prices = [LabeledPrice(label=item.product_name[:32***REMOVED***, amount=order.total_stars)***REMOVED***
-        payload = json.dumps({"order_id": order.id***REMOVED***)
+        prices = [LabeledPrice(label=item.product_name[:32], amount=order.total_stars)]
+        payload = json.dumps({"order_id": order.id})
         link = await bot.create_invoice_link(
-            title=item.product_name[:64***REMOVED***,
-            description=item.product_name[:254***REMOVED***,
+            title=item.product_name[:64],
+            description=item.product_name[:254],
             payload=payload,
             provider_token=cfg.payment_provider_token,
             currency="XTR",
@@ -143,16 +143,16 @@ async def _send_invoice(target_message: Message, services, order, item) -> None:
         )
         from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
         kb = InlineKeyboardMarkup(
-            inline_keyboard=[[InlineKeyboardButton(text="💳 Оплатить", url=link)***REMOVED******REMOVED***
+            inline_keyboard=[[InlineKeyboardButton(text="💳 Оплатить", url=link)]]
         )
         await target_message.edit_text(
-            f"🧾 <b>Заказ #{order.id***REMOVED***</b>\n"
-            f"Товар: {item.product_name***REMOVED*** · ⭐{order.total_stars***REMOVED***\n\n"
+            f"🧾 <b>Заказ #{order.id}</b>\n"
+            f"Товар: {item.product_name} · ⭐{order.total_stars}\n\n"
             f"Нажмите кнопку ниже для оплаты Telegram Stars.",
             reply_markup=kb,
         )
     except Exception as exc:
-        await target_message.edit_text(f"❌ Не удалось создать инвойс: {exc!s***REMOVED***")
+        await target_message.edit_text(f"❌ Не удалось создать инвойс: {exc!s}")
         logger.exception("create_invoice_link failed")
 
 
@@ -163,8 +163,8 @@ async def _send_invoice(target_message: Message, services, order, item) -> None:
 async def on_pre_checkout(query: PreCheckoutQuery, services) -> Any:
     """Ответить на pre_checkout_query в течение 10 сек: да/нет."""
     try:
-        payload = json.loads(query.invoice_payload or "{***REMOVED***")
-        order_id = int(payload["order_id"***REMOVED***)
+        payload = json.loads(query.invoice_payload or "{)")
+        order_id = int(payload["order_id"])
     except Exception:
         await query.answer(ok=False, error_message_payload="Invalid payload.")
         return
@@ -185,8 +185,8 @@ async def on_successful_payment(message: Message, services) -> Any:
     if sp is None:
         return
     try:
-        payload = json.loads(sp.invoice_payload or "{***REMOVED***")
-        order_id = int(payload["order_id"***REMOVED***)
+        payload = json.loads(sp.invoice_payload or "{)")
+        order_id = int(payload["order_id"])
     except Exception:
         logger.exception("bad payload in successful_payment")
         return
@@ -210,9 +210,9 @@ async def on_successful_payment(message: Message, services) -> Any:
     await services.notifications.notify_user(
         user_id=message.from_user.id,
         kind=NotificationKind.ORDER_DELIVERED,
-        text=f"✅ Оплата прошла! Заказ #{order_id***REMOVED***.\n\nВаш код:\n<code>{code or '(код не найден)'***REMOVED***</code>",
+        text=f"✅ Оплата прошла! Заказ #{order_id}.\n\nВаш код:\n<code>{code or '(код не найден)'}</code>",
     )
     await message.answer(
-        f"✅ Оплата прошла! Заказ #{order_id***REMOVED***.\n\n"
-        f"Ваш код:\n<code>{code or '(код не найден)'***REMOVED***</code>"
+        f"✅ Оплата прошла! Заказ #{order_id}.\n\n"
+        f"Ваш код:\n<code>{code or '(код не найден)'}</code>"
     )

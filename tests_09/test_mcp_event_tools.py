@@ -11,7 +11,7 @@ import json
 import os
 import sys
 import tempfile
-***REMOVED***
+}
 from typing import Any, Dict, Generator, List
 
 import pytest
@@ -30,7 +30,7 @@ from freebuff_plugin_03.event import AuditDecision, AuditAction
 
 
 @pytest.fixture
-def tmp_db() -> Generator[Path, None, None***REMOVED***:
+def tmp_db() -> Generator[Path, None, None]:
     """Временная БД для тестов."""
     tmp = tempfile.mktemp(suffix=".db", prefix="mcp_event_test_")
     yield Path(tmp)
@@ -48,21 +48,21 @@ def store(tmp_db: Path) -> EventStore:
 def populated_store(store: EventStore) -> EventStore:
     """EventStore с тестовыми событиями (5 штук)."""
     store.store(event_type="system.startup", source="system",
-                data={"version": "4.7.0"***REMOVED***)
+                data={"version": "4.7.0"})
     store.store(event_type="session.created", source="context_manager",
-                data={"topic": "Test Session"***REMOVED***, session_id="sess-mcp-1")
+                data={"topic": "Test Session"}, session_id="sess-mcp-1")
     store.store(event_type="task.created", source="orchestrator",
-                data={"task_id": "t-mcp-1"***REMOVED***, session_id="sess-mcp-1")
+                data={"task_id": "t-mcp-1"}, session_id="sess-mcp-1")
     store.store(event_type="task.completed", source="orchestrator",
-                data={"task_id": "t-mcp-1", "duration_ms": 500***REMOVED***,
+                data={"task_id": "t-mcp-1", "duration_ms": 500},
                 session_id="sess-mcp-1")
     store.store(event_type="session.completed", source="context_manager",
-                data={***REMOVED***, session_id="sess-mcp-1")
+                data={}, session_id="sess-mcp-1")
     return store
 
 
 @pytest.fixture
-def server() -> Generator[Any, None, None***REMOVED***:
+def server() -> Generator[Any, None, None]:
     """MCPServer instance with mocked dependencies."""
     # We don't want to actually run the plugin bridge/wrapper
     # So we test through _call_tool directly on a patched server
@@ -87,7 +87,7 @@ class TestEventToolsList:
     def test_event_tools_registered(self, server):
         """5 event tools должны быть в _list_tools()."""
         tools = server._list_tools()
-        names = [t["name"***REMOVED*** for t in tools***REMOVED***
+        names = [t["name"] for t in tools]
         assert "event_search" in names
         assert "event_timeline" in names
         assert "event_replay" in names
@@ -97,17 +97,17 @@ class TestEventToolsList:
     def test_event_tools_have_schema(self, server):
         """Каждый event tool имеет inputSchema."""
         tools = server._list_tools()
-        event_tools = [t for t in tools if t["name"***REMOVED***.startswith("event_")***REMOVED***
+        event_tools = [t for t in tools if t["name"].startswith("event_")]
         assert len(event_tools) == 5
         for t in event_tools:
             assert "inputSchema" in t
-            assert t["inputSchema"***REMOVED***["type"***REMOVED*** == "object"
+            assert t["inputSchema"]["type"] == "object"
 
     def test_event_search_has_properties(self, server):
         """event_search должен иметь event_type, session_id, data_search."""
         tools = server._list_tools()
-        es = next(t for t in tools if t["name"***REMOVED*** == "event_search")
-        props = es["inputSchema"***REMOVED***["properties"***REMOVED***
+        es = next(t for t in tools if t["name"] == "event_search")
+        props = es["inputSchema"]["properties"]
         assert "event_type" in props
         assert "session_id" in props
         assert "data_search" in props
@@ -125,9 +125,9 @@ class TestEventSearch:
         """event_search в пустом Event Store."""
         estore = EventStore(db_path=tmp_db)
         server._event_store = estore
-        result = server._call_tool("event_search", {***REMOVED***)
+        result = server._call_tool("event_search", {})
         assert "content" in result
-        text = result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***
+        text = result["content"][0]["text"]
         data = json.loads(text)
         assert isinstance(data, list)
         assert len(data) == 0
@@ -135,31 +135,31 @@ class TestEventSearch:
     def test_event_search_by_type(self, server, populated_store):
         """event_search по event_type."""
         server._event_store = populated_store
-        result = server._call_tool("event_search", {"event_type": "task.*"***REMOVED***)
-        text = result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***
+        result = server._call_tool("event_search", {"event_type": "task.*"})
+        text = result["content"][0]["text"]
         data = json.loads(text)
         assert len(data) >= 2
 
     def test_event_search_by_session(self, server, populated_store):
         """event_search по session_id."""
         server._event_store = populated_store
-        result = server._call_tool("event_search", {"session_id": "sess-mcp-1"***REMOVED***)
-        text = result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***
+        result = server._call_tool("event_search", {"session_id": "sess-mcp-1"})
+        text = result["content"][0]["text"]
         data = json.loads(text)
         assert len(data) >= 4
 
     def test_event_search_return_fields(self, server, populated_store):
         """event_search возвращает корректные поля."""
         server._event_store = populated_store
-        result = server._call_tool("event_search", {***REMOVED***)
-        text = result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***
+        result = server._call_tool("event_search", {})
+        text = result["content"][0]["text"]
         data = json.loads(text)
         assert len(data) >= 1
-        assert "id" in data[0***REMOVED***
-        assert "type" in data[0***REMOVED***
-        assert "source" in data[0***REMOVED***
-        assert "data" in data[0***REMOVED***
-        assert "timestamp" in data[0***REMOVED***
+        assert "id" in data[0]
+        assert "type" in data[0]
+        assert "source" in data[0]
+        assert "data" in data[0]
+        assert "timestamp" in data[0]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -174,9 +174,9 @@ class TestEventTimeline:
         """event_timeline в пустом Event Store."""
         estore = EventStore(db_path=tmp_db)
         server._event_store = estore
-        result = server._call_tool("event_timeline", {***REMOVED***)
+        result = server._call_tool("event_timeline", {})
         assert "content" in result
-        text = result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***
+        text = result["content"][0]["text"]
         # format_timeline_text для пустой шкалы: "📭 Нет событий в временной шкале."
         assert "📭" in text
         assert isinstance(text, str)
@@ -185,8 +185,8 @@ class TestEventTimeline:
     def test_timeline_has_events(self, server, populated_store):
         """event_timeline возвращает отформатированные события."""
         server._event_store = populated_store
-        result = server._call_tool("event_timeline", {"limit": 5***REMOVED***)
-        text = result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***
+        result = server._call_tool("event_timeline", {"limit": 5})
+        text = result["content"][0]["text"]
         assert len(text) > 0
         # Должны быть иконки и таймштампы
         assert " — " in text
@@ -204,20 +204,20 @@ class TestEventReplay:
         """event_replay в пустом Event Store."""
         estore = EventStore(db_path=tmp_db)
         server._event_store = estore
-        result = server._call_tool("event_replay", {***REMOVED***)
-        text = result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***
+        result = server._call_tool("event_replay", {})
+        text = result["content"][0]["text"]
         data = json.loads(text)
-        assert data["total"***REMOVED*** == 0
-        assert data["delivered"***REMOVED*** == 0
+        assert data["total"] == 0
+        assert data["delivered"] == 0
 
     def test_replay_with_events(self, server, populated_store):
         """event_replay с событиями."""
         server._event_store = populated_store
-        result = server._call_tool("event_replay", {"event_type": "system.*"***REMOVED***)
-        text = result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***
+        result = server._call_tool("event_replay", {"event_type": "system.*"})
+        text = result["content"][0]["text"]
         data = json.loads(text)
-        assert data["total"***REMOVED*** >= 1
-        assert data["errors"***REMOVED*** == 0
+        assert data["total"] >= 1
+        assert data["errors"] == 0
         assert "duration_ms" in data
 
     def test_replay_instant_speed(self, server, populated_store):
@@ -226,10 +226,10 @@ class TestEventReplay:
         result = server._call_tool("event_replay", {
             "event_type": "task.*",
             "speed": "instant",
-        ***REMOVED***)
-        text = result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***
+        ])
+        text = result["content"][0]["text"]
         data = json.loads(text)
-        assert data["total"***REMOVED*** == 2
+        assert data["total"] == 2
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -244,8 +244,8 @@ class TestEventAudit:
         """event_audit в пустом Event Store."""
         estore = EventStore(db_path=tmp_db)
         server._event_store = estore
-        result = server._call_tool("event_audit", {***REMOVED***)
-        text = result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***
+        result = server._call_tool("event_audit", {})
+        text = result["content"][0]["text"]
         assert "Нет записей аудита" in text
 
     def test_audit_with_decisions(self, server, store):
@@ -259,8 +259,8 @@ class TestEventAudit:
             cost_estimate=0.01,
         ))
 
-        result = server._call_tool("event_audit", {"limit": 10***REMOVED***)
-        text = result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***
+        result = server._call_tool("event_audit", {"limit": 10})
+        text = result["content"][0]["text"]
         assert "AUDIT LOG" in text
         assert "test-policy" in text
 
@@ -276,14 +276,14 @@ class TestEventAudit:
         ))
 
         # Фильтр по decision
-        result = server._call_tool("event_audit", {"target_type": "decision"***REMOVED***)
-        text = result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***
+        result = server._call_tool("event_audit", {"target_type": "decision"})
+        text = result["content"][0]["text"]
         assert "DECISION" in text
         assert "policy-x" in text
 
         # Фильтр по action
-        result = server._call_tool("event_audit", {"target_type": "action"***REMOVED***)
-        text = result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***
+        result = server._call_tool("event_audit", {"target_type": "action"})
+        text = result["content"][0]["text"]
         assert "ACTION" in text
         assert "user" in text
 
@@ -300,8 +300,8 @@ class TestEventPulse:
         """event_pulse в пустом Event Store."""
         estore = EventStore(db_path=tmp_db)
         server._event_store = estore
-        result = server._call_tool("event_pulse", {***REMOVED***)
-        text = result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***
+        result = server._call_tool("event_pulse", {})
+        text = result["content"][0]["text"]
         data = json.loads(text)
         assert isinstance(data, list)
         assert len(data) == 0
@@ -316,21 +316,21 @@ class TestEventPulse:
         store.store(
             event_type="task.completed",
             source="orchestrator",
-            data={"task_id": "t-001", "_pulse": True***REMOVED***,
+            data={"task_id": "t-001", "_pulse": True},
         )
         store.store(
             event_type="memory.stored",
             source="memory_engine",
-            data={"key": "note", "_pulse": True***REMOVED***,
+            data={"key": "note", "_pulse": True},
         )
 
-        result = server._call_tool("event_pulse", {"limit": 10***REMOVED***)
-        text = result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***
+        result = server._call_tool("event_pulse", {"limit": 10})
+        text = result["content"][0]["text"]
         data = json.loads(text)
         assert len(data) >= 1
-        assert "icon" in data[0***REMOVED***
-        assert "title" in data[0***REMOVED***
-        assert "severity" in data[0***REMOVED***
+        assert "icon" in data[0]
+        assert "title" in data[0]
+        assert "severity" in data[0]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -343,9 +343,9 @@ class TestErrorHandling:
 
     def test_unknown_tool(self, server):
         """Неизвестный инструмент."""
-        result = server._call_tool("nonexistent", {***REMOVED***)
-        assert result["isError"***REMOVED*** is True
-        assert "Unknown tool" in result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***
+        result = server._call_tool("nonexistent", {})
+        assert result["isError"] is True
+        assert "Unknown tool" in result["content"][0]["text"]
 
     def test_event_search_exception(self, server, store):
         """Ошибка в event_search."""
@@ -355,7 +355,7 @@ class TestErrorHandling:
         # Правильный подход: пакуем store с багнутой query
         server._event_store = store
         with mock.patch.object(store, 'query', side_effect=RuntimeError("test error")):
-            result = server._call_tool("event_search", {"event_type": "test"***REMOVED***)
-            assert result["isError"***REMOVED*** is True
-            assert "Error" in result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***
-            assert "test error" in result["content"***REMOVED***[0***REMOVED***["text"***REMOVED***
+            result = server._call_tool("event_search", {"event_type": "test"})
+            assert result["isError"] is True
+            assert "Error" in result["content"][0]["text"]
+            assert "test error" in result["content"][0]["text"]

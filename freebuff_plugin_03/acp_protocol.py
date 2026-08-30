@@ -34,7 +34,7 @@ ACP — Agent Collaboration Protocol.
     handler.start()
 
     # Отправить задачу другому агенту
-    handler.send_task("claude-agent", "knowledge_search", {"query": "python"***REMOVED***)
+    handler.send_task("claude-agent", "knowledge_search", {"query": "python"})
 """
 
 from __future__ import annotations
@@ -85,22 +85,22 @@ class AgentInfo:
     name: str
     version: str = "1.0.0"
     status: AgentStatus = AgentStatus.ONLINE
-    capabilities: Dict[str, str***REMOVED*** = field(default_factory=dict)  # tool_name → description
+    capabilities: Dict[str, str] = field(default_factory=dict)  # tool_name → description
     protocol: str = ACP_PROTOCOL
     last_seen: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
-    metadata: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class ACPTask:
     """Задача, отправляемая агенту."""
-    task_id: str = field(default_factory=lambda: uuid.uuid4().hex[:12***REMOVED***)
+    task_id: str = field(default_factory=lambda: uuid.uuid4().hex[:12])
     target: str = ""           # имя целевого агента
     source: str = ""           # имя источника
     tool: str = ""             # название инструмента
-    arguments: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    arguments: Dict[str, Any] = field(default_factory=dict)
     timeout: float = 60.0      # таймаут в секундах
     created_at: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
@@ -116,7 +116,7 @@ class ACPResult:
     target: str = ""
     success: bool = True
     data: Any = None
-    error: Optional[str***REMOVED*** = None
+    error: Optional[str] = None
     duration_ms: float = 0.0
     completed_at: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
@@ -136,10 +136,10 @@ class AgentRegistry:
 
     def __init__(self):
         self._lock = threading.Lock()
-        self._agents: Dict[str, AgentInfo***REMOVED*** = {***REMOVED***
-        self._pending_tasks: Dict[str, ACPTask***REMOVED*** = {***REMOVED***  # task_id → task
-        self._task_results: Dict[str, ACPResult***REMOVED*** = {***REMOVED***  # task_id → result
-        self._result_events: Dict[str, threading.Event***REMOVED*** = {***REMOVED***  # task_id → event
+        self._agents: Dict[str, AgentInfo] = {}
+        self._pending_tasks: Dict[str, ACPTask] = {}  # task_id → task
+        self._task_results: Dict[str, ACPResult] = {}  # task_id → result
+        self._result_events: Dict[str, threading.Event] = {}  # task_id → event
 
     # ── Agent management ────────────────────────────────────
 
@@ -147,24 +147,24 @@ class AgentRegistry:
         """Регистрирует или обновляет агента."""
         with self._lock:
             info.last_seen = datetime.now(timezone.utc).isoformat()
-            self._agents[info.name***REMOVED*** = info
+            self._agents[info.name] = info
 
     def unregister(self, name: str) -> bool:
         """Удаляет агента из реестра."""
         with self._lock:
             return self._agents.pop(name, None) is not None
 
-    def get(self, name: str) -> Optional[AgentInfo***REMOVED***:
+    def get(self, name: str) -> Optional[AgentInfo]:
         """Получает информацию об агенте."""
         with self._lock:
             return self._agents.get(name)
 
-    def list_agents(self, status: Optional[AgentStatus***REMOVED*** = None) -> List[AgentInfo***REMOVED***:
+    def list_agents(self, status: Optional[AgentStatus] = None) -> List[AgentInfo]:
         """Список всех агентов, опционально фильтрованных по статусу."""
         with self._lock:
             agents = list(self._agents.values())
         if status:
-            agents = [a for a in agents if a.status == status***REMOVED***
+            agents = [a for a in agents if a.status == status]
         return sorted(agents, key=lambda a: a.name)
 
     def is_online(self, name: str) -> bool:
@@ -185,14 +185,14 @@ class AgentRegistry:
     def prune_offline(self, max_age_seconds: float = 300.0) -> int:
         """Удаляет агентов, не подававших признаков жизни."""
         now = datetime.now(timezone.utc)
-        to_remove: List[str***REMOVED*** = [***REMOVED***
+        to_remove: List[str] = []
         with self._lock:
             for name, info in self._agents.items():
                 last = datetime.fromisoformat(info.last_seen)
                 if (now - last).total_seconds() > max_age_seconds:
                     to_remove.append(name)
             for name in to_remove:
-                del self._agents[name***REMOVED***
+                del self._agents[name]
         return len(to_remove)
 
     # ── Task management ──────────────────────────────────────
@@ -200,19 +200,19 @@ class AgentRegistry:
     def register_pending_task(self, task: ACPTask) -> None:
         """Регистрирует ожидающую выполнения задачу."""
         with self._lock:
-            self._pending_tasks[task.task_id***REMOVED*** = task
-            self._result_events[task.task_id***REMOVED*** = threading.Event()
+            self._pending_tasks[task.task_id] = task
+            self._result_events[task.task_id] = threading.Event()
 
     def complete_task(self, result: ACPResult) -> None:
         """Сохраняет результат задачи и сигнализирует ожидающим."""
         with self._lock:
-            self._task_results[result.task_id***REMOVED*** = result
+            self._task_results[result.task_id] = result
             self._pending_tasks.pop(result.task_id, None)
             event = self._result_events.pop(result.task_id, None)
             if event:
                 event.set()
 
-    def wait_for_result(self, task_id: str, timeout: float = 60.0) -> Optional[ACPResult***REMOVED***:
+    def wait_for_result(self, task_id: str, timeout: float = 60.0) -> Optional[ACPResult]:
         """Ожидает результат задачи (блокирующий вызов)."""
         event = self._result_events.get(task_id)
         if event is None:
@@ -222,18 +222,18 @@ class AgentRegistry:
                 return self._task_results.pop(task_id, None)
         return None  # timeout
 
-    def get_pending_task(self, task_id: str) -> Optional[ACPTask***REMOVED***:
+    def get_pending_task(self, task_id: str) -> Optional[ACPTask]:
         """Получает ожидающую задачу."""
         with self._lock:
             return self._pending_tasks.get(task_id)
 
-    def get_pending_tasks_for_agent(self, agent_name: str) -> List[ACPTask***REMOVED***:
+    def get_pending_tasks_for_agent(self, agent_name: str) -> List[ACPTask]:
         """Получает все ожидающие задачи для агента."""
         with self._lock:
             return [
                 t for t in self._pending_tasks.values()
                 if t.target == agent_name
-            ***REMOVED***
+            ]
 
 
 # ── ACP Handler ────────────────────────────────────────────────
@@ -253,7 +253,7 @@ class ACPHandler:
         # Зарегистрировать обработчик инструмента
         @handler.on_tool("knowledge_search")
         def handle_search(args: dict) -> dict:
-            return {"results": [...***REMOVED******REMOVED***
+            return {"results": [...]}
 
         handler.start()
     """
@@ -264,24 +264,24 @@ class ACPHandler:
         registry: AgentRegistry,
         agent_name: str = "buffy",
         agent_version: str = "1.0.0",
-        capabilities: Optional[Dict[str, str***REMOVED******REMOVED*** = None,
+        capabilities: Optional[Dict[str, str]] = None,
     ):
         self._bus = event_bus
         self._registry = registry
         self._agent_name = agent_name
         self._agent_version = agent_version
-        self._capabilities: Dict[str, str***REMOVED*** = capabilities or {***REMOVED***
-        self._tool_handlers: Dict[str, Callable***REMOVED*** = {***REMOVED***
-        self._subscriptions: List[Any***REMOVED*** = [***REMOVED***
+        self._capabilities: Dict[str, str] = capabilities or {}
+        self._tool_handlers: Dict[str, Callable] = {}
+        self._subscriptions: List[Any] = []
         self._running = False
-        self._heartbeat_thread: Optional[threading.Thread***REMOVED*** = None
+        self._heartbeat_thread: Optional[threading.Thread] = None
         self._agent_status = AgentStatus.ONLINE
 
     # ── Capability management ────────────────────────────────
 
     def register_capability(self, tool_name: str, description: str) -> None:
         """Регистрирует возможность агента."""
-        self._capabilities[tool_name***REMOVED*** = description
+        self._capabilities[tool_name] = description
 
     def remove_capability(self, tool_name: str) -> None:
         """Удаляет возможность агента."""
@@ -296,7 +296,7 @@ class ACPHandler:
                 ...
         """
         def decorator(func: Callable) -> Callable:
-            self._tool_handlers[tool_name***REMOVED*** = func
+            self._tool_handlers[tool_name] = func
             return func
         return decorator
 
@@ -314,7 +314,7 @@ class ACPHandler:
         acp_events = [
             ACP_DISCOVER, ACP_TASK, ACP_RESULT,
             ACP_BROADCAST, ACP_STATUS, ACP_HEARTBEAT,
-        ***REMOVED***
+        ]
         for event_type in acp_events:
             sub = self._bus.subscribe(event_type, self._on_acp_event)
             self._subscriptions.append(sub)
@@ -331,13 +331,13 @@ class ACPHandler:
             "version": self._agent_version,
             "status": AgentStatus.ONLINE.value,
             "capabilities": self._capabilities,
-        ***REMOVED***)
+        })
 
         # Heartbeat thread
         self._heartbeat_thread = threading.Thread(
             target=self._heartbeat_loop,
             daemon=True,
-            name=f"acp-heartbeat-{self._agent_name***REMOVED***",
+            name=f"acp-heartbeat-{self._agent_name}",
         )
         self._heartbeat_thread.start()
 
@@ -351,7 +351,7 @@ class ACPHandler:
         self._publish_event(ACP_STATUS, {
             "agent": self._agent_name,
             "status": AgentStatus.OFFLINE.value,
-        ***REMOVED***)
+        })
 
         # Отписка от событий
         for sub in self._subscriptions:
@@ -399,7 +399,7 @@ class ACPHandler:
             import traceback
             traceback.print_exc()
 
-    def _handle_discover(self, data: Dict[str, Any***REMOVED***, source: str) -> None:
+    def _handle_discover(self, data: Dict[str, Any], source: str) -> None:
         """Обрабатывает discover запрос — отвечает своей информацией."""
         # Отвечаем только на directed discover или всегда?
         # Отвечаем всегда — чтобы новые агенты узнавали о нас
@@ -409,17 +409,17 @@ class ACPHandler:
             "status": self._agent_status.value,
             "capabilities": self._capabilities,
             "response_to": data.get("agent", source),
-        ***REMOVED***)
+        })
 
-    def _handle_task(self, data: Dict[str, Any***REMOVED***, source: str) -> None:
+    def _handle_task(self, data: Dict[str, Any], source: str) -> None:
         """Обрабатывает входящую задачу."""
         target = data.get("target", "")
         if target != self._agent_name:
             return  # Задача не нам
 
         tool = data.get("tool", "")
-        task_id = data.get("task_id", uuid.uuid4().hex[:12***REMOVED***)
-        arguments = data.get("arguments", {***REMOVED***)
+        task_id = data.get("task_id", uuid.uuid4().hex[:12])
+        arguments = data.get("arguments", {})
         correlation_id = data.get("correlation_id", "")
 
         # Проверяем, знаем ли мы такой инструмент
@@ -430,9 +430,9 @@ class ACPHandler:
                 "source": self._agent_name,
                 "target": source,
                 "success": False,
-                "error": f"Unknown tool: {tool***REMOVED***",
+                "error": f"Unknown tool: {tool}",
                 "correlation_id": correlation_id,
-            ***REMOVED***)
+            })
             return
 
         # Выполняем
@@ -449,7 +449,7 @@ class ACPHandler:
                 "data": result_data,
                 "duration_ms": round(duration_ms, 1),
                 "correlation_id": correlation_id,
-            ***REMOVED***)
+            })
         except Exception as e:
             duration_ms = (time.time() - t0) * 1000
             self._publish_event(ACP_RESULT, {
@@ -460,9 +460,9 @@ class ACPHandler:
                 "error": str(e),
                 "duration_ms": round(duration_ms, 1),
                 "correlation_id": correlation_id,
-            ***REMOVED***)
+            })
 
-    def _handle_result(self, data: Dict[str, Any***REMOVED***, source: str) -> None:
+    def _handle_result(self, data: Dict[str, Any], source: str) -> None:
         """Обрабатывает полученный результат задачи."""
         result = ACPResult(
             task_id=data.get("task_id", ""),
@@ -476,11 +476,11 @@ class ACPHandler:
         )
         self._registry.complete_task(result)
 
-    def _handle_status(self, data: Dict[str, Any***REMOVED***) -> None:
+    def _handle_status(self, data: Dict[str, Any]) -> None:
         """Обрабатывает обновление статуса агента."""
         agent_name = data.get("agent", "unknown")
         status_str = data.get("status", AgentStatus.ONLINE.value)
-        capabilities = data.get("capabilities", {***REMOVED***)
+        capabilities = data.get("capabilities", {})
 
         try:
             status = AgentStatus(status_str)
@@ -492,23 +492,23 @@ class ACPHandler:
             version=data.get("version", "1.0.0"),
             status=status,
             capabilities=capabilities,
-            metadata=data.get("metadata", {***REMOVED***),
+            metadata=data.get("metadata", {}),
         )
         self._registry.register(info)
 
-    def _handle_broadcast(self, data: Dict[str, Any***REMOVED***, source: str) -> None:
+    def _handle_broadcast(self, data: Dict[str, Any], source: str) -> None:
         """Обрабатывает широковещательное сообщение."""
         # Можно переопределить в подклассе
         message = data.get("message", "")
         if message:
-            print(f"📢 ACP Broadcast from {source***REMOVED***: {message[:200***REMOVED******REMOVED***")
+            print(f"📢 ACP Broadcast from {source}: {message[:200]}")
         self.on_broadcast(data, source)
 
-    def on_broadcast(self, data: Dict[str, Any***REMOVED***, source: str) -> None:
+    def on_broadcast(self, data: Dict[str, Any], source: str) -> None:
         """Хук для обработки broadcast сообщений. Переопределите в подклассе."""
         pass
 
-    def _handle_heartbeat(self, data: Dict[str, Any***REMOVED***) -> None:
+    def _handle_heartbeat(self, data: Dict[str, Any]) -> None:
         """Обрабатывает heartbeat — обновляет last_seen."""
         agent_name = data.get("agent", "unknown")
         agent = self._registry.get(agent_name)
@@ -522,15 +522,15 @@ class ACPHandler:
         self._publish_event(ACP_DISCOVER, {
             "agent": self._agent_name,
             "version": self._agent_version,
-        ***REMOVED***)
+        })
 
     def send_task(
         self,
         target: str,
         tool: str,
-        arguments: Dict[str, Any***REMOVED***,
+        arguments: Dict[str, Any],
         timeout: float = 60.0,
-    ) -> Optional[ACPResult***REMOVED***:
+    ) -> Optional[ACPResult]:
         """Отправляет задачу агенту и ожидает результат.
 
         Args:
@@ -542,7 +542,7 @@ class ACPHandler:
         Returns:
             ACPResult или None при таймауте
         """
-        correlation_id = uuid.uuid4().hex[:8***REMOVED***
+        correlation_id = uuid.uuid4().hex[:8]
         task = ACPTask(
             target=target,
             source=self._agent_name,
@@ -560,18 +560,18 @@ class ACPHandler:
             "tool": tool,
             "arguments": arguments,
             "correlation_id": correlation_id,
-        ***REMOVED***)
+        })
 
         return self._registry.wait_for_result(task.task_id, timeout=timeout)
 
-    def send_broadcast(self, message: str, data: Optional[Dict[str, Any***REMOVED******REMOVED*** = None) -> None:
+    def send_broadcast(self, message: str, data: Optional[Dict[str, Any]] = None) -> None:
         """Отправляет широковещательное сообщение всем агентам."""
-        payload: Dict[str, Any***REMOVED*** = {
+        payload: Dict[str, Any] = {
             "agent": self._agent_name,
             "message": message,
-        ***REMOVED***
+        }
         if data:
-            payload["data"***REMOVED*** = data
+            payload["data"] = data
         self._publish_event(ACP_BROADCAST, payload)
 
     def send_status_update(self) -> None:
@@ -581,11 +581,11 @@ class ACPHandler:
             "version": self._agent_version,
             "status": self._agent_status.value,
             "capabilities": self._capabilities,
-        ***REMOVED***)
+        })
 
     # ── Internal ─────────────────────────────────────────────
 
-    def _publish_event(self, event_type: str, data: Dict[str, Any***REMOVED***) -> None:
+    def _publish_event(self, event_type: str, data: Dict[str, Any]) -> None:
         """Публикует событие в Event Bus."""
         if self._bus is None:
             return
@@ -608,7 +608,7 @@ class ACPHandler:
             try:
                 self._publish_event(ACP_HEARTBEAT, {
                     "agent": self._agent_name,
-                ***REMOVED***)
+                })
                 # При необходимости чистим мёртвых агентов
                 self._registry.prune_offline(max_age_seconds=120.0)
             except Exception:

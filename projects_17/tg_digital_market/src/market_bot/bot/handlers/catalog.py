@@ -21,7 +21,7 @@ from ..keyboards import (
 router = Router(name="catalog")
 
 
-def _render_categories(categories: Iterable[str***REMOVED***):
+def _render_categories(categories: Iterable[str]):
     return catalog_root_kb(list(categories))
 
 
@@ -31,7 +31,7 @@ async def cb_categories(call: CallbackQuery, services) -> None:
     if not categories:
         await call.message.edit_text(
             "📭 Категорий пока нет. Зайдите позже.",
-            reply_markup=catalog_root_kb([***REMOVED***),
+            reply_markup=catalog_root_kb([]),
         )
         await call.answer()
         return
@@ -46,12 +46,12 @@ async def cb_category(call: CallbackQuery, callback_data: CatalogAction, service
     products = await asyncio.to_thread(services.catalog.list_active, category)
     if not products:
         await call.message.edit_text(
-            f"В категории «{category***REMOVED***» пока пусто.",
+            f"В категории «{category}» пока пусто.",
             reply_markup=catalog_root_kb(await asyncio.to_thread(services.catalog.list_categories)),
         )
         await call.answer()
         return
-    title = f"📁 {category***REMOVED*** — {len(products)***REMOVED*** шт."
+    title = f"📁 {category} — {len(products)} шт."
     await call.message.edit_text(
         title, reply_markup=products_list_kb(products, category=category, page=page)
     )
@@ -66,11 +66,11 @@ async def cb_product(call: CallbackQuery, callback_data: CatalogAction, services
         return
     stock = await asyncio.to_thread(services.catalog.available_stock, product.id)
     text = (
-        f"<b>{product.name***REMOVED***</b>\n\n"
-        f"{product.description or '—'***REMOVED***\n\n"
-        f"📂 Категория: {product.category***REMOVED***\n"
-        f"💰 Цена: ⭐{product.price_stars***REMOVED***\n"
-        f"📦 В наличии: {stock***REMOVED*** шт."
+        f"<b>{product.name}</b>\n\n"
+        f"{product.description or '—'}\n\n"
+        f"📂 Категория: {product.category}\n"
+        f"💰 Цена: ⭐{product.price_stars}\n"
+        f"📦 В наличии: {stock} шт."
     )
     await call.message.edit_text(text, reply_markup=product_detail_kb(product.id, in_stock=stock > 0))
     await call.answer()

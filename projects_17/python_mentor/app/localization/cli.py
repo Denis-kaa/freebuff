@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-***REMOVED***
+}
 
 from app.localization import ExternalLLMTranslationProvider, GeminiKeyPool
 from app.localization.contract import TranslationStatus
@@ -23,10 +23,10 @@ DEFAULT_SOURCE = "data/exercism_src"
 DEFAULT_MANIFEST = "data/localization/source_manifest.json"
 DEFAULT_TARGET = "data/localization/ru"
 DEFAULT_DRAFT_ROOT = "data/localization/drafts/ru"
-DEFAULT_KEYS = str(Path(__file__).resolve().parents[4***REMOVED*** / ".keys" / "gemini_active.keys")
+DEFAULT_KEYS = str(Path(__file__).resolve().parents[4] / ".keys" / "gemini_active.keys")
 
 
-def add_localization_parser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser***REMOVED***) -> None:
+def add_localization_parser(subparsers: argparse._SubParsersAction[argparse.ArgumentParser]) -> None:
     """Register ``localize`` CLI commands on the main app parser."""
 
     localize = subparsers.add_parser("localize", help="локализация learner-facing контента")
@@ -44,7 +44,7 @@ def add_localization_parser(subparsers: argparse._SubParsersAction[argparse.Argu
     status.set_defaults(localize_func=_status)
 
     update = commands.add_parser("update", help="создать translation drafts через внешний provider")
-    update.add_argument("--provider", choices=["external_llm", "gemini"***REMOVED***, default="external_llm")
+    update.add_argument("--provider", choices=["external_llm", "gemini"], default="external_llm")
     update.add_argument("--source", default=DEFAULT_SOURCE)
     update.add_argument("--target-locale", default="ru")
     update.add_argument("--keys", default=DEFAULT_KEYS, help="ignored local Gemini key file")
@@ -60,7 +60,7 @@ def run_localization(args: argparse.Namespace) -> int:
     try:
         return int(args.localize_func(args))
     except (OSError, RuntimeError, ValueError) as exc:
-        print(f"localization error: {exc***REMOVED***", file=sys.stderr)
+        print(f"localization error: {exc}", file=sys.stderr)
         return 2
 
 
@@ -73,10 +73,10 @@ def _scan(args: argparse.Namespace) -> int:
 def _status(args: argparse.Namespace) -> int:
     documents = iter_source_documents(args.source)
     rows = translation_status_rows(documents, args.target)
-    counts: dict[str, int***REMOVED*** = {***REMOVED***
+    counts: dict[str, int] = {}
     for row in rows:
-        counts[row.status.value***REMOVED*** = counts.get(row.status.value, 0) + 1
-    print(json.dumps({"counts": counts, "documents": [row.to_dict() for row in rows***REMOVED******REMOVED***, ensure_ascii=False, indent=2))
+        counts[row.status.value] = counts.get(row.status.value, 0) + 1
+    print(json.dumps({"counts": counts, "documents": [row.to_dict() for row in rows]}, ensure_ascii=False, indent=2))
     return 0
 
 
@@ -88,15 +88,15 @@ def _update(args: argparse.Namespace) -> int:
     rows = translation_status_rows(documents, DEFAULT_TARGET)
     pending_ids = {
         row.document_id for row in rows if row.status is not TranslationStatus.REVIEWED
-    ***REMOVED***
+    }
     selected = tuple(
         document
         for document in documents
         if document.document_id in pending_ids
         and not draft_is_current(document, args.draft_dir)
-    )[: args.limit***REMOVED***
+    )[: args.limit]
     if not selected:
-        print(json.dumps({"provider": args.provider, "drafts": [***REMOVED***, "message": "no missing/stale documents"***REMOVED***, ensure_ascii=False))
+        print(json.dumps({"provider": args.provider, "drafts": [], "message": "no missing/stale documents"}, ensure_ascii=False))
         return 0
 
     pool: GeminiKeyPool | None
@@ -112,7 +112,7 @@ def _update(args: argparse.Namespace) -> int:
     written = [
         str(write_translation_draft(source, draft, args.draft_dir))
         for source, draft in zip(selected, drafts)
-    ***REMOVED***
+    ]
     result = {
         "provider": args.provider,
         "model": args.model if args.provider == "gemini" else None,
@@ -120,6 +120,6 @@ def _update(args: argparse.Namespace) -> int:
         "draft_count": len(written),
         "drafts": written,
         "published": False,
-    ***REMOVED***
+    }
     print(json.dumps(result, ensure_ascii=False, indent=2))
     return 0

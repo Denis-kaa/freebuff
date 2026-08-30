@@ -39,14 +39,14 @@ presence.py — Agent Presence Engine (Phase 7: CoWork / Companion Platform).
     engine.start()
 
     # Регистрация агента
-    engine.register("buffy", capabilities={"code": "Code generation"***REMOVED***)
+    engine.register("buffy", capabilities={"code": "Code generation"})
 
     # Обновление статуса
     engine.update_status("buffy", PresenceStatus.BUSY, current_task="Refactoring")
 
     # Получение статуса
     agent = engine.get("buffy")
-    print(f"{agent.agent_name***REMOVED***: {agent.status.value***REMOVED***")
+    print(f"{agent.agent_name}: {agent.status.value}")
 
     engine.stop()
 
@@ -69,7 +69,7 @@ import time
 import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional, Set
 
 WORKSPACE = Path(__file__).resolve().parent
@@ -125,17 +125,17 @@ class AgentPresence:
     agent_name: str = ""
     status: str = PresenceStatus.ONLINE
     version: str = "1.0.0"
-    capabilities: Dict[str, str***REMOVED*** = field(default_factory=dict)
+    capabilities: Dict[str, str] = field(default_factory=dict)
     current_task: str = ""
     uptime_seconds: float = 0.0
-    host_info: Dict[str, str***REMOVED*** = field(default_factory=dict)
+    host_info: Dict[str, str] = field(default_factory=dict)
     last_seen: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     last_heartbeat: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     registered_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    metadata: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
     error: str = ""
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         """Сериализация в dict для JSON."""
         return asdict(self)
 
@@ -151,7 +151,7 @@ class PresenceHistoryEntry:
     old_task: str = ""
     new_task: str = ""
     timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    metadata: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 class PresenceEngine:
@@ -180,7 +180,7 @@ class PresenceEngine:
         self._prune_timeout = prune_timeout
         self._lock = threading.RLock()
         self._running = False
-        self._heartbeat_thread: Optional[threading.Thread***REMOVED*** = None
+        self._heartbeat_thread: Optional[threading.Thread] = None
         self._init_db()
 
     def _connect(self) -> sqlite3.Connection:
@@ -202,14 +202,14 @@ class PresenceEngine:
                     agent_name TEXT PRIMARY KEY,
                     status TEXT NOT NULL DEFAULT 'online',
                     version TEXT DEFAULT '1.0.0',
-                    capabilities TEXT DEFAULT '{***REMOVED***',
+                    capabilities TEXT DEFAULT '{}',
                     current_task TEXT DEFAULT '',
                     uptime_seconds REAL DEFAULT 0,
-                    host_info TEXT DEFAULT '{***REMOVED***',
+                    host_info TEXT DEFAULT '{}',
                     last_seen TEXT,
                     last_heartbeat TEXT,
                     registered_at TEXT,
-                    metadata TEXT DEFAULT '{***REMOVED***',
+                    metadata TEXT DEFAULT '{}',
                     error TEXT DEFAULT ''
                 )
                 """
@@ -224,7 +224,7 @@ class PresenceEngine:
                     old_task TEXT DEFAULT '',
                     new_task TEXT DEFAULT '',
                     timestamp TEXT NOT NULL,
-                    metadata TEXT DEFAULT '{***REMOVED***'
+                    metadata TEXT DEFAULT '{}'
                 )
                 """
                 )
@@ -234,7 +234,7 @@ class PresenceEngine:
 
     # ── Внутренние помощники ─────────────────────────────────────────
 
-    def _publish(self, event_type: str, data: Dict[str, Any***REMOVED***) -> None:
+    def _publish(self, event_type: str, data: Dict[str, Any]) -> None:
         """Публикует событие в EventBus (если подключён)."""
         if self._event_bus is None:
             return
@@ -248,33 +248,33 @@ class PresenceEngine:
     def _row_to_agent(self, row: sqlite3.Row) -> AgentPresence:
         """Конвертирует SQLite row в AgentPresence."""
         try:
-            capabilities = json.loads(row["capabilities"***REMOVED***) if row["capabilities"***REMOVED*** else {***REMOVED***
+            capabilities = json.loads(row["capabilities"]) if row["capabilities"] else {}
         except (TypeError, ValueError):
-            capabilities = {***REMOVED***
+            capabilities = {}
         try:
-            host_info = json.loads(row["host_info"***REMOVED***) if row["host_info"***REMOVED*** else {***REMOVED***
+            host_info = json.loads(row["host_info"]) if row["host_info"] else {}
         except (TypeError, ValueError):
-            host_info = {***REMOVED***
+            host_info = {}
         try:
-            metadata = json.loads(row["metadata"***REMOVED***) if row["metadata"***REMOVED*** else {***REMOVED***
+            metadata = json.loads(row["metadata"]) if row["metadata"] else {}
         except (TypeError, ValueError):
-            metadata = {***REMOVED***
+            metadata = {}
         return AgentPresence(
-            agent_name=row["agent_name"***REMOVED***,
-            status=row["status"***REMOVED***,
-            version=row["version"***REMOVED*** or "1.0.0",
+            agent_name=row["agent_name"],
+            status=row["status"],
+            version=row["version"] or "1.0.0",
             capabilities=capabilities,
-            current_task=row["current_task"***REMOVED*** or "",
-            uptime_seconds=float(row["uptime_seconds"***REMOVED*** or 0),
+            current_task=row["current_task"] or "",
+            uptime_seconds=float(row["uptime_seconds"] or 0),
             host_info=host_info,
-            last_seen=row["last_seen"***REMOVED*** or "",
-            last_heartbeat=row["last_heartbeat"***REMOVED*** or "",
-            registered_at=row["registered_at"***REMOVED*** or "",
+            last_seen=row["last_seen"] or "",
+            last_heartbeat=row["last_heartbeat"] or "",
+            registered_at=row["registered_at"] or "",
             metadata=metadata,
-            error=row["error"***REMOVED*** or "",
+            error=row["error"] or "",
         )
 
-    def _load_agent(self, agent_name: str) -> Optional[AgentPresence***REMOVED***:
+    def _load_agent(self, agent_name: str) -> Optional[AgentPresence]:
         """Загружает агента из БД (под блокировкой)."""
         with self._lock:
             conn = self._connect()
@@ -286,13 +286,13 @@ class PresenceEngine:
             finally:
                 conn.close()
 
-    def _load_all_agents(self) -> List[AgentPresence***REMOVED***:
+    def _load_all_agents(self) -> List[AgentPresence]:
         """Загружает всех агентов из БД (под блокировкой)."""
         with self._lock:
             conn = self._connect()
             try:
                 rows = conn.execute("SELECT * FROM presence").fetchall()
-                return [self._row_to_agent(r) for r in rows***REMOVED***
+                return [self._row_to_agent(r) for r in rows]
             finally:
                 conn.close()
 
@@ -419,9 +419,9 @@ class PresenceEngine:
         agent_name: str,
         status: str = PresenceStatus.ONLINE,
         version: str = "1.0.0",
-        capabilities: Optional[Dict[str, str***REMOVED******REMOVED*** = None,
-        host_info: Optional[Dict[str, str***REMOVED******REMOVED*** = None,
-        metadata: Optional[Dict[str, Any***REMOVED******REMOVED*** = None,
+        capabilities: Optional[Dict[str, str]] = None,
+        host_info: Optional[Dict[str, str]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> AgentPresence:
         """Регистрирует агента в системе присутствия.
 
@@ -437,9 +437,9 @@ class PresenceEngine:
             agent_name=agent_name,
             status=status if PresenceStatus.is_valid(status) else PresenceStatus.ONLINE,
             version=version,
-            capabilities=capabilities or (existing.capabilities if existing else {***REMOVED***),
-            host_info=host_info or (existing.host_info if existing else {***REMOVED***),
-            metadata=metadata or (existing.metadata if existing else {***REMOVED***),
+            capabilities=capabilities or (existing.capabilities if existing else {}),
+            host_info=host_info or (existing.host_info if existing else {}),
+            metadata=metadata or (existing.metadata if existing else {}),
             last_seen=now_ts,
             last_heartbeat=now_ts,
             registered_at=existing.registered_at if existing else now_ts,
@@ -455,7 +455,7 @@ class PresenceEngine:
                 new_task=agent.current_task,
             )
         )
-        self._publish("presence.online", {"agent_name": agent_name, "status": agent.status***REMOVED***)
+        self._publish("presence.online", {"agent_name": agent_name, "status": agent.status})
         return agent
 
     def unregister(self, agent_name: str) -> bool:
@@ -486,10 +486,10 @@ class PresenceEngine:
                 new_task="",
             )
         )
-        self._publish("presence.offline", {"agent_name": agent_name***REMOVED***)
+        self._publish("presence.offline", {"agent_name": agent_name})
         return True
 
-    def get(self, agent_name: str) -> Optional[AgentPresence***REMOVED***:
+    def get(self, agent_name: str) -> Optional[AgentPresence]:
         """Получает информацию об агенте.
 
         Args:
@@ -506,8 +506,8 @@ class PresenceEngine:
         new_status: str,
         current_task: str = "",
         error: str = "",
-        metadata: Optional[Dict[str, Any***REMOVED******REMOVED*** = None,
-    ) -> Optional[AgentPresence***REMOVED***:
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> Optional[AgentPresence]:
         """Обновляет статус агента.
 
         Args:
@@ -547,10 +547,10 @@ class PresenceEngine:
                 new_task=current_task,
             )
         )
-        self._publish(f"presence.{new_status***REMOVED***", {"agent_name": agent_name, "status": new_status***REMOVED***)
+        self._publish(f"presence.{new_status}", {"agent_name": agent_name, "status": new_status})
         return agent
 
-    def heartbeat(self, agent_name: str) -> Optional[AgentPresence***REMOVED***:
+    def heartbeat(self, agent_name: str) -> Optional[AgentPresence]:
         """Обновляет heartbeat агента.
 
         Args:
@@ -565,14 +565,14 @@ class PresenceEngine:
         agent.last_heartbeat = datetime.now(timezone.utc).isoformat()
         agent.last_seen = agent.last_heartbeat
         self._save_agent(agent)
-        self._publish("presence.heartbeat", {"agent_name": agent_name***REMOVED***)
+        self._publish("presence.heartbeat", {"agent_name": agent_name})
         return agent
 
     # ── Списки ────────────────────────────────────────────────────────
 
     def list_agents(
-        self, status: Optional[str***REMOVED*** = None, capability: Optional[str***REMOVED*** = None
-    ) -> List[AgentPresence***REMOVED***:
+        self, status: Optional[str] = None, capability: Optional[str] = None
+    ) -> List[AgentPresence]:
         """Список всех агентов с опциональной фильтрацией.
 
         Args:
@@ -584,12 +584,12 @@ class PresenceEngine:
         """
         agents = self._load_all_agents()
         if status:
-            agents = [a for a in agents if a.status == status***REMOVED***
+            agents = [a for a in agents if a.status == status]
         if capability:
-            agents = [a for a in agents if capability in a.capabilities***REMOVED***
+            agents = [a for a in agents if capability in a.capabilities]
         return agents
 
-    def list_online(self) -> List[AgentPresence***REMOVED***:
+    def list_online(self) -> List[AgentPresence]:
         """Список только ONLINE агентов."""
         return self.list_agents(status=PresenceStatus.ONLINE)
 
@@ -599,7 +599,7 @@ class PresenceEngine:
             conn = self._connect()
             try:
                 row = conn.execute("SELECT COUNT(*) FROM presence").fetchone()
-                return int(row[0***REMOVED***)
+                return int(row[0])
             finally:
                 conn.close()
 
@@ -607,10 +607,10 @@ class PresenceEngine:
 
     def get_history(
         self,
-        agent_name: Optional[str***REMOVED*** = None,
+        agent_name: Optional[str] = None,
         limit: int = 50,
-        since: Optional[str***REMOVED*** = None,
-    ) -> List[PresenceHistoryEntry***REMOVED***:
+        since: Optional[str] = None,
+    ) -> List[PresenceHistoryEntry]:
         """Получает историю изменений присутствия.
 
         Args:
@@ -622,8 +622,8 @@ class PresenceEngine:
             Список PresenceHistoryEntry.
         """
         query = "SELECT * FROM presence_history"
-        conditions: List[str***REMOVED*** = [***REMOVED***
-        params: List[Any***REMOVED*** = [***REMOVED***
+        conditions: List[str] = []
+        params: List[Any] = []
         if agent_name:
             conditions.append("agent_name = ?")
             params.append(agent_name)
@@ -638,21 +638,21 @@ class PresenceEngine:
             conn = self._connect()
             try:
                 rows = conn.execute(query, params).fetchall()
-                result = [***REMOVED***
+                result = []
                 for r in rows:
                     try:
-                        metadata = json.loads(r["metadata"***REMOVED***) if r["metadata"***REMOVED*** else {***REMOVED***
+                        metadata = json.loads(r["metadata"]) if r["metadata"] else {}
                     except (TypeError, ValueError):
-                        metadata = {***REMOVED***
+                        metadata = {}
                     result.append(
                         PresenceHistoryEntry(
-                            id=r["id"***REMOVED***,
-                            agent_name=r["agent_name"***REMOVED***,
-                            old_status=r["old_status"***REMOVED***,
-                            new_status=r["new_status"***REMOVED***,
-                            old_task=r["old_task"***REMOVED***,
-                            new_task=r["new_task"***REMOVED***,
-                            timestamp=r["timestamp"***REMOVED***,
+                            id=r["id"],
+                            agent_name=r["agent_name"],
+                            old_status=r["old_status"],
+                            new_status=r["new_status"],
+                            old_task=r["old_task"],
+                            new_task=r["new_task"],
+                            timestamp=r["timestamp"],
                             metadata=metadata,
                         )
                     )
@@ -663,8 +663,8 @@ class PresenceEngine:
     # ── JSON-хелперы (для MCP) ────────────────────────────────────────
 
     def list_agents_json(
-        self, status: Optional[str***REMOVED*** = None, capability: Optional[str***REMOVED*** = None
-    ) -> Dict[str, Any***REMOVED***:
+        self, status: Optional[str] = None, capability: Optional[str] = None
+    ) -> Dict[str, Any]:
         """Возвращает JSON-совместимый список агентов (для MCP).
 
         Args:
@@ -675,46 +675,46 @@ class PresenceEngine:
             JSON-ready dict с агентами.
         """
         agents = self.list_agents(status=status, capability=capability)
-        agent_dicts = [a.to_dict() for a in agents***REMOVED***
+        agent_dicts = [a.to_dict() for a in agents]
         return {
             "success": True,
             "total": len(agents),
             "agents": agent_dicts,
-            "data": {"total": len(agents), "agents": agent_dicts***REMOVED***,
-        ***REMOVED***
+            "data": {"total": len(agents), "agents": agent_dicts},
+        }
 
-    def get_agent_json(self, agent_name: str) -> Dict[str, Any***REMOVED***:
+    def get_agent_json(self, agent_name: str) -> Dict[str, Any]:
         """Возвращает JSON-совместимые данные агента (для MCP)."""
         agent = self.get(agent_name)
         if agent is None:
-            return {"success": False, "data": None, "found": False, "error": "Agent not found"***REMOVED***
-        return {"success": True, "data": agent.to_dict(), "found": True***REMOVED***
+            return {"success": False, "data": None, "found": False, "error": "Agent not found"}
+        return {"success": True, "data": agent.to_dict(), "found": True}
 
     def get_history_json(
-        self, agent_name: Optional[str***REMOVED*** = None, limit: int = 50
-    ) -> Dict[str, Any***REMOVED***:
+        self, agent_name: Optional[str] = None, limit: int = 50
+    ) -> Dict[str, Any]:
         """Возвращает JSON-совместимую историю (для MCP)."""
         entries = self.get_history(agent_name=agent_name, limit=limit)
-        entry_dicts = [asdict(e) for e in entries***REMOVED***
+        entry_dicts = [asdict(e) for e in entries]
         return {
             "success": True,
             "total": len(entries),
             "entries": entry_dicts,
-            "data": {"total": len(entries), "entries": entry_dicts***REMOVED***,
-        ***REMOVED***
+            "data": {"total": len(entries), "entries": entry_dicts},
+        }
 
     # ── Диагностика ───────────────────────────────────────────────────
 
-    def get_status(self) -> Dict[str, Any***REMOVED***:
+    def get_status(self) -> Dict[str, Any]:
         """Диагностика Presence Engine.
 
         Returns:
             Словарь с состоянием Engine.
         """
         agents = self._load_all_agents()
-        status_counts: Dict[str, int***REMOVED*** = {***REMOVED***
+        status_counts: Dict[str, int] = {}
         for a in agents:
-            status_counts[a.status***REMOVED*** = status_counts.get(a.status, 0) + 1
+            status_counts[a.status] = status_counts.get(a.status, 0) + 1
         last_change = "never"
         with self._lock:
             conn = self._connect()
@@ -723,7 +723,7 @@ class PresenceEngine:
                     "SELECT timestamp FROM presence_history ORDER BY timestamp DESC LIMIT 1"
                 ).fetchone()
                 if row:
-                    last_change = row[0***REMOVED***
+                    last_change = row[0]
             finally:
                 conn.close()
         return {
@@ -739,7 +739,7 @@ class PresenceEngine:
             "prune_timeout": self._prune_timeout,
             "eventbus_connected": self._event_bus is not None,
             "last_change": last_change,
-        ***REMOVED***
+        }
 
 
 def _status_icon(status: str) -> str:
@@ -750,7 +750,7 @@ def _status_icon(status: str) -> str:
         PresenceStatus.AWAY: "🟠",
         PresenceStatus.ERROR: "🔴",
         PresenceStatus.OFFLINE: "⚪",
-    ***REMOVED***.get(status, "❓")
+    ].get(status, "❓")
 
 
 class Colors:
@@ -774,46 +774,46 @@ def _cmd_list(args: argparse.Namespace) -> None:
     if not agents:
         print("📭 No agents registered")
         return
-    print(f"Agent Presence ({len(agents)***REMOVED*** agents)")
+    print(f"Agent Presence ({len(agents)} agents)")
     for a in agents:
         icon = _status_icon(a.status)
-        task = f" — {a.current_task***REMOVED***" if a.current_task else ""
-        print(f"  {icon***REMOVED*** {a.agent_name***REMOVED***: {a.status***REMOVED***{task***REMOVED*** (v{a.version***REMOVED***)")
+        task = f" — {a.current_task}" if a.current_task else ""
+        print(f"  {icon} {a.agent_name}: {a.status}{task} (v{a.version})")
 
 
 def _cmd_get(args: argparse.Namespace) -> None:
     engine = PresenceEngine(db_path=args.db_path)
     agent = engine.get(args.agent)
     if agent is None:
-        print(f"❌ Agent not found: {args.agent***REMOVED***")
+        print(f"❌ Agent not found: {args.agent}")
         return
-    print(f"Agent: {agent.agent_name***REMOVED***")
-    print(f"  Status:      {_status_icon(agent.status)***REMOVED*** {agent.status***REMOVED***")
-    print(f"  Version:     {agent.version***REMOVED***")
-    print(f"  Task:        {agent.current_task or '—'***REMOVED***")
-    print(f"  Uptime:      {agent.uptime_seconds:.0f***REMOVED***s")
-    print(f"  Registered:  {agent.registered_at***REMOVED***")
-    print(f"  Last seen:   {agent.last_seen***REMOVED***")
+    print(f"Agent: {agent.agent_name}")
+    print(f"  Status:      {_status_icon(agent.status)} {agent.status}")
+    print(f"  Version:     {agent.version}")
+    print(f"  Task:        {agent.current_task or '—'}")
+    print(f"  Uptime:      {agent.uptime_seconds:.0f}s")
+    print(f"  Registered:  {agent.registered_at}")
+    print(f"  Last seen:   {agent.last_seen}")
     if agent.capabilities:
         print("  Capabilities:")
         for name, desc in agent.capabilities.items():
-            print(f"    • {name***REMOVED***: {desc***REMOVED***")
+            print(f"    • {name}: {desc}")
 
 
 def _cmd_status(args: argparse.Namespace) -> None:
     engine = PresenceEngine(db_path=args.db_path)
     st = engine.get_status()
     print("Presence Engine Status")
-    print(f"  Status:        {'🟢 Running' if st['running'***REMOVED*** else '🔴 Stopped'***REMOVED***")
-    print(f"  Total agents:  {st['total_agents'***REMOVED******REMOVED***")
-    print(f"  Online:        {st['online_count'***REMOVED******REMOVED***")
-    print(f"  Busy:          {st['busy_count'***REMOVED******REMOVED***")
-    print(f"  Error:         {st['error_count'***REMOVED******REMOVED***")
-    print(f"  Heartbeat:     every {st['heartbeat_interval'***REMOVED******REMOVED***s")
-    print(f"  Prune timeout: {st['prune_timeout'***REMOVED******REMOVED***s")
-    print(f"  EventBus:      {'connected' if st['eventbus_connected'***REMOVED*** else 'not connected'***REMOVED***")
-    print(f"  DB path:       {st['db_path'***REMOVED******REMOVED***")
-    print(f"  Last change:   {st['last_change'***REMOVED******REMOVED***")
+    print(f"  Status:        {'🟢 Running' if st['running'] else '🔴 Stopped'}")
+    print(f"  Total agents:  {st['total_agents']}")
+    print(f"  Online:        {st['online_count']}")
+    print(f"  Busy:          {st['busy_count']}")
+    print(f"  Error:         {st['error_count']}")
+    print(f"  Heartbeat:     every {st['heartbeat_interval']}s")
+    print(f"  Prune timeout: {st['prune_timeout']}s")
+    print(f"  EventBus:      {'connected' if st['eventbus_connected'] else 'not connected'}")
+    print(f"  DB path:       {st['db_path']}")
+    print(f"  Last change:   {st['last_change']}")
 
 
 def _cmd_history(args: argparse.Namespace) -> None:
@@ -822,10 +822,10 @@ def _cmd_history(args: argparse.Namespace) -> None:
     if not entries:
         print("📭 No history available")
         return
-    print(f"Presence History ({len(entries)***REMOVED*** entries)")
+    print(f"Presence History ({len(entries)} entries)")
     for e in entries:
-        change = f"{e.old_status***REMOVED*** → {e.new_status***REMOVED***" if e.old_status else e.new_status
-        print(f"  {e.timestamp***REMOVED***  {e.agent_name***REMOVED***: {change***REMOVED***")
+        change = f"{e.old_status} → {e.new_status}" if e.old_status else e.new_status
+        print(f"  {e.timestamp}  {e.agent_name}: {change}")
 
 
 def main() -> int:
@@ -857,7 +857,7 @@ def main() -> int:
         "get": _cmd_get,
         "status": _cmd_status,
         "history": _cmd_history,
-    ***REMOVED***
+    }
     handler = handlers.get(args.command)
     if handler is None:
         parser.print_help()

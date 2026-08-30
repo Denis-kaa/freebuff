@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import os
 import sys
-***REMOVED***
+}
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -31,11 +31,11 @@ from freebuff_plugin_03.tgbot import ScenarioTGBot  # noqa: E402
 
 
 def _get_text(mock_method: MagicMock) -> str:
-    """Извлекает текст из mock вызова (args[0***REMOVED*** или kwargs.get('text'))."""
+    """Извлекает текст из mock вызова (args[0] или kwargs.get('text'))."""
     if mock_method.await_args is None:
         return ""
     if mock_method.await_args.args:
-        return str(mock_method.await_args.args[0***REMOVED***)
+        return str(mock_method.await_args.args[0])
     return mock_method.await_args.kwargs.get("text", "")
 
 
@@ -83,7 +83,7 @@ def mock_update(mock_message: MagicMock, mock_chat: MagicMock) -> MagicMock:
 @pytest.fixture
 def mock_context() -> MagicMock:
     ctx = MagicMock(spec=ContextTypes.DEFAULT_TYPE)
-    ctx.args = [***REMOVED***
+    ctx.args = []
     ctx.bot = MagicMock()
     ctx.bot.send_chat_action = AsyncMock()
     return ctx
@@ -112,12 +112,12 @@ def test_scenarios_by_category(bot: ScenarioTGBot) -> None:
     scenarios = bot._scenarios_by_category("freelancing")
     assert len(scenarios) >= 5
     for s in scenarios:
-        assert s["category"***REMOVED*** == "freelancing"
+        assert s["category"] == "freelancing"
 
 
 def test_extract_variable_names(bot: ScenarioTGBot) -> None:
     """Variable names are extracted from template placeholders."""
-    names = bot._extract_variable_names("Hello {name***REMOVED***, welcome to {place***REMOVED***")
+    names = bot._extract_variable_names("Hello {name), welcome to {place]")
     assert "name" in names
     assert "place" in names
 
@@ -125,7 +125,7 @@ def test_extract_variable_names(bot: ScenarioTGBot) -> None:
 def test_extract_variable_names_no_vars(bot: ScenarioTGBot) -> None:
     """No placeholders returns empty list."""
     names = bot._extract_variable_names("Hello world")
-    assert names == [***REMOVED***
+    assert names == []
 
 
 def test_format_scenario_list(bot: ScenarioTGBot) -> None:
@@ -138,7 +138,7 @@ def test_format_scenario_list(bot: ScenarioTGBot) -> None:
 
 def test_format_scenario_list_empty(bot: ScenarioTGBot) -> None:
     """Empty list returns 'no scenarios' message."""
-    text = bot._format_scenario_list([***REMOVED***)
+    text = bot._format_scenario_list([])
     assert "Нет сценариев" in text
 
 
@@ -155,15 +155,15 @@ def test_scenario_apply_no_vars(bot: ScenarioTGBot) -> None:
     """apply_scenario returns prompt for freelance_parser."""
     result = bot.engine.apply_scenario("freelance_parser")
     assert "error" not in result
-    assert result["slug"***REMOVED*** == "freelance_parser"
-    assert len(result["prompt"***REMOVED***) > 50
+    assert result["slug"] == "freelance_parser"
+    assert len(result["prompt"]) > 50
 
 
 def test_scenario_apply_with_vars(bot: ScenarioTGBot) -> None:
     """Variable substitution works."""
-    result = bot.engine.apply_scenario("freelance_parser", {"URL": "https://test.com"***REMOVED***)
+    result = bot.engine.apply_scenario("freelance_parser", {"URL": "https://test.com"})
     assert "error" not in result
-    assert "https://test.com" in result["prompt"***REMOVED***
+    assert "https://test.com" in result["prompt"]
 
 
 def test_scenario_apply_not_found(bot: ScenarioTGBot) -> None:
@@ -175,22 +175,22 @@ def test_scenario_apply_not_found(bot: ScenarioTGBot) -> None:
 def test_scenario_search(bot: ScenarioTGBot) -> None:
     """Search finds telegram-related scenarios."""
     results = bot.engine.search_scenarios("telegram")
-    slugs = [r["slug"***REMOVED*** for r in results***REMOVED***
+    slugs = [r["slug"] for r in results]
     assert "freelance_tg_bot" in slugs
 
 
 def test_scenario_search_no_results(bot: ScenarioTGBot) -> None:
     """Search with nonsense query returns empty."""
     results = bot.engine.search_scenarios("xyznonexistent123")
-    assert results == [***REMOVED***
+    assert results == []
 
 
 def test_categories_keyboard(bot: ScenarioTGBot) -> None:
     """Category keyboard has correct buttons (substring match due to emoji)."""
     kb = bot._categories_keyboard()
     assert isinstance(kb, InlineKeyboardMarkup)
-    buttons = [btn for row in kb.inline_keyboard for btn in row***REMOVED***
-    texts = [b.text for b in buttons***REMOVED***
+    buttons = [btn for row in kb.inline_keyboard for btn in row]
+    texts = [b.text for b in buttons]
     # Substring match because buttons have emoji prefixes like "💼 Freelancing (5)"
     assert any("freelancing" in t.lower() for t in texts)
     assert any("Все сценарии" in t for t in texts)
@@ -200,8 +200,8 @@ def test_categories_keyboard(bot: ScenarioTGBot) -> None:
 def test_scenario_detail_keyboard_with_template(bot: ScenarioTGBot) -> None:
     """Scenarios with prompt_template get 'Apply' button (substring match for emoji)."""
     kb = bot._scenario_detail_keyboard("freelance_parser", "freelancing")
-    buttons = [btn for row in kb.inline_keyboard for btn in row***REMOVED***
-    texts = [b.text for b in buttons***REMOVED***
+    buttons = [btn for row in kb.inline_keyboard for btn in row]
+    texts = [b.text for b in buttons]
     # Substring match: button text is "🚀 Применить", not exact "Применить"
     assert any("Применить" in t for t in texts)
     assert any("Назад" in t for t in texts)
@@ -210,16 +210,16 @@ def test_scenario_detail_keyboard_with_template(bot: ScenarioTGBot) -> None:
 def test_scenario_detail_keyboard_no_template(bot: ScenarioTGBot) -> None:
     """Scenarios without template don't get 'Apply'."""
     kb = bot._scenario_detail_keyboard("task_framework", "templates")
-    buttons = [btn for row in kb.inline_keyboard for btn in row***REMOVED***
-    texts = [b.text for b in buttons***REMOVED***
+    buttons = [btn for row in kb.inline_keyboard for btn in row]
+    texts = [b.text for b in buttons]
     assert "Применить" not in texts  # exact check: no emoji for non-apply buttons
 
 
 def test_home_keyboard(bot: ScenarioTGBot) -> None:
     """Home keyboard has scenarios and status buttons (substring match for emoji)."""
     kb = bot._home_keyboard()
-    buttons = [btn for row in kb.inline_keyboard for btn in row***REMOVED***
-    texts = [b.text for b in buttons***REMOVED***
+    buttons = [btn for row in kb.inline_keyboard for btn in row]
+    texts = [b.text for b in buttons]
     assert any("Сценарии" in t for t in texts)
     assert any("Статус" in t for t in texts)
     assert any("Помощь" in t for t in texts)
@@ -251,7 +251,7 @@ async def test_cmd_status(bot: ScenarioTGBot, mock_update: MagicMock, mock_conte
 @pytest.mark.asyncio
 async def test_cmd_scenarios_no_args(bot: ScenarioTGBot, mock_update: MagicMock, mock_context: MagicMock) -> None:
     """cmd_scenarios without args shows category menu."""
-    mock_context.args = [***REMOVED***
+    mock_context.args = []
     await bot.cmd_scenarios(mock_update, mock_context)
     mock_update.effective_message.reply_text.assert_awaited_once()
     text = _get_text(mock_update.effective_message.reply_text)
@@ -261,7 +261,7 @@ async def test_cmd_scenarios_no_args(bot: ScenarioTGBot, mock_update: MagicMock,
 @pytest.mark.asyncio
 async def test_cmd_scenarios_list(bot: ScenarioTGBot, mock_update: MagicMock, mock_context: MagicMock) -> None:
     """/scenarios list shows all scenarios."""
-    mock_context.args = ["list"***REMOVED***
+    mock_context.args = ["list"]
     await bot.cmd_scenarios(mock_update, mock_context)
     mock_update.effective_message.reply_text.assert_awaited_once()
     text = _get_text(mock_update.effective_message.reply_text)
@@ -271,7 +271,7 @@ async def test_cmd_scenarios_list(bot: ScenarioTGBot, mock_update: MagicMock, mo
 @pytest.mark.asyncio
 async def test_cmd_scenarios_list_freelancing(bot: ScenarioTGBot, mock_update: MagicMock, mock_context: MagicMock) -> None:
     """/scenarios list freelancing shows only freelancing scenarios."""
-    mock_context.args = ["list", "freelancing"***REMOVED***
+    mock_context.args = ["list", "freelancing"]
     await bot.cmd_scenarios(mock_update, mock_context)
     mock_update.effective_message.reply_text.assert_awaited_once()
     text = _get_text(mock_update.effective_message.reply_text)
@@ -281,7 +281,7 @@ async def test_cmd_scenarios_list_freelancing(bot: ScenarioTGBot, mock_update: M
 @pytest.mark.asyncio
 async def test_cmd_scenarios_apply_with_vars(bot: ScenarioTGBot, mock_update: MagicMock, mock_context: MagicMock) -> None:
     """/scenarios apply with URL=... substitutes vars and returns prompt."""
-    mock_context.args = ["apply", "freelance_parser", "URL=https://test.com"***REMOVED***
+    mock_context.args = ["apply", "freelance_parser", "URL=https://test.com"]
     await bot.cmd_scenarios(mock_update, mock_context)
     mock_update.effective_message.reply_text.assert_awaited_once()
     text = _get_text(mock_update.effective_message.reply_text)
@@ -299,7 +299,7 @@ async def test_cmd_scenarios_apply_all_vars(bot: ScenarioTGBot, mock_update: Mag
         "поле2=price",
         "поле3=desc",
         "формат=JSON",
-    ***REMOVED***
+    ]
     await bot.cmd_scenarios(mock_update, mock_context)
     mock_update.effective_message.reply_text.assert_awaited_once()
     text = _get_text(mock_update.effective_message.reply_text)
@@ -309,7 +309,7 @@ async def test_cmd_scenarios_apply_all_vars(bot: ScenarioTGBot, mock_update: Mag
 @pytest.mark.asyncio
 async def test_cmd_scenarios_apply_request_vars(bot: ScenarioTGBot, mock_update: MagicMock, mock_context: MagicMock) -> None:
     """/scenarios apply without vars requests variable input (freelance_parser needs them)."""
-    mock_context.args = ["apply", "freelance_parser"***REMOVED***
+    mock_context.args = ["apply", "freelance_parser"]
     await bot.cmd_scenarios(mock_update, mock_context)
     mock_update.effective_message.reply_text.assert_awaited_once()
     text = _get_text(mock_update.effective_message.reply_text)
@@ -320,7 +320,7 @@ async def test_cmd_scenarios_apply_request_vars(bot: ScenarioTGBot, mock_update:
 @pytest.mark.asyncio
 async def test_cmd_scenarios_apply_not_found(bot: ScenarioTGBot, mock_update: MagicMock, mock_context: MagicMock) -> None:
     """/scenarios apply nonexistent returns error."""
-    mock_context.args = ["apply", "nonexistent"***REMOVED***
+    mock_context.args = ["apply", "nonexistent"]
     await bot.cmd_scenarios(mock_update, mock_context)
     mock_update.effective_message.reply_text.assert_awaited_once()
     text = _get_text(mock_update.effective_message.reply_text)
@@ -330,7 +330,7 @@ async def test_cmd_scenarios_apply_not_found(bot: ScenarioTGBot, mock_update: Ma
 @pytest.mark.asyncio
 async def test_cmd_scenarios_apply_no_slug(bot: ScenarioTGBot, mock_update: MagicMock, mock_context: MagicMock) -> None:
     """/scenarios apply without slug shows usage."""
-    mock_context.args = ["apply"***REMOVED***
+    mock_context.args = ["apply"]
     await bot.cmd_scenarios(mock_update, mock_context)
     mock_update.effective_message.reply_text.assert_awaited_once()
     text = _get_text(mock_update.effective_message.reply_text)
@@ -340,7 +340,7 @@ async def test_cmd_scenarios_apply_no_slug(bot: ScenarioTGBot, mock_update: Magi
 @pytest.mark.asyncio
 async def test_cmd_scenarios_search(bot: ScenarioTGBot, mock_update: MagicMock, mock_context: MagicMock) -> None:
     """/scenarios search telegram finds TG bot scenario."""
-    mock_context.args = ["search", "telegram"***REMOVED***
+    mock_context.args = ["search", "telegram"]
     await bot.cmd_scenarios(mock_update, mock_context)
     mock_update.effective_message.reply_text.assert_awaited_once()
     text = _get_text(mock_update.effective_message.reply_text)
@@ -350,7 +350,7 @@ async def test_cmd_scenarios_search(bot: ScenarioTGBot, mock_update: MagicMock, 
 @pytest.mark.asyncio
 async def test_cmd_scenarios_search_no_query(bot: ScenarioTGBot, mock_update: MagicMock, mock_context: MagicMock) -> None:
     """/scenarios search without query shows usage."""
-    mock_context.args = ["search"***REMOVED***
+    mock_context.args = ["search"]
     await bot.cmd_scenarios(mock_update, mock_context)
     mock_update.effective_message.reply_text.assert_awaited_once()
     text = _get_text(mock_update.effective_message.reply_text)
@@ -360,7 +360,7 @@ async def test_cmd_scenarios_search_no_query(bot: ScenarioTGBot, mock_update: Ma
 @pytest.mark.asyncio
 async def test_cmd_scenarios_unknown_subcommand(bot: ScenarioTGBot, mock_update: MagicMock, mock_context: MagicMock) -> None:
     """Unknown subcommand shows available subcommands."""
-    mock_context.args = ["blabla"***REMOVED***
+    mock_context.args = ["blabla"]
     await bot.cmd_scenarios(mock_update, mock_context)
     mock_update.effective_message.reply_text.assert_awaited_once()
     text = _get_text(mock_update.effective_message.reply_text)
@@ -393,7 +393,7 @@ async def test_handle_text_greeting(bot: ScenarioTGBot, mock_update: MagicMock, 
 async def test_handle_text_gotovo(bot: ScenarioTGBot, mock_update: MagicMock, mock_context: MagicMock) -> None:
     """"готово" text applies scenario without variables."""
     # Set up state as if user clicked "Apply" on freelance_parser
-    bot._set_state(12345, {"slug": "freelance_parser", "step": "wait_vars"***REMOVED***)
+    bot._set_state(12345, {"slug": "freelance_parser", "step": "wait_vars"})
     mock_update.message.text = "готово"
     mock_update.effective_chat.id = 12345
     await bot.handle_text(mock_update, mock_context)
@@ -408,7 +408,7 @@ async def test_handle_text_gotovo(bot: ScenarioTGBot, mock_update: MagicMock, mo
 @pytest.mark.asyncio
 async def test_handle_text_with_vars(bot: ScenarioTGBot, mock_update: MagicMock, mock_context: MagicMock) -> None:
     """key=value text in wait_vars state applies with variables."""
-    bot._set_state(12345, {"slug": "freelance_parser", "step": "wait_vars"***REMOVED***)
+    bot._set_state(12345, {"slug": "freelance_parser", "step": "wait_vars"})
     mock_update.message.text = "URL=https://test.com\nформат=JSON"
     mock_update.effective_chat.id = 12345
     await bot.handle_text(mock_update, mock_context)

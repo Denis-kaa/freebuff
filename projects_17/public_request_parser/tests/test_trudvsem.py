@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-***REMOVED***
+}
 
 import pytest
 
 from app.adapters.trudvsem import TrudvsemAdapter, parse_vacancy_payload
 from app.domain import AdapterError, SourceItem, SourcePolicy, SourcePolicyStatus
 
-FIXTURES = Path(__file__).parents[1***REMOVED*** / "fixtures" / "trudvsem"
+FIXTURES = Path(__file__).parents[1] / "fixtures" / "trudvsem"
 NOW = datetime(2026, 8, 23, 12, 0, tzinfo=timezone.utc)
 
 
@@ -64,7 +64,7 @@ def test_parse_page_builds_source_items() -> None:
     items = parse_vacancy_payload(_fixture("vacancies_page.json"))
 
     assert len(items) == 2
-    first = items[0***REMOVED***
+    first = items[0]
     assert isinstance(first, SourceItem)
     assert first.item_id == "prp-fixture-0001"
     assert first.canonical_url == (
@@ -75,8 +75,8 @@ def test_parse_page_builds_source_items() -> None:
     assert first.published_at.tzinfo is not None
     assert first.published_at.astimezone(timezone.utc).hour == 15  # +0300 → 15:00 UTC
     assert "FastAPI" in (first.content or "")
-    assert first.metadata["region"***REMOVED*** == "Город Санкт-Петербург"
-    assert first.metadata["salary_min"***REMOVED*** == "200000"
+    assert first.metadata["region"] == "Город Санкт-Петербург"
+    assert first.metadata["salary_min"] == "200000"
 
 
 def test_parse_never_contains_private_fields() -> None:
@@ -98,8 +98,8 @@ def test_parse_skips_record_without_url_or_id() -> None:
     import json
 
     data = json.loads(_fixture("vacancies_page.json"))
-    data["results"***REMOVED***["vacancies"***REMOVED***.append({"vacancy": {"id": "broken-no-url"***REMOVED******REMOVED***)
-    data["results"***REMOVED***["vacancies"***REMOVED***.append({"vacancy": {"vac_url": "https://x.test/a"***REMOVED******REMOVED***)
+    data["results"]["vacancies"].append({"vacancy": {"id": "broken-no-url"}})
+    data["results"]["vacancies"].append({"vacancy": {"vac_url": "https://x.test/a"}})
 
     items = parse_vacancy_payload(json.dumps(data).encode("utf-8"))
 
@@ -124,12 +124,12 @@ def test_parse_empty_vacancies_is_empty_not_error() -> None:
 
     data = {
         "status": "200",
-        "request": {"api": "v1"***REMOVED***,
-        "meta": {"total": 0, "limit": 0***REMOVED***,
-        "results": {"vacancies": [***REMOVED******REMOVED***,
-    ***REMOVED***
+        "request": {"api": "v1"},
+        "meta": {"total": 0, "limit": 0},
+        "results": {"vacancies": []},
+    }
     items = parse_vacancy_payload(json.dumps(data).encode("utf-8"))
-    assert items == [***REMOVED***
+    assert items == []
 
 
 # --- Policy gate -------------------------------------------------------------
@@ -144,10 +144,10 @@ async def test_allowed_can_poll_fetches() -> None:
         http_get=_fake_get_ok,
     )
 
-    items = [item async for item in adapter.fetch()***REMOVED***
+    items = [item async for item in adapter.fetch()]
 
     assert len(items) == 2
-    assert items[0***REMOVED***.item_id == "prp-fixture-0001"
+    assert items[0].item_id == "prp-fixture-0001"
     assert await adapter.health() is True
 
 
@@ -166,7 +166,7 @@ async def test_non_allowed_hard_blocked() -> None:
             http_get=_fake_get_ok,
         )
         with pytest.raises(AdapterError, match="ALLOWED"):
-            [item async for item in adapter.fetch()***REMOVED***
+            [item async for item in adapter.fetch()]
 
 
 @pytest.mark.asyncio
@@ -179,7 +179,7 @@ async def test_can_poll_false_blocks_even_allowed() -> None:
     )
 
     with pytest.raises(AdapterError, match="can_poll"):
-        [item async for item in adapter.fetch()***REMOVED***
+        [item async for item in adapter.fetch()]
 
 
 # --- fetch-семантикa ---------------------------------------------------------
@@ -194,11 +194,11 @@ async def test_fetch_limit_and_checkpoint() -> None:
         http_get=_fake_get_ok,
     )
 
-    first = [item async for item in adapter.fetch(limit=1)***REMOVED***
-    assert [item.item_id for item in first***REMOVED*** == ["prp-fixture-0001"***REMOVED***
+    first = [item async for item in adapter.fetch(limit=1)]
+    assert [item.item_id for item in first] == ["prp-fixture-0001"]
 
-    resumed = [item async for item in adapter.fetch(checkpoint="prp-fixture-0001")***REMOVED***
-    assert [item.item_id for item in resumed***REMOVED*** == ["prp-fixture-0002"***REMOVED***
+    resumed = [item async for item in adapter.fetch(checkpoint="prp-fixture-0001")]
+    assert [item.item_id for item in resumed] == ["prp-fixture-0002"]
 
 
 @pytest.mark.asyncio
@@ -210,7 +210,7 @@ async def test_fetch_limit_clamped_to_api_max_100() -> None:
         http_get=_fake_get_ok,
     )
 
-    items = [item async for item in adapter.fetch(limit=500)***REMOVED***
+    items = [item async for item in adapter.fetch(limit=500)]
 
     # fixture содержит 2 вакансии; главное — не упал и не запросил >100
     assert len(items) == 2
@@ -226,7 +226,7 @@ async def test_fetch_source_error_propagates() -> None:
     )
 
     with pytest.raises(AdapterError, match="500"):
-        [item async for item in adapter.fetch()***REMOVED***
+        [item async for item in adapter.fetch()]
 
 
 @pytest.mark.asyncio
@@ -244,7 +244,7 @@ async def test_health_false_on_api_error() -> None:
 @pytest.mark.asyncio
 async def test_fetch_sends_modified_from_checkpoint_param() -> None:
     """Дельта-параметр modifiedFrom попадает в URL запроса (ISO 8601 UTC)."""
-    captured: list[str***REMOVED*** = [***REMOVED***
+    captured: list[str] = []
 
     async def fake_get_with_capture(url: str) -> bytes:
         captured.append(url)
@@ -257,12 +257,12 @@ async def test_fetch_sends_modified_from_checkpoint_param() -> None:
     )
 
     since = datetime(2026, 8, 22, 0, 0, tzinfo=timezone.utc)
-    [item async for item in adapter.fetch(modified_from=since)***REMOVED***
+    [item async for item in adapter.fetch(modified_from=since)]
 
     assert len(captured) == 1
-    assert "modifiedFrom=2026-08-22T00%3A00%3A00%2B00%3A00" in captured[0***REMOVED*** or (
-        "modifiedFrom=" in captured[0***REMOVED***
-        and "2026-08-22" in captured[0***REMOVED***
+    assert "modifiedFrom=2026-08-22T00%3A00%3A00%2B00%3A00" in captured[0] or (
+        "modifiedFrom=" in captured[0]
+        and "2026-08-22" in captured[0]
     )
 
 
@@ -275,8 +275,8 @@ async def test_copywriter_fixture_parsed() -> None:
         http_get=_fake_get_copywriter,
     )
 
-    items = [item async for item in adapter.fetch()***REMOVED***
+    items = [item async for item in adapter.fetch()]
 
     assert len(items) == 1
-    assert items[0***REMOVED***.title == "Копирайтер для маркетплейса"
-    assert "копирайтинг" in (items[0***REMOVED***.content or "")
+    assert items[0].title == "Копирайтер для маркетплейса"
+    assert "копирайтинг" in (items[0].content or "")

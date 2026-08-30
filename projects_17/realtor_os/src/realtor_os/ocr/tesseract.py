@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
-***REMOVED***
+}
 
 from realtor_os.logger import setup_logger
 
@@ -36,11 +36,11 @@ def ocr_image(path: Path, lang: str = "rus+eng") -> str:
         raise OCRError("tesseract is not installed or not in PATH")
 
     if not path.exists():
-        raise OCRError(f"File not found: {path***REMOVED***")
+        raise OCRError(f"File not found: {path}")
 
     try:
         result = subprocess.run(
-            ["tesseract", str(path), "stdout", "-l", lang***REMOVED***,
+            ["tesseract", str(path), "stdout", "-l", lang],
             capture_output=True,
             text=True,
             check=False,
@@ -52,7 +52,7 @@ def ocr_image(path: Path, lang: str = "rus+eng") -> str:
         raise OCRError("tesseract command failed") from exc
 
     if result.returncode != 0:
-        raise OCRError(f"OCR failed: {result.stderr.strip()***REMOVED***")
+        raise OCRError(f"OCR failed: {result.stderr.strip()}")
 
     return result.stdout.strip()
 

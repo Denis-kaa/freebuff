@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import datetime
 import json
-***REMOVED***
+}
 from statistics import pstdev
 
 # === sys.path injection (run as direct script, not as -m module) ===
@@ -24,7 +24,7 @@ from statistics import pstdev
 # Minimal-invasive option (d): NO __init__.py markers added (per user constraint
 # «не расширять архитектуру платформы» в promt 62).
 import sys as _sys_for_path
-***REMOVED*** as _Path_for_path
+] as _Path_for_path
 _sys_for_path.path.insert(
     0, str(_Path_for_path(__file__).resolve().parent.parent.parent)
 )
@@ -38,7 +38,7 @@ __all__ = [
     "SMA_WINDOW", "WEEKDAY_BASE", "SERVICE_LEVEL_Z",
     "SHELF_CRITICAL_RATIO", "INCIDENT_2024_CORRECTION", "ORDER_BUFFER",
     "OUT_DIR", "OUT_PATH", "SNAPSHOT_PATH",
-***REMOVED***
+]
 
 
 HEADER = (
@@ -50,32 +50,32 @@ HEADER = (
 BASE_DATE = datetime.date(2025, 6, 2)  # синтетический понедельник
 
 # === 3 категории (per Q2 clarification) ===
-CATEGORIES: list[dict***REMOVED*** = [
+CATEGORIES: list[dict] = [
     {
         "sku": "Молоко 3.2% 1л",
         "cat": "dairy",
         "shelf_life": 7,
         "lead_time": 2,
         "baseline": 35,
-        "wd": [1.10, 1.00, 1.00, 1.05, 1.20, 1.40, 1.30***REMOVED***,
-    ***REMOVED***,
+        "wd": [1.10, 1.00, 1.00, 1.05, 1.20, 1.40, 1.30],
+    },
     {
         "sku": "Крупа гречневая 800г",
         "cat": "groats",
         "shelf_life": 365,
         "lead_time": 5,
         "baseline": 12,
-        "wd": [1.05, 1.00, 1.00, 1.00, 1.15, 1.10, 0.90***REMOVED***,
-    ***REMOVED***,
+        "wd": [1.05, 1.00, 1.00, 1.00, 1.15, 1.10, 0.90],
+    },
     {
         "sku": "Напиток газир. 1л",
         "cat": "beverage",
         "shelf_life": 90,
         "lead_time": 3,
         "baseline": 22,
-        "wd": [0.90, 0.85, 0.85, 0.95, 1.25, 1.50, 1.30***REMOVED***,
-    ***REMOVED***,
-***REMOVED***
+        "wd": [0.90, 0.85, 0.85, 0.95, 1.25, 1.50, 1.30],
+    },
+]
 WEEKS = 12
 
 # === 4 принципа: named constants (NO magic numbers) ===
@@ -84,7 +84,7 @@ WEEKDAY_BASE = 1.2                                   # пятница для п�
 SERVICE_LEVEL_Z = 1.65                               # принцип 3: Z для 95% сервиса — NON_OBVIOUS_1
 SHELF_CRITICAL_RATIO = 2.0                           # принцип 4: порог shelf_life/lead_time
 INCIDENT_2024_CORRECTION = 0.92                      # NON_OBVIOUS_2: cell-content proxy legacy defined name
-DEFAULT_STOCK = {cat["sku"***REMOVED***: 10 + i * 5 for i, cat in enumerate(CATEGORIES)***REMOVED***
+DEFAULT_STOCK = {cat["sku"]: 10 + i * 5 for i, cat in enumerate(CATEGORIES)}
 ORDER_BUFFER = 0.10                                  # 10% day-cover buffer в формуле заказа
 
 OUT_DIR = Path("projects_17/vkusvill_demo")
@@ -93,62 +93,62 @@ SNAPSHOT_PATH = OUT_DIR / "model_snapshot.json"
 
 
 def build_history(wb: Workbook, base: datetime.date) -> tuple[
-    dict[str, tuple[int, int***REMOVED******REMOVED***, dict[str, list[int***REMOVED******REMOVED***
-***REMOVED***:
+    dict[str, tuple[int, int]], dict[str, list[int]]
+]:
     """Sheet 'history': 12 weeks × 3 categories. Returns sku->(start_row, end_row)
     + sku->list_of_12 sales_qty (raw values for downstream use)."""
     wb.sheet("history")
-    wb.cell("A1", value=HEADER, fmt={"bold": True***REMOVED***)
+    wb.cell("A1", value=HEADER, fmt={"bold": True})
     wb.cell("A3", value="week")
     wb.cell("B3", value="date")
     wb.cell("C3", value="sku_name")
     wb.cell("D3", value="sales_qty")
 
     row = 4
-    sku_rows: dict[str, tuple[int, int***REMOVED******REMOVED*** = {***REMOVED***
-    sku_sales: dict[str, list[int***REMOVED******REMOVED*** = {***REMOVED***
+    sku_rows: dict[str, tuple[int, int]] = {}
+    sku_sales: dict[str, list[int]] = {}
     for cat in CATEGORIES:
         start = row
-        sales: list[int***REMOVED*** = [***REMOVED***
+        sales: list[int] = []
         for wk in range(WEEKS):
             wk_date = base + datetime.timedelta(weeks=wk)
             wd_idx = wk_date.weekday()
             drift = 1 + wk * 0.005
-            qty = round(cat["baseline"***REMOVED*** * cat["wd"***REMOVED***[wd_idx***REMOVED*** * 7 * drift)
-            wb.cell(f"A{row***REMOVED***", value=f"W{wk+1***REMOVED***")
-            wb.cell(f"B{row***REMOVED***", value=str(wk_date))
-            wb.cell(f"C{row***REMOVED***", value=cat["sku"***REMOVED***)
-            wb.cell(f"D{row***REMOVED***", value=qty)
+            qty = round(cat["baseline"] * cat["wd"][wd_idx] * 7 * drift)
+            wb.cell(f"A{row}", value=f"W{wk+1}")
+            wb.cell(f"B{row}", value=str(wk_date))
+            wb.cell(f"C{row}", value=cat["sku"])
+            wb.cell(f"D{row}", value=qty)
             sales.append(qty)
             row += 1
-        sku_rows[cat["sku"***REMOVED******REMOVED*** = (start, row - 1)
-        sku_sales[cat["sku"***REMOVED******REMOVED*** = sales
+        sku_rows[cat["sku"]] = (start, row - 1)
+        sku_sales[cat["sku"]] = sales
         row += 1  # blank separator
     return sku_rows, sku_sales
 
 
 def compute_forecast_values(
-    sku_sales: list[int***REMOVED***, cat: dict, base: datetime.date
+    sku_sales: list[int], cat: dict, base: datetime.date
 ) -> dict:
     """Pre-compute forecast values (Python side, deterministic mirror of Excel formulas)."""
-    sma = sum(sku_sales[-SMA_WINDOW:***REMOVED***) / SMA_WINDOW
-    sigma_p = pstdev(sku_sales[-SMA_WINDOW:***REMOVED***)
-    wd_factor = cat["wd"***REMOVED***[(base.weekday() + WEEKS) % 7***REMOVED***
-    safety = sigma_p * SERVICE_LEVEL_Z * (cat["lead_time"***REMOVED*** ** 0.5)
-    shelf = 0.5 if cat["shelf_life"***REMOVED*** < cat["lead_time"***REMOVED*** * SHELF_CRITICAL_RATIO else 1.0
+    sma = sum(sku_sales[-SMA_WINDOW:]) / SMA_WINDOW
+    sigma_p = pstdev(sku_sales[-SMA_WINDOW:])
+    wd_factor = cat["wd"][(base.weekday() + WEEKS) % 7]
+    safety = sigma_p * SERVICE_LEVEL_Z * (cat["lead_time"] ** 0.5)
+    shelf = 0.5 if cat["shelf_life"] < cat["lead_time"] * SHELF_CRITICAL_RATIO else 1.0
     final = ((sma * wd_factor) + safety) * shelf
     return {
         "sma": sma, "wd_factor": wd_factor, "safety": safety,
         "shelf": shelf, "final": final,
-    ***REMOVED***
+    }
 
 
 def build_forecast(
-    wb: Workbook, sku_rows: dict[str, tuple[int, int***REMOVED******REMOVED***,
-    sku_sales: dict[str, list[int***REMOVED******REMOVED***, base: datetime.date,
-) -> dict[str, dict***REMOVED***:
+    wb: Workbook, sku_rows: dict[str, tuple[int, int]],
+    sku_sales: dict[str, list[int]], base: datetime.date,
+) -> dict[str, dict]:
     wb.sheet("forecast")
-    wb.cell("A1", value=HEADER, fmt={"bold": True***REMOVED***)
+    wb.cell("A1", value=HEADER, fmt={"bold": True})
     wb.cell("A3", value="sku_name")
     wb.cell("B3", value="week")
     wb.cell("C3", value="forecast_sma4w")
@@ -172,21 +172,21 @@ def build_forecast(
         "— молочка получает -8% legacy-норматив после инцидента 2024)."
     ))
 
-    forecasts: dict[str, dict***REMOVED*** = {***REMOVED***
+    forecasts: dict[str, dict] = {}
     for cat_i, cat in enumerate(CATEGORIES):
-        h_start, h_end = sku_rows[cat["sku"***REMOVED******REMOVED***
+        h_start, h_end = sku_rows[cat["sku"]]
         row_n = 4 + cat_i
-        last4_ref = f"'history'!D{h_end-3***REMOVED***:D{h_end***REMOVED***"
-        vals = compute_forecast_values(sku_sales[cat["sku"***REMOVED******REMOVED***, cat, base)
-        wb.cell(f"A{row_n***REMOVED***", value=cat["sku"***REMOVED***)
-        wb.cell(f"B{row_n***REMOVED***", value=f"W{WEEKS + 1***REMOVED***")  # W13 = forecast week
-        wb.cell(f"C{row_n***REMOVED***", formula=f"=AVERAGE({last4_ref***REMOVED***)")
-        wb.cell(f"D{row_n***REMOVED***", value=vals["wd_factor"***REMOVED***)
-        wb.cell(f"E{row_n***REMOVED***", formula=f"=STDEV.P({last4_ref***REMOVED***)*{SERVICE_LEVEL_Z***REMOVED****SQRT({cat['lead_time'***REMOVED******REMOVED***)")
-        wb.cell(f"F{row_n***REMOVED***", formula=f"=IF({cat['shelf_life'***REMOVED******REMOVED***<{cat['lead_time'***REMOVED****SHELF_CRITICAL_RATIO***REMOVED***,0.5,1.0)")
-        wb.cell(f"G{row_n***REMOVED***", formula=f"=(C{row_n***REMOVED****D{row_n***REMOVED***+E{row_n***REMOVED***)*F{row_n***REMOVED***")
-        wb.cell(f"H{row_n***REMOVED***", value="baseline")
-        forecasts[cat["sku"***REMOVED******REMOVED*** = vals
+        last4_ref = f"'history'!D{h_end-3}:D{h_end}"
+        vals = compute_forecast_values(sku_sales[cat["sku"]], cat, base)
+        wb.cell(f"A{row_n}", value=cat["sku"])
+        wb.cell(f"B{row_n}", value=f"W{WEEKS + 1}")  # W13 = forecast week
+        wb.cell(f"C{row_n}", formula=f"=AVERAGE({last4_ref})")
+        wb.cell(f"D{row_n}", value=vals["wd_factor"])
+        wb.cell(f"E{row_n}", formula=f"=STDEV.P({last4_ref})*{SERVICE_LEVEL_Z}*SQRT({cat['lead_time']})")
+        wb.cell(f"F{row_n}", formula=f"=IF({cat['shelf_life']}<{cat['lead_time']*SHELF_CRITICAL_RATIO},0.5,1.0)")
+        wb.cell(f"G{row_n}", formula=f"=(C{row_n}*D{row_n}+E{row_n})*F{row_n}")
+        wb.cell(f"H{row_n}", value="baseline")
+        forecasts[cat["sku"]] = vals
 
     # NON_OBVIOUS_2: H22 — INCIDENT_2024_CORRECTION cell-content proxy
     wb.cell("H22", value=INCIDENT_2024_CORRECTION)
@@ -194,10 +194,10 @@ def build_forecast(
 
 
 def build_order(
-    wb: Workbook, forecasts: dict[str, dict***REMOVED***
-) -> dict[str, dict***REMOVED***:
+    wb: Workbook, forecasts: dict[str, dict]
+) -> dict[str, dict]:
     wb.sheet("order")
-    wb.cell("A1", value=HEADER, fmt={"bold": True***REMOVED***)
+    wb.cell("A1", value=HEADER, fmt={"bold": True})
     wb.cell("A3", value="sku_name")
     wb.cell("B3", value="final_forecast")
     wb.cell("C3", value="current_stock")
@@ -205,41 +205,41 @@ def build_order(
     wb.cell("E3", value="order_qty")
     wb.cell("F3", value="notes")
 
-    orders: dict[str, dict***REMOVED*** = {***REMOVED***
+    orders: dict[str, dict] = {}
     for cat_i, cat in enumerate(CATEGORIES):
         row_n = 4 + cat_i
         forecast_row = 4 + cat_i
-        final = forecasts[cat["sku"***REMOVED******REMOVED***["final"***REMOVED***
-        stock = DEFAULT_STOCK[cat["sku"***REMOVED******REMOVED***
-        order_qty = max(0, (final * cat["lead_time"***REMOVED***) - stock + (final * ORDER_BUFFER))
+        final = forecasts[cat["sku"]]["final"]
+        stock = DEFAULT_STOCK[cat["sku"]]
+        order_qty = max(0, (final * cat["lead_time"]) - stock + (final * ORDER_BUFFER))
         # Mirror forecast.py compute_order: INCIDENT_2024_CORRECTION применяется
         # только для category='dairy' (NON_OBVIOUS_2 — legacy -8% rule post-инцидента 2024).
-        if cat["cat"***REMOVED*** == "dairy":
+        if cat["cat"] == "dairy":
             order_qty *= INCIDENT_2024_CORRECTION
-        wb.cell(f"A{row_n***REMOVED***", value=cat["sku"***REMOVED***)
-        wb.cell(f"B{row_n***REMOVED***", formula=f"='forecast'!G{forecast_row***REMOVED***")
-        wb.cell(f"C{row_n***REMOVED***", value=stock)
-        wb.cell(f"D{row_n***REMOVED***", formula=f"=B{row_n***REMOVED****{cat['lead_time'***REMOVED******REMOVED***")
+        wb.cell(f"A{row_n}", value=cat["sku"])
+        wb.cell(f"B{row_n}", formula=f"='forecast'!G{forecast_row}")
+        wb.cell(f"C{row_n}", value=stock)
+        wb.cell(f"D{row_n}", formula=f"=B{row_n}*{cat['lead_time']}")
         # BUG-001 FIX (2026-08-08): Excel-формула теперь математически эквивалентна
         # forecast.py compute_order — INCIDENT_2024_CORRECTION применяется ко ВСЕМУ заказу:
         #   Excel:  =MAX(0,D-C+B*BUF)*CORR   (dairy) / *1.0 (прочие)
         #   Python: max(0, D-C+B*BUF) * CORR (dairy) / *1.0 (прочие)
         # Раньше: =MAX(0,D-C+B*BUF*CORR) — коррекция применялась только к буферу B*BUF,
         # расхождение с Python 8.3% для dairy (823.87 vs 760.90), parity не ловил.
-        _corr = INCIDENT_2024_CORRECTION if cat["cat"***REMOVED*** == "dairy" else 1.0
-        wb.cell(f"E{row_n***REMOVED***", formula=f"=MAX(0,D{row_n***REMOVED***-C{row_n***REMOVED***+B{row_n***REMOVED****{ORDER_BUFFER***REMOVED***)*{_corr***REMOVED***")
-        notes = "INCIDENT_2024_CORRECTION (-8%) применён" if cat["cat"***REMOVED*** == "dairy" else ""
-        wb.cell(f"F{row_n***REMOVED***", value=notes)
-        orders[cat["sku"***REMOVED******REMOVED*** = {
+        _corr = INCIDENT_2024_CORRECTION if cat["cat"] == "dairy" else 1.0
+        wb.cell(f"E{row_n}", formula=f"=MAX(0,D{row_n}-C{row_n}+B{row_n}*{ORDER_BUFFER})*{_corr}")
+        notes = "INCIDENT_2024_CORRECTION (-8%) применён" if cat["cat"] == "dairy" else ""
+        wb.cell(f"F{row_n}", value=notes)
+        orders[cat["sku"]] = {
             "final_forecast": final, "current_stock": stock, "order_qty": order_qty,
-        ***REMOVED***
+        }
 
-    total = sum(o["order_qty"***REMOVED*** for o in orders.values())
+    total = sum(o["order_qty"] for o in orders.values())
     total_row = 4 + len(CATEGORIES) + 1
-    wb.cell(f"A{total_row***REMOVED***", value="TOTAL:", fmt={"bold": True***REMOVED***)
-    wb.cell(f"E{total_row***REMOVED***", formula=f"=SUM(E4:E{3+len(CATEGORIES)***REMOVED***)", fmt={"bold": True***REMOVED***)
-    wb.cell(f"F{total_row***REMOVED***", value=f"total={total:.2f***REMOVED***")
-    orders["_total"***REMOVED*** = {"order_qty": total***REMOVED***
+    wb.cell(f"A{total_row}", value="TOTAL:", fmt={"bold": True})
+    wb.cell(f"E{total_row}", formula=f"=SUM(E4:E{3+len(CATEGORIES)})", fmt={"bold": True})
+    wb.cell(f"F{total_row}", value=f"total={total:.2f}")
+    orders["_total"] = {"order_qty": total}
     return orders
 
 
@@ -252,23 +252,23 @@ def main() -> None:
     wb.save(OUT_PATH)
     sidecar = {
         "forecasts": forecasts,
-        "orders": {k: v for k, v in orders.items() if k != "_total"***REMOVED***,
+        "orders": {k: v for k, v in orders.items() if k != "_total"},
         "_meta": {
             "base_date": str(BASE_DATE),
             "weeks": WEEKS,
-            "categories": [c["sku"***REMOVED*** for c in CATEGORIES***REMOVED***,
+            "categories": [c["sku"] for c in CATEGORIES],
             "non_obvious": {
                 "service_level_z": SERVICE_LEVEL_Z,
                 "incident_2024_correction": INCIDENT_2024_CORRECTION,
-            ***REMOVED***,
-        ***REMOVED***,
-    ***REMOVED***
+            },
+        },
+    }
     SNAPSHOT_PATH.write_text(
         json.dumps(sidecar, ensure_ascii=False, indent=2), encoding="utf-8"
     )
-    print(f"OK: {OUT_PATH***REMOVED***")
-    print(f"OK: {SNAPSHOT_PATH***REMOVED***")
-    print(f"Snapshot summary: {len(CATEGORIES)***REMOVED*** categories, total order = {orders['_total'***REMOVED***['order_qty'***REMOVED***:.2f***REMOVED***")
+    print(f"OK: {OUT_PATH}")
+    print(f"OK: {SNAPSHOT_PATH}")
+    print(f"Snapshot summary: {len(CATEGORIES)} categories, total order = {orders['_total']['order_qty']:.2f}")
 
 
 if __name__ == "__main__":

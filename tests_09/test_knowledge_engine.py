@@ -18,7 +18,7 @@ import os
 import sys
 import tempfile
 import pytest
-***REMOVED***
+}
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -112,13 +112,13 @@ class TestTokenizer:
 
     def test_extract_snippet(self):
         text = "This is a long text about capability-based routing with scoring system"
-        snippet = Tokenizer.extract_snippet(text, ["routing"***REMOVED***)
+        snippet = Tokenizer.extract_snippet(text, ["routing"])
         assert "routing" in snippet
         assert len(snippet) > 10
 
     def test_extract_snippet_short_text(self):
         text = "Short text"
-        snippet = Tokenizer.extract_snippet(text, ["missing"***REMOVED***)
+        snippet = Tokenizer.extract_snippet(text, ["missing"])
         assert len(snippet) > 0
         assert "Short" in snippet
 
@@ -138,7 +138,7 @@ class TestFtsIndex:
 
         results = fts_index.search("router")
         assert len(results) >= 1
-        assert results[0***REMOVED***[0***REMOVED*** == "doc1"
+        assert results[0][0] == "doc1"
 
     def test_search_no_results(self, fts_index: FtsIndex):
         results = fts_index.search("nonexistent_query_xyz")
@@ -150,7 +150,7 @@ class TestFtsIndex:
 
         results = fts_index.search("engine architecture")
         assert len(results) >= 1
-        assert results[0***REMOVED***[0***REMOVED*** == "doc2"
+        assert results[0][0] == "doc2"
 
     def test_remove_document(self, fts_index: FtsIndex):
         fts_index.index("doc1", "test content")
@@ -176,10 +176,10 @@ class TestFtsIndex:
         assert fts_index.count() == 0
 
     def test_metadata_stored(self, fts_index: FtsIndex):
-        fts_index.index("doc1", "test content", {"title": "Test Doc", "source": "test"***REMOVED***)
+        fts_index.index("doc1", "test content", {"title": "Test Doc", "source": "test"})
         results = fts_index.search("test")
         assert len(results) >= 1
-        doc_id, score, content, meta = results[0***REMOVED***
+        doc_id, score, content, meta = results[0]
         assert meta.get("title") == "Test Doc"
         assert meta.get("source") == "test"
 
@@ -204,23 +204,23 @@ class TestTfidfIndex:
             ("doc1", "capability based router with scoring system python"),
             ("doc2", "memory engine with five levels working archive"),
             ("doc3", "context builder unified memory stream task"),
-        ***REMOVED***)
+        ])
 
         results = tfidf_index.search("router scoring")
         assert len(results) >= 1
-        assert results[0***REMOVED***[0***REMOVED*** == "doc1"
+        assert results[0][0] == "doc1"
 
     def test_search_semantic_related(self, tfidf_index: TfidfIndex):
         """TF-IDF находит семантически близкие документы (по общим токенам)."""
         tfidf_index.index_documents([
             ("doc1", "capability router model route routing"),
             ("doc2", "memory storage context session archive"),
-        ***REMOVED***)
+        ])
 
         results = tfidf_index.search("router capability")
         assert len(results) >= 1
         # doc1 имеет больше общих терминов с запросом
-        top_doc = results[0***REMOVED***[0***REMOVED***
+        top_doc = results[0][0]
         assert top_doc == "doc1"
 
     def test_search_empty_index(self, tfidf_index: TfidfIndex):
@@ -229,16 +229,16 @@ class TestTfidfIndex:
 
     def test_is_empty(self, tfidf_index: TfidfIndex):
         assert tfidf_index.is_empty() is True
-        tfidf_index.index_documents([("doc1", "test content")***REMOVED***)
+        tfidf_index.index_documents([("doc1", "test content")])
         assert tfidf_index.is_empty() is False
 
     def test_count(self, tfidf_index: TfidfIndex):
         assert tfidf_index.count() == 0
-        tfidf_index.index_documents([("doc1", "test"), ("doc2", "test")***REMOVED***)
+        tfidf_index.index_documents([("doc1", "test"), ("doc2", "test")])
         assert tfidf_index.count() == 2
 
     def test_clear(self, tfidf_index: TfidfIndex):
-        tfidf_index.index_documents([("doc1", "test")***REMOVED***)
+        tfidf_index.index_documents([("doc1", "test")])
         assert tfidf_index.count() == 1
         tfidf_index.clear()
         assert tfidf_index.count() == 0
@@ -251,7 +251,7 @@ class TestTfidfIndex:
             vocab_path=tmp_dir / "vocab.json",
             meta_path=tmp_dir / "metadata.json",
         )
-        idx1.index_documents([("doc1", "test content router")***REMOVED***)
+        idx1.index_documents([("doc1", "test content router")])
         assert idx1.count() == 1
 
         # Создаём новый экземпляр (должен загрузить с диска)
@@ -269,7 +269,7 @@ class TestTfidfIndex:
         tfidf_index.index_documents([
             ("relevant", "router capability routing scoring system"),
             ("irrelevant", "weather forecast sunny cloudy rain"),
-        ***REMOVED***)
+        ])
 
         results = tfidf_index.search("router scoring")
         assert len(results) >= 1
@@ -284,7 +284,7 @@ class TestTfidfIndex:
 
         if relevant_score is not None and irrelevant_score is not None:
             assert relevant_score > irrelevant_score, \
-                f"Relevant doc should score higher: {relevant_score***REMOVED*** vs {irrelevant_score***REMOVED***"
+                f"Relevant doc should score higher: {relevant_score} vs {irrelevant_score}"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -305,7 +305,7 @@ class TestKnowledgeEngine:
 
         results = knowledge_engine.search("router", mode="keyword")
         assert len(results) >= 1
-        assert results[0***REMOVED***.doc_id == "doc1"
+        assert results[0].doc_id == "doc1"
 
     def test_search_semantic(self, knowledge_engine: KnowledgeEngine):
         knowledge_engine.index_document(
@@ -317,7 +317,7 @@ class TestKnowledgeEngine:
 
         results = knowledge_engine.search("routing capabilities", mode="semantic")
         assert len(results) >= 1
-        assert results[0***REMOVED***.doc_id == "doc1"
+        assert results[0].doc_id == "doc1"
 
     def test_search_hybrid(self, knowledge_engine: KnowledgeEngine):
         knowledge_engine.index_document(
@@ -329,7 +329,7 @@ class TestKnowledgeEngine:
 
         results = knowledge_engine.search("router capability", mode="hybrid")
         assert len(results) >= 1
-        assert results[0***REMOVED***.doc_id == "doc1"
+        assert results[0].doc_id == "doc1"
 
     def test_search_no_results(self, knowledge_engine: KnowledgeEngine):
         results = knowledge_engine.search("nonexistent_xyz_123")
@@ -346,7 +346,7 @@ class TestKnowledgeEngine:
     def test_search_capabilities(self, knowledge_engine: KnowledgeEngine):
         knowledge_engine.index_document(
             "router_doc", "capability router scoring routing model selection",
-            metadata={"source": "memory/project/router", "doc_type": "text"***REMOVED***,
+            metadata={"source": "memory/project/router", "doc_type": "text"},
         )
         caps = knowledge_engine.search_capabilities("router scoring", top_k=3)
         assert len(caps) >= 1
@@ -377,8 +377,8 @@ class TestKnowledgeEngine:
 
         results = knowledge_engine.search("capability router")
         assert len(results) >= 1
-        assert results[0***REMOVED***.snippet is not None
-        assert len(results[0***REMOVED***.snippet) > 0
+        assert results[0].snippet is not None
+        assert len(results[0].snippet) > 0
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -461,4 +461,4 @@ class TestSearchResult:
 
     def test_matched_terms_default(self):
         r = SearchResult(doc_id="test", score=0.5, content="content")
-        assert r.matched_terms == [***REMOVED***
+        assert r.matched_terms == []

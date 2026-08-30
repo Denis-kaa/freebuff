@@ -10,12 +10,12 @@ import asyncio
 import http.client
 import json
 import os
-***REMOVED***
+}
 import socket
 import sys
 import threading
 import time
-***REMOVED***
+}
 from unittest import mock
 
 import pytest
@@ -42,21 +42,21 @@ from scripts_01.mcp_server import PROTOCOL_VERSION, PARSE_ERROR, METHOD_NOT_FOUN
 def _find_port() -> int:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(("127.0.0.1", 0))
-        return s.getsockname()[1***REMOVED***
+        return s.getsockname()[1]
 
 
 def _http(host: str, port: int, method: str, path: str = "/mcp",
-          body: str | None = None, headers: dict | None = None) -> tuple[int, dict, str***REMOVED***:
+          body: str | None = None, headers: dict | None = None) -> tuple[int, dict, str]:
     """Make HTTP request, return (status, headers_dict, body_str)."""
     conn = http.client.HTTPConnection(host, port, timeout=10)
-    hdrs = {"Content-Type": "application/json"***REMOVED***
+    hdrs = {"Content-Type": "application/json"}
     if headers:
         hdrs.update(headers)
     body_bytes = body.encode("utf-8") if body else None
     conn.request(method, path, body=body_bytes, headers=hdrs)
     resp = conn.getresponse()
     status = resp.status
-    resp_headers = {k.lower(): v for k, v in resp.getheaders()***REMOVED***
+    resp_headers = {k.lower(): v for k, v in resp.getheaders()}
     resp_body = resp.read().decode("utf-8")
     conn.close()
     return status, resp_headers, resp_body
@@ -118,10 +118,10 @@ class TestHealth:
         status, headers, body = _http(host, port, "GET", "/")
         assert status == 200
         data = json.loads(body)
-        assert data["status"***REMOVED*** == "ok"
-        assert data["server"***REMOVED*** == "buffy-mcp"
-        assert data["endpoint"***REMOVED*** == "/mcp"
-        assert data["protocol"***REMOVED*** == PROTOCOL_VERSION
+        assert data["status"] == "ok"
+        assert data["server"] == "buffy-mcp"
+        assert data["endpoint"] == "/mcp"
+        assert data["protocol"] == PROTOCOL_VERSION
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -132,45 +132,45 @@ class TestHealth:
 class TestPostInitialize:
     def test_initialize_returns_200(self, addr):
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {***REMOVED******REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}})
         status, headers, resp = _http(host, port, "POST", body=body)
         assert status == 200
 
     def test_initialize_returns_session_id(self, addr):
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {***REMOVED******REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}})
         status, headers, resp = _http(host, port, "POST", body=body)
         assert "mcp-session-id" in headers
-        assert len(headers["mcp-session-id"***REMOVED***) > 0
+        assert len(headers["mcp-session-id"]) > 0
 
     def test_initialize_returns_protocol_version(self, addr):
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {***REMOVED******REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}})
         status, headers, resp = _http(host, port, "POST", body=body)
         assert headers.get("mcp-protocol-version") == PROTOCOL_VERSION
 
     def test_initialize_returns_server_info(self, addr):
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {***REMOVED******REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}})
         status, headers, resp = _http(host, port, "POST", body=body)
         data = json.loads(resp)
         assert "result" in data
-        assert data["result"***REMOVED***["protocolVersion"***REMOVED*** == PROTOCOL_VERSION
+        assert data["result"]["protocolVersion"] == PROTOCOL_VERSION
 
 
 class TestPostPing:
     def test_ping_returns_200(self, addr):
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"})
         status, headers, resp = _http(host, port, "POST", body=body)
         assert status == 200
-        assert json.loads(resp)["result"***REMOVED*** == {***REMOVED***
+        assert json.loads(resp)["result"] == {}
 
 
 class TestPostNotification:
     def test_notification_returns_202(self, addr):
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized", "params": {***REMOVED******REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized", "params": {}})
         status, headers, resp = _http(host, port, "POST", body=body)
         assert status == 202
 
@@ -178,37 +178,37 @@ class TestPostNotification:
 class TestPostToolsList:
     def test_tools_list_returns_200(self, addr):
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/list"***REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/list"})
         status, headers, resp = _http(host, port, "POST", body=body)
         assert status == 200
         data = json.loads(resp)
-        assert "tools" in data["result"***REMOVED***
-        assert len(data["result"***REMOVED***["tools"***REMOVED***) > 0
+        assert "tools" in data["result"]
+        assert len(data["result"]["tools"]) > 0
 
     def test_tools_list_includes_knowledge_search(self, addr):
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/list"***REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "tools/list"})
         status, headers, resp = _http(host, port, "POST", body=body)
-        names = [t["name"***REMOVED*** for t in json.loads(resp)["result"***REMOVED***["tools"***REMOVED******REMOVED***
+        names = [t["name"] for t in json.loads(resp)["result"]["tools"]]
         assert "knowledge_search" in names
 
 
 class TestPostResourcesList:
     def test_resources_list(self, addr):
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "resources/list"***REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "resources/list"})
         status, headers, resp = _http(host, port, "POST", body=body)
         assert status == 200
-        assert "resources" in json.loads(resp)["result"***REMOVED***
+        assert "resources" in json.loads(resp)["result"]
 
 
 class TestPostPromptsList:
     def test_prompts_list(self, addr):
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "prompts/list"***REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "prompts/list"})
         status, headers, resp = _http(host, port, "POST", body=body)
         assert status == 200
-        assert "prompts" in json.loads(resp)["result"***REMOVED***
+        assert "prompts" in json.loads(resp)["result"]
 
 
 class TestPostToolsCall:
@@ -216,31 +216,31 @@ class TestPostToolsCall:
         host, port = addr
         body = json.dumps({
             "jsonrpc": "2.0", "id": 1, "method": "tools/call",
-            "params": {"name": "session_status", "arguments": {***REMOVED******REMOVED***,
-        ***REMOVED***)
+            "params": {"name": "session_status", "arguments": {}},
+        ])
         status, headers, resp = _http(host, port, "POST", body=body)
         assert status == 200
-        assert "content" in json.loads(resp)["result"***REMOVED***
+        assert "content" in json.loads(resp)["result"]
 
 
 class TestPostBatch:
     def test_batch_request(self, addr):
         host, port = addr
         batch = [
-            {"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***,
-            {"jsonrpc": "2.0", "id": 2, "method": "tools/list"***REMOVED***,
-        ***REMOVED***
+            {"jsonrpc": "2.0", "id": 1, "method": "ping"},
+            {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
+        ]
         status, headers, resp = _http(host, port, "POST", body=json.dumps(batch))
         assert status == 200
         data = json.loads(resp)
         assert isinstance(data, list)
         assert len(data) == 2
-        assert data[0***REMOVED***["id"***REMOVED*** == 1
-        assert data[1***REMOVED***["id"***REMOVED*** == 2
+        assert data[0]["id"] == 1
+        assert data[1]["id"] == 2
 
     def test_batch_all_notifications(self, addr):
         host, port = addr
-        batch = [{"jsonrpc": "2.0", "method": "notifications/initialized"***REMOVED******REMOVED***
+        batch = [{"jsonrpc": "2.0", "method": "notifications/initialized"}]
         status, headers, resp = _http(host, port, "POST", body=json.dumps(batch))
         assert status == 202
 
@@ -250,30 +250,30 @@ class TestPostErrors:
         host, port = addr
         status, headers, resp = _http(host, port, "POST", body="{invalid")
         assert status == 400
-        assert json.loads(resp)["error"***REMOVED***["code"***REMOVED*** == PARSE_ERROR
+        assert json.loads(resp)["error"]["code"] == PARSE_ERROR
 
     def test_unknown_method_returns_error(self, addr):
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "unknown/method"***REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "unknown/method"})
         status, headers, resp = _http(host, port, "POST", body=body)
         assert status == 200
-        assert json.loads(resp)["error"***REMOVED***["code"***REMOVED*** == METHOD_NOT_FOUND
+        assert json.loads(resp)["error"]["code"] == METHOD_NOT_FOUND
 
     def test_unknown_session_id_returns_404(self, addr):
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"})
         status, headers, resp = _http(
             host, port, "POST", body=body,
-            headers={"Mcp-Session-Id": "nonexistent"***REMOVED***,
+            headers={"Mcp-Session-Id": "nonexistent"},
         )
         assert status == 404
 
     def test_shutdown_returns_200(self, addr):
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "shutdown"***REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "shutdown"})
         status, headers, resp = _http(host, port, "POST", body=body)
         assert status == 200
-        assert json.loads(resp)["result"***REMOVED*** == {***REMOVED***
+        assert json.loads(resp)["result"] == {}
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -285,19 +285,19 @@ class TestDelete:
     def test_delete_session(self, addr):
         host, port = addr
         # Create session via initialize
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {***REMOVED******REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}})
         _, init_h, _ = _http(host, port, "POST", body=body)
-        session_id = init_h["mcp-session-id"***REMOVED***
+        session_id = init_h["mcp-session-id"]
 
         status, headers, resp = _http(
-            host, port, "DELETE", headers={"Mcp-Session-Id": session_id***REMOVED***
+            host, port, "DELETE", headers={"Mcp-Session-Id": session_id}
         )
         assert status == 204
 
     def test_delete_unknown_session(self, addr):
         host, port = addr
         status, headers, resp = _http(
-            host, port, "DELETE", headers={"Mcp-Session-Id": "nonexistent"***REMOVED***
+            host, port, "DELETE", headers={"Mcp-Session-Id": "nonexistent"}
         )
         assert status == 404
 
@@ -321,16 +321,16 @@ class TestGet:
     def test_get_unknown_session(self, addr):
         host, port = addr
         status, headers, resp = _http(
-            host, port, "GET", headers={"Mcp-Session-Id": "nonexistent"***REMOVED***
+            host, port, "GET", headers={"Mcp-Session-Id": "nonexistent"}
         )
         assert status == 404
 
     def test_get_sse_content_type(self, addr):
         host, port = addr
         # Create session first
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {***REMOVED******REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}})
         _, init_h, _ = _http(host, port, "POST", body=body)
-        session_id = init_h["mcp-session-id"***REMOVED***
+        session_id = init_h["mcp-session-id"]
 
         # GET SSE stream
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -338,8 +338,8 @@ class TestGet:
         sock.connect((host, port))
         request = (
             f"GET /mcp HTTP/1.1\r\n"
-            f"Host: {host***REMOVED***:{port***REMOVED***\r\n"
-            f"Mcp-Session-Id: {session_id***REMOVED***\r\n"
+            f"Host: {host}:{port}\r\n"
+            f"Mcp-Session-Id: {session_id}\r\n"
             f"Accept: text/event-stream\r\n"
             f"Connection: keep-alive\r\n"
             f"\r\n"
@@ -355,7 +355,7 @@ class TestGet:
 
         sock.close()
         header_str = header_data.decode("utf-8")
-        assert "200" in header_str.split("\r\n")[0***REMOVED***
+        assert "200" in header_str.split("\r\n")[0]
         assert "text/event-stream" in header_str
         assert PROTOCOL_VERSION in header_str
 
@@ -368,34 +368,34 @@ class TestGet:
 class TestOriginValidation:
     def test_evil_origin_rejected(self, addr):
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"})
         status, headers, resp = _http(
             host, port, "POST", body=body,
-            headers={"Origin": "http://evil.com"***REMOVED***,
+            headers={"Origin": "http://evil.com"},
         )
         assert status == 403
 
     def test_localhost_origin_allowed(self, addr):
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"})
         status, headers, resp = _http(
             host, port, "POST", body=body,
-            headers={"Origin": "http://localhost:3000"***REMOVED***,
+            headers={"Origin": "http://localhost:3000"},
         )
         assert status == 200
 
     def test_no_origin_allowed(self, addr):
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"})
         status, headers, resp = _http(host, port, "POST", body=body)
         assert status == 200
 
     def test_evil_origin_bypass_attempt(self, addr):
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"})
         status, headers, resp = _http(
             host, port, "POST", body=body,
-            headers={"Origin": "http://localhost.evil.com"***REMOVED***,
+            headers={"Origin": "http://localhost.evil.com"},
         )
         assert status == 403
 
@@ -483,8 +483,8 @@ class TestMetricsEndpoints:
         assert "health_score" in data
         # All 5 metrics present
         for name in ("vcr", "srg", "cpvo", "rrr", "ttd"):
-            assert name in data["metrics"***REMOVED***
-            assert "value" in data["metrics"***REMOVED***[name***REMOVED***
+            assert name in data["metrics"]
+            assert "value" in data["metrics"][name]
 
     def test_metrics_report_default_format(self, addr):
         host, port = addr
@@ -497,7 +497,7 @@ class TestMetricsEndpoints:
         status, headers, body = _http(host, port, "GET", "/metrics/vcr")
         assert status == 200
         data = json.loads(body)
-        assert data["name"***REMOVED*** == "vcr"
+        assert data["name"] == "vcr"
         assert "value" in data
         assert "unit" in data
 
@@ -506,7 +506,7 @@ class TestMetricsEndpoints:
         status, headers, body = _http(host, port, "GET", "/metrics/srg")
         assert status == 200
         data = json.loads(body)
-        assert data["name"***REMOVED*** == "srg"
+        assert data["name"] == "srg"
         assert "interpretation" in data
 
     def test_metrics_cpvo(self, addr):
@@ -514,15 +514,15 @@ class TestMetricsEndpoints:
         status, headers, body = _http(host, port, "GET", "/metrics/cpvo")
         assert status == 200
         data = json.loads(body)
-        assert data["name"***REMOVED*** == "cpvo"
-        assert data["unit"***REMOVED*** == "ms/verification"
+        assert data["name"] == "cpvo"
+        assert data["unit"] == "ms/verification"
 
     def test_metrics_rrr(self, addr):
         host, port = addr
         status, headers, body = _http(host, port, "GET", "/metrics/rrr")
         assert status == 200
         data = json.loads(body)
-        assert data["name"***REMOVED*** == "rrr"
+        assert data["name"] == "rrr"
         assert "value" in data
 
     def test_metrics_ttd(self, addr):
@@ -530,15 +530,15 @@ class TestMetricsEndpoints:
         status, headers, body = _http(host, port, "GET", "/metrics/ttd")
         assert status == 200
         data = json.loads(body)
-        assert data["name"***REMOVED*** == "ttd"
-        assert data["unit"***REMOVED*** == "minutes"
+        assert data["name"] == "ttd"
+        assert data["unit"] == "minutes"
 
     def test_metrics_status(self, addr):
         host, port = addr
         status, headers, body = _http(host, port, "GET", "/metrics/status")
         assert status == 200
         data = json.loads(body)
-        assert data["status"***REMOVED*** == "ok"
+        assert data["status"] == "ok"
         assert "databases" in data
 
     def test_metrics_trend_known(self, addr):
@@ -546,7 +546,7 @@ class TestMetricsEndpoints:
         status, headers, body = _http(host, port, "GET", "/metrics/trend/vcr")
         assert status == 200
         data = json.loads(body)
-        assert data["metric"***REMOVED*** == "vcr"
+        assert data["metric"] == "vcr"
         assert "history" in data
 
     def test_metrics_trend_unknown(self, addr):
@@ -555,15 +555,15 @@ class TestMetricsEndpoints:
         assert status == 200
         data = json.loads(body)
         assert "error" in data
-        assert "unknown_metric" in data["error"***REMOVED***
+        assert "unknown_metric" in data["error"]
 
     def test_metrics_trend_with_limit(self, addr):
         host, port = addr
         status, headers, body = _http(host, port, "GET", "/metrics/trend/vcr?limit=5")
         assert status == 200
         data = json.loads(body)
-        assert data["metric"***REMOVED*** == "vcr"
-        assert isinstance(data["history"***REMOVED***, list)
+        assert data["metric"] == "vcr"
+        assert isinstance(data["history"], list)
 
     def test_all_metrics_endpoints_return_json(self, addr):
         """Проверка Content-Type для всех metrics endpoints."""
@@ -577,12 +577,12 @@ class TestMetricsEndpoints:
             "/metrics/ttd",
             "/metrics/status",
             "/metrics/trend/vcr",
-        ***REMOVED***
+        ]
         for endpoint in endpoints:
             status, headers, body = _http(host, port, "GET", endpoint)
-            assert status == 200, f"{endpoint***REMOVED*** returned {status***REMOVED***"
+            assert status == 200, f"{endpoint} returned {status}"
             ct = headers.get("content-type", "")
-            assert "json" in ct, f"{endpoint***REMOVED*** Content-Type is {ct***REMOVED***"
+            assert "json" in ct, f"{endpoint} Content-Type is {ct}"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -604,9 +604,9 @@ class TestPolicyOverrideEndpoint:
         "capability": "coding",
         "runtime": "deepseek",
         "previous_runtime": None,
-        "matched": "use (?P<rt>[a-z***REMOVED***+) for (?P<cap>[a-z***REMOVED***+)",
+        "matched": "use (?P<rt>[a-z]+) for (?P<cap>[a-z]+)",
         "message": EN_MSG,
-    ***REMOVED***
+    }
 
     def _post(self, host, port, body):
         return _http(
@@ -622,40 +622,40 @@ class TestPolicyOverrideEndpoint:
             return_value=dict(self.FAKE_RESULT),
         ) as m:
             status, headers, body = self._post(
-                host, port, {"message": self.EN_MSG***REMOVED***
+                host, port, {"message": self.EN_MSG}
             )
         assert status == 200
         data = json.loads(body)
-        assert data["success"***REMOVED*** is True
-        assert data["data"***REMOVED***["applied"***REMOVED*** is True
-        assert data["data"***REMOVED***["capability"***REMOVED*** == "coding"
-        assert data["data"***REMOVED***["runtime"***REMOVED*** == "deepseek"
+        assert data["success"] is True
+        assert data["data"]["applied"] is True
+        assert data["data"]["capability"] == "coding"
+        assert data["data"]["runtime"] == "deepseek"
         m.assert_called_once()
-        assert m.call_args[0***REMOVED***[0***REMOVED*** == self.EN_MSG
+        assert m.call_args[0][0] == self.EN_MSG
 
     def test_override_applies_russian(self, addr, monkeypatch):
         host, port = addr
         monkeypatch.setattr(_mcp_fastapi, "_get_policy_engine", lambda: object())
         fake = dict(self.FAKE_RESULT)
-        fake["capability"***REMOVED*** = "research"
-        fake["runtime"***REMOVED*** = "freebuff"
+        fake["capability"] = "research"
+        fake["runtime"] = "freebuff"
         with mock.patch(
             "freebuff_plugin_03.policy.apply_override", return_value=fake
         ):
             status, headers, body = self._post(
-                host, port, {"message": self.RU_MSG***REMOVED***
+                host, port, {"message": self.RU_MSG}
             )
         assert status == 200
         data = json.loads(body)
-        assert data["data"***REMOVED***["capability"***REMOVED*** == "research"
-        assert data["data"***REMOVED***["runtime"***REMOVED*** == "freebuff"
+        assert data["data"]["capability"] == "research"
+        assert data["data"]["runtime"] == "freebuff"
 
     def test_override_bad_payloads_return_400(self, addr):
         host, port = addr
-        for payload in ({***REMOVED***, {"message": ""***REMOVED***, {"message": 42***REMOVED***, "not-a-dict"):
+        for payload in ({}, {"message": ""}, {"message": 42}, "not-a-dict"):
             status, _, body = self._post(host, port, payload)
-            assert status == 400, f"{payload!r***REMOVED*** should be 400"
-            assert json.loads(body)["success"***REMOVED*** is False
+            assert status == 400, f"{payload!r} should be 400"
+            assert json.loads(body)["success"] is False
 
     def test_override_invalid_json_returns_400(self, addr):
         host, port = addr
@@ -663,7 +663,7 @@ class TestPolicyOverrideEndpoint:
             host, port, "POST", "/policy/override", body="{invalid"
         )
         assert status == 400
-        assert json.loads(body)["success"***REMOVED*** is False
+        assert json.loads(body)["success"] is False
 
     def test_override_unrecognized_phrase_returns_422(self, addr, monkeypatch):
         host, port = addr
@@ -672,12 +672,12 @@ class TestPolicyOverrideEndpoint:
             "freebuff_plugin_03.policy.apply_override", return_value=None
         ) as m:
             status, _, body = self._post(
-                host, port, {"message": "hello world, nothing to override"***REMOVED***
+                host, port, {"message": "hello world, nothing to override"}
             )
         assert status == 422
         data = json.loads(body)
-        assert data["success"***REMOVED*** is False
-        assert "parse" in data["error"***REMOVED***.lower()
+        assert data["success"] is False
+        assert "parse" in data["error"].lower()
         m.assert_called_once()
 
     def test_override_engine_unavailable_returns_503(self, addr, monkeypatch):
@@ -685,10 +685,10 @@ class TestPolicyOverrideEndpoint:
         monkeypatch.setattr(_mcp_fastapi, "_get_policy_engine", lambda: None)
         with mock.patch("freebuff_plugin_03.policy.apply_override") as m:
             status, _, body = self._post(
-                host, port, {"message": self.EN_MSG***REMOVED***
+                host, port, {"message": self.EN_MSG}
             )
         assert status == 503
-        assert json.loads(body)["success"***REMOVED*** is False
+        assert json.loads(body)["success"] is False
         m.assert_not_called()
 
     def test_override_rejects_evil_origin(self, addr, monkeypatch):
@@ -696,11 +696,11 @@ class TestPolicyOverrideEndpoint:
         monkeypatch.setattr(_mcp_fastapi, "_get_policy_engine", lambda: object())
         status, _, body = _http(
             host, port, "POST", "/policy/override",
-            body=json.dumps({"message": self.EN_MSG***REMOVED***),
-            headers={"Origin": "http://evil.com"***REMOVED***,
+            body=json.dumps({"message": self.EN_MSG}),
+            headers={"Origin": "http://evil.com"},
         )
         assert status == 403
-        assert json.loads(body)["success"***REMOVED*** is False
+        assert json.loads(body)["success"] is False
 
     def test_override_requires_auth(self, addr, monkeypatch):
         """Без валидного Bearer — 401 (эндпоинт защищён, как /mcp)."""
@@ -710,7 +710,7 @@ class TestPolicyOverrideEndpoint:
         _mcp_fastapi._reset_token_cache()
         host, port = addr
         status, headers, body = self._post(
-            host, port, {"message": self.EN_MSG***REMOVED***
+            host, port, {"message": self.EN_MSG}
         )
         assert status == 401
         assert "www-authenticate" in headers
@@ -729,11 +729,11 @@ class TestPolicyOverrideEndpoint:
             host, port = addr
             status, _, body = _http(
                 host, port, "POST", "/policy/override",
-                body=json.dumps({"message": self.EN_MSG***REMOVED***),
-                headers={"Authorization": "Bearer correct-token-abcdef123456"***REMOVED***,
+                body=json.dumps({"message": self.EN_MSG}),
+                headers={"Authorization": "Bearer correct-token-abcdef123456"},
             )
         assert status == 200
-        assert json.loads(body)["success"***REMOVED*** is True
+        assert json.loads(body)["success"] is True
 
     def test_override_passes_capability_param(self, addr, monkeypatch):
         """capability из тела передаётся в apply_override (переопределение)."""
@@ -745,13 +745,13 @@ class TestPolicyOverrideEndpoint:
         ) as m:
             status, _, body = self._post(
                 host, port,
-                {"message": self.EN_MSG, "capability": "research"***REMOVED***,
+                {"message": self.EN_MSG, "capability": "research"},
             )
         assert status == 200
         m.assert_called_once()
-        assert m.call_args[0***REMOVED***[0***REMOVED*** == self.EN_MSG
-        assert m.call_args[0***REMOVED***[2***REMOVED*** == "research"
-        assert m.call_args[0***REMOVED***[3***REMOVED*** is False
+        assert m.call_args[0][0] == self.EN_MSG
+        assert m.call_args[0][2] == "research"
+        assert m.call_args[0][3] is False
 
     def test_override_passes_dry_run_flag(self, addr, monkeypatch):
         """dry_run=true передаётся в apply_override (без записи)."""
@@ -763,11 +763,11 @@ class TestPolicyOverrideEndpoint:
         ) as m:
             status, _, body = self._post(
                 host, port,
-                {"message": self.EN_MSG, "dry_run": True***REMOVED***,
+                {"message": self.EN_MSG, "dry_run": True},
             )
         assert status == 200
-        assert m.call_args[0***REMOVED***[2***REMOVED*** is None
-        assert m.call_args[0***REMOVED***[3***REMOVED*** is True
+        assert m.call_args[0][2] is None
+        assert m.call_args[0][3] is True
 
     def test_override_dry_run_without_engine_ok(self, addr, monkeypatch):
         """dry_run=true НЕ требует PolicyEngine (503 не возвращается)."""
@@ -778,16 +778,16 @@ class TestPolicyOverrideEndpoint:
             return_value={
                 "applied": False, "dry_run": True,
                 "capability": "coding", "runtime": "deepseek",
-            ***REMOVED***,
+            },
         ) as m:
             status, _, body = self._post(
                 host, port,
-                {"message": self.EN_MSG, "dry_run": True***REMOVED***,
+                {"message": self.EN_MSG, "dry_run": True},
             )
         assert status == 200
         m.assert_called_once()
         # engine передан как None, но dry_run позволяет продолжить
-        assert m.call_args[0***REMOVED***[1***REMOVED*** is None
+        assert m.call_args[0][1] is None
 
     def test_override_invalid_capability_returns_400(self, addr):
         """capability не-string, пустой или из пробелов — 400 на уровне эндпоинта."""
@@ -795,10 +795,10 @@ class TestPolicyOverrideEndpoint:
         for cap in (42, "", "   "):
             status, _, body = self._post(
                 host, port,
-                {"message": self.EN_MSG, "capability": cap***REMOVED***,
+                {"message": self.EN_MSG, "capability": cap},
             )
-            assert status == 400, f"capability={cap!r***REMOVED*** should be 400"
-            assert json.loads(body)["success"***REMOVED*** is False
+            assert status == 400, f"capability={cap!r} should be 400"
+            assert json.loads(body)["success"] is False
 
     def test_override_invalid_dry_run_returns_400(self, addr):
         """dry_run не-bool — 400 на уровне эндпоинта."""
@@ -806,10 +806,10 @@ class TestPolicyOverrideEndpoint:
         for dr in ("yes", 1, "true"):
             status, _, body = self._post(
                 host, port,
-                {"message": self.EN_MSG, "dry_run": dr***REMOVED***,
+                {"message": self.EN_MSG, "dry_run": dr},
             )
-            assert status == 400, f"dry_run={dr!r***REMOVED*** should be 400"
-            assert json.loads(body)["success"***REMOVED*** is False
+            assert status == 400, f"dry_run={dr!r} should be 400"
+            assert json.loads(body)["success"] is False
 
 
 class TestPolicyOverrideE2E:
@@ -835,7 +835,7 @@ class TestPolicyOverrideE2E:
                     class Status:
                         value = "connected"
                     status = Status()
-                    capabilities = ["coding"***REMOVED***
+                    capabilities = ["coding"]
                 return FakeRuntime()
 
             def is_connected(self, name):
@@ -843,7 +843,7 @@ class TestPolicyOverrideE2E:
 
         class MockCapabilityRegistry:
             def get_runtime_for_capability(self, capability, preferred_runtime=None):
-                return {"runtime": "freebuff", "confidence": 0.8, "connected": True***REMOVED***
+                return {"runtime": "freebuff", "confidence": 0.8, "connected": True}
 
             def score_runtime(self, runtime_name, capability):
                 return 0.8
@@ -852,7 +852,7 @@ class TestPolicyOverrideE2E:
         # Пустой seed только если файла ещё нет — reload-тест персистит через POST
         if not policy_file.exists():
             policy_file.write_text(
-                '{"version": "1.0", "policies": {***REMOVED******REMOVED***', encoding="utf-8"
+                '{"version": "1.0", "policies": {]]', encoding="utf-8"
             )
         return PolicyEngine(
             MockRuntimeRegistry(),
@@ -872,19 +872,19 @@ class TestPolicyOverrideE2E:
         engine = self._make_engine(tmp_path)
         monkeypatch.setattr(_mcp_fastapi, "_get_policy_engine", lambda: engine)
 
-        status, _, body = self._post(host, port, {"message": self.EN_MSG***REMOVED***)
+        status, _, body = self._post(host, port, {"message": self.EN_MSG})
 
         assert status == 200
         data = json.loads(body)
-        assert data["success"***REMOVED*** is True
-        assert data["data"***REMOVED***["applied"***REMOVED*** is True
-        assert data["data"***REMOVED***["capability"***REMOVED*** == "coding"
-        assert data["data"***REMOVED***["runtime"***REMOVED*** == "deepseek"
+        assert data["success"] is True
+        assert data["data"]["applied"] is True
+        assert data["data"]["capability"] == "coding"
+        assert data["data"]["runtime"] == "deepseek"
 
         # Персист: политика записана в policies.json на диске
         on_disk = json.loads((tmp_path / "policies.json").read_text(encoding="utf-8"))
-        assert on_disk["version"***REMOVED*** == "1.0"
-        assert on_disk["policies"***REMOVED***["coding"***REMOVED***["preferred_runtime"***REMOVED*** == "deepseek"
+        assert on_disk["version"] == "1.0"
+        assert on_disk["policies"]["coding"]["preferred_runtime"] == "deepseek"
         # Engine разделяет то же состояние
         assert engine.get_policy("coding").preferred_runtime == "deepseek"
 
@@ -895,17 +895,17 @@ class TestPolicyOverrideE2E:
         monkeypatch.setattr(_mcp_fastapi, "_get_policy_engine", lambda: engine)
 
         status, _, body = self._post(
-            host, port, {"message": "используй freebuff для research"***REMOVED***
+            host, port, {"message": "используй freebuff для research"}
         )
 
         assert status == 200
         data = json.loads(body)
-        assert data["data"***REMOVED***["applied"***REMOVED*** is True
-        assert data["data"***REMOVED***["capability"***REMOVED*** == "research"
-        assert data["data"***REMOVED***["runtime"***REMOVED*** == "freebuff"
+        assert data["data"]["applied"] is True
+        assert data["data"]["capability"] == "research"
+        assert data["data"]["runtime"] == "freebuff"
 
         on_disk = json.loads((tmp_path / "policies.json").read_text(encoding="utf-8"))
-        assert on_disk["policies"***REMOVED***["research"***REMOVED***["preferred_runtime"***REMOVED*** == "freebuff"
+        assert on_disk["policies"]["research"]["preferred_runtime"] == "freebuff"
 
     def test_e2e_override_capability_param_persists(self, addr, monkeypatch, tmp_path):
         """capability-параметр переопределяет capability из фразы и персистится."""
@@ -915,18 +915,18 @@ class TestPolicyOverrideE2E:
 
         status, _, body = self._post(
             host, port,
-            {"message": self.EN_MSG, "capability": "research"***REMOVED***,
+            {"message": self.EN_MSG, "capability": "research"},
         )
 
         assert status == 200
         data = json.loads(body)
-        assert data["data"***REMOVED***["applied"***REMOVED*** is True
-        assert data["data"***REMOVED***["capability"***REMOVED*** == "research"
-        assert data["data"***REMOVED***["runtime"***REMOVED*** == "deepseek"
+        assert data["data"]["applied"] is True
+        assert data["data"]["capability"] == "research"
+        assert data["data"]["runtime"] == "deepseek"
 
         on_disk = json.loads((tmp_path / "policies.json").read_text(encoding="utf-8"))
-        assert "coding" not in on_disk["policies"***REMOVED***
-        assert on_disk["policies"***REMOVED***["research"***REMOVED***["preferred_runtime"***REMOVED*** == "deepseek"
+        assert "coding" not in on_disk["policies"]
+        assert on_disk["policies"]["research"]["preferred_runtime"] == "deepseek"
 
     def test_e2e_dry_run_does_not_persist(self, addr, monkeypatch, tmp_path):
         """dry_run=true: интент распознан, но policies.json НЕ изменяется."""
@@ -936,19 +936,19 @@ class TestPolicyOverrideE2E:
 
         status, _, body = self._post(
             host, port,
-            {"message": self.EN_MSG, "dry_run": True***REMOVED***,
+            {"message": self.EN_MSG, "dry_run": True},
         )
 
         assert status == 200
         data = json.loads(body)
-        assert data["data"***REMOVED***["applied"***REMOVED*** is False
-        assert data["data"***REMOVED***["dry_run"***REMOVED*** is True
-        assert data["data"***REMOVED***["capability"***REMOVED*** == "coding"
-        assert data["data"***REMOVED***["runtime"***REMOVED*** == "deepseek"
+        assert data["data"]["applied"] is False
+        assert data["data"]["dry_run"] is True
+        assert data["data"]["capability"] == "coding"
+        assert data["data"]["runtime"] == "deepseek"
 
         # Файл остался пустым (персиста нет)
         on_disk = json.loads((tmp_path / "policies.json").read_text(encoding="utf-8"))
-        assert on_disk["policies"***REMOVED*** == {***REMOVED***
+        assert on_disk["policies"] == {}
 
     def test_e2e_replaces_existing_preference_on_disk(self, addr, monkeypatch, tmp_path):
         """Повторный override заменяет предыдущее значение в policies.json."""
@@ -957,14 +957,14 @@ class TestPolicyOverrideE2E:
         engine.set_preference("coding", "claude-code")
         monkeypatch.setattr(_mcp_fastapi, "_get_policy_engine", lambda: engine)
 
-        status, _, body = self._post(host, port, {"message": self.EN_MSG***REMOVED***)
+        status, _, body = self._post(host, port, {"message": self.EN_MSG})
 
         assert status == 200
         data = json.loads(body)
-        assert data["data"***REMOVED***["previous_runtime"***REMOVED*** == "claude-code"
+        assert data["data"]["previous_runtime"] == "claude-code"
 
         on_disk = json.loads((tmp_path / "policies.json").read_text(encoding="utf-8"))
-        assert on_disk["policies"***REMOVED***["coding"***REMOVED***["preferred_runtime"***REMOVED*** == "deepseek"
+        assert on_disk["policies"]["coding"]["preferred_runtime"] == "deepseek"
 
     def test_e2e_engine_reload_sees_persisted_policy(self, addr, monkeypatch, tmp_path):
         """Новый PolicyEngine (перезагрузка сервиса) видит политику из policies.json."""
@@ -972,7 +972,7 @@ class TestPolicyOverrideE2E:
         engine = self._make_engine(tmp_path)
         monkeypatch.setattr(_mcp_fastapi, "_get_policy_engine", lambda: engine)
 
-        status, _, _ = self._post(host, port, {"message": self.EN_MSG***REMOVED***)
+        status, _, _ = self._post(host, port, {"message": self.EN_MSG})
         assert status == 200
 
         # Свежий engine на том же файле — политика загружается с диска
@@ -994,7 +994,7 @@ class TestPolicyStatusEndpoint:
 
     def _make_engine(self, policies: dict | None = None):
         engine = mock.MagicMock()
-        engine.list_policies.return_value = policies or {***REMOVED***
+        engine.list_policies.return_value = policies or {}
         return engine
 
     def test_status_returns_preferences(self, addr, monkeypatch):
@@ -1004,23 +1004,23 @@ class TestPolicyStatusEndpoint:
             "coding": CapabilityPolicy(preferred_runtime="deepseek"),
             "research": CapabilityPolicy(
                 preferred_runtime="freebuff",
-                fallback_chain=["openclaw"***REMOVED***,
+                fallback_chain=["openclaw"],
             ),
-        ***REMOVED***)
+        ])
         monkeypatch.setattr(_mcp_fastapi, "_get_policy_engine", lambda: engine)
         status, _, body = _http(host, port, "GET", "/policy/status")
         assert status == 200
         data = json.loads(body)
-        assert data["success"***REMOVED*** is True
-        assert data["data"***REMOVED***["count"***REMOVED*** == 2
-        assert data["data"***REMOVED***["preferences"***REMOVED*** == {
+        assert data["success"] is True
+        assert data["data"]["count"] == 2
+        assert data["data"]["preferences"] == {
             "coding": "deepseek",
             "research": "freebuff",
-        ***REMOVED***
+        }
         # Полная сериализация политик (не только preferences)
-        assert data["data"***REMOVED***["policies"***REMOVED***["coding"***REMOVED***["preferred_runtime"***REMOVED*** == "deepseek"
-        assert data["data"***REMOVED***["policies"***REMOVED***["research"***REMOVED***["fallback_chain"***REMOVED*** == ["openclaw"***REMOVED***
-        assert data["data"***REMOVED***["policies"***REMOVED***["research"***REMOVED***["constraints"***REMOVED*** == [***REMOVED***
+        assert data["data"]["policies"]["coding"]["preferred_runtime"] == "deepseek"
+        assert data["data"]["policies"]["research"]["fallback_chain"] == ["openclaw"]
+        assert data["data"]["policies"]["research"]["constraints"] == []
 
     def test_status_empty(self, addr, monkeypatch):
         host, port = addr
@@ -1030,9 +1030,9 @@ class TestPolicyStatusEndpoint:
         status, _, body = _http(host, port, "GET", "/policy/status")
         assert status == 200
         data = json.loads(body)
-        assert data["data"***REMOVED***["count"***REMOVED*** == 0
-        assert data["data"***REMOVED***["preferences"***REMOVED*** == {***REMOVED***
-        assert data["data"***REMOVED***["policies"***REMOVED*** == {***REMOVED***
+        assert data["data"]["count"] == 0
+        assert data["data"]["preferences"] == {}
+        assert data["data"]["policies"] == {}
 
     def test_status_constraints_serialized(self, addr, monkeypatch):
         """Constraints сериализуются (rule_type + params)."""
@@ -1041,38 +1041,38 @@ class TestPolicyStatusEndpoint:
         engine = self._make_engine({
             "coding": CapabilityPolicy(
                 preferred_runtime="deepseek",
-                constraints=[PolicyRule(rule_type="min_confidence", params={"value": 0.8***REMOVED***)***REMOVED***,
+                constraints=[PolicyRule(rule_type="min_confidence", params={"value": 0.8})],
             ),
-        ***REMOVED***)
+        ])
         monkeypatch.setattr(_mcp_fastapi, "_get_policy_engine", lambda: engine)
         status, _, body = _http(host, port, "GET", "/policy/status")
         assert status == 200
         data = json.loads(body)
-        cons = data["data"***REMOVED***["policies"***REMOVED***["coding"***REMOVED***["constraints"***REMOVED***
-        assert cons == [{"rule_type": "min_confidence", "params": {"value": 0.8***REMOVED******REMOVED******REMOVED***
+        cons = data["data"]["policies"]["coding"]["constraints"]
+        assert cons == [{"rule_type": "min_confidence", "params": {"value": 0.8}}]
 
     def test_status_policy_without_preferred_still_counted(self, addr, monkeypatch):
         """Политика без preferred_runtime есть в policies/count, но не в preferences."""
         host, port = addr
         from freebuff_plugin_03.policy.config import CapabilityPolicy
         engine = self._make_engine({
-            "coding": CapabilityPolicy(fallback_chain=["freebuff"***REMOVED***),
-        ***REMOVED***)
+            "coding": CapabilityPolicy(fallback_chain=["freebuff"]),
+        ])
         monkeypatch.setattr(_mcp_fastapi, "_get_policy_engine", lambda: engine)
         status, _, body = _http(host, port, "GET", "/policy/status")
         assert status == 200
         data = json.loads(body)
-        assert data["data"***REMOVED***["count"***REMOVED*** == 1
-        assert data["data"***REMOVED***["preferences"***REMOVED*** == {***REMOVED***
-        assert data["data"***REMOVED***["policies"***REMOVED***["coding"***REMOVED***["fallback_chain"***REMOVED*** == ["freebuff"***REMOVED***
-        assert data["data"***REMOVED***["policies"***REMOVED***["coding"***REMOVED***["preferred_runtime"***REMOVED*** is None
+        assert data["data"]["count"] == 1
+        assert data["data"]["preferences"] == {}
+        assert data["data"]["policies"]["coding"]["fallback_chain"] == ["freebuff"]
+        assert data["data"]["policies"]["coding"]["preferred_runtime"] is None
 
     def test_status_engine_unavailable_returns_503(self, addr, monkeypatch):
         host, port = addr
         monkeypatch.setattr(_mcp_fastapi, "_get_policy_engine", lambda: None)
         status, _, body = _http(host, port, "GET", "/policy/status")
         assert status == 503
-        assert json.loads(body)["success"***REMOVED*** is False
+        assert json.loads(body)["success"] is False
 
     def test_status_rejects_evil_origin(self, addr, monkeypatch):
         host, port = addr
@@ -1081,10 +1081,10 @@ class TestPolicyStatusEndpoint:
         )
         status, _, body = _http(
             host, port, "GET", "/policy/status",
-            headers={"Origin": "http://evil.com"***REMOVED***,
+            headers={"Origin": "http://evil.com"},
         )
         assert status == 403
-        assert json.loads(body)["success"***REMOVED*** is False
+        assert json.loads(body)["success"] is False
 
     def test_status_requires_auth(self, addr, monkeypatch):
         """Без валидного Bearer — 401 (эндпоинт защищён, как /policy/override)."""
@@ -1109,10 +1109,10 @@ class TestPolicyStatusEndpoint:
         host, port = addr
         status, _, body = _http(
             host, port, "GET", "/policy/status",
-            headers={"Authorization": "Bearer correct-token-abcdef123456"***REMOVED***,
+            headers={"Authorization": "Bearer correct-token-abcdef123456"},
         )
         assert status == 200
-        assert json.loads(body)["success"***REMOVED*** is True
+        assert json.loads(body)["success"] is True
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1144,7 +1144,7 @@ class TestAuthorization:
     def test_no_authorization_header_returns_401(self, addr, monkeypatch):
         self._setup_auth(monkeypatch)
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"})
         status, headers, resp = _http(host, port, "POST", body=body)
         assert status == 401
         assert "www-authenticate" in headers
@@ -1155,44 +1155,44 @@ class TestAuthorization:
     def test_wrong_bearer_returns_401(self, addr, monkeypatch):
         self._setup_auth(monkeypatch, token="correct-token-xxxxxx")
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"})
         status, headers, resp = _http(
             host,
             port,
             "POST",
             body=body,
-            headers={"Authorization": "Bearer wrong-token-yyyyyy"***REMOVED***,
+            headers={"Authorization": "Bearer wrong-token-yyyyyy"},
         )
         assert status == 401
 
     def test_non_bearer_scheme_returns_401(self, addr, monkeypatch):
         self._setup_auth(monkeypatch)
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"})
         for bad_auth in ("a", "Basic xyz", "Bearer", "Token 123", ""):
             status, _, _ = _http(
                 host,
                 port,
                 "POST",
                 body=body,
-                headers={"Authorization": bad_auth***REMOVED***,
+                headers={"Authorization": bad_auth},
             )
-            assert status == 401, f"{bad_auth!r***REMOVED*** should be 401"
+            assert status == 401, f"{bad_auth!r} should be 401"
 
     def test_correct_bearer_returns_200(self, addr, monkeypatch):
         token = "right-token-abcdef123456"
         self._setup_auth(monkeypatch, token=token)
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"})
         status, headers, resp = _http(
             host,
             port,
             "POST",
             body=body,
-            headers={"Authorization": f"Bearer {token***REMOVED***"***REMOVED***,
+            headers={"Authorization": f"Bearer {token}"},
         )
         assert status == 200
-        assert json.loads(resp)["result"***REMOVED*** == {***REMOVED***
+        assert json.loads(resp)["result"] == {}
 
     def test_correct_bearer_for_delete_returns_204(self, addr, monkeypatch):
         token = "right-token-abcdef123456"
@@ -1203,25 +1203,25 @@ class TestAuthorization:
                 "jsonrpc": "2.0",
                 "id": 1,
                 "method": "initialize",
-                "params": {***REMOVED***,
-            ***REMOVED***
+                "params": {},
+            }
         )
         _, init_h, _ = _http(
             host,
             port,
             "POST",
             body=body,
-            headers={"Authorization": f"Bearer {token***REMOVED***"***REMOVED***,
+            headers={"Authorization": f"Bearer {token}"},
         )
-        sid = init_h["mcp-session-id"***REMOVED***
+        sid = init_h["mcp-session-id"]
         status, headers, resp = _http(
             host,
             port,
             "DELETE",
             headers={
-                "Authorization": f"Bearer {token***REMOVED***",
+                "Authorization": f"Bearer {token}",
                 "Mcp-Session-Id": sid,
-            ***REMOVED***,
+            },
         )
         assert status == 204
 
@@ -1233,13 +1233,13 @@ class TestAuthorization:
         monkeypatch.setenv("FREEBUFF_ENV", "test")
         _mcp_fastapi._reset_token_cache()
         host, port = addr
-        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"***REMOVED***)
+        body = json.dumps({"jsonrpc": "2.0", "id": 1, "method": "ping"})
         status, _, _ = _http(
             host,
             port,
             "POST",
             body=body,
-            headers={"Authorization": "Bearer anything-not-real"***REMOVED***,
+            headers={"Authorization": "Bearer anything-not-real"},
         )
         assert status == 401
 
@@ -1318,7 +1318,7 @@ class TestMeetingTasksREST:
                 "INSERT OR REPLACE INTO projects "
                 "(name, path, description, status, last_scanned) "
                 "VALUES (?, ?, ?, 'active', '2026-08-01T00:00:00+00:00')",
-                (n, f"/tmp/{n***REMOVED***", f"project {n***REMOVED***"),
+                (n, f"/tmp/{n}", f"project {n}"),
             )
         conn.commit()
         conn.close()
@@ -1333,9 +1333,9 @@ class TestMeetingTasksREST:
         status, _, body = _http(host, port, "GET", "/api/v1/projects")
         assert status == 200
         data = json.loads(body)
-        assert data["success"***REMOVED*** is True
-        assert data["data"***REMOVED***["count"***REMOVED*** == 0
-        assert data["data"***REMOVED***["projects"***REMOVED*** == [***REMOVED***
+        assert data["success"] is True
+        assert data["data"]["count"] == 0
+        assert data["data"]["projects"] == []
 
     def test_list_projects_seeded_sorted_by_name(
         self, addr, tmp_tasks_db
@@ -1345,12 +1345,12 @@ class TestMeetingTasksREST:
         status, _, body = _http(host, port, "GET", "/api/v1/projects")
         assert status == 200
         data = json.loads(body)
-        assert data["data"***REMOVED***["count"***REMOVED*** == 2
-        assert [p["name"***REMOVED*** for p in data["data"***REMOVED***["projects"***REMOVED******REMOVED*** == [
+        assert data["data"]["count"] == 2
+        assert [p["name"] for p in data["data"]["projects"]] == [
             "CRM", "diet_platform"
-        ***REMOVED***
-        assert data["data"***REMOVED***["projects"***REMOVED***[0***REMOVED***["status"***REMOVED*** == "active"
-        assert data["data"***REMOVED***["projects"***REMOVED***[0***REMOVED***["last_scanned"***REMOVED***
+        ]
+        assert data["data"]["projects"][0]["status"] == "active"
+        assert data["data"]["projects"][0]["last_scanned"]
 
     # ── /api/v1/tasks GET ──
 
@@ -1363,8 +1363,8 @@ class TestMeetingTasksREST:
         )
         assert status == 200
         data = json.loads(body)
-        assert data["data"***REMOVED***["count"***REMOVED*** == 0
-        assert data["data"***REMOVED***["tasks"***REMOVED*** == [***REMOVED***
+        assert data["data"]["count"] == 0
+        assert data["data"]["tasks"] == []
 
     def test_get_tasks_with_type_filter(self, addr, tmp_tasks_db):
         host, port = addr
@@ -1377,7 +1377,7 @@ class TestMeetingTasksREST:
             task_type="meeting",
             meeting_time="2026-08-02T14:00",
             location="Офис",
-            participants=["Алексей"***REMOVED***,
+            participants=["Алексей"],
             db_path=tmp_tasks_db,
         )
         status, _, body = _http(
@@ -1385,11 +1385,11 @@ class TestMeetingTasksREST:
         )
         assert status == 200
         data = json.loads(body)
-        assert data["data"***REMOVED***["count"***REMOVED*** == 1
-        t = data["data"***REMOVED***["tasks"***REMOVED***[0***REMOVED***
-        assert t["task_type"***REMOVED*** == "meeting"
-        assert t["meeting_time"***REMOVED*** == "2026-08-02T14:00"
-        assert t["participants"***REMOVED*** == ["Алексей"***REMOVED***
+        assert data["data"]["count"] == 1
+        t = data["data"]["tasks"][0]
+        assert t["task_type"] == "meeting"
+        assert t["meeting_time"] == "2026-08-02T14:00"
+        assert t["participants"] == ["Алексей"]
 
     def test_get_tasks_invalid_filter_returns_400(
         self, addr, tmp_tasks_db
@@ -1399,7 +1399,7 @@ class TestMeetingTasksREST:
             host, port, "GET", "/api/v1/tasks?project_id=CRM&type=bogus"
         )
         assert status == 400
-        assert json.loads(body)["success"***REMOVED*** is False
+        assert json.loads(body)["success"] is False
 
     # ── /api/v1/tasks POST ──
 
@@ -1413,17 +1413,17 @@ class TestMeetingTasksREST:
             body=json.dumps({
                 "project_id": "CRM", "title": "API endpoint",
                 "task_type": "digital",
-            ***REMOVED***),
+            ]),
         )
         assert status == 201
         data = json.loads(body)
-        assert data["success"***REMOVED*** is True
-        task = data["data"***REMOVED***["task"***REMOVED***
-        assert task["title"***REMOVED*** == "API endpoint"
-        assert task["task_type"***REMOVED*** == "digital"
-        assert task["id"***REMOVED***.startswith("tm-")
-        assert task["status"***REMOVED*** == "pending"
-        assert task["created_at"***REMOVED***
+        assert data["success"] is True
+        task = data["data"]["task"]
+        assert task["title"] == "API endpoint"
+        assert task["task_type"] == "digital"
+        assert task["id"].startswith("tm-")
+        assert task["status"] == "pending"
+        assert task["created_at"]
 
     def test_post_task_meeting_with_full_attrs(
         self, addr, tmp_tasks_db
@@ -1437,20 +1437,20 @@ class TestMeetingTasksREST:
                 "task_type": "meeting",
                 "meeting_time": "2026-08-02T14:00",
                 "location": "Офис",
-                "participants": ["Алексей", "Иван"***REMOVED***,
+                "participants": ["Алексей", "Иван"],
                 "priority": "high",
                 "description": "Согласование roadmap",
-            ***REMOVED***),
+            ]),
         )
         assert status == 201
         data = json.loads(body)
-        task = data["data"***REMOVED***["task"***REMOVED***
-        assert task["task_type"***REMOVED*** == "meeting"
-        assert task["meeting_time"***REMOVED*** == "2026-08-02T14:00"
-        assert task["location"***REMOVED*** == "Офис"
-        assert task["participants"***REMOVED*** == ["Алексей", "Иван"***REMOVED***
-        assert task["priority"***REMOVED*** == "high"
-        assert task["description"***REMOVED*** == "Согласование roadmap"
+        task = data["data"]["task"]
+        assert task["task_type"] == "meeting"
+        assert task["meeting_time"] == "2026-08-02T14:00"
+        assert task["location"] == "Офис"
+        assert task["participants"] == ["Алексей", "Иван"]
+        assert task["priority"] == "high"
+        assert task["description"] == "Согласование roadmap"
 
     def test_post_task_missing_title_returns_400(
         self, addr, tmp_tasks_db
@@ -1461,10 +1461,10 @@ class TestMeetingTasksREST:
             host, port, "POST", "/api/v1/tasks",
             body=json.dumps({
                 "project_id": "CRM", "title": "", "task_type": "digital",
-            ***REMOVED***),
+            ]),
         )
         assert status == 400
-        assert json.loads(body)["success"***REMOVED*** is False
+        assert json.loads(body)["success"] is False
 
     def test_post_task_meeting_attr_for_digital_returns_400(
         self, addr, tmp_tasks_db
@@ -1477,11 +1477,11 @@ class TestMeetingTasksREST:
             body=json.dumps({
                 "project_id": "CRM", "title": "x", "task_type": "digital",
                 "meeting_time": "2026-08-02T14:00",
-            ***REMOVED***),
+            ]),
         )
         assert status == 400
-        assert "meeting_time" in json.loads(body)["error"***REMOVED***
-        assert "Context-Aware" in json.loads(body)["error"***REMOVED***
+        assert "meeting_time" in json.loads(body)["error"]
+        assert "Context-Aware" in json.loads(body)["error"]
 
     def test_post_task_invalid_json_returns_400(
         self, addr, tmp_tasks_db
@@ -1491,7 +1491,7 @@ class TestMeetingTasksREST:
             host, port, "POST", "/api/v1/tasks", body="{invalid"
         )
         assert status == 400
-        assert json.loads(body)["success"***REMOVED*** is False
+        assert json.loads(body)["success"] is False
 
     def test_post_task_non_dict_body_returns_400(
         self, addr, tmp_tasks_db
@@ -1499,7 +1499,7 @@ class TestMeetingTasksREST:
         host, port = addr
         status, _, body = _http(
             host, port, "POST", "/api/v1/tasks",
-            body=json.dumps(["not", "a", "dict"***REMOVED***),
+            body=json.dumps(["not", "a", "dict"]),
         )
         assert status == 400
-        assert json.loads(body)["success"***REMOVED*** is False
+        assert json.loads(body)["success"] is False

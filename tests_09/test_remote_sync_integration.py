@@ -18,7 +18,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 import sys
-***REMOVED***
+}
 
 sys.path.insert(0, str(Path("/storage/emulated/0/PROJECTS/workstation/freebuff")))
 
@@ -50,14 +50,14 @@ def _make_delta_text(
                 "source_device_id": src,
                 "revision": rev,
                 "sync_mode": "saved_messages",
-                "updated_keys": updated or {"k": "v"***REMOVED***,
-                "deleted_keys": [***REMOVED***,
-            ***REMOVED***,
-        ***REMOVED***,
+                "updated_keys": updated or {"k": "v"},
+                "deleted_keys": [],
+            },
+        },
         separators=(",", ":"),
         sort_keys=True,
     )
-    return f"{_SYNC_MARKER_PREFIX***REMOVED*** V1.0.0 corr-{rev***REMOVED*** CHUNK 0/1\n{payload***REMOVED***"
+    return f"{_SYNC_MARKER_PREFIX} V1.0.0 corr-{rev} CHUNK 0/1\n{payload}"
 
 
 # ── Fixtures ────────────────────────────────────────────────────────────────
@@ -90,7 +90,7 @@ async def test_attach_listener_shutdown_stops_listener(coordinator, listener):
     assert coordinator._listener is listener
 
     # Mock listener.stop() to track calls
-    listener.stop = AsyncMock()  # type: ignore[method-assign***REMOVED***
+    listener.stop = AsyncMock()  # type: ignore[method-assign]
 
     await coordinator.shutdown()
     listener.stop.assert_awaited_once()
@@ -114,8 +114,8 @@ async def test_attach_listener_idempotent(coordinator, listener):
 async def test_shutdown_without_listener_still_works(coordinator):
     """shutdown() without listener attached still works (backward compat)."""
     result = await coordinator.shutdown()
-    assert result["ok"***REMOVED*** is True
-    assert result["drained"***REMOVED*** == 0
+    assert result["ok"] is True
+    assert result["drained"] == 0
 
 
 # ── 4. Full cycle: register → push_state → listener drains → shutdown ───────
@@ -141,15 +141,15 @@ async def test_full_cycle_push_listener_drain_shutdown(coordinator, listener):
         source_device_id="tg:42:test-laptop",
         revision=1,
         sync_mode=SyncMode.SAVED_MESSAGES,
-        updated_keys={"key_a": "value_a"***REMOVED***,
-        deleted_keys=[***REMOVED***,
+        updated_keys={"key_a": "value_a"},
+        deleted_keys=[],
     )
     push_result = await coordinator.push_state(delta)
-    assert push_result["ok"***REMOVED*** is True
-    assert push_result["chunk_count"***REMOVED*** == 1
+    assert push_result["ok"] is True
+    assert push_result["chunk_count"] == 1
 
     # Simulate incoming event (like Telethon would fire via _on_new_message)
-    text = _make_delta_text(rev=2, updated={"key_b": "value_b"***REMOVED***)
+    text = _make_delta_text(rev=2, updated={"key_b": "value_b"})
     listener._on_new_message(MagicMock(
         message=MagicMock(id=999, text=text)
     ))
@@ -174,8 +174,8 @@ async def test_full_cycle_push_listener_drain_shutdown(coordinator, listener):
         pass
 
     shutdown_result = await coordinator.shutdown()
-    assert shutdown_result["ok"***REMOVED*** is True
-    assert shutdown_result["drained"***REMOVED*** == 1  # pending push drained
+    assert shutdown_result["ok"] is True
+    assert shutdown_result["drained"] == 1  # pending push drained
 
 
 # ── 5. Listener stop called before push drain ───────────────────────────────
@@ -190,13 +190,13 @@ async def test_shutdown_calls_listener_stop_before_drain(coordinator, listener):
     and queue cleanup.
     """
     # Track call order
-    call_order: list[str***REMOVED*** = [***REMOVED***
+    call_order: list[str] = []
 
     # Mock listener.stop()
     async def tracking_stop():
         call_order.append("listener_stop")
 
-    listener.stop = tracking_stop  # type: ignore[method-assign***REMOVED***
+    listener.stop = tracking_stop  # type: ignore[method-assign]
     coordinator.attach_listener(listener)
 
     # Add a pending push item so drained count is > 0
@@ -207,17 +207,17 @@ async def test_shutdown_calls_listener_stop_before_drain(coordinator, listener):
             source_device_id="test",
             revision=0,
             sync_mode=SyncMode.SAVED_MESSAGES,
-            updated_keys={"k": "v"***REMOVED***,
-            deleted_keys=[***REMOVED***,
+            updated_keys={"k": "v"},
+            deleted_keys=[],
         ),
         signature=None,
         compression="none",
-        marker="##FB_STATE##",  # type: ignore[arg-type***REMOVED***
+        marker="##FB_STATE##",  # type: ignore[arg-type]
     )
     coordinator._pending_push.append(
         type("_PendingPush", (object,), {
             "envelope": env, "enqueued_ms": 1, "chunk_count": 1
-        ***REMOVED***)()
+        ])()
     )
 
     await coordinator.shutdown()
@@ -226,5 +226,5 @@ async def test_shutdown_calls_listener_stop_before_drain(coordinator, listener):
     # shutdown result: drained=1 implies drain happened after listener.stop()
     # (idempotent second call confirms first call completed)
     result = await coordinator.shutdown()
-    assert result["ok"***REMOVED*** is False
-    assert "already called" in result["error"***REMOVED***
+    assert result["ok"] is False
+    assert "already called" in result["error"]

@@ -21,7 +21,7 @@ import json
 import logging
 import sys
 import tempfile
-***REMOVED***
+}
 from typing import Sequence
 
 # Корень пакета lead_aggregator — чтобы импорты app.* работали при запуске
@@ -45,7 +45,7 @@ class _CaptureDelivery:
     """Перехватчик доставки для dry-run: ничего не отправляет, копит лиды."""
 
     def __init__(self) -> None:
-        self.captured: list[Lead***REMOVED*** = [***REMOVED***
+        self.captured: list[Lead] = []
 
     @property
     def enabled(self) -> bool:
@@ -53,7 +53,7 @@ class _CaptureDelivery:
 
     async def send(self, lead: Lead) -> bool:
         self.captured.append(lead)
-        logger.info("[dry***REMOVED*** lead %s score=%.0f", lead.source_id, lead.score)
+        logger.info("[dry) lead %s score=%.0f", lead.source_id, lead.score)
         return False
 
     async def aclose(self) -> None:
@@ -61,11 +61,11 @@ class _CaptureDelivery:
 
 
 # ── helpers ──────────────────────────────────────────────────────────
-def _parse_sources(value: str | None) -> list[str***REMOVED*** | None:
+def _parse_sources(value: str | None) -> list[str] | None:
     """Фильтр источников: 'kwork' / 'tg' / 'kwork,tg' / None = все."""
     if not value:
         return None
-    wanted: list[str***REMOVED*** = [***REMOVED***
+    wanted: list[str] = []
     for part in value.split(","):
         part = part.strip().lower()
         if part == "tg":
@@ -75,27 +75,27 @@ def _parse_sources(value: str | None) -> list[str***REMOVED*** | None:
     return wanted
 
 
-def _select_adapters(config, client: TLSClient, wanted: list[str***REMOVED*** | None):
+def _select_adapters(config, client: TLSClient, wanted: list[str] | None):
     adapters = build_default_adapters(config, client)
     if wanted is None:
         return adapters
-    return [a for a in adapters if a.name in wanted***REMOVED***
+    return [a for a in adapters if a.name in wanted]
 
 
 def _print_lead(idx: int, lead: Lead) -> None:
-    print(f"  {idx:>2***REMOVED***. [{lead.source:11s***REMOVED******REMOVED*** score={lead.score:5.1f***REMOVED*** intent={lead.intent:7s***REMOVED*** "
-          f"{lead.text[:90***REMOVED******REMOVED***")
+    print(f"  {idx:>2}. [{lead.source:11s}] score={lead.score:5.1f} intent={lead.intent:7s} "
+          f"{lead.text[:90]}")
     if lead.url:
-        print(f"      {lead.url***REMOVED***")
+        print(f"      {lead.url}")
 
 
-def _print_stats(stats: dict[str, int***REMOVED***) -> None:
-    print(f"      fetched={stats['fetched'***REMOVED******REMOVED*** new={stats['new'***REMOVED******REMOVED*** "
-          f"delivered={stats['delivered'***REMOVED******REMOVED*** errors={stats['errors'***REMOVED******REMOVED***")
+def _print_stats(stats: dict[str, int]) -> None:
+    print(f"      fetched={stats['fetched']} new={stats['new']} "
+          f"delivered={stats['delivered']} errors={stats['errors']}")
 
 
 # ── запуск ───────────────────────────────────────────────────────────
-async def _run_pipeline(config, adapters, delivery, checkpoint_db: Path) -> dict[str, int***REMOVED***:
+async def _run_pipeline(config, adapters, delivery, checkpoint_db: Path) -> dict[str, int]:
     """Один проход пайплайна; чекпоинты в checkpoint_db."""
     pipeline = LeadPipeline(
         config,
@@ -130,25 +130,25 @@ async def _cmd_once(config, args: argparse.Namespace) -> int:
 
     await client.aclose()
 
-    print(f"\n[lead_aggregator***REMOVED*** {'DRY-RUN' if args.dry_run else 'RUN'***REMOVED*** "
-          f"({', '.join(a.name for a in adapters)***REMOVED***)")
+    print(f"\n[lead_aggregator] {'DRY-RUN' if args.dry_run else 'RUN'} "
+          f"({', '.join(a.name for a in adapters)})")
     _print_stats(stats)
     if args.dry_run:
-        print(f"  → было бы доставлено лидов: {len(delivery.captured)***REMOVED***")
+        print(f"  → было бы доставлено лидов: {len(delivery.captured)}")
         for i, lead in enumerate(delivery.captured, 1):
             _print_lead(i, lead)
-        print(f"  [dry***REMOVED*** доставка отключена (temp-чекпоинты, без TG)")
+        print(f"  [dry] доставка отключена (temp-чекпоинты, без TG)")
     elif not delivery.enabled:
-        print("  [warn***REMOVED*** LA_TG_BOT_TOKEN/LA_TG_CHAT_ID не заданы — доставка не производилась")
+        print("  [warn) LA_TG_BOT_TOKEN/LA_TG_CHAT_ID не заданы — доставка не производилась")
     if args.json:
         payload = {"mode": "dry-run" if args.dry_run else "once", "stats": stats,
-                   "sources": [a.name for a in adapters***REMOVED******REMOVED***
+                   "sources": [a.name for a in adapters]]
         if args.dry_run:
-            payload["leads"***REMOVED*** = [{"id": l.source_id, "source": l.source,
+            payload["leads"] = [{"id": l.source_id, "source": l.source,
                                  "score": l.score, "intent": l.intent, "text": l.text,
-                                 "url": l.url***REMOVED*** for l in delivery.captured***REMOVED***
+                                 "url": l.url] for l in delivery.captured]
         print(json.dumps(payload, ensure_ascii=False))
-    return 0 if stats["errors"***REMOVED*** == 0 else 1
+    return 0 if stats["errors"] == 0 else 1
 
 
 async def _cmd_forever(config, args: argparse.Namespace) -> int:
@@ -161,16 +161,16 @@ async def _cmd_forever(config, args: argparse.Namespace) -> int:
         return 2
     delivery = TelegramDelivery(config.tg_bot_token, config.tg_chat_id)
     if not delivery.enabled:
-        print("[warn***REMOVED*** LA_TG_BOT_TOKEN/LA_TG_CHAT_ID не заданы — лиды только логируются")
+        print("[warn) LA_TG_BOT_TOKEN/LA_TG_CHAT_ID не заданы — лиды только логируются")
     pipeline = LeadPipeline(config, adapters, delivery=delivery,
                             checkpoint=CheckpointStore(config.checkpoint_db))
     interval = args.interval if args.interval else config.poll_interval_s
-    print(f"[lead_aggregator***REMOVED*** FOREVER ({', '.join(a.name for a in adapters)***REMOVED***), "
-          f"interval={interval***REMOVED***s. Ctrl+C для остановки.")
+    print(f"[lead_aggregator] FOREVER ({', '.join(a.name for a in adapters)}), "
+          f"interval={interval}s. Ctrl+C для остановки.")
     try:
         while True:
             stats = await pipeline.run_once()
-            print(f"  [cycle***REMOVED*** {stats***REMOVED***")
+            print(f"  [cycle] {stats}")
             await asyncio.sleep(interval)
     except (KeyboardInterrupt, asyncio.CancelledError):
         print("\nОстановлено пользователем.")
@@ -200,7 +200,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Sequence[str***REMOVED*** | None = None) -> int:
+def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     logging.basicConfig(
         level=logging.DEBUG if args.verbose else logging.WARNING,

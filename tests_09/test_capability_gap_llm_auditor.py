@@ -12,7 +12,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional
 
 import pytest
@@ -49,24 +49,24 @@ class _FakeGateway:
     В production вызовов нет: тесты полностью self-contained (нет сети).
     """
 
-    def __init__(self, content: str = "", raise_on_call: Optional[Exception***REMOVED*** = None) -> None:
+    def __init__(self, content: str = "", raise_on_call: Optional[Exception] = None) -> None:
         self._content = content
         self._raise = raise_on_call
-        self.calls: List[Dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+        self.calls: List[Dict[str, Any]] = []
 
     def generate_by_capabilities(
-        self, capabilities: List[str***REMOVED***, messages: List[Dict[str, Any***REMOVED******REMOVED***,
+        self, capabilities: List[str], messages: List[Dict[str, Any]],
     ) -> _FakeModelResponse:
-        self.calls.append({"capabilities": list(capabilities), "messages": list(messages)***REMOVED***)
+        self.calls.append({"capabilities": list(capabilities), "messages": list(messages)})
         if self._raise is not None:
             raise self._raise
         return _FakeModelResponse(self._content)
 
 
-def _make_fake_gateway_response(entries: List[Dict[str, Any***REMOVED******REMOVED***) -> str:
+def _make_fake_gateway_response(entries: List[Dict[str, Any]]) -> str:
     """Генерирует JSON-in-markdown fenced block (как отвечает реальный LLM)."""
     payload = json.dumps(entries, ensure_ascii=False, indent=2)
-    return f"```json\n{payload***REMOVED***\n```"
+    return f"```json\n{payload}\n```"
 
 
 # ─── fixtures (mirror tests_09/test_capability_gap_auditor.py) ────────────────
@@ -123,14 +123,14 @@ def seed_registry(empty_registry: MissingRegistry) -> MissingRegistry:
 
 @pytest.fixture(autouse=True)
 def _no_corpus_side_effects(monkeypatch):
-    """Stub corpus_persistence.lookup_by_source по default → [***REMOVED***.
+    """Stub corpus_persistence.lookup_by_source по default → [].
     Защищает существующие тесты от real-disk lookups в DEFAULT_CORPUS_DIR.
     """
     from scripts_01 import corpus_persistence as cp_mod
 
     def _stub_lookup_by_source(source, *, root=None):
         # Default: empty corpus, no real disk read.
-        return [***REMOVED***
+        return []
 
     monkeypatch.setattr(cp_mod, "lookup_by_source", _stub_lookup_by_source)
 
@@ -163,7 +163,7 @@ VOCAL_TASK_FRAGMENT = (
     "Зафиксировать гипотезы и статусы.\n\n"
     "## 11. Devil's advocate: kill-questions\n"
     "Написать опровержение и 3 kill-questions.\n\n"
-    "## 12. Claim source tracker [fact***REMOVED*** vs [observation***REMOVED*** vs [hypothesis***REMOVED***\n"
+    "## 12. Claim source tracker [fact] vs [observation] vs [hypothesis]\n"
     "Каждое утверждение пометить тегом.\n\n"
     "## 13. Vanity metric filter (лайк не успех)\n"
     "Не считать лайки/подписчиков успехом.\n\n"
@@ -182,15 +182,15 @@ VOCAL_TASK_FRAGMENT = (
 
 
 class TestParseLlmResponse:
-    """Парсер LLM-ответа: fenced ```json → fallback greedy [..***REMOVED*** → fail-safe."""
+    """Парсер LLM-ответа: fenced ```json → fallback greedy [..] → fail-safe."""
 
     def test_parses_fenced_json_block(self):
         caps = [
             {"item_id": "research_web", "kind": "tool", "factory": "research",
-             "description": "Web research", "confidence": 0.9, "explicit": True***REMOVED***,
+             "description": "Web research", "confidence": 0.9, "explicit": True],
             {"item_id": "claim_tracker", "kind": "module", "factory": "docs_10",
-             "description": "Claim tracker", "confidence": 0.7, "explicit": False***REMOVED***,
-        ***REMOVED***
+             "description": "Claim tracker", "confidence": 0.7, "explicit": False],
+        }
         content = (
             "Вот JSON: \n```json\n"
             + json.dumps(caps, ensure_ascii=False)
@@ -198,112 +198,112 @@ class TestParseLlmResponse:
         )
         out = _parse_llm_response(content)
         assert len(out) == 2
-        assert out[0***REMOVED***["item_id"***REMOVED*** == "research_web"
-        assert out[0***REMOVED***["explicit"***REMOVED*** is True
-        assert out[1***REMOVED***["confidence"***REMOVED*** == 0.7
+        assert out[0]["item_id"] == "research_web"
+        assert out[0]["explicit"] is True
+        assert out[1]["confidence"] == 0.7
 
     def test_fallback_to_greedy_brackets(self):
-        # Нет fenced-блока, но есть `[...***REMOVED***` в произвольном месте.
+        # Нет fenced-блока, но есть `[...]` в произвольном месте.
         caps = [{"item_id": "x", "kind": "tool", "factory": "nil",
-                 "description": "Some tool", "confidence": 0.5, "explicit": True***REMOVED******REMOVED***
+                 "description": "Some tool", "confidence": 0.5, "explicit": True]]
         content = "Some preamble text " + json.dumps(caps) + " trailing words"
         out = _parse_llm_response(content)
         assert len(out) == 1
-        assert out[0***REMOVED***["item_id"***REMOVED*** == "x"
+        assert out[0]["item_id"] == "x"
 
     def test_empty_string_returns_empty(self):
-        assert _parse_llm_response("") == [***REMOVED***
-        assert _parse_llm_response("   ") == [***REMOVED***
+        assert _parse_llm_response("") == []
+        assert _parse_llm_response("   ") == []
 
     def test_unparseable_json_returns_empty(self):
         # Есть скобки, но внутри не JSON.
         content = "```json\n{not a valid json:::\n```"
-        assert _parse_llm_response(content) == [***REMOVED***
+        assert _parse_llm_response(content) == []
 
     def test_json_object_not_array_returns_empty(self):
-        # Найден `{...***REMOVED***` или `[...***REMOVED***`, но это dict не list — per spec нужен массив.
-        content = "```json\n{\"key\": \"value\"***REMOVED***\n```"
-        assert _parse_llm_response(content) == [***REMOVED***
+        # Найден `{...}` или `[...]`, но это dict не list — per spec нужен массив.
+        content = "```json\n{\"key\": \"value\"]\n```"
+        assert _parse_llm_response(content) == []
 
     def test_drops_items_missing_required_fields(self):
         # ADR-016 fail-safe: 1 bad item не валит batch.
         caps = [
             {"item_id": "good_one", "kind": "tool", "factory": "research",
-             "description": "OK tool", "confidence": 0.8, "explicit": True***REMOVED***,
+             "description": "OK tool", "confidence": 0.8, "explicit": True],
             {"item_id": "missing_kind", "factory": "research",  # kind missing
-             "description": "Bad entry", "confidence": 0.5***REMOVED***,
+             "description": "Bad entry", "confidence": 0.5],
             {"kind": "tool", "factory": "research",  # item_id missing
-             "description": "Also bad", "confidence": 0.5***REMOVED***,
+             "description": "Also bad", "confidence": 0.5],
             {"item_id": "missing_desc", "kind": "tool",  # description missing
-             "factory": "research", "confidence": 0.5***REMOVED***,
+             "factory": "research", "confidence": 0.5],
             {"item_id": "", "kind": "tool",  # empty item_id
-             "factory": "research", "description": "x"***REMOVED***,
-        ***REMOVED***
+             "factory": "research", "description": "x"],
+        }
         content = "```json\n" + json.dumps(caps) + "\n```"
         out = _parse_llm_response(content)
         assert len(out) == 1
-        assert out[0***REMOVED***["item_id"***REMOVED*** == "good_one"
+        assert out[0]["item_id"] == "good_one"
 
     def test_uses_default_confidence_when_missing(self):
         caps = [{"item_id": "no_conf", "kind": "tool", "factory": "research",
-                 "description": "no confidence attribute", "explicit": True***REMOVED******REMOVED***
+                 "description": "no confidence attribute", "explicit": True]]
         out = _parse_llm_response("```json\n" + json.dumps(caps) + "\n```")
-        assert out[0***REMOVED***["confidence"***REMOVED*** == 0.5
+        assert out[0]["confidence"] == 0.5
 
     def test_uses_default_explicit_false_when_missing(self):
         caps = [{"item_id": "no_explicit", "kind": "tool", "factory": "research",
-                 "description": "no explicit attr", "confidence": 0.5***REMOVED******REMOVED***
+                 "description": "no explicit attr", "confidence": 0.5]]
         out = _parse_llm_response("```json\n" + json.dumps(caps) + "\n```")
-        assert out[0***REMOVED***["explicit"***REMOVED*** is False
+        assert out[0]["explicit"] is False
 
     def test_non_dict_items_dropped_silently(self):
         # Если LLM вернул массив со скалярами или списками — drop, не crash.
         caps = [
             "just a string",
-            ["nested", "list"***REMOVED***,
+            ["nested", "list"],
             42,
             None,
             {"item_id": "ok", "kind": "tool", "factory": "research",
-             "description": "good", "confidence": 0.5, "explicit": False***REMOVED***,
-        ***REMOVED***
+             "description": "good", "confidence": 0.5, "explicit": False],
+        }
         content = "```json\n" + json.dumps(caps) + "\n```"
         out = _parse_llm_response(content)
         assert len(out) == 1
-        assert out[0***REMOVED***["item_id"***REMOVED*** == "ok"
+        assert out[0]["item_id"] == "ok"
 
     def test_handles_markdown_block_without_newline_inside(self):
-        # Edge case: ```json[***REMOVED***``` (без внутренних \n).
+        # Edge case: ```json[]``` (без внутренних \n).
         caps = [{"item_id": "tight", "kind": "tool", "factory": "nil",
-                 "description": "tight block", "confidence": 0.5, "explicit": True***REMOVED******REMOVED***
+                 "description": "tight block", "confidence": 0.5, "explicit": True]]
         content = "```json" + json.dumps(caps) + "```"
         out = _parse_llm_response(content)
         assert len(out) == 1
-        assert out[0***REMOVED***["item_id"***REMOVED*** == "tight"
+        assert out[0]["item_id"] == "tight"
 
     def test_drops_items_with_unknown_kind(self):
         """ANTI-6b vocabulary defense: kind вне _KINDS тихо отбрасываются (silent reject).
 
         Per код-ревью v5.189.55: LLM_SYSTEM_PROMPT объявляет kind в закрытом множестве
-        ``{tool, module, role, engine***REMOVED***`` (MissingRegistry.KINDS), но парсер должен
+        ``{tool, module, role, engine}`` (MissingRegistry.KINDS), но парсер должен
         валидировать и тихо отбрасывать нарушителей, иначе — silent drift в registry
         cross-check (kind="service"/"agent"/"skill" никогда не зарегистрированы).
         """
         caps = [
             {"item_id": "good_tool", "kind": "tool", "factory": "research",
-             "description": "valid tool", "confidence": 0.5, "explicit": True***REMOVED***,
+             "description": "valid tool", "confidence": 0.5, "explicit": True],
             {"item_id": "good_module", "kind": "module", "factory": "docs_10",
-             "description": "valid module", "confidence": 0.5, "explicit": False***REMOVED***,
+             "description": "valid module", "confidence": 0.5, "explicit": False],
             {"item_id": "bad_service", "kind": "service",  # not in _KINDS
-             "factory": "research", "description": "service kind rejected", "confidence": 0.5***REMOVED***,
+             "factory": "research", "description": "service kind rejected", "confidence": 0.5],
             {"item_id": "bad_agent", "kind": "agent",  # not in _KINDS
-             "factory": "research", "description": "agent kind rejected", "confidence": 0.5***REMOVED***,
+             "factory": "research", "description": "agent kind rejected", "confidence": 0.5],
             {"item_id": "bad_skill", "kind": "skill",  # not in _KINDS
-             "factory": "research", "description": "skill kind rejected", "confidence": 0.5***REMOVED***,
-        ***REMOVED***
+             "factory": "research", "description": "skill kind rejected", "confidence": 0.5],
+        }
         content = "```json\n" + json.dumps(caps) + "\n```"
         out = _parse_llm_response(content)
         assert len(out) == 2
-        assert {item["item_id"***REMOVED*** for item in out***REMOVED*** == {"good_tool", "good_module"***REMOVED***
+        assert {item["item_id"] for item in out} == {"good_tool", "good_module"}
 
 
 # ─── TestCapabilityGapReporterLLM (reused Reporter с pre_extracted_entries) ───
@@ -316,23 +316,23 @@ class TestCapabilityGapReporterLLM:
         entries = {
             "research_web": ("tool", "research", "Web research"),
             "corpus_persistence": ("tool", "nil", "Corpus persistence"),
-        ***REMOVED***
+        }
         reporter = CapabilityGapReporter(registry=None, pre_extracted_entries=entries)
-        md = reporter.render([("(section A)", "web research"), ("(section B)", "corpus")***REMOVED***)
+        md = reporter.render([("(section A)", "web research"), ("(section B)", "corpus")])
         assert "`research_web`" in md
         assert "`corpus_persistence`" in md
-        summary_line = [l for l in md.splitlines() if "Уникальных требуемых" in l***REMOVED***[0***REMOVED***
+        summary_line = [l for l in md.splitlines() if "Уникальных требуемых" in l][0]
         assert "**Уникальных требуемых capabilities:** 2" in summary_line
 
     def test_llm_path_treats_existing_registry(self, seed_registry):
         entries = {
             "research_web": ("tool", "research", "Web research"),  # implemented
             "lisa_estimator": ("tool", "research", "Lisa estimator"),  # registered
-        ***REMOVED***
+        }
         reporter = CapabilityGapReporter(
             registry=seed_registry, pre_extracted_entries=entries,
         )
-        md = reporter.render([("(LLM-extracted)", "web research lisa")***REMOVED***)
+        md = reporter.render([("(LLM-extracted)", "web research lisa")])
         # summary table reflects cross-check against seed_registry.
         assert "`implemented`" in md
         assert "`registered`" in md
@@ -343,15 +343,15 @@ class TestCapabilityGapReporterLLM:
         # добавить research_web автоматически (LLM-mode игнорирует keyword extraction).
         reporter = CapabilityGapReporter(
             registry=None,
-            pre_extracted_entries={"only_llm_cap": ("tool", "nil", "only LLM")***REMOVED***,
+            pre_extracted_entries={"only_llm_cap": ("tool", "nil", "only LLM")},
         )
-        md = reporter.render([("(section)", "web research URL")***REMOVED***)
+        md = reporter.render([("(section)", "web research URL")])
         assert "`only_llm_cap`" in md
         assert "`research_web`" not in md
 
     def test_empty_pre_extracted_still_renders_empty_table(self):
-        reporter = CapabilityGapReporter(registry=None, pre_extracted_entries={***REMOVED***)
-        md = reporter.render([("(section)", "some text")***REMOVED***)
+        reporter = CapabilityGapReporter(registry=None, pre_extracted_entries={})
+        md = reporter.render([("(section)", "some text")])
         assert "**Уникальных требуемых capabilities:** 0" in md
         # При пустом списке — сообщение «всё реализовано» (first-slice empty).
         assert "Все блокеры закрыты" in md or "Регистрация не требуется" in md
@@ -370,9 +370,9 @@ class TestCapabilityGapReporterLLM:
         entries = {
             "research_web": ("tool", "research", "Web research"),
             "corpus_persistence": ("tool", "nil", "Corpus persistence"),
-        ***REMOVED***
+        }
         reporter = CapabilityGapReporter(registry=None, pre_extracted_entries=entries)
-        md = reporter.render([("(section A)", "web research"), ("(section B)", "corpus")***REMOVED***)
+        md = reporter.render([("(section A)", "web research"), ("(section B)", "corpus")])
         # Утверждение 1: flat-list header присутствует.
         assert "## 2. LLM-extracted capabilities (flat list)" in md
         # Утверждение 2: старое per-section поведение НЕ должно появляться.
@@ -393,50 +393,50 @@ class TestCapabilityGapLlmExecutor:
     def test_executor_writes_report_on_valid_response(self, project, empty_registry):
         (project.root / "задача.md").write_text(VOCAL_TASK_FRAGMENT, encoding="utf-8")
         caps = [
-            {"item_id": f"c{i***REMOVED***", "kind": "tool", "factory": "research",
-             "description": f"cap-{i***REMOVED***", "confidence": 0.5, "explicit": i % 2 == 0***REMOVED***
+            {"item_id": f"c{i}", "kind": "tool", "factory": "research",
+             "description": f"cap-{i}", "confidence": 0.5, "explicit": i % 2 == 0]
             for i in range(20)
-        ***REMOVED***
+        }
         gateway = _FakeGateway(content=_make_fake_gateway_response(caps))
         executor = CapabilityGapLlmExecutor(gateway=gateway, registry=empty_registry)
         created = executor.execute(project, LLM_ROLE_ID)
-        assert created == [LLM_REPORT_FILE***REMOVED***
+        assert created == [LLM_REPORT_FILE]
         assert (project.root / LLM_REPORT_FILE).is_file()
         # Gateway был вызван с правильными capability-тэгами.
         assert len(gateway.calls) == 1
-        assert "plan" in gateway.calls[0***REMOVED***["capabilities"***REMOVED***
+        assert "plan" in gateway.calls[0]["capabilities"]
         # System prompt + user prompt содержат task.
-        messages = gateway.calls[0***REMOVED***["messages"***REMOVED***
-        assert any("expert платформенный" in m["content"***REMOVED*** for m in messages if m["role"***REMOVED*** == "system")
-        assert any("VOCAL" in m["content"***REMOVED*** or "рынок вокала" in m["content"***REMOVED*** for m in messages if m["role"***REMOVED*** == "user")
+        messages = gateway.calls[0]["messages"]
+        assert any("expert платформенный" in m["content"] for m in messages if m["role"] == "system")
+        assert any("VOCAL" in m["content"] or "рынок вокала" in m["content"] for m in messages if m["role"] == "user")
 
     def test_executor_no_gateway_returns_empty(self, project, empty_registry):
         (project.root / "задача.md").write_text(VOCAL_TASK_FRAGMENT, encoding="utf-8")
         executor = CapabilityGapLlmExecutor(gateway=None, registry=empty_registry)
         created = executor.execute(project, LLM_ROLE_ID)
-        assert created == [***REMOVED***
+        assert created == []
         assert not (project.root / LLM_REPORT_FILE).exists()
 
     def test_executor_short_text_returns_empty(self, project, empty_registry):
         (project.root / "задача.md").write_text("короткий текст", encoding="utf-8")
-        gateway = _FakeGateway(content="```json\n[***REMOVED***\n```")
+        gateway = _FakeGateway(content="```json\n[)\n```")
         executor = CapabilityGapLlmExecutor(gateway=gateway, registry=empty_registry)
         created = executor.execute(project, LLM_ROLE_ID)
-        assert created == [***REMOVED***
+        assert created == []
 
     def test_executor_no_task_file_returns_empty(self, project, empty_registry):
         executor = CapabilityGapLlmExecutor(
             gateway=_FakeGateway(content="..."), registry=empty_registry,
         )
         created = executor.execute(project, LLM_ROLE_ID)
-        assert created == [***REMOVED***
+        assert created == []
 
     def test_executor_gateway_raises_returns_empty(self, project, empty_registry):
         (project.root / "задача.md").write_text(VOCAL_TASK_FRAGMENT, encoding="utf-8")
         gateway = _FakeGateway(raise_on_call=RuntimeError("simulated gateway crash"))
         executor = CapabilityGapLlmExecutor(gateway=gateway, registry=empty_registry)
         created = executor.execute(project, LLM_ROLE_ID)
-        assert created == [***REMOVED***  # ADR-016 fail-safe
+        assert created == []  # ADR-016 fail-safe
         assert not (project.root / LLM_REPORT_FILE).exists()
 
     def test_executor_unparseable_response_returns_empty(self, project, empty_registry):
@@ -444,7 +444,7 @@ class TestCapabilityGapLlmExecutor:
         gateway = _FakeGateway(content="No JSON here, just plain text response.")
         executor = CapabilityGapLlmExecutor(gateway=gateway, registry=empty_registry)
         created = executor.execute(project, LLM_ROLE_ID)
-        assert created == [***REMOVED***
+        assert created == []
 
     def test_executor_partial_corruption_drops_bad_keeps_good(
         self, project, empty_registry,
@@ -453,18 +453,18 @@ class TestCapabilityGapLlmExecutor:
         # 3 валидных + 2 невалидных.
         mixed = [
             {"item_id": "good_1", "kind": "tool", "factory": "nil",
-             "description": "ok-1", "confidence": 0.5, "explicit": True***REMOVED***,
-            {"kind": "tool", "factory": "nil", "description": "no item_id"***REMOVED***,  # bad
+             "description": "ok-1", "confidence": 0.5, "explicit": True],
+            {"kind": "tool", "factory": "nil", "description": "no item_id"},  # bad
             {"item_id": "good_2", "kind": "module", "factory": "docs_10",
-             "description": "ok-2", "confidence": 0.7, "explicit": False***REMOVED***,
+             "description": "ok-2", "confidence": 0.7, "explicit": False],
             None,  # bad
             {"item_id": "good_3", "kind": "role", "factory": "governance",
-             "description": "ok-3", "confidence": 0.9, "explicit": True***REMOVED***,
-        ***REMOVED***
+             "description": "ok-3", "confidence": 0.9, "explicit": True],
+        }
         gateway = _FakeGateway(content=_make_fake_gateway_response(mixed))
         executor = CapabilityGapLlmExecutor(gateway=gateway, registry=empty_registry)
         created = executor.execute(project, LLM_ROLE_ID)
-        assert created == [LLM_REPORT_FILE***REMOVED***
+        assert created == [LLM_REPORT_FILE]
         content = (project.root / LLM_REPORT_FILE).read_text(encoding="utf-8")
         assert "`good_1`" in content
         assert "`good_2`" in content
@@ -486,7 +486,7 @@ class TestCapabilityGapLlmExecutorQuality:
             "devil_advocate_pass", "claim_source_tracker",
             "vanity_metric_filter", "weighted_scoring_engine",
             "corpus_persistence", "persona_funnel_analyzer",
-        ***REMOVED***
+        ]
         inferred_meta_7 = [
             "execution_log",         # runtime logging (meta-infra)
             "model_benchmark",       # capability benchmark framework
@@ -495,14 +495,14 @@ class TestCapabilityGapLlmExecutorQuality:
             "output_archiver",       # report archival across sessions
             "schema_validator",      # LLM JSON schema validation
             "cost_estimator",        # per-call credit budget tracking
-        ***REMOVED***
+        ]
         all_caps = curated_15 + inferred_meta_7
         assert len(all_caps) == 22
 
         entries = {
-            cap: ("tool", "research", f"Capability {cap***REMOVED*** (inferred by fake LLM)")
+            cap: ("tool", "research", f"Capability {cap} (inferred by fake LLM)")
             for cap in all_caps
-        ***REMOVED***
+        }
 
         from core_02.capability_gap_auditor import _split_sections
         sections = _split_sections(VOCAL_TASK_FRAGMENT)
@@ -510,9 +510,9 @@ class TestCapabilityGapLlmExecutorQuality:
         md = reporter.render(sections)
 
         # Считаем строки в таблице.
-        table_section = md.split("## 1. Сводная таблица", 1)[1***REMOVED***.split("## 2.", 1)[0***REMOVED***
-        rows = [l for l in table_section.splitlines() if l.startswith("| `")***REMOVED***
-        assert len(rows) == 22, f"expected 22 capabilities; got {len(rows)***REMOVED***"
+        table_section = md.split("## 1. Сводная таблица", 1)[1].split("## 2.", 1)[0]
+        rows = [l for l in table_section.splitlines() if l.startswith("| `")]
+        assert len(rows) == 22, f"expected 22 capabilities; got {len(rows)}"
         # Качественный баръер: ≥18 (на 20%+ больше детерминированного).
         assert len(rows) >= 18, f"quality bar: LLM should give ≥18 caps vs deterministic 15"
 
@@ -537,14 +537,14 @@ class TestCapabilityGapLlmExecutorNoSideEffects:
     def test_does_not_mutate_registry(self, seed_registry, project):
         (project.root / "задача.md").write_text(VOCAL_TASK_FRAGMENT, encoding="utf-8")
         before = sorted(seed_registry.list_all(), key=lambda i: i.item_id)
-        caps = [{"item_id": f"c{i***REMOVED***", "kind": "tool", "factory": "research",
-                 "description": f"cap {i***REMOVED***", "confidence": 0.5, "explicit": True***REMOVED***
-                for i in range(20)***REMOVED***
+        caps = [{"item_id": f"c{i}", "kind": "tool", "factory": "research",
+                 "description": f"cap {i}", "confidence": 0.5, "explicit": True]
+                for i in range(20)]
         gateway = _FakeGateway(content=_make_fake_gateway_response(caps))
         executor = CapabilityGapLlmExecutor(gateway=gateway, registry=seed_registry)
         executor.execute(project, LLM_ROLE_ID)
         after = sorted(seed_registry.list_all(), key=lambda i: i.item_id)
-        assert [i.item_id for i in before***REMOVED*** == [i.item_id for i in after***REMOVED***
+        assert [i.item_id for i in before] == [i.item_id for i in after]
 
 
 # ─── Reuse deterministic (regression: deterministic variant не сломан) ────────
@@ -555,7 +555,7 @@ class TestDeterministicVariantUnaffected:
         (project.root / "задача.md").write_text(VOCAL_TASK_FRAGMENT, encoding="utf-8")
         ex = CapabilityGapAuditorExecutor(registry=empty_registry)
         created = ex.execute(project, "capability_gap_auditor")
-        assert created == ["capability_gap_report.md"***REMOVED***
+        assert created == ["capability_gap_report.md"]
 
 
 # ─── Corpus context integration (v5.189.57) ────
@@ -577,13 +577,13 @@ class TestCorpusContextIntegration:
         # 5 fake entries: timestamps so i=1 is newest, i=5 oldest.
         fake_entries = [
             cp_mod.CorpusEntry(
-                url=f"https://prior{i***REMOVED***.example.com/",
+                url=f"https://prior{i}.example.com/",
                 source=LLM_ROLE_ID,
-                timestamp=f"2026-08-{20 - i:02d***REMOVED***T00:00:00Z",
-                title=f"Prior Source {i***REMOVED***",
+                timestamp=f"2026-08-{20 - i:02d}T00:00:00Z",
+                title=f"Prior Source {i}",
             )
             for i in range(1, 6)
-        ***REMOVED***
+        ]
         monkeypatch.setattr(
             cp_mod, "lookup_by_source",
             lambda source, *, root=None: fake_entries,
@@ -591,30 +591,30 @@ class TestCorpusContextIntegration:
 
         (project.root / "задача.md").write_text(VOCAL_TASK_FRAGMENT, encoding="utf-8")
         caps = [
-            {"item_id": f"c{i***REMOVED***", "kind": "tool", "factory": "research",
-             "description": f"cap {i***REMOVED***", "confidence": 0.5, "explicit": True***REMOVED***
+            {"item_id": f"c{i}", "kind": "tool", "factory": "research",
+             "description": f"cap {i}", "confidence": 0.5, "explicit": True]
             for i in range(20)
-        ***REMOVED***
+        }
         gateway = _FakeGateway(content=_make_fake_gateway_response(caps))
 
         executor = CapabilityGapLlmExecutor(
             gateway=gateway, registry=empty_registry,
         )
         created = executor.execute(project, LLM_ROLE_ID)
-        assert created == [LLM_REPORT_FILE***REMOVED***
+        assert created == [LLM_REPORT_FILE]
 
         assert len(gateway.calls) == 1
-        user_message = gateway.calls[0***REMOVED***["messages"***REMOVED***[1***REMOVED***["content"***REMOVED***
+        user_message = gateway.calls[0]["messages"][1]["content"]
         # Context header injected.
         assert "PRIOR CORPUS CONTEXT" in user_message
         # All 5 URLs listed.
         for i in range(1, 6):
-            assert f"https://prior{i***REMOVED***.example.com/" in user_message
+            assert f"https://prior{i}.example.com/" in user_message
         # Order: newest first → prior1 before prior5.
         idx_1 = user_message.index("https://prior1.example.com/")
         idx_5 = user_message.index("https://prior5.example.com/")
         assert idx_1 < idx_5, (
-            f"expected newest (prior1) before oldest (prior5); got idx_1={idx_1***REMOVED***, idx_5={idx_5***REMOVED***"
+            f"expected newest (prior1) before oldest (prior5); got idx_1={idx_1}, idx_5={idx_5}"
         )
         # Anti-anchoring framing present (defends against LLM over-anchoring).
         # Per code-reviewer v5.189.57 commit: STRONGER framing than "memory, NOT a constraint"
@@ -631,14 +631,14 @@ class TestCorpusContextIntegration:
         from scripts_01 import corpus_persistence as cp_mod
         monkeypatch.setattr(
             cp_mod, "lookup_by_source",
-            lambda source, *, root=None: [***REMOVED***,
+            lambda source, *, root=None: [],
         )
 
         (project.root / "задача.md").write_text(VOCAL_TASK_FRAGMENT, encoding="utf-8")
         caps = [
             {"item_id": "c1", "kind": "tool", "factory": "research",
-             "description": "x", "confidence": 0.5, "explicit": True***REMOVED***,
-        ***REMOVED***
+             "description": "x", "confidence": 0.5, "explicit": True],
+        }
         gateway = _FakeGateway(content=_make_fake_gateway_response(caps))
 
         executor = CapabilityGapLlmExecutor(
@@ -646,7 +646,7 @@ class TestCorpusContextIntegration:
         )
         executor.execute(project, LLM_ROLE_ID)
 
-        user_message = gateway.calls[0***REMOVED***["messages"***REMOVED***[1***REMOVED***["content"***REMOVED***
+        user_message = gateway.calls[0]["messages"][1]["content"]
         # NO context block.
         assert "PRIOR CORPUS CONTEXT" not in user_message
         # Normal user prompt + task fragment still present.
@@ -665,8 +665,8 @@ class TestCorpusContextIntegration:
         (project.root / "задача.md").write_text(VOCAL_TASK_FRAGMENT, encoding="utf-8")
         caps = [
             {"item_id": "c1", "kind": "tool", "factory": "research",
-             "description": "x", "confidence": 0.5, "explicit": True***REMOVED***,
-        ***REMOVED***
+             "description": "x", "confidence": 0.5, "explicit": True],
+        }
         gateway = _FakeGateway(content=_make_fake_gateway_response(caps))
 
         executor = CapabilityGapLlmExecutor(
@@ -674,8 +674,8 @@ class TestCorpusContextIntegration:
         )
         created = executor.execute(project, LLM_ROLE_ID)  # Must NOT raise
         # Research completed successfully despite corpus lookup failure.
-        assert created == [LLM_REPORT_FILE***REMOVED***
-        user_message = gateway.calls[0***REMOVED***["messages"***REMOVED***[1***REMOVED***["content"***REMOVED***
+        assert created == [LLM_REPORT_FILE]
+        user_message = gateway.calls[0]["messages"][1]["content"]
         # Context block silently omitted; normal task prompt still present.
         assert "PRIOR CORPUS CONTEXT" not in user_message
         assert "рынок вокала" in user_message
@@ -686,19 +686,19 @@ class TestCorpusContextIntegration:
         """corpus_context_enabled=False → lookup NOT called, no context block."""
         from scripts_01 import corpus_persistence as cp_mod
 
-        lookup_calls: list = [***REMOVED***
+        lookup_calls: list = []
 
         def _tracker(source, **kwargs):
-            lookup_calls.append({"called": True***REMOVED***)
-            return [***REMOVED***
+            lookup_calls.append({"called": True})
+            return []
 
         monkeypatch.setattr(cp_mod, "lookup_by_source", _tracker)
 
         (project.root / "задача.md").write_text(VOCAL_TASK_FRAGMENT, encoding="utf-8")
         caps = [
             {"item_id": "c1", "kind": "tool", "factory": "research",
-             "description": "x", "confidence": 0.5, "explicit": True***REMOVED***,
-        ***REMOVED***
+             "description": "x", "confidence": 0.5, "explicit": True],
+        }
         gateway = _FakeGateway(content=_make_fake_gateway_response(caps))
 
         executor = CapabilityGapLlmExecutor(
@@ -708,8 +708,8 @@ class TestCorpusContextIntegration:
         executor.execute(project, LLM_ROLE_ID)
 
         # Explicit opt-out: lookup NOT called.
-        assert lookup_calls == [***REMOVED***
-        user_message = gateway.calls[0***REMOVED***["messages"***REMOVED***[1***REMOVED***["content"***REMOVED***
+        assert lookup_calls == []
+        user_message = gateway.calls[0]["messages"][1]["content"]
         assert "PRIOR CORPUS CONTEXT" not in user_message
         assert "рынок вокала" in user_message
 
@@ -720,7 +720,7 @@ class TestCorpusContextIntegration:
 
         Защита от регрессии dedup-логики: если future edit удалит dedup → прежние 6 тестов
         останутся зелёными (т.к. используют unique URLs). Этот тест гарантирует, что если
-        entries содержит [url_A_old, url_A_new, url_B, url_A_old2***REMOVED***, итог = [url_A_new, url_B***REMOVED***
+        entries содержит [url_A_old, url_A_new, url_B, url_A_old2], итог = [url_A_new, url_B]
         (newest wins per URL).
         """
         from scripts_01 import corpus_persistence as cp_mod
@@ -750,7 +750,7 @@ class TestCorpusContextIntegration:
                 timestamp="2026-08-12T00:00:00Z",  # middle A — should be dropped
                 title="URL A v1 (middle)",
             ),
-        ***REMOVED***
+        ]
         monkeypatch.setattr(
             cp_mod, "lookup_by_source",
             lambda source, *, root=None: fake_entries,
@@ -759,25 +759,25 @@ class TestCorpusContextIntegration:
         (project.root / "задача.md").write_text(VOCAL_TASK_FRAGMENT, encoding="utf-8")
         caps = [
             {"item_id": "c1", "kind": "tool", "factory": "research",
-             "description": "x", "confidence": 0.5, "explicit": True***REMOVED***,
-        ***REMOVED***
+             "description": "x", "confidence": 0.5, "explicit": True],
+        }
         gateway = _FakeGateway(content=_make_fake_gateway_response(caps))
 
         executor = CapabilityGapLlmExecutor(
             gateway=gateway, registry=empty_registry,
         )
         executor.execute(project, LLM_ROLE_ID)
-        user_message = gateway.calls[0***REMOVED***["messages"***REMOVED***[1***REMOVED***["content"***REMOVED***
+        user_message = gateway.calls[0]["messages"][1]["content"]
 
         # Counts: exactly 2 distinct URLs (A и B).
         url_a_count = user_message.count("https://url-a.example.com/v1")
         url_b_count = user_message.count("https://url-b.example.com/v1")
         # А появляется ровно 1 раз (newest), В — 1 раз. Дубликаты A (oldest, middle) — dropped.
         assert url_a_count == 1, (
-            f"expected URL A exactly once (newest); got {url_a_count***REMOVED*** occurrences. "
+            f"expected URL A exactly once (newest); got {url_a_count} occurrences. "
             f"Dedup broken."
         )
-        assert url_b_count == 1, f"expected URL B once; got {url_b_count***REMOVED***"
+        assert url_b_count == 1, f"expected URL B once; got {url_b_count}"
         # Newest A wins. URL A v1 (newest) присутствует, остальные — нет.
         assert "URL A v1 (newest)" in user_message
         assert "URL A v1 (oldest)" not in user_message
@@ -793,7 +793,7 @@ class TestCorpusContextIntegration:
         idx_a = user_message.index("URL A v1 (newest)")
         idx_b = user_message.index("URL B v1")
         assert idx_a < idx_b, (
-            f"expected newest URL A before URL B; got idx_a={idx_a***REMOVED***, idx_b={idx_b***REMOVED***"
+            f"expected newest URL A before URL B; got idx_a={idx_a}, idx_b={idx_b}"
         )
 
     def test_corpus_context_limits_to_top_5(
@@ -806,13 +806,13 @@ class TestCorpusContextIntegration:
         total = _CORPUS_CONTEXT_TOP_K + 5
         fake_entries = [
             cp_mod.CorpusEntry(
-                url=f"https://cap{i***REMOVED***.example.com/",
+                url=f"https://cap{i}.example.com/",
                 source=LLM_ROLE_ID,
-                timestamp=f"2026-08-{20 - i:02d***REMOVED***T00:00:00Z",
-                title=f"Cap {i***REMOVED***",
+                timestamp=f"2026-08-{20 - i:02d}T00:00:00Z",
+                title=f"Cap {i}",
             )
             for i in range(1, total + 1)
-        ***REMOVED***
+        ]
         monkeypatch.setattr(
             cp_mod, "lookup_by_source",
             lambda source, *, root=None: fake_entries,
@@ -820,33 +820,33 @@ class TestCorpusContextIntegration:
 
         (project.root / "задача.md").write_text(VOCAL_TASK_FRAGMENT, encoding="utf-8")
         caps = [
-            {"item_id": f"c{i***REMOVED***", "kind": "tool", "factory": "research",
-             "description": f"cap {i***REMOVED***", "confidence": 0.5, "explicit": True***REMOVED***
+            {"item_id": f"c{i}", "kind": "tool", "factory": "research",
+             "description": f"cap {i}", "confidence": 0.5, "explicit": True]
             for i in range(20)
-        ***REMOVED***
+        }
         gateway = _FakeGateway(content=_make_fake_gateway_response(caps))
 
         executor = CapabilityGapLlmExecutor(
             gateway=gateway, registry=empty_registry,
         )
         executor.execute(project, LLM_ROLE_ID)
-        user_message = gateway.calls[0***REMOVED***["messages"***REMOVED***[1***REMOVED***["content"***REMOVED***
+        user_message = gateway.calls[0]["messages"][1]["content"]
         # Top-_CORPUS_CONTEXT_TOP_K (newest first): cap1..capTOP_K included.
         for i in range(1, _CORPUS_CONTEXT_TOP_K + 1):
-            assert f"https://cap{i***REMOVED***.example.com/" in user_message, (
-                f"expected cap{i***REMOVED*** (top-{_CORPUS_CONTEXT_TOP_K***REMOVED***) in user_message"
+            assert f"https://cap{i}.example.com/" in user_message, (
+                f"expected cap{i} (top-{_CORPUS_CONTEXT_TOP_K}) in user_message"
             )
         # capTOP_K+1..total — omitted.
         for i in range(_CORPUS_CONTEXT_TOP_K + 1, total + 1):
-            assert f"https://cap{i***REMOVED***.example.com/" not in user_message, (
-                f"cap{i***REMOVED*** (beyond TOP_K={_CORPUS_CONTEXT_TOP_K***REMOVED***) should be truncated"
+            assert f"https://cap{i}.example.com/" not in user_message, (
+                f"cap{i} (beyond TOP_K={_CORPUS_CONTEXT_TOP_K}) should be truncated"
             )
 
     def test_corpus_root_propagated_to_lookup(self, monkeypatch, project, tmp_path):
         """corpus_root=tmp_path → lookup_by_source получает root=tmp_path (DI)."""
         from scripts_01 import corpus_persistence as cp_mod
 
-        captured_roots: list = [***REMOVED***
+        captured_roots: list = []
         fake_entry = cp_mod.CorpusEntry(
             url="https://custom-root.example.com/",
             source=LLM_ROLE_ID,
@@ -856,14 +856,14 @@ class TestCorpusContextIntegration:
 
         def _capture_root(source, *, root=None):
             captured_roots.append(root)
-            return [fake_entry***REMOVED***
+            return [fake_entry]
 
         monkeypatch.setattr(cp_mod, "lookup_by_source", _capture_root)
         (project.root / "задача.md").write_text(VOCAL_TASK_FRAGMENT, encoding="utf-8")
         caps = [
             {"item_id": "c1", "kind": "tool", "factory": "research",
-             "description": "x", "confidence": 0.5, "explicit": True***REMOVED***,
-        ***REMOVED***
+             "description": "x", "confidence": 0.5, "explicit": True],
+        }
         gateway = _FakeGateway(content=_make_fake_gateway_response(caps))
 
         executor = CapabilityGapLlmExecutor(
@@ -874,4 +874,4 @@ class TestCorpusContextIntegration:
 
         # lookup получил root=tmp_path (НЕ None / НЕ default DEFAULT_CORPUS_DIR).
         assert len(captured_roots) == 1
-        assert captured_roots[0***REMOVED*** == tmp_path
+        assert captured_roots[0] == tmp_path

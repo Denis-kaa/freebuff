@@ -33,7 +33,7 @@ import threading
 from collections import deque
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 
@@ -44,7 +44,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple
 REL_TYPES = {
     "references", "parent", "child", "depends",
     "related", "tagged", "contains",
-***REMOVED***
+}
 
 REL_INVERSE = {
     "references": "referenced_by",
@@ -54,13 +54,13 @@ REL_INVERSE = {
     "related": "related",          # symmetric
     "tagged": "tags",
     "contains": "part_of",
-***REMOVED***
+}
 
 # Для симметричных отношений — обе стороны храним одинаково
-SYMMETRIC_RELS = {"related"***REMOVED***
+SYMMETRIC_RELS = {"related"}
 
 # Для обратных отношений — создаём автоматически
-AUTO_INVERSE = {"parent", "references", "depends", "contains", "tagged"***REMOVED***
+AUTO_INVERSE = {"parent", "references", "depends", "contains", "tagged"}
 
 
 @dataclass
@@ -70,7 +70,7 @@ class Edge:
     target_id: str
     rel_type: str
     weight: float = 1.0
-    metadata: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
     created_at: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
@@ -82,13 +82,13 @@ class Node:
     doc_id: str
     node_type: str = "document"
     label: str = ""
-    metadata: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class PathResult:
     """Результат поиска пути в графе."""
-    path: List[Tuple[str, str, str***REMOVED******REMOVED***  # [(from, to, rel_type), ...***REMOVED***
+    path: List[Tuple[str, str, str]]  # [(from, to, rel_type), ...]
     length: int = 0
     total_weight: float = 0.0
 
@@ -98,7 +98,7 @@ class GraphStats:
     """Статистика графа."""
     total_nodes: int = 0
     total_edges: int = 0
-    edge_types: Dict[str, int***REMOVED*** = field(default_factory=dict)
+    edge_types: Dict[str, int] = field(default_factory=dict)
     isolated_nodes: int = 0
 
 
@@ -142,7 +142,7 @@ class GraphIndex:
                     doc_id TEXT PRIMARY KEY,
                     node_type TEXT DEFAULT 'document',
                     label TEXT DEFAULT '',
-                    metadata TEXT DEFAULT '{***REMOVED***',
+                    metadata TEXT DEFAULT '{}',
                     created_at TEXT
                 );
 
@@ -151,7 +151,7 @@ class GraphIndex:
                     target_id TEXT NOT NULL,
                     rel_type TEXT NOT NULL,
                     weight REAL DEFAULT 1.0,
-                    metadata TEXT DEFAULT '{***REMOVED***',
+                    metadata TEXT DEFAULT '{}',
                     created_at TEXT,
                     PRIMARY KEY (source_id, target_id, rel_type)
                 );
@@ -172,11 +172,11 @@ class GraphIndex:
         doc_id: str,
         node_type: str = "document",
         label: str = "",
-        metadata: Dict[str, Any***REMOVED*** | None = None,
+        metadata: Dict[str, Any] | None = None,
     ) -> None:
         """Добавляет или обновляет узел графа."""
         now = datetime.now(timezone.utc).isoformat()
-        meta_json = json.dumps(metadata or {***REMOVED***, ensure_ascii=False)
+        meta_json = json.dumps(metadata or {}, ensure_ascii=False)
 
         with self._lock:
             with self._connect() as conn:
@@ -218,10 +218,10 @@ class GraphIndex:
             if row is None:
                 return None
             return Node(
-                doc_id=row["doc_id"***REMOVED***,
-                node_type=row["node_type"***REMOVED***,
-                label=row["label"***REMOVED***,
-                metadata=json.loads(row["metadata"***REMOVED*** or "{***REMOVED***"),
+                doc_id=row["doc_id"],
+                node_type=row["node_type"],
+                label=row["label"],
+                metadata=json.loads(row["metadata"] or "{)"),
             )
 
     # ── Рёбра ─────────────────────────────────────────────
@@ -232,7 +232,7 @@ class GraphIndex:
         target_id: str,
         rel_type: str,
         weight: float = 1.0,
-        metadata: Dict[str, Any***REMOVED*** | None = None,
+        metadata: Dict[str, Any] | None = None,
         auto_add_nodes: bool = True,
         create_inverse: bool = True,
     ) -> None:
@@ -242,19 +242,19 @@ class GraphIndex:
             source_id: откуда
             target_id: куда
             rel_type: тип связи (references, parent, depends, related, etc.)
-            weight: вес связи [0..1***REMOVED***
+            weight: вес связи [0..1]
             metadata: произвольные метаданные
             auto_add_nodes: создать узлы, если не существуют
             create_inverse: создать обратные рёбра (parent→child и т.д.)
         """
         if rel_type not in REL_TYPES:
             raise ValueError(
-                f"Unknown rel_type: '{rel_type***REMOVED***'. "
-                f"Valid: {', '.join(sorted(REL_TYPES))***REMOVED***"
+                f"Unknown rel_type: '{rel_type}'. "
+                f"Valid: {', '.join(sorted(REL_TYPES))}"
             )
 
         now = datetime.now(timezone.utc).isoformat()
-        meta_json = json.dumps(metadata or {***REMOVED***, ensure_ascii=False)
+        meta_json = json.dumps(metadata or {}, ensure_ascii=False)
 
         with self._lock:
             with self._connect() as conn:
@@ -286,7 +286,7 @@ class GraphIndex:
 
                 # Обратное ребро (parent → child, references → referenced_by, etc.)
                 if create_inverse and rel_type in AUTO_INVERSE and rel_type not in SYMMETRIC_RELS:
-                    inverse_type = REL_INVERSE[rel_type***REMOVED***
+                    inverse_type = REL_INVERSE[rel_type]
                     conn.execute(
                         """INSERT OR REPLACE INTO graph_edges
                            (source_id, target_id, rel_type, weight, metadata, created_at)
@@ -333,7 +333,7 @@ class GraphIndex:
         rel_type: str | None = None,
         max_depth: int = 1,
         min_weight: float = 0.0,
-    ) -> List[Tuple[str, str, str, float, int***REMOVED******REMOVED***:
+    ) -> List[Tuple[str, str, str, float, int]]:
         """Находит все узлы, связанные с doc_id.
 
         Возвращает связанные узлы с информацией о связи.
@@ -351,14 +351,14 @@ class GraphIndex:
             direction: 'out' — от doc_id, 'in' — к doc_id
         """
         if max_depth < 1:
-            return [***REMOVED***
+            return []
 
         with self._lock:
             with self._connect() as conn:
-                visited: Set[str***REMOVED*** = {doc_id***REMOVED***
-                results: List[Tuple[str, str, str, float, int***REMOVED******REMOVED*** = [***REMOVED***
+                visited: Set[str] = {doc_id}
+                results: List[Tuple[str, str, str, float, int]] = []
                 # Для отслеживания уникальных (node, type) пар
-                seen_pairs: Set[Tuple[str, str***REMOVED******REMOVED*** = set()
+                seen_pairs: Set[Tuple[str, str]] = set()
 
                 queue: deque = deque()
                 queue.append((doc_id, 0))
@@ -375,22 +375,22 @@ class GraphIndex:
                         FROM graph_edges e
                         WHERE e.source_id = ? AND e.weight >= ?
                     """
-                    params: List[Any***REMOVED*** = [current_id, min_weight***REMOVED***
+                    params: List[Any] = [current_id, min_weight]
                     if rel_type:
                         query += " AND e.rel_type = ?"
                         params.append(rel_type)
 
                     outgoing_rows = conn.execute(query, params).fetchall()
                     for row in outgoing_rows:
-                        neighbor_id = row["target_id"***REMOVED***
-                        rtype = row["rel_type"***REMOVED***
+                        neighbor_id = row["target_id"]
+                        rtype = row["rel_type"]
                         pair_key = (neighbor_id, rtype)
 
                         if pair_key not in seen_pairs:
                             seen_pairs.add(pair_key)
                             results.append((
                                 neighbor_id, rtype, "out",
-                                row["weight"***REMOVED***, depth + 1,
+                                row["weight"], depth + 1,
                             ))
 
                         if neighbor_id not in visited:
@@ -404,22 +404,22 @@ class GraphIndex:
                         FROM graph_edges e
                         WHERE e.target_id = ? AND e.weight >= ?
                     """
-                    params = [current_id, min_weight***REMOVED***
+                    params = [current_id, min_weight]
                     if rel_type:
                         query += " AND e.rel_type = ?"
                         params.append(rel_type)
 
                     incoming_rows = conn.execute(query, params).fetchall()
                     for row in incoming_rows:
-                        neighbor_id = row["source_id"***REMOVED***
-                        rtype = row["rel_type"***REMOVED***
+                        neighbor_id = row["source_id"]
+                        rtype = row["rel_type"]
                         pair_key = (neighbor_id, rtype)
 
                         if pair_key not in seen_pairs:
                             seen_pairs.add(pair_key)
                             results.append((
                                 neighbor_id, rtype, "in",
-                                row["weight"***REMOVED***, depth + 1,
+                                row["weight"], depth + 1,
                             ))
 
                         if neighbor_id not in visited:
@@ -448,12 +448,12 @@ class GraphIndex:
             PathResult или None если путь не найден
         """
         if source_id == target_id:
-            return PathResult(path=[***REMOVED***, length=0, total_weight=1.0)
+            return PathResult(path=[], length=0, total_weight=1.0)
 
-        visited: Set[str***REMOVED*** = {source_id***REMOVED***
+        visited: Set[str] = {source_id}
         # queue: (current_id, path_so_far, total_weight)
         queue: deque = deque()
-        queue.append((source_id, [***REMOVED***, 0.0))
+        queue.append((source_id, [], 0.0))
 
         with self._connect() as conn:
             while queue:
@@ -468,25 +468,25 @@ class GraphIndex:
                     FROM graph_edges e
                     WHERE e.source_id = ?
                 """
-                params: List[Any***REMOVED*** = [current_id***REMOVED***
+                params: List[Any] = [current_id]
                 if rel_type:
                     query += " AND e.rel_type = ?"
                     params.append(rel_type)
 
                 for row in conn.execute(query, params).fetchall():
-                    neighbor_id = row["target_id"***REMOVED***
+                    neighbor_id = row["target_id"]
                     if neighbor_id == target_id:
                         return PathResult(
-                            path=path + [(current_id, neighbor_id, row["rel_type"***REMOVED***)***REMOVED***,
+                            path=path + [(current_id, neighbor_id, row["rel_type"])],
                             length=len(path) + 1,
-                            total_weight=total_weight + row["weight"***REMOVED***,
+                            total_weight=total_weight + row["weight"],
                         )
                     if neighbor_id not in visited:
                         visited.add(neighbor_id)
                         queue.append((
                             neighbor_id,
-                            path + [(current_id, neighbor_id, row["rel_type"***REMOVED***)***REMOVED***,
-                            total_weight + row["weight"***REMOVED***,
+                            path + [(current_id, neighbor_id, row["rel_type"])],
+                            total_weight + row["weight"],
                         ))
 
                 # Входящие рёбра (для обратных связей)
@@ -495,25 +495,25 @@ class GraphIndex:
                     FROM graph_edges e
                     WHERE e.target_id = ?
                 """
-                params = [current_id***REMOVED***
+                params = [current_id]
                 if rel_type:
                     query += " AND e.rel_type = ?"
                     params.append(rel_type)
 
                 for row in conn.execute(query, params).fetchall():
-                    neighbor_id = row["source_id"***REMOVED***
+                    neighbor_id = row["source_id"]
                     if neighbor_id == target_id:
                         return PathResult(
-                            path=path + [(current_id, neighbor_id, row["rel_type"***REMOVED***)***REMOVED***,
+                            path=path + [(current_id, neighbor_id, row["rel_type"])],
                             length=len(path) + 1,
-                            total_weight=total_weight + row["weight"***REMOVED***,
+                            total_weight=total_weight + row["weight"],
                         )
                     if neighbor_id not in visited:
                         visited.add(neighbor_id)
                         queue.append((
                             neighbor_id,
-                            path + [(current_id, neighbor_id, row["rel_type"***REMOVED***)***REMOVED***,
-                            total_weight + row["weight"***REMOVED***,
+                            path + [(current_id, neighbor_id, row["rel_type"])],
+                            total_weight + row["weight"],
                         ))
 
         return None
@@ -523,7 +523,7 @@ class GraphIndex:
         doc_id: str,
         depth: int = 2,
         rel_type: str | None = None,
-    ) -> Tuple[List[Node***REMOVED***, List[Edge***REMOVED******REMOVED***:
+    ) -> Tuple[List[Node], List[Edge]]:
         """Извлекает подграф вокруг узла.
 
         Returns:
@@ -532,44 +532,44 @@ class GraphIndex:
         related = self.get_related(doc_id, rel_type=rel_type, max_depth=depth)
 
         # Собираем все doc_id в подграфе
-        node_ids: Set[str***REMOVED*** = {doc_id***REMOVED***
+        node_ids: Set[str] = {doc_id}
         for related_id, _, _, _, _ in related:
             node_ids.add(related_id)
 
         with self._connect() as conn:
             # Узлы
-            nodes = [***REMOVED***
+            nodes = []
             for nid in node_ids:
                 row = conn.execute(
                     "SELECT * FROM graph_nodes WHERE doc_id = ?", (nid,)
                 ).fetchone()
                 if row:
                     nodes.append(Node(
-                        doc_id=row["doc_id"***REMOVED***,
-                        node_type=row["node_type"***REMOVED***,
-                        label=row["label"***REMOVED***,
-                        metadata=json.loads(row["metadata"***REMOVED*** or "{***REMOVED***"),
+                        doc_id=row["doc_id"],
+                        node_type=row["node_type"],
+                        label=row["label"],
+                        metadata=json.loads(row["metadata"] or "{)"),
                     ))
                 else:
                     nodes.append(Node(doc_id=nid))
 
             # Рёбра между узлами подграфа
             placeholders = ",".join("?" for _ in node_ids)
-            edges = [***REMOVED***
+            edges = []
             for row in conn.execute(
                 f"""SELECT * FROM graph_edges
-                    WHERE source_id IN ({placeholders***REMOVED***)
-                    AND target_id IN ({placeholders***REMOVED***)""",
+                    WHERE source_id IN ({placeholders})
+                    AND target_id IN ({placeholders})""",
                 list(node_ids) + list(node_ids),
             ).fetchall():
-                if rel_type is None or row["rel_type"***REMOVED*** == rel_type:
+                if rel_type is None or row["rel_type"] == rel_type:
                     edges.append(Edge(
-                        source_id=row["source_id"***REMOVED***,
-                        target_id=row["target_id"***REMOVED***,
-                        rel_type=row["rel_type"***REMOVED***,
-                        weight=row["weight"***REMOVED***,
-                        metadata=json.loads(row["metadata"***REMOVED*** or "{***REMOVED***"),
-                        created_at=row["created_at"***REMOVED***,
+                        source_id=row["source_id"],
+                        target_id=row["target_id"],
+                        rel_type=row["rel_type"],
+                        weight=row["weight"],
+                        metadata=json.loads(row["metadata"] or "{)"),
+                        created_at=row["created_at"],
                     ))
 
         return nodes, edges
@@ -580,7 +580,7 @@ class GraphIndex:
         rel_type: str,
         direction: str = "out",
         max_hops: int = 10,
-    ) -> List[List[Tuple[str, str, float***REMOVED******REMOVED******REMOVED***:
+    ) -> List[List[Tuple[str, str, float]]]:
         """Обход графа по цепочке связей.
 
         Args:
@@ -592,10 +592,10 @@ class GraphIndex:
         Returns:
             Список путей, каждый путь — список (node_id, rel_type, weight)
         """
-        paths: List[List[Tuple[str, str, float***REMOVED******REMOVED******REMOVED*** = [***REMOVED***
-        visited: Set[str***REMOVED*** = {start_id***REMOVED***
+        paths: List[List[Tuple[str, str, float]]] = []
+        visited: Set[str] = {start_id}
 
-        def _dfs(current: str, path: List[Tuple[str, str, float***REMOVED******REMOVED***):
+        def _dfs(current: str, path: List[Tuple[str, str, float]]):
             if len(path) >= max_hops:
                 paths.append(list(path))
                 return
@@ -618,11 +618,11 @@ class GraphIndex:
                     ).fetchall()
 
                 for row in rows:
-                    neighbor_id = row[0***REMOVED***
+                    neighbor_id = row[0]
                     if neighbor_id not in visited:
                         found = True
                         visited.add(neighbor_id)
-                        path.append((neighbor_id, row[1***REMOVED***, row[2***REMOVED***))
+                        path.append((neighbor_id, row[1], row[2]))
                         _dfs(neighbor_id, path)
                         path.pop()
                         visited.discard(neighbor_id)
@@ -630,14 +630,14 @@ class GraphIndex:
             if not found:
                 paths.append(list(path))
 
-        _dfs(start_id, [***REMOVED***)
+        _dfs(start_id, [])
         return paths
 
     # ── Авто-детект связей ───────────────────────────────
 
     def auto_discover(
         self,
-        doc_pairs: List[Tuple[str, str, str, str***REMOVED******REMOVED***,
+        doc_pairs: List[Tuple[str, str, str, str]],
         min_shared_terms: int = 3,
     ) -> int:
         """Автоматически обнаруживает связи между документами.
@@ -669,7 +669,7 @@ class GraphIndex:
                     target_id=doc_id2,
                     rel_type="related",
                     weight=round(weight, 2),
-                    metadata={"shared_terms": list(shared)[:10***REMOVED******REMOVED***,
+                    metadata={"shared_terms": list(shared)[:10]},
                     auto_add_nodes=True,
                     create_inverse=True,
                 )
@@ -696,11 +696,11 @@ class GraphIndex:
 
         engine = MemoryEngine(workspace_root=str(self._db_path.parent.parent.parent))
 
-        all_entries = [***REMOVED***
+        all_entries = []
         for level in MemoryLevel:
             entries = engine.list_entries(level=level)
             for e in entries:
-                all_entries.append((f"mem_{level.value***REMOVED***_{e.key***REMOVED***", e.content))
+                all_entries.append((f"mem_{level.value}_{e.key}", e.content))
 
         # Анализируем пары
         count = 0
@@ -710,8 +710,8 @@ class GraphIndex:
                 if pairs_done >= max_pairs:
                     return count
 
-                doc_id1, content1 = all_entries[i***REMOVED***
-                doc_id2, content2 = all_entries[j***REMOVED***
+                doc_id1, content1 = all_entries[i]
+                doc_id2, content2 = all_entries[j]
 
                 from scripts_01.knowledge_engine import Tokenizer
                 set1 = set(Tokenizer.tokenize(content1))
@@ -725,7 +725,7 @@ class GraphIndex:
                         target_id=doc_id2,
                         rel_type="related",
                         weight=round(weight, 2),
-                        metadata={"shared_terms": list(shared)[:10***REMOVED******REMOVED***,
+                        metadata={"shared_terms": list(shared)[:10]},
                         auto_add_nodes=True,
                         create_inverse=True,
                     )
@@ -742,18 +742,18 @@ class GraphIndex:
         with self._connect() as conn:
             total_nodes = conn.execute(
                 "SELECT COUNT(*) FROM graph_nodes"
-            ).fetchone()[0***REMOVED***
+            ).fetchone()[0]
 
             total_edges = conn.execute(
                 "SELECT COUNT(*) FROM graph_edges"
-            ).fetchone()[0***REMOVED***
+            ).fetchone()[0]
 
             # Типы рёбер
-            edge_types: Dict[str, int***REMOVED*** = {***REMOVED***
+            edge_types: Dict[str, int] = {}
             for row in conn.execute(
                 "SELECT rel_type, COUNT(*) as cnt FROM graph_edges GROUP BY rel_type"
             ).fetchall():
-                edge_types[row["rel_type"***REMOVED******REMOVED*** = row["cnt"***REMOVED***
+                edge_types[row["rel_type"]] = row["cnt"]
 
             # Изолированные узлы (без рёбер)
             isolated = conn.execute(
@@ -762,7 +762,7 @@ class GraphIndex:
                        SELECT 1 FROM graph_edges e
                        WHERE e.source_id = n.doc_id OR e.target_id = n.doc_id
                    )"""
-            ).fetchone()[0***REMOVED***
+            ).fetchone()[0]
 
         return GraphStats(
             total_nodes=total_nodes,
@@ -821,7 +821,7 @@ def main():
 
     # edge
     p_edge = sub.add_parser("edge", help="Управление рёбрами")
-    p_edge.add_argument("action", choices=["add", "remove"***REMOVED***, help="Действие")
+    p_edge.add_argument("action", choices=["add", "remove"], help="Действие")
     p_edge.add_argument("source", help="Откуда")
     p_edge.add_argument("target", help="Куда")
     p_edge.add_argument("rel_type", help="Тип связи")
@@ -854,68 +854,68 @@ def main():
             max_depth=args.depth,
         )
         if not results:
-            print(f"📭 No relations found for '{args.doc_id***REMOVED***'")
+            print(f"📭 No relations found for '{args.doc_id}'")
             return
-        print(f"🔗 {len(results)***REMOVED*** relations for '{args.doc_id***REMOVED***' (depth={args.depth***REMOVED***):")
+        print(f"🔗 {len(results)} relations for '{args.doc_id}' (depth={args.depth}):")
         for rel_id, rtype, direction, weight, depth in results:
             arrow = "→" if direction == "out" else "←"
-            print(f"  {'  ' * (depth - 1)***REMOVED***[{weight:.2f***REMOVED******REMOVED*** {rel_id***REMOVED*** {arrow***REMOVED*** {rtype***REMOVED***")
+            print(f"  {'  ' * (depth - 1)}[{weight:.2f}] {rel_id} {arrow} {rtype}")
 
     elif args.command == "path":
         result = g.shortest_path(args.source, args.target)
         if result is None:
-            print(f"❌ No path found between '{args.source***REMOVED***' and '{args.target***REMOVED***'")
+            print(f"❌ No path found between '{args.source}' and '{args.target}'")
             return
-        print(f"🛤 Path (length={result.length***REMOVED***, weight={result.total_weight:.2f***REMOVED***):")
+        print(f"🛤 Path (length={result.length}, weight={result.total_weight:.2f}):")
         for from_id, to_id, rtype in result.path:
-            print(f"  {from_id***REMOVED*** →[{rtype***REMOVED******REMOVED***→ {to_id***REMOVED***")
+            print(f"  {from_id} →[{rtype}]→ {to_id}")
 
     elif args.command == "subgraph":
         nodes, edges = g.subgraph(args.doc_id, depth=args.depth)
-        print(f"📊 Subgraph around '{args.doc_id***REMOVED***' (depth={args.depth***REMOVED***):")
-        print(f"   Nodes: {len(nodes)***REMOVED***")
-        print(f"   Edges: {len(edges)***REMOVED***")
-        for e in edges[:10***REMOVED***:
-            print(f"   {e.source_id***REMOVED*** →[{e.rel_type***REMOVED*** ({e.weight***REMOVED***)***REMOVED***→ {e.target_id***REMOVED***")
+        print(f"📊 Subgraph around '{args.doc_id}' (depth={args.depth}):")
+        print(f"   Nodes: {len(nodes)}")
+        print(f"   Edges: {len(edges)}")
+        for e in edges[:10]:
+            print(f"   {e.source_id} →[{e.rel_type} ({e.weight})]→ {e.target_id}")
         if len(edges) > 10:
-            print(f"   ... and {len(edges) - 10***REMOVED*** more")
+            print(f"   ... and {len(edges) - 10} more")
 
     elif args.command == "edge":
         if args.action == "add":
             g.add_edge(args.source, args.target, args.rel_type)
-            print(f"✅ Edge added: {args.source***REMOVED*** →[{args.rel_type***REMOVED******REMOVED***→ {args.target***REMOVED***")
+            print(f"✅ Edge added: {args.source} →[{args.rel_type}]→ {args.target}")
         elif args.action == "remove":
             ok = g.remove_edge(args.source, args.target, args.rel_type)
-            print(f"{'🗑 Removed' if ok else '❌ Not found'***REMOVED***: {args.source***REMOVED*** →[{args.rel_type***REMOVED******REMOVED***→ {args.target***REMOVED***")
+            print(f"{'🗑 Removed' if ok else '❌ Not found'}: {args.source} →[{args.rel_type}]→ {args.target}")
 
     elif args.command == "node":
         node = g.get_node(args.doc_id)
         if node:
-            print(f"📖 Node: {node.doc_id***REMOVED***")
-            print(f"   Type:  {node.node_type***REMOVED***")
-            print(f"   Label: {node.label or '(none)'***REMOVED***")
+            print(f"📖 Node: {node.doc_id}")
+            print(f"   Type:  {node.node_type}")
+            print(f"   Label: {node.label or '(none)'}")
             if node.metadata:
-                print(f"   Meta:  {json.dumps(node.metadata, ensure_ascii=False)[:200***REMOVED******REMOVED***")
+                print(f"   Meta:  {json.dumps(node.metadata, ensure_ascii=False)[:200]}")
         else:
-            print(f"❌ Node not found: {args.doc_id***REMOVED***")
+            print(f"❌ Node not found: {args.doc_id}")
 
     elif args.command == "auto":
         count = g.auto_discover_from_memory(
             min_shared_terms=args.min_terms,
             max_pairs=args.max_pairs,
         )
-        print(f"✅ Auto-discovered {count***REMOVED*** relations")
+        print(f"✅ Auto-discovered {count} relations")
 
     elif args.command == "stats":
         stats = g.get_stats()
         print("📊 GRAPH STATS")
-        print(f"   Nodes:  {stats.total_nodes***REMOVED***")
-        print(f"   Edges:  {stats.total_edges***REMOVED***")
-        print(f"   Isolated: {stats.isolated_nodes***REMOVED***")
+        print(f"   Nodes:  {stats.total_nodes}")
+        print(f"   Edges:  {stats.total_edges}")
+        print(f"   Isolated: {stats.isolated_nodes}")
         if stats.edge_types:
             print(f"   Edge types:")
             for rtype, cnt in sorted(stats.edge_types.items()):
-                print(f"     {rtype***REMOVED***: {cnt***REMOVED***")
+                print(f"     {rtype}: {cnt}")
 
     elif args.command == "clear":
         g.clear()

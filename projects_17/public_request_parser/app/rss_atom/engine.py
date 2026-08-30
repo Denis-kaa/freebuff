@@ -7,7 +7,7 @@ ETag/Last-Modified и live polling остаются отдельными policy-
 from __future__ import annotations
 
 import hashlib
-***REMOVED***
+}
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
@@ -40,11 +40,11 @@ class FeedParseResult:
     """Результат разбора с сохранением порядка и warnings."""
 
     format: str
-    items: tuple[SourceItem, ...***REMOVED***
-    warnings: tuple[FeedWarning, ...***REMOVED*** = ()
+    items: tuple[SourceItem, ...]
+    warnings: tuple[FeedWarning, ...] = ()
 
 
-_XML_NAME_RE = re.compile(r"\{[^***REMOVED******REMOVED***+\***REMOVED***")
+_XML_NAME_RE = re.compile(r"\{[^)]+\*]")
 
 
 def _local_name(tag: str) -> str:
@@ -91,7 +91,7 @@ def _absolute_url(value: str, base_url: str | None) -> str | None:
     if base_url:
         value = urljoin(base_url, value)
     parsed = urlparse(value)
-    if parsed.scheme not in {"http", "https"***REMOVED*** or not parsed.netloc:
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         return None
     return value
 
@@ -101,7 +101,7 @@ def _entry_url(entry: ElementTree.Element, base_url: str | None) -> str | None:
     direct = _first_child(entry, "link")
     if direct is not None:
         href = direct.attrib.get("href", "").strip()
-        if href and direct.attrib.get("rel", "alternate") in {"alternate", ""***REMOVED***:
+        if href and direct.attrib.get("rel", "alternate") in {"alternate", ""}:
             result = _absolute_url(href, base_url)
             if result:
                 return result
@@ -118,8 +118,8 @@ def _item_id(entry: ElementTree.Element, canonical_url: str) -> str:
     raw_id = _text(_first_child(entry, "guid", "id"))
     if raw_id:
         return raw_id
-    digest = hashlib.sha256(canonical_url.encode("utf-8")).hexdigest()[:24***REMOVED***
-    return f"url-{digest***REMOVED***"
+    digest = hashlib.sha256(canonical_url.encode("utf-8")).hexdigest()[:24]
+    return f"url-{digest}"
 
 
 def _content(entry: ElementTree.Element) -> str | None:
@@ -153,23 +153,23 @@ class RSSAtomParser:
         try:
             root = ElementTree.fromstring(payload)
         except (ElementTree.ParseError, TypeError, ValueError) as exc:
-            raise AdapterError(f"invalid RSS/Atom XML: {exc***REMOVED***") from exc
+            raise AdapterError(f"invalid RSS/Atom XML: {exc}") from exc
 
         root_name = _local_name(root.tag).lower()
         if root_name == "rss":
             entries = _first_child(root, "channel")
             if entries is None:
                 raise AdapterError("RSS document has no channel")
-            raw_entries = [child for child in list(entries) if _local_name(child.tag) == "item"***REMOVED***
+            raw_entries = [child for child in list(entries) if _local_name(child.tag) == "item"]
             feed_format = "rss"
         elif root_name == "feed":
-            raw_entries = [child for child in list(root) if _local_name(child.tag) == "entry"***REMOVED***
+            raw_entries = [child for child in list(root) if _local_name(child.tag) == "entry"]
             feed_format = "atom"
         else:
-            raise AdapterError(f"unsupported feed root: {root_name***REMOVED***")
+            raise AdapterError(f"unsupported feed root: {root_name}")
 
-        items: list[SourceItem***REMOVED*** = [***REMOVED***
-        warnings: list[FeedWarning***REMOVED*** = [***REMOVED***
+        items: list[SourceItem] = []
+        warnings: list[FeedWarning] = []
         for index, entry in enumerate(raw_entries):
             canonical_url = _entry_url(entry, self.base_url)
             title = _text(_first_child(entry, "title"))
@@ -195,7 +195,7 @@ class RSSAtomParser:
                         for value in (child.attrib.get("term", "") or _text(child),)
                         if value
                     ),
-                ***REMOVED***,
+                },
             )
             items.append(item)
             if _first_child(entry, "published", "pubDate", "updated") is not None and item.published_at is None:
@@ -219,7 +219,7 @@ def normalize_source_item(
     if max_text_chars is not None:
         if max_text_chars < 0:
             raise ValueError("max_text_chars must be >= 0")
-        content = content[:max_text_chars***REMOVED*** if content is not None else None
+        content = content[:max_text_chars] if content is not None else None
     return Publication(
         source_id=source_id,
         item_id=item.item_id,
@@ -233,11 +233,11 @@ def normalize_source_item(
     )
 
 
-def deduplicate_publications(publications: Iterable[Publication***REMOVED***) -> tuple[Publication, ...***REMOVED***:
+def deduplicate_publications(publications: Iterable[Publication]) -> tuple[Publication, ...]:
     """Оставить первый item по source-scoped key и canonical URL."""
-    seen_keys: set[str***REMOVED*** = set()
-    seen_urls: set[str***REMOVED*** = set()
-    unique: list[Publication***REMOVED*** = [***REMOVED***
+    seen_keys: set[str] = set()
+    seen_urls: set[str] = set()
+    unique: list[Publication] = []
     for publication in publications:
         if publication.item_key in seen_keys or publication.canonical_url in seen_urls:
             continue
@@ -251,7 +251,7 @@ class InMemoryCheckpointStore:
     """Hermetic async checkpoint store; SQLite реализация относится к P6."""
 
     def __init__(self) -> None:
-        self._values: dict[str, str***REMOVED*** = {***REMOVED***
+        self._values: dict[str, str] = {}
 
     async def get(self, source_id: str) -> str | None:
         """Получить последний committed item ID."""
@@ -259,7 +259,7 @@ class InMemoryCheckpointStore:
 
     async def commit(self, source_id: str, item_id: str) -> None:
         """Идемпотентно сохранить item ID."""
-        self._values[source_id***REMOVED*** = item_id
+        self._values[source_id] = item_id
 
 
 class FixtureFeedAdapter:
@@ -283,7 +283,7 @@ class FixtureFeedAdapter:
         *,
         limit: int = 50,
         checkpoint: str | None = None,
-    ) -> AsyncIterator[SourceItem***REMOVED***:
+    ) -> AsyncIterator[SourceItem]:
         """Отдать bounded items после checkpoint; adapter не обращается к сети."""
         if limit < 1:
             raise AdapterError("limit must be >= 1")
@@ -296,7 +296,7 @@ class FixtureFeedAdapter:
                 if item.item_id == checkpoint:
                     start = index + 1
                     break
-        for item in result.items[start : start + limit***REMOVED***:
+        for item in result.items[start : start + limit]:
             yield item
 
     async def health(self) -> bool:
@@ -316,4 +316,4 @@ __all__ = [
     "RSSAtomParser",
     "deduplicate_publications",
     "normalize_source_item",
-***REMOVED***
+]

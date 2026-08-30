@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import os
 import sys
-***REMOVED***
+}
 
 import pytest
 
@@ -41,11 +41,11 @@ class _StubEventBus:
     """Минимальный EventBus с подпиской."""
 
     def __init__(self):
-        self.subscribed = [***REMOVED***
+        self.subscribed = []
 
     def subscribe(self, pattern, handler):
         self.subscribed.append((pattern, handler))
-        return f"sub-{len(self.subscribed)***REMOVED***"
+        return f"sub-{len(self.subscribed)}"
 
     def unsubscribe(self, token):
         return True
@@ -57,7 +57,7 @@ class _StubEvent:
     def __init__(self, event_type: str, data: dict | None = None, event_id: str = ""):
         self.type = event_type
         self.event_type = event_type
-        self.data = data or {***REMOVED***
+        self.data = data or {}
         self.id = event_id
 
 
@@ -83,16 +83,16 @@ class TestPulseEntry:
     def test_to_dict_includes_icon(self):
         e = PulseEntry(event_type="git.commit", title="Commit: abc")
         d = e.to_dict()
-        assert d["event_type"***REMOVED*** == "git.commit"
-        assert d["icon"***REMOVED*** == "💾"
-        assert d["title"***REMOVED*** == "Commit: abc"
+        assert d["event_type"] == "git.commit"
+        assert d["icon"] == "💾"
+        assert d["title"] == "Commit: abc"
 
     def test_icon_property(self):
         e = PulseEntry(event_type="file.created")
         assert e.icon == "📄"
 
     def test_unknown_icon(self):
-        assert get_pulse_icon("mystery.type") == PULSE_TYPES["event.unknown"***REMOVED***
+        assert get_pulse_icon("mystery.type") == PULSE_TYPES["event.unknown"]
 
     def test_pulse_types_cover_known_categories(self):
         for key in ("git.commit", "git.branch", "file.created", "file.modified",
@@ -130,7 +130,7 @@ class TestCRUD:
         assert pulse.get("nope") is None
 
     def test_list_empty(self, pulse: ProjectPulse):
-        assert pulse.list() == [***REMOVED***
+        assert pulse.list() == []
 
     def test_list_returns_entries(self, pulse: ProjectPulse):
         pulse.add_entry(PulseEntry(event_type="event.task", title="A"))
@@ -141,7 +141,7 @@ class TestCRUD:
         pulse.add_entry(PulseEntry(event_type="event.task", title="A"))
         removed = pulse.clear()
         assert removed == 1
-        assert pulse.list() == [***REMOVED***
+        assert pulse.list() == []
 
     def test_dedup_by_ref(self, pulse: ProjectPulse):
         pulse.add_entry(PulseEntry(event_type="event.task", title="A", ref="same"))
@@ -159,35 +159,35 @@ class TestFilters:
         pulse.add_entry(PulseEntry(event_type="event.task", title="A"))
         pulse.add_entry(PulseEntry(event_type="git.commit", title="B"))
         entries = pulse.list(event_type="git.commit")
-        assert [e.title for e in entries***REMOVED*** == ["B"***REMOVED***
+        assert [e.title for e in entries] == ["B"]
 
     def test_filter_by_source(self, pulse: ProjectPulse):
         pulse.add_entry(PulseEntry(event_type="event.task", title="A", source="event"))
         pulse.add_entry(PulseEntry(event_type="git.commit", title="B", source="git"))
         entries = pulse.list(source="git")
-        assert [e.title for e in entries***REMOVED*** == ["B"***REMOVED***
+        assert [e.title for e in entries] == ["B"]
 
     def test_filter_by_since(self, pulse: ProjectPulse):
         pulse.add_entry(PulseEntry(event_type="event.task", title="old", timestamp="2020-01-01T00:00:00+00:00"))
         pulse.add_entry(PulseEntry(event_type="event.task", title="new", timestamp="2026-01-01T00:00:00+00:00"))
         entries = pulse.list(since="2025-01-01T00:00:00+00:00")
-        assert [e.title for e in entries***REMOVED*** == ["new"***REMOVED***
+        assert [e.title for e in entries] == ["new"]
 
     def test_limit_and_offset(self, pulse: ProjectPulse):
         for i in range(5):
-            pulse.add_entry(PulseEntry(event_type="event.task", title=f"T{i***REMOVED***"))
+            pulse.add_entry(PulseEntry(event_type="event.task", title=f"T{i}"))
         entries = pulse.list(limit=2)
         assert len(entries) == 2
         # ORDER BY timestamp DESC — последние добавленные сначала.
-        assert entries[0***REMOVED***.title == "T4"
+        assert entries[0].title == "T4"
 
     def test_list_json_shape(self, pulse: ProjectPulse):
         pulse.add_entry(PulseEntry(event_type="event.task", title="A"))
         payload = pulse.list_json()
-        assert payload["success"***REMOVED*** is True
-        assert payload["total"***REMOVED*** == 1
-        assert payload["data"***REMOVED***["total"***REMOVED*** == 1
-        assert payload["entries"***REMOVED***[0***REMOVED***["icon"***REMOVED***
+        assert payload["success"] is True
+        assert payload["total"] == 1
+        assert payload["data"]["total"] == 1
+        assert payload["entries"][0]["icon"]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -199,28 +199,28 @@ class TestScans:
     def test_scan_files_creates_entries(self, pulse: ProjectPulse, workspace: Path):
         f1 = workspace / "a.py"
         f1.write_text("x = 1")
-        added = pulse.scan_files(paths=[str(f1)***REMOVED***)
+        added = pulse.scan_files(paths=[str(f1)])
         assert added == 1
         entries = pulse.list(source="file")
-        assert entries[0***REMOVED***.event_type == "file.created"
+        assert entries[0].event_type == "file.created"
 
     def test_scan_files_second_run_no_duplicates(self, pulse: ProjectPulse, workspace: Path):
         f1 = workspace / "a.py"
         f1.write_text("x = 1")
-        pulse.scan_files(paths=[str(f1)***REMOVED***)
-        assert pulse.scan_files(paths=[str(f1)***REMOVED***) == 0
+        pulse.scan_files(paths=[str(f1)])
+        assert pulse.scan_files(paths=[str(f1)]) == 0
 
     def test_scan_files_modified(self, pulse: ProjectPulse, workspace: Path):
         f1 = workspace / "a.py"
         f1.write_text("x = 1")
-        pulse.scan_files(paths=[str(f1)***REMOVED***)
+        pulse.scan_files(paths=[str(f1)])
         # Явное другое mtime (без sleep): гранularity ФС на Android может быть 1с+.
         old_mtime = f1.stat().st_mtime
         os.utime(f1, (old_mtime + 2, old_mtime + 2))
         f1.write_text("x = 2")
-        added = pulse.scan_files(paths=[str(f1)***REMOVED***)
+        added = pulse.scan_files(paths=[str(f1)])
         assert added == 1
-        types = [e.event_type for e in pulse.list(source="file")***REMOVED***
+        types = [e.event_type for e in pulse.list(source="file")]
         assert "file.modified" in types
 
     def test_scan_git_graceful_non_git(self, pulse: ProjectPulse):
@@ -233,8 +233,8 @@ class TestScans:
         assert "git" in result
         assert "file" in result
         assert "files" in result
-        assert result["files"***REMOVED*** == result["file"***REMOVED***
-        assert result["file"***REMOVED*** >= 1
+        assert result["files"] == result["file"]
+        assert result["file"] >= 1
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -248,7 +248,7 @@ class TestEventBus:
         pulse = ProjectPulse(db_path=workspace / "p.db", workspace=workspace, event_bus=bus)
         assert pulse.subscribe_eventbus() is True
         assert len(bus.subscribed) == 1
-        assert bus.subscribed[0***REMOVED***[0***REMOVED*** == "*"
+        assert bus.subscribed[0][0] == "*"
 
     def test_subscribe_without_bus(self, pulse: ProjectPulse):
         assert pulse.subscribe_eventbus() is False
@@ -260,16 +260,16 @@ class TestEventBus:
         pulse.unsubscribe_eventbus()
 
     def test_on_event_creates_entry(self, pulse: ProjectPulse):
-        pulse._on_event(_StubEvent("task.failed", {"task": "build"***REMOVED***, event_id="e1"))
+        pulse._on_event(_StubEvent("task.failed", {"task": "build"}, event_id="e1"))
         entries = pulse.list()
         assert len(entries) == 1
-        assert entries[0***REMOVED***.event_type == "event.task"
-        assert entries[0***REMOVED***.title == "build"
-        assert entries[0***REMOVED***.source == "event"
+        assert entries[0].event_type == "event.task"
+        assert entries[0].title == "build"
+        assert entries[0].source == "event"
 
     def test_on_event_dedup(self, pulse: ProjectPulse):
-        pulse._on_event(_StubEvent("task.failed", {***REMOVED***, event_id="e1"))
-        pulse._on_event(_StubEvent("task.failed", {***REMOVED***, event_id="e1"))
+        pulse._on_event(_StubEvent("task.failed", {}, event_id="e1"))
+        pulse._on_event(_StubEvent("task.failed", {}, event_id="e1"))
         assert len(pulse.list()) == 1
 
     def test_map_event_type(self, pulse: ProjectPulse):
@@ -295,23 +295,23 @@ class TestEventBus:
 class TestStats:
     def test_get_stats_empty(self, pulse: ProjectPulse):
         stats = pulse.get_stats()
-        assert stats["total_entries"***REMOVED*** == 0
-        assert stats["last_entry"***REMOVED*** == "never"
-        assert stats["type_counts"***REMOVED*** == {***REMOVED***
-        assert stats["source_counts"***REMOVED*** == {***REMOVED***
+        assert stats["total_entries"] == 0
+        assert stats["last_entry"] == "never"
+        assert stats["type_counts"] == {}
+        assert stats["source_counts"] == {}
 
     def test_get_stats_with_entries(self, pulse: ProjectPulse):
         pulse.add_entry(PulseEntry(event_type="event.task", title="A", source="event"))
         pulse.add_entry(PulseEntry(event_type="event.task", title="B", source="event"))
         pulse.add_entry(PulseEntry(event_type="git.commit", title="C", source="git"))
         stats = pulse.get_stats()
-        assert stats["total_entries"***REMOVED*** == 3
-        assert stats["type_counts"***REMOVED***["event.task"***REMOVED*** == 2
-        assert stats["type_counts"***REMOVED***["git.commit"***REMOVED*** == 1
-        assert stats["source_counts"***REMOVED***["event"***REMOVED*** == 2
-        assert stats["source_counts"***REMOVED***["git"***REMOVED*** == 1
-        assert stats["last_entry"***REMOVED*** != "never"
-        assert stats["db_path"***REMOVED***
+        assert stats["total_entries"] == 3
+        assert stats["type_counts"]["event.task"] == 2
+        assert stats["type_counts"]["git.commit"] == 1
+        assert stats["source_counts"]["event"] == 2
+        assert stats["source_counts"]["git"] == 1
+        assert stats["last_entry"] != "never"
+        assert stats["db_path"]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -323,7 +323,7 @@ class TestCLI:
     def test_main_help(self, monkeypatch):
         from scripts_01.project_pulse import main
 
-        monkeypatch.setattr(sys, "argv", ["project_pulse.py", "--help"***REMOVED***)
+        monkeypatch.setattr(sys, "argv", ["project_pulse.py", "--help"])
         with pytest.raises(SystemExit) as exc:
             main()
         assert exc.value.code == 0
@@ -331,6 +331,6 @@ class TestCLI:
     def test_main_no_command(self, monkeypatch, capsys):
         from scripts_01.project_pulse import main
 
-        monkeypatch.setattr(sys, "argv", ["project_pulse.py"***REMOVED***)
+        monkeypatch.setattr(sys, "argv", ["project_pulse.py"])
         code = main()
         assert code == 1

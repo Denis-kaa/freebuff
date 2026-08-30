@@ -18,7 +18,7 @@ PolicyEngine.set_preference — предпочтение сохраняется 
 
 from __future__ import annotations
 
-***REMOVED***
+}
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
@@ -26,25 +26,25 @@ from typing import Any, Dict, Optional
 DEFAULT_CAPABILITY = "coding"
 
 # Токен Runtime/модели: буквы, цифры, _, -, ., :, / (модели вида qwen2.5:1.5b, deepseek/deepseek-chat)
-_RT = r"(?P<rt>[a-zа-яё0-9_\-.:/***REMOVED***+)"
-_CAP = r"(?P<cap>[a-zа-яё0-9_\-***REMOVED***+)"
-_ANY = r"[a-zа-яё0-9_\-.:/***REMOVED***+"
+_RT = r"(?P<rt>[a-zа-яё0-9_\-.:/]+)"
+_CAP = r"(?P<cap>[a-zа-яё0-9_\-]+)"
+_ANY = r"[a-zа-яё0-9_\-.:/]+"
 
 # Паттерны в порядке приоритета. kind определяет порядок извлечения (rt, cap).
 _PATTERNS = [
-    # EN: "use X [instead of Y***REMOVED*** for Z"
-    (re.compile(rf"use\s+{_RT***REMOVED***(?:\s+instead\s+of\s+{_ANY***REMOVED***)?\s+for\s+{_CAP***REMOVED***", re.IGNORECASE), "rt_cap"),
-    # RU: "используй X [вместо Y***REMOVED*** для Z"
-    (re.compile(rf"используй\s+{_RT***REMOVED***(?:\s+вместо\s+{_ANY***REMOVED***)?\s+для\s+{_CAP***REMOVED***", re.IGNORECASE), "rt_cap"),
+    # EN: "use X [instead of Y] for Z"
+    (re.compile(rf"use\s+{_RT}(?:\s+instead\s+of\s+{_ANY})?\s+for\s+{_CAP}", re.IGNORECASE), "rt_cap"),
+    # RU: "используй X [вместо Y] для Z"
+    (re.compile(rf"используй\s+{_RT}(?:\s+вместо\s+{_ANY})?\s+для\s+{_CAP}", re.IGNORECASE), "rt_cap"),
     # RU: "для Z используй X" / "для Z ставь X"
-    (re.compile(rf"для\s+{_CAP***REMOVED***\s+(?:используй|ставь|возьми|поставь)\s+{_RT***REMOVED***", re.IGNORECASE), "cap_rt"),
+    (re.compile(rf"для\s+{_CAP}\s+(?:используй|ставь|возьми|поставь)\s+{_RT}", re.IGNORECASE), "cap_rt"),
     # EN/RU: "switch/set Z to X" / "переключи/назначь/поставь Z на X"
-    (re.compile(rf"(?:switch|set|переключи|назначь|поставь)\s+{_CAP***REMOVED***\s+(?:to|на)\s+{_RT***REMOVED***", re.IGNORECASE), "cap_rt"),
+    (re.compile(rf"(?:switch|set|переключи|назначь|поставь)\s+{_CAP}\s+(?:to|на)\s+{_RT}", re.IGNORECASE), "cap_rt"),
     # EN/RU: "use X instead of Y" / "используй X вместо Y" (capability → default)
-    (re.compile(rf"(?:use|используй)\s+{_RT***REMOVED***\s+(?:instead\s+of|вместо)\s+{_ANY***REMOVED***", re.IGNORECASE), "rt_only"),
+    (re.compile(rf"(?:use|используй)\s+{_RT}\s+(?:instead\s+of|вместо)\s+{_ANY}", re.IGNORECASE), "rt_only"),
     # EN: "use X for Z" (уже покрыто первым, но оставляем на случай регистра/пунктуации)
-    (re.compile(rf"use\s+{_RT***REMOVED***\s+for\s+{_CAP***REMOVED***", re.IGNORECASE), "rt_cap"),
-***REMOVED***
+    (re.compile(rf"use\s+{_RT}\s+for\s+{_CAP}", re.IGNORECASE), "rt_cap"),
+]
 
 
 @dataclass
@@ -53,7 +53,7 @@ class OverrideIntent:
 
     capability: str
     runtime: str
-    previous_runtime: Optional[str***REMOVED*** = None
+    previous_runtime: Optional[str] = None
     message: str = ""
     matched_pattern: str = ""
 
@@ -65,7 +65,7 @@ def _normalize_runtime(raw: str) -> str:
     return s.lower()
 
 
-def parse_override_intent(message: str) -> Optional[OverrideIntent***REMOVED***:
+def parse_override_intent(message: str) -> Optional[OverrideIntent]:
     """Разбирает диалоговую фразу и возвращает OverrideIntent или None.
 
     Args:
@@ -78,7 +78,7 @@ def parse_override_intent(message: str) -> Optional[OverrideIntent***REMOVED***:
         return None
 
     # Кавычки — акценты, убираем для упрощения парсинга
-    cleaned = re.sub(r'["\'`***REMOVED***', "", message)
+    cleaned = re.sub(r'["\'`)', "", message)
 
     for pattern, kind in _PATTERNS:
         match = pattern.search(cleaned)
@@ -114,9 +114,9 @@ def parse_override_intent(message: str) -> Optional[OverrideIntent***REMOVED***:
 def apply_override(
     message: str,
     engine: Any,
-    capability: Optional[str***REMOVED*** = None,
+    capability: Optional[str] = None,
     dry_run: bool = False,
-) -> Optional[Dict[str, Any***REMOVED******REMOVED***:
+) -> Optional[Dict[str, Any]]:
     """Применяет диалоговое переопределение через PolicyEngine (правило 11).
 
     Распознаёт интент в message и вызывает engine.set_preference() —
@@ -134,7 +134,7 @@ def apply_override(
 
     Returns:
         {"applied": bool, "dry_run": bool, "capability": ..., "runtime": ...,
-         "previous_runtime": ..., "matched": ...***REMOVED*** или None
+         "previous_runtime": ..., "matched": ...] или None
     """
     intent = parse_override_intent(message)
     if intent is None:
@@ -146,7 +146,7 @@ def apply_override(
             return None
         intent.capability = normalized_capability
 
-    previous_runtime: Optional[str***REMOVED*** = None
+    previous_runtime: Optional[str] = None
     try:
         policy = engine.get_policy(intent.capability)
         if policy is not None:
@@ -165,4 +165,4 @@ def apply_override(
         "previous_runtime": previous_runtime,
         "matched": intent.matched_pattern,
         "message": intent.message,
-    ***REMOVED***
+    }

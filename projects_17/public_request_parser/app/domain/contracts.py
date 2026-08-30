@@ -26,8 +26,8 @@ from typing import AsyncIterator, Mapping, Protocol, TypeAlias
 from urllib.parse import urlparse
 
 
-Metadata: TypeAlias = Mapping[str, str***REMOVED***
-RuleSnapshot: TypeAlias = Mapping[str, tuple[str, ...***REMOVED******REMOVED***
+Metadata: TypeAlias = Mapping[str, str]
+RuleSnapshot: TypeAlias = Mapping[str, tuple[str, ...]]
 
 
 class ContractValidationError(ValueError):
@@ -87,7 +87,7 @@ class DeliveryStatus(StrEnum):
 def _require_non_empty(value: str, field_name: str) -> str:
     """Проверить обязательную непустую строку."""
     if not isinstance(value, str) or not value.strip():
-        raise ContractValidationError(f"{field_name***REMOVED*** must be a non-empty string")
+        raise ContractValidationError(f"{field_name} must be a non-empty string")
     return value.strip()
 
 
@@ -95,15 +95,15 @@ def _validate_url(value: str, field_name: str = "canonical_url") -> str:
     """Проверить абсолютный HTTP(S) URL без нормализации содержимого."""
     value = _require_non_empty(value, field_name)
     parsed = urlparse(value)
-    if parsed.scheme not in {"http", "https"***REMOVED*** or not parsed.netloc:
-        raise ContractValidationError(f"{field_name***REMOVED*** must be an absolute HTTP(S) URL")
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise ContractValidationError(f"{field_name} must be an absolute HTTP(S) URL")
     return value
 
 
 def _validate_utc(value: datetime, field_name: str) -> datetime:
     """Потребовать timezone-aware дату и привести её к UTC."""
     if value.tzinfo is None or value.utcoffset() is None:
-        raise ContractValidationError(f"{field_name***REMOVED*** must be timezone-aware")
+        raise ContractValidationError(f"{field_name} must be timezone-aware")
     return value.astimezone(timezone.utc)
 
 
@@ -170,7 +170,7 @@ class Publication:
     @property
     def item_key(self) -> str:
         """Стабильный ключ источника для deduplication/checkpoint."""
-        return f"{self.source_id***REMOVED***:{self.item_id***REMOVED***"
+        return f"{self.source_id}:{self.item_id}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -181,14 +181,14 @@ class SearchProfile:
     owner_scope: str
     version: int
     service_name: str
-    required_terms: tuple[str, ...***REMOVED*** = ()
-    optional_terms: tuple[str, ...***REMOVED*** = ()
-    synonyms: tuple[tuple[str, tuple[str, ...***REMOVED******REMOVED***, ...***REMOVED*** = ()
-    excluded_terms: tuple[str, ...***REMOVED*** = ()
-    intent_terms: tuple[str, ...***REMOVED*** = ()
+    required_terms: tuple[str, ...] = ()
+    optional_terms: tuple[str, ...] = ()
+    synonyms: tuple[tuple[str, tuple[str, ...]], ...] = ()
+    excluded_terms: tuple[str, ...] = ()
+    intent_terms: tuple[str, ...] = ()
     accept_threshold: float = 0.8
     pending_threshold: float = 0.5
-    source_ids: tuple[str, ...***REMOVED*** = ()
+    source_ids: tuple[str, ...] = ()
     rules_snapshot: RuleSnapshot = field(default_factory=dict)
     mode: SearchMode = SearchMode.DEMAND
 
@@ -212,11 +212,11 @@ class SearchProfile:
                 "optional_terms": tuple(self.optional_terms),
                 "excluded_terms": tuple(self.excluded_terms),
                 "intent_terms": tuple(self.intent_terms),
-            ***REMOVED***
+            }
             object.__setattr__(self, "rules_snapshot", snapshot)
 
     @property
-    def all_terms(self) -> tuple[str, ...***REMOVED***:
+    def all_terms(self) -> tuple[str, ...]:
         """Все термины профиля в стабильном порядке."""
         synonym_terms = tuple(
             synonym
@@ -235,10 +235,10 @@ class MatchDecision:
     profile_version: int
     outcome: MatchOutcome
     score: float
-    matched_terms: tuple[str, ...***REMOVED*** = ()
-    matched_synonyms: tuple[str, ...***REMOVED*** = ()
-    rejected_terms: tuple[str, ...***REMOVED*** = ()
-    reasons: tuple[str, ...***REMOVED*** = ()
+    matched_terms: tuple[str, ...] = ()
+    matched_synonyms: tuple[str, ...] = ()
+    rejected_terms: tuple[str, ...] = ()
+    reasons: tuple[str, ...] = ()
     rules_snapshot: RuleSnapshot = field(default_factory=dict)
     decided_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
@@ -266,7 +266,7 @@ class RetentionPolicy:
     def __post_init__(self) -> None:
         for name, value in (("text_ttl", self.text_ttl), ("metadata_ttl", self.metadata_ttl)):
             if value is not None and value.total_seconds() < 0:
-                raise ContractValidationError(f"{name***REMOVED*** must not be negative")
+                raise ContractValidationError(f"{name} must not be negative")
         if self.max_text_chars < 0:
             raise ContractValidationError("max_text_chars must be >= 0")
         if not self.allow_full_text and self.text_ttl is not None:
@@ -292,11 +292,11 @@ class SourcePolicy:
     access_mode: str
     endpoint: str
     checked_at: datetime
-    allowed_fields: tuple[str, ...***REMOVED*** = ()
+    allowed_fields: tuple[str, ...] = ()
     retention: RetentionPolicy = field(
         default_factory=lambda: RetentionPolicy(text_ttl=None, allow_full_text=False)
     )
-    evidence_urls: tuple[str, ...***REMOVED*** = ()
+    evidence_urls: tuple[str, ...] = ()
     attribution_required: bool = False
     user_facing: bool = False
     can_poll: bool = False
@@ -319,7 +319,7 @@ class SourceAdapter(Protocol):
 
     source_id: str
 
-    async def fetch(self, *, limit: int = 50, checkpoint: str | None = None) -> AsyncIterator[SourceItem***REMOVED***:
+    async def fetch(self, *, limit: int = 50, checkpoint: str | None = None) -> AsyncIterator[SourceItem]:
         """Получить bounded batch элементов, не меняя источник."""
         ...
 
@@ -393,4 +393,4 @@ __all__ = [
     "SourceItem",
     "SourcePolicy",
     "SourcePolicyStatus",
-***REMOVED***
+]

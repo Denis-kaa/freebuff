@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any
 
 
@@ -14,18 +14,18 @@ class ProjectState:
     """Holds the current project state."""
 
     version: str = "0.1.0"
-    installed: list[str***REMOVED*** = field(default_factory=list)
-    risks: list[str***REMOVED*** = field(default_factory=list)
+    installed: list[str] = field(default_factory=list)
+    risks: list[str] = field(default_factory=list)
     phase: str = "init"
-    backlog: list[str***REMOVED*** = field(default_factory=list)
+    backlog: list[str] = field(default_factory=list)
     knowledge_sources: int = 0
     updated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
-    def to_dict(self) -> dict[str, Any***REMOVED***:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any***REMOVED***) -> "ProjectState":
+    def from_dict(cls, data: dict[str, Any]) -> "ProjectState":
         return cls(**data)
 
 
@@ -86,11 +86,11 @@ class StateManager:
 
     def format_state(self) -> str:
         return (
-            f"📊 PROJECT STATE [v{self._state.version***REMOVED******REMOVED***\n"
-            f"✅ Установлено: {', '.join(self._state.installed) or '—'***REMOVED***\n"
-            f"⚠️ Ошибки/Риски: {', '.join(self._state.risks) or '—'***REMOVED***\n"
-            f"🎯 Текущая фаза: {self._state.phase***REMOVED***\n"
-            f"📋 Осталось: {', '.join(self._state.backlog) or '—'***REMOVED***\n"
-            f"📚 База знаний: {self._state.knowledge_sources***REMOVED*** источников\n"
-            f"🕒 Обновлено: {self._state.updated_at***REMOVED***\n"
+            f"📊 PROJECT STATE [v{self._state.version}]\n"
+            f"✅ Установлено: {', '.join(self._state.installed) or '—'}\n"
+            f"⚠️ Ошибки/Риски: {', '.join(self._state.risks) or '—'}\n"
+            f"🎯 Текущая фаза: {self._state.phase}\n"
+            f"📋 Осталось: {', '.join(self._state.backlog) or '—'}\n"
+            f"📚 База знаний: {self._state.knowledge_sources} источников\n"
+            f"🕒 Обновлено: {self._state.updated_at}\n"
         )

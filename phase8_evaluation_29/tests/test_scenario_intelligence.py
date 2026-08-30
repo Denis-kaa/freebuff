@@ -30,12 +30,12 @@ from __future__ import annotations
 
 import sys
 import types
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional, Tuple
 
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parents[1***REMOVED***
+REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS_DIR = REPO_ROOT / "scripts_01"
 sys.path.insert(0, str(SCRIPTS_DIR))
 sys.path.insert(0, str(REPO_ROOT))
@@ -53,7 +53,7 @@ from scripts_01.opportunity_engine import Opportunity, propose  # noqa: E402
 
 # ── Helpers ──────────────────────────────────────────────────────────────
 
-def _make_opp(scenario_cap: Optional[str***REMOVED*** = None, **kwargs: Any) -> Opportunity:
+def _make_opp(scenario_cap: Optional[str] = None, **kwargs: Any) -> Opportunity:
     """Минимальный Opportunity (domain-neutral: любой проект)."""
     opp = Opportunity(
         id="opp-si-001",
@@ -64,37 +64,37 @@ def _make_opp(scenario_cap: Optional[str***REMOVED*** = None, **kwargs: Any) -> 
         status="ACTIVE",
     )
     if scenario_cap:
-        opp.scenario = {"scenario_id": "scenario_a", "capability": scenario_cap***REMOVED***
+        opp.scenario = {"scenario_id": "scenario_a", "capability": scenario_cap}
     for k, v in kwargs.items():
         setattr(opp, k, v)
     return opp
 
 
 class _FakeRole:
-    def __init__(self, role_id: str, routing_hint: Optional[list***REMOVED*** = None) -> None:
+    def __init__(self, role_id: str, routing_hint: Optional[list] = None) -> None:
         self.role_id = role_id
         self.title = role_id.replace("_", " ").title()
-        self.routing_hint = routing_hint or [***REMOVED***
+        self.routing_hint = routing_hint or []
 
 
 class _FakeScenario:
-    def __init__(self, scenario_id: str, capabilities: Optional[list***REMOVED*** = None) -> None:
+    def __init__(self, scenario_id: str, capabilities: Optional[list] = None) -> None:
         self.scenario_id = scenario_id
         self.display_name = scenario_id.replace("_", " ").title()
-        self.capabilities = capabilities or [***REMOVED***
+        self.capabilities = capabilities or []
 
 
 class _FakeScenarioRegistry:
     """Fake ScenarioRegistry: propose_roles + list_scenarios (каталог)."""
 
-    def __init__(self, proposals: Optional[List[Tuple[Any, Any, float***REMOVED******REMOVED******REMOVED*** = None) -> None:
-        self._proposals = proposals or [***REMOVED***
-        self._catalog = [s for (s, _r, _sc) in self._proposals***REMOVED***
+    def __init__(self, proposals: Optional[List[Tuple[Any, Any, float]]] = None) -> None:
+        self._proposals = proposals or []
+        self._catalog = [s for (s, _r, _sc) in self._proposals]
 
-    def propose_roles(self, text: str, top_n: int = 3) -> List[Tuple[Any, Any, float***REMOVED******REMOVED***:
-        return self._proposals[:top_n***REMOVED***
+    def propose_roles(self, text: str, top_n: int = 3) -> List[Tuple[Any, Any, float]]:
+        return self._proposals[:top_n]
 
-    def list_scenarios(self) -> List[Any***REMOVED***:
+    def list_scenarios(self) -> List[Any]:
         return self._catalog
 
 
@@ -111,32 +111,32 @@ class _FakeForgePassport:
 class _FakeFactoryRegistry:
     """Fake FactoryRegistry: capability_catalog + select_forge (+ find_by_capability)."""
 
-    def __init__(self, catalog: Optional[Dict[str, list***REMOVED******REMOVED*** = None) -> None:
-        # capability → [(factory_id, forge_id)***REMOVED***
-        self._pairs: Dict[str, list***REMOVED*** = catalog or {
-            "article_generation": [("articles_factory", "article_forge")***REMOVED***,
-            "api_implementation": [("code_factory", "api_forge")***REMOVED***,
-        ***REMOVED***
+    def __init__(self, catalog: Optional[Dict[str, list]] = None) -> None:
+        # capability → [(factory_id, forge_id)]
+        self._pairs: Dict[str, list] = catalog or {
+            "article_generation": [("articles_factory", "article_forge")],
+            "api_implementation": [("code_factory", "api_forge")],
+        }
 
-    def capability_catalog(self) -> Dict[str, list***REMOVED***:
-        return {cap: [f for f, _g in pairs***REMOVED*** for cap, pairs in self._pairs.items()***REMOVED***
+    def capability_catalog(self) -> Dict[str, list]:
+        return {cap: [f for f, _g in pairs] for cap, pairs in self._pairs.items()}
 
-    def select_forge(self, capability: str) -> Optional[Tuple[Any, Any***REMOVED******REMOVED***:
+    def select_forge(self, capability: str) -> Optional[Tuple[Any, Any]]:
         pairs = self._pairs.get(capability)
         if not pairs:
             return None
-        f_id, g_id = pairs[0***REMOVED***
+        f_id, g_id = pairs[0]
         return (_FakeFactoryPassport(f_id), _FakeForgePassport(g_id))
 
     def find_factories_by_capability(self, capability: str) -> list:
-        return [_FakeFactoryPassport(f) for f, _g in self._pairs.get(capability, [***REMOVED***)***REMOVED***
+        return [_FakeFactoryPassport(f) for f, _g in self._pairs.get(capability, [])]
 
 
 def _make_si(
     tmp_path: Path,
     *,
-    proposals: Optional[List[Tuple[Any, Any, float***REMOVED******REMOVED******REMOVED*** = None,
-    catalog: Optional[Dict[str, list***REMOVED******REMOVED*** = None,
+    proposals: Optional[List[Tuple[Any, Any, float]]] = None,
+    catalog: Optional[Dict[str, list]] = None,
     memory_store: Any = None,
 ) -> ScenarioIntelligence:
     """ScenarioIntelligence с инъектированными фейками + tmp history store (hermetic).
@@ -151,19 +151,19 @@ def _make_si(
         # tmp_path уникален на тест — фиксированное имя достаточно (hash() не нужен).
         memory_store = MemoryStore(tmp_path / "mem_si.db")
     return ScenarioIntelligence(
-        registry=_FakeScenarioRegistry(proposals or [***REMOVED***),
-        factory_registry=_FakeFactoryRegistry(catalog or {***REMOVED***),
+        registry=_FakeScenarioRegistry(proposals or []),
+        factory_registry=_FakeFactoryRegistry(catalog or {}),
         memory_store=memory_store,
         history_store=DecisionHistoryStore(tmp_path / "history.yaml"),
     )
 
 
-def _mock_forge_facade(monkeypatch: pytest.MonkeyPatch, result: Any) -> List[str***REMOVED***:
+def _mock_forge_facade(monkeypatch: pytest.MonkeyPatch, result: Any) -> List[str]:
     """Подмена core_02.forge_facade на фейк с run_chain (как в test_intelligence_loop_phase5)."""
-    calls: List[str***REMOVED*** = [***REMOVED***
+    calls: List[str] = []
 
     class _FakeForgeFacade:
-        PIPELINE_CHAIN = ["r1", "r2"***REMOVED***
+        PIPELINE_CHAIN = ["r1", "r2"]
 
         @staticmethod
         def run_chain(*args: Any, **kwargs: Any) -> Any:
@@ -183,8 +183,8 @@ class _FakeChainRun:
         self.overall = overall
         self.stage_count = 2
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
-        return {"overall": self.overall, "stage_count": self.stage_count***REMOVED***
+    def to_dict(self) -> Dict[str, Any]:
+        return {"overall": self.overall, "stage_count": self.stage_count}
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -196,15 +196,15 @@ def test_1_candidate_discovery(tmp_path: Path):
     si = _make_si(
         tmp_path,
         proposals=[
-            (_FakeScenario("scenario_a", ["article_generation"***REMOVED***), _FakeRole("writer", ["article_generation"***REMOVED***), 0.9),
-        ***REMOVED***,
+            (_FakeScenario("scenario_a", ["article_generation"]), _FakeRole("writer", ["article_generation"]), 0.9),
+        ],
     )
     opp = _make_opp()
     cands = si.discover(opp, top_n=5)
     assert len(cands) == 1
-    assert cands[0***REMOVED***.scenario_id == "scenario_a"
-    assert cands[0***REMOVED***.capability == "article_generation"  # из scenario.capabilities[0***REMOVED***
-    assert cands[0***REMOVED***.score == pytest.approx(0.9)  # raw fuzzy match
+    assert cands[0].scenario_id == "scenario_a"
+    assert cands[0].capability == "article_generation"  # из scenario.capabilities[0]
+    assert cands[0].score == pytest.approx(0.9)  # raw fuzzy match
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -216,14 +216,14 @@ def test_2_multiple_scenarios(tmp_path: Path):
     si = _make_si(
         tmp_path,
         proposals=[
-            (_FakeScenario("scenario_a", ["article_generation"***REMOVED***), _FakeRole("writer"), 0.9),
-            (_FakeScenario("scenario_b", ["api_implementation"***REMOVED***), _FakeRole("engineer"), 0.7),
-            (_FakeScenario("scenario_c", [***REMOVED***), _FakeRole("designer"), 0.5),
-        ***REMOVED***,
+            (_FakeScenario("scenario_a", ["article_generation"]), _FakeRole("writer"), 0.9),
+            (_FakeScenario("scenario_b", ["api_implementation"]), _FakeRole("engineer"), 0.7),
+            (_FakeScenario("scenario_c", []), _FakeRole("designer"), 0.5),
+        ],
     )
     cands = si.discover(_make_opp(), top_n=5)
     assert len(cands) == 3
-    assert {c.scenario_id for c in cands***REMOVED*** == {"scenario_a", "scenario_b", "scenario_c"***REMOVED***
+    assert {c.scenario_id for c in cands} == {"scenario_a", "scenario_b", "scenario_c"}
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -232,15 +232,15 @@ def test_2_multiple_scenarios(tmp_path: Path):
 
 def test_3_ranking(tmp_path: Path):
     """§18 #3: rank() сортирует по composite score (desc), tie-break стабилен."""
-    si = _make_si(tmp_path, proposals=[***REMOVED***)
+    si = _make_si(tmp_path, proposals=[])
     opp = _make_opp()
     cands = [
         ScenarioCandidate(scenario_id="low", display_name="Low", score=0.4),
         ScenarioCandidate(scenario_id="high", display_name="High", score=0.9),
         ScenarioCandidate(scenario_id="mid", display_name="Mid", score=0.7),
-    ***REMOVED***
+    ]
     ranked = si.rank(cands)
-    assert [c.scenario_id for c in ranked***REMOVED*** == ["high", "mid", "low"***REMOVED***
+    assert [c.scenario_id for c in ranked] == ["high", "mid", "low"]
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -252,9 +252,9 @@ def test_4_selection(tmp_path: Path):
     si = _make_si(
         tmp_path,
         proposals=[
-            (_FakeScenario("scenario_a", ["article_generation"***REMOVED***), _FakeRole("writer"), 0.9),
-            (_FakeScenario("scenario_b", ["api_implementation"***REMOVED***), _FakeRole("engineer"), 0.7),
-        ***REMOVED***,
+            (_FakeScenario("scenario_a", ["article_generation"]), _FakeRole("writer"), 0.9),
+            (_FakeScenario("scenario_b", ["api_implementation"]), _FakeRole("engineer"), 0.7),
+        ],
         # Герметичность: _make_si уже инъектирует пустой MemoryStore (history=neutral).
     )
     opp = _make_opp()
@@ -275,8 +275,8 @@ def test_5_provenance(tmp_path: Path):
     si = _make_si(
         tmp_path,
         proposals=[
-            (_FakeScenario("scenario_a", ["article_generation"***REMOVED***), _FakeRole("writer"), 0.9),
-        ***REMOVED***,
+            (_FakeScenario("scenario_a", ["article_generation"]), _FakeRole("writer"), 0.9),
+        ],
     )
     decision = si.select(_make_opp(), top_n=5, persist=True)
     assert decision.reasons, "reasons must be non-empty (explainable)"
@@ -315,8 +315,8 @@ def test_7_factory_routing(tmp_path: Path):
     si = _make_si(
         tmp_path,
         proposals=[
-            (_FakeScenario("scenario_a", ["article_generation"***REMOVED***), _FakeRole("writer"), 0.9),
-        ***REMOVED***,
+            (_FakeScenario("scenario_a", ["article_generation"]), _FakeRole("writer"), 0.9),
+        ],
     )
     decision = si.select(_make_opp(), top_n=5, persist=True)
     assert decision.capability == "article_generation"
@@ -334,11 +334,11 @@ def test_8_forge_boundary(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
     si = _make_si(
         tmp_path,
         proposals=[
-            (_FakeScenario("scenario_a", ["article_generation"***REMOVED***), _FakeRole("writer"), 0.9),
-        ***REMOVED***,
+            (_FakeScenario("scenario_a", ["article_generation"]), _FakeRole("writer"), 0.9),
+        ],
     )
     decision = si.select(_make_opp(), top_n=5, persist=True)
-    assert calls == [***REMOVED***, f"ScenarioIntelligence must not call ForgeFacade: {calls***REMOVED***"
+    assert calls == [], f"ScenarioIntelligence must not call ForgeFacade: {calls}"
     assert decision.factory_id == "articles_factory"
     assert decision.forge_id == "article_forge"
 
@@ -355,23 +355,23 @@ def test_9_feedback(tmp_path: Path):
     si = _make_si(
         tmp_path,
         proposals=[
-            (_FakeScenario("scenario_a", ["article_generation"***REMOVED***), _FakeRole("writer"), 0.9),
-        ***REMOVED***,
+            (_FakeScenario("scenario_a", ["article_generation"]), _FakeRole("writer"), 0.9),
+        ],
         memory_store=mem,
     )
     decision = si.select(_make_opp(), top_n=5, persist=True)
     result = si.feedback_v0(decision, "success", memory_store=mem)
-    assert result["recorded"***REMOVED*** is True
-    assert result["knowledge_id"***REMOVED***
-    assert result["learning_event_id"***REMOVED***
+    assert result["recorded"] is True
+    assert result["knowledge_id"]
+    assert result["learning_event_id"]
     # KO kind=candidate (существующий KNOWLEDGE_KINDS) + tag scenario_decision
     kos = mem.query_by_type("candidate", limit=10)
-    assert any(k["id"***REMOVED*** == result["knowledge_id"***REMOVED*** for k in kos)
-    ko = mem.get_knowledge(result["knowledge_id"***REMOVED***)
+    assert any(k["id"] == result["knowledge_id"] for k in kos)
+    ko = mem.get_knowledge(result["knowledge_id"])
     assert ko is not None
-    assert "scenario_decision" in (ko.get("tags") or [***REMOVED***)
+    assert "scenario_decision" in (ko.get("tags") or [])
     events = mem.list_learning_events(limit=10)
-    assert any(e["id"***REMOVED*** == result["learning_event_id"***REMOVED*** for e in events)
+    assert any(e["id"] == result["learning_event_id"] for e in events)
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -386,12 +386,12 @@ def test_10_eventbus(tmp_path: Path):
     si = _make_si(
         tmp_path,
         proposals=[
-            (_FakeScenario("scenario_a", ["article_generation"***REMOVED***), _FakeRole("writer"), 0.9),
-        ***REMOVED***,
+            (_FakeScenario("scenario_a", ["article_generation"]), _FakeRole("writer"), 0.9),
+        ],
     )
     si.select(_make_opp(), top_n=5, persist=True, event_bus=bus)
     events = bus.get_events(limit=50)
-    types = {e.event_type for e in events***REMOVED***
+    types = {e.event_type for e in events}
     assert "scenario.candidates.generated" in types
     assert "scenario.evaluated" in types
     assert "scenario.selected" in types
@@ -407,8 +407,8 @@ def test_11_persistence(tmp_path: Path):
     si = _make_si(
         tmp_path,
         proposals=[
-            (_FakeScenario("scenario_a", ["article_generation"***REMOVED***), _FakeRole("writer"), 0.9),
-        ***REMOVED***,
+            (_FakeScenario("scenario_a", ["article_generation"]), _FakeRole("writer"), 0.9),
+        ],
     )
     # Переопределяем history store на явный tmp-путь (после создания si)
     si._history_store = DecisionHistoryStore(history_path)
@@ -418,7 +418,7 @@ def test_11_persistence(tmp_path: Path):
     store2 = DecisionHistoryStore(history_path)
     recs = store2.by_opportunity(decision.opportunity_id)
     assert len(recs) == 1
-    assert recs[0***REMOVED***["selected_scenario_id"***REMOVED*** == "scenario_a"
+    assert recs[0]["selected_scenario_id"] == "scenario_a"
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -432,7 +432,7 @@ def test_12_backward_compat_legacy_path(monkeypatch: pytest.MonkeyPatch, tmp_pat
     real_import = __import__
 
     def _blocked(name, *args, **kwargs):
-        # Блокируем и полное имя, и bare-name fallback (_lazy_***REMOVED***tries
+        # Блокируем и полное имя, и bare-name fallback (_lazy_)tries
         # top-level "scenario_intelligence", который иначе пере-импортируется
         # из scripts_01/ в sys.path).
         if name in ("scripts_01.scenario_intelligence", "scenario_intelligence"):
@@ -449,8 +449,8 @@ def test_12_backward_compat_legacy_path(monkeypatch: pytest.MonkeyPatch, tmp_pat
         scenario_id = "blueprint_v3"
 
     class _FakeRegistry:
-        def propose_roles(self, text: str, top_n: int = 3) -> List[Tuple[Any, Any, float***REMOVED******REMOVED***:
-            return [(_FakeScenario(), _FakeRole(), 0.9)***REMOVED***
+        def propose_roles(self, text: str, top_n: int = 3) -> List[Tuple[Any, Any, float]]:
+            return [(_FakeScenario(), _FakeRole(), 0.9)]
 
     fake_module = types.ModuleType("core_02.scenario_registry")
     fake_module.ScenarioRegistry = _FakeRegistry
@@ -460,11 +460,11 @@ def test_12_backward_compat_legacy_path(monkeypatch: pytest.MonkeyPatch, tmp_pat
         opp = _make_opp()
         opp = propose(opp)
         assert opp.scenario is not None
-        assert opp.scenario["scenario_id"***REMOVED*** == "blueprint_v3"
-        assert opp.scenario["score"***REMOVED*** == 0.9  # legacy raw score
+        assert opp.scenario["scenario_id"] == "blueprint_v3"
+        assert opp.scenario["score"] == 0.9  # legacy raw score
     finally:
         if saved is not None:
-            sys.modules["scripts_01.scenario_intelligence"***REMOVED*** = saved
+            sys.modules["scripts_01.scenario_intelligence"] = saved
 
 
 def test_12b_backward_compat_si_unavailable_decision(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
@@ -491,8 +491,8 @@ def test_12b_backward_compat_si_unavailable_decision(monkeypatch: pytest.MonkeyP
         scenario_id = "blueprint_v3"
 
     class _FakeRegistry:
-        def propose_roles(self, text: str, top_n: int = 3) -> List[Tuple[Any, Any, float***REMOVED******REMOVED***:
-            return [(_FakeScenario(), _FakeRole(), 0.9)***REMOVED***
+        def propose_roles(self, text: str, top_n: int = 3) -> List[Tuple[Any, Any, float]]:
+            return [(_FakeScenario(), _FakeRole(), 0.9)]
 
     fake_reg = types.ModuleType("core_02.scenario_registry")
     fake_reg.ScenarioRegistry = _FakeRegistry
@@ -501,7 +501,7 @@ def test_12b_backward_compat_si_unavailable_decision(monkeypatch: pytest.MonkeyP
     opp = _make_opp()
     opp = propose(opp)
     assert opp.scenario is not None
-    assert opp.scenario["scenario_id"***REMOVED*** == "blueprint_v3"  # legacy path сработал
+    assert opp.scenario["scenario_id"] == "blueprint_v3"  # legacy path сработал
 
 
 # ═════════════════════════════════════════════════════════════════════════
@@ -510,7 +510,7 @@ def test_12b_backward_compat_si_unavailable_decision(monkeypatch: pytest.MonkeyP
 
 def test_13_unavailable_scenario(tmp_path: Path):
     """§18 #13: нет кандидатов → decision status='unavailable' (не краш)."""
-    si = _make_si(tmp_path, proposals=[***REMOVED***)
+    si = _make_si(tmp_path, proposals=[])
     decision = si.select(_make_opp(), top_n=5, persist=True)
     assert decision.selected_scenario_id is None
     assert decision.status == "unavailable"
@@ -523,8 +523,8 @@ def test_13b_unavailable_infeasible(tmp_path: Path):
         tmp_path,
         proposals=[
             # capability "image_generation" НЕ в каталоге фейка → cap_avail=0 → feas=0.3 → infeasible
-            (_FakeScenario("scenario_x", ["image_generation"***REMOVED***), _FakeRole("artist"), 0.9),
-        ***REMOVED***,
+            (_FakeScenario("scenario_x", ["image_generation"]), _FakeRole("artist"), 0.9),
+        ],
     )
     decision = si.select(_make_opp(), top_n=5, persist=True, available_only=True)
     assert decision.selected_scenario_id is None
@@ -542,8 +542,8 @@ def test_14_deferred_opportunity(tmp_path: Path):
     si = _make_si(
         tmp_path,
         proposals=[
-            (_FakeScenario("scenario_a", ["article_generation"***REMOVED***), _FakeRole("writer"), 0.9),
-        ***REMOVED***,
+            (_FakeScenario("scenario_a", ["article_generation"]), _FakeRole("writer"), 0.9),
+        ],
     )
     opp = _make_opp()
     opp = advance(opp, "DEFERRED", reason="не сейчас")
@@ -564,22 +564,22 @@ def test_14_deferred_opportunity(tmp_path: Path):
 def test_15_reselection_after_new_evidence(tmp_path: Path):
     """§18 #15: новый evidence → другой сценарий → superseded; повторный → reselected."""
     history_path = tmp_path / "history.yaml"
-    si = _make_si(tmp_path, proposals=[***REMOVED***)
+    si = _make_si(tmp_path, proposals=[])
     si._history_store = DecisionHistoryStore(history_path)
 
     # Первый выбор: scenario_a (0.9)
     si._registry = _FakeScenarioRegistry([
-        (_FakeScenario("scenario_a", ["article_generation"***REMOVED***), _FakeRole("writer"), 0.9),
-    ***REMOVED***)
+        (_FakeScenario("scenario_a", ["article_generation"]), _FakeRole("writer"), 0.9),
+    ])
     d1 = si.select(_make_opp(), top_n=5, persist=True)
     assert d1.selected_scenario_id == "scenario_a"
     assert d1.status == "selected"
 
     # Новый evidence: scenario_b теперь сильнее (1.0) → superseded
     si._registry = _FakeScenarioRegistry([
-        (_FakeScenario("scenario_b", ["api_implementation"***REMOVED***), _FakeRole("engineer"), 1.0),
-        (_FakeScenario("scenario_a", ["article_generation"***REMOVED***), _FakeRole("writer"), 0.9),
-    ***REMOVED***)
+        (_FakeScenario("scenario_b", ["api_implementation"]), _FakeRole("engineer"), 1.0),
+        (_FakeScenario("scenario_a", ["article_generation"]), _FakeRole("writer"), 0.9),
+    ])
     d2 = si.select(_make_opp(), top_n=5, persist=True)
     assert d2.selected_scenario_id == "scenario_b"
     assert d2.status == "superseded"
@@ -606,10 +606,10 @@ def test_main_integration_vertical_slice(monkeypatch: pytest.MonkeyPatch, tmp_pa
     si = _make_si(
         tmp_path,
         proposals=[
-            (_FakeScenario("scenario_a", ["article_generation"***REMOVED***), _FakeRole("writer"), 0.9),
-            (_FakeScenario("scenario_b", ["api_implementation"***REMOVED***), _FakeRole("engineer"), 0.7),
-            (_FakeScenario("scenario_c", [***REMOVED***), _FakeRole("designer"), 0.5),
-        ***REMOVED***,
+            (_FakeScenario("scenario_a", ["article_generation"]), _FakeRole("writer"), 0.9),
+            (_FakeScenario("scenario_b", ["api_implementation"]), _FakeRole("engineer"), 0.7),
+            (_FakeScenario("scenario_c", []), _FakeRole("designer"), 0.5),
+        ],
         memory_store=MemoryStore(tmp_path / "mem_int.db"),
     )
     decision = si.select(opp, top_n=5, persist=True)
@@ -620,7 +620,7 @@ def test_main_integration_vertical_slice(monkeypatch: pytest.MonkeyPatch, tmp_pa
     assert decision.status == "selected"
     assert decision.reasons and decision.evidence
 
-    # 5. propose() интеграция: opp.scenario + provenance['scenario_decision'***REMOVED***
+    # 5. propose() интеграция: opp.scenario + provenance['scenario_decision']
     # (через SI — здесь проверяем прямое делегирование в opportunity_engine)
     from scripts_01.opportunity_engine import propose as _propose
 
@@ -636,27 +636,27 @@ def test_main_integration_vertical_slice(monkeypatch: pytest.MonkeyPatch, tmp_pa
     opp2 = _make_opp()
     opp2 = _propose(opp2)
     assert opp2.scenario is not None
-    assert opp2.scenario["scenario_id"***REMOVED*** == "scenario_a"
-    assert opp2.scenario["capability"***REMOVED*** == "article_generation"
-    assert opp2.provenance.get("scenario_decision", {***REMOVED***).get("selected_scenario_id") == "scenario_a"
+    assert opp2.scenario["scenario_id"] == "scenario_a"
+    assert opp2.scenario["capability"] == "article_generation"
+    assert opp2.provenance.get("scenario_decision", {}).get("selected_scenario_id") == "scenario_a"
 
     # 6-7. EXECUTION: ForgeFacade (мок) → artifact
     calls = _mock_forge_facade(monkeypatch, _FakeChainRun(overall="ok"))
-    opp2.roles = [{"role_id": "r1"***REMOVED***, {"role_id": "r2"***REMOVED******REMOVED***
+    opp2.roles = [{"role_id": "r1"}, {"role_id": "r2"}]
     from scripts_01.opportunity_engine import execute
 
     mem = MemoryStore(tmp_path / "mem_int2.db")
     opp2 = execute(opp2, dry_run=False, memory_store=mem)
-    assert calls == ["run_chain"***REMOVED***
+    assert calls == ["run_chain"]
     assert opp2.status == "COMPLETED"
     assert opp2.artifacts
 
     # 8. FEEDBACK v0 → Memory (kind=candidate, tag=scenario_decision)
-    si2 = _make_si(tmp_path, proposals=[***REMOVED***, memory_store=mem)
+    si2 = _make_si(tmp_path, proposals=[], memory_store=mem)
     fb = si2.feedback_v0(decision, "success", memory_store=mem)
-    assert fb["recorded"***REMOVED*** is True
+    assert fb["recorded"] is True
     kos = mem.query_by_type("candidate", limit=10)
-    assert any(k["id"***REMOVED*** == fb["knowledge_id"***REMOVED*** for k in kos)
+    assert any(k["id"] == fb["knowledge_id"] for k in kos)
 
     # 9. History persisted (no new DB — YAML store)
     assert (tmp_path / "history.yaml").exists()

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-***REMOVED***
+}
 from collections.abc import Iterable
 
 from app.adapters.base import BaseAdapter
@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 _ID_NUM_RE = re.compile(r"(\d+)$")
 
 
-def _id_key(source_id: str) -> tuple[int, int | str***REMOVED***:
+def _id_key(source_id: str) -> tuple[int, int | str]:
     """Ключ для упорядоченного сравнения id источников.
 
     Числовой хвост (post_id, order_id) сравнивается как int — иначе
@@ -52,7 +52,7 @@ class LeadPipeline:
     def __init__(
         self,
         config: Config,
-        adapters: Iterable[BaseAdapter***REMOVED***,
+        adapters: Iterable[BaseAdapter],
         classifier: IntentClassifier | None = None,
         deduplicator: Deduplicator | None = None,
         scorer: Scorer | None = None,
@@ -74,16 +74,16 @@ class LeadPipeline:
         self._retry_template = retry or RetryPolicy()
         # per-adapter retry: изоляция (промт 69 п.2) — сбой одного источника
         # не должен размыкать circuit breaker для остальных.
-        self._retries: dict[str, RetryPolicy***REMOVED*** = {***REMOVED***
-        self._stats = {"fetched": 0, "new": 0, "delivered": 0, "errors": 0***REMOVED***
+        self._retries: dict[str, RetryPolicy] = {}
+        self._stats = {"fetched": 0, "new": 0, "delivered": 0, "errors": 0}
 
     def _retry_for(self, adapter: BaseAdapter) -> RetryPolicy:
         if adapter.name not in self._retries:
-            self._retries[adapter.name***REMOVED*** = self._retry_template.clone()
-        return self._retries[adapter.name***REMOVED***
+            self._retries[adapter.name] = self._retry_template.clone()
+        return self._retries[adapter.name]
 
     @property
-    def stats(self) -> dict[str, int***REMOVED***:
+    def stats(self) -> dict[str, int]:
         return dict(self._stats)
 
     # ── обработка одного лида ───────────────────────────────────────
@@ -108,13 +108,13 @@ class LeadPipeline:
         try:
             leads = await self._retry_for(adapter).run(adapter.fetch)
         except Exception as exc:  # noqa: BLE001 — изоляция адаптера (промт 69 п.2)
-            self._stats["errors"***REMOVED*** += 1
+            self._stats["errors"] += 1
             logger.warning("adapter %s error: %s", adapter.name, exc)
             return
 
-        self._stats["fetched"***REMOVED*** += len(leads)
+        self._stats["fetched"] += len(leads)
         last_id = self.checkpoint.get_last(adapter.name) if adapter.ordered else None
-        new_ids: list[str***REMOVED*** = [***REMOVED***
+        new_ids: list[str] = []
         for lead in leads:
             # resume: только для упорядоченных фидов (промт 69 п.3);
             # неупорядоченные (Kwork) — через Deduplicator, без скипа по id
@@ -123,17 +123,17 @@ class LeadPipeline:
             processed = self._process_lead(lead)
             if processed is None:
                 continue
-            self._stats["new"***REMOVED*** += 1
+            self._stats["new"] += 1
             new_ids.append(processed.source_id)
             if await self.delivery.send(processed):
-                self._stats["delivered"***REMOVED*** += 1
+                self._stats["delivered"] += 1
 
         if new_ids and adapter.ordered:
             # чекпоинт = самый новый виденный id (фид от новых к старым)
-            self.checkpoint.set_last(adapter.name, new_ids[0***REMOVED***)
+            self.checkpoint.set_last(adapter.name, new_ids[0])
 
     # ── циклы ───────────────────────────────────────────────────────
-    async def run_once(self) -> dict[str, int***REMOVED***:
+    async def run_once(self) -> dict[str, int]:
         """Один проход по всем источникам."""
         for adapter in self.adapters:
             await self._process_source(adapter)
@@ -158,13 +158,13 @@ class LeadPipeline:
         await self.delivery.aclose()
 
 
-def build_default_adapters(config: Config, client: TLSClient) -> list[BaseAdapter***REMOVED***:
+def build_default_adapters(config: Config, client: TLSClient) -> list[BaseAdapter]:
     """Фабрика адаптеров из конфига (kwork_enabled + tg_channels).
 
     Первый источник по roadmap — Kwork (рекомендация PHASE2 §8);
     затем TG-каналы из LA_TG_CHANNELS.
     """
-    adapters: list[BaseAdapter***REMOVED*** = [***REMOVED***
+    adapters: list[BaseAdapter] = []
     if config.kwork_enabled:
         adapters.append(KworkAdapter(client, feed_url=config.kwork_feed_url))
     for channel in config.tg_channels:

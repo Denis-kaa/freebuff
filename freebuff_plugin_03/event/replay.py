@@ -21,7 +21,7 @@ class EventReplay:
     - Протестировать обработчики на исторических данных
     """
 
-    def __init__(self, store: Any, bus: Optional[Any***REMOVED*** = None):
+    def __init__(self, store: Any, bus: Optional[Any] = None):
         """Инициализация.
 
         Args:
@@ -34,7 +34,7 @@ class EventReplay:
     def replay(
         self,
         query: EventQuery,
-        handler: Optional[Callable[[EventEntry***REMOVED***, None***REMOVED******REMOVED*** = None,
+        handler: Optional[Callable[[EventEntry], None]] = None,
         speed: str = "instant",
     ) -> ReplayResult:
         """Воспроизвести события, соответствующие запросу.
@@ -97,10 +97,10 @@ class EventReplay:
     def rebuild(
         self,
         target: str,
-        snapshot_path: Optional[str***REMOVED*** = None,
-        clear_func: Optional[Callable[[***REMOVED***, None***REMOVED******REMOVED*** = None,
-        process_func: Optional[Callable[[EventEntry***REMOVED***, None***REMOVED******REMOVED*** = None,
-        event_filter: Optional[Callable[[EventEntry***REMOVED***, bool***REMOVED******REMOVED*** = None,
+        snapshot_path: Optional[str] = None,
+        clear_func: Optional[Callable[[], None]] = None,
+        process_func: Optional[Callable[[EventEntry], None]] = None,
+        event_filter: Optional[Callable[[EventEntry], bool]] = None,
     ) -> RebuildResult:
         """Перестроить состояние компонента из событий.
 
@@ -131,11 +131,11 @@ class EventReplay:
             "knowledge_engine": "memory.stored",
             "memory_engine": "memory.*",
             "event_bus": "system.*",
-        ***REMOVED***
-        target_event_type = event_type_map.get(target, f"{target***REMOVED***.*")
+        }
+        target_event_type = event_type_map.get(target, f"{target}.*")
 
         # 2. Проверка snapshot
-        snapshot_file = snapshot_path or f"data_13/{target***REMOVED***.snapshot"
+        snapshot_file = snapshot_path or f"data_13/{target}.snapshot"
         snapshot_path_obj = self._store._db_path.parent.parent / snapshot_file
         snapshot_loaded = False
 
@@ -196,11 +196,11 @@ class EventReplay:
                 snapshot_path_obj.write_text(
                     json.dumps({
                         "target": target,
-                        "last_event_id": events[-1***REMOVED***.event_id if events else "",
-                        "last_timestamp": events[-1***REMOVED***.timestamp if events else "",
+                        "last_event_id": events[-1].event_id if events else "",
+                        "last_timestamp": events[-1].timestamp if events else "",
                         "events_processed": result.events_processed,
                         "items_count": result.items_created,
-                    ***REMOVED***, ensure_ascii=False, indent=2)
+                    }, ensure_ascii=False, indent=2)
                 )
             except Exception:
                 pass

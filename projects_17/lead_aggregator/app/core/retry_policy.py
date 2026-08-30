@@ -85,7 +85,7 @@ class RetryPolicy:
             self._opened_at = time.monotonic()
 
     # ── исполнение ──────────────────────────────────────────────────
-    async def run(self, fn: Callable[..., Awaitable[Any***REMOVED******REMOVED***, *args: Any, **kwargs: Any) -> Any:
+    async def run(self, fn: Callable[..., Awaitable[Any]], *args: Any, **kwargs: Any) -> Any:
         """Выполняет async-функцию с ретраями.
 
         Raises:
@@ -99,7 +99,7 @@ class RetryPolicy:
                 self._opened_at = None
             else:
                 raise CircuitOpenError(
-                    f"circuit open after {self._consecutive_failures***REMOVED*** consecutive failures"
+                    f"circuit open after {self._consecutive_failures} consecutive failures"
                 )
         last_error: Exception | None = None
         for attempt in range(self.max_attempts):

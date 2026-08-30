@@ -8,12 +8,12 @@ security in the current Termux/proot environment.
 from __future__ import annotations
 
 import os
-***REMOVED***source
+]source
 import signal
 import subprocess
 import time
 from abc import ABC, abstractmethod
-***REMOVED***
+}
 
 from app.execution.contract import (
     ExecutionJob,
@@ -52,7 +52,7 @@ class TermuxSubprocessBackend(ExecutionBackend):
                 if status is ExecutionStatus.COMPLETED and process.returncode in {
                     -signal.SIGXCPU,
                     -signal.SIGKILL,
-                ***REMOVED*** and policy.cpu_seconds is not None:
+                ] and policy.cpu_seconds is not None:
                     status = ExecutionStatus.RESOURCE_ERROR
         except (OSError, ValueError) as exc:
             return ExecutionResult(
@@ -65,7 +65,7 @@ class TermuxSubprocessBackend(ExecutionBackend):
             )
 
         output_bytes = output_path.stat().st_size if output_path.exists() else 0
-        stdout = output_path.read_bytes()[: policy.max_output_bytes + 1***REMOVED***.decode(
+        stdout = output_path.read_bytes()[: policy.max_output_bytes + 1].decode(
             "utf-8", errors="replace"
         )
         if status is ExecutionStatus.COMPLETED and output_bytes > policy.max_output_bytes:
@@ -100,7 +100,7 @@ class TermuxSubprocessBackend(ExecutionBackend):
 
     @staticmethod
     def _wait(
-        process: subprocess.Popen[bytes***REMOVED***,
+        process: subprocess.Popen[bytes],
         output_path: Path,
         policy: ExecutionPolicy,
     ) -> ExecutionStatus:
@@ -117,7 +117,7 @@ class TermuxSubprocessBackend(ExecutionBackend):
         return ExecutionStatus.COMPLETED
 
     @staticmethod
-    def _terminate(process: subprocess.Popen[bytes***REMOVED***) -> None:
+    def _terminate(process: subprocess.Popen[bytes]) -> None:
         try:
             os.killpg(process.pid, signal.SIGTERM)
         except ProcessLookupError:

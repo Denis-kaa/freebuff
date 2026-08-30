@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import ast
-***REMOVED***
+}
 
 from app.diagnostics.ast_rules import ASTRuleRegistry, RuleContext, default_registry
 from app.diagnostics.contract import (
@@ -53,7 +53,7 @@ class ASTAnalyzer:
         try:
             source = path.read_text(encoding="utf-8")
         except OSError as exc:
-            return SensorReport(self.source, SensorStatus.FAILED, stderr=f"{type(exc).__name__***REMOVED***: {exc***REMOVED***")
+            return SensorReport(self.source, SensorStatus.FAILED, stderr=f"{type(exc).__name__}: {exc}")
         return self.analyze_source(source, filename=str(path), competency_id=competency_id)
 
 

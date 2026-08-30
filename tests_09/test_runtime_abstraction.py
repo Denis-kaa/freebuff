@@ -19,7 +19,7 @@ import json
 import os
 import sys
 import tempfile
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
@@ -82,13 +82,13 @@ def mock_mcp_client():
     client.connect.return_value = True
     client.ping.return_value = True
     client.disconnect.return_value = None
-    client.list_tools.return_value = [***REMOVED***
+    client.list_tools.return_value = []
     client.call_tool.return_value = Mock(
         success=True,
-        content=[{"type": "text", "text": "Hello from mock"***REMOVED******REMOVED***,
+        content=[{"type": "text", "text": "Hello from mock"}],
         error=None,
     )
-    client.server_info = {"serverInfo": {"version": "1.0.0"***REMOVED******REMOVED***
+    client.server_info = {"serverInfo": {"version": "1.0.0"}}
     return client
 
 
@@ -119,7 +119,7 @@ class TestTypes:
             display_name="Freebuff CLI",
             version="1.0.0",
             status=RuntimeStatus.ACTIVE,
-            capabilities=["coding", "planning"***REMOVED***,
+            capabilities=["coding", "planning"],
         )
         assert rt.name == "freebuff"
         assert rt.status == RuntimeStatus.ACTIVE
@@ -148,7 +148,7 @@ class TestTypes:
             name="coding",
             description="Code generation",
             confidence=0.95,
-            models=["deepseek-v4", "claude-3.5"***REMOVED***,
+            models=["deepseek-v4", "claude-3.5"],
         )
         assert cap.name == "coding"
         assert cap.confidence == 0.95
@@ -187,7 +187,7 @@ class TestRuntimeAdapter:
 
     def test_concrete_adapter_implements_abstract(self):
         """StdioMCPAdapter реализует все абстрактные методы."""
-        adapter = StdioMCPAdapter(RuntimeConfig(), "echo", ["hello"***REMOVED***, "test", "Test Runtime")
+        adapter = StdioMCPAdapter(RuntimeConfig(), "echo", ["hello"], "test", "Test Runtime")
         # Должен быть инстанциирован без ошибок
         assert adapter.name == "test"
         assert adapter.display_name == "Test Runtime"
@@ -200,7 +200,7 @@ class TestRuntimeAdapter:
         from freebuff_plugin_03 import mcp_client
 
         monkeypatch.setattr(mcp_client, "MCP_REQUEST_TIMEOUT", 0.5)
-        adapter = StdioMCPAdapter(RuntimeConfig(), "echo", ["hello"***REMOVED***, "test", "Test")
+        adapter = StdioMCPAdapter(RuntimeConfig(), "echo", ["hello"], "test", "Test")
         assert adapter.is_connected() is False
         # connect должен вернуть False (echo не MCP сервер)
         ok = adapter.connect()
@@ -209,7 +209,7 @@ class TestRuntimeAdapter:
 
     def test_adapter_reset_session(self):
         """reset_session создаёт новую сессию."""
-        adapter = StdioMCPAdapter(RuntimeConfig(), "echo", [***REMOVED***, "test", "Test")
+        adapter = StdioMCPAdapter(RuntimeConfig(), "echo", [], "test", "Test")
         adapter._session = RuntimeSession(runtime="test", message_count=10)
         adapter.reset_session()
         assert adapter._session is not None
@@ -221,7 +221,7 @@ class TestStdioMCPAdapter:
 
     def test_connect_with_mock(self, mock_mcp_client):
         """connect через mock MCP клиента."""
-        adapter = StdioMCPAdapter(RuntimeConfig(), "python", ["-c", "print(1)"***REMOVED***, "test", "Test")
+        adapter = StdioMCPAdapter(RuntimeConfig(), "python", ["-c", "print(1)"], "test", "Test")
         with patch("freebuff_plugin_03.runtime.adapter.StdioMCPClient", return_value=mock_mcp_client):
             ok = adapter.connect()
             assert ok is True
@@ -229,7 +229,7 @@ class TestStdioMCPAdapter:
 
     def test_disconnect(self, mock_mcp_client):
         """disconnect вызывает disconnect клиента."""
-        adapter = StdioMCPAdapter(RuntimeConfig(), "python", [***REMOVED***, "test", "Test")
+        adapter = StdioMCPAdapter(RuntimeConfig(), "python", [], "test", "Test")
         with patch("freebuff_plugin_03.runtime.adapter.StdioMCPClient", return_value=mock_mcp_client):
             adapter.connect()
             ok = adapter.disconnect()
@@ -237,14 +237,14 @@ class TestStdioMCPAdapter:
 
     def test_ping(self, mock_mcp_client):
         """ping возвращает True при успехе."""
-        adapter = StdioMCPAdapter(RuntimeConfig(), "python", [***REMOVED***, "test", "Test")
+        adapter = StdioMCPAdapter(RuntimeConfig(), "python", [], "test", "Test")
         with patch("freebuff_plugin_03.runtime.adapter.StdioMCPClient", return_value=mock_mcp_client):
             adapter.connect()
             assert adapter.ping() is True
 
     def test_health(self, mock_mcp_client):
         """health возвращает RuntimeHealth."""
-        adapter = StdioMCPAdapter(RuntimeConfig(), "python", [***REMOVED***, "test", "Test")
+        adapter = StdioMCPAdapter(RuntimeConfig(), "python", [], "test", "Test")
         with patch("freebuff_plugin_03.runtime.adapter.StdioMCPClient", return_value=mock_mcp_client):
             adapter.connect()
             health = adapter.health()
@@ -258,20 +258,20 @@ class TestStdioMCPAdapter:
         mock_tool.description = "Generate"
         mock_tool.input_schema = {
             "type": "object",
-            "properties": {"messages": {"type": "array"***REMOVED******REMOVED***,
-        ***REMOVED***
-        mock_mcp_client.list_tools.return_value = [mock_tool***REMOVED***
-        adapter = StdioMCPAdapter(RuntimeConfig(), "python", [***REMOVED***, "test", "Test")
+            "properties": {"messages": {"type": "array"}},
+        }
+        mock_mcp_client.list_tools.return_value = [mock_tool]
+        adapter = StdioMCPAdapter(RuntimeConfig(), "python", [], "test", "Test")
         with patch("freebuff_plugin_03.runtime.adapter.StdioMCPClient", return_value=mock_mcp_client):
             adapter.connect()
-            result = adapter.generate([{"role": "user", "content": "hi"***REMOVED******REMOVED***)
+            result = adapter.generate([{"role": "user", "content": "hi"}])
             assert isinstance(result, RuntimeResult)
             assert result.runtime == "test"
 
     def test_generate_not_connected(self):
         """generate без подключения возвращает ошибку."""
-        adapter = StdioMCPAdapter(RuntimeConfig(), "python", [***REMOVED***, "test", "Test")
-        result = adapter.generate([{"role": "user", "content": "hi"***REMOVED******REMOVED***)
+        adapter = StdioMCPAdapter(RuntimeConfig(), "python", [], "test", "Test")
+        result = adapter.generate([{"role": "user", "content": "hi"}])
         assert result.error is not None
         assert "Not connected" in result.error
 
@@ -299,7 +299,7 @@ class TestHTTPMCPAdapter:
     def test_generate_not_connected(self):
         """generate без подключения возвращает ошибку."""
         adapter = HTTPMCPAdapter(RuntimeConfig(), "http://localhost:1/mcp", "http-test", "HTTP Test")
-        result = adapter.generate([{"role": "user", "content": "hi"***REMOVED******REMOVED***)
+        result = adapter.generate([{"role": "user", "content": "hi"}])
         assert result.error is not None
         assert "Not connected" in result.error
 
@@ -341,7 +341,7 @@ class TestAdapterRegistry:
         """create создаёт экземпляр адаптера."""
         registry = AdapterRegistry()
         registry.register("test_type", StdioMCPAdapter)
-        adapter = registry.create("test_type", RuntimeConfig(), command="echo", args=[***REMOVED***, runtime_name="test")
+        adapter = registry.create("test_type", RuntimeConfig(), command="echo", args=[], runtime_name="test")
         assert adapter is not None
         assert adapter.name == "test"
 
@@ -377,7 +377,7 @@ class TestRuntimeRegistry:
         # Проверяем что файл создан
         assert tmp_storage.exists()
         data = json.loads(tmp_storage.read_text())
-        assert len(data["runtimes"***REMOVED***) == 1
+        assert len(data["runtimes"]) == 1
 
     def test_load_persisted(self, tmp_storage: Path):
         """Загрузка из сохранённого файла."""
@@ -436,7 +436,7 @@ class TestRuntimeRegistry:
         discovered = registry.discover()
         # В списке known runtimes должны быть freebuff и claude-code
         known = registry.list_known()
-        names = [k["name"***REMOVED*** for k in known***REMOVED***
+        names = [k["name"] for k in known]
         assert "freebuff" in names
         assert "claude-code" in names
 
@@ -445,7 +445,7 @@ class TestRuntimeRegistry:
         registry = RuntimeRegistry(tmp_storage)
         known = registry.list_known()
         assert len(known) >= 3  # freebuff, claude-code, openclaw
-        assert any(k["name"***REMOVED*** == "freebuff" for k in known)
+        assert any(k["name"] == "freebuff" for k in known)
 
     def test_get_status_structure(self, tmp_storage: Path):
         """get_status возвращает корректную структуру."""
@@ -457,7 +457,7 @@ class TestRuntimeRegistry:
         assert "connected" in status
         assert "runtimes" in status
         assert "known" in status
-        assert status["total"***REMOVED*** == 1
+        assert status["total"] == 1
 
     def test_connect_disconnect(self, tmp_storage: Path):
         """connect/disconnect lifecycle."""
@@ -500,55 +500,55 @@ class TestRuntimeCapabilityRegistry:
         registry = RuntimeRegistry(tmp_storage)
         cap_reg = RuntimeCapabilityRegistry(registry)
         caps = cap_reg.list_capabilities()
-        assert caps == {***REMOVED***
+        assert caps == {}
 
     def test_list_capabilities_with_runtimes(self, tmp_storage: Path):
         """Реестр с Runtime возвращает capability."""
         runtime_reg = RuntimeRegistry(tmp_storage)
         runtime_reg.register(RuntimeDefinition(
             name="freebuff", display_name="Freebuff",
-            capabilities=["coding", "planning"***REMOVED***,
+            capabilities=["coding", "planning"],
             status=RuntimeStatus.CONNECTED,
         ))
         cap_reg = RuntimeCapabilityRegistry(runtime_reg)
         caps = cap_reg.list_capabilities()
         assert "coding" in caps
         assert "planning" in caps
-        assert len(caps["coding"***REMOVED***) == 1
+        assert len(caps["coding"]) == 1
 
     def test_get_runtime_for_capability(self, tmp_storage: Path):
         """get_runtime_for_capability возвращает лучший Runtime."""
         runtime_reg = RuntimeRegistry(tmp_storage)
         runtime_reg.register(RuntimeDefinition(
             name="freebuff", display_name="Freebuff",
-            capabilities=["coding", "planning"***REMOVED***,
+            capabilities=["coding", "planning"],
             status=RuntimeStatus.CONNECTED,
         ))
         runtime_reg.register(RuntimeDefinition(
             name="claude-code", display_name="Claude Code",
-            capabilities=["coding", "review"***REMOVED***,
+            capabilities=["coding", "review"],
             status=RuntimeStatus.CONNECTED,
         ))
         cap_reg = RuntimeCapabilityRegistry(runtime_reg)
         best = cap_reg.get_runtime_for_capability("coding")
         assert best is not None
-        assert best["runtime"***REMOVED*** == "claude-code"  # Выше confidence
+        assert best["runtime"] == "claude-code"  # Выше confidence
 
     def test_get_runtime_with_preference(self, tmp_storage: Path):
         """Предпочитаемый Runtime учитывается."""
         runtime_reg = RuntimeRegistry(tmp_storage)
         runtime_reg.register(RuntimeDefinition(
             name="freebuff", display_name="Freebuff",
-            capabilities=["coding"***REMOVED***, status=RuntimeStatus.CONNECTED,
+            capabilities=["coding"], status=RuntimeStatus.CONNECTED,
         ))
         runtime_reg.register(RuntimeDefinition(
             name="claude-code", display_name="Claude Code",
-            capabilities=["coding"***REMOVED***, status=RuntimeStatus.CONNECTED,
+            capabilities=["coding"], status=RuntimeStatus.CONNECTED,
         ))
         cap_reg = RuntimeCapabilityRegistry(runtime_reg)
         best = cap_reg.get_runtime_for_capability("coding", preferred_runtime="freebuff")
         assert best is not None
-        assert best["runtime"***REMOVED*** == "freebuff"
+        assert best["runtime"] == "freebuff"
 
     def test_get_runtime_unknown_capability(self, tmp_storage: Path):
         """Неизвестная capability возвращает None."""
@@ -605,7 +605,7 @@ class TestFreebuffAdapter:
         adapter = FreebuffAdapter()
         caps = adapter.list_capabilities()
         assert len(caps) >= 3
-        names = [c.name for c in caps***REMOVED***
+        names = [c.name for c in caps]
         assert "coding" in names
         assert "planning" in names
 
@@ -643,7 +643,7 @@ class TestClaudeCodeAdapter:
         adapter = ClaudeCodeAdapter()
         caps = adapter.list_capabilities()
         assert len(caps) >= 4
-        names = [c.name for c in caps***REMOVED***
+        names = [c.name for c in caps]
         assert "review" in names
         assert "documentation" in names
 
@@ -708,11 +708,11 @@ class TestProviderLoading:
             "name": "test-runtime",
             "display_name": "Test Runtime",
             "adapter_type": "stdio_mcp",
-            "bin_names": ["test-rt"***REMOVED***,
-            "args": ["mcp"***REMOVED***,
-            "capabilities": {"coding": 0.80, "testing": 0.90***REMOVED***,
-            "platforms": ["linux"***REMOVED***,
-        ***REMOVED***
+            "bin_names": ["test-rt"],
+            "args": ["mcp"],
+            "capabilities": {"coding": 0.80, "testing": 0.90},
+            "platforms": ["linux"],
+        }
         ok = registry.register_provider(manifest)
         assert ok is True
         assert registry.providers_count >= 1
@@ -721,7 +721,7 @@ class TestProviderLoading:
     def test_register_provider_invalid(self, tmp_storage: Path):
         """register_provider() с пустым именем возвращает False."""
         registry = RuntimeRegistry(tmp_storage)
-        ok = registry.register_provider({"name": "", "display_name": "Bad"***REMOVED***)
+        ok = registry.register_provider({"name": "", "display_name": "Bad"})
         assert ok is False
 
     def test_custom_providers_dir(self, tmp_storage: Path):
@@ -736,11 +736,11 @@ class TestProviderLoading:
                 "name": "custom-rt",
                 "display_name": "Custom Runtime",
                 "adapter_type": "http_mcp",
-                "bin_names": ["custom"***REMOVED***,
-                "args": [***REMOVED***,
-                "capabilities": {"coding": 0.75***REMOVED***,
-                "platforms": ["linux", "android"***REMOVED***,
-            ***REMOVED***
+                "bin_names": ["custom"],
+                "args": [],
+                "capabilities": {"coding": 0.75},
+                "platforms": ["linux", "android"],
+            }
             yaml_file = providers_path / "custom.yaml"
             yaml_file.write_text(yaml.dump(manifest))
 
@@ -748,7 +748,7 @@ class TestProviderLoading:
             count = registry.load_providers_from_dir()
             assert count == 1
             assert "custom-rt" in registry._known_runtimes
-            assert registry._known_runtimes["custom-rt"***REMOVED***["capabilities"***REMOVED***["coding"***REMOVED*** == 0.75
+            assert registry._known_runtimes["custom-rt"]["capabilities"]["coding"] == 0.75
 
     def test_marketplace_ready_property(self, tmp_storage: Path):
         """marketplace_ready — True после загрузки провайдеров."""
@@ -778,8 +778,8 @@ class TestProviderIntegration:
         registry.register_provider({
             "name": "test",
             "display_name": "Test",
-            "capabilities": {"coding": 0.99, "review": 0.88***REMOVED***,
-        ***REMOVED***)
+            "capabilities": {"coding": 0.99, "review": 0.88},
+        ])
         cap_reg = RuntimeCapabilityRegistry(registry)
         # score должен прийти из манифеста
         score = cap_reg.score_runtime("test", "coding")
@@ -793,8 +793,8 @@ class TestProviderIntegration:
         registry.register_provider({
             "name": "legacy-rt",
             "display_name": "Legacy",
-            "capabilities": ["coding", "planning"***REMOVED***,  # Старый формат
-        ***REMOVED***)
+            "capabilities": ["coding", "planning"],  # Старый формат
+        ])
         cap_reg = RuntimeCapabilityRegistry(registry)
         score = cap_reg.score_runtime("legacy-rt", "coding")
         assert score == 0.5  # По умолчанию для старого формата
@@ -809,7 +809,7 @@ class TestIntegration:
         rt = RuntimeDefinition(
             name="freebuff",
             display_name="Freebuff CLI",
-            capabilities=["coding", "planning"***REMOVED***,
+            capabilities=["coding", "planning"],
             status=RuntimeStatus.INSTALLED,
         )
         registry.register(rt)
@@ -822,19 +822,19 @@ class TestIntegration:
         cap_reg = RuntimeCapabilityRegistry(registry)
         best = cap_reg.get_runtime_for_capability("coding")
         assert best is not None
-        assert best["runtime"***REMOVED*** == "freebuff"
+        assert best["runtime"] == "freebuff"
 
     def test_multiple_runtimes_capability_selection(self, tmp_storage: Path):
         """Выбор между multiple Runtime по capability."""
         registry = RuntimeRegistry(tmp_storage)
         registry.register(RuntimeDefinition(
             name="freebuff", display_name="Freebuff",
-            capabilities=["coding", "planning"***REMOVED***,
+            capabilities=["coding", "planning"],
             status=RuntimeStatus.CONNECTED,
         ))
         registry.register(RuntimeDefinition(
             name="claude-code", display_name="Claude Code",
-            capabilities=["coding", "review", "documentation"***REMOVED***,
+            capabilities=["coding", "review", "documentation"],
             status=RuntimeStatus.CONNECTED,
         ))
 
@@ -842,11 +842,11 @@ class TestIntegration:
 
         # Для review — лучший claude-code
         review_rt = cap_reg.get_runtime_for_capability("review")
-        assert review_rt["runtime"***REMOVED*** == "claude-code"
+        assert review_rt["runtime"] == "claude-code"
 
         # Для coding — лучший claude-code (0.95 > 0.85)
         coding_rt = cap_reg.get_runtime_for_capability("coding")
-        assert coding_rt["runtime"***REMOVED*** == "claude-code"
+        assert coding_rt["runtime"] == "claude-code"
 
     def test_registry_save_load_cycle(self, tmp_storage: Path):
         """Цикл save/load сохраняет состояние."""

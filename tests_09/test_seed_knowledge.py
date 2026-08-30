@@ -6,7 +6,7 @@ Tests for scripts_01/seed_knowledge.py — seeding the Knowledge Memory layer.
 from __future__ import annotations
 
 import sys
-***REMOVED***
+}
 
 import pytest
 
@@ -43,7 +43,7 @@ class TestSeedKnowledge:
         me = MemoryEngine(workspace_root=str(tmp_path))
         entries = me.list_entries(level=MemoryLevel.KNOWLEDGE)
         assert len(entries) >= 2
-        keys = {e.key for e in entries***REMOVED***
+        keys = {e.key for e in entries}
         assert "readme_md" in keys
         assert "buffy_md" in keys
 
@@ -84,7 +84,7 @@ class TestSeedKnowledge:
 
         me = MemoryEngine(workspace_root=str(tmp_path))
         entries = me.list_entries(level=MemoryLevel.KNOWLEDGE)
-        readme_entries = [e for e in entries if e.key == "readme_md"***REMOVED***
+        readme_entries = [e for e in entries if e.key == "readme_md"]
         assert len(readme_entries) == 1
 
     def test_seed_with_event_bus_avoids_rebuild(self, tmp_path: Path):
@@ -93,7 +93,7 @@ class TestSeedKnowledge:
 
         class FakeBus:
             def __init__(self):
-                self.events = [***REMOVED***
+                self.events = []
 
             def publish(self, event):
                 self.events.append(event)

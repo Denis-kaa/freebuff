@@ -44,7 +44,7 @@ def last_call(client):
 
 def last_contents(client):
     """Возвращает список Content, переданный модели в последнем вызове."""
-    return last_call(client)["contents"***REMOVED***
+    return last_call(client)["contents"]
 
 
 # ---------------------------------------------------------------------------
@@ -90,9 +90,9 @@ def test_sends_correct_model_and_system_prompt(fake_gemini):
     client = fake_gemini()
     run_chat(message="Привет")
     kwargs = last_call(client)
-    assert kwargs["model"***REMOVED*** == "gemini-2.5-flash"
+    assert kwargs["model"] == "gemini-2.5-flash"
     # системный промпт передаётся через config.system_instruction
-    config = kwargs["config"***REMOVED***
+    config = kwargs["config"]
     assert "Северный чай" in config.system_instruction
     assert config.temperature == 0.7
 
@@ -124,9 +124,9 @@ def test_reuses_session_and_remembers_history(fake_gemini):
     second = last_contents(client)
     # история сессии + новый ход: user(model) -> user(new user)
     assert len(second) == 3
-    assert second[0***REMOVED***.parts[0***REMOVED***.text == "первое сообщение"
-    assert second[1***REMOVED***.role == "model"
-    assert second[2***REMOVED***.parts[0***REMOVED***.text == "второе сообщение"
+    assert second[0].parts[0].text == "первое сообщение"
+    assert second[1].role == "model"
+    assert second[2].parts[0].text == "второе сообщение"
 
 
 def test_returns_same_session_id(fake_gemini):
@@ -145,7 +145,7 @@ def test_sessions_are_isolated(fake_gemini):
     run_chat(message="привет B", session_id="2" * 32)
     contents = last_contents(client)
     assert len(contents) == 1
-    assert contents[0***REMOVED***.parts[0***REMOVED***.text == "привет B"
+    assert contents[0].parts[0].text == "привет B"
 
 
 def test_history_is_capped_at_max():
@@ -153,13 +153,13 @@ def test_history_is_capped_at_max():
     sid = "c" * 32
     turns = m.MAX_HISTORY_MESSAGES + 5  # каждый ход = 2 реплики (user+model)
     for i in range(turns):
-        m._append_turn(sid, f"u{i***REMOVED***", f"a{i***REMOVED***")
+        m._append_turn(sid, f"u{i}", f"a{i}")
     history = m._get_session_history(sid)
     # в контексте остаётся ровно MAX_HISTORY_MESSAGES реплик = последние N/2 ходов
     assert len(history) == m.MAX_HISTORY_MESSAGES
     # первый сохранённый пользователь — тот, что попадает в хвост из N реплик
     kept_turns = m.MAX_HISTORY_MESSAGES // 2
-    assert history[0***REMOVED***.parts[0***REMOVED***.text == f"u{turns - kept_turns***REMOVED***"
+    assert history[0].parts[0].text == f"u{turns - kept_turns}"
 
 
 # ---------------------------------------------------------------------------
@@ -185,7 +185,7 @@ def test_medical_question_forces_fixed_phrase(fake_gemini):
     client = fake_gemini(reply_text="Я не даю медицинских рекомендаций, проконсультируйтесь с лечащим врачом")
     run_chat(message="Как этот чай совместим с моими лекарствами?")
     contents = last_contents(client)
-    user_part = contents[-1***REMOVED***.parts[0***REMOVED***.text
+    user_part = contents[-1].parts[0].text
     assert "Я не даю медицинских рекомендаций" in user_part
 
 
@@ -193,7 +193,7 @@ def test_normal_message_not_rewritten(fake_gemini):
     client = fake_gemini(reply_text="Таёжный сбор")
     run_chat(message="Расскажи про Таёжный сбор")
     contents = last_contents(client)
-    user_part = contents[-1***REMOVED***.parts[0***REMOVED***.text
+    user_part = contents[-1].parts[0].text
     assert "Таёжный сбор" in user_part
     assert "медицинских рекомендаций" not in user_part
 

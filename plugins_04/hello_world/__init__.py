@@ -8,7 +8,7 @@ hello_world — Демонстрационный плагин для Buffy Plugi
   - Подписка на system.* события
 """
 
-***REMOVED***
+}
 from scripts_01.plugin_api import BasePlugin, PluginMeta, PluginResult
 
 
@@ -22,7 +22,7 @@ class HelloWorldPlugin(BasePlugin):
             description="Демонстрационный плагин — приветствие мира и эхо-команда",
         )
         self._greeting_count = 0
-        self._events_received: list = [***REMOVED***
+        self._events_received: list = []
 
     @property
     def meta(self) -> PluginMeta:
@@ -35,17 +35,17 @@ class HelloWorldPlugin(BasePlugin):
 
     @property
     def events_subscribed(self):
-        return ["system.*", "plugin.*"***REMOVED***
+        return ["system.*", "plugin.*"]
 
     # ── Lifecycle ───────────────────────────────────────────
 
     def on_load(self):
         self._greeting_count = 0
-        self._events_received = [***REMOVED***
+        self._events_received = []
         print(f"👋 HelloWorld: plugin loaded")
 
     def on_unload(self):
-        print(f"👋 HelloWorld: plugin unloaded (said hello {self._greeting_count***REMOVED*** times)")
+        print(f"👋 HelloWorld: plugin unloaded (said hello {self._greeting_count} times)")
 
     def on_enable(self):
         print(f"✅ HelloWorld: plugin enabled, listening to system.* events")
@@ -56,9 +56,9 @@ class HelloWorldPlugin(BasePlugin):
     def on_event(self, event):
         """Обработчик событий — просто логирует."""
         self._events_received.append({
-            "type": event.type, "data_13": getattr(event, 'data_13', {***REMOVED***),
+            "type": event.type, "data_13": getattr(event, 'data_13', {}),
             "timestamp": getattr(event, 'timestamp', ''),
-        ***REMOVED***)
+        ])
 
     # ── Действия ───────────────────────────────────────────
 
@@ -66,17 +66,17 @@ class HelloWorldPlugin(BasePlugin):
         """Возвращает приветствие."""
         self._greeting_count += 1
         return {
-            "message": f"Hello, {name***REMOVED***! 🤖",
+            "message": f"Hello, {name}! 🤖",
             "count": self._greeting_count,
             "version": self._version,
-        ***REMOVED***
+        }
 
     def do_echo(self, text: str = "") -> dict:
         """Эхо — возвращает переданный текст."""
         return {
             "echo": text,
             "length": len(text),
-        ***REMOVED***
+        }
 
     def do_status(self) -> dict:
         """Статус плагина."""
@@ -85,19 +85,19 @@ class HelloWorldPlugin(BasePlugin):
             "enabled": self._enabled,
             "greeting_count": self._greeting_count,
             "events_received": len(self._events_received),
-            "last_events": self._events_received[-3:***REMOVED*** if self._events_received else [***REMOVED***,
-        ***REMOVED***
+            "last_events": self._events_received[-3:] if self._events_received else [],
+        }
 
     def do_log(self, message: str = "") -> dict:
         """Записывает сообщение и возвращает его."""
-        print(f"📝 HelloWorld log: {message***REMOVED***")
-        return {"logged": True, "message": message***REMOVED***
+        print(f"📝 HelloWorld log: {message}")
+        return {"logged": True, "message": message}
 
     def do_reset(self) -> dict:
         """Сбрасывает счётчики."""
         self._greeting_count = 0
-        self._events_received = [***REMOVED***
-        return {"reset": True, "greeting_count": 0***REMOVED***
+        self._events_received = []
+        return {"reset": True, "greeting_count": 0}
 
 
 # Экземпляр плагина (обнаруживается PluginLoader по переменной `plugin`)

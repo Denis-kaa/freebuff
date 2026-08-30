@@ -11,7 +11,7 @@ Tests use `tmp_path` fixtures + absolute paths to avoid CWD-relativity bugs
 from __future__ import annotations
 
 import sys
-***REMOVED***
+}
 from unittest.mock import patch
 
 import pytest
@@ -57,7 +57,7 @@ def tmp_registry(tmp_path: Path) -> WorkspaceRegistry:
     need the 5 subdirs should request `projects_root` explicitly.
 
     seed_defaults принимает `workspace_root` для relative-path resolution,
-    иначе DEFAULT_WORKSPACES paths=['projects_17/X'***REMOVED*** резолвятся в CWD-freebuff/.
+    иначе DEFAULT_WORKSPACES paths=['projects_17/X'] резолвятся в CWD-freebuff/.
     """
     db_path = tmp_path / "workspace_registry_test.db"
     return WorkspaceRegistry(db_path)
@@ -115,20 +115,20 @@ def test_three_default_workspaces_seeded(
     """init + seed_defaults yields 3 workspaces with project mappings."""
     workspaces = seeded_registry.list_workspaces()
     slugs = sorted(ws.slug for ws in workspaces)
-    assert slugs == ["hobbi", "rabota", "uchyoba"***REMOVED***
-    paths_by_slug = {ws.slug: ws.project_paths for ws in workspaces***REMOVED***
+    assert slugs == ["hobbi", "rabota", "uchyoba"]
+    paths_by_slug = {ws.slug: ws.project_paths for ws in workspaces}
 
     # Работа binding — absolute paths
-    rabota_paths = sorted(Path(p).name for p in paths_by_slug["rabota"***REMOVED***)
-    assert rabota_paths == ["interior_planner", "tg_terminal_messenger"***REMOVED***
+    rabota_paths = sorted(Path(p).name for p in paths_by_slug["rabota"])
+    assert rabota_paths == ["interior_planner", "tg_terminal_messenger"]
 
     # Учёба binding
-    assert len(paths_by_slug["uchyoba"***REMOVED***) == 1
-    assert Path(paths_by_slug["uchyoba"***REMOVED***[0***REMOVED***).name == "buffy-playground_19"
+    assert len(paths_by_slug["uchyoba"]) == 1
+    assert Path(paths_by_slug["uchyoba"][0]).name == "buffy-playground_19"
 
     # Хобби binding
-    hobbi_paths = sorted(Path(p).name for p in paths_by_slug["hobbi"***REMOVED***)
-    assert hobbi_paths == ["diet_platform", "freebuff_flutter_app"***REMOVED***
+    hobbi_paths = sorted(Path(p).name for p in paths_by_slug["hobbi"])
+    assert hobbi_paths == ["diet_platform", "freebuff_flutter_app"]
 
 
 def test_seed_defaults_is_idempotent(tmp_registry: WorkspaceRegistry, tmp_path: Path) -> None:
@@ -162,16 +162,16 @@ def test_seed_defaults_skips_missing_paths(tmp_path: Path) -> None:
     # 3 paths missing on FS: buffy-playground_19, freebuff_flutter_app, diet_platform.
     assert len(result.missing) == 3
     missing_names = sorted(Path(p).name for p in result.missing)
-    assert missing_names == ["buffy-playground_19", "diet_platform", "freebuff_flutter_app"***REMOVED***
+    assert missing_names == ["buffy-playground_19", "diet_platform", "freebuff_flutter_app"]
     # Workspaces are still inserted (idempotency-friendly) but only existing paths bound.
     slugs = sorted(ws.slug for ws in reg.list_workspaces())
-    assert slugs == ["hobbi", "rabota", "uchyoba"***REMOVED***
-    rabota_paths = [Path(p).name for p in reg.list_projects("rabota")***REMOVED***
-    assert sorted(rabota_paths) == ["interior_planner", "tg_terminal_messenger"***REMOVED***
+    assert slugs == ["hobbi", "rabota", "uchyoba"]
+    rabota_paths = [Path(p).name for p in reg.list_projects("rabota")]
+    assert sorted(rabota_paths) == ["interior_planner", "tg_terminal_messenger"]
     # Учёба has NO bound paths (buffy-playground_19 missing)
-    assert reg.list_projects("uchyoba") == [***REMOVED***
+    assert reg.list_projects("uchyoba") == []
     # Хобби has NO bound paths (both diet_platform + freebuff_flutter_app missing)
-    assert reg.list_projects("hobbi") == [***REMOVED***
+    assert reg.list_projects("hobbi") == []
 
 
 def test_seed_defaults_uses_workspace_root_relative_paths(tmp_path: Path) -> None:
@@ -183,7 +183,7 @@ def test_seed_defaults_uses_workspace_root_relative_paths(tmp_path: Path) -> Non
     reg = WorkspaceRegistry(tmp_path / "ws.db")
     reg.seed_defaults(workspace_root=tmp_path)
     # All 5 paths stored as absolute resolved paths (canonical form)
-    all_paths = [***REMOVED***
+    all_paths = []
     for ws in reg.list_workspaces():
         all_paths.extend(ws.project_paths)
     # Every stored path is absolute
@@ -327,7 +327,7 @@ def test_create_workspace_with_new_path(
     new_path = tmp_path / "_tmp_new_path"
     new_path.mkdir(parents=True, exist_ok=True)
     ws = seeded_registry.create_workspace(
-        "Test Sandbox", project_paths=[str(new_path)***REMOVED***
+        "Test Sandbox", project_paths=[str(new_path)]
     )
     assert ws.slug == "test_sandbox"
     found = seeded_registry.find_workspace_for_project(str(new_path))
@@ -390,7 +390,7 @@ def test_add_project_returns_true_on_successful_insert(
     assert result is True
     # Verify bound
     projects_in_rabota = seeded_registry.list_projects("rabota")
-    assert str(new_proj) in [str(Path(p).resolve()) for p in projects_in_rabota***REMOVED***
+    assert str(new_proj) in [str(Path(p).resolve()) for p in projects_in_rabota]
 
 
 def test_add_project_strict_mode_raises_filenotfound(
@@ -401,7 +401,7 @@ def test_add_project_strict_mode_raises_filenotfound(
     with pytest.raises(FileNotFoundError, match="strict=True"):
         seeded_registry.add_project("rabota", ghost, strict=True)
     # Verify NO insertion happened (transaction was not entered).
-    projects_in_rabota_after = [Path(p).name for p in seeded_registry.list_projects("rabota")***REMOVED***
+    projects_in_rabota_after = [Path(p).name for p in seeded_registry.list_projects("rabota")]
     assert "ghost_strict_does_not_exist" not in projects_in_rabota_after
 
 
@@ -417,7 +417,7 @@ def test_create_workspace_propagates_strict_to_add_project(
     with pytest.raises(FileNotFoundError, match="strict=True"):
         tmp_registry.create_workspace(
             name="Mixed",
-            project_paths=[str(valid), ghost***REMOVED***,
+            project_paths=[str(valid), ghost],
             description="strict propagation test",
             owner_chat_id=42,
             strict=True,
@@ -433,13 +433,13 @@ def test_create_workspace_non_strict_skips_ghost_silently(
     ghost = str(tmp_path / "ghost_proj_non_strict_does_not_exist")
     ws = tmp_registry.create_workspace(
         name="MixedSilent",
-        project_paths=[str(valid), ghost***REMOVED***,
+        project_paths=[str(valid), ghost],
         description="silent skip test",
         owner_chat_id=99,
     )
     # Workspace created; valid path bound; ghost silently skipped (no raise).
     assert ws.name == "MixedSilent"
-    bound = [Path(p).name for p in ws.project_paths***REMOVED***
+    bound = [Path(p).name for p in ws.project_paths]
     assert "valid_non_strict_proj" in bound
     assert "ghost_proj_non_strict_does_not_exist" not in bound
 
@@ -451,7 +451,7 @@ def test_seedresult_dataclass_default_field_factory() -> None:
     r2 = SeedResult(created=2)
     # Critical: dataclass field(default_factory=list) ensures each instance has its own list.
     r1.missing.append("/x")
-    assert r2.missing == [***REMOVED***  # mutation isolation test
+    assert r2.missing == []  # mutation isolation test
 
 
 # ── Polish-followup regression tests (post code-reviewer APPROVE-WITH-NITS) ─
@@ -535,10 +535,10 @@ def test_seed_defaults_integrity_error_logs_warning(
         r
         for r in caplog.records
         if "race-loser" in r.message or "concurrent connection" in r.message
-    ***REMOVED***
+    ]
     assert len(race_warnings) >= 1, (
         f"Expected race-loser WARNING; got: "
-        f"{[r.message for r in caplog.records if r.levelno >= logging.WARNING***REMOVED******REMOVED***"
+        f"{[r.message for r in caplog.records if r.levelno >= logging.WARNING]}"
     )
     # Verify: SeedResult contract preserved (created is an int, missing is a list).
     assert isinstance(result, SeedResult)
@@ -549,8 +549,8 @@ def test_seed_defaults_integrity_error_logs_warning(
     # Verify: race-loser workspace's seed counter was NOT incremented (we lost).
     # Order-independent: exactly one INSERT raised IntegrityError; rest succeeded.
     assert result.created == len(DEFAULT_WORKSPACES) - 1, (
-        f"Expected created = len(DEFAULT_WORKSPACES) - 1 = {len(DEFAULT_WORKSPACES) - 1***REMOVED***; "
-        f"got {result.created***REMOVED***"
+        f"Expected created = len(DEFAULT_WORKSPACES) - 1 = {len(DEFAULT_WORKSPACES) - 1}; "
+        f"got {result.created}"
     )
 
 
@@ -559,7 +559,7 @@ def test_create_workspace_strict_no_partial_state_on_ghost_path(
 ) -> None:
     """Lock CAN-14 strict-mode partial-state fix (fix #3 polish):
 
-    create_workspace(strict=True, [valid, ghost***REMOVED***) raises BEFORE workspace INSERT.
+    create_workspace(strict=True, [valid, ghost]) raises BEFORE workspace INSERT.
     No orphan workspace + no orphan project binding.
     """
     valid = tmp_path / "valid_partial_state_test"
@@ -569,19 +569,19 @@ def test_create_workspace_strict_no_partial_state_on_ghost_path(
     with pytest.raises(FileNotFoundError, match="create_workspace"):
         tmp_registry.create_workspace(
             name="Should Not Exist After PreValidate",
-            project_paths=[str(valid), ghost***REMOVED***,
+            project_paths=[str(valid), ghost],
             description="partial-state regression test",
             owner_chat_id=42,
             strict=True,
         )
     # Critical assertion 1: NO orphan workspace inserted (pre-validate blocked it).
-    slugs = [ws.slug for ws in tmp_registry.list_workspaces()***REMOVED***
+    slugs = [ws.slug for ws in tmp_registry.list_workspaces()]
     assert "should_not_exist_after_prevalidate" not in slugs, (
         f"PARTIAL STATE BUG: workspace was inserted despite strict-mode ghost path. "
-        f"Pre-validate fix not working. slugs={slugs***REMOVED***"
+        f"Pre-validate fix not working. slugs={slugs}"
     )
     # Critical assertion 2: NO orphan project binding (valid path was NOT bound).
     assert tmp_registry.list_projects(
         "should_not_exist_after_prevalidate"
-    ) == [***REMOVED***, "PARTIAL STATE BUG: valid path was bound to non-existent workspace"
+    ) == [], "PARTIAL STATE BUG: valid path was bound to non-existent workspace"
 

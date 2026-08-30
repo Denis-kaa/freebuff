@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-***REMOVED***
+}
 
 import pytest
 
@@ -70,13 +70,13 @@ class TestWeights:
 
         assert set(DEFAULT_WEIGHTS.keys()) == {
             "confidence", "evidence", "recency", "tag_match",
-        ***REMOVED***
+        }
 
     def test_normalize_weights_rejects_missing_keys(self) -> None:
         from scripts_01.weighted_scoring_engine import normalize_weights
 
         with pytest.raises(ValueError, match="missing keys"):
-            normalize_weights({"confidence": 0.5, "evidence": 0.5***REMOVED***)
+            normalize_weights({"confidence": 0.5, "evidence": 0.5})
 
     def test_normalize_weights_rejects_unknown_keys(self) -> None:
         from scripts_01.weighted_scoring_engine import normalize_weights
@@ -85,7 +85,7 @@ class TestWeights:
             normalize_weights({
                 "confidence": 0.4, "evidence": 0.2, "recency": 0.25,
                 "tag_match": 0.15, "rogue": 0.0,
-            ***REMOVED***)
+            ])
 
     def test_normalize_weights_allows_zero_tag_match(self) -> None:
         """Zero weight допустимо (operator opts out of tag factor)."""
@@ -93,9 +93,9 @@ class TestWeights:
         out = normalize_weights({
             "confidence": 0.5, "evidence": 0.3, "recency": 0.2,
             "tag_match": 0.0,
-        ***REMOVED***)
+        ])
         assert sum(out.values()) == 1.0
-        assert out["tag_match"***REMOVED*** == 0.0
+        assert out["tag_match"] == 0.0
 
     def test_normalize_weights_rejects_zero_total(self) -> None:
         from scripts_01.weighted_scoring_engine import normalize_weights
@@ -104,7 +104,7 @@ class TestWeights:
             normalize_weights({
                 "confidence": 0.0, "evidence": 0.0, "recency": 0.0,
                 "tag_match": 0.0,
-            ***REMOVED***)
+            ])
 
     def test_normalize_weights_rescales_to_unit_sum(self) -> None:
         from scripts_01.weighted_scoring_engine import normalize_weights
@@ -112,10 +112,10 @@ class TestWeights:
         out = normalize_weights({
             "confidence": 1.6, "evidence": 0.8, "recency": 1.0,
             "tag_match": 0.6,
-        ***REMOVED***)
+        ])
         assert abs(sum(out.values()) - 1.0) < 1e-9
         # Ratio between keys preserved.
-        assert abs(out["confidence"***REMOVED*** / out["evidence"***REMOVED*** - 2.0) < 1e-9
+        assert abs(out["confidence"] / out["evidence"] - 2.0) < 1e-9
 
     def test_recency_factor_at_zero_is_unity(self) -> None:
         from scripts_01.weighted_scoring_engine import _recency_factor
@@ -137,16 +137,16 @@ class TestWeights:
 
     def test_tag_match_full_overlap_is_unity(self) -> None:
         from scripts_01.weighted_scoring_engine import _tag_match
-        assert _tag_match(["a", "b"***REMOVED***, ["a", "b"***REMOVED***) == 1.0
+        assert _tag_match(["a", "b"], ["a", "b"]) == 1.0
 
     def test_tag_match_zero_overlap_is_zero(self) -> None:
         from scripts_01.weighted_scoring_engine import _tag_match
-        assert _tag_match(["x", "y"***REMOVED***, ["a", "b"***REMOVED***) == 0.0
+        assert _tag_match(["x", "y"], ["a", "b"]) == 0.0
 
     def test_tag_match_no_focus_is_neutral_half(self) -> None:
         from scripts_01.weighted_scoring_engine import _tag_match
-        assert _tag_match(["anything"***REMOVED***, focus=None) == 0.5
-        assert _tag_match(["anything"***REMOVED***, focus=[***REMOVED***) == 0.5
+        assert _tag_match(["anything"], focus=None) == 0.5
+        assert _tag_match(["anything"], focus=[]) == 0.5
 
 
 # ─── engine ─────────────────────────────────────────────────────────────
@@ -156,7 +156,7 @@ class TestScoreSupported:
     def test_empty_ledger_returns_empty_list(self, isolated_ledger: Path) -> None:
         from scripts_01.weighted_scoring_engine import WeightedScoringEngine
         engine = WeightedScoringEngine()
-        assert engine.score_supported() == [***REMOVED***
+        assert engine.score_supported() == []
 
     def test_single_supported_scores_nonnegatively(self, isolated_ledger: Path) -> None:
         from scripts_01.weighted_scoring_engine import WeightedScoringEngine
@@ -164,7 +164,7 @@ class TestScoreSupported:
         engine = WeightedScoringEngine()
         ranked = engine.score_supported()
         assert len(ranked) == 1
-        r = ranked[0***REMOVED***
+        r = ranked[0]
         assert r.score > 0.0
         assert r.confidence == pytest.approx(0.8)
         assert r.evidence_count == 0
@@ -178,7 +178,7 @@ class TestScoreSupported:
         # Add OPEN — should NOT appear in scoring.
         add_hypothesis("Open hypothesis", confidence=0.99)
         engine = WeightedScoringEngine()
-        assert engine.score_supported() == [***REMOVED***
+        assert engine.score_supported() == []
 
     def test_sort_descending_by_score(self, isolated_ledger: Path) -> None:
         from scripts_01.weighted_scoring_engine import WeightedScoringEngine
@@ -186,9 +186,9 @@ class TestScoreSupported:
         _seed_supported("High conf: 0.9", confidence=0.9)
         _seed_supported("Mid  conf: 0.6", confidence=0.6)
         engine = WeightedScoringEngine()
-        scores = [r.confidence for r in engine.score_supported()***REMOVED***
+        scores = [r.confidence for r in engine.score_supported()]
         assert scores == sorted(scores, reverse=True), (
-            f"Expected desc-sorted, got {scores***REMOVED***"
+            f"Expected desc-sorted, got {scores}"
         )
 
     def test_evidence_count_saturates_at_configured_max(self, isolated_ledger: Path) -> None:
@@ -198,44 +198,44 @@ class TestScoreSupported:
         # Seed with 5+ evidence urls → normalized to 1.0 (saturation=5).
         kc = [
             {
-                "criterion": f"crit_{i***REMOVED***",
+                "criterion": f"crit_{i}",
                 "met": False,
-                "evidence_url": f"https://x.test/{i***REMOVED***",
-            ***REMOVED***
+                "evidence_url": f"https://x.test/{i}",
+            }
             for i in range(5)
-        ***REMOVED***
+        ]
         _seed_supported("Many evidences", confidence=0.5, kill_criteria=kc)
         engine = WeightedScoringEngine(evidence_saturation=5)
         ranked = engine.score_supported()
-        r = ranked[0***REMOVED***
+        r = ranked[0]
         assert r.evidence_count == 5
-        assert r.breakdown["evidence"***REMOVED*** == pytest.approx(0.20, abs=1e-6)
+        assert r.breakdown["evidence"] == pytest.approx(0.20, abs=1e-6)
         # Same hypothesis at 10 evidences → same normalized (saturated).
         kc2 = kc + [
-            {"criterion": f"crit_{i***REMOVED***", "met": False, "evidence_url": f"https://x.test/{i***REMOVED***"***REMOVED***
+            {"criterion": f"crit_{i}", "met": False, "evidence_url": f"https://x.test/{i}"}
             for i in range(5, 10)
-        ***REMOVED***
+        ]
         _seed_supported("Many evidences more", confidence=0.5, kill_criteria=kc2)
         ranked2 = engine.score_supported()
         # Find second entry (added second).
-        more = [r for r in ranked2 if r.evidence_count == 10***REMOVED***[0***REMOVED***
-        assert more.breakdown["evidence"***REMOVED*** == pytest.approx(0.20, abs=1e-6)
+        more = [r for r in ranked2 if r.evidence_count == 10][0]
+        assert more.breakdown["evidence"] == pytest.approx(0.20, abs=1e-6)
 
     def test_focus_tag_match_boosts_score(self, isolated_ledger: Path) -> None:
         from scripts_01.weighted_scoring_engine import WeightedScoringEngine
-        _seed_supported("Pricing hypothesis", confidence=0.5, tags=["pricing"***REMOVED***)
-        _seed_supported("Other topic", confidence=0.5, tags=["unrelated"***REMOVED***)
+        _seed_supported("Pricing hypothesis", confidence=0.5, tags=["pricing"])
+        _seed_supported("Other topic", confidence=0.5, tags=["unrelated"])
         engine = WeightedScoringEngine()
         # Without focus: both equally weighted (match_score=0.5 each).
         no_focus = engine.score_supported()
         # With focus=pricing: pricing hypothesis gets tag_match=1.0, others 0.0.
-        with_focus = engine.score_supported(focus_tags=["pricing"***REMOVED***)
+        with_focus = engine.score_supported(focus_tags=["pricing"])
         # The pricing hypothesis's score WITH focus > WITHOUT focus.
-        pricing_no = [r for r in no_focus if "Pricing" in r.text***REMOVED***[0***REMOVED***
-        pricing_yes = [r for r in with_focus if "Pricing" in r.text***REMOVED***[0***REMOVED***
+        pricing_no = [r for r in no_focus if "Pricing" in r.text][0]
+        pricing_yes = [r for r in with_focus if "Pricing" in r.text][0]
         assert pricing_yes.score > pricing_no.score, (
-            f"focus should boost pricing score: no={pricing_no.score:.4f***REMOVED*** "
-            f"yes={pricing_yes.score:.4f***REMOVED***"
+            f"focus should boost pricing score: no={pricing_no.score:.4f} "
+            f"yes={pricing_yes.score:.4f}"
         )
 
     def test_score_clamped_to_unit_interval(self, isolated_ledger: Path) -> None:
@@ -244,17 +244,17 @@ class TestScoreSupported:
         _seed_supported(
             "All maxes",
             confidence=1.0,
-            tags=["pricing", "research", "tools"***REMOVED***,
+            tags=["pricing", "research", "tools"],
             kill_criteria=[
-                {"criterion": "x", "met": False, "evidence_url": "https://x.test/1"***REMOVED***
-            ***REMOVED*** * 5,
+                {"criterion": "x", "met": False, "evidence_url": "https://x.test/1"}
+            ] * 5,
         )
         engine = WeightedScoringEngine()
-        ranked = engine.score_supported(focus_tags=["pricing", "research"***REMOVED***)
-        assert 0.0 <= ranked[0***REMOVED***.score <= 1.0
+        ranked = engine.score_supported(focus_tags=["pricing", "research"])
+        assert 0.0 <= ranked[0].score <= 1.0
 
     def test_score_4factors_sum_to_weighted_sum(self, isolated_ledger: Path) -> None:
-        """Sanity: breakdown[factor***REMOVED*** = weights[factor***REMOVED*** * raw_factor_value."""
+        """Sanity: breakdown[factor] = weights[factor] * raw_factor_value."""
         from scripts_01.weighted_scoring_engine import (
             DEFAULT_WEIGHTS,
             WeightedScoringEngine,
@@ -262,9 +262,9 @@ class TestScoreSupported:
         _seed_supported("Breakdown math", confidence=0.5)
         engine = WeightedScoringEngine()
         ranked = engine.score_supported()
-        r = ranked[0***REMOVED***
-        assert r.breakdown["confidence"***REMOVED*** == pytest.approx(
-            DEFAULT_WEIGHTS["confidence"***REMOVED*** * r.confidence, abs=1e-6
+        r = ranked[0]
+        assert r.breakdown["confidence"] == pytest.approx(
+            DEFAULT_WEIGHTS["confidence"] * r.confidence, abs=1e-6
         )
 
     def test_score_zero_evidence_zero_factor(self, isolated_ledger: Path) -> None:
@@ -272,7 +272,7 @@ class TestScoreSupported:
         _seed_supported("No evidence", confidence=0.5)
         engine = WeightedScoringEngine()
         ranked = engine.score_supported()
-        assert ranked[0***REMOVED***.breakdown["evidence"***REMOVED*** == 0.0
+        assert ranked[0].breakdown["evidence"] == 0.0
 
     def test_custom_weights_redistribute(self, isolated_ledger: Path) -> None:
         """Custom weights (confidence=1.0) → score == confidence."""
@@ -284,10 +284,10 @@ class TestScoreSupported:
             weights={
                 "confidence": 1.0, "evidence": 0.0,
                 "recency": 0.0, "tag_match": 0.0,
-            ***REMOVED***
+            }
         )
         ranked = engine.score_supported()
-        assert ranked[0***REMOVED***.score == pytest.approx(0.7, abs=1e-6)
+        assert ranked[0].score == pytest.approx(0.7, abs=1e-6)
 
     def test_engine_constructor_validates_half_life(self) -> None:
         from scripts_01.weighted_scoring_engine import WeightedScoringEngine
@@ -309,7 +309,7 @@ class TestScoreSupported:
 
 class TestCLI:
     def test_cli_json_empty_dir_subprocess(self, tmp_path: Path) -> None:
-        """CLI --json на пустой/hypothetical root → stdout == '[***REMOVED***'."""
+        """CLI --json на пустой/hypothetical root → stdout == '[]'."""
         empty_dir = tmp_path / "empty_ledger"
         empty_dir.mkdir()
         result = subprocess.run(
@@ -317,7 +317,7 @@ class TestCLI:
                 sys.executable, "-m", "scripts_01.weighted_scoring_engine",
                 "--root", str(empty_dir),
                 "--json",
-            ***REMOVED***,
+            ],
             cwd=str(Path.cwd()),
             capture_output=True,
             text=True,
@@ -326,10 +326,10 @@ class TestCLI:
             shell=False,
         )
         assert result.returncode == 0, (
-            f"non-zero exit: stderr={result.stderr!r***REMOVED***"
+            f"non-zero exit: stderr={result.stderr!r}"
         )
         json_out = result.stdout.strip()
-        assert json_out == "[***REMOVED***", f"Expected '[***REMOVED***', got {json_out!r***REMOVED***"
+        assert json_out == "[]", f"Expected '[]', got {json_out!r}"
 
     def test_cli_runs_subprocess_with_supported(self, tmp_path: Path) -> None:
         """Seed 1 SUPPORTED hypothesis + run CLI → stdout contains hid + score."""
@@ -348,7 +348,7 @@ class TestCLI:
                 sys.executable, "-m", "scripts_01.weighted_scoring_engine",
                 "--root", str(ledger_dir),
                 "--json",
-            ***REMOVED***,
+            ],
             cwd=str(Path.cwd()),
             capture_output=True,
             text=True,
@@ -356,15 +356,15 @@ class TestCLI:
             check=False,
             shell=False,
         )
-        assert result.returncode == 0, f"stderr={result.stderr!r***REMOVED***"
+        assert result.returncode == 0, f"stderr={result.stderr!r}"
         try:
             parsed = json.loads(result.stdout)
         except json.JSONDecodeError as exc:  # pragma: no cover
-            pytest.fail(f"non-JSON output: {result.stdout!r***REMOVED***: {exc***REMOVED***")
+            pytest.fail(f"non-JSON output: {result.stdout!r}: {exc}")
         assert isinstance(parsed, list)
         assert len(parsed) == 1
-        assert parsed[0***REMOVED***["confidence"***REMOVED*** == pytest.approx(0.7)
-        assert parsed[0***REMOVED***["hid"***REMOVED***.startswith("h_")
+        assert parsed[0]["confidence"] == pytest.approx(0.7)
+        assert parsed[0]["hid"].startswith("h_")
 
     def test_cli_text_format_includes_score_and_breakdown(
         self, tmp_path: Path,
@@ -384,7 +384,7 @@ class TestCLI:
             [
                 sys.executable, "-m", "scripts_01.weighted_scoring_engine",
                 "--root", str(ledger_dir),
-            ***REMOVED***,
+            ],
             cwd=str(Path.cwd()),
             capture_output=True,
             text=True,
@@ -405,7 +405,7 @@ class TestCLI:
             [
                 sys.executable, "-m", "scripts_01.weighted_scoring_engine",
                 "--version",
-            ***REMOVED***,
+            ],
             cwd=str(Path.cwd()),
             capture_output=True,
             text=True,

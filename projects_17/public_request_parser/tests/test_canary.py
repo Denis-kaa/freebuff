@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-***REMOVED***
+}
 
 import pytest
 
@@ -11,7 +11,7 @@ from app.canary import CanaryReport, build_source_adapter, run_canary
 from app.domain import SearchProfile, SourcePolicy, SourcePolicyStatus
 from app.storage import SqliteCheckpointStore, SqliteStorage
 
-FIXTURES = Path(__file__).parents[1***REMOVED*** / "fixtures"
+FIXTURES = Path(__file__).parents[1] / "fixtures"
 NOW = datetime(2026, 8, 23, 12, 0, tzinfo=timezone.utc)
 
 

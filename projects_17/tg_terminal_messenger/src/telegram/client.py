@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
-***REMOVED***
+}
 from typing import List, Optional
 
 from telethon import TelegramClient as TelethonClient
@@ -95,7 +95,7 @@ class TGClient:
             self._client = TelethonClient(self._session_path, API_ID, API_HASH)
             await self._client.connect()
         self._connected = True
-        return await self._client.is_user_authorized()  # type: ignore[no-any-return***REMOVED***  # Telethon без stubs
+        return await self._client.is_user_authorized()  # type: ignore[no-any-return]  # Telethon без stubs
 
     async def start(self, phone: str = PHONE, code_callback=None) -> bool:
         """Авторизоваться (интерактивно запросит код если нужно)."""
@@ -118,22 +118,22 @@ class TGClient:
             password = input("🔐 2FA пароль: ").strip()
             await self._client.sign_in(password=password)
 
-        return await self._client.is_user_authorized()  # type: ignore[no-any-return***REMOVED***  # Telethon без stubs
+        return await self._client.is_user_authorized()  # type: ignore[no-any-return]  # Telethon без stubs
 
-    async def get_me(self) -> Optional[User***REMOVED***:
+    async def get_me(self) -> Optional[User]:
         """Информация о текущем пользователе."""
         if not self._connected:
             await self.connect()
         return await self._client.get_me()
 
-    async def get_dialogs(self, limit: int = 10) -> List[Dialog***REMOVED***:
+    async def get_dialogs(self, limit: int = 10) -> List[Dialog]:
         """Последние диалоги."""
         dialogs = await self._client.get_dialogs(limit=limit)
-        return list(dialogs)  # type: ignore[no-any-return***REMOVED***  # Telethon без stubs
+        return list(dialogs)  # type: ignore[no-any-return]  # Telethon без stubs
 
-    async def get_messages(self, entity, limit: int = 5, offset_id: int = 0) -> List[Message***REMOVED***:
+    async def get_messages(self, entity, limit: int = 5, offset_id: int = 0) -> List[Message]:
         """Сообщения из диалога. offset_id — подгрузить более старые (строго раньше этого id)."""
-        return await self._client.get_messages(entity, limit=limit, offset_id=offset_id)  # type: ignore[no-any-return***REMOVED***  # Telethon без stubs
+        return await self._client.get_messages(entity, limit=limit, offset_id=offset_id)  # type: ignore[no-any-return]  # Telethon без stubs
 
     async def send_message(self, entity, text: str) -> Message:
         """Отправить сообщение."""
@@ -145,22 +145,22 @@ class TGClient:
         .mp3 → музыка. progress_callback(done, total) вызывается из TG-потока."""
         from telethon.tl.types import DocumentAttributeAnimated, DocumentAttributeFilename
 
-        kwargs: dict = {***REMOVED***
+        kwargs: dict = {}
         if str(path).lower().endswith((".gif", ".webp")) and _is_animated(path):
             # Явно помечаем файл как анимированную гифку (DocumentAttributeAnimated),
             # иначе Telegram может показать его простым документом. WebP тоже
             # поддерживается: Telegram транскодирует анимированный webp в гифку.
             # Проверка анимации через PIL: статичный файл не помечаем, иначе
             # Telegram отклонит запрос (атрибут только для анимированных).
-            kwargs["attributes"***REMOVED*** = [
+            kwargs["attributes"] = [
                 DocumentAttributeAnimated(),
                 DocumentAttributeFilename(Path(str(path)).name),
-            ***REMOVED***
+            ]
         return await self._client.send_file(
             entity, path, caption=caption or None, progress_callback=progress_callback, **kwargs
         )
 
-    async def download_media(self, message, dest: str, progress_callback=None) -> Optional[str***REMOVED***:
+    async def download_media(self, message, dest: str, progress_callback=None) -> Optional[str]:
         """Скачать медиа из сообщения в dest. Возвращает путь или None.
         progress_callback(done, total) вызывается из TG-потока."""
         return await self._client.download_media(message, file=dest, progress_callback=progress_callback)
@@ -189,7 +189,7 @@ class ThreadedTGClient:
 
     def __init__(self, session_name: str = "tg_session"):
         self._loop: asyncio.AbstractEventLoop = asyncio.new_event_loop()
-        self._client: Optional[TGClient***REMOVED*** = None
+        self._client: Optional[TGClient] = None
         self._ready = threading.Event()
         self._started = False
 
@@ -218,7 +218,7 @@ class ThreadedTGClient:
     # ── публичные async-методы (возвращают Future) ───────────
 
     def connect_async(self):
-        """Подключиться к Telegram. Возвращает Future[bool***REMOVED***."""
+        """Подключиться к Telegram. Возвращает Future[bool]."""
         if self._started:
             async def _recheck():
                 if self._client is None:
@@ -233,7 +233,7 @@ class ThreadedTGClient:
         return self._submit(_connect())
 
     def get_me_async(self):
-        """Информация о пользователе. Возвращает Future[Optional[User***REMOVED******REMOVED***."""
+        """Информация о пользователе. Возвращает Future[Optional[User]]."""
         async def _get_me():
             if self._client is None:
                 return None
@@ -241,23 +241,23 @@ class ThreadedTGClient:
         return self._submit(_get_me())
 
     def get_dialogs_async(self, limit: int = 10):
-        """Список диалогов. Возвращает Future[List[Dialog***REMOVED******REMOVED***."""
+        """Список диалогов. Возвращает Future[List[Dialog]]."""
         async def _get_dialogs():
             if self._client is None:
-                return [***REMOVED***
+                return []
             return await self._client.get_dialogs(limit)
         return self._submit(_get_dialogs())
 
     def get_messages_async(self, entity, limit: int = 5, offset_id: int = 0):
-        """Сообщения из диалога. Возвращает Future[List[Message***REMOVED******REMOVED***."""
+        """Сообщения из диалога. Возвращает Future[List[Message]]."""
         async def _get_messages():
             if self._client is None:
-                return [***REMOVED***
+                return []
             return await self._client.get_messages(entity, limit, offset_id=offset_id)
         return self._submit(_get_messages())
 
     def send_message_async(self, entity, text: str):
-        """Отправить сообщение. Возвращает Future[Message***REMOVED***."""
+        """Отправить сообщение. Возвращает Future[Message]."""
         async def _send():
             if self._client is None:
                 raise RuntimeError("Not connected")
@@ -265,7 +265,7 @@ class ThreadedTGClient:
         return self._submit(_send())
 
     def send_file_async(self, entity, path: str, caption: str = "", progress_callback=None, voice_note: bool = False):
-        """Отправить файл как медиа. Возвращает Future[Message***REMOVED***.
+        """Отправить файл как медиа. Возвращает Future[Message].
 
         voice_note=True — отправить как голосовое сообщение (Telethon сам
         добавит DocumentAttributeAudio(voice=True); поддерживается для
@@ -274,14 +274,14 @@ class ThreadedTGClient:
         async def _send():
             if self._client is None:
                 raise RuntimeError("Not connected")
-            kwargs = {"caption": caption, "progress_callback": progress_callback***REMOVED***
+            kwargs = {"caption": caption, "progress_callback": progress_callback}
             if voice_note:
-                kwargs["voice_note"***REMOVED*** = True
+                kwargs["voice_note"] = True
             return await self._client.send_file(entity, path, **kwargs)
         return self._submit(_send())
 
     def download_media_async(self, message, dest: str, progress_callback=None):
-        """Скачать медиа из сообщения. Возвращает Future[str | None***REMOVED***."""
+        """Скачать медиа из сообщения. Возвращает Future[str | None]."""
         async def _download():
             if self._client is None:
                 return None
@@ -291,14 +291,14 @@ class ThreadedTGClient:
         return self._submit(_download())
 
     @property
-    def telethon_client(self) -> Optional[TelethonClient***REMOVED***:
+    def telethon_client(self) -> Optional[TelethonClient]:
         """Прямой доступ к TelethonClient (если нужен is_user_authorized)."""
         if self._client is None:
             return None
         return self._client.client
 
     def is_authorized_async(self):
-        """Проверить авторизацию. Возвращает Future[bool***REMOVED***."""
+        """Проверить авторизацию. Возвращает Future[bool]."""
         async def _check():
             if self._client is None:
                 return False

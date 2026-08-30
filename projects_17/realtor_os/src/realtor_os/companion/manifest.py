@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-***REMOVED***
+}
 from typing import Any
 
 from realtor_os.constants import MANIFEST_PATH, PROJECT_ROOT
@@ -13,12 +13,12 @@ class ManifestError(Exception):
     """Ошибка манифеста."""
 
 
-def generate_manifest(path: Path | None = None) -> dict[str, Any***REMOVED***:
+def generate_manifest(path: Path | None = None) -> dict[str, Any]:
     """Сгенерировать buffy_manifest.json."""
     if path is None:
         path = MANIFEST_PATH
 
-    manifest: dict[str, Any***REMOVED*** = {
+    manifest: dict[str, Any] = {
         "project": "realtor_os",
         "version": "0.1.0",
         "owner": "realtor_etagi_poykovsky",
@@ -32,7 +32,7 @@ def generate_manifest(path: Path | None = None) -> dict[str, Any***REMOVED***:
             "ask": "PYTHONPATH=src python -m realtor_os.cli ask",
             "ocr": "PYTHONPATH=src python -m realtor_os.cli ocr",
             "learn": "PYTHONPATH=src python -m realtor_os.cli learn",
-        ***REMOVED***,
+        },
         "state_file": "companion/state.json",
         "log_file": "logs/realtor_os.log",
         "config_file": "config.yaml",
@@ -41,25 +41,25 @@ def generate_manifest(path: Path | None = None) -> dict[str, Any***REMOVED***:
             "architecture": "docs/ARCHITECTURE.md",
             "roadmap": "docs/ROADMAP.md",
             "changelog": "docs/CHANGELOG.md",
-        ***REMOVED***,
-    ***REMOVED***
+        },
+    }
 
     path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     return manifest
 
 
-def load_manifest(path: Path | None = None) -> dict[str, Any***REMOVED***:
+def load_manifest(path: Path | None = None) -> dict[str, Any]:
     """Загрузить buffy_manifest.json."""
     if path is None:
         path = MANIFEST_PATH
 
     if not path.exists():
-        raise ManifestError(f"Manifest not found: {path***REMOVED***")
+        raise ManifestError(f"Manifest not found: {path}")
 
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
-        raise ManifestError(f"Invalid manifest JSON: {exc***REMOVED***") from exc
+        raise ManifestError(f"Invalid manifest JSON: {exc}") from exc
 
     return data
 

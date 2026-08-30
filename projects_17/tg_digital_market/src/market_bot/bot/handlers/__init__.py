@@ -24,4 +24,4 @@ def build_router() -> Router:
     return root
 
 
-__all__ = ["build_router"***REMOVED***
+__all__ = ["build_router"]

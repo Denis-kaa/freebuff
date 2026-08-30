@@ -30,7 +30,7 @@ class EmailClient:
         self.user = user or os.environ.get("EMAIL_USER", "")
         self.password = password or os.environ.get("EMAIL_PASSWORD", "")
 
-    def send(self, to: str, subject: str, body: str) -> dict[str, str***REMOVED***:
+    def send(self, to: str, subject: str, body: str) -> dict[str, str]:
         """Отправить письмо.
 
         Args:
@@ -45,15 +45,15 @@ class EmailClient:
             raise EmailError("Email credentials are not configured")
 
         msg = MIMEText(body, "plain", "utf-8")
-        msg["Subject"***REMOVED*** = subject
-        msg["From"***REMOVED*** = self.user
-        msg["To"***REMOVED*** = to
+        msg["Subject"] = subject
+        msg["From"] = self.user
+        msg["To"] = to
 
         try:
             with smtplib.SMTP_SSL(self.host, self.port, timeout=30) as server:
                 server.login(self.user, self.password)
-                server.sendmail(self.user, [to***REMOVED***, msg.as_string())
+                server.sendmail(self.user, [to], msg.as_string())
         except smtplib.SMTPException as exc:
-            raise EmailError(f"SMTP error: {exc***REMOVED***") from exc
+            raise EmailError(f"SMTP error: {exc}") from exc
 
-        return {"status": "ok", "to": to***REMOVED***
+        return {"status": "ok", "to": to}

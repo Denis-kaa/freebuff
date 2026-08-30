@@ -24,11 +24,11 @@ async def _show_account(message: Message, services) -> None:
     is_admin = user_id in services.config.admin_ids
     is_seller = user.role.value == "seller"
     text = (
-        f"👤 <b>{user.full_name***REMOVED***</b>\n"
-        f"🆔 Telegram ID: <code>{user.id***REMOVED***</code>\n"
-        f"🎭 Роль: <b>{user.role.value***REMOVED***</b>\n\n"
-        f"Всего заказов: <b>{len(history)***REMOVED***</b>\n"
-        f"Доставлено: <b>{delivered***REMOVED***</b>"
+        f"👤 <b>{user.full_name}</b>\n"
+        f"🆔 Telegram ID: <code>{user.id}</code>\n"
+        f"🎭 Роль: <b>{user.role.value}</b>\n\n"
+        f"Всего заказов: <b>{len(history)}</b>\n"
+        f"Доставлено: <b>{delivered}</b>"
     )
     await message.answer(text, reply_markup=account_kb(is_seller=is_seller, is_admin=is_admin))
 
@@ -39,7 +39,7 @@ async def _show_history(message: Message, services) -> None:
     if not orders:
         await message.answer("📭 У вас пока нет заказов.")
         return
-    lines = ["📜 <b>Ваши заказы:</b>\n"***REMOVED***
+    lines = ["📜 <b>Ваши заказы:</b>\n"]
     for o in orders:
         emoji = {
             "pending": "🕒",
@@ -47,10 +47,10 @@ async def _show_history(message: Message, services) -> None:
             "delivered": "✅",
             "cancelled": "❌",
             "failed": "⚠️",
-        ***REMOVED***.get(o.status.value, "·")
+        }.get(o.status.value, "·")
         lines.append(
-            f"{emoji***REMOVED*** #{o.id***REMOVED*** · {o.status.value***REMOVED*** · ⭐{o.total_stars***REMOVED*** · "
-            f"{o.created_at.strftime('%Y-%m-%d %H:%M')***REMOVED***"
+            f"{emoji} #{o.id} · {o.status.value} · ⭐{o.total_stars} · "
+            f"{o.created_at.strftime('%Y-%m-%d %H:%M')}"
         )
     await message.answer("\n".join(lines))
 
@@ -59,8 +59,8 @@ async def _show_history(message: Message, services) -> None:
 async def cb_account(call: CallbackQuery, services) -> None:
     # Превращаем в сообщение: можно редактировать, но проще — закрыть и ответить.
     await call.message.delete()
-    fake_message = call.message  # type: ignore[assignment***REMOVED***
-    fake_message.from_user = call.from_user  # type: ignore[attr-defined***REMOVED***
+    fake_message = call.message  # type: ignore[assignment]
+    fake_message.from_user = call.from_user  # type: ignore[attr-defined]
     await _show_account(fake_message, services)
     await call.answer()
 
@@ -68,7 +68,7 @@ async def cb_account(call: CallbackQuery, services) -> None:
 @router.callback_query(MenuAction.filter(F.action == "history"))
 async def cb_history(call: CallbackQuery, services) -> None:
     await call.message.delete()
-    fake_message = call.message  # type: ignore[assignment***REMOVED***
-    fake_message.from_user = call.from_user  # type: ignore[attr-defined***REMOVED***
+    fake_message = call.message  # type: ignore[assignment]
+    fake_message.from_user = call.from_user  # type: ignore[attr-defined]
     await _show_history(fake_message, services)
     await call.answer()

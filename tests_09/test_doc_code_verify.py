@@ -12,7 +12,7 @@ PLATFORM_CODE_MAP reality §A format: `### @entity <id>` followed by
 from __future__ import annotations
 
 import json
-***REMOVED***
+}
 
 import pytest
 
@@ -108,9 +108,9 @@ class TestExtractClaims:
         doc = workspace_with_doc / "docs_10" / "engineering-memory" / "README.md"
         claims = extract_claims(doc)
         assert len(claims) >= 3
-        targets = {c.target for c in claims***REMOVED***
+        targets = {c.target for c in claims}
         assert "scenario.registry" in targets
-        namespaces = {c.namespace for c in claims***REMOVED***
+        namespaces = {c.namespace for c in claims}
         assert "@entity" in namespaces
         assert "@contract" in namespaces
         assert "@symbol" in namespaces
@@ -120,22 +120,22 @@ class TestExtractClaims:
         with doc.open("a", encoding="utf-8") as f:
             f.write("\n```\n@entity in.fence.should.not.extract\n```\n")
         claims = extract_claims(doc)
-        targets = {c.target for c in claims***REMOVED***
+        targets = {c.target for c in claims}
         assert "in.fence.should.not.extract" not in targets
 
     def test_extract_empty_doc(self, tmp_path: Path):
         doc = tmp_path / "empty.md"
         doc.write_text("# Title only\n", encoding="utf-8")
-        assert extract_claims(doc) == [***REMOVED***
+        assert extract_claims(doc) == []
 
     def test_extract_missing_file(self, tmp_path: Path):
-        assert extract_claims(tmp_path / "nonexistent.md") == [***REMOVED***
+        assert extract_claims(tmp_path / "nonexistent.md") == []
 
     def test_extract_claim_line_numbering(self, workspace_with_doc: Path):
         doc = workspace_with_doc / "docs_10" / "engineering-memory" / "README.md"
         claims = extract_claims(doc)
-        assert claims[0***REMOVED***.line_num >= 2
-        line_nums = [c.line_num for c in claims***REMOVED***
+        assert claims[0].line_num >= 2
+        line_nums = [c.line_num for c in claims]
         assert line_nums == sorted(line_nums)
 
     def test_extract_skips_unknown_namespace(self, workspace_with_doc: Path):
@@ -143,16 +143,16 @@ class TestExtractClaims:
         with doc.open("a", encoding="utf-8") as f:
             f.write("\n@unknown.foo This namespace is not in closed vocab.\n")
         claims = extract_claims(doc)
-        unknown_hits = [c for c in claims if c.namespace == "@unknown"***REMOVED***
-        assert unknown_hits == [***REMOVED***
+        unknown_hits = [c for c in claims if c.namespace == "@unknown"]
+        assert unknown_hits == []
 
 
 class TestLoadCodeMap:
     def test_parses_section_basic(self, workspace_with_code_map: Path):
         m = load_code_map(workspace_with_code_map)
         assert "scenario.registry" in m
-        assert m["scenario.registry"***REMOVED***["file"***REMOVED*** == "core_02/scenario_registry.py"
-        assert m["scenario.registry"***REMOVED***["symbol"***REMOVED*** == "ScenarioRegistry"
+        assert m["scenario.registry"]["file"] == "core_02/scenario_registry.py"
+        assert m["scenario.registry"]["symbol"] == "ScenarioRegistry"
         assert len(m) == 3
 
     def test_parses_section_empty(self, tmp_path: Path):
@@ -160,10 +160,10 @@ class TestLoadCodeMap:
         (tmp_path / "docs_10" / "engineering-memory" / "PLATFORM_CODE_MAP_V1.md").write_text(
             "Empty file\n", encoding="utf-8"
         )
-        assert load_code_map(tmp_path) == {***REMOVED***
+        assert load_code_map(tmp_path) == {}
 
     def test_parses_section_missing(self, tmp_path: Path):
-        assert load_code_map(tmp_path) == {***REMOVED***
+        assert load_code_map(tmp_path) == {}
 
     def test_parses_section_with_public_api_fallback(self, tmp_path: Path):
         """public_api bullet can substitute for symbol."""
@@ -176,7 +176,7 @@ class TestLoadCodeMap:
             encoding="utf-8",
         )
         m = load_code_map(tmp_path)
-        assert m["only.public_api"***REMOVED***["symbol"***REMOVED*** == "SomeClass"
+        assert m["only.public_api"]["symbol"] == "SomeClass"
 
 
 class TestCheckSymbolExists:
@@ -235,8 +235,8 @@ class TestVerifyClaim:
                 "type": "component",
                 "file": "core_02/scenario_registry.py",
                 "symbol": "GhostSymbol",
-            ***REMOVED***,
-        ***REMOVED***
+            },
+        }
         claim = Claim(
             doc_path="X", line_num=1, namespace="@entity", target="stale.entry"
         )
@@ -257,8 +257,8 @@ class TestVerifyClaim:
                 "type": "component",
                 "file": "core_02/scenario_registry.py",
                 "symbol": "",
-            ***REMOVED***,
-        ***REMOVED***
+            },
+        }
         claim = Claim(
             doc_path="X", line_num=1, namespace="@entity", target="incomplete.entry"
         )
@@ -273,21 +273,21 @@ class TestRunVerification:
         assert "docs_checked" in summary
         assert "total_claims" in summary
         for c in CLASSIFICATIONS:
-            assert c in summary["by_classification"***REMOVED***
+            assert c in summary["by_classification"]
         assert "findings" in summary
         assert "strict_exit_code" in summary
 
     def test_run_on_file_missing_code_map(self, workspace_with_doc: Path):
         doc = workspace_with_doc / "docs_10" / "engineering-memory" / "README.md"
         summary = run_verification(doc, workspace_with_doc)
-        assert summary["by_classification"***REMOVED***["DOC_ONLY"***REMOVED*** >= 3
-        assert summary["by_classification"***REMOVED***["CONFIRMED"***REMOVED*** == 0
+        assert summary["by_classification"]["DOC_ONLY"] >= 3
+        assert summary["by_classification"]["CONFIRMED"] == 0
 
     def test_warn_mode_exit_0(self, workspace_with_code_map: Path):
         (workspace_with_code_map / "core_02").mkdir(exist_ok=True)
         target = workspace_with_code_map / "docs_10" / "engineering-memory" / "PLATFORM_CODE_MAP_V1.md"
         summary = run_verification(target, workspace_with_code_map, strict=False)
-        assert summary["strict_exit_code"***REMOVED*** == 0
+        assert summary["strict_exit_code"] == 0
 
     def test_strict_mode_exit_1_on_stale(self, workspace_with_code_map: Path):
         """3 entities in map, 0 actual code files on disk → all 3 STALE → strict exit 1."""
@@ -299,12 +299,12 @@ class TestRunVerification:
             / "PLATFORM_CODE_MAP_V1.md"
         )
         summary = run_verification(target, workspace_with_code_map, strict=True)
-        assert summary["strict_exit_code"***REMOVED*** == 1
-        assert summary["by_classification"***REMOVED***["STALE"***REMOVED*** + summary["by_classification"***REMOVED***["DOC_ONLY"***REMOVED*** > 0
+        assert summary["strict_exit_code"] == 1
+        assert summary["by_classification"]["STALE"] + summary["by_classification"]["DOC_ONLY"] > 0
 
     def test_target_not_found_returns_error(self, tmp_path: Path):
         summary = run_verification(tmp_path / "nope", tmp_path)
-        assert summary["strict_exit_code"***REMOVED*** == 2
+        assert summary["strict_exit_code"] == 2
         assert "error" in summary
 
     def test_skips_docs_outside_engineering_memory(self, tmp_path: Path):
@@ -315,7 +315,7 @@ class TestRunVerification:
         target = tmp_path
         summary = run_verification(target, tmp_path)
         # README.md is filtered out → 0 docs scanned.
-        assert summary["docs_checked"***REMOVED*** == 0
+        assert summary["docs_checked"] == 0
 
 
 class TestMainCLI:
@@ -324,7 +324,7 @@ class TestMainCLI:
             "@entity scenario.registry\n", encoding="utf-8"
         )
         target = workspace_full / "docs_10" / "engineering-memory" / "EXTRA.md"
-        rc = main([str(target), "--workspace", str(workspace_full), "--json"***REMOVED***)
+        rc = main([str(target), "--workspace", str(workspace_full), "--json"])
         out = capsys.readouterr().out
         data = json.loads(out)
         assert "docs_checked" in data
@@ -335,7 +335,7 @@ class TestMainCLI:
         assert rc == 0
 
     def test_target_not_found(self, capsys):
-        rc = main(["/nonexistent/path", "--workspace", "."***REMOVED***)
+        rc = main(["/nonexistent/path", "--workspace", "."])
         assert rc == 2
 
     def test_strict_flag_passes_through(self, workspace_full: Path, capsys):
@@ -343,7 +343,7 @@ class TestMainCLI:
             "@entity scenario.registry\n", encoding="utf-8"
         )
         target = workspace_full / "docs_10" / "engineering-memory" / "EXTRA.md"
-        rc = main([str(target), "--workspace", str(workspace_full), "--strict"***REMOVED***)
+        rc = main([str(target), "--workspace", str(workspace_full), "--strict"])
         assert rc == 0
 
     def test_human_format_output(self, workspace_full: Path, capsys):
@@ -351,7 +351,7 @@ class TestMainCLI:
             "@entity scenario.registry\n", encoding="utf-8"
         )
         target = workspace_full / "docs_10" / "engineering-memory" / "EXTRA.md"
-        rc = main([str(target), "--workspace", str(workspace_full)***REMOVED***)
+        rc = main([str(target), "--workspace", str(workspace_full)])
         out = capsys.readouterr().out
         assert "Docs checked" in out
         assert "Total claims" in out

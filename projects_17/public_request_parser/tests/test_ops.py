@@ -50,12 +50,12 @@ async def test_schedule_runs_max_iterations_and_records_stats() -> None:
     assert calls == 3
     assert len(stats) == 3
     assert all(s.ok for s in stats)
-    assert stats[0***REMOVED***.source_id == "x"
+    assert stats[0].source_id == "x"
 
 
 @pytest.mark.asyncio
 async def test_schedule_backoff_and_alert_on_failure() -> None:
-    alerts: list[tuple[str, str***REMOVED******REMOVED*** = [***REMOVED***
+    alerts: list[tuple[str, str]] = []
 
     async def alert(level: str, message: str) -> None:
         alerts.append((level, message))
@@ -71,7 +71,7 @@ async def test_schedule_backoff_and_alert_on_failure() -> None:
     assert len(alerts) == 3
     assert all(level == "warning" for level, _ in alerts)
     assert all(not s.ok for s in stats)
-    assert stats[-1***REMOVED***.consecutive_failures == 3
+    assert stats[-1].consecutive_failures == 3
 
 
 @pytest.mark.asyncio
@@ -110,6 +110,6 @@ async def test_schedule_isolates_source_failures() -> None:
     config = ScheduleConfig(source_id="x", interval_total=0.001, max_backoff=0.01)
     stats = await run_schedule(config=config, run_once=run_once, max_iterations=2)
 
-    assert stats[0***REMOVED***.ok is False
-    assert stats[1***REMOVED***.ok is True
-    assert stats[1***REMOVED***.consecutive_failures == 0  # streak сброшен после успеха
+    assert stats[0].ok is False
+    assert stats[1].ok is True
+    assert stats[1].consecutive_failures == 0  # streak сброшен после успеха

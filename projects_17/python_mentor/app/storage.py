@@ -12,14 +12,14 @@ user_version для миграций. НЕ создаём таблицы буд�
 from __future__ import annotations
 
 import sqlite3
-***REMOVED***
+}
 
 SCHEMA_VERSION = 1
 
 _LEGACY_DROP = ""  # аддитивная миграция: без DROP
 
 SCHEMA_SQL = f"""
-PRAGMA user_version = {SCHEMA_VERSION***REMOVED***;
+PRAGMA user_version = {SCHEMA_VERSION};
 
 CREATE TABLE IF NOT EXISTS competencies (
     id                      TEXT PRIMARY KEY,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS competencies (
          'code_structure')),
     understand_criteria     TEXT NOT NULL,
     can_do_criteria         TEXT NOT NULL,
-    typical_errors_json     TEXT NOT NULL DEFAULT '[***REMOVED***',
+    typical_errors_json     TEXT NOT NULL DEFAULT '[]',
     verification_exercise   TEXT NOT NULL DEFAULT '',
     project_marker          TEXT NOT NULL DEFAULT ''
 );

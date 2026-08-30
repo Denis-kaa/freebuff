@@ -9,10 +9,10 @@ Pattern follows tests_09/test_role_executor.py (DI через _FakeGateway style
 
 from __future__ import annotations
 
-***REMOVED***
+}
 import subprocess
 import sys
-***REMOVED***
+}
 
 import pytest
 
@@ -100,7 +100,7 @@ VOCAL_TASK_FRAGMENT = (
     "Зафиксировать гипотезы и статусы.\n\n"
     "## 11. Devil's advocate: kill-questions\n"
     "Написать опровержение и 3 kill-questions.\n\n"
-    "## 12. Claim source tracker [fact***REMOVED*** vs [observation***REMOVED*** vs [hypothesis***REMOVED***\n"
+    "## 12. Claim source tracker [fact] vs [observation] vs [hypothesis]\n"
     "Каждое утверждение пометить тегом.\n\n"
     "## 13. Vanity metric filter (лайк не успех)\n"
     "Не считать лайки/подписчиков успехом.\n\n"
@@ -126,7 +126,7 @@ class TestSplitSections:
         )
         out = _split_sections(text)
         assert len(out) == 1
-        assert out[0***REMOVED***[1***REMOVED***.strip() == text.strip()
+        assert out[0][1].strip() == text.strip()
 
     def test_h2_numbered_sections(self):
         out = _split_sections(VOCAL_TASK_FRAGMENT)
@@ -154,7 +154,7 @@ class TestSplitSections:
 
 class TestExtractCapabilities:
     def test_vocal_fragment_extracts_expected_set(self):
-        found = [item_id for item_id, *_ in _extract_capabilities_from_text(VOCAL_TASK_FRAGMENT)***REMOVED***
+        found = [item_id for item_id, *_ in _extract_capabilities_from_text(VOCAL_TASK_FRAGMENT)]
         expected_subset = {
             "research_web",
             "lisa_estimator",
@@ -171,20 +171,20 @@ class TestExtractCapabilities:
             "weighted_scoring_engine",
             "corpus_persistence",
             "persona_funnel_analyzer",
-        ***REMOVED***
+        }
         found_set = set(found)
         missing = expected_subset - found_set
-        assert not missing, f"expected to extract {missing***REMOVED***, but found {found_set***REMOVED***"
+        assert not missing, f"expected to extract {missing}, but found {found_set}"
 
     def test_unrelated_text_extracts_nothing_critical(self):
         text = (
             "Сегодня хорошая погода. Сходил в магазин за молоком и хлебом. "
             "Никаких специальных терминов из таксономии здесь нет, длинный текст для body."
         )
-        found_ids = {x[0***REMOVED*** for x in _extract_capabilities_from_text(text)***REMOVED***
-        block = {"research_web", "claim_source_tracker", "corpus_persistence"***REMOVED***
+        found_ids = {x[0] for x in _extract_capabilities_from_text(text)}
+        block = {"research_web", "claim_source_tracker", "corpus_persistence"}
         assert not (found_ids & block), (
-            f"unexpected block-cap hit on unrelated text: {found_ids & block***REMOVED***"
+            f"unexpected block-cap hit on unrelated text: {found_ids & block}"
         )
 
     def test_claim_source_tracker_new_phrasings(self):
@@ -195,13 +195,13 @@ class TestExtractCapabilities:
             "Кроме того, старайся не выдавать предположение за факт.\n"
             "Остальной текст не содержит других capabilities."
         )
-        found_ids = {x[0***REMOVED*** for x in _extract_capabilities_from_text(text)***REMOVED***
-        assert found_ids == {"claim_source_tracker"***REMOVED***
+        found_ids = {x[0] for x in _extract_capabilities_from_text(text)}
+        assert found_ids == {"claim_source_tracker"}
 
     def test_dedupe_by_item_id(self):
         text = "см. также web research. web page. URL и web research ещё раз."
         found = _extract_capabilities_from_text(text)
-        ids = [x[0***REMOVED*** for x in found***REMOVED***
+        ids = [x[0] for x in found]
         assert len(ids) == len(set(ids))
 
 
@@ -217,7 +217,7 @@ def _strip_bash_comments(bash: str) -> str:
 
 def _extract_first_slice(md: str) -> list:
     """Извлекает только numbered first-slice items из rendered-report."""
-    section = md.split("## 4.", 1)[1***REMOVED***.split("## 5.", 1)[0***REMOVED***
+    section = md.split("## 4.", 1)[1].split("## 5.", 1)[0]
     return re.findall(r"^\d+\.\s+`(\w+)`", section, re.MULTILINE)
 
 
@@ -228,7 +228,7 @@ class TestCapabilityGapReporter:
             ("Web Research", "web research URL"),
             ("Unit economics", "calibration teacher time"),
             ("Hypothesis tracking", "hypothesis ledger kill-criteria"),
-        ***REMOVED***
+        ]
         md = reporter.render(sections)
         assert "## 1. Сводная таблица" in md
         assert "| `research_web`" in md
@@ -243,12 +243,12 @@ class TestCapabilityGapReporter:
             ("est", "calibration teacher time"),
             ("hyp", "hypothesis ledger kill-criteria"),
             ("anti", "anti-pattern mining заброшенные школы"),
-        ***REMOVED***
+        ]
         md = reporter.render(sections)
         first_slice_items = _extract_first_slice(md)
         assert first_slice_items, "first-slice list missing"
         # Первым по приоритету — anti_pattern_miner (absent, P0).
-        assert first_slice_items[0***REMOVED*** == "anti_pattern_miner"
+        assert first_slice_items[0] == "anti_pattern_miner"
         # research_web (implemented) НЕ попадает в first-slice.
         assert "research_web" not in first_slice_items
         # Блокеры в правильном порядке: absent → registered → prompt_written.
@@ -259,10 +259,10 @@ class TestCapabilityGapReporter:
     def test_paste_friendly_commands_use_registry_cli(self, seed_registry):
         reporter = CapabilityGapReporter(registry=seed_registry)
         # Берём только absent-кап, чтобы получить детерминированную команду.
-        sections = [("anti", "anti-pattern mining заброшенные школы")***REMOVED***
+        sections = [("anti", "anti-pattern mining заброшенные школы")]
         md = reporter.render(sections)
         assert "```bash" in md
-        bash = md.split("```bash\n", 1)[1***REMOVED***.split("```", 1)[0***REMOVED***
+        bash = md.split("```bash\n", 1)[1].split("```", 1)[0]
         assert "python -m core_02.missing_registry register" in bash
         assert "anti_pattern_miner" in bash
         assert "--kind tool" in bash
@@ -271,10 +271,10 @@ class TestCapabilityGapReporter:
 
     def test_implemented_capabs_skipped_in_register_block(self, seed_registry):
         reporter = CapabilityGapReporter(registry=seed_registry)
-        sections = [("web", "web research url")***REMOVED***
+        sections = [("web", "web research url")]
         md = reporter.render(sections)
         if "```bash" in md:
-            bash = md.split("```bash\n", 1)[1***REMOVED***.split("```", 1)[0***REMOVED***
+            bash = md.split("```bash\n", 1)[1].split("```", 1)[0]
             non_comment = _strip_bash_comments(bash)
             assert "register research_web" not in non_comment
         else:
@@ -284,14 +284,14 @@ class TestCapabilityGapReporter:
         reporter = CapabilityGapReporter(registry=seed_registry)
         before = sorted(seed_registry.list_all(), key=lambda i: i.item_id)
         for _ in range(3):
-            reporter.render([("web", "web research url")***REMOVED***)
+            reporter.render([("web", "web research url")])
         after = sorted(seed_registry.list_all(), key=lambda i: i.item_id)
-        assert [i.item_id for i in before***REMOVED*** == [i.item_id for i in after***REMOVED***
-        assert [i.status for i in before***REMOVED*** == [i.status for i in after***REMOVED***
+        assert [i.item_id for i in before] == [i.item_id for i in after]
+        assert [i.status for i in before] == [i.status for i in after]
 
     def test_handles_registry_none_gracefully(self):
         reporter = CapabilityGapReporter(registry=None)
-        md = reporter.render([("web", "web research url")***REMOVED***)
+        md = reporter.render([("web", "web research url")])
         assert "(registry=None)" in md or "registry=None" in md
 
 
@@ -303,7 +303,7 @@ class TestCapabilityGapAuditorExecutor:
         (project.root / "задача.md").write_text(VOCAL_TASK_FRAGMENT, encoding="utf-8")
         executor = CapabilityGapAuditorExecutor(registry=empty_registry)
         created = executor.execute(project, "capability_gap_auditor")
-        assert created == [REPORT_FILE***REMOVED***
+        assert created == [REPORT_FILE]
         out = project.root / REPORT_FILE
         assert out.is_file()
         content = out.read_text(encoding="utf-8")
@@ -317,7 +317,7 @@ class TestCapabilityGapAuditorExecutor:
         (project.root / "brief.md").write_text(VOCAL_TASK_FRAGMENT, encoding="utf-8")
         executor = CapabilityGapAuditorExecutor(registry=seed_registry)
         created = executor.execute(project, "capability_gap_auditor")
-        assert created == [REPORT_FILE***REMOVED***
+        assert created == [REPORT_FILE]
         content = (project.root / REPORT_FILE).read_text(encoding="utf-8")
         bash_block_match = re.search(r"```bash\n(.*?)```", content, re.DOTALL)
         assert bash_block_match, "expected bash block in report"
@@ -331,14 +331,14 @@ class TestCapabilityGapAuditorExecutor:
     def test_execute_fail_safe_on_missing_input(self, project, empty_registry):
         executor = CapabilityGapAuditorExecutor(registry=empty_registry)
         created = executor.execute(project, "capability_gap_auditor")
-        assert created == [***REMOVED***
+        assert created == []
         assert not (project.root / REPORT_FILE).exists()
 
     def test_execute_fail_safe_on_short_input(self, project, empty_registry):
         (project.root / "brief.md").write_text("короткий текст", encoding="utf-8")
         executor = CapabilityGapAuditorExecutor(registry=empty_registry)
         created = executor.execute(project, "capability_gap_auditor")
-        assert created == [***REMOVED***
+        assert created == []
 
     def test_execute_at_min_length_returns_report(self, project, empty_registry):
         # Текст РОВНО на границе _MIN_BODY_LEN (=60). Длина рассчитывается из длины
@@ -346,34 +346,34 @@ class TestCapabilityGapAuditorExecutor:
         prefix = "Min body length на границе "  # 27 chars (вычислено ниже через len)
         exactly_min = prefix + "a" * (60 - len(prefix))
         assert len(exactly_min) == 60, (
-            f"Фикстура должна быть строго 60 chars, got {len(exactly_min)***REMOVED***"
+            f"Фикстура должна быть строго 60 chars, got {len(exactly_min)}"
         )
         (project.root / "задача.md").write_text(exactly_min, encoding="utf-8")
         executor = CapabilityGapAuditorExecutor(registry=empty_registry)
         created = executor.execute(project, "capability_gap_auditor")
-        assert created == [REPORT_FILE***REMOVED***
+        assert created == [REPORT_FILE]
         assert (project.root / REPORT_FILE).is_file()
 
     def test_execute_below_min_length_returns_empty(self, project, empty_registry):
-        # 59 chars (на 1 ниже _MIN_BODY_LEN=60) → execute fail-safe → [***REMOVED***.
+        # 59 chars (на 1 ниже _MIN_BODY_LEN=60) → execute fail-safe → [].
         below_min = "a" * 59
         assert len(below_min.strip()) == 59
         (project.root / "задача.md").write_text(below_min, encoding="utf-8")
         executor = CapabilityGapAuditorExecutor(registry=empty_registry)
         created = executor.execute(project, "capability_gap_auditor")
-        assert created == [***REMOVED***
+        assert created == []
         assert not (project.root / REPORT_FILE).exists()
 
     def test_executor_returns_relative_path_only(self, project, empty_registry):
-        # ADR-016 контракт: execute() → ["filename"***REMOVED*** relative к project.root.
+        # ADR-016 контракт: execute() → ["filename"] relative к project.root.
         (project.root / "задача.md").write_text(VOCAL_TASK_FRAGMENT, encoding="utf-8")
         executor = CapabilityGapAuditorExecutor(registry=empty_registry)
         created = executor.execute(project, "capability_gap_auditor")
-        assert created == [REPORT_FILE***REMOVED***
+        assert created == [REPORT_FILE]
         # Никаких абсолютных путей или path-traversal.
         for path_str in created:
             assert "/" not in path_str and "\\" not in path_str, (
-                f"ADR-016: возвращаемый путь должен быть relative, got {path_str!r***REMOVED***"
+                f"ADR-016: возвращаемый путь должен быть relative, got {path_str!r}"
             )
 
     def test_executor_role_id_is_correct(self):
@@ -404,11 +404,11 @@ class TestCLI:
             "audit", str(project_dir),
             "--registry", str(empty_registry.path),
             "--no-write",
-        ***REMOVED***
+        ]
         result = subprocess.run(
             cmd, capture_output=True, text=True, timeout=20,
             cwd=str(Path(__file__).resolve().parent.parent),
         )
-        assert result.returncode == 0, f"CLI stderr: {result.stderr***REMOVED***"
+        assert result.returncode == 0, f"CLI stderr: {result.stderr}"
         assert "Capability Gap Audit Report" in result.stdout
         assert "```bash" in result.stdout

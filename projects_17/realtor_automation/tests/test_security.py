@@ -21,7 +21,7 @@ def encryption_key() -> str:
 
 
 def test_encrypt_decrypt_roundtrip(encryption_key: str) -> None:
-    os.environ["PII_ENCRYPTION_KEY"***REMOVED*** = encryption_key
+    os.environ["PII_ENCRYPTION_KEY"] = encryption_key
     encryptor = PIIEncryptor()
     token = encryptor.encrypt("Иван Иванов")
     assert token != "Иван Иванов"
@@ -29,12 +29,12 @@ def test_encrypt_decrypt_roundtrip(encryption_key: str) -> None:
 
 
 def test_redact_pii(encryption_key: str) -> None:
-    os.environ["PII_ENCRYPTION_KEY"***REMOVED*** = encryption_key
+    os.environ["PII_ENCRYPTION_KEY"] = encryption_key
     encryptor = PIIEncryptor()
     text = "Телефон: +7 999 123-45-67, паспорт: 1234 567890"
     redacted = encryptor.redact_pii(text)
-    assert "[PHONE***REMOVED***" in redacted
-    assert "[PASSPORT***REMOVED***" in redacted
+    assert "[PHONE]" in redacted
+    assert "[PASSPORT]" in redacted
 
 
 def test_validate_non_empty() -> None:

@@ -1,10 +1,10 @@
 """Общие фикстуры и пути (Phase B+C, Шаг 9). Hermetic: без сети."""
 
-***REMOVED***
+}
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1***REMOVED***
+ROOT = Path(__file__).resolve().parents[1]
 FIXTURES = ROOT / "tests" / "fixtures" / "exercism"
 SOURCES_YAML = ROOT / "configs" / "sources.yaml"
 MAP_YAML = ROOT / "configs" / "competency_map.yaml"

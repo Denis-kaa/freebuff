@@ -18,7 +18,7 @@ import json
 import subprocess
 import sys
 import threading
-***REMOVED***
+}
 from typing import Any, Dict, List
 
 import pytest
@@ -65,18 +65,18 @@ def _isolate_corpus_root(monkeypatch, tmp_path) -> None:
 
 class FakeScraper:
     """Deterministic ScraperProtocol impl keyed by URL. No httpx needed."""
-    def __init__(self, mapping: Dict[str, ScrapeResult***REMOVED***) -> None:
+    def __init__(self, mapping: Dict[str, ScrapeResult]) -> None:
         self.mapping = mapping
-        self.calls: List[str***REMOVED*** = [***REMOVED***
+        self.calls: List[str] = []
 
     def fetch(self, url: str) -> ScrapeResult:
         self.calls.append(url)
         if url not in self.mapping:
             return ScrapeResult(
                 status=ScrapeStatus.MISSING_FIELDS,
-                error_msg=f"no fixture for {url***REMOVED***",
+                error_msg=f"no fixture for {url}",
             )
-        return self.mapping[url***REMOVED***
+        return self.mapping[url]
 
 
 # ─── TestSchema ─────────────────────────────────────────────────────────────
@@ -95,11 +95,11 @@ class TestSchema:
             format=FormatType.COHORT,
         )
         d = cp.to_dict()
-        assert d["course"***REMOVED*** == "Vocal Mastery"
-        assert d["price_raw"***REMOVED*** == "12 900 ₽"
-        assert d["format"***REMOVED*** == "cohort_based"
-        assert d["price_amount"***REMOVED*** == 12900.0
-        assert d["price_currency"***REMOVED*** == "RUB"
+        assert d["course"] == "Vocal Mastery"
+        assert d["price_raw"] == "12 900 ₽"
+        assert d["format"] == "cohort_based"
+        assert d["price_amount"] == 12900.0
+        assert d["price_currency"] == "RUB"
 
     def test_validate_url_accepts_https(self):
         _validate_url("https://example.com/courses")
@@ -121,7 +121,7 @@ class TestSchema:
 
     def test_validate_url_rejects_non_str(self):
         with pytest.raises(TypeError):
-            _validate_url(123)  # type: ignore[arg-type***REMOVED***
+            _validate_url(123)  # type: ignore[arg-type]
 
     def test_format_type_unknown_is_default(self):
         cp = CoursePrice(
@@ -131,24 +131,24 @@ class TestSchema:
 
     def test_validate_scrape_data_missing_course_raises(self):
         with pytest.raises(ValueError, match="course"):
-            _validate_scrape_data({"price_raw": "100"***REMOVED***)
+            _validate_scrape_data({"price_raw": "100"})
 
     def test_validate_scrape_data_missing_price_raises(self):
         with pytest.raises(ValueError, match="price_raw"):
-            _validate_scrape_data({"course": "Test"***REMOVED***)
+            _validate_scrape_data({"course": "Test"})
 
     def test_validate_scrape_data_extracts_price_amount(self):
         cp = _validate_scrape_data({
             "course": "X", "price_raw": "от 12 900 ₽/мес",
             "source_url": "https://x", "scrape_timestamp": "now",
-        ***REMOVED***)
+        ])
         assert cp.price_amount == 12900.0
 
     def test_validate_scrape_data_unparseable_amount_is_none(self):
         cp = _validate_scrape_data({
             "course": "X", "price_raw": "по запросу",
             "source_url": "https://x", "scrape_timestamp": "now",
-        ***REMOVED***)
+        ])
         assert cp.price_amount is None  # verbatim preserved
 
     def test_validate_scrape_data_unknown_format_falls_to_unknown(self):
@@ -157,7 +157,7 @@ class TestSchema:
             "course": "X", "price_raw": "100",
             "source_url": "https://x", "scrape_timestamp": "now",
             "format": "unicorn-mode",
-        ***REMOVED***)
+        ])
         assert cp.format == FormatType.UNKNOWN
 
     def test_validate_scrape_data_rejects_oversize_course(self):
@@ -166,7 +166,7 @@ class TestSchema:
                 "course": "x" * (COURSE_MAX_LEN + 10),
                 "price_raw": "100",
                 "source_url": "https://x", "scrape_timestamp": "now",
-            ***REMOVED***)
+            ])
 
 
 # ─── TestEnumerator ────────────────────────────────────────────────────────
@@ -179,12 +179,12 @@ class TestEnumerator:
             url: ScrapeResult(status=ScrapeStatus.OK, data={
                 "course": "Vocal Mastery", "price_raw": "12 900 ₽",
                 "teacher": "Иванов И.И.", "format": "cohort_based",
-            ***REMOVED***),
-        ***REMOVED***)
+            ]),
+        ])
         enum = PricingEnumerator(scraper=scraper, enabled=False)
-        results = enum.enumerate([url***REMOVED***)
+        results = enum.enumerate([url])
         assert len(results) == 1
-        cp = results[0***REMOVED***
+        cp = results[0]
         assert cp.course == "Vocal Mastery"
         assert cp.price_raw == "12 900 ₽"
         assert cp.format == FormatType.COHORT
@@ -196,11 +196,11 @@ class TestEnumerator:
         scraper = FakeScraper({
             url: ScrapeResult(status=ScrapeStatus.OK, data={
                 "course": "Only Course",  # no price_raw
-            ***REMOVED***),
-        ***REMOVED***)
+            ]),
+        ])
         enum = PricingEnumerator(scraper=scraper, enabled=False)
-        results = enum.enumerate([url***REMOVED***)
-        assert results == [***REMOVED***  # soft skip
+        results = enum.enumerate([url])
+        assert results == []  # soft skip
 
     def test_http_error_warns_and_skips(self):
         url = "https://example.com/404"
@@ -208,10 +208,10 @@ class TestEnumerator:
             url: ScrapeResult(
                 status=ScrapeStatus.HTTP_ERROR, error_msg="HTTP 404",
             ),
-        ***REMOVED***)
+        ])
         enum = PricingEnumerator(scraper=scraper, enabled=False)
-        results = enum.enumerate([url***REMOVED***)
-        assert results == [***REMOVED***
+        results = enum.enumerate([url])
+        assert results == []
 
     def test_parse_error_warns_and_skips(self):
         url = "https://example.com/parse-broken"
@@ -219,60 +219,60 @@ class TestEnumerator:
             url: ScrapeResult(
                 status=ScrapeStatus.PARSE_ERROR, error_msg="BeautifulSoup crash",
             ),
-        ***REMOVED***)
+        ])
         enum = PricingEnumerator(scraper=scraper, enabled=False)
-        results = enum.enumerate([url***REMOVED***)
-        assert results == [***REMOVED***
+        results = enum.enumerate([url])
+        assert results == []
 
     def test_network_unavailable_raises_fatal_exception(self):
         url = "https://example.com/offline"
 
         class NetworkFailScraper:
             def fetch(self, u: str) -> ScrapeResult:
-                raise PricingEnumeratorNetworkError(f"offline: {u***REMOVED***")
+                raise PricingEnumeratorNetworkError(f"offline: {u}")
 
         enum = PricingEnumerator(
-            scraper=NetworkFailScraper(),  # type: ignore[arg-type***REMOVED***
+            scraper=NetworkFailScraper(),  # type: ignore[arg-type]
             enabled=False,
         )
         with pytest.raises(PricingEnumeratorNetworkError, match="offline"):
-            enum.enumerate([url***REMOVED***)
+            enum.enumerate([url])
 
     def test_valid_scrape_triggers_corpus_persist(self):
         url = "https://example.com/courses/x"
         scraper = FakeScraper({
             url: ScrapeResult(status=ScrapeStatus.OK, data={
                 "course": "X", "price_raw": "100",
-            ***REMOVED***),
-        ***REMOVED***)
+            ]),
+        ])
         from scripts_01.corpus_persistence import list_all, DEFAULT_CORPUS_DIR
         enum = PricingEnumerator(
             scraper=scraper, corpus_source="pricing_enumerator", enabled=True,
         )
-        results = enum.enumerate([url***REMOVED***)
+        results = enum.enumerate([url])
         assert len(results) == 1
         # default corpus dir is patched by autouse → tmp_path / corpus.
         entries = list_all(root=DEFAULT_CORPUS_DIR)
-        matching = [e for e in entries if e.url == url***REMOVED***
+        matching = [e for e in entries if e.url == url]
         assert len(matching) == 1
-        assert matching[0***REMOVED***.source == "pricing_enumerator"
-        assert matching[0***REMOVED***.title == "X"
+        assert matching[0].source == "pricing_enumerator"
+        assert matching[0].title == "X"
 
     def test_no_corpus_flag_bypasses_persistence(self):
         url = "https://example.com/no-write"
         scraper = FakeScraper({
             url: ScrapeResult(status=ScrapeStatus.OK, data={
                 "course": "X", "price_raw": "100",
-            ***REMOVED***),
-        ***REMOVED***)
+            ]),
+        ])
         from scripts_01.corpus_persistence import list_all, DEFAULT_CORPUS_DIR
         enum = PricingEnumerator(
             scraper=scraper, enabled=False,
         )
-        results = enum.enumerate([url***REMOVED***)
+        results = enum.enumerate([url])
         assert len(results) == 1
         entries = list_all(root=DEFAULT_CORPUS_DIR)
-        assert entries == [***REMOVED***
+        assert entries == []
 
     def test_corpus_exception_caught_safely_adr016(self, monkeypatch):
         """Verify ADR-016 fail-safe: persist() raising should NOT crash batch.
@@ -285,8 +285,8 @@ class TestEnumerator:
         scraper = FakeScraper({
             url: ScrapeResult(status=ScrapeStatus.OK, data={
                 "course": "Y", "price_raw": "200",
-            ***REMOVED***),
-        ***REMOVED***)
+            ]),
+        ])
 
         def exploding_persist(*args: Any, **kwargs: Any) -> None:
             raise RuntimeError("simulated persist failure")
@@ -295,11 +295,11 @@ class TestEnumerator:
             "scripts_01.corpus_persistence.persist", exploding_persist,
         )
         enum = PricingEnumerator(scraper=scraper, enabled=True)
-        results = enum.enumerate([url***REMOVED***)
+        results = enum.enumerate([url])
         # Despite persist exploding, results list still populated
         # (ADR-016: best-effort persistence, not blocking).
         assert len(results) == 1
-        assert results[0***REMOVED***.course == "Y"
+        assert results[0].course == "Y"
 
     def test_batch_processing_survives_partial_failures(self):
         good_url = "https://example.com/good"
@@ -307,19 +307,19 @@ class TestEnumerator:
         scraper = FakeScraper({
             good_url: ScrapeResult(status=ScrapeStatus.OK, data={
                 "course": "Good", "price_raw": "100",
-            ***REMOVED***),
+            ]),
             bad_url: ScrapeResult(
                 status=ScrapeStatus.HTTP_ERROR, error_msg="HTTP 503",
             ),
-        ***REMOVED***)
+        ])
         enum = PricingEnumerator(scraper=scraper, enabled=False)
-        results = enum.enumerate([good_url, bad_url***REMOVED***)
+        results = enum.enumerate([good_url, bad_url])
         # Wait, validate_url rejects invalid because enum fetches bad_url's
         # ScrapeResult — but it's also invalid HTTPS? No, bad_url starts https.
         # Both URLs are valid → bad_url yields ScrapeStatus.HTTP_ERROR → skipped,
         # good_url yields CoursePrice.
         assert len(results) == 1
-        assert results[0***REMOVED***.course == "Good"
+        assert results[0].course == "Good"
 
     def test_price_raw_preserved_when_amount_unparseable(self):
         """Verbatim guarantee: «по запросу» / «от 50 000» preserved raw."""
@@ -327,41 +327,41 @@ class TestEnumerator:
         scraper = FakeScraper({
             url: ScrapeResult(status=ScrapeStatus.OK, data={
                 "course": "Custom", "price_raw": "по запросу",
-            ***REMOVED***),
-        ***REMOVED***)
+            ]),
+        ])
         enum = PricingEnumerator(scraper=scraper, enabled=False)
-        results = enum.enumerate([url***REMOVED***)
+        results = enum.enumerate([url])
         assert len(results) == 1
-        assert results[0***REMOVED***.price_raw == "по запросу"
-        assert results[0***REMOVED***.price_amount is None
+        assert results[0].price_raw == "по запросу"
+        assert results[0].price_amount is None
 
     def test_invalid_url_summary_skipped_but_other_urls_continue(self):
         good_url = "https://example.com/ok"
         scraper = FakeScraper({
             good_url: ScrapeResult(status=ScrapeStatus.OK, data={
                 "course": "OK", "price_raw": "1",
-            ***REMOVED***),
-        ***REMOVED***)
+            ]),
+        ])
         enum = PricingEnumerator(scraper=scraper, enabled=False)
         # First URL is invalid (no protocol) → soft skip; second URL → success.
-        results = enum.enumerate(["not-a-url", good_url***REMOVED***)
+        results = enum.enumerate(["not-a-url", good_url])
         assert len(results) == 1
-        assert results[0***REMOVED***.course == "OK"
-        assert scraper.calls == [good_url***REMOVED***  # invalid URL NOT fetched
+        assert results[0].course == "OK"
+        assert scraper.calls == [good_url]  # invalid URL NOT fetched
 
     def test_enumerator_rejects_non_list_input(self):
-        enum = PricingEnumerator(scraper=FakeScraper({***REMOVED***), enabled=False)
+        enum = PricingEnumerator(scraper=FakeScraper({}), enabled=False)
         with pytest.raises(TypeError):
-            enum.enumerate("not-a-list")  # type: ignore[arg-type***REMOVED***
+            enum.enumerate("not-a-list")  # type: ignore[arg-type]
 
     def test_enumerator_rejects_oversize_batch(self):
-        enum = PricingEnumerator(scraper=FakeScraper({***REMOVED***), enabled=False)
+        enum = PricingEnumerator(scraper=FakeScraper({}), enabled=False)
         with pytest.raises(ValueError, match="BATCH_MAX_URLS"):
-            enum.enumerate([f"https://example.com/{i***REMOVED***" for i in range(BATCH_MAX_URLS + 1)***REMOVED***)
+            enum.enumerate([f"https://example.com/{i}" for i in range(BATCH_MAX_URLS + 1)])
 
     def test_enumerator_requires_scraper(self):
         with pytest.raises(ValueError, match="scraper is required"):
-            PricingEnumerator(scraper=None, enabled=False)  # type: ignore[arg-type***REMOVED***
+            PricingEnumerator(scraper=None, enabled=False)  # type: ignore[arg-type]
 
 
 # ─── TestWebScraperDispatch (verifies WebScraper wired into enumeration) ──
@@ -375,7 +375,7 @@ class TestWebScraperDispatch:
         assert hasattr(scraper, "fetch")
 
     def test_batch_via_web_scraper_offline_is_skipped(self, monkeypatch):
-        """Stub httpx so BatchSize=2 (1 unreachable, 1 hard-skip) returns [***REMOVED***; we
+        """Stub httpx so BatchSize=2 (1 unreachable, 1 hard-skip) returns []; we
         verify that httpx.ConnectError is mapped to PricingEnumeratorNetworkError."""
         import httpx
 
@@ -390,13 +390,13 @@ class TestWebScraperDispatch:
                 pass
 
             def get(self, url: str, **kwargs: Any) -> None:
-                raise httpx.ConnectError(f"fake-offline {url***REMOVED***")
+                raise httpx.ConnectError(f"fake-offline {url}")
 
         monkeypatch.setattr(httpx, "Client", FakeHttpxClient)
         scraper = WebScraper(timeout=1.0)
         enum = PricingEnumerator(scraper=scraper, enabled=False)
         with pytest.raises(PricingEnumeratorNetworkError, match="Cannot reach"):
-            enum.enumerate(["https://example.com/x"***REMOVED***)
+            enum.enumerate(["https://example.com/x"])
 
 
 # ─── TestConcurrency (file_lock protected) ────────────────────────────────
@@ -405,23 +405,23 @@ class TestWebScraperDispatch:
 class TestConcurrency:
     def test_concurrent_threads_corpus_persist_consistent(self):
         """Sequential scrapes (file_lock-protected) → all 10 entries land."""
-        urls = [f"https://example.com/c/{idx***REMOVED***" for idx in range(10)***REMOVED***
+        urls = [f"https://example.com/c/{idx}" for idx in range(10)]
         # Use indexed pairs → unique course per URL, no `i`-in-scope bug.
-        mappings: Dict[str, ScrapeResult***REMOVED*** = {
+        mappings: Dict[str, ScrapeResult] = {
             url: ScrapeResult(status=ScrapeStatus.OK, data={
-                "course": f"C{idx***REMOVED***", "price_raw": str(100 + idx),
-            ***REMOVED***) for idx, url in enumerate(urls)
-        ***REMOVED***
+                "course": f"C{idx}", "price_raw": str(100 + idx),
+            ]) for idx, url in enumerate(urls)
+        }
         scraper = FakeScraper(mappings)
         enum = PricingEnumerator(
             scraper=scraper, enabled=True, corpus_source="concurrent_test",
         )
         for u in urls:
-            enum.enumerate([u***REMOVED***)
+            enum.enumerate([u])
 
         from scripts_01.corpus_persistence import list_all, DEFAULT_CORPUS_DIR
         entries = list_all(root=DEFAULT_CORPUS_DIR)
-        concurrent = [e for e in entries if e.source == "concurrent_test"***REMOVED***
+        concurrent = [e for e in entries if e.source == "concurrent_test"]
         assert len(concurrent) == 10
 
 
@@ -430,7 +430,7 @@ class TestConcurrency:
 
 class TestCLI:
     def test_cli_version(self):
-        cmd = [sys.executable, "-m", "scripts_01.pricing_enumerator", "--version"***REMOVED***
+        cmd = [sys.executable, "-m", "scripts_01.pricing_enumerator", "--version"]
         r = subprocess.run(
             cmd, capture_output=True, text=True, timeout=10,
             cwd=str(Path(__file__).resolve().parent.parent),
@@ -465,18 +465,18 @@ class TestCacheLayer:
             def __init__(self) -> None:
                 self.call_count = 0
 
-            def fetch(self, url: str) -> _SR:  # type: ignore[override***REMOVED***
+            def fetch(self, url: str) -> _SR:  # type: ignore[override]
                 self.call_count += 1
                 return _SR(status=ScrapeStatus.OK, data={
                     "course": "X", "price_raw": "100", "source_url": url,
-                ***REMOVED***)
+                ])
 
         fake = _Fake()
         enum = PricingEnumerator(scraper=fake, enabled=True, cache_ttl_seconds=0)
         # Seed corpus entry — should NOT be picked up under cache_ttl_seconds=0.
         persist("https://example.test/c1", source="pricing_enumerator",
-                title="X", metadata={"price_raw": "100", "price_amount": 100.0***REMOVED***)
-        result = enum.enumerate(["https://example.test/c1"***REMOVED***)
+                title="X", metadata={"price_raw": "100", "price_amount": 100.0})
+        result = enum.enumerate(["https://example.test/c1"])
         assert len(result) == 1
         assert fake.call_count == 1, "scraper MUST be called when cache_ttl_seconds=0"
 
@@ -497,22 +497,22 @@ class TestCacheLayer:
                 "price_currency": "RUB", "teacher": "Иванов",
                 "format": "cohort_based",
                 "scrape_timestamp": _now_iso_helper(),
-            ***REMOVED***,
+            },
         )
 
         class _NoCallScraper(ScraperProtocol):
             call_count = 0
 
-            def fetch(self, url: str):  # type: ignore[override***REMOVED***
+            def fetch(self, url: str):  # type: ignore[override]
                 self.call_count += 1
                 raise AssertionError("scraper.fetch MUST NOT be called on cache hit")
 
         scraper = _NoCallScraper()
         enum = PricingEnumerator(scraper=scraper, enabled=True, cache_ttl_seconds=3600)
-        results = enum.enumerate(["https://example.test/cached"***REMOVED***)
+        results = enum.enumerate(["https://example.test/cached"])
 
         assert len(results) == 1, "cache hit должен вернуть 1 result entry"
-        cp = results[0***REMOVED***
+        cp = results[0]
         assert cp.course == "Cached Course", "course name from corpus.title"
         assert cp.price_raw == "9 999 \u20BD", "price_raw reconstructed from metadata"
         assert cp.price_amount == 9999.0
@@ -542,25 +542,25 @@ class TestCacheLayer:
             metadata={
                 "price_raw": "100", "price_amount": 100.0,
                 "format": "recorded", "scrape_timestamp": old,
-            ***REMOVED***,
+            },
         )
 
         class _OneShotScraper(ScraperProtocol):
             call_count = 0
 
-            def fetch(self, url: str):  # type: ignore[override***REMOVED***
+            def fetch(self, url: str):  # type: ignore[override]
                 self.call_count += 1
                 return _SR(status=ScrapeStatus.OK, data={
                     "course": "Fresh Course", "price_raw": "150",
                     "source_url": url,
-                ***REMOVED***)
+                ])
 
         scraper = _OneShotScraper()
         enum = PricingEnumerator(scraper=scraper, enabled=True, cache_ttl_seconds=60)
-        results = enum.enumerate(["https://example.test/stale"***REMOVED***)
+        results = enum.enumerate(["https://example.test/stale"])
 
         assert len(results) == 1
-        assert results[0***REMOVED***.course == "Fresh Course", "fresh scrape replaces stale cache"
+        assert results[0].course == "Fresh Course", "fresh scrape replaces stale cache"
         assert scraper.call_count == 1, "scraper MUST be called on cache expiration"
 
     def test_cache_skipped_when_corpus_disabled(self, isolated_corpus_root) -> None:
@@ -582,24 +582,24 @@ class TestCacheLayer:
             metadata={
                 "price_raw": "10", "price_amount": 10.0,
                 "format": "recorded", "scrape_timestamp": fresh,
-            ***REMOVED***,
+            },
         )
 
         class _Counted(ScraperProtocol):
             call_count = 0
 
-            def fetch(self, url: str):  # type: ignore[override***REMOVED***
+            def fetch(self, url: str):  # type: ignore[override]
                 self.call_count += 1
                 return _SR(status=ScrapeStatus.OK, data={
                     "course": "Re-fetched", "price_raw": "10", "source_url": url,
-                ***REMOVED***)
+                ])
 
         scraper = _Counted()
         # enabled=False — cache BOTH sides disabled (no persist, no lookup).
         enum = PricingEnumerator(scraper=scraper, enabled=False, cache_ttl_seconds=3600)
-        results = enum.enumerate(["https://example.test/disabled"***REMOVED***)
+        results = enum.enumerate(["https://example.test/disabled"])
         assert len(results) == 1
-        assert results[0***REMOVED***.course == "Re-fetched", (
+        assert results[0].course == "Re-fetched", (
             "enabled=False bypasses cache check → scraper runs fresh"
         )
         assert scraper.call_count == 1

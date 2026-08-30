@@ -10,14 +10,14 @@ from market_bot.models import OrderStatus, PaymentStatus, UserRole
 def test_overdue_pending_is_cancelled_and_key_returned(
     services, make_seller, make_buyer
 ):
-    repo = services["repo"***REMOVED***
-    orders = services["orders"***REMOVED***
-    payments = services["payments"***REMOVED***
+    repo = services["repo"]
+    orders = services["orders"]
+    payments = services["payments"]
 
     sid = make_seller(8000, "TTL-Seller")
     bid = make_buyer(8001, "TTL-Buyer")
-    product = services["catalog"***REMOVED***.seller_create(sid, "T", "t", "t", 10)
-    repo.add_keys(product.id, ["TTL-1"***REMOVED***)
+    product = services["catalog"].seller_create(sid, "T", "t", "t", 10)
+    repo.add_keys(product.id, ["TTL-1"])
     order, _ = orders.create_order_for_product(bid, product.id)
     payment = payments.attach_to_order(order)
     # Подменим created_at на 100 секунд в прошлое.

@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import sys
 from datetime import datetime, timezone, timedelta
-***REMOVED***
+}
 
 import pytest
 
@@ -44,7 +44,7 @@ class _StubEventBus:
     """Минимальный EventBus: публикация в память."""
 
     def __init__(self):
-        self.events = [***REMOVED***
+        self.events = []
 
     def publish(self, event):
         self.events.append(event)
@@ -89,11 +89,11 @@ class TestPresenceStatus:
 
 class TestRegister:
     def test_register_returns_agent(self, engine: PresenceEngine):
-        agent = engine.register("buffy", capabilities={"code": "Code generation"***REMOVED***)
+        agent = engine.register("buffy", capabilities={"code": "Code generation"})
         assert isinstance(agent, AgentPresence)
         assert agent.agent_name == "buffy"
         assert agent.status == PresenceStatus.ONLINE
-        assert agent.capabilities == {"code": "Code generation"***REMOVED***
+        assert agent.capabilities == {"code": "Code generation"}
 
     def test_register_persists(self, engine: PresenceEngine):
         engine.register("buffy")
@@ -109,12 +109,12 @@ class TestRegister:
         agent = engine.register(
             "buffy",
             version="2.0.0",
-            host_info={"os": "linux"***REMOVED***,
-            metadata={"team": "core"***REMOVED***,
+            host_info={"os": "linux"},
+            metadata={"team": "core"},
         )
         assert agent.version == "2.0.0"
-        assert agent.host_info == {"os": "linux"***REMOVED***
-        assert agent.metadata == {"team": "core"***REMOVED***
+        assert agent.host_info == {"os": "linux"}
+        assert agent.metadata == {"team": "core"}
 
     def test_register_twice_preserves_registered_at(self, engine: PresenceEngine):
         first = engine.register("buffy")
@@ -154,8 +154,8 @@ class TestUpdateStatus:
 
     def test_update_status_metadata_merged(self, engine: PresenceEngine):
         engine.register("buffy")
-        agent = engine.update_status("buffy", PresenceStatus.BUSY, metadata={"roles": ["developer"***REMOVED******REMOVED***)
-        assert agent.metadata["roles"***REMOVED*** == ["developer"***REMOVED***
+        agent = engine.update_status("buffy", PresenceStatus.BUSY, metadata={"roles": ["developer"]})
+        assert agent.metadata["roles"] == ["developer"]
 
     def test_update_status_unknown_agent(self, engine: PresenceEngine):
         assert engine.update_status("ghost", PresenceStatus.BUSY) is None
@@ -200,20 +200,20 @@ class TestLists:
         engine.register("alice")
         engine.update_status("buffy", PresenceStatus.BUSY)
         busy = engine.list_agents(status=PresenceStatus.BUSY)
-        assert [a.agent_name for a in busy***REMOVED*** == ["buffy"***REMOVED***
+        assert [a.agent_name for a in busy] == ["buffy"]
 
     def test_list_agents_by_capability(self, engine: PresenceEngine):
-        engine.register("buffy", capabilities={"code": "gen"***REMOVED***)
-        engine.register("alice", capabilities={"docs": "write"***REMOVED***)
+        engine.register("buffy", capabilities={"code": "gen"})
+        engine.register("alice", capabilities={"docs": "write"})
         agents = engine.list_agents(capability="code")
-        assert [a.agent_name for a in agents***REMOVED*** == ["buffy"***REMOVED***
+        assert [a.agent_name for a in agents] == ["buffy"]
 
     def test_list_online(self, engine: PresenceEngine):
         engine.register("buffy")
         engine.register("alice")
         engine.update_status("alice", PresenceStatus.OFFLINE)
         online = engine.list_online()
-        assert [a.agent_name for a in online***REMOVED*** == ["buffy"***REMOVED***
+        assert [a.agent_name for a in online] == ["buffy"]
 
     def test_count(self, engine: PresenceEngine):
         assert engine.count() == 0
@@ -235,7 +235,7 @@ class TestHistory:
         history = engine.get_history(agent_name="buffy")
         assert len(history) >= 3
         assert all(isinstance(e, PresenceHistoryEntry) for e in history)
-        new_statuses = [e.new_status for e in history***REMOVED***
+        new_statuses = [e.new_status for e in history]
         assert PresenceStatus.BUSY in new_statuses
 
     def test_history_filter_by_agent(self, engine: PresenceEngine):
@@ -254,7 +254,7 @@ class TestHistory:
         assert len(history) <= 3
 
     def test_history_empty(self, engine: PresenceEngine):
-        assert engine.get_history() == [***REMOVED***
+        assert engine.get_history() == []
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -266,34 +266,34 @@ class TestJsonHelpers:
     def test_list_agents_json(self, engine: PresenceEngine):
         engine.register("buffy")
         payload = engine.list_agents_json()
-        assert payload["success"***REMOVED*** is True
-        assert payload["total"***REMOVED*** == 1
-        assert payload["agents"***REMOVED***[0***REMOVED***["agent_name"***REMOVED*** == "buffy"
-        assert payload["data"***REMOVED***["total"***REMOVED*** == 1
+        assert payload["success"] is True
+        assert payload["total"] == 1
+        assert payload["agents"][0]["agent_name"] == "buffy"
+        assert payload["data"]["total"] == 1
 
     def test_get_agent_json(self, engine: PresenceEngine):
         engine.register("buffy")
         payload = engine.get_agent_json("buffy")
-        assert payload["success"***REMOVED*** is True
-        assert payload["found"***REMOVED*** is True
-        assert payload["data"***REMOVED***["agent_name"***REMOVED*** == "buffy"
+        assert payload["success"] is True
+        assert payload["found"] is True
+        assert payload["data"]["agent_name"] == "buffy"
 
     def test_get_agent_json_missing(self, engine: PresenceEngine):
         payload = engine.get_agent_json("ghost")
-        assert payload["success"***REMOVED*** is False
-        assert payload["found"***REMOVED*** is False
+        assert payload["success"] is False
+        assert payload["found"] is False
 
     def test_get_history_json(self, engine: PresenceEngine):
         engine.register("buffy")
         engine.update_status("buffy", PresenceStatus.BUSY)
         payload = engine.get_history_json(agent_name="buffy")
-        assert payload["success"***REMOVED*** is True
-        assert payload["total"***REMOVED*** >= 1
+        assert payload["success"] is True
+        assert payload["total"] >= 1
 
     def test_agent_to_dict(self, engine: PresenceEngine):
         agent = engine.register("buffy")
         d = agent.to_dict()
-        assert d["agent_name"***REMOVED*** == "buffy"
+        assert d["agent_name"] == "buffy"
         assert "status" in d and "capabilities" in d
 
 
@@ -305,7 +305,7 @@ class TestJsonHelpers:
 class TestLifecycle:
     def test_start_starts_heartbeat(self, engine: PresenceEngine):
         engine.start()
-        assert engine.get_status()["running"***REMOVED*** is True
+        assert engine.get_status()["running"] is True
         engine.stop()
 
     def test_start_idempotent(self, engine: PresenceEngine):
@@ -349,17 +349,17 @@ class TestLifecycle:
         engine.register("buffy")
         engine.update_status("buffy", PresenceStatus.BUSY)
         engine.heartbeat("buffy")
-        types = [getattr(e, "type", None) for e in bus.events***REMOVED***
+        types = [getattr(e, "type", None) for e in bus.events]
         assert "presence.online" in types
         assert "presence.busy" in types
         assert "presence.heartbeat" in types
 
     def test_get_status(self, engine: PresenceEngine):
         st = engine.get_status()
-        assert st["status"***REMOVED*** in ("running", "stopped")
-        assert st["total_agents"***REMOVED*** == 0
-        assert st["eventbus_connected"***REMOVED*** is False
-        assert st["heartbeat_interval"***REMOVED*** == 1000
+        assert st["status"] in ("running", "stopped")
+        assert st["total_agents"] == 0
+        assert st["eventbus_connected"] is False
+        assert st["heartbeat_interval"] == 1000
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -371,7 +371,7 @@ class TestCLI:
     def test_main_help(self, monkeypatch):
         from scripts_01.presence import main
 
-        monkeypatch.setattr(sys, "argv", ["presence.py", "--help"***REMOVED***)
+        monkeypatch.setattr(sys, "argv", ["presence.py", "--help"])
         with pytest.raises(SystemExit) as exc:
             main()
         assert exc.value.code == 0
@@ -379,6 +379,6 @@ class TestCLI:
     def test_main_no_command(self, monkeypatch, capsys):
         from scripts_01.presence import main
 
-        monkeypatch.setattr(sys, "argv", ["presence.py"***REMOVED***)
+        monkeypatch.setattr(sys, "argv", ["presence.py"])
         code = main()
         assert code == 1

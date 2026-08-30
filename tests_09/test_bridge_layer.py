@@ -17,7 +17,7 @@ import os
 import sys
 import threading
 import time
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional
 from unittest.mock import MagicMock, patch, PropertyMock
 
@@ -132,7 +132,7 @@ class TestAgentRegistry:
         registry.register(AgentInfo(name="agent-2", status=AgentStatus.BUSY))
         online = registry.list_agents(AgentStatus.ONLINE)
         assert len(online) == 1
-        assert online[0***REMOVED***.name == "agent-1"
+        assert online[0].name == "agent-1"
 
     def test_is_online(self, registry: AgentRegistry):
         registry.register(AgentInfo(name="agent-1", status=AgentStatus.ONLINE))
@@ -205,11 +205,11 @@ class TestACPHandler:
     def test_on_tool_decorator(self, acp_handler: ACPHandler):
         @acp_handler.on_tool("my_tool")
         def handler(args: dict) -> dict:
-            return {"result": "ok"***REMOVED***
+            return {"result": "ok"}
 
         assert "my_tool" in acp_handler._tool_handlers
-        result = acp_handler._tool_handlers["my_tool"***REMOVED***({"test": True***REMOVED***)
-        assert result["result"***REMOVED*** == "ok"
+        result = acp_handler._tool_handlers["my_tool"]({"test": True})
+        assert result["result"] == "ok"
 
     def test_handle_status_updates_registry(self, acp_handler: ACPHandler, mock_event_bus):
         """Проверяет, что handle_status регистрирует агента в реестре."""
@@ -222,8 +222,8 @@ class TestACPHandler:
                 "agent": "other-agent",
                 "version": "2.0.0",
                 "status": "online",
-                "capabilities": {"tool1": "desc"***REMOVED***,
-            ***REMOVED***,
+                "capabilities": {"tool1": "desc"},
+            },
         )
         acp_handler._on_acp_event(event)
 
@@ -241,7 +241,7 @@ class TestACPHandler:
         event = Event(
             type=ACP_DISCOVER,
             source="asking-agent",
-            data={"agent": "asking-agent"***REMOVED***,
+            data={"agent": "asking-agent"},
         )
         acp_handler._on_acp_event(event)
 
@@ -254,7 +254,7 @@ class TestACPHandler:
 
         @acp_handler.on_tool("my_tool")
         def handle_my_tool(args: dict) -> dict:
-            return {"processed": True, "input": args***REMOVED***
+            return {"processed": True, "input": args}
 
         event = Event(
             type=ACP_TASK,
@@ -263,14 +263,14 @@ class TestACPHandler:
                 "target": "test-agent",
                 "tool": "my_tool",
                 "task_id": "task-001",
-                "arguments": {"key": "value"***REMOVED***,
+                "arguments": {"key": "value"},
                 "correlation_id": "corr-001",
-            ***REMOVED***,
+            },
         )
         acp_handler._on_acp_event(event)
 
         # Должен опубликовать результат
-        published_calls = [c for c in mock_event_bus.publish.call_args_list***REMOVED***
+        published_calls = [c for c in mock_event_bus.publish.call_args_list]
         assert len(published_calls) >= 1
 
     def test_handle_unknown_tool_returns_error(self, acp_handler: ACPHandler, mock_event_bus):
@@ -284,9 +284,9 @@ class TestACPHandler:
                 "target": "test-agent",
                 "tool": "nonexistent",
                 "task_id": "task-002",
-                "arguments": {***REMOVED***,
+                "arguments": {},
                 "correlation_id": "corr-002",
-            ***REMOVED***,
+            },
         )
         acp_handler._on_acp_event(event)
 
@@ -297,7 +297,7 @@ class TestACPHandler:
         """Проверяет отправку задачи."""
         from scripts_01.event_bus import Event
 
-        result = acp_handler.send_task("other-agent", "test_tool", {"query": "hello"***REMOVED***, timeout=0.1)
+        result = acp_handler.send_task("other-agent", "test_tool", {"query": "hello"}, timeout=0.1)
         assert mock_event_bus.publish.called
         # Таймаут — результата не будет (нет обработчика на той стороне)
         assert result is None
@@ -312,7 +312,7 @@ class TestACPHandler:
 
     def test_on_broadcast_hook(self, acp_handler: ACPHandler):
         """Проверяет, что хук on_broadcast вызывается."""
-        received = [***REMOVED***
+        received = []
 
         def hook(data: dict, source: str):
             received.append((data, source))
@@ -323,12 +323,12 @@ class TestACPHandler:
         event = Event(
             type=ACP_BROADCAST,
             source="other-agent",
-            data={"message": "test", "agent": "other-agent"***REMOVED***,
+            data={"message": "test", "agent": "other-agent"},
         )
         acp_handler._on_acp_event(event)
 
         assert len(received) == 1
-        assert received[0***REMOVED***[1***REMOVED*** == "other-agent"
+        assert received[0][1] == "other-agent"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -340,14 +340,14 @@ class TestMCPClientBase:
     """Тесты MCPClientBase."""
 
     def test_mcp_tool_info_creation(self):
-        tool = MCPToolInfo(name="test", description="desc", input_schema={"type": "object"***REMOVED***)
+        tool = MCPToolInfo(name="test", description="desc", input_schema={"type": "object"})
         assert tool.name == "test"
         assert tool.description == "desc"
 
     def test_mcp_call_result_success(self):
-        result = MCPCallResult(success=True, data={"result": "ok"***REMOVED***)
+        result = MCPCallResult(success=True, data={"result": "ok"})
         assert result.success is True
-        assert result.data["result"***REMOVED*** == "ok"
+        assert result.data["result"] == "ok"
         assert result.error is None
 
     def test_mcp_call_result_error(self):
@@ -386,7 +386,7 @@ class TestBridgeLayer:
 
     def test_list_servers_empty(self, bridge: BridgeLayer):
         servers = bridge.list_mcp_servers()
-        assert servers == [***REMOVED***
+        assert servers == []
 
     def test_connect_and_disconnect_mcp_stdio(self, bridge: BridgeLayer):
         """Подключение stdio MCP сервера (с моком клиента)."""
@@ -394,15 +394,15 @@ class TestBridgeLayer:
         mock_client.connect.return_value = True
         mock_client.list_tools.return_value = [
             MCPToolInfo(name="test_tool", description="Test")
-        ***REMOVED***
-        mock_client.list_resources.return_value = [***REMOVED***
+        ]
+        mock_client.list_resources.return_value = []
 
         with patch("freebuff_plugin_03.bridge_layer.StdioMCPClient", return_value=mock_client):
-            result = bridge.connect_mcp_stdio("python", ["test.py"***REMOVED***, name="test-mcp")
+            result = bridge.connect_mcp_stdio("python", ["test.py"], name="test-mcp")
 
-        assert result["success"***REMOVED*** is True
-        assert result["server"***REMOVED*** == "test-mcp"
-        assert result["tools"***REMOVED*** == 1
+        assert result["success"] is True
+        assert result["server"] == "test-mcp"
+        assert result["tools"] == 1
 
         # Отключаем
         assert bridge.disconnect_mcp("test-mcp") is True
@@ -412,14 +412,14 @@ class TestBridgeLayer:
         """Подключение HTTP MCP сервера (с моком клиента)."""
         mock_client = MagicMock()
         mock_client.connect.return_value = True
-        mock_client.list_tools.return_value = [***REMOVED***
-        mock_client.list_resources.return_value = [***REMOVED***
+        mock_client.list_tools.return_value = []
+        mock_client.list_resources.return_value = []
 
         with patch("freebuff_plugin_03.bridge_layer.HTTPMCPClient", return_value=mock_client):
             result = bridge.connect_mcp_http("http://localhost:8765/mcp", name="http-mcp")
 
-        assert result["success"***REMOVED*** is True
-        assert result["server"***REMOVED*** == "http-mcp"
+        assert result["success"] is True
+        assert result["server"] == "http-mcp"
 
         bridge.disconnect_mcp("http-mcp")
 
@@ -427,14 +427,14 @@ class TestBridgeLayer:
         """Повторное подключение не создаёт дубликат."""
         mock_client = MagicMock()
         mock_client.connect.return_value = True
-        mock_client.list_tools.return_value = [***REMOVED***
-        mock_client.list_resources.return_value = [***REMOVED***
+        mock_client.list_tools.return_value = []
+        mock_client.list_resources.return_value = []
 
         with patch("freebuff_plugin_03.bridge_layer.StdioMCPClient", return_value=mock_client):
             bridge.connect_mcp_stdio("python", name="dup")
             result = bridge.connect_mcp_stdio("python", name="dup")
 
-        assert result["success"***REMOVED*** is True
+        assert result["success"] is True
         assert "already" in result.get("message", "").lower()
         assert len(bridge._mcp_servers) == 1
 
@@ -446,18 +446,18 @@ class TestBridgeLayer:
         mock_client.connect.return_value = True
         mock_client.list_tools.return_value = [
             MCPToolInfo(name="search", description="Search tool")
-        ***REMOVED***
-        mock_client.list_resources.return_value = [***REMOVED***
+        ]
+        mock_client.list_resources.return_value = []
         mock_client.call_tool.return_value = MCPCallResult(
             success=True,
-            content=[{"type": "text", "text": '{"results": ["doc1"***REMOVED******REMOVED***'***REMOVED******REMOVED***,
+            content=[{"type": "text", "text": '{"results": ["doc1"}]']],
         )
 
         with patch("freebuff_plugin_03.bridge_layer.StdioMCPClient", return_value=mock_client):
             bridge.connect_mcp_stdio("python", name="fwd-test")
 
-        result = bridge._forward_to_mcp("fwd-test", "search", {"query": "test"***REMOVED***)
-        assert result["success"***REMOVED*** is True
+        result = bridge._forward_to_mcp("fwd-test", "search", {"query": "test"})
+        assert result["success"] is True
 
         bridge.disconnect_mcp("fwd-test")
 
@@ -471,8 +471,8 @@ class TestBridgeLayer:
         mock_client.connect.return_value = True
         mock_client.list_tools.return_value = [
             MCPToolInfo(name="policy_override", description="Apply user override")
-        ***REMOVED***
-        mock_client.list_resources.return_value = [***REMOVED***
+        ]
+        mock_client.list_resources.return_value = []
         mock_client.call_tool.return_value = MCPCallResult(
             success=True,
             content=[{
@@ -483,9 +483,9 @@ class TestBridgeLayer:
                         "capability": "coding",
                         "runtime": "deepseek",
                         "applied": True,
-                    ***REMOVED***,
-                ***REMOVED***),
-            ***REMOVED******REMOVED***,
+                    },
+                ]),
+            ]],
         )
 
         with patch("freebuff_plugin_03.bridge_layer.StdioMCPClient", return_value=mock_client):
@@ -494,25 +494,25 @@ class TestBridgeLayer:
         result = bridge._forward_to_mcp(
             "policy-mcp",
             "policy_override",
-            {"message": "use deepseek instead of claude for coding"***REMOVED***,
+            {"message": "use deepseek instead of claude for coding"},
         )
-        assert result["success"***REMOVED*** is True
+        assert result["success"] is True
         # _forward_to_mcp: data = parsed content JSON (ответ сервера),
-        # т.е. {"success": True, "data": {capability, runtime, applied***REMOVED******REMOVED***
-        assert result["data"***REMOVED***["success"***REMOVED*** is True
-        assert result["data"***REMOVED***["data"***REMOVED***["runtime"***REMOVED*** == "deepseek"
-        assert result["data"***REMOVED***["data"***REMOVED***["applied"***REMOVED*** is True
+        # т.е. {"success": True, "data": {capability, runtime, applied}}
+        assert result["data"]["success"] is True
+        assert result["data"]["data"]["runtime"] == "deepseek"
+        assert result["data"]["data"]["applied"] is True
         mock_client.call_tool.assert_called_once_with(
             "policy_override",
-            {"message": "use deepseek instead of claude for coding"***REMOVED***,
+            {"message": "use deepseek instead of claude for coding"},
         )
 
         bridge.disconnect_mcp("policy-mcp")
 
     def test_forward_to_nonexistent_server(self, bridge: BridgeLayer):
         """Перенаправление на несуществующий сервер."""
-        result = bridge._forward_to_mcp("nonexistent", "tool", {***REMOVED***)
-        assert result["success"***REMOVED*** is False
+        result = bridge._forward_to_mcp("nonexistent", "tool", {})
+        assert result["success"] is False
         assert "not found" in result.get("error", "").lower()
 
     def test_rpc_to_server(self, bridge: BridgeLayer):
@@ -521,15 +521,15 @@ class TestBridgeLayer:
         mock_client.connect.return_value = True
         mock_client.list_tools.return_value = [
             MCPToolInfo(name="tool1", description="Tool 1"),
-        ***REMOVED***
-        mock_client.list_resources.return_value = [***REMOVED***
+        ]
+        mock_client.list_resources.return_value = []
 
         with patch("freebuff_plugin_03.bridge_layer.StdioMCPClient", return_value=mock_client):
             bridge.connect_mcp_stdio("python", name="rpc-test")
 
-        result = bridge._rpc_to_server("rpc-test", "tools/list", {***REMOVED***)
-        assert result["success"***REMOVED*** is True
-        assert len(result["data"***REMOVED***) == 1
+        result = bridge._rpc_to_server("rpc-test", "tools/list", {})
+        assert result["success"] is True
+        assert len(result["data"]) == 1
 
         bridge.disconnect_mcp("rpc-test")
 
@@ -543,9 +543,9 @@ class TestBridgeLayer:
         # Вызов через ACP handler
         handler_entry = bridge._acp._tool_handlers.get("bridge.list_servers")
         assert handler_entry is not None
-        result = handler_entry({***REMOVED***)
+        result = handler_entry({})
         assert "servers" in result
-        assert result["total"***REMOVED*** == 0
+        assert result["total"] == 0
 
         bridge.stop()
 
@@ -554,8 +554,8 @@ class TestBridgeLayer:
         bridge.start()
         handler_entry = bridge._acp._tool_handlers.get("bridge.rpc")
         assert handler_entry is not None
-        result = handler_entry({"server": "nonexistent", "method": "ping", "params": {***REMOVED******REMOVED***)
-        assert result["success"***REMOVED*** is False
+        result = handler_entry({"server": "nonexistent", "method": "ping", "params": {}})
+        assert result["success"] is False
         bridge.stop()
 
     def test_send_acp_broadcast(self, bridge: BridgeLayer, mock_event_bus):
@@ -563,7 +563,7 @@ class TestBridgeLayer:
         assert mock_event_bus.publish.called
 
     def test_send_acp_task(self, bridge: BridgeLayer, mock_event_bus):
-        result = bridge.send_acp_task("nonexistent-agent", "test_tool", {***REMOVED***, timeout=0.1)
+        result = bridge.send_acp_task("nonexistent-agent", "test_tool", {}, timeout=0.1)
         assert result is None  # таймаут
         assert mock_event_bus.publish.called
 
@@ -576,7 +576,7 @@ class TestBridgeLayer:
     def test_register_acp_tool_handler(self, bridge: BridgeLayer):
         def custom_handler(args: dict) -> dict:
             """Custom handler."""
-            return {"custom": True***REMOVED***
+            return {"custom": True}
 
         bridge.register_acp_tool_handler("custom_tool", custom_handler)
         assert "custom_tool" in bridge._acp._capabilities
@@ -588,7 +588,7 @@ class TestBridgeLayer:
             target="test-bridge",
             source="other-agent",
             tool="not_an_mcp_tool",
-            arguments={***REMOVED***,
+            arguments={},
         )
         result = bridge._handle_acp_task_on_mcp(task)
         assert result is None
@@ -599,7 +599,7 @@ class TestBridgeLayer:
             target="test-bridge",
             source="other-agent",
             tool="mcp.nonexistent.tool",
-            arguments={***REMOVED***,
+            arguments={},
         )
         result = bridge._handle_acp_task_on_mcp(task)
         assert result is not None
@@ -627,23 +627,23 @@ class TestStdioMCPClientMocked:
     def test_connect_failure(self, mock_process):
         """Ошибка подключения — пустой результат initialize."""
         with patch("subprocess.Popen", return_value=mock_process):
-            with patch.object(MCPClientBase, "initialize", return_value={***REMOVED***):
-                client = StdioMCPClient("python", ["nonexistent.py"***REMOVED***)
+            with patch.object(MCPClientBase, "initialize", return_value={}):
+                client = StdioMCPClient("python", ["nonexistent.py"])
                 ok = client.connect()
-                assert ok is False  # пустой {***REMOVED*** считается False
+                assert ok is False  # пустой {} считается False
 
     def test_connect_with_initialize_error(self, mock_process):
         """Ошибка при initialize."""
         with patch("subprocess.Popen", return_value=mock_process):
             with patch.object(MCPClientBase, "initialize", side_effect=Exception("init failed")):
-                client = StdioMCPClient("python", ["test.py"***REMOVED***)
+                client = StdioMCPClient("python", ["test.py"])
                 ok = client.connect()
                 assert ok is False
 
     def test_server_info_property(self):
         client = StdioMCPClient("python", name="test-client")
-        client._server_info = {"name": "test-server", "version": "1.0"***REMOVED***
-        assert client.server_info["name"***REMOVED*** == "test-server"
+        client._server_info = {"name": "test-server", "version": "1.0"}
+        assert client.server_info["name"] == "test-server"
 
     def test_is_connected_property(self):
         client = StdioMCPClient("python", name="test-client")
@@ -706,7 +706,7 @@ class TestBridgeEdgeCases:
 
         tasks_for_1 = registry.get_pending_tasks_for_agent("agent-1")
         assert len(tasks_for_1) == 1
-        assert tasks_for_1[0***REMOVED***.tool == "t1"
+        assert tasks_for_1[0].tool == "t1"
 
     def test_get_pending_task(self, registry: AgentRegistry):
         task = ACPTask(target="agent-1", source="me", tool="t1")

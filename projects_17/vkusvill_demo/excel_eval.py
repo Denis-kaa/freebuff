@@ -30,9 +30,9 @@ SUPPORTED formula subset (ровно то, что встречается в mode
 """
 from __future__ import annotations
 
-***REMOVED***
+}
 from statistics import pstdev
-***REMOVED***
+}
 from typing import Any
 
 from openpyxl import load_workbook
@@ -45,11 +45,11 @@ from openpyxl import load_workbook
 _TOKEN_RE = re.compile(
     r"""
     (?P<WS>\s+)
-  | (?P<QUOTED>'[^'***REMOVED****')
+  | (?P<QUOTED>'[^')*')
   | (?P<NUM>\d+(?:\.\d+)?)
-  | (?P<NAME>[A-Za-z_.***REMOVED***[A-Za-z0-9_.***REMOVED****)
-  | (?P<OP><=|>=|<>|[<>=+\-*/***REMOVED***)
-  | (?P<PUNCT>[(),:!***REMOVED***)
+  | (?P<NAME>[A-Za-z_.][A-Za-z0-9_.]*)
+  | (?P<OP><=|>=|<>|[<>=+\-*/])
+  | (?P<PUNCT>[(),:!])
     """,
     re.VERBOSE,
 )
@@ -59,19 +59,19 @@ class FormulaError(Exception):
     pass
 
 
-def tokenize(formula: str) -> list[tuple[str, str***REMOVED******REMOVED***:
-    tokens: list[tuple[str, str***REMOVED******REMOVED*** = [***REMOVED***
+def tokenize(formula: str) -> list[tuple[str, str]]:
+    tokens: list[tuple[str, str]] = []
     pos = 0
     for m in _TOKEN_RE.finditer(formula):
         if m.start() != pos:
-            raise FormulaError(f"Unexpected char {formula[pos***REMOVED***!r***REMOVED*** in {formula!r***REMOVED***")
+            raise FormulaError(f"Unexpected char {formula[pos]!r} in {formula!r}")
         pos = m.end()
         kind = m.lastgroup
         if kind == "WS":
             continue
         tokens.append((kind, m.group()))
     if pos != len(formula):
-        raise FormulaError(f"Trailing chars in {formula!r***REMOVED***: {formula[pos:***REMOVED***!r***REMOVED***")
+        raise FormulaError(f"Trailing chars in {formula!r}: {formula[pos:]!r}")
     tokens.append(("END", ""))
     return tokens
 
@@ -90,18 +90,18 @@ class ExcelEval:
 
     def __init__(self, xlsx_path: str | Path) -> None:
         self.wb = load_workbook(str(xlsx_path), data_only=False)
-        # sheet -> {(col_letter, row_number): raw_value***REMOVED***
-        self._raw: dict[str, dict[tuple[str, int***REMOVED***, Any***REMOVED******REMOVED*** = {***REMOVED***
+        # sheet -> {(col_letter, row_number): raw_value}
+        self._raw: dict[str, dict[tuple[str, int], Any]] = {}
         for name in self.wb.sheetnames:
-            ws = self.wb[name***REMOVED***
-            sheet: dict[tuple[str, int***REMOVED***, Any***REMOVED*** = {***REMOVED***
+            ws = self.wb[name]
+            sheet: dict[tuple[str, int], Any] = {}
             for row in ws.iter_rows():
                 for cell in row:
                     if cell.value is not None:
-                        sheet[(cell.column_letter, cell.row)***REMOVED*** = cell.value
-            self._raw[name***REMOVED*** = sheet
-        self._cache: dict[tuple[str, str, int***REMOVED***, Any***REMOVED*** = {***REMOVED***
-        self._evaluating: set[tuple[str, str, int***REMOVED******REMOVED*** = set()
+                        sheet[(cell.column_letter, cell.row)] = cell.value
+            self._raw[name] = sheet
+        self._cache: dict[tuple[str, str, int], Any] = {}
+        self._evaluating: set[tuple[str, str, int]] = set()
 
     # -- helpers ------------------------------------------------------------
 
@@ -113,35 +113,35 @@ class ExcelEval:
         """
         key = (sheet, col, row)
         if key in self._cache:
-            return self._cache[key***REMOVED***
+            return self._cache[key]
         if key in self._evaluating:
             raise FormulaError(
-                f"Circular reference detected: {sheet***REMOVED***!{col***REMOVED***{row***REMOVED***"
+                f"Circular reference detected: {sheet}!{col}{row}"
             )
         if sheet not in self._raw:
-            raise FormulaError(f"Unknown sheet {sheet!r***REMOVED***")
-        raw = self._raw[sheet***REMOVED***.get((col, row))
+            raise FormulaError(f"Unknown sheet {sheet!r}")
+        raw = self._raw[sheet].get((col, row))
         if raw is None:
-            self._cache[key***REMOVED*** = None
+            self._cache[key] = None
             return None
         if isinstance(raw, str) and raw.startswith("="):
             self._evaluating.add(key)
             try:
-                self._cache[key***REMOVED*** = self._eval_formula(sheet, raw[1:***REMOVED***)
+                self._cache[key] = self._eval_formula(sheet, raw[1:])
             except FormulaError as exc:
-                raise FormulaError(f"{sheet***REMOVED***!{col***REMOVED***{row***REMOVED***: {exc***REMOVED***") from exc
+                raise FormulaError(f"{sheet}!{col}{row}: {exc}") from exc
             finally:
                 self._evaluating.discard(key)
-            return self._cache[key***REMOVED***
-        self._cache[key***REMOVED*** = raw
+            return self._cache[key]
+        self._cache[key] = raw
         return raw
 
     def _eval_formula(self, sheet: str, body: str) -> Any:
         tokens = tokenize(body)
         parser = _Parser(self, sheet, tokens)
         val = parser.parse_expression()
-        if parser.peek()[0***REMOVED*** != "END":
-            raise FormulaError(f"Trailing tokens after expression: {body!r***REMOVED***")
+        if parser.peek()[0] != "END":
+            raise FormulaError(f"Trailing tokens after expression: {body!r}")
         return val
 
     def evaluate(self, address: str) -> Any:
@@ -150,16 +150,16 @@ class ExcelEval:
             sheet, cell = address.split("!", 1)
             sheet = sheet.strip("'")
         else:
-            sheet = self.wb.sheetnames[0***REMOVED***
+            sheet = self.wb.sheetnames[0]
             cell = address
-        m = re.fullmatch(r"([A-Za-z***REMOVED***+)(\d+)", cell.strip())
+        m = re.fullmatch(r"([A-Za-z)+)(\d+)", cell.strip())
         if not m:
-            raise FormulaError(f"Bad cell address {address!r***REMOVED***")
+            raise FormulaError(f"Bad cell address {address!r}")
         return self._cell(sheet, m.group(1).upper(), int(m.group(2)))
 
     def find_formula_cell(
         self, sheet: str, col: str, prefix: str = "=SUM("
-    ) -> tuple[str, int***REMOVED*** | None:
+    ) -> tuple[str, int] | None:
         """Найти первую ячейку в колонке, чья формула начинается с prefix.
 
         Public helper (used by parity_check для поиска TOTAL-строки), чтобы не
@@ -167,7 +167,7 @@ class ExcelEval:
         """
         if sheet not in self._raw:
             return None
-        for (c, row), raw in self._raw[sheet***REMOVED***.items():
+        for (c, row), raw in self._raw[sheet].items():
             if (
                 c == col.upper()
                 and isinstance(raw, str)
@@ -182,17 +182,17 @@ class ExcelEval:
 # ---------------------------------------------------------------------------
 
 class _Parser:
-    def __init__(self, ev: ExcelEval, sheet: str, tokens: list[tuple[str, str***REMOVED******REMOVED***) -> None:
+    def __init__(self, ev: ExcelEval, sheet: str, tokens: list[tuple[str, str]]) -> None:
         self.ev = ev
         self.sheet = sheet
         self.toks = tokens
         self.i = 0
 
-    def peek(self) -> tuple[str, str***REMOVED***:
-        return self.toks[self.i***REMOVED***
+    def peek(self) -> tuple[str, str]:
+        return self.toks[self.i]
 
-    def next(self) -> tuple[str, str***REMOVED***:
-        tok = self.toks[self.i***REMOVED***
+    def next(self) -> tuple[str, str]:
+        tok = self.toks[self.i]
         self.i += 1
         return tok
 
@@ -250,7 +250,7 @@ class _Parser:
             nk, nxt = self.peek()
             if nk == "PUNCT" and nxt == "(":
                 self.next()  # consume '('
-                args: list[Any***REMOVED*** = [***REMOVED***
+                args: list[Any] = []
                 while True:
                     ak, anxt = self.peek()
                     if ak == "PUNCT" and anxt == ")":
@@ -277,12 +277,12 @@ class _Parser:
             sheet = tok.strip("'")
             nk, nxt = self.next()
             if nk != "PUNCT" or nxt != "!":
-                raise FormulaError(f"Expected '!' after sheet name {tok!r***REMOVED***")
+                raise FormulaError(f"Expected '!' after sheet name {tok!r}")
             nk2, cell_or_range = self.next()
             if nk2 != "NAME":
-                raise FormulaError(f"Expected cell ref after '!', got {cell_or_range!r***REMOVED***")
+                raise FormulaError(f"Expected cell ref after '!', got {cell_or_range!r}")
             return self._parse_cellref(cell_or_range, sheet=sheet)
-        raise FormulaError(f"Unexpected token {kind***REMOVED***={tok!r***REMOVED***")
+        raise FormulaError(f"Unexpected token {kind}={tok!r}")
 
     def _looks_like_range(self) -> bool:
         """A1:B2  или  'Sheet'!A1:B2 — начинается как ссылка и содержит ':'."""
@@ -291,13 +291,13 @@ class _Parser:
         save = self.i
         try:
             sheet = None
-            kind, tok = self.toks[j***REMOVED***; j += 1
+            kind, tok = self.toks[j]; j += 1
             if kind == "QUOTED":
                 sheet = tok
-                k1, t1 = self.toks[j***REMOVED***; j += 1
+                k1, t1 = self.toks[j]; j += 1
                 if not (k1 == "PUNCT" and t1 == "!"):
                     return False
-                k2, t2 = self.toks[j***REMOVED***; j += 1
+                k2, t2 = self.toks[j]; j += 1
                 if k2 != "NAME":
                     return False
                 cell1 = t2
@@ -305,14 +305,14 @@ class _Parser:
                 cell1 = tok
             else:
                 return False
-            k3, t3 = self.toks[j***REMOVED***; j += 1
+            k3, t3 = self.toks[j]; j += 1
             if k3 == "PUNCT" and t3 == ":":
                 return True
             return False
         finally:
             self.i = save
 
-    def _parse_range_arg(self) -> list[Any***REMOVED***:
+    def _parse_range_arg(self) -> list[Any]:
         """Парсит 'Sheet'!A1:B2 или A1:B2 → СПИСОК ЗНАЧЕНИЙ ячеек диапазона."""
         sheet = self.sheet
         kind, tok = self.next()
@@ -342,9 +342,9 @@ class _Parser:
         приходят только через `_parse_range_arg` (аргументы функций AVERAGE/SUM/...).
         """
         sheet = sheet or self.sheet
-        m = re.fullmatch(r"([A-Za-z***REMOVED***+)(\d+)", name)
+        m = re.fullmatch(r"([A-Za-z)+)(\d+)", name)
         if not m:
-            raise FormulaError(f"Bad reference {name!r***REMOVED***")
+            raise FormulaError(f"Bad reference {name!r}")
         return self.ev._cell(sheet, m.group(1).upper(), int(m.group(2)))
 
 
@@ -352,17 +352,17 @@ class _Parser:
 # Function dispatch
 # ---------------------------------------------------------------------------
 
-def _split_range(sheet: str, cell1: str, cell2: str) -> tuple[str, str, int, str, int***REMOVED***:
-    m1 = re.fullmatch(r"([A-Za-z***REMOVED***+)(\d+)", cell1)
-    m2 = re.fullmatch(r"([A-Za-z***REMOVED***+)(\d+)", cell2)
+def _split_range(sheet: str, cell1: str, cell2: str) -> tuple[str, str, int, str, int]:
+    m1 = re.fullmatch(r"([A-Za-z)+)(\d+)", cell1)
+    m2 = re.fullmatch(r"([A-Za-z)+)(\d+)", cell2)
     if not m1 or not m2:
-        raise FormulaError(f"Bad range {cell1***REMOVED***:{cell2***REMOVED***")
+        raise FormulaError(f"Bad range {cell1}:{cell2}")
     return sheet, m1.group(1).upper(), int(m1.group(2)), m2.group(1).upper(), int(m2.group(2))
 
 
-def _range_values(ev: ExcelEval, sheet: str, c1: str, r1: int, c2: str, r2: int) -> list[Any***REMOVED***:
+def _range_values(ev: ExcelEval, sheet: str, c1: str, r1: int, c2: str, r2: int) -> list[Any]:
     cols = _expand_cols(c1, c2)
-    values: list[Any***REMOVED*** = [***REMOVED***
+    values: list[Any] = []
     for col in cols:
         for row in range(min(r1, r2), max(r1, r2) + 1):
             v = ev._cell(sheet, col, row)
@@ -371,7 +371,7 @@ def _range_values(ev: ExcelEval, sheet: str, c1: str, r1: int, c2: str, r2: int)
     return values
 
 
-def _expand_cols(c1: str, c2: str) -> list[str***REMOVED***:
+def _expand_cols(c1: str, c2: str) -> list[str]:
     def col_num(c: str) -> int:
         n = 0
         for ch in c:
@@ -387,7 +387,7 @@ def _expand_cols(c1: str, c2: str) -> list[str***REMOVED***:
 
     a, b = col_num(c1), col_num(c2)
     lo, hi = min(a, b), max(a, b)
-    return [col_str(n) for n in range(lo, hi + 1)***REMOVED***
+    return [col_str(n) for n in range(lo, hi + 1)]
 
 
 def _compare(op: str, a: Any, b: Any) -> bool:
@@ -403,10 +403,10 @@ def _compare(op: str, a: Any, b: Any) -> bool:
         return a == b
     if op == "<>":
         return a != b
-    raise FormulaError(f"Unknown comparison {op!r***REMOVED***")
+    raise FormulaError(f"Unknown comparison {op!r}")
 
 
-def _call(ev: ExcelEval, name: str, args: list[Any***REMOVED***) -> Any:
+def _call(ev: ExcelEval, name: str, args: list[Any]) -> Any:
     name = name.upper()
     if name == "AVERAGE":
         vals = _flatten(args)
@@ -415,11 +415,11 @@ def _call(ev: ExcelEval, name: str, args: list[Any***REMOVED***) -> Any:
         vals = _flatten(args)
         return pstdev(vals)
     if name == "SQRT":
-        return args[0***REMOVED*** ** 0.5
+        return args[0] ** 0.5
     if name == "IF":
         if len(args) != 3:
-            raise FormulaError(f"IF expects 3 arguments, got {len(args)***REMOVED***")
-        cond, then_v, else_v = args[0***REMOVED***, args[1***REMOVED***, args[2***REMOVED***
+            raise FormulaError(f"IF expects 3 arguments, got {len(args)}")
+        cond, then_v, else_v = args[0], args[1], args[2]
         return then_v if cond else else_v
     if name == "MAX":
         vals = _flatten(args)
@@ -427,11 +427,11 @@ def _call(ev: ExcelEval, name: str, args: list[Any***REMOVED***) -> Any:
     if name == "SUM":
         vals = _flatten(args)
         return sum(vals)
-    raise FormulaError(f"Unsupported function {name***REMOVED***")
+    raise FormulaError(f"Unsupported function {name}")
 
 
-def _flatten(args: list[Any***REMOVED***) -> list[Any***REMOVED***:
-    out: list[Any***REMOVED*** = [***REMOVED***
+def _flatten(args: list[Any]) -> list[Any]:
+    out: list[Any] = []
     for a in args:
         if isinstance(a, list):
             out.extend(a)
@@ -451,31 +451,31 @@ def main() -> int:
     xlsx = Path("projects_17/vkusvill_demo/model_forecast.xlsx")
     out_json = Path("projects_17/vkusvill_demo/excel_eval.json")
     if not xlsx.exists():
-        print(f"ERR: {xlsx***REMOVED*** not found")
+        print(f"ERR: {xlsx} not found")
         return 2
     ev = ExcelEval(xlsx)
 
-    result: dict[str, Any***REMOVED*** = {"orders": {***REMOVED***, "forecasts": {***REMOVED******REMOVED***
+    result: dict[str, Any] = {"orders": {}, "forecasts": {}}
     # order sheet E4:E6 = order_qty; TOTAL row = SUM(E4:E6) — найти динамически
     total_addr = None
     hit = ev.find_formula_cell("order", "E", prefix="=SUM(")
     if hit:
-        total_addr = f"order!{hit[0***REMOVED******REMOVED***{hit[1***REMOVED******REMOVED***"
+        total_addr = f"order!{hit[0]}{hit[1]}"
     # forecast G4:G6 = final_forecast, order E4:E6 = order_qty
     for row in range(4, 7):
-        result["orders"***REMOVED***.setdefault("order_qty", {***REMOVED***)[f"E{row***REMOVED***"***REMOVED*** = ev.evaluate(f"order!E{row***REMOVED***")
-        result["forecasts"***REMOVED***.setdefault("final_forecast", {***REMOVED***)[f"G{row***REMOVED***"***REMOVED*** = ev.evaluate(f"forecast!G{row***REMOVED***")
-    result["orders"***REMOVED***["total_addr"***REMOVED*** = total_addr
-    result["orders"***REMOVED***["total"***REMOVED*** = ev.evaluate(total_addr) if total_addr else None
+        result["orders"].setdefault("order_qty", {})[f"E{row}"] = ev.evaluate(f"order!E{row}")
+        result["forecasts"].setdefault("final_forecast", {})[f"G{row}"] = ev.evaluate(f"forecast!G{row}")
+    result["orders"]["total_addr"] = total_addr
+    result["orders"]["total"] = ev.evaluate(total_addr) if total_addr else None
 
     out_json.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"OK: {out_json***REMOVED***")
-    for k, v in result["orders"***REMOVED***["order_qty"***REMOVED***.items():
-        print(f"order!{k***REMOVED*** (Excel-eval) = {v:.4f***REMOVED***")
-    if result["orders"***REMOVED***["total"***REMOVED*** is not None:
-        print(f"{result['orders'***REMOVED***['total_addr'***REMOVED******REMOVED*** total (Excel-eval) = {result['orders'***REMOVED***['total'***REMOVED***:.4f***REMOVED***")
-    for k, v in result["forecasts"***REMOVED***["final_forecast"***REMOVED***.items():
-        print(f"forecast!{k***REMOVED*** (Excel-eval) = {v:.4f***REMOVED***")
+    print(f"OK: {out_json}")
+    for k, v in result["orders"]["order_qty"].items():
+        print(f"order!{k} (Excel-eval) = {v:.4f}")
+    if result["orders"]["total"] is not None:
+        print(f"{result['orders']['total_addr']} total (Excel-eval) = {result['orders']['total']:.4f}")
+    for k, v in result["forecasts"]["final_forecast"].items():
+        print(f"forecast!{k} (Excel-eval) = {v:.4f}")
     return 0
 
 

@@ -35,11 +35,11 @@ async def cmd_seller(message: Message, services) -> None:
     if not products:
         await message.answer("🏪 У вас пока нет товаров.", reply_markup=seller_kb())
         return
-    lines = ["🏪 <b>Ваши товары:</b>\n"***REMOVED***
+    lines = ["🏪 <b>Ваши товары:</b>\n"]
     for p in products:
         stock = await asyncio.to_thread(services.catalog.available_stock, p.id)
         flag = "🟢" if p.is_active else "⚪"
-        lines.append(f"{flag***REMOVED*** #{p.id***REMOVED*** · {p.name***REMOVED*** · ⭐{p.price_stars***REMOVED*** · сток {stock***REMOVED***")
+        lines.append(f"{flag} #{p.id} · {p.name} · ⭐{p.price_stars} · сток {stock}")
     await message.answer("\n".join(lines), reply_markup=seller_kb())
 
 
@@ -88,18 +88,18 @@ async def seller_add_price(message: Message, state: FSMContext, services) -> Non
         product = await asyncio.to_thread(
             services.catalog.seller_create,
             seller_id=message.from_user.id,
-            name=data["name"***REMOVED***,
+            name=data["name"],
             description=data.get("description", ""),
             category=data.get("category", "other"),
             price_stars=price,
         )
     except Exception as exc:
-        await message.answer(f"❌ Ошибка: {exc!s***REMOVED***")
+        await message.answer(f"❌ Ошибка: {exc!s}")
         await state.clear()
         return
     await state.clear()
     await message.answer(
-        f"✅ Товар #{product.id***REMOVED*** создан. Теперь добавьте ключи (по одному в строке):",
+        f"✅ Товар #{product.id} создан. Теперь добавьте ключи (по одному в строке):",
     )
     await state.set_state(SellerFlow.adding_keys)
     await state.update_data(product_id=product.id)
@@ -112,10 +112,10 @@ async def seller_add_keys(message: Message, state: FSMContext, services) -> None
     if product_id is None:
         await state.clear()
         return
-    codes = [c.strip() for c in (message.text or "").splitlines() if c.strip()***REMOVED***
+    codes = [c.strip() for c in (message.text or "").splitlines() if c.strip()]
     if not codes:
         await message.answer("Нужно ≥ 1 строки с кодом. Попробуйте ещё раз или /cancel.")
         return
     added = await asyncio.to_thread(services.catalog.bulk_add_keys, product_id, codes)
     await state.clear()
-    await message.answer(f"✅ Добавлено ключей: <b>{added***REMOVED***</b>.", reply_markup=seller_kb())
+    await message.answer(f"✅ Добавлено ключей: <b>{added}</b>.", reply_markup=seller_kb())

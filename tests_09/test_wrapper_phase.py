@@ -21,12 +21,12 @@ def _fake_launch_success(prompt, cwd, timeout, session_id=None, model="auto"):
     return {
         "success": True, "session_id": "test_sid", "pid": 1234,
         "status": "launched", "cwd": str(cwd),
-    ***REMOVED***
+    }
 
 
 def _fake_launch_failure(prompt, cwd, timeout, session_id=None, model="auto"):
     return {"success": False, "session_id": "", "pid": None,
-            "status": "session_start failed: boom", "error": "boom"***REMOVED***
+            "status": "session_start failed: boom", "error": "boom"}
 
 
 def test_launch_and_wait_returns_result(monkeypatch, work_dir):
@@ -37,26 +37,26 @@ def test_launch_and_wait_returns_result(monkeypatch, work_dir):
     result = wrapper.launch_and_wait(
         prompt="test", cwd=str(work_dir), timeout=5,
     )
-    assert result["success"***REMOVED*** is True
-    assert result["result"***REMOVED*** == "TASK DONE"
-    assert result["session_id"***REMOVED*** == "test_sid"
-    assert result["error"***REMOVED*** is None
+    assert result["success"] is True
+    assert result["result"] == "TASK DONE"
+    assert result["session_id"] == "test_sid"
+    assert result["error"] is None
 
 
 def test_launch_and_wait_launch_failure(monkeypatch, work_dir):
     """Провал launch() → немедленный failed-результат без опроса."""
     monkeypatch.setattr(wrapper, "launch", _fake_launch_failure)
-    called = {"poll": False***REMOVED***
+    called = {"poll": False}
 
     def _no_poll(*a, **k):
-        called["poll"***REMOVED*** = True
+        called["poll"] = True
         return None
 
     monkeypatch.setattr(wrapper, "_wait_for_new_result", _no_poll)
     result = wrapper.launch_and_wait(prompt="test", cwd=str(work_dir), timeout=5)
-    assert result["success"***REMOVED*** is False
-    assert "boom" in result["error"***REMOVED***
-    assert called["poll"***REMOVED*** is False
+    assert result["success"] is False
+    assert "boom" in result["error"]
+    assert called["poll"] is False
 
 
 def test_launch_and_wait_timeout(monkeypatch, work_dir):
@@ -65,9 +65,9 @@ def test_launch_and_wait_timeout(monkeypatch, work_dir):
     monkeypatch.setattr(wrapper, "_wait_for_new_result", lambda *a, **k: None)
 
     result = wrapper.launch_and_wait(prompt="test", cwd=str(work_dir), timeout=5)
-    assert result["success"***REMOVED*** is False
-    assert "timeout" in result["error"***REMOVED***.lower()
-    assert result["returncode"***REMOVED*** == -1
+    assert result["success"] is False
+    assert "timeout" in result["error"].lower()
+    assert result["returncode"] == -1
 
 
 def test_launch_and_wait_detects_single_instance_blocker(monkeypatch, work_dir):
@@ -89,10 +89,10 @@ def test_launch_and_wait_detects_single_instance_blocker(monkeypatch, work_dir):
     )
 
     result = wrapper.launch_and_wait(prompt="test", cwd=str(work_dir), timeout=5)
-    assert result["success"***REMOVED*** is False
-    assert result["blocked_single_instance"***REMOVED*** is True
-    assert "single_instance_busy" in result["error"***REMOVED***
-    assert result["returncode"***REMOVED*** == -1
+    assert result["success"] is False
+    assert result["blocked_single_instance"] is True
+    assert "single_instance_busy" in result["error"]
+    assert result["returncode"] == -1
 
 
 def test_launch_and_wait_blocked_only_when_no_result(monkeypatch, work_dir):
@@ -112,10 +112,10 @@ def test_launch_and_wait_blocked_only_when_no_result(monkeypatch, work_dir):
     )
 
     result = wrapper.launch_and_wait(prompt="test", cwd=str(work_dir), timeout=5)
-    assert result["success"***REMOVED*** is True
-    assert result["result"***REMOVED*** == "TASK DONE"
-    assert result["blocked_single_instance"***REMOVED*** is False
-    assert result["error"***REMOVED*** is None
+    assert result["success"] is True
+    assert result["result"] == "TASK DONE"
+    assert result["blocked_single_instance"] is False
+    assert result["error"] is None
 
 
 def test_launch_and_wait_not_blocked_on_clean_output(monkeypatch, work_dir):
@@ -127,18 +127,18 @@ def test_launch_and_wait_not_blocked_on_clean_output(monkeypatch, work_dir):
     out_file.write_text("Connecting...\n\x1b[2J no marker here", encoding="utf-8")
 
     result = wrapper.launch_and_wait(prompt="test", cwd=str(work_dir), timeout=5)
-    assert result["success"***REMOVED*** is False
-    assert result["blocked_single_instance"***REMOVED*** is False
-    assert "timeout" in result["error"***REMOVED***.lower()
+    assert result["success"] is False
+    assert result["blocked_single_instance"] is False
+    assert "timeout" in result["error"].lower()
 
 
 def test_launch_and_wait_forwards_model_to_launch(monkeypatch, work_dir):
     """model из launch_and_wait пробрасывается в launch (→ monitor.sh) (v5.88.0)."""
-    seen: dict = {***REMOVED***
+    seen: dict = {}
 
     def _fake_launch(prompt, cwd, timeout, session_id=None, model="auto"):
         seen.update(prompt=prompt, model=model)
-        return {"success": True, "session_id": "sid", "pid": 1, "status": "launched"***REMOVED***
+        return {"success": True, "session_id": "sid", "pid": 1, "status": "launched"}
 
     monkeypatch.setattr(wrapper, "launch", _fake_launch)
     monkeypatch.setattr(wrapper, "_wait_for_new_result", lambda *a, **k: "OK")
@@ -146,7 +146,7 @@ def test_launch_and_wait_forwards_model_to_launch(monkeypatch, work_dir):
     result = wrapper.launch_and_wait(
         prompt="p", cwd=str(work_dir), timeout=5, model="3",
     )
-    assert result["success"***REMOVED*** is True
+    assert result["success"] is True
     assert seen.get("model") == "3"
     assert seen.get("prompt") == "p"
 
@@ -184,14 +184,14 @@ def test_wait_for_new_result_no_baseline_accepts_existing(work_dir):
 # ── Proot autodetection (v5.73.0) ──────────────────────────────
 
 def test_build_buffer_cmd_uses_direct_exec_when_inside_proot(monkeypatch, work_dir):
-    """Inside-proot БЕЗ rootfs loader: proot_cmd = `{bin***REMOVED*** --cwd {cwd***REMOVED***` (fallback)."""
+    """Inside-proot БЕЗ rootfs loader: proot_cmd = `{bin] --cwd {cwd]` (fallback)."""
     from freebuff_plugin_03.config import FREEBUFF_BINARY
     monkeypatch.setattr(wrapper, "_is_inside_proot", lambda: True)
     monkeypatch.setattr(wrapper, "_rootfs_loader_prefix", lambda: None)
     cmd = wrapper._build_buffer_cmd(work_dir)
     # direct-exec fallback: тот же glibc-бинарь → тоже снимаем LD_PRELOAD,
     # иначе Termux bionic exec-shim ломает загрузку (libc.so exit 127)
-    assert cmd.startswith("env -u LD_PRELOAD "), f"got: {cmd!r***REMOVED***"
+    assert cmd.startswith("env -u LD_PRELOAD "), f"got: {cmd!r}"
     assert str(FREEBUFF_BINARY) in cmd
     assert "proot-distro login" not in cmd
     assert str(work_dir) in cmd
@@ -202,7 +202,7 @@ def test_build_buffer_cmd_uses_rootfs_loader_when_inside_proot(monkeypatch, work
 
     Регрессия на live-баг: direct-exec glibc-бинаря падал с
     'libc.so: cannot open shared object file' (exit 127); через
-    `ld-linux-aarch64.so.1 --library-path {libdir***REMOVED***` бинарь линкуется.
+    `ld-linux-aarch64.so.1 --library-path {libdir}` бинарь линкуется.
     """
     from freebuff_plugin_03.config import FREEBUFF_BINARY
     monkeypatch.setattr(wrapper, "_is_inside_proot", lambda: True)
@@ -213,8 +213,8 @@ def test_build_buffer_cmd_uses_rootfs_loader_when_inside_proot(monkeypatch, work
     )
     cmd = wrapper._build_buffer_cmd(work_dir)
     # Termux LD_PRELOAD (libtermux-exec-ld-preload.so) ломает glibc loader → снимаем
-    assert cmd.startswith("env -u LD_PRELOAD "), f"got: {cmd!r***REMOVED***"
-    assert "ld-linux-aarch64.so.1 --library-path" in cmd, f"got: {cmd!r***REMOVED***"
+    assert cmd.startswith("env -u LD_PRELOAD "), f"got: {cmd!r}"
+    assert "ld-linux-aarch64.so.1 --library-path" in cmd, f"got: {cmd!r}"
     assert str(FREEBUFF_BINARY) in cmd
     assert "proot-distro login" not in cmd
     assert str(work_dir) in cmd
@@ -227,24 +227,24 @@ def test_rootfs_loader_prefix_found_when_loader_exists(monkeypatch, tmp_path):
     libdir.mkdir(parents=True)
     loader = libdir / "ld-linux-aarch64.so.1"
     loader.write_text("# fake loader", encoding="utf-8")
-    monkeypatch.setattr(wrapper, "_ROOTFS_CANDIDATES", [root***REMOVED***)
+    monkeypatch.setattr(wrapper, "_ROOTFS_CANDIDATES", [root])
 
     prefix = wrapper._rootfs_loader_prefix()
     assert prefix is not None
     assert str(loader) in prefix
-    assert f"--library-path {libdir***REMOVED***" in prefix
+    assert f"--library-path {libdir}" in prefix
 
 
 def test_rootfs_loader_prefix_none_when_missing(monkeypatch, tmp_path):
     """_rootfs_loader_prefix: loader нигде не найден → None (fallback direct-exec)."""
     empty_root = tmp_path / "empty"
     empty_root.mkdir(parents=True)
-    monkeypatch.setattr(wrapper, "_ROOTFS_CANDIDATES", [empty_root***REMOVED***)
+    monkeypatch.setattr(wrapper, "_ROOTFS_CANDIDATES", [empty_root])
     assert wrapper._rootfs_loader_prefix() is None
 
 
 def test_build_buffer_cmd_uses_proot_login_when_outside(monkeypatch, work_dir):
-    """Native Termux: proot_cmd = `proot-distro login ubuntu -- {bin***REMOVED*** --cwd {cwd***REMOVED***`."""
+    """Native Termux: proot_cmd = `proot-distro login ubuntu -- {bin] --cwd {cwd]`."""
     monkeypatch.setattr(wrapper, "_is_inside_proot", lambda: False)
     cmd = wrapper._build_buffer_cmd(work_dir)
     assert "proot-distro login" in cmd

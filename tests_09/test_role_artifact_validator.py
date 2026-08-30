@@ -48,7 +48,7 @@ def project(tmp_path):
 def _write_yaml_registry(path, pipeline):
     """Пишет registry.yaml в формате blueprints_v3 (pipeline: list)."""
     import yaml
-    payload = {"pipeline": pipeline, "metadata": {"version": "test"***REMOVED******REMOVED***
+    payload = {"pipeline": pipeline, "metadata": {"version": "test"}}
     with open(str(path), "w", encoding="utf-8") as f:
         yaml.safe_dump(payload, f, allow_unicode=True, sort_keys=False)
 
@@ -56,7 +56,7 @@ def _write_yaml_registry(path, pipeline):
 def _materialize_outputs(root, patterns):
     """Создаёт файлы-«артефакты» по каждому паттерну (прямой файл или простой
     path для нескольких glob). Для каждого паттерна создаётся сам файл."""
-    ***REMOVED***
+    }
     for pat in patterns:
         if "*" in pat:
             # Превращаем "src/**/*.py" → "src/foo.py" (простой путь).
@@ -83,12 +83,12 @@ class TestScopeDefaults:
         # Все pipeline-роли имеют хотя бы 1 output (для fallback).
         for rid in PIPELINE_ROLES:
             assert rid in DEFAULT_ROLE_OUTPUTS, \
-                f"pipeline-роль {rid***REMOVED*** отсутствует в DEFAULT_ROLE_OUTPUTS"
-            assert len(DEFAULT_ROLE_OUTPUTS[rid***REMOVED***) >= 1
+                f"pipeline-роль {rid} отсутствует в DEFAULT_ROLE_OUTPUTS"
+            assert len(DEFAULT_ROLE_OUTPUTS[rid]) >= 1
 
     def test_default_registry_candidates_priority(self):
         # Первый кандидат — blueprints_v3/registry.yaml (платформенный стандарт).
-        assert DEFAULT_REGISTRY_CANDIDATES[0***REMOVED*** == "blueprints_v3/registry.yaml"
+        assert DEFAULT_REGISTRY_CANDIDATES[0] == "blueprints_v3/registry.yaml"
 
 
 # ─── loaded registry: ok / partial / missing ───────────────────────────────
@@ -102,9 +102,9 @@ class TestLoadedRegistry:
         explainer_id, explainer_patterns = "explainer", ("brief.md", "parsed_requirements.md")
         lisa_id, lisa_patterns = "lisa", ("lisa_report.md",)
         pipeline = [
-            {"id": explainer_id, "outputs": list(explainer_patterns)***REMOVED***,
-            {"id": lisa_id, "outputs": list(lisa_patterns)***REMOVED***,
-        ***REMOVED***
+            {"id": explainer_id, "outputs": list(explainer_patterns)},
+            {"id": lisa_id, "outputs": list(lisa_patterns)},
+        ]
         _write_yaml_registry(registry_path, pipeline)
 
         _materialize_outputs(project.root, list(explainer_patterns) + list(lisa_patterns))
@@ -131,13 +131,13 @@ class TestLoadedRegistry:
         registry_path = tmp_path / "blueprints_v3" / "registry.yaml"
         registry_path.parent.mkdir(parents=True, exist_ok=True)
         pipeline = [
-            {"id": "explainer", "outputs": ["brief.md", "parsed_requirements.md"***REMOVED******REMOVED***,
-            {"id": "lisa", "outputs": ["lisa_report.md"***REMOVED******REMOVED***,
-        ***REMOVED***
+            {"id": "explainer", "outputs": ["brief.md", "parsed_requirements.md"]},
+            {"id": "lisa", "outputs": ["lisa_report.md"]},
+        ]
         _write_yaml_registry(registry_path, pipeline)
 
         # Только brief.md; parsed_requirements.md и lisa_report.md отсутствуют.
-        _materialize_outputs(project.root, ["brief.md"***REMOVED***)
+        _materialize_outputs(project.root, ["brief.md"])
 
         # Явный registry_path (см. test_registry_loaded_all_outputs_present).
         validator = RoleArtifactValidator(registry_path=registry_path)
@@ -160,7 +160,7 @@ class TestLoadedRegistry:
         # Если role_id не в registry + не в fallback → role_report требует empty.
         registry_path = tmp_path / "blueprints_v3" / "registry.yaml"
         registry_path.parent.mkdir(parents=True, exist_ok=True)
-        _write_yaml_registry(registry_path, [***REMOVED***)  # пустой registry
+        _write_yaml_registry(registry_path, [])  # пустой registry
 
         validator = RoleArtifactValidator(registry_path=registry_path)
         # orchestrator — reference; в DEFAULT_ROLE_OUTPUTS его нет → required=()
@@ -168,7 +168,7 @@ class TestLoadedRegistry:
                                        role_ids=("orchestrator",),
                                        compose_check=False)
 
-        orchestrator_rprt = summary.role_reports[0***REMOVED***
+        orchestrator_rprt = summary.role_reports[0]
         assert orchestrator_rprt.required == ()
         assert orchestrator_rprt.status == "ok"  # нет required → ok по классификации
 
@@ -208,7 +208,7 @@ class TestRegistryResolution:
         assert summary.registry_path == str(path)
         assert summary.registry_status == "unreadable"
         assert summary.overall == "degraded"
-        explainer_rprt = summary.role_reports[0***REMOVED***
+        explainer_rprt = summary.role_reports[0]
         assert "brief.md" in explainer_rprt.required  # из fallback
         assert explainer_rprt.status == "missing"
 
@@ -230,9 +230,9 @@ class TestRegistryResolution:
         reg_dir.mkdir(parents=True, exist_ok=True)
         registry_path = reg_dir / "registry.yaml"
         _write_yaml_registry(registry_path, [{
-            "id": "explainer", "outputs": ["brief.md"***REMOVED***,
-        ***REMOVED******REMOVED***)
-        _materialize_outputs(project.root, ["brief.md"***REMOVED***)
+            "id": "explainer", "outputs": ["brief.md"],
+        ]])
+        _materialize_outputs(project.root, ["brief.md"])
 
         # Валидатор БЕЗ явного registry_path: резолвер должен найти registry
         # через cwd.
@@ -245,7 +245,7 @@ class TestRegistryResolution:
         assert summary.registry_path == str(registry_path)
         # project_root path resolution: НЕ нашёлся (registry НЕ лежит в project_root).
         # Только cwd-resolution сработал.
-        explainer_rprt = summary.role_reports[0***REMOVED***
+        explainer_rprt = summary.role_reports[0]
         assert explainer_rprt.status == "ok"
         assert explainer_rprt.missing == ()
 
@@ -265,16 +265,16 @@ class TestRegistryResolution:
         # доступен (yaml парсит JSON).
         path = tmp_path / "r.yaml"
         path.write_text(
-            json.dumps({"pipeline": [{"id": "explainer", "outputs": ["brief.md"***REMOVED******REMOVED******REMOVED******REMOVED***),
+            json.dumps({"pipeline": [{"id": "explainer", "outputs": ["brief.md"]}]}),
             encoding="utf-8",
         )
-        _materialize_outputs(project.root, ["brief.md"***REMOVED***)
+        _materialize_outputs(project.root, ["brief.md"])
         validator = RoleArtifactValidator(registry_path=path)
         summary = validator.validate(project,
                                        role_ids=("explainer",),
                                        compose_check=False)
         assert summary.registry_status == "loaded"
-        explainer_rprt = summary.role_reports[0***REMOVED***
+        explainer_rprt = summary.role_reports[0]
         assert explainer_rprt.status == "ok"
 
     def test_explicit_registry_path_takes_priority_over_cwd(self, tmp_path,
@@ -301,19 +301,19 @@ class TestRegistryResolution:
         # 1) explicit registry (cодержит explainer без missing).
         explicit_path = tmp_path / "explicit_registry.yaml"  # НЕ под DEFAULT_REGISTRY_CANDIDATES.
         _write_yaml_registry(explicit_path, [
-            {"id": "explainer", "outputs": ["brief.md"***REMOVED******REMOVED***,
-        ***REMOVED***)
-        _materialize_outputs(project.root, ["brief.md"***REMOVED***)
+            {"id": "explainer", "outputs": ["brief.md"]},
+        ])
+        _materialize_outputs(project.root, ["brief.md"])
 
-        # 2) cwd registry (отличающийся по роли — содержит lisa). Имя = DEFAULT_REGISTRY_CANDIDATES[0***REMOVED***.
+        # 2) cwd registry (отличающийся по роли — содержит lisa). Имя = DEFAULT_REGISTRY_CANDIDATES[0].
         # Это имя реально matchится cwd fallback iter (find first match в candidates).
         monkeypatch.chdir(tmp_path)
         cwd_alt_dir = tmp_path / "blueprints_v3"
         cwd_alt_dir.mkdir(parents=True, exist_ok=True)
         cwd_alt_registry_path = cwd_alt_dir / "registry.yaml"
         _write_yaml_registry(cwd_alt_registry_path, [
-            {"id": "lisa", "outputs": ["brief.md"***REMOVED******REMOVED***,  # different role_id
-        ***REMOVED***)
+            {"id": "lisa", "outputs": ["brief.md"]},  # different role_id
+        ])
 
         # SANITY: confirm that cwd fallback WOULD find cwd_alt_registry (если бы
         # explicit_path не был задан). Создаём second validator БЕЗ registry_path
@@ -324,7 +324,7 @@ class TestRegistryResolution:
         )
         assert summary_cwd_only.registry_status == "loaded"
         assert summary_cwd_only.registry_path == str(cwd_alt_registry_path)
-        assert summary_cwd_only.role_reports[0***REMOVED***.role_id == "lisa"
+        assert summary_cwd_only.role_reports[0].role_id == "lisa"
         # This confirms cwd-fallback is functional and finds the alt registry.
 
         # Validate с explicit registry_path. Должен использовать explicit,
@@ -335,11 +335,11 @@ class TestRegistryResolution:
                                        compose_check=False)
 
         # Explicit использован → loaded from explicit, role = explainer, status = ok.
-        # (Если бы использовался cwd_alt, role = lisa → role_reports[0***REMOVED***.role_id был бы другая.)
+        # (Если бы использовался cwd_alt, role = lisa → role_reports[0].role_id был бы другая.)
         assert summary.registry_status == "loaded"
         assert summary.registry_path == str(explicit_path)
-        assert summary.role_reports[0***REMOVED***.role_id == "explainer"
-        assert summary.role_reports[0***REMOVED***.status == "ok"
+        assert summary.role_reports[0].role_id == "explainer"
+        assert summary.role_reports[0].status == "ok"
 
 
 # ─── glob semantics ─────────────────────────────────────────────────────────
@@ -354,15 +354,15 @@ class TestGlobSemantics:
 
         registry_path = tmp_path / "r.yaml"
         _write_yaml_registry(registry_path, [
-            {"id": "developer", "outputs": ["src/**/*.py"***REMOVED******REMOVED***,
-        ***REMOVED***)
+            {"id": "developer", "outputs": ["src/**/*.py"]},
+        ])
         validator = RoleArtifactValidator(registry_path=registry_path)
         summary = validator.validate(project,
                                        role_ids=("developer",),
                                        compose_check=False)
 
         assert summary.overall == "ok"
-        dev_rprt = summary.role_reports[0***REMOVED***
+        dev_rprt = summary.role_reports[0]
         assert dev_rprt.status == "ok"
         assert dev_rprt.missing == ()
         assert len(dev_rprt.present) >= 1
@@ -371,23 +371,23 @@ class TestGlobSemantics:
     def test_multi_level_glob_no_match_yields_missing(self, tmp_path, project):
         registry_path = tmp_path / "r.yaml"
         _write_yaml_registry(registry_path, [
-            {"id": "tester", "outputs": ["tests/**/*.py"***REMOVED******REMOVED***,
-        ***REMOVED***)
+            {"id": "tester", "outputs": ["tests/**/*.py"]},
+        ])
         # Проект пустой по tests/ — статус missing.
         validator = RoleArtifactValidator(registry_path=registry_path)
         summary = validator.validate(project,
                                        role_ids=("tester",),
                                        compose_check=False)
 
-        tester_rprt = summary.role_reports[0***REMOVED***
+        tester_rprt = summary.role_reports[0]
         assert tester_rprt.status == "missing"
         assert "tests/**/*.py" in tester_rprt.missing
 
     def test_present_cap_limits_max_matches_reported(self, tmp_path, project):
         # Создаём 15 .py файлов в src/, проверяем что present ≤ PRESENT_CAP(10).
         for i in range(15):
-            (project.root / "src" / f"m{i***REMOVED***.py").parent.mkdir(parents=True, exist_ok=True)
-            (project.root / "src" / f"m{i***REMOVED***.py").write_text("# x\n", encoding="utf-8")
+            (project.root / "src" / f"m{i}.py").parent.mkdir(parents=True, exist_ok=True)
+            (project.root / "src" / f"m{i}.py").write_text("# x\n", encoding="utf-8")
 
         # SANITY: на ФС действительно 15 файлов (не "изначально мало").
         # Без этой проверки тест прошёл бы даже если PRESENT_CAP=100 (cap не режет).
@@ -396,15 +396,15 @@ class TestGlobSemantics:
         registry_path = tmp_path / "r.yaml"
         _write_yaml_registry(registry_path, [
             # Только src/**/*.py — без tests/migrations — чтобы status был ok.
-            {"id": "developer", "outputs": ["src/**/*.py"***REMOVED******REMOVED***,
-        ***REMOVED***)
+            {"id": "developer", "outputs": ["src/**/*.py"]},
+        ])
         # Явный registry_path (резолвер не ищет автоматически).
         validator = RoleArtifactValidator(registry_path=registry_path)
         summary = validator.validate(project,
                                        role_ids=("developer",),
                                        compose_check=False)
 
-        dev_rprt = summary.role_reports[0***REMOVED***
+        dev_rprt = summary.role_reports[0]
         assert dev_rprt.status == "ok"
         # Единый формат: real relative-paths (≤ PRESENT_CAP=10) даже при 15 файлах.
         assert len(dev_rprt.present) <= 10
@@ -416,7 +416,7 @@ class TestGlobSemantics:
 
         PRESENT_CAP=10 в RoleArtifactValidator (v5.157.0). Ровно 10 файлов ->
         present ровно 10 (NO truncation beyond this point, NO divide-by-zero,
-        NO edge-of-slice artifact_loss). Граничный случай для `[:PRESENT_CAP***REMOVED***`
+        NO edge-of-slice artifact_loss). Граничный случай для `[:PRESENT_CAP]`
         slicing semantics.
         """
         PRESENT_CAP = RoleArtifactValidator.PRESENT_CAP
@@ -424,23 +424,23 @@ class TestGlobSemantics:
 
         # SANITY: на ФС ровно PRESENT_CAP файлов (не 9, не 11).
         for i in range(PRESENT_CAP):
-            (project.root / "src" / f"cap{i***REMOVED***.py").parent.mkdir(
+            (project.root / "src" / f"cap{i}.py").parent.mkdir(
                 parents=True, exist_ok=True,
             )
-            (project.root / "src" / f"cap{i***REMOVED***.py").write_text(
+            (project.root / "src" / f"cap{i}.py").write_text(
                 "# x\n", encoding="utf-8",
             )
         assert len(list((project.root / "src").glob("**/*.py"))) == PRESENT_CAP
 
         registry_path = tmp_path / "r.yaml"
         _write_yaml_registry(registry_path, [{
-            "id": "developer", "outputs": ["src/**/*.py"***REMOVED***,
-        ***REMOVED******REMOVED***)
+            "id": "developer", "outputs": ["src/**/*.py"],
+        ]])
         validator = RoleArtifactValidator(registry_path=registry_path)
         summary = validator.validate(project,
                                        role_ids=("developer",),
                                        compose_check=False)
-        dev_rprt = summary.role_reports[0***REMOVED***
+        dev_rprt = summary.role_reports[0]
         # Граничный случай: present ровно 10 (все матчи с шапкой, без truncation).
         assert len(dev_rprt.present) == PRESENT_CAP
         # Все real-relative-paths, без mixed-annotations.
@@ -454,18 +454,18 @@ class TestGlobSemantics:
         # Регрессия: present содержит ТОЛЬКО relative-paths, без mixed-annotations
         # типа "src/**/*.py (15 files)" (старый формат, до фикса code-reviewer).
         for i in range(3):
-            (project.root / "src" / f"x{i***REMOVED***.py").parent.mkdir(parents=True, exist_ok=True)
-            (project.root / "src" / f"x{i***REMOVED***.py").write_text("# x\n", encoding="utf-8")
+            (project.root / "src" / f"x{i}.py").parent.mkdir(parents=True, exist_ok=True)
+            (project.root / "src" / f"x{i}.py").write_text("# x\n", encoding="utf-8")
 
         registry_path = tmp_path / "r.yaml"
         _write_yaml_registry(registry_path, [
-            {"id": "developer", "outputs": ["src/**/*.py"***REMOVED******REMOVED***,
-        ***REMOVED***)
+            {"id": "developer", "outputs": ["src/**/*.py"]},
+        ])
         validator = RoleArtifactValidator(registry_path=registry_path)
         summary = validator.validate(project,
                                        role_ids=("developer",),
                                        compose_check=False)
-        dev_rprt = summary.role_reports[0***REMOVED***
+        dev_rprt = summary.role_reports[0]
         # Никаких скобок с counts в present.
         for entry in dev_rprt.present:
             assert "(" not in entry
@@ -479,8 +479,8 @@ class TestGlobSemantics:
 
         Симметрично к test_present_exactly_at_present_cap (10 матчей → 10 в present)
         и test_present_cap_limits_max_matches_reported (15 матчей → ≤10 в present).
-        PRESENT_CAP slicing [:PRESENT_CAP***REMOVED*** должен корректно обработать edge-case
-        пустого списка (`[***REMOVED***[:10***REMOVED*** == [***REMOVED***`). Также статус classification:
+        PRESENT_CAP slicing [:PRESENT_CAP] должен корректно обработать edge-case
+        пустого списка (`[][:10] == []`). Также статус classification:
         required defined в registry, present=(), missing=("src/**/*.py") → ok_count=0
         → status="missing".
         """
@@ -489,13 +489,13 @@ class TestGlobSemantics:
 
         registry_path = tmp_path / "r.yaml"
         _write_yaml_registry(registry_path, [
-            {"id": "developer", "outputs": ["src/**/*.py"***REMOVED******REMOVED***,
-        ***REMOVED***)
+            {"id": "developer", "outputs": ["src/**/*.py"]},
+        ])
         validator = RoleArtifactValidator(registry_path=registry_path)
         summary = validator.validate(project,
                                        role_ids=("developer",),
                                        compose_check=False)
-        dev_rprt = summary.role_reports[0***REMOVED***
+        dev_rprt = summary.role_reports[0]
 
         # Граничный случай: пустой список.
         assert dev_rprt.present == ()  # empty tuple, не None.
@@ -563,9 +563,9 @@ class TestFacadeDelegate:
     def test_facade_validate_with_explicit_registry(self, tmp_path, project):
         path = tmp_path / "r.yaml"
         _write_yaml_registry(path, [
-            {"id": "lisa", "outputs": ["lisa_report.md"***REMOVED******REMOVED***,
-        ***REMOVED***)
-        _materialize_outputs(project.root, ["lisa_report.md"***REMOVED***)
+            {"id": "lisa", "outputs": ["lisa_report.md"]},
+        ])
+        _materialize_outputs(project.root, ["lisa_report.md"])
 
         facade = ForgeFacade()
         summary = facade.validate_role_artifacts(
@@ -573,7 +573,7 @@ class TestFacadeDelegate:
             registry_path=path,
         )
         assert summary.registry_status == "loaded"
-        lisa_rprt = summary.role_reports[0***REMOVED***
+        lisa_rprt = summary.role_reports[0]
         assert lisa_rprt.status == "ok"
 
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
-***REMOVED***
+}
 from typing import Optional
 
 
@@ -43,32 +43,32 @@ class OCRProcessor:
                 "Tesseract is not installed. Run: pkg install tesseract tesseract-eng tesseract-rus"
             )
         if not image_path.exists():
-            raise OCRError(f"File not found: {image_path***REMOVED***")
+            raise OCRError(f"File not found: {image_path}")
 
         try:
             result = subprocess.run(
-                [self._binary, str(image_path), "stdout", "-l", self._language***REMOVED***,
+                [self._binary, str(image_path), "stdout", "-l", self._language],
                 capture_output=True,
                 text=True,
                 check=True,
             )
             return result.stdout
         except subprocess.CalledProcessError as exc:
-            raise OCRError(f"OCR failed: {exc.stderr***REMOVED***") from exc
+            raise OCRError(f"OCR failed: {exc.stderr}") from exc
         except FileNotFoundError as exc:
-            raise OCRError(f"Tesseract binary not found: {self._binary***REMOVED***") from exc
+            raise OCRError(f"Tesseract binary not found: {self._binary}") from exc
 
-    def process_images(self, image_paths: list[Path***REMOVED***) -> dict[str, str***REMOVED***:
+    def process_images(self, image_paths: list[Path]) -> dict[str, str]:
         """Process multiple images and return a mapping of path to text."""
-        results: dict[str, str***REMOVED*** = {***REMOVED***
+        results: dict[str, str] = {}
         for path in image_paths:
             try:
-                results[str(path)***REMOVED*** = self.process_image(path)
+                results[str(path)] = self.process_image(path)
             except OCRError as exc:
-                results[str(path)***REMOVED*** = f"ERROR: {exc***REMOVED***"
+                results[str(path)] = f"ERROR: {exc}"
         return results
 
 
-def get_ocr_processor(binary: Optional[str***REMOVED*** = None, language: Optional[str***REMOVED*** = None) -> OCRProcessor:
+def get_ocr_processor(binary: Optional[str] = None, language: Optional[str] = None) -> OCRProcessor:
     """Factory for the default OCR processor."""
     return OCRProcessor(binary or "tesseract", language or "rus+eng")

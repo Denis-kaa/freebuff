@@ -46,7 +46,7 @@ class RuntimeAdapter(ABC):
 
     def __init__(self, config: RuntimeConfig):
         self.config = config
-        self._session: Optional[RuntimeSession***REMOVED*** = None
+        self._session: Optional[RuntimeSession] = None
 
     # ── Lifecycle ────────────────────────────────────────────
 
@@ -80,27 +80,27 @@ class RuntimeAdapter(ABC):
     @abstractmethod
     def generate(
         self,
-        messages: List[Dict[str, str***REMOVED******REMOVED***,
-        system: Optional[str***REMOVED*** = None,
+        messages: List[Dict[str, str]],
+        system: Optional[str] = None,
         temperature: float = 0.7,
-        max_tokens: Optional[int***REMOVED*** = None,
+        max_tokens: Optional[int] = None,
     ) -> RuntimeResult:
         """Генерация ответа от Runtime."""
         ...
 
     @abstractmethod
-    def list_capabilities(self) -> List[RuntimeCapability***REMOVED***:
+    def list_capabilities(self) -> List[RuntimeCapability]:
         """Список capability этого Runtime."""
         ...
 
     @abstractmethod
-    def list_tools(self) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    def list_tools(self) -> List[Dict[str, Any]]:
         """Список MCP-инструментов Runtime."""
         ...
 
     # ── Session ──────────────────────────────────────────────
 
-    def get_session(self) -> Optional[RuntimeSession***REMOVED***:
+    def get_session(self) -> Optional[RuntimeSession]:
         """Текущая сессия Runtime."""
         return self._session
 
@@ -143,7 +143,7 @@ class StdioMCPAdapter(RuntimeAdapter):
         self,
         config: RuntimeConfig,
         command: str,
-        args: Optional[List[str***REMOVED******REMOVED*** = None,
+        args: Optional[List[str]] = None,
         runtime_name: str = "unknown",
         display_name: str = "Unknown Runtime",
     ):
@@ -151,10 +151,10 @@ class StdioMCPAdapter(RuntimeAdapter):
         self._runtime_name = runtime_name
         self._display_name = display_name
         self._command = command
-        self._args = args or [***REMOVED***
-        self._client: Optional[StdioMCPClient***REMOVED*** = None
-        self._tools: List[MCPToolInfo***REMOVED*** = [***REMOVED***
-        self._capabilities: List[RuntimeCapability***REMOVED*** = [***REMOVED***
+        self._args = args or []
+        self._client: Optional[StdioMCPClient] = None
+        self._tools: List[MCPToolInfo] = []
+        self._capabilities: List[RuntimeCapability] = []
 
     def connect(self) -> bool:
         if self.is_connected():
@@ -184,7 +184,7 @@ class StdioMCPAdapter(RuntimeAdapter):
             except Exception:
                 pass
             self._client = None
-        self._tools = [***REMOVED***
+        self._tools = []
         self._session = None
         return True
 
@@ -207,7 +207,7 @@ class StdioMCPAdapter(RuntimeAdapter):
             if alive:
                 return RuntimeHealth(
                     alive=True,
-                    version=self._client.server_info.get("serverInfo", {***REMOVED***).get("version", "unknown")
+                    version=self._client.server_info.get("serverInfo", {}).get("version", "unknown")
                     if self._client else "unknown",
                     latency_ms=latency_ms,
                     connected=True,
@@ -219,10 +219,10 @@ class StdioMCPAdapter(RuntimeAdapter):
 
     def generate(
         self,
-        messages: List[Dict[str, str***REMOVED******REMOVED***,
-        system: Optional[str***REMOVED*** = None,
+        messages: List[Dict[str, str]],
+        system: Optional[str] = None,
         temperature: float = 0.7,
-        max_tokens: Optional[int***REMOVED*** = None,
+        max_tokens: Optional[int] = None,
     ) -> RuntimeResult:
         if not self._client:
             return RuntimeResult(error="Not connected", runtime=self._runtime_name)
@@ -238,13 +238,13 @@ class StdioMCPAdapter(RuntimeAdapter):
                 )
 
             # Формируем аргументы
-            args: Dict[str, Any***REMOVED*** = {"messages": messages***REMOVED***
+            args: Dict[str, Any] = {"messages": messages}
             if system:
-                args["system"***REMOVED*** = system
+                args["system"] = system
             if temperature != 0.7:
-                args["temperature"***REMOVED*** = temperature
+                args["temperature"] = temperature
             if max_tokens:
-                args["max_tokens"***REMOVED*** = max_tokens
+                args["max_tokens"] = max_tokens
 
             result = self._client.call_tool(tool_name, args)
 
@@ -280,39 +280,39 @@ class StdioMCPAdapter(RuntimeAdapter):
                 latency_ms=int((time.time() - t0) * 1000),
             )
 
-    def _find_generate_tool(self) -> Optional[str***REMOVED***:
+    def _find_generate_tool(self) -> Optional[str]:
         """Ищет подходящий MCP инструмент для генерации.
 
         Предпочитает: generate, generate_stream, codegen, run.
         Если не найдено — берёт первый попавшийся инструмент,
         который принимает messages.
         """
-        preferred = {"generate", "generate_stream", "codegen", "run", "execute"***REMOVED***
+        preferred = {"generate", "generate_stream", "codegen", "run", "execute"}
         for tool in self._tools:
             if tool.name in preferred:
                 return tool.name
         # Fallback: первый инструмент, который принимает messages
         for tool in self._tools:
-            props = tool.input_schema.get("properties", {***REMOVED***)
+            props = tool.input_schema.get("properties", {})
             if "messages" in props or "prompt" in props:
                 return tool.name
         # Fallback: первый инструмент
         if self._tools:
-            return self._tools[0***REMOVED***.name
+            return self._tools[0].name
         return None
 
-    def list_capabilities(self) -> List[RuntimeCapability***REMOVED***:
+    def list_capabilities(self) -> List[RuntimeCapability]:
         return self._capabilities
 
-    def list_tools(self) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    def list_tools(self) -> List[Dict[str, Any]]:
         return [
             {
                 "name": t.name,
                 "description": t.description,
                 "input_schema": t.input_schema,
-            ***REMOVED***
+            }
             for t in self._tools
-        ***REMOVED***
+        ]
 
     @property
     def name(self) -> str:
@@ -349,9 +349,9 @@ class HTTPMCPAdapter(RuntimeAdapter):
         self._runtime_name = runtime_name
         self._display_name = display_name
         self._endpoint = endpoint
-        self._client: Optional[HTTPMCPClient***REMOVED*** = None
-        self._tools: List[MCPToolInfo***REMOVED*** = [***REMOVED***
-        self._capabilities: List[RuntimeCapability***REMOVED*** = [***REMOVED***
+        self._client: Optional[HTTPMCPClient] = None
+        self._tools: List[MCPToolInfo] = []
+        self._capabilities: List[RuntimeCapability] = []
 
     def connect(self) -> bool:
         if self.is_connected():
@@ -378,7 +378,7 @@ class HTTPMCPAdapter(RuntimeAdapter):
             except Exception:
                 pass
             self._client = None
-        self._tools = [***REMOVED***
+        self._tools = []
         self._session = None
         return True
 
@@ -408,10 +408,10 @@ class HTTPMCPAdapter(RuntimeAdapter):
 
     def generate(
         self,
-        messages: List[Dict[str, str***REMOVED******REMOVED***,
-        system: Optional[str***REMOVED*** = None,
+        messages: List[Dict[str, str]],
+        system: Optional[str] = None,
         temperature: float = 0.7,
-        max_tokens: Optional[int***REMOVED*** = None,
+        max_tokens: Optional[int] = None,
     ) -> RuntimeResult:
         if not self._client:
             return RuntimeResult(error="Not connected", runtime=self._runtime_name)
@@ -422,11 +422,11 @@ class HTTPMCPAdapter(RuntimeAdapter):
             if not tool_name:
                 return RuntimeResult(error="No generate tool", runtime=self._runtime_name)
 
-            args: Dict[str, Any***REMOVED*** = {"messages": messages***REMOVED***
+            args: Dict[str, Any] = {"messages": messages}
             if system:
-                args["system"***REMOVED*** = system
+                args["system"] = system
             if max_tokens:
-                args["max_tokens"***REMOVED*** = max_tokens
+                args["max_tokens"] = max_tokens
 
             result = self._client.call_tool(tool_name, args)
 
@@ -448,27 +448,27 @@ class HTTPMCPAdapter(RuntimeAdapter):
                 latency_ms=int((time.time() - t0) * 1000),
             )
 
-    def _find_generate_tool(self) -> Optional[str***REMOVED***:
-        preferred = {"generate", "generate_stream", "codegen", "run"***REMOVED***
+    def _find_generate_tool(self) -> Optional[str]:
+        preferred = {"generate", "generate_stream", "codegen", "run"}
         for tool in self._tools:
             if tool.name in preferred:
                 return tool.name
         for tool in self._tools:
-            props = tool.input_schema.get("properties", {***REMOVED***)
+            props = tool.input_schema.get("properties", {})
             if "messages" in props or "prompt" in props:
                 return tool.name
         if self._tools:
-            return self._tools[0***REMOVED***.name
+            return self._tools[0].name
         return None
 
-    def list_capabilities(self) -> List[RuntimeCapability***REMOVED***:
+    def list_capabilities(self) -> List[RuntimeCapability]:
         return self._capabilities
 
-    def list_tools(self) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    def list_tools(self) -> List[Dict[str, Any]]:
         return [
-            {"name": t.name, "description": t.description, "input_schema": t.input_schema***REMOVED***
+            {"name": t.name, "description": t.description, "input_schema": t.input_schema}
             for t in self._tools
-        ***REMOVED***
+        ]
 
     @property
     def name(self) -> str:
@@ -495,17 +495,17 @@ class AdapterRegistry:
     """
 
     def __init__(self):
-        self._adapters: Dict[str, Type[RuntimeAdapter***REMOVED******REMOVED*** = {***REMOVED***
+        self._adapters: Dict[str, Type[RuntimeAdapter]] = {}
 
-    def register(self, adapter_type: str, adapter_cls: Type[RuntimeAdapter***REMOVED***) -> None:
+    def register(self, adapter_type: str, adapter_cls: Type[RuntimeAdapter]) -> None:
         """Зарегистрировать класс адаптера."""
-        self._adapters[adapter_type***REMOVED*** = adapter_cls
+        self._adapters[adapter_type] = adapter_cls
 
-    def get(self, adapter_type: str) -> Optional[Type[RuntimeAdapter***REMOVED******REMOVED***:
+    def get(self, adapter_type: str) -> Optional[Type[RuntimeAdapter]]:
         """Получить класс адаптера по типу."""
         return self._adapters.get(adapter_type)
 
-    def list_types(self) -> List[str***REMOVED***:
+    def list_types(self) -> List[str]:
         """Список зарегистрированных типов адаптеров."""
         return list(self._adapters.keys())
 
@@ -514,7 +514,7 @@ class AdapterRegistry:
         adapter_type: str,
         config: RuntimeConfig,
         **kwargs,
-    ) -> Optional[RuntimeAdapter***REMOVED***:
+    ) -> Optional[RuntimeAdapter]:
         """Создать экземпляр адаптера по типу."""
         cls = self.get(adapter_type)
         if cls is None:

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-***REMOVED***
+}
 
 
 class IntegrationError(RuntimeError):
@@ -44,7 +44,7 @@ class EmailConfig:
 
     @classmethod
     def from_env(cls) -> "EmailConfig":
-        missing = [***REMOVED***
+        missing = []
         host = os.environ.get("EMAIL_HOST", "")
         port = int(os.environ.get("EMAIL_PORT", "0"))
         user = os.environ.get("EMAIL_USER", "")
@@ -58,7 +58,7 @@ class EmailConfig:
         if not password:
             missing.append("EMAIL_PASS")
         if missing:
-            raise IntegrationError(f"Missing email configuration: {', '.join(missing)***REMOVED***")
+            raise IntegrationError(f"Missing email configuration: {', '.join(missing)}")
         return cls(host=host, port=port, user=user, password=password)
 
 
@@ -82,9 +82,9 @@ class YandexDiskUploader:
             A status message.
         """
         if not local_path.exists():
-            raise IntegrationError(f"File not found: {local_path***REMOVED***")
+            raise IntegrationError(f"File not found: {local_path}")
         # Real implementation would call the Yandex Disk API here.
-        return f"[YANDEX DISK UPLOAD STUB***REMOVED*** {local_path***REMOVED*** -> {self._config.upload_folder***REMOVED***/{remote_name***REMOVED***"
+        return f"[YANDEX DISK UPLOAD STUB] {local_path} -> {self._config.upload_folder}/{remote_name}"
 
 
 class EmailSender:
@@ -107,9 +107,9 @@ class EmailSender:
             A status message.
         """
         if not encrypted_path.exists():
-            raise IntegrationError(f"Attachment not found: {encrypted_path***REMOVED***")
+            raise IntegrationError(f"Attachment not found: {encrypted_path}")
         # Real implementation would use smtplib here.
         return (
-            f"[EMAIL STUB***REMOVED*** To: {recipient***REMOVED***, Subject: {subject***REMOVED***, "
-            f"Attachment: {encrypted_path.name***REMOVED*** via {self._config.host***REMOVED***:{self._config.port***REMOVED***"
+            f"[EMAIL STUB] To: {recipient}, Subject: {subject}, "
+            f"Attachment: {encrypted_path.name} via {self._config.host}:{self._config.port}"
         )

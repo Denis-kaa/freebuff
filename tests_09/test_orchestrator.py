@@ -7,7 +7,7 @@ import json
 import os
 import sys
 import pytest
-***REMOVED***
+}
 from unittest.mock import patch
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -51,8 +51,8 @@ class TestWorkflowLifecycle:
     def test_workflow_default(self):
         wf = Workflow(id="wf1", goal="Test goal")
         assert wf.status == WorkflowStatus.PENDING
-        assert wf.steps == [***REMOVED***
-        assert wf.errors == [***REMOVED***
+        assert wf.steps == []
+        assert wf.errors == []
 
     def test_workflow_to_completed(self):
         wf = Workflow(id="wf1", goal="Test")
@@ -68,60 +68,60 @@ class TestWorkflowLifecycle:
 
     def test_workflow_to_dict(self):
         step = Step(id="s1", type=StepType.TOOL, name="Test", tool=ToolType.SHELL)
-        wf = Workflow(id="wf1", goal="Test", steps=[step***REMOVED***)
+        wf = Workflow(id="wf1", goal="Test", steps=[step])
         wf.status = WorkflowStatus.COMPLETED
         d = wf.to_dict()
-        assert d["id"***REMOVED*** == "wf1"
-        assert d["status"***REMOVED*** == "completed"
-        assert len(d["steps"***REMOVED***) == 1
+        assert d["id"] == "wf1"
+        assert d["status"] == "completed"
+        assert len(d["steps"]) == 1
 
 
 class TestToolExecutor:
     def test_shell_simple(self):
         success, result, error = ToolExecutor.run(
-            ToolType.SHELL, {"command": "echo hello"***REMOVED***, timeout=5
+            ToolType.SHELL, {"command": "echo hello"}, timeout=5
         )
         assert success
         assert "hello" in result
 
     def test_shell_failure(self):
         success, result, error = ToolExecutor.run(
-            ToolType.SHELL, {"command": "exit 1"***REMOVED***, timeout=5
+            ToolType.SHELL, {"command": "exit 1"}, timeout=5
         )
         assert not success
         assert error is not None
 
     def test_shell_no_command(self):
-        success, result, error = ToolExecutor.run(ToolType.SHELL, {***REMOVED***, timeout=5)
+        success, result, error = ToolExecutor.run(ToolType.SHELL, {}, timeout=5)
         assert not success
 
     def test_python_exec(self):
         success, result, error = ToolExecutor.run(
-            ToolType.PYTHON, {"code": "print('hello from python')"***REMOVED***, timeout=5
+            ToolType.PYTHON, {"code": "print('hello from python')"}, timeout=5
         )
         assert success
         assert "hello from python" in result
 
     def test_python_syntax_error(self):
         success, result, error = ToolExecutor.run(
-            ToolType.PYTHON, {"code": "print(***REMOVED***"***REMOVED***, timeout=5
+            ToolType.PYTHON, {"code": "print(}"], timeout=5
         )
         assert not success
 
     def test_python_no_code(self):
-        success, result, error = ToolExecutor.run(ToolType.PYTHON, {***REMOVED***, timeout=5)
+        success, result, error = ToolExecutor.run(ToolType.PYTHON, {}, timeout=5)
         assert not success
 
     def test_file_read_readme(self):
         success, result, error = ToolExecutor.run(
-            ToolType.FILE, {"action": "read", "path": "README.md"***REMOVED***, timeout=5
+            ToolType.FILE, {"action": "read", "path": "README.md"}, timeout=5
         )
         assert success
         assert len(result) > 0
 
     def test_file_not_found(self):
         success, result, error = ToolExecutor.run(
-            ToolType.FILE, {"action": "read", "path": "nonexistent_file_xyz.md"***REMOVED***, timeout=5
+            ToolType.FILE, {"action": "read", "path": "nonexistent_file_xyz.md"}, timeout=5
         )
         assert not success
 
@@ -132,7 +132,7 @@ class TestToolExecutor:
                 "action": "write",
                 "path": test_path,
                 "content": "test content",
-            ***REMOVED***, timeout=5
+            ], timeout=5
         )
         # Absolute path overrides WORKSPACE on POSIX
         if success:
@@ -143,7 +143,7 @@ class TestToolExecutor:
             assert error is not None
 
     def test_unknown_tool(self):
-        success, result, error = ToolExecutor.run("unknown_tool", {***REMOVED***, timeout=5)
+        success, result, error = ToolExecutor.run("unknown_tool", {}, timeout=5)
         assert not success
         assert "Unknown" in (error or "")
 
@@ -151,56 +151,56 @@ class TestToolExecutor:
 class TestValidator:
     def test_not_empty_pass(self):
         step = Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
-                    input={"validation": {"not_empty": True***REMOVED******REMOVED***)
+                    input={"validation": {"not_empty": True}})
         step.status = StepStatus.SUCCESS
         step.result = "some result"
-        is_valid, error = StepValidator.validate(step, {***REMOVED***)
+        is_valid, error = StepValidator.validate(step, {})
         assert is_valid
 
     def test_not_empty_fail(self):
         step = Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
-                    input={"validation": {"not_empty": True***REMOVED******REMOVED***)
+                    input={"validation": {"not_empty": True}})
         step.status = StepStatus.SUCCESS
         step.result = ""
-        is_valid, error = StepValidator.validate(step, {***REMOVED***)
+        is_valid, error = StepValidator.validate(step, {})
         assert not is_valid
 
     def test_min_length_pass(self):
         step = Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
-                    input={"validation": {"min_length": 5***REMOVED******REMOVED***)
+                    input={"validation": {"min_length": 5}})
         step.status = StepStatus.SUCCESS
         step.result = "hello world"
-        is_valid, error = StepValidator.validate(step, {***REMOVED***)
+        is_valid, error = StepValidator.validate(step, {})
         assert is_valid
 
     def test_min_length_fail(self):
         step = Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
-                    input={"validation": {"min_length": 50***REMOVED******REMOVED***)
+                    input={"validation": {"min_length": 50}})
         step.status = StepStatus.SUCCESS
         step.result = "short"
-        is_valid, error = StepValidator.validate(step, {***REMOVED***)
+        is_valid, error = StepValidator.validate(step, {})
         assert not is_valid
 
     def test_contains_pass(self):
         step = Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
-                    input={"validation": {"contains": "SUCCESS"***REMOVED******REMOVED***)
+                    input={"validation": {"contains": "SUCCESS"}})
         step.status = StepStatus.SUCCESS
         step.result = "Task completed SUCCESS"
-        is_valid, error = StepValidator.validate(step, {***REMOVED***)
+        is_valid, error = StepValidator.validate(step, {})
         assert is_valid
 
     def test_contains_fail(self):
         step = Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
-                    input={"validation": {"contains": "FAILED"***REMOVED******REMOVED***)
+                    input={"validation": {"contains": "FAILED"}})
         step.status = StepStatus.SUCCESS
         step.result = "Task completed OK"
-        is_valid, error = StepValidator.validate(step, {***REMOVED***)
+        is_valid, error = StepValidator.validate(step, {})
         assert not is_valid
 
     def test_not_success_status(self):
         step = Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL)
         step.status = StepStatus.FAILED
-        is_valid, error = StepValidator.validate(step, {***REMOVED***)
+        is_valid, error = StepValidator.validate(step, {})
         assert not is_valid
 
 
@@ -208,7 +208,7 @@ class TestDefaultPlanner:
     def test_plan_code_goal(self):
         steps = DefaultPlanner.plan("Refactor the router module")
         assert len(steps) >= 3
-        types = [s.type for s in steps***REMOVED***
+        types = [s.type for s in steps]
         assert StepType.TOOL in types
 
     def test_plan_research_goal(self):
@@ -244,11 +244,11 @@ class TestContextAwareRouting:
             doc_id = "doc_1"
             score = 0.95
             snippet = "existing knowledge snippet"
-            metadata = {"title": "Existing Work", "doc_type": "note"***REMOVED***
+            metadata = {"title": "Existing Work", "doc_type": "note"}
 
         class FakeKE:
             def search(self, *args, **kwargs):
-                return [FakeResult()***REMOVED***
+                return [FakeResult()]
 
         # Создаём файл индекса во временном воркспейсе
         index_file = tmp_path / "context_12" / "knowledge" / "index.db"
@@ -266,28 +266,28 @@ class TestContextAwareRouting:
             orch_mod.WORKSPACE = orig_ws
 
         assert len(matches) == 1
-        assert matches[0***REMOVED***["doc_id"***REMOVED*** == "doc_1"
-        assert matches[0***REMOVED***["title"***REMOVED*** == "Existing Work"
+        assert matches[0]["doc_id"] == "doc_1"
+        assert matches[0]["title"] == "Existing Work"
 
     def test_run_workflow_publishes_context_check_event(self):
         """Событие workflow.context_check публикуется при запуске workflow."""
         from scripts_01.event_bus import EventBus
         eb = EventBus()
-        collected = [***REMOVED***
+        collected = []
         eb.subscribe("workflow.context_check", lambda e: collected.append(e))
         orch = Orchestrator(event_bus=eb)
         orch.run_workflow("Test context event")
         assert len(collected) >= 1
-        assert "workflow_id" in collected[0***REMOVED***.data
-        assert "goal" in collected[0***REMOVED***.data
-        assert "matches" in collected[0***REMOVED***.data
+        assert "workflow_id" in collected[0].data
+        assert "goal" in collected[0].data
+        assert "matches" in collected[0].data
 
     def test_workflow_metadata_has_context_matches(self):
         """Результат проверки контекста сохраняется в workflow.metadata."""
         orch = Orchestrator()
         result = orch.run_workflow("Test metadata")
         assert "context_matches" in result.metadata
-        assert isinstance(result.metadata["context_matches"***REMOVED***, list)
+        assert isinstance(result.metadata["context_matches"], list)
 
 
 class TestOrchestrator:
@@ -313,50 +313,50 @@ class TestOrchestrator:
         wf = Workflow(id="wf1", goal="Test")
         wf.steps = [
             Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL),
-            Step(id="s2", type=StepType.TOOL, tool=ToolType.SHELL, depends_on=["s1"***REMOVED***),
-        ***REMOVED***
+            Step(id="s2", type=StepType.TOOL, tool=ToolType.SHELL, depends_on=["s1"]),
+        ]
         ready = orch._get_ready_steps(wf)
         assert len(ready) == 1
-        assert ready[0***REMOVED***.id == "s1"
+        assert ready[0].id == "s1"
 
     def test_get_ready_steps_chain(self):
         orch = Orchestrator()
         wf = Workflow(id="wf1", goal="Test")
         wf.steps = [
             Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL),
-            Step(id="s2", type=StepType.TOOL, tool=ToolType.SHELL, depends_on=["s1"***REMOVED***),
-            Step(id="s3", type=StepType.TOOL, tool=ToolType.SHELL, depends_on=["s2"***REMOVED***),
-        ***REMOVED***
+            Step(id="s2", type=StepType.TOOL, tool=ToolType.SHELL, depends_on=["s1"]),
+            Step(id="s3", type=StepType.TOOL, tool=ToolType.SHELL, depends_on=["s2"]),
+        ]
         # s1 ready
         ready = orch._get_ready_steps(wf)
         assert len(ready) == 1
-        assert ready[0***REMOVED***.id == "s1"
+        assert ready[0].id == "s1"
         # Complete s1
-        wf.steps[0***REMOVED***.status = StepStatus.SUCCESS
+        wf.steps[0].status = StepStatus.SUCCESS
         ready = orch._get_ready_steps(wf)
         assert len(ready) == 1
-        assert ready[0***REMOVED***.id == "s2"
+        assert ready[0].id == "s2"
 
     def test_context_stored_on_success(self):
         """Output key is stored in context when step succeeds."""
         orch = Orchestrator()
         wf = Workflow(id="wf1", goal="Test context")
         step = Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
-                    input={"command": "echo context_value"***REMOVED***,
+                    input={"command": "echo context_value"},
                     output_key="test_key")
-        wf.steps = [step***REMOVED***
+        wf.steps = [step]
         orch._execute_step(step, wf)
         if step.status == StepStatus.SUCCESS:
             assert wf.context.get("test_key") is not None
-            assert "context_value" in str(wf.context["test_key"***REMOVED***)
+            assert "context_value" in str(wf.context["test_key"])
 
     def test_workflow_errors_collected(self):
         """Workflow accumulates errors from failed steps after max retries."""
         orch = Orchestrator()
         wf = Workflow(id="wf1", goal="Test errors")
         step = Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
-                    input={"command": "false"***REMOVED***, max_retries=0)
-        wf.steps = [step***REMOVED***
+                    input={"command": "false"}, max_retries=0)
+        wf.steps = [step]
         orch._execute_step(step, wf)
         assert step.status == StepStatus.FAILED
         assert step.error is not None
@@ -368,10 +368,10 @@ class TestOrchestrator:
         wf = Workflow(id="wf1", goal="Test deps")
         wf.steps = [
             Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL),
-            Step(id="s2", type=StepType.TOOL, tool=ToolType.SHELL, depends_on=["s1"***REMOVED***),
-        ***REMOVED***
-        wf.steps[0***REMOVED***.status = StepStatus.FAILED
-        wf.steps[0***REMOVED***.error = "catastrophic failure"
+            Step(id="s2", type=StepType.TOOL, tool=ToolType.SHELL, depends_on=["s1"]),
+        ]
+        wf.steps[0].status = StepStatus.FAILED
+        wf.steps[0].error = "catastrophic failure"
         ready = orch._get_ready_steps(wf)
         assert len(ready) == 0
 
@@ -393,16 +393,16 @@ class TestOrchestrator:
         wf = Workflow(id="wf1", goal="Parallel test")
         wf.steps = [
             Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
-                 input={"command": "echo a"***REMOVED***),
+                 input={"command": "echo a"}),
             Step(id="s2", type=StepType.TOOL, tool=ToolType.SHELL,
-                 input={"command": "echo b"***REMOVED***),
+                 input={"command": "echo b"}),
             Step(id="s3", type=StepType.TOOL, tool=ToolType.SHELL,
-                 input={"command": "echo c"***REMOVED***),
-        ***REMOVED***
+                 input={"command": "echo c"}),
+        ]
         ready = orch._get_ready_steps(wf)
         assert len(ready) == 3
-        ids = {s.id for s in ready***REMOVED***
-        assert ids == {"s1", "s2", "s3"***REMOVED***
+        ids = {s.id for s in ready}
+        assert ids == {"s1", "s2", "s3"}
 
     def test_parallel_workflow_completes(self):
         """Full parallel workflow with independent steps completes."""
@@ -421,20 +421,20 @@ class TestOrchestrator:
         wf = Workflow(id="wf1", goal="Chain test")
         wf.steps = [
             Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
-                 input={"command": "echo first"***REMOVED***),
+                 input={"command": "echo first"}),
             Step(id="s2", type=StepType.TOOL, tool=ToolType.SHELL,
-                 input={"command": "echo second"***REMOVED***,
-                 depends_on=["s1"***REMOVED***),
-        ***REMOVED***
+                 input={"command": "echo second"},
+                 depends_on=["s1"]),
+        ]
         # Only s1 should be ready initially
         ready = orch._get_ready_steps(wf)
         assert len(ready) == 1
-        assert ready[0***REMOVED***.id == "s1"
+        assert ready[0].id == "s1"
         # After s1 succeeds, s2 becomes ready
-        wf.steps[0***REMOVED***.status = StepStatus.SUCCESS
+        wf.steps[0].status = StepStatus.SUCCESS
         ready = orch._get_ready_steps(wf)
         assert len(ready) == 1
-        assert ready[0***REMOVED***.id == "s2"
+        assert ready[0].id == "s2"
 
     def test_handle_blocked_steps_marks_skipped(self):
         """_handle_blocked_steps skips steps with failed dependencies."""
@@ -443,8 +443,8 @@ class TestOrchestrator:
         s1 = Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL)
         s1.status = StepStatus.FAILED
         s1.error = "dependency broke"
-        s2 = Step(id="s2", type=StepType.TOOL, tool=ToolType.SHELL, depends_on=["s1"***REMOVED***)
-        wf.steps = [s1, s2***REMOVED***
+        s2 = Step(id="s2", type=StepType.TOOL, tool=ToolType.SHELL, depends_on=["s1"])
+        wf.steps = [s1, s2]
         orch._handle_blocked_steps(wf, wf.steps)
         assert s2.status == StepStatus.SKIPPED
         assert "s1" in s2.error
@@ -455,26 +455,26 @@ class TestOrchestrator:
         """step.retrying event is published when a step retries."""
         from scripts_01.event_bus import EventBus, Event
         eb = EventBus()
-        collected: list[Event***REMOVED*** = [***REMOVED***
+        collected: list[Event] = []
         eb.subscribe("step.retrying", lambda e: collected.append(e))
         orch = Orchestrator(event_bus=eb)
         wf = Workflow(id="wf1", goal="Retry test")
         step = Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
-                     input={"command": "exit 1"***REMOVED***, max_retries=2)
-        wf.steps = [step***REMOVED***
+                     input={"command": "exit 1"}, max_retries=2)
+        wf.steps = [step]
         orch._execute_step(step, wf)
         # Should have retried (status back to PENDING)
         assert step.retry_count >= 1
         assert step.status == StepStatus.PENDING
         assert len(collected) >= 1
-        assert collected[0***REMOVED***.data["step_id"***REMOVED*** == "s1"
-        assert collected[0***REMOVED***.data["retry_count"***REMOVED*** >= 1
+        assert collected[0].data["step_id"] == "s1"
+        assert collected[0].data["retry_count"] >= 1
 
     def test_event_bus_workflow_progress(self):
         """workflow.progress event is published during execution."""
         from scripts_01.event_bus import EventBus, Event
         eb = EventBus()
-        collected: list[Event***REMOVED*** = [***REMOVED***
+        collected: list[Event] = []
         eb.subscribe("workflow.progress", lambda e: collected.append(e))
         orch = Orchestrator(event_bus=eb, max_workers=1)
         result = orch.run_workflow("Implement hello world")
@@ -488,39 +488,39 @@ class TestOrchestrator:
         """step.completed event is published on success."""
         from scripts_01.event_bus import EventBus, Event
         eb = EventBus()
-        collected: list[Event***REMOVED*** = [***REMOVED***
+        collected: list[Event] = []
         eb.subscribe("step.completed", lambda e: collected.append(e))
         orch = Orchestrator(event_bus=eb)
         wf = Workflow(id="wf1", goal="Test")
         step = Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
-                     input={"command": "echo ok"***REMOVED***)
-        wf.steps = [step***REMOVED***
+                     input={"command": "echo ok"})
+        wf.steps = [step]
         orch._execute_step(step, wf)
         assert step.status == StepStatus.SUCCESS
         assert len(collected) >= 1
-        assert collected[0***REMOVED***.data["step_id"***REMOVED*** == "s1"
+        assert collected[0].data["step_id"] == "s1"
 
     def test_event_bus_step_failed(self):
         """step.failed event is published when step exhausts retries."""
         from scripts_01.event_bus import EventBus, Event
         eb = EventBus()
-        collected: list[Event***REMOVED*** = [***REMOVED***
+        collected: list[Event] = []
         eb.subscribe("step.failed", lambda e: collected.append(e))
         orch = Orchestrator(event_bus=eb)
         wf = Workflow(id="wf1", goal="Test")
         step = Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
-                     input={"command": "exit 1"***REMOVED***, max_retries=0)
-        wf.steps = [step***REMOVED***
+                     input={"command": "exit 1"}, max_retries=0)
+        wf.steps = [step]
         orch._execute_step(step, wf)
         assert step.status == StepStatus.FAILED
         assert len(collected) >= 1
-        assert collected[0***REMOVED***.data["step_id"***REMOVED*** == "s1"
+        assert collected[0].data["step_id"] == "s1"
 
     def test_event_bus_workflow_lifecycle(self):
         """All workflow lifecycle events fire during run_workflow."""
         from scripts_01.event_bus import EventBus, Event
         eb = EventBus()
-        events: list[str***REMOVED*** = [***REMOVED***
+        events: list[str] = []
         eb.subscribe("workflow.created", lambda e: events.append("created"))
         eb.subscribe("workflow.planning", lambda e: events.append("planning"))
         eb.subscribe("workflow.started", lambda e: events.append("started"))
@@ -559,20 +559,20 @@ class TestOrchestrator:
         orch = Orchestrator()
         wf_steps = [
             Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
-                 input={"command": "exit 1"***REMOVED***, max_retries=0),
+                 input={"command": "exit 1"}, max_retries=0),
             Step(id="s2", type=StepType.TOOL, tool=ToolType.SHELL,
-                 input={"command": "echo b"***REMOVED***, depends_on=["s1"***REMOVED***, max_retries=0),
+                 input={"command": "echo b"}, depends_on=["s1"], max_retries=0),
             Step(id="s3", type=StepType.TOOL, tool=ToolType.SHELL,
-                 input={"command": "echo c"***REMOVED***, depends_on=["s2"***REMOVED***, max_retries=0),
-        ***REMOVED***
+                 input={"command": "echo c"}, depends_on=["s2"], max_retries=0),
+        ]
         orch._planner = self._FixedStepsPlanner(wf_steps)
         result = orch.run_workflow("skip chain")
         assert result.status in (WorkflowStatus.COMPLETED, WorkflowStatus.FAILED)
-        statuses = {s.id: s.status for s in result.steps***REMOVED***
-        assert statuses["s1"***REMOVED*** == StepStatus.FAILED
-        assert statuses["s2"***REMOVED*** == StepStatus.SKIPPED
+        statuses = {s.id: s.status for s in result.steps}
+        assert statuses["s1"] == StepStatus.FAILED
+        assert statuses["s2"] == StepStatus.SKIPPED
         # Транзитивная пропагация: s3 не виснет PENDING, а скипается
-        assert statuses["s3"***REMOVED*** == StepStatus.SKIPPED
+        assert statuses["s3"] == StepStatus.SKIPPED
 
     def test_missing_dependency_terminates_with_failed(self):
         """depends_on на несуществующий step id → deadlock-guard, а не вечный цикл.
@@ -585,8 +585,8 @@ class TestOrchestrator:
         orch = Orchestrator()
         wf_steps = [
             Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
-                 input={"command": "echo ok"***REMOVED***, depends_on=["ghost"***REMOVED***, max_retries=0),
-        ***REMOVED***
+                 input={"command": "echo ok"}, depends_on=["ghost"], max_retries=0),
+        ]
         orch._planner = self._FixedStepsPlanner(wf_steps)
         result = orch.run_workflow("ghost dep")
         assert result.status == WorkflowStatus.FAILED
@@ -617,7 +617,7 @@ class TestOrchestrator:
         result = orch.run_workflow("Implement a simple hello world")
         elapsed = time.perf_counter() - start
         assert elapsed < 10.0, (
-            f"code-workflow занял {elapsed:.1f***REMOVED***s — вероятен возврат медленного "
+            f"code-workflow занял {elapsed:.1f}s — вероятен возврат медленного "
             "find (Read Context должен использовать -maxdepth 3)"
         )
         assert result.status in (WorkflowStatus.COMPLETED, WorkflowStatus.FAILED)
@@ -630,15 +630,15 @@ class TestOrchestrator:
         wf = Workflow(id="wf1", goal="Context test")
         wf.steps = [
             Step(id="s1", type=StepType.TOOL, tool=ToolType.SHELL,
-                 input={"command": "echo val1"***REMOVED***, output_key="key1"),
+                 input={"command": "echo val1"}, output_key="key1"),
             Step(id="s2", type=StepType.TOOL, tool=ToolType.SHELL,
-                 input={"command": "echo val2"***REMOVED***, output_key="key2"),
+                 input={"command": "echo val2"}, output_key="key2"),
             Step(id="s3", type=StepType.TOOL, tool=ToolType.SHELL,
-                 input={"command": "echo val3"***REMOVED***, output_key="key3"),
-        ***REMOVED***
+                 input={"command": "echo val3"}, output_key="key3"),
+        ]
         result = orch.run_workflow("Context test")
         # All keys should be present if steps succeeded
-        succeeded = [s for s in result.steps if s.status == StepStatus.SUCCESS***REMOVED***
+        succeeded = [s for s in result.steps if s.status == StepStatus.SUCCESS]
         for s in succeeded:
             if s.output_key:
                 assert s.output_key in result.context
@@ -649,27 +649,27 @@ class TestOrchestrator:
         wf = Workflow(id="wf1", goal="Diamond DAG")
         wf.steps = [
             Step(id="a", type=StepType.TOOL, tool=ToolType.SHELL,
-                 input={"command": "echo a"***REMOVED***),
+                 input={"command": "echo a"}),
             Step(id="b", type=StepType.TOOL, tool=ToolType.SHELL,
-                 input={"command": "echo b"***REMOVED***, depends_on=["a"***REMOVED***),
+                 input={"command": "echo b"}, depends_on=["a"]),
             Step(id="c", type=StepType.TOOL, tool=ToolType.SHELL,
-                 input={"command": "echo c"***REMOVED***, depends_on=["a"***REMOVED***),
+                 input={"command": "echo c"}, depends_on=["a"]),
             Step(id="d", type=StepType.TOOL, tool=ToolType.SHELL,
-                 input={"command": "echo d"***REMOVED***, depends_on=["b", "c"***REMOVED***),
-        ***REMOVED***
+                 input={"command": "echo d"}, depends_on=["b", "c"]),
+        ]
         # Initially only 'a' is ready
         ready = orch._get_ready_steps(wf)
-        assert len(ready) == 1 and ready[0***REMOVED***.id == "a"
+        assert len(ready) == 1 and ready[0].id == "a"
         # After a succeeds, b and c are both ready
-        wf.steps[0***REMOVED***.status = StepStatus.SUCCESS
+        wf.steps[0].status = StepStatus.SUCCESS
         ready = orch._get_ready_steps(wf)
-        ids = {s.id for s in ready***REMOVED***
-        assert ids == {"b", "c"***REMOVED***
+        ids = {s.id for s in ready}
+        assert ids == {"b", "c"}
         # After b and c succeed, d is ready
-        wf.steps[1***REMOVED***.status = StepStatus.SUCCESS
-        wf.steps[2***REMOVED***.status = StepStatus.SUCCESS
+        wf.steps[1].status = StepStatus.SUCCESS
+        wf.steps[2].status = StepStatus.SUCCESS
         ready = orch._get_ready_steps(wf)
-        assert len(ready) == 1 and ready[0***REMOVED***.id == "d"
+        assert len(ready) == 1 and ready[0].id == "d"
 
 
 class TestModelStepPolicy:
@@ -684,7 +684,7 @@ class TestModelStepPolicy:
                 "runtime": "claude-code",
                 "source": "policy",
                 "preferred": "claude-code",
-            ***REMOVED***
+            }
 
     class NoPolicy:
         """Policy без переопределения — авто-выбор системы."""
@@ -695,12 +695,12 @@ class TestModelStepPolicy:
                 "runtime": None,
                 "source": "auto",
                 "preferred": None,
-            ***REMOVED***
+            }
 
     def _run_model_step(self, orch: Orchestrator) -> Step:
         wf = Workflow(id="w1", goal="g")
-        step = Step(id="m1", type=StepType.MODEL, model_capabilities=["coding"***REMOVED***)
-        wf.steps = [step***REMOVED***
+        step = Step(id="m1", type=StepType.MODEL, model_capabilities=["coding"])
+        wf.steps = [step]
         orch._execute_step(step, wf)
         return step
 

@@ -20,7 +20,7 @@ import subprocess
 import sys
 import tempfile
 import uuid
-***REMOVED***
+}
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -102,7 +102,7 @@ class TestRegistration:
         registry.register(ShellTool())
         tools = registry.list_tools()
         assert len(tools) == 2
-        names = [t["name"***REMOVED*** for t in tools***REMOVED***
+        names = [t["name"] for t in tools]
         assert "file" in names
         assert "shell" in names
 
@@ -110,16 +110,16 @@ class TestRegistration:
         registry.register_defaults()
         tools = registry.list_tools(category="git")
         assert len(tools) == 1
-        assert tools[0***REMOVED***["name"***REMOVED*** == "git"
+        assert tools[0]["name"] == "git"
 
     def test_list_parameters(self, registry: ToolRegistry):
         registry.register(FileTool())
         tools = registry.list_tools()
-        file_tool = next(t for t in tools if t["name"***REMOVED*** == "file")
-        params = {p["name"***REMOVED***: p for p in file_tool["parameters"***REMOVED******REMOVED***
+        file_tool = next(t for t in tools if t["name"] == "file")
+        params = {p["name"]: p for p in file_tool["parameters"]}
         assert "action" in params
-        assert params["action"***REMOVED***["required"***REMOVED*** is True
-        assert "enum" in params["action"***REMOVED***
+        assert params["action"]["required"] is True
+        assert "enum" in params["action"]
         assert "path" in params
 
     def test_create_default_registry(self):
@@ -135,26 +135,26 @@ class TestRegistration:
 
 class TestFileTool:
     def _ctx(self, tmp_path: Path) -> dict:
-        return {"workspace": str(tmp_path)***REMOVED***
+        return {"workspace": str(tmp_path)}
 
     def test_read_file(self, tmp_path: Path):
         f = tmp_path / "test.txt"
         f.write_text("hello world", encoding="utf-8")
         tool = FileTool()
-        result = tool.execute({"action": "read", "path": str(f)***REMOVED***, self._ctx(tmp_path))
+        result = tool.execute({"action": "read", "path": str(f)}, self._ctx(tmp_path))
         assert result.success
         assert result.data == "hello world"
 
     def test_read_nonexistent(self, tmp_path: Path):
         tool = FileTool()
-        result = tool.execute({"action": "read", "path": str(tmp_path / "nope.txt")***REMOVED***, self._ctx(tmp_path))
+        result = tool.execute({"action": "read", "path": str(tmp_path / "nope.txt")}, self._ctx(tmp_path))
         assert not result.success
         assert "not found" in (result.error or "").lower()
 
     def test_write_file(self, tmp_path: Path):
         target = tmp_path / "out.txt"
         tool = FileTool()
-        result = tool.execute({"action": "write", "path": str(target), "content": "test content"***REMOVED***, self._ctx(tmp_path))
+        result = tool.execute({"action": "write", "path": str(target), "content": "test content"}, self._ctx(tmp_path))
         assert result.success
         assert target.read_text(encoding="utf-8") == "test content"
 
@@ -162,7 +162,7 @@ class TestFileTool:
         (tmp_path / "a.txt").write_text("a")
         (tmp_path / "b.txt").write_text("b")
         tool = FileTool()
-        result = tool.execute({"action": "list", "path": str(tmp_path)***REMOVED***, self._ctx(tmp_path))
+        result = tool.execute({"action": "list", "path": str(tmp_path)}, self._ctx(tmp_path))
         assert result.success
         assert len(result.data) == 2
 
@@ -172,16 +172,16 @@ class TestFileTool:
         (tmp_path / "root.txt").write_text("root")
         (sub / "nested.txt").write_text("nested")
         tool = FileTool()
-        result = tool.execute({"action": "list", "path": str(tmp_path), "recursive": True***REMOVED***, self._ctx(tmp_path))
+        result = tool.execute({"action": "list", "path": str(tmp_path), "recursive": True}, self._ctx(tmp_path))
         assert result.success
-        paths = [f["path"***REMOVED*** for f in result.data***REMOVED***
+        paths = [f["path"] for f in result.data]
         assert any("nested.txt" in p for p in paths)
 
     def test_delete_file(self, tmp_path: Path):
         f = tmp_path / "to_delete.txt"
         f.write_text("delete me")
         tool = FileTool()
-        result = tool.execute({"action": "delete", "path": str(f)***REMOVED***, self._ctx(tmp_path))
+        result = tool.execute({"action": "delete", "path": str(f)}, self._ctx(tmp_path))
         assert result.success
         assert not f.exists()
 
@@ -190,7 +190,7 @@ class TestFileTool:
         src.write_text("copy me")
         dst = tmp_path / "dst.txt"
         tool = FileTool()
-        result = tool.execute({"action": "copy", "path": str(src), "destination": str(dst)***REMOVED***, self._ctx(tmp_path))
+        result = tool.execute({"action": "copy", "path": str(src), "destination": str(dst)}, self._ctx(tmp_path))
         assert result.success
         assert dst.read_text(encoding="utf-8") == "copy me"
 
@@ -199,7 +199,7 @@ class TestFileTool:
         src.write_text("move me")
         dst = tmp_path / "move_dst.txt"
         tool = FileTool()
-        result = tool.execute({"action": "move", "path": str(src), "destination": str(dst)***REMOVED***, self._ctx(tmp_path))
+        result = tool.execute({"action": "move", "path": str(src), "destination": str(dst)}, self._ctx(tmp_path))
         assert result.success
         assert dst.read_text(encoding="utf-8") == "move me"
         assert not src.exists()
@@ -209,20 +209,20 @@ class TestFileTool:
         f.write_text("x")
         tool = FileTool()
         ctx = self._ctx(tmp_path)
-        assert tool.execute({"action": "exists", "path": str(f)***REMOVED***, ctx).data is True
-        assert tool.execute({"action": "exists", "path": str(tmp_path / "nope")***REMOVED***, ctx).data is False
+        assert tool.execute({"action": "exists", "path": str(f)}, ctx).data is True
+        assert tool.execute({"action": "exists", "path": str(tmp_path / "nope")}, ctx).data is False
 
     def test_mkdir(self, tmp_path: Path):
         d = tmp_path / "new_dir"
         tool = FileTool()
-        result = tool.execute({"action": "mkdir", "path": str(d)***REMOVED***, self._ctx(tmp_path))
+        result = tool.execute({"action": "mkdir", "path": str(d)}, self._ctx(tmp_path))
         assert result.success
         assert d.exists() and d.is_dir()
 
     def test_mkdir_recursive(self, tmp_path: Path):
         d = tmp_path / "a" / "b" / "c"
         tool = FileTool()
-        result = tool.execute({"action": "mkdir", "path": str(d)***REMOVED***, self._ctx(tmp_path))
+        result = tool.execute({"action": "mkdir", "path": str(d)}, self._ctx(tmp_path))
         assert result.success
         assert d.exists()
 
@@ -231,12 +231,12 @@ class TestFileTool:
         outside = Path("/etc/passwd")
         tool = FileTool()
         ctx = self._ctx(tmp_path)
-        result = tool.execute({"action": "read", "path": str(outside)***REMOVED***, ctx)
+        result = tool.execute({"action": "read", "path": str(outside)}, ctx)
         assert not result.success
 
     def test_unknown_action(self, tmp_path: Path):
         tool = FileTool()
-        result = tool.execute({"action": "unknown", "path": str(tmp_path)***REMOVED***, self._ctx(tmp_path))
+        result = tool.execute({"action": "unknown", "path": str(tmp_path)}, self._ctx(tmp_path))
         assert not result.success
 
 
@@ -248,31 +248,31 @@ class TestFileTool:
 class TestShellTool:
     def test_echo(self):
         tool = ShellTool()
-        result = tool.execute({"command": "echo hello"***REMOVED***)
+        result = tool.execute({"command": "echo hello"})
         assert result.success
         assert "hello" in result.data
 
     def test_failure(self):
         tool = ShellTool()
-        result = tool.execute({"command": "exit 42"***REMOVED***)
+        result = tool.execute({"command": "exit 42"})
         assert not result.success
         assert "42" in (result.error or "")
 
     def test_no_command(self):
         tool = ShellTool()
-        result = tool.execute({"command": ""***REMOVED***)
+        result = tool.execute({"command": ""})
         assert not result.success
 
     def test_cwd(self, tmp_path: Path):
         (tmp_path / "marker.txt").write_text("yes")
         tool = ShellTool()
-        result = tool.execute({"command": "ls marker.txt", "cwd": str(tmp_path)***REMOVED***)
+        result = tool.execute({"command": "ls marker.txt", "cwd": str(tmp_path)})
         assert result.success
         assert "marker.txt" in result.data
 
     def test_env(self):
         tool = ShellTool()
-        result = tool.execute({"command": "echo $MY_VAR", "env": {"MY_VAR": "custom"***REMOVED******REMOVED***)
+        result = tool.execute({"command": "echo $MY_VAR", "env": {"MY_VAR": "custom"}})
         assert result.success
         assert "custom" in result.data.strip()
 
@@ -285,33 +285,33 @@ class TestShellTool:
 class TestGitTool:
     def test_git_status(self, tmp_path: Path):
         # Init a temp git repo
-        subprocess.run(["git", "init"***REMOVED***, cwd=str(tmp_path), capture_output=True)
-        subprocess.run(["git", "config", "user.email", "test@test.com"***REMOVED***, cwd=str(tmp_path), capture_output=True)
-        subprocess.run(["git", "config", "user.name", "Tester"***REMOVED***, cwd=str(tmp_path), capture_output=True)
+        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(["git", "config", "user.name", "Tester"], cwd=str(tmp_path), capture_output=True)
         (tmp_path / "README.md").write_text("# Test")
-        subprocess.run(["git", "add", "."***REMOVED***, cwd=str(tmp_path), capture_output=True)
-        subprocess.run(["git", "commit", "-m", "init"***REMOVED***, cwd=str(tmp_path), capture_output=True)
+        subprocess.run(["git", "add", "."], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(["git", "commit", "-m", "init"], cwd=str(tmp_path), capture_output=True)
 
         tool = GitTool()
-        result = tool.execute({"command": "status", "cwd": str(tmp_path)***REMOVED***)
+        result = tool.execute({"command": "status", "cwd": str(tmp_path)})
         assert result.success
 
     def test_git_log(self, tmp_path: Path):
-        subprocess.run(["git", "init"***REMOVED***, cwd=str(tmp_path), capture_output=True)
-        subprocess.run(["git", "config", "user.email", "test@test.com"***REMOVED***, cwd=str(tmp_path), capture_output=True)
-        subprocess.run(["git", "config", "user.name", "Tester"***REMOVED***, cwd=str(tmp_path), capture_output=True)
+        subprocess.run(["git", "init"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(["git", "config", "user.email", "test@test.com"], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(["git", "config", "user.name", "Tester"], cwd=str(tmp_path), capture_output=True)
         (tmp_path / "f.txt").write_text("x")
-        subprocess.run(["git", "add", "."***REMOVED***, cwd=str(tmp_path), capture_output=True)
-        subprocess.run(["git", "commit", "-m", "first"***REMOVED***, cwd=str(tmp_path), capture_output=True)
+        subprocess.run(["git", "add", "."], cwd=str(tmp_path), capture_output=True)
+        subprocess.run(["git", "commit", "-m", "first"], cwd=str(tmp_path), capture_output=True)
 
         tool = GitTool()
-        result = tool.execute({"command": "log", "args": "--oneline", "cwd": str(tmp_path)***REMOVED***)
+        result = tool.execute({"command": "log", "args": "--oneline", "cwd": str(tmp_path)})
         assert result.success
         assert "first" in result.data
 
     def test_no_command(self):
         tool = GitTool()
-        result = tool.execute({"command": ""***REMOVED***)
+        result = tool.execute({"command": ""})
         assert not result.success
 
 
@@ -323,46 +323,46 @@ class TestGitTool:
 class TestSQLiteTool:
     def test_select(self, db_path: str):
         tool = SQLiteTool()
-        result = tool.execute({"query": "SELECT * FROM test", "db_path": db_path***REMOVED***)
+        result = tool.execute({"query": "SELECT * FROM test", "db_path": db_path})
         assert result.success
         assert len(result.data) == 2
-        assert result.data[0***REMOVED***["name"***REMOVED*** == "hello"
+        assert result.data[0]["name"] == "hello"
 
     def test_select_one(self, db_path: str):
         tool = SQLiteTool()
-        result = tool.execute({"query": "SELECT * FROM test WHERE id = 1", "db_path": db_path, "fetch": "one"***REMOVED***)
+        result = tool.execute({"query": "SELECT * FROM test WHERE id = 1", "db_path": db_path, "fetch": "one"})
         assert result.success
-        assert result.data["name"***REMOVED*** == "hello"
+        assert result.data["name"] == "hello"
 
     def test_insert(self, db_path: str):
         tool = SQLiteTool()
         result = tool.execute({
             "query": "INSERT INTO test (id, name) VALUES (?, ?)",
             "db_path": db_path,
-            "params": [3, "test"***REMOVED***,
+            "params": [3, "test"],
             "fetch": "none",
-        ***REMOVED***)
+        ])
         assert result.success
 
         # Verify
         conn = sqlite3.connect(db_path)
         row = conn.execute("SELECT name FROM test WHERE id = 3").fetchone()
-        assert row[0***REMOVED*** == "test"
+        assert row[0] == "test"
         conn.close()
 
     def test_missing_db(self, tmp_path: Path):
         tool = SQLiteTool()
-        result = tool.execute({"query": "SELECT 1", "db_path": str(tmp_path / "nope.db")***REMOVED***)
+        result = tool.execute({"query": "SELECT 1", "db_path": str(tmp_path / "nope.db")})
         assert not result.success
 
     def test_no_query(self, db_path: str):
         tool = SQLiteTool()
-        result = tool.execute({"query": "", "db_path": db_path***REMOVED***)
+        result = tool.execute({"query": "", "db_path": db_path})
         assert not result.success
 
     def test_invalid_sql(self, db_path: str):
         tool = SQLiteTool()
-        result = tool.execute({"query": "SELECT INVALID", "db_path": db_path***REMOVED***)
+        result = tool.execute({"query": "SELECT INVALID", "db_path": db_path})
         assert not result.success
 
 
@@ -375,22 +375,22 @@ class TestHTTPTool:
     def test_get_success(self):
         tool = HTTPTool()
         # Use httpbin or a reliable test endpoint
-        result = tool.execute({"url": "https://httpbin.org/get", "timeout": 5***REMOVED***)
+        result = tool.execute({"url": "https://httpbin.org/get", "timeout": 5})
         if result.success:
             assert isinstance(result.data, dict)
             assert "url" in result.data
         else:
             # Skip if no internet
-            pytest.skip(f"No network: {result.error***REMOVED***")
+            pytest.skip(f"No network: {result.error}")
 
     def test_invalid_url(self):
         tool = HTTPTool()
-        result = tool.execute({"url": "https://nonexistent.example.com/test", "timeout": 3***REMOVED***)
+        result = tool.execute({"url": "https://nonexistent.example.com/test", "timeout": 3})
         assert not result.success
 
     def test_no_url(self):
         tool = HTTPTool()
-        result = tool.execute({"url": ""***REMOVED***)
+        result = tool.execute({"url": ""})
         assert not result.success
 
 
@@ -403,37 +403,37 @@ class TestValidation:
     def test_missing_required(self, registry: ToolRegistry):
         registry.register(FileTool())
         # Missing required 'path'
-        result = registry.execute("file", {"action": "read"***REMOVED***)
+        result = registry.execute("file", {"action": "read"})
         assert not result.success
         assert "required" in (result.error or "").lower()
 
     def test_wrong_type(self, registry: ToolRegistry):
         registry.register(ShellTool())
         # 'timeout' should be integer
-        result = registry.execute("shell", {"command": "echo hi", "timeout": "not_a_number"***REMOVED***)
+        result = registry.execute("shell", {"command": "echo hi", "timeout": "not_a_number"})
         assert not result.success
 
     def test_enum_validation(self):
         """Проверка enum-валидации через ParamSchema."""
-        schema = ParamSchema(name="action", type="string", enum=["read", "write"***REMOVED***, required=True)
+        schema = ParamSchema(name="action", type="string", enum=["read", "write"], required=True)
 
         # Valid
-        schema.enum = ["read", "write"***REMOVED***
-        errors = [***REMOVED***
+        schema.enum = ["read", "write"]
+        errors = []
         if schema.enum and "read" not in schema.enum:
             errors.append("invalid")
         assert len(errors) == 0
 
         # Built-in validation via FileTool
         tool = FileTool()
-        result = tool.execute({"action": "INVALID", "path": "/tmp"***REMOVED***)
+        result = tool.execute({"action": "INVALID", "path": "/tmp"})
         assert not result.success
 
     def test_default_values(self):
         tool = ShellTool()
-        params = tool.with_defaults({"command": "echo hi"***REMOVED***)
-        assert params["cwd"***REMOVED*** == str(WORKSPACE)
-        assert params["timeout"***REMOVED*** == 30
+        params = tool.with_defaults({"command": "echo hi"})
+        assert params["cwd"] == str(WORKSPACE)
+        assert params["timeout"] == 30
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -443,21 +443,21 @@ class TestValidation:
 
 class TestToolRegistryExecute:
     def test_execute_success(self, tmp_path: Path):
-        registry = ToolRegistry(default_context={"workspace": str(tmp_path)***REMOVED***)
+        registry = ToolRegistry(default_context={"workspace": str(tmp_path)})
         registry.register(FileTool())
         f = tmp_path / "test.txt"
         f.write_text("content")
-        result = registry.execute("file", {"action": "read", "path": str(f)***REMOVED***)
+        result = registry.execute("file", {"action": "read", "path": str(f)})
         assert result.success
         assert result.data == "content"
 
     def test_execute_tool_not_found(self, registry: ToolRegistry):
-        result = registry.execute("nonexistent", {***REMOVED***)
+        result = registry.execute("nonexistent", {})
         assert not result.success
         assert "not found" in (result.error or "").lower()
 
     def test_execute_multi(self, tmp_path: Path):
-        registry = ToolRegistry(default_context={"workspace": str(tmp_path)***REMOVED***)
+        registry = ToolRegistry(default_context={"workspace": str(tmp_path)})
         registry.register(FileTool())
         registry.register(ShellTool())
 
@@ -465,23 +465,23 @@ class TestToolRegistryExecute:
         f.write_text("multi test")
 
         calls = [
-            ("file", {"action": "read", "path": str(f)***REMOVED***),
-            ("shell", {"command": "echo done"***REMOVED***),
-        ***REMOVED***
+            ("file", {"action": "read", "path": str(f)}),
+            ("shell", {"command": "echo done"}),
+        ]
         results = registry.execute_multi(calls)
         assert len(results) == 2
-        assert results[0***REMOVED***.success
-        assert results[1***REMOVED***.success
+        assert results[0].success
+        assert results[1].success
 
     def test_execute_multi_stop_on_error(self, registry: ToolRegistry):
         registry.register(FileTool())
         calls = [
-            ("file", {"action": "read", "path": "/nonexistent/nope.txt"***REMOVED***),
-            ("file", {"action": "read", "path": "/tmp"***REMOVED***),
-        ***REMOVED***
+            ("file", {"action": "read", "path": "/nonexistent/nope.txt"}),
+            ("file", {"action": "read", "path": "/tmp"}),
+        ]
         results = registry.execute_multi(calls, stop_on_error=True)
         assert len(results) == 1
-        assert not results[0***REMOVED***.success
+        assert not results[0].success
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -491,27 +491,27 @@ class TestToolRegistryExecute:
 
 class TestEventBusIntegration:
     def test_tool_executed_event(self, tmp_path: Path):
-        events = [***REMOVED***
+        events = []
         mock_bus = MagicMock()
         mock_bus.publish = lambda e: events.append(e.type)
 
-        registry = ToolRegistry(event_bus=mock_bus, default_context={"workspace": str(tmp_path)***REMOVED***)
+        registry = ToolRegistry(event_bus=mock_bus, default_context={"workspace": str(tmp_path)})
         registry.register(FileTool())
 
         f = tmp_path / "eb_test.txt"
         f.write_text("event bus test")
-        registry.execute("file", {"action": "read", "path": str(f)***REMOVED***)
+        registry.execute("file", {"action": "read", "path": str(f)})
 
         assert "tool.executed" in events
 
     def test_tool_failed_event(self, registry: ToolRegistry):
-        events = [***REMOVED***
+        events = []
         mock_bus = MagicMock()
         mock_bus.publish = lambda e: events.append(e.type)
 
         registry = ToolRegistry(event_bus=mock_bus)
         registry.register(FileTool())
-        registry.execute("file", {"action": "read", "path": "/nonexistent"***REMOVED***)
+        registry.execute("file", {"action": "read", "path": "/nonexistent"})
 
         assert "tool.failed" in events
 
@@ -522,7 +522,7 @@ class TestEventBusIntegration:
 
         registry = ToolRegistry(event_bus=broken_bus)
         registry.register(ShellTool())
-        result = registry.execute("shell", {"command": "echo hi"***REMOVED***)
+        result = registry.execute("shell", {"command": "echo hi"})
         assert result.success
 
     def test_set_event_bus(self):
@@ -551,7 +551,7 @@ class TestBaseTool:
                     description="Convert text to uppercase",
                     parameters=[
                         ParamSchema(name="text", type="string", description="Input text", required=True),
-                    ***REMOVED***,
+                    ],
                 )
 
             def execute(self, params, context=None):
@@ -559,7 +559,7 @@ class TestBaseTool:
                 return ToolResult(success=True, data=text.upper(), tool_name="uppercase")
 
         tool = UppercaseTool()
-        result = tool.execute({"text": "hello"***REMOVED***)
+        result = tool.execute({"text": "hello"})
         assert result.success
         assert result.data == "HELLO"
 
@@ -571,14 +571,14 @@ class TestBaseTool:
 
             def execute(self, params, context=None):
                 text = params.get("text", "")
-                return ToolResult(success=True, data=text[::-1***REMOVED***, tool_name="reverse")
+                return ToolResult(success=True, data=text[::-1], tool_name="reverse")
 
         registry = ToolRegistry()
         registry.register(ReverseTool())
         registry.register(FileTool())
         tools = registry.list_tools()
         assert len(tools) == 2
-        names = [t["name"***REMOVED*** for t in tools***REMOVED***
+        names = [t["name"] for t in tools]
         assert "reverse" in names
         assert "file" in names
 
@@ -601,9 +601,9 @@ class TestOrchestratorIntegration:
             ToolType.SHELL: "shell",
             ToolType.FILE: "file",
             ToolType.GIT: "git",
-        ***REMOVED***
+        }
 
         for tool_type, expected_name in type_map.items():
             tool = registry.get(expected_name)
-            assert tool is not None, f"Missing tool for {tool_type.value***REMOVED***"
+            assert tool is not None, f"Missing tool for {tool_type.value}"
             assert tool.meta.name == expected_name

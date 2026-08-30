@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import os
 import sys
-***REMOVED***
+}
 from typing import Any
 
 FREEBUFF_ROOT = Path(os.environ.get(
@@ -90,7 +90,7 @@ async def get_status() -> dict:
         "active_tasks": len(active_pids),
         "tasks": active_pids,
         "freebuff_binary_exists": plugin_wrapper.FREEBUFF_BINARY.exists(),
-    ***REMOVED***
+    }
 
 
 @app.post("/chat")
@@ -106,10 +106,10 @@ async def chat(req: ChatRequest) -> ChatResponse:
 
     decision = router.route(req.message)
 
-    if decision["target"***REMOVED*** == "freebuff" or req.force_freebuff:
+    if decision["target"] == "freebuff" or req.force_freebuff:
         # Phase-based запуск freebuff
-        sid = plugin_bridge.session_start(topic=req.topic or req.message[:80***REMOVED***)
-        plugin_bridge._log_json(sid, "user", {"content": req.message***REMOVED***)
+        sid = plugin_bridge.session_start(topic=req.topic or req.message[:80])
+        plugin_bridge._log_json(sid, "user", {"content": req.message})
 
         result = plugin_wrapper.launch(
             prompt=req.message,
@@ -122,8 +122,8 @@ async def chat(req: ChatRequest) -> ChatResponse:
         return ChatResponse(
             session_id=result.get("session_id", "?"),
             routed_to="freebuff",
-            response=f"Задача запущена (session: {result.get('session_id', '?')***REMOVED***, PID: {result.get('pid', '?')***REMOVED***)\n"
-                     f"Статус: {result.get('status', '?')***REMOVED***\n"
+            response=f"Задача запущена (session: {result.get('session_id', '?')}, PID: {result.get('pid', '?')})\n"
+                     f"Статус: {result.get('status', '?')}\n"
                      f"Проверить: GET /status",
             duration=round(duration, 1),
         )
@@ -144,23 +144,23 @@ async def session(action: str = "start", topic: str = "api session", summary: st
     """Управление сессиями: start / end."""
     if action == "start":
         sid = plugin_bridge.session_start(topic=topic)
-        return {"status": "started", "session_id": sid***REMOVED***
+        return {"status": "started", "session_id": sid}
     elif action == "end":
         sessions = plugin_bridge.session_list()
         if sessions:
-            sid = sessions[-1***REMOVED***["session_id"***REMOVED***[:8***REMOVED***
+            sid = sessions[-1]["session_id"][:8]
             cp = plugin_bridge.session_end(sid, summary)
-            return {"status": "ended", "session_id": sid, "conspect_path": str(cp) if cp else None***REMOVED***
-        return {"status": "no_active_sessions"***REMOVED***
+            return {"status": "ended", "session_id": sid, "conspect_path": str(cp) if cp else None}
+        return {"status": "no_active_sessions"}
     else:
-        raise HTTPException(status_code=400, detail=f"Unknown action: {action***REMOVED***")
+        raise HTTPException(status_code=400, detail=f"Unknown action: {action}")
 
 
 @app.post("/freebuff/run")
 async def freebuff_run(req: FreebuffRunRequest) -> FreebuffRunResponse:
     """Запустить freebuff phase-based (анти-OOM)."""
-    sid = plugin_bridge.session_start(topic=req.topic or req.task[:80***REMOVED***)
-    plugin_bridge._log_json(sid, "user", {"content": req.task***REMOVED***)
+    sid = plugin_bridge.session_start(topic=req.topic or req.task[:80])
+    plugin_bridge._log_json(sid, "user", {"content": req.task})
 
     result = plugin_wrapper.launch(
         prompt=req.task,
@@ -183,11 +183,11 @@ async def get_context() -> dict:
     """Последний конспект."""
     bridge = plugin_bridge.get_stream_bridge()
     conspect = bridge.get_context_resume()
-    return {"conspect": conspect, "has_conspect": bool(conspect)***REMOVED***
+    return {"conspect": conspect, "has_conspect": bool(conspect)}
 
 
 @app.get("/tasks")
-async def list_tasks() -> list[dict***REMOVED***:
+async def list_tasks() -> list[dict]:
     """Список активных задач."""
     return plugin_wrapper.list_active_pids()
 
@@ -203,34 +203,34 @@ async def list_scenarios(category: str | None = None, tag: str | None = None):
     return {
         "scenarios": _scenario_engine.list_scenarios(category=category, tag=tag),
         "total": len(_scenario_engine.list_scenarios(category=category, tag=tag)),
-    ***REMOVED***
+    }
 
 
 @app.get("/scenarios/search")
 async def search_scenarios(q: str = ""):
     """Поиск сценариев."""
-    return {"results": _scenario_engine.search_scenarios(q)***REMOVED***
+    return {"results": _scenario_engine.search_scenarios(q)}
 
 
-@app.get("/scenarios/{slug***REMOVED***")
+@app.get("/scenarios/{slug)")
 async def get_scenario(slug: str):
     """Детали сценария."""
     scenario = _scenario_engine.get_scenario(slug)
     if not scenario:
-        raise HTTPException(status_code=404, detail=f"Scenario not found: {slug***REMOVED***")
+        raise HTTPException(status_code=404, detail=f"Scenario not found: {slug}")
     return scenario.to_dict()
 
 
 class ScenarioApplyRequest(BaseModel):
-    variables: dict[str, str***REMOVED*** | None = None
+    variables: dict[str, str] | None = None
 
 
-@app.post("/scenarios/{slug***REMOVED***/apply")
+@app.post("/scenarios/{slug)/apply")
 async def apply_scenario(slug: str, req: ScenarioApplyRequest):
     """Применить сценарий — получить готовый промт."""
     result = _scenario_engine.apply_scenario(slug, req.variables)
     if "error" in result:
-        raise HTTPException(status_code=404, detail=result["error"***REMOVED***)
+        raise HTTPException(status_code=404, detail=result["error"])
 
 
 # ── Запуск ────────────────────────────────────────────────────
@@ -239,8 +239,8 @@ def main():
     import uvicorn
     from freebuff_plugin_03.config import API_HOST, API_PORT
 
-    print(f"🚀 Freebuff Plugin API: http://{API_HOST***REMOVED***:{API_PORT***REMOVED***")
-    print(f"   Документация: http://{API_HOST***REMOVED***:{API_PORT***REMOVED***/docs")
+    print(f"🚀 Freebuff Plugin API: http://{API_HOST}:{API_PORT}")
+    print(f"   Документация: http://{API_HOST}:{API_PORT}/docs")
     uvicorn.run(app, host=API_HOST, port=API_PORT)
 
 

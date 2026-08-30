@@ -54,14 +54,14 @@ class FeedAdapter(Protocol):
     """Асинхронный источник элементов (SourceAdapter порт P3).
 
     Реализации — async-генераторы: вызов `fetch()` возвращает
-    `AsyncIterator[SourceItem***REMOVED***` без дополнительного `await`.
+    `AsyncIterator[SourceItem]` без дополнительного `await`.
     """
 
     source_id: str
 
     def fetch(
         self, *, limit: int = 50, checkpoint: str | None = None
-    ) -> AsyncIterator[SourceItem***REMOVED***:
+    ) -> AsyncIterator[SourceItem]:
         """Итератор SourceItem (асинхронный)."""
         ...
 
@@ -111,7 +111,7 @@ async def run_offline_slice(
     """
     when = fetched_at or datetime.now(timezone.utc)
     last_checkpoint = await checkpoint.get(adapter.source_id)
-    items = [item async for item in adapter.fetch(limit=limit, checkpoint=last_checkpoint)***REMOVED***
+    items = [item async for item in adapter.fetch(limit=limit, checkpoint=last_checkpoint)]
 
     matcher = RuleMatcher(profile)
     new_publications = 0
@@ -167,11 +167,11 @@ async def run_offline_slice(
 def format_report(result: PipelineResult) -> str:
     """Компактный JSON-подобный отчёт CLI."""
     return (
-        f"source={result.source_id***REMOVED*** fetched={result.fetched***REMOVED*** "
-        f"new={result.new_publications***REMOVED*** decisions={result.stored_decisions***REMOVED*** "
-        f"accepted={result.accepted***REMOVED*** pending={result.pending***REMOVED*** "
-        f"rejected={result.rejected***REMOVED*** delivered={result.delivered***REMOVED*** "
-        f"checkpoint={result.checkpoint!r***REMOVED***"
+        f"source={result.source_id} fetched={result.fetched} "
+        f"new={result.new_publications} decisions={result.stored_decisions} "
+        f"accepted={result.accepted} pending={result.pending} "
+        f"rejected={result.rejected} delivered={result.delivered} "
+        f"checkpoint={result.checkpoint!r}"
     )
 
 
@@ -182,4 +182,4 @@ __all__ = [
     "PipelineResult",
     "format_report",
     "run_offline_slice",
-***REMOVED***
+]

@@ -9,9 +9,9 @@ from app.ingestion.license import (
     register_sources,
 )
 from app.storage import connect, init_db
-***REMOVED***
+}
 
-ROOT = Path(__file__).resolve().parents[2***REMOVED***
+ROOT = Path(__file__).resolve().parents[2]
 SOURCES_YAML = ROOT / "configs" / "sources.yaml"
 
 
@@ -51,7 +51,7 @@ def test_pending_with_evidence_is_still_not_live() -> None:
 def test_load_sources_yaml() -> None:
     sources = load_sources(SOURCES_YAML)
     assert len(sources) == 1
-    s = sources[0***REMOVED***
+    s = sources[0]
     assert s.id == "exercism-python"
     assert s.status == "approved"
     assert s.license == "MIT"
@@ -65,10 +65,10 @@ def test_register_and_live(conn) -> None:
         "SELECT status, license FROM exercise_sources WHERE id='exercism-python'"
     ).fetchone()
     assert row is not None
-    assert can_be_live(row["status"***REMOVED***) is True
+    assert can_be_live(row["status"]) is True
 
 
 def test_pending_source_not_in_live(conn) -> None:
     s = _src(id="other", status="pending", license_evidence="ev")
-    register_sources(conn, [s***REMOVED***)
+    register_sources(conn, [s])
     assert can_be_live("pending") is False

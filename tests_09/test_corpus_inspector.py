@@ -18,7 +18,7 @@ import json
 import os
 import subprocess
 import sys
-***REMOVED***
+}
 from typing import Any, Dict, List
 
 import pytest
@@ -85,7 +85,7 @@ def _persist_with_timestamp(
     path = _entry_path(url, root=root)
     path.parent.mkdir(parents=True, exist_ok=True)
     record = dict(
-        url=url, source=source, timestamp=timestamp, title=None, metadata={***REMOVED***,
+        url=url, source=source, timestamp=timestamp, title=None, metadata={},
     )
     # Hand-write ONE jsonl line; append if file exists.
     if path.is_file():
@@ -112,29 +112,29 @@ class TestStats:
         now = datetime.now(timezone.utc).replace(microsecond=0)
 
         # 3 distinct URLs across 4 age buckets (some share source for variety).
-        fixtures: List[Dict[str, str***REMOVED******REMOVED*** = [
+        fixtures: List[Dict[str, str]] = [
             # <7d (3 days old)
-            {"url": "https://fresh.example.com/a", "ts": (now - timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%SZ")***REMOVED***,
+            {"url": "https://fresh.example.com/a", "ts": (now - timedelta(days=3)).strftime("%Y-%m-%dT%H:%M:%SZ")},
             # 7-30d (15 days old)
-            {"url": "https://warm.example.com/b", "ts": (now - timedelta(days=15)).strftime("%Y-%m-%dT%H:%M:%SZ")***REMOVED***,
+            {"url": "https://warm.example.com/b", "ts": (now - timedelta(days=15)).strftime("%Y-%m-%dT%H:%M:%SZ")},
             # 30-90d (60 days old)
-            {"url": "https://stale.example.com/c", "ts": (now - timedelta(days=60)).strftime("%Y-%m-%dT%H:%M:%SZ")***REMOVED***,
+            {"url": "https://stale.example.com/c", "ts": (now - timedelta(days=60)).strftime("%Y-%m-%dT%H:%M:%SZ")},
             # >90d (180 days old)
-            {"url": "https://ancient.example.com/d", "ts": (now - timedelta(days=180)).strftime("%Y-%m-%dT%H:%M:%SZ")***REMOVED***,
-        ***REMOVED***
+            {"url": "https://ancient.example.com/d", "ts": (now - timedelta(days=180)).strftime("%Y-%m-%dT%H:%M:%SZ")},
+        ]
         for fx in fixtures:
             _persist_with_timestamp(
-                fx["url"***REMOVED***, "research_web", fx["ts"***REMOVED***, root=corpus_root,
+                fx["url"], "research_web", fx["ts"], root=corpus_root,
             )
 
         result = stats(root=corpus_root)
 
         # Assert: 4 entries total, 1 per bucket.
-        assert result["total"***REMOVED*** == 4
-        assert result["by_source"***REMOVED*** == {"research_web": 4***REMOVED***
-        assert result["by_age_bucket"***REMOVED*** == {"<7d": 1, "7-30d": 1, "30-90d": 1, ">90d": 1***REMOVED***
+        assert result["total"] == 4
+        assert result["by_source"] == {"research_web": 4}
+        assert result["by_age_bucket"] == {"<7d": 1, "7-30d": 1, "30-90d": 1, ">90d": 1}
         # No invalid timestamps.
-        assert result["invalid_timestamp_count"***REMOVED*** == 0
+        assert result["invalid_timestamp_count"] == 0
 
     def test_stats_handles_invalid_timestamps_gracefully(self, corpus_root):
         """Malformed timestamps → invalid_count; не валят stats."""
@@ -154,23 +154,23 @@ class TestStats:
         )
 
         result = stats(root=corpus_root)
-        assert result["total"***REMOVED*** == 3
+        assert result["total"] == 3
         # Exactly 2 entries with bad timestamps (1 valid → bucket).
-        assert result["invalid_timestamp_count"***REMOVED*** == 2
+        assert result["invalid_timestamp_count"] == 2
         # The 1 valid entry DID land in some bucket (computed against now()).
-        assert sum(result["by_age_bucket"***REMOVED***.values()) == 1
+        assert sum(result["by_age_bucket"].values()) == 1
 
     def test_stats_top_domains_sorted_by_count(self, corpus_root):
         """top_domains — top-10 sorted by count desc, tie-break by domain asc."""
         # Build skewed distribution.
         for i in range(5):
             _persist_with_timestamp(
-                f"https://alpha.com/{i***REMOVED***", "research_web",
+                f"https://alpha.com/{i}", "research_web",
                 "2026-08-01T00:00:00Z", root=corpus_root,
             )
         for i in range(3):
             _persist_with_timestamp(
-                f"https://beta.com/{i***REMOVED***", "manual",
+                f"https://beta.com/{i}", "manual",
                 "2026-08-01T00:00:00Z", root=corpus_root,
             )
         _persist_with_timestamp(
@@ -179,10 +179,10 @@ class TestStats:
         )
 
         result = stats(root=corpus_root)
-        top = result["top_domains"***REMOVED***
+        top = result["top_domains"]
         # alpha.com (5) → first; beta.com (3) → second; gamma.com (1) → third.
-        assert [d["domain"***REMOVED*** for d in top***REMOVED*** == ["alpha.com", "beta.com", "gamma.com"***REMOVED***
-        assert [d["count"***REMOVED*** for d in top***REMOVED*** == [5, 3, 1***REMOVED***
+        assert [d["domain"] for d in top] == ["alpha.com", "beta.com", "gamma.com"]
+        assert [d["count"] for d in top] == [5, 3, 1]
 
 
 # ─── 2. test_dedup_groups_tracking_variants_properly ─────────────────────────
@@ -197,7 +197,7 @@ class TestDedup:
             "https://example.com/article",
             "https://example.com/article?utm_source=twitter",
             "https://example.com/article?utm_source=twitter&utm_campaign=foo#section-1",
-        ***REMOVED***:
+        ]:
             _persist_with_timestamp(
                 url, "research_web", "2026-08-01T00:00:00Z", root=corpus_root,
             )
@@ -209,9 +209,9 @@ class TestDedup:
 
         groups = dedup(root=corpus_root)
         # Filter to multi-variant groups (singletons excluded per design doc).
-        example_groups = [g for g in groups if "example.com" in g.canonical***REMOVED***
+        example_groups = [g for g in groups if "example.com" in g.canonical]
         assert len(example_groups) == 1
-        g = example_groups[0***REMOVED***
+        g = example_groups[0]
         assert g.canonical == "https://example.com/article"
         assert g.count == 3
         assert g.occurrences == 3
@@ -223,14 +223,14 @@ class TestDedup:
             "https://example.com/doc?page=1",
             "https://example.com/doc?page=2",
             "https://example.com/doc?page=3",
-        ***REMOVED***:
+        ]:
             _persist_with_timestamp(
                 url, "research_web", "2026-08-01T00:00:00Z", root=corpus_root,
             )
 
         groups = dedup(root=corpus_root)
         # All 3 should be singletons → no cluster in `groups`.
-        assert groups == [***REMOVED***
+        assert groups == []
 
     def test_dedup_cross_source_count_vs_occurrences(self, corpus_root):
         """Same canonical URL across 2 sources → count=2 (unique URLs),
@@ -261,9 +261,9 @@ class TestDedup:
         )
 
         groups = dedup(root=corpus_root)
-        example_groups = [g for g in groups if "example.com" in g.canonical***REMOVED***
+        example_groups = [g for g in groups if "example.com" in g.canonical]
         assert len(example_groups) == 1
-        g = example_groups[0***REMOVED***
+        g = example_groups[0]
         # 2 unique original URLs (canonical self + utm=twitter variant).
         assert g.count == 2
         # 3 total source-occurrences: 2x research_web + 1x manual.
@@ -274,7 +274,7 @@ class TestDedup:
         assert sorted(g.variants) == sorted([
             "https://example.com/article",
             "https://example.com/article?utm_source=twitter",
-        ***REMOVED***)
+        ])
     def test_evict_dry_run_does_not_delete_files(self, corpus_root):
         """Dry-run (default) → preview only, NO file deletion."""
         # 3 entries older than 100 days.
@@ -285,7 +285,7 @@ class TestDedup:
             "https://old-1.example.com",
             "https://old-2.example.com",
             "https://old-3.example.com",
-        ***REMOVED***:
+        ]:
             _persist_with_timestamp(
                 url, "research_web", old_ts, root=corpus_root,
             )
@@ -295,12 +295,12 @@ class TestDedup:
 
         # Dry-run (apply=False default).
         report = evict(older_than_days=90, apply=False, root=corpus_root)
-        assert report["mode"***REMOVED*** == "dry-run"
+        assert report["mode"] == "dry-run"
         # Dry-run reports what WOULD be removed.
-        assert report["removed_files"***REMOVED*** == 3
-        assert report["removed_entries"***REMOVED*** == 3
-        assert report["kept_entries"***REMOVED*** == 0
-        assert report["warnings"***REMOVED*** == [***REMOVED***
+        assert report["removed_files"] == 3
+        assert report["removed_entries"] == 3
+        assert report["kept_entries"] == 0
+        assert report["warnings"] == []
 
         # Files STILL on disk (dry-run doesn't mutate).
         files_after = sorted(p.name for p in corpus_root.glob("*.jsonl"))
@@ -314,7 +314,7 @@ class TestDedup:
         for url in [
             "https://stale-1.example.com",
             "https://stale-2.example.com",
-        ***REMOVED***:
+        ]:
             _persist_with_timestamp(
                 url, "research_web", old_ts, root=corpus_root,
             )
@@ -322,16 +322,16 @@ class TestDedup:
         assert len(list(corpus_root.glob("*.jsonl"))) == 2
 
         report = evict(older_than_days=90, apply=True, root=corpus_root)
-        assert report["mode"***REMOVED*** == "apply"
-        assert report["removed_files"***REMOVED*** == 2
-        assert report["removed_entries"***REMOVED*** == 2
-        assert report["kept_entries"***REMOVED*** == 0
+        assert report["mode"] == "apply"
+        assert report["removed_files"] == 2
+        assert report["removed_entries"] == 2
+        assert report["kept_entries"] == 0
         # NO .tmp leftover (atomic replacements or unlinks).
         tmp_files = list(corpus_root.glob("*.tmp"))
-        assert tmp_files == [***REMOVED***
+        assert tmp_files == []
         # Files actually gone.
         jsonl_files = list(corpus_root.glob("*.jsonl"))
-        assert jsonl_files == [***REMOVED***
+        assert jsonl_files == []
 
     def test_evict_apply_partial_evicts_mixed_age_files_atomically(
         self, corpus_root,
@@ -358,28 +358,28 @@ class TestDedup:
         assert len(before_files) == 1
 
         report = evict(older_than_days=90, apply=True, root=corpus_root)
-        assert report["mode"***REMOVED*** == "apply"
-        assert report["considered_files"***REMOVED*** == 1
+        assert report["mode"] == "apply"
+        assert report["considered_files"] == 1
         # Partial eviction: removed 1 (research_web stale), kept 1 (manual fresh).
-        assert report["removed_entries"***REMOVED*** == 1
-        assert report["kept_entries"***REMOVED*** == 1
+        assert report["removed_entries"] == 1
+        assert report["kept_entries"] == 1
         # Whole file NOT removed (kept entry present).
-        assert report["removed_files"***REMOVED*** == 0
+        assert report["removed_files"] == 0
 
         # After: file STILL exists with 1 entry (manual/fresh source).
         after_files = list(corpus_root.glob("*.jsonl"))
         assert len(after_files) == 1
         # Re-read: only the fresh entry remains.
         records = [
-            json.loads(line) for line in after_files[0***REMOVED***.read_text(
+            json.loads(line) for line in after_files[0].read_text(
                 encoding="utf-8",
             ).splitlines() if line
-        ***REMOVED***
+        ]
         assert len(records) == 1
-        assert records[0***REMOVED***["source"***REMOVED*** == "manual"
-        assert records[0***REMOVED***["timestamp"***REMOVED*** == fresh_ts
+        assert records[0]["source"] == "manual"
+        assert records[0]["timestamp"] == fresh_ts
         # No .tmp leftover (atomic write verifies).
-        assert list(corpus_root.glob("*.tmp")) == [***REMOVED***
+        assert list(corpus_root.glob("*.tmp")) == []
 
     def test_evict_rejects_negative_ttl(self, corpus_root):
         """older_than_days < 0 → ValueError (NOT silently allowed)."""
@@ -406,9 +406,9 @@ class TestDedup:
         )
 
         report = evict(older_than_days=0, apply=True, root=corpus_root)
-        assert report["mode"***REMOVED*** == "apply"
-        assert report["removed_files"***REMOVED*** == 1
-        assert report["removed_entries"***REMOVED*** == 1
+        assert report["mode"] == "apply"
+        assert report["removed_files"] == 1
+        assert report["removed_entries"] == 1
         assert len(list(corpus_root.glob("*.jsonl"))) == 0
 
     def test_evict_root_none_resolves_to_default_corpus_dir(
@@ -446,14 +446,14 @@ class TestDedup:
         jsonl_path.write_text(
             json.dumps({
                 "url": url, "source": "test", "timestamp": old_ts,
-                "title": None, "metadata": {***REMOVED***,
-            ***REMOVED***, ensure_ascii=False) + "\n",
+                "title": None, "metadata": {},
+            ], ensure_ascii=False) + "\n",
             encoding="utf-8",
         )
         # Now call evict WITHOUT explicit root — uses autouse-isolated dir.
         report = evict(older_than_days=90, apply=True, root=None)
-        assert report["removed_files"***REMOVED*** >= 1
-        assert report["removed_entries"***REMOVED*** >= 1
+        assert report["removed_files"] >= 1
+        assert report["removed_entries"] >= 1
         # File we placed in isolated dir is gone (proves evict read FROM
         # autouse-patched dir, NOT FROM real data_13/corpus).
         assert not jsonl_path.exists()
@@ -473,17 +473,17 @@ class TestDedup:
         expected_keys = {
             "by_source", "total", "by_age_bucket",
             "top_domains", "invalid_timestamp_count",
-        ***REMOVED***
+        }
         assert expected_keys <= set(result.keys()), (
             f"stats() missing required keys: "
-            f"{expected_keys - set(result.keys())***REMOVED***"
+            f"{expected_keys - set(result.keys())}"
         )
         # All-zero values.
-        assert result["total"***REMOVED*** == 0
-        assert result["by_source"***REMOVED*** == {***REMOVED***
-        assert result["by_age_bucket"***REMOVED*** == {b: 0 for b in AGE_BUCKETS***REMOVED***
-        assert result["top_domains"***REMOVED*** == [***REMOVED***
-        assert result["invalid_timestamp_count"***REMOVED*** == 0
+        assert result["total"] == 0
+        assert result["by_source"] == {}
+        assert result["by_age_bucket"] == {b: 0 for b in AGE_BUCKETS}
+        assert result["top_domains"] == []
+        assert result["invalid_timestamp_count"] == 0
 
     def test_cli_evict_negative_ttl_argparse_rejects(self, corpus_root):
         """CLI: ``--older-than-days -1`` → argparse error exit 2."""
@@ -491,7 +491,7 @@ class TestDedup:
             sys.executable, "-m", "scripts_01.corpus_inspector",
             "--root", str(corpus_root),
             "evict", "--older-than-days", "-1",
-        ***REMOVED***
+        ]
         result = subprocess.run(
             cmd, capture_output=True, text=True, timeout=30,
             cwd=str(Path(__file__).resolve().parent.parent),
@@ -504,7 +504,7 @@ class TestDedup:
         cmd = [
             sys.executable, "-m", "scripts_01.corpus_inspector",
             "--version",
-        ***REMOVED***
+        ]
         result = subprocess.run(
             cmd, capture_output=True, text=True, timeout=30,
             cwd=str(Path(__file__).resolve().parent.parent),
@@ -523,7 +523,7 @@ class TestDedup:
             sys.executable, "-m", "scripts_01.corpus_inspector",
             "--root", str(corpus_root),
             "stats", "--json",
-        ***REMOVED***
+        ]
         result = subprocess.run(
             cmd, capture_output=True, text=True, timeout=30,
             cwd=str(Path(__file__).resolve().parent.parent),
@@ -534,9 +534,9 @@ class TestDedup:
         assert set(payload.keys()) >= {
             "total", "by_source", "by_age_bucket",
             "top_domains", "invalid_timestamp_count",
-        ***REMOVED***
-        assert payload["total"***REMOVED*** == 1
-        assert payload["by_source"***REMOVED***["research_web"***REMOVED*** == 1
+        }
+        assert payload["total"] == 1
+        assert payload["by_source"]["research_web"] == 1
 
     def test_cli_dedup_json_outputs_machine_readable(self, corpus_root):
         """CLI: ``dedup --json`` → list of variant-group objects."""
@@ -545,7 +545,7 @@ class TestDedup:
             "https://example.com/doc",
             "https://example.com/doc?utm_source=tw",
             "https://example.com/doc?utm_source=tw&utm_medium=email",
-        ***REMOVED***:
+        ]:
             _persist_with_timestamp(
                 url, "research_web", "2026-08-01T00:00:00Z",
                 root=corpus_root,
@@ -554,26 +554,26 @@ class TestDedup:
             sys.executable, "-m", "scripts_01.corpus_inspector",
             "--root", str(corpus_root),
             "dedup", "--json",
-        ***REMOVED***
+        ]
         result = subprocess.run(
             cmd, capture_output=True, text=True, timeout=30,
             cwd=str(Path(__file__).resolve().parent.parent),
         )
         assert result.returncode == 0, (
-            f"dedup --json failed: stdout={result.stdout***REMOVED***, "
-            f"stderr={result.stderr***REMOVED***"
+            f"dedup --json failed: stdout={result.stdout}, "
+            f"stderr={result.stderr}"
         )
         payload = json.loads(result.stdout)
         assert isinstance(payload, list)
         assert len(payload) == 1
         # Verify cluster shape (canonical + variants + count + occurrences).
-        cluster = payload[0***REMOVED***
+        cluster = payload[0]
         assert set(cluster.keys()) >= {
             "canonical", "variants", "count", "occurrences",
-        ***REMOVED***
-        assert cluster["canonical"***REMOVED*** == "https://example.com/doc"
-        assert cluster["count"***REMOVED*** == 3
-        assert cluster["occurrences"***REMOVED*** == 3
+        }
+        assert cluster["canonical"] == "https://example.com/doc"
+        assert cluster["count"] == 3
+        assert cluster["occurrences"] == 3
 
     def test_cli_evict_json_dry_run_report(self, corpus_root):
         """CLI: ``evict --older-than-days N --json`` (no --apply) → dry-run JSON."""
@@ -581,7 +581,7 @@ class TestDedup:
         old_ts = (
             datetime.now(timezone.utc) - timedelta(days=120)
         ).strftime("%Y-%m-%dT%H:%M:%SZ")
-        for url in ["https://old.example.com/a", "https://old.example.com/b"***REMOVED***:
+        for url in ["https://old.example.com/a", "https://old.example.com/b"]:
             _persist_with_timestamp(
                 url, "research_web", old_ts, root=corpus_root,
             )
@@ -590,22 +590,22 @@ class TestDedup:
             sys.executable, "-m", "scripts_01.corpus_inspector",
             "--root", str(corpus_root),
             "evict", "--older-than-days", "90", "--json",
-        ***REMOVED***
+        ]
         result = subprocess.run(
             cmd, capture_output=True, text=True, timeout=30,
             cwd=str(Path(__file__).resolve().parent.parent),
         )
         assert result.returncode == 0, (
-            f"evict --json dry-run failed: stderr={result.stderr***REMOVED***"
+            f"evict --json dry-run failed: stderr={result.stderr}"
         )
         payload = json.loads(result.stdout)
         # Verify dry-run report schema (mode + counts + warnings).
         assert set(payload.keys()) >= {
             "mode", "removed_files", "removed_entries",
             "kept_entries", "considered_files", "warnings",
-        ***REMOVED***
-        assert payload["mode"***REMOVED*** == "dry-run"
-        assert payload["removed_files"***REMOVED*** == 2
-        assert payload["removed_entries"***REMOVED*** == 2
+        }
+        assert payload["mode"] == "dry-run"
+        assert payload["removed_files"] == 2
+        assert payload["removed_entries"] == 2
         # Dry-run default → files STILL on disk.
         assert len(list(corpus_root.glob("*.jsonl"))) == 2

@@ -28,7 +28,7 @@ from app.domain import AdapterError, SourceItem, SourcePolicy, SourcePolicyStatu
 API_BASE = "https://opendata.trudvsem.ru/api/v1/vacancies"
 DEFAULT_USER_AGENT = "public-request-parser/0.1 (read-only)"
 
-HttpGetter = Callable[[str***REMOVED***, Awaitable[bytes***REMOVED******REMOVED***
+HttpGetter = Callable[[str], Awaitable[bytes]]
 
 
 async def _default_http_get(url: str) -> bytes:
@@ -47,8 +47,8 @@ def _parse_iso(value: str | None) -> datetime | None:
         return None
     raw = value.strip().replace("Z", "+00:00")
     # нормализовать "+0300" → "+03:00" для fromisoformat (Python 3.11)
-    if len(raw) > 6 and raw[-5***REMOVED*** in "+-" and raw[-2***REMOVED*** != ":":
-        raw = raw[:-5***REMOVED*** + raw[-5:-2***REMOVED*** + ":" + raw[-2:***REMOVED***
+    if len(raw) > 6 and raw[-5] in "+-" and raw[-2] != ":":
+        raw = raw[:-5] + raw[-5:-2] + ":" + raw[-2:]
     try:
         parsed = datetime.fromisoformat(raw)
     except ValueError:
@@ -58,13 +58,13 @@ def _parse_iso(value: str | None) -> datetime | None:
     return parsed.astimezone(timezone.utc)
 
 
-def _title_from(entry: Mapping[str, Any***REMOVED***) -> str:
+def _title_from(entry: Mapping[str, Any]) -> str:
     """Заголовок вакансии (`job-name`), fallback — id."""
     name = (entry.get("job-name") or "").strip()
     return name or str(entry.get("id") or "untitled")
 
 
-def _region_name(entry: Mapping[str, Any***REMOVED***) -> str:
+def _region_name(entry: Mapping[str, Any]) -> str:
     """Название региона, если есть."""
     region = entry.get("region")
     if isinstance(region, Mapping):
@@ -72,53 +72,53 @@ def _region_name(entry: Mapping[str, Any***REMOVED***) -> str:
     return ""
 
 
-def _requirement_text(entry: Mapping[str, Any***REMOVED***) -> str:
+def _requirement_text(entry: Mapping[str, Any]) -> str:
     """Текстовое описание требования без персональных данных."""
     req = entry.get("requirement")
-    parts: list[str***REMOVED*** = [***REMOVED***
+    parts: list[str] = []
     if isinstance(req, Mapping):
         education = req.get("education")
         experience = req.get("experience")
         if education:
-            parts.append(f"Образование: {education***REMOVED***")
+            parts.append(f"Образование: {education}")
         if experience:
-            parts.append(f"Опыт: {experience***REMOVED*** лет")
+            parts.append(f"Опыт: {experience} лет")
     skills = entry.get("skills")
     if isinstance(skills, list) and skills:
         parts.append("Навыки: " + ", ".join(str(s) for s in skills))
     return " ".join(parts)
 
 
-def _metadata_from(entry: Mapping[str, Any***REMOVED***) -> dict[str, str***REMOVED***:
+def _metadata_from(entry: Mapping[str, Any]) -> dict[str, str]:
     """Безопасные технические metadata (без контактов и персональных данных)."""
-    meta: dict[str, str***REMOVED*** = {***REMOVED***
+    meta: dict[str, str] = {}
     for key in ("salary_min", "salary_max", "currency", "schedule", "source"):
         value = entry.get(key)
         if value is not None and str(value).strip():
-            meta[key***REMOVED*** = str(value)
+            meta[key] = str(value)
     region = _region_name(entry)
     if region:
-        meta["region"***REMOVED*** = region
+        meta["region"] = region
     date_modify = entry.get("date_modify")
     if date_modify:
-        meta["date_modify"***REMOVED*** = str(date_modify)
+        meta["date_modify"] = str(date_modify)
     category = entry.get("category")
     if isinstance(category, Mapping) and category.get("specialisation"):
-        meta["category"***REMOVED*** = str(category["specialisation"***REMOVED***)
+        meta["category"] = str(category["specialisation"])
     skills = entry.get("skills")
     if isinstance(skills, list) and skills:
-        meta["skills"***REMOVED*** = ", ".join(str(s) for s in skills if s)
+        meta["skills"] = ", ".join(str(s) for s in skills if s)
     return meta
 
 
-def _vacancy_to_source_item(entry: Mapping[str, Any***REMOVED***) -> SourceItem | None:
+def _vacancy_to_source_item(entry: Mapping[str, Any]) -> SourceItem | None:
     """Одна запись `vacancy` → `SourceItem`; None если нельзя построить."""
     item_id = str(entry.get("id") or "").strip()
     url = str(entry.get("vac_url") or "").strip()
     if not item_id or not url:
         return None
     parsed = urlparse(url)
-    if parsed.scheme not in {"http", "https"***REMOVED*** or not parsed.netloc:
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         return None
     published = _parse_iso(entry.get("creation-date")) or _parse_iso(
         entry.get("date_modify")
@@ -131,13 +131,13 @@ def _vacancy_to_source_item(entry: Mapping[str, Any***REMOVED***) -> SourceItem 
         canonical_url=url,
         title=_title_from(entry),
         published_at=published,
-        summary=duty[:1000***REMOVED***,
+        summary=duty[:1000],
         content=content or None,
         metadata=_metadata_from(entry),
     )
 
 
-def parse_vacancy_payload(payload: bytes) -> list[SourceItem***REMOVED***:
+def parse_vacancy_payload(payload: bytes) -> list[SourceItem]:
     """Разобрать байтовый JSON-ответ API в список `SourceItem`.
 
     Поднимает `AdapterError` при глобальной ошибке API (не-JSON, `status !=
@@ -150,11 +150,11 @@ def parse_vacancy_payload(payload: bytes) -> list[SourceItem***REMOVED***:
     try:
         data = json.loads(payload.decode("utf-8"))
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
-        raise AdapterError(f"trudvsem: invalid JSON payload: {exc***REMOVED***") from exc
+        raise AdapterError(f"trudvsem: invalid JSON payload: {exc}") from exc
     return parse_payload_dict(data)
 
 
-def parse_payload_dict(data: Any) -> list[SourceItem***REMOVED***:
+def parse_payload_dict(data: Any) -> list[SourceItem]:
     """Парсер словаря payload → список `SourceItem` (или `AdapterError`)."""
     if not isinstance(data, Mapping):
         raise AdapterError("trudvsem: unexpected payload structure")
@@ -165,15 +165,15 @@ def parse_payload_dict(data: Any) -> list[SourceItem***REMOVED***:
         if isinstance(meta, Mapping):
             error = str(meta.get("error") or "")
         raise AdapterError(
-            f"trudvsem: API reported {status***REMOVED***" + (f": {error***REMOVED***" if error else "")
+            f"trudvsem: API reported {status}" + (f": {error}" if error else "")
         )
     results = data.get("results")
     if not isinstance(results, Mapping):
         raise AdapterError("trudvsem: response missing 'results'")
     vacancies = results.get("vacancies")
     if not isinstance(vacancies, list):
-        return [***REMOVED***
-    items: list[SourceItem***REMOVED*** = [***REMOVED***
+        return []
+    items: list[SourceItem] = []
     for raw in vacancies:
         if not isinstance(raw, Mapping):
             continue
@@ -212,7 +212,7 @@ class TrudvsemAdapter:
         if self._policy.status is not SourcePolicyStatus.ALLOWED:
             raise AdapterError(
                 "live polling requires ALLOWED source policy, "
-                f"got {self._policy.status.value***REMOVED***"
+                f"got {self._policy.status.value}"
             )
         if not self._policy.can_poll:
             raise AdapterError(
@@ -225,10 +225,10 @@ class TrudvsemAdapter:
         limit: int,
         modified_from: datetime | None,
     ) -> str:
-        params: dict[str, str***REMOVED*** = {"limit": str(limit), "offset": "0"***REMOVED***
+        params: dict[str, str] = {"limit": str(limit), "offset": "0"}
         if modified_from is not None:
-            params["modifiedFrom"***REMOVED*** = modified_from.astimezone(timezone.utc).isoformat()
-        return f"{self._base_url***REMOVED***?{urlencode(params)***REMOVED***"
+            params["modifiedFrom"] = modified_from.astimezone(timezone.utc).isoformat()
+        return f"{self._base_url}?{urlencode(params)}"
 
     async def fetch(
         self,
@@ -236,7 +236,7 @@ class TrudvsemAdapter:
         limit: int = 50,
         checkpoint: str | None = None,
         modified_from: datetime | None = None,
-    ) -> AsyncIterator[SourceItem***REMOVED***:
+    ) -> AsyncIterator[SourceItem]:
         """Загрузить bounded batch вакансий, пропуская элементы до checkpoint.
 
         API-квоты: `limit` <= 100 на страницу; пагинация следующих страниц
@@ -256,7 +256,7 @@ class TrudvsemAdapter:
                 if item.item_id == checkpoint:
                     start = index + 1
                     break
-        for item in items[start : start + limit***REMOVED***:
+        for item in items[start : start + limit]:
             yield item
 
     async def health(self) -> bool:
@@ -276,4 +276,4 @@ __all__ = [
     "TrudvsemAdapter",
     "parse_payload_dict",
     "parse_vacancy_payload",
-***REMOVED***
+]

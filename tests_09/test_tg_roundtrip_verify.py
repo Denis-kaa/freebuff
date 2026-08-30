@@ -16,11 +16,11 @@ from __future__ import annotations
 
 import importlib.util
 import sys
-***REMOVED***
+}
 
 import pytest
 
-_SCRIPT = Path(__file__).resolve().parents[1***REMOVED*** / "scripts_01" / "tg_roundtrip_verify.py"
+_SCRIPT = Path(__file__).resolve().parents[1] / "scripts_01" / "tg_roundtrip_verify.py"
 
 
 @pytest.fixture(scope="module")
@@ -29,7 +29,7 @@ def rtv() -> "ModuleType":
     spec = importlib.util.spec_from_file_location("tg_roundtrip_verify", _SCRIPT)
     assert spec is not None and spec.loader is not None
     mod = importlib.util.module_from_spec(spec)
-    sys.modules["tg_roundtrip_verify"***REMOVED*** = mod
+    sys.modules["tg_roundtrip_verify"] = mod
     spec.loader.exec_module(mod)
     return mod
 
@@ -58,7 +58,7 @@ class TestUniqueSearchHead:
         head = rtv._unique_search_head(text, "v5_87_0_rt_ab12cd")
         # Search head must be unique-per-run: run-tag present in the head.
         assert "v5_87_0_rt_ab12cd" in head
-        assert "v5_87_0_rt_ab12cd" in text.splitlines()[0***REMOVED***
+        assert "v5_87_0_rt_ab12cd" in text.splitlines()[0]
 
     def test_custom_text_with_tag_in_body_falls_back_to_run_tag(self, rtv) -> None:
         # Tag present but NOT in first line → helper must fall back to run-tag itself.
@@ -87,15 +87,15 @@ class TestRunTagForceAppend:
         text = rtv.MESSAGE_TEXT.format(run_tag=run_tag)
         assert run_tag in text  # precondition
         if run_tag not in text:
-            text = f"{text***REMOVED***\nRun-tag: {run_tag***REMOVED***"
+            text = f"{text}\nRun-tag: {run_tag}"
         # Tag stays in first line — append NOT triggered.
-        assert run_tag in text.splitlines()[0***REMOVED***
+        assert run_tag in text.splitlines()[0]
 
     def test_custom_text_without_tag_is_force_appended(self, rtv) -> None:
         run_tag = "v5_87_0_rt_forced"
         text = "Чистый текст задачи без тега"
         if run_tag not in text:
-            text = f"{text***REMOVED***\nRun-tag: {run_tag***REMOVED***"
+            text = f"{text}\nRun-tag: {run_tag}"
         assert "Run-tag: v5_87_0_rt_forced" in text
         # After append, search head must still resolve (fallback path).
         head = rtv._unique_search_head(text, run_tag)
@@ -103,9 +103,9 @@ class TestRunTagForceAppend:
 
     def test_custom_text_with_tag_in_body_no_double_append(self, rtv) -> None:
         run_tag = "v5_87_0_rt_once"
-        text = f"Тело с {run_tag***REMOVED*** внутри"
+        text = f"Тело с {run_tag} внутри"
         if run_tag not in text:
-            text = f"{text***REMOVED***\nRun-tag: {run_tag***REMOVED***"
+            text = f"{text}\nRun-tag: {run_tag}"
         assert text.count(run_tag) == 1  # no double-append
 
 
@@ -130,7 +130,7 @@ class TestAppendAuditTrail:
         new_idx = next(i for i, ln in enumerate(lines) if "task_v5_87_0_test" in ln)
         old_idx = next(i for i, ln in enumerate(lines) if "task_old" in ln)
         assert new_idx < old_idx
-        assert "138675" in lines[new_idx***REMOVED*** and "138676" in lines[new_idx***REMOVED***
+        assert "138675" in lines[new_idx] and "138676" in lines[new_idx]
         # Old row preserved verbatim.
         assert "138366 | 138367 | 5s | old" in content
 
@@ -183,15 +183,15 @@ class FakeTGClient:
         pass
 
     async def get_messages(self, chat_id: int, limit: int = 5) -> list:
-        return self._msgs[:limit***REMOVED***
+        return self._msgs[:limit]
 
 
 class TestRoundTrip:
     def test_finds_matching_message(self, rtv) -> None:
         msgs = [
-            {"id": 100, "message": "unrelated"***REMOVED***,
-            {"id": 138675, "message": "🧪 v5.87.0 live TG round-trip v5_87_0_final_confirm ..."***REMOVED***,
-        ***REMOVED***
+            {"id": 100, "message": "unrelated"},
+            {"id": 138675, "message": "🧪 v5.87.0 live TG round-trip v5_87_0_final_confirm ..."},
+        ]
         result = rtv._round_trip(
             7709651193,
             "v5_87_0_final_confirm",
@@ -203,7 +203,7 @@ class TestRoundTrip:
         result = rtv._round_trip(
             7709651193,
             "v5_87_0_does_not_exist",
-            client_factory=lambda: FakeTGClient([***REMOVED***),
+            client_factory=lambda: FakeTGClient([]),
         )
         assert result is None
 
@@ -215,7 +215,7 @@ class TestRoundTrip:
         result = rtv._round_trip(
             7709651193,
             "anything",
-            client_factory=lambda: UnauthorizedClient([{"id": 1, "message": "x"***REMOVED******REMOVED***),
+            client_factory=lambda: UnauthorizedClient([{"id": 1, "message": "x"}]),
         )
         assert result is None
 
@@ -225,5 +225,5 @@ class TestRoundTrip:
 
 class TestMessageText:
     def test_run_tag_placeholder_in_first_line(self, rtv) -> None:
-        first_line = rtv.MESSAGE_TEXT.splitlines()[0***REMOVED***
-        assert "{run_tag***REMOVED***" in first_line
+        first_line = rtv.MESSAGE_TEXT.splitlines()[0]
+        assert "{run_tag]" in first_line

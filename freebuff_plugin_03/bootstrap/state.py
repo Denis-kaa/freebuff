@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional
 
 from freebuff_plugin_03.bootstrap import EnvironmentState, InstallStep
@@ -24,7 +24,7 @@ class BootstrapState:
     def __init__(self, workspace_root: Path):
         self._path = Path(workspace_root) / "bootstrap_state.json"
 
-    def load(self) -> Optional[Dict[str, Any***REMOVED******REMOVED***:
+    def load(self) -> Optional[Dict[str, Any]]:
         """Загружает состояние из bootstrap_state.json.
 
         Returns:
@@ -38,20 +38,20 @@ class BootstrapState:
         except (json.JSONDecodeError, OSError):
             return None
 
-    def save(self, data: Dict[str, Any***REMOVED***) -> None:
+    def save(self, data: Dict[str, Any]) -> None:
         """Сохраняет состояние.
 
         Args:
             data: словарь с состоянием для сохранения
         """
-        data["timestamp"***REMOVED*** = datetime.now(timezone.utc).isoformat()
+        data["timestamp"] = datetime.now(timezone.utc).isoformat()
         self._path.parent.mkdir(parents=True, exist_ok=True)
         self._path.write_text(
             json.dumps(data, ensure_ascii=False, indent=2, default=str),
             encoding="utf-8",
         )
 
-    def get_component_version(self, component: str) -> Optional[str***REMOVED***:
+    def get_component_version(self, component: str) -> Optional[str]:
         """Возвращает сохранённую версию компонента.
 
         Args:
@@ -65,13 +65,13 @@ class BootstrapState:
             return None
 
         # Проверяем в разделах environments и runtimes
-        env = data.get("environment", {***REMOVED***)
+        env = data.get("environment", {})
         if component in env:
-            return env[component***REMOVED***
+            return env[component]
 
-        runtimes = data.get("runtimes", {***REMOVED***)
+        runtimes = data.get("runtimes", {})
         if component in runtimes:
-            rt = runtimes[component***REMOVED***
+            rt = runtimes[component]
             if rt.get("installed"):
                 return rt.get("version")
 
@@ -79,14 +79,14 @@ class BootstrapState:
 
     def mark_incomplete(self) -> None:
         """Помечает текущий bootstrap как incomplete."""
-        data = self.load() or {***REMOVED***
-        data["status"***REMOVED*** = "incomplete"
+        data = self.load() or {}
+        data["status"] = "incomplete"
         self.save(data)
 
     def mark_complete(self) -> None:
         """Помечает текущий bootstrap как complete."""
-        data = self.load() or {***REMOVED***
-        data["status"***REMOVED*** = "complete"
+        data = self.load() or {}
+        data["status"] = "complete"
         self.save(data)
 
     def is_complete(self) -> bool:
@@ -111,11 +111,11 @@ class BootstrapState:
     def to_report_dict(
         self,
         env: EnvironmentState,
-        steps: List[InstallStep***REMOVED***,
-        warnings: List[str***REMOVED***,
-        errors: List[str***REMOVED***,
+        steps: List[InstallStep],
+        warnings: List[str],
+        errors: List[str],
         profile: str,
-    ) -> Dict[str, Any***REMOVED***:
+    ) -> Dict[str, Any]:
         """Формирует словарь для сохранения в state.json.
 
         Args:
@@ -138,7 +138,7 @@ class BootstrapState:
                 "git": "yes" if env.git_available else "no",
                 "os": env.os_type,
                 "termux": env.is_termux,
-            ***REMOVED***,
+            },
             "runtimes": env.runtimes,
             "steps": [
                 {
@@ -147,9 +147,9 @@ class BootstrapState:
                     "duration_ms": s.duration_ms,
                     "error": s.error,
                     "skip_reason": s.skip_reason,
-                ***REMOVED***
+                }
                 for s in steps
-            ***REMOVED***,
+            ],
             "warnings": len(warnings),
             "errors": len(errors),
-        ***REMOVED***
+        }

@@ -1,6 +1,6 @@
 """Tests for config loader."""
 
-***REMOVED***
+}
 
 import pytest
 
@@ -14,6 +14,6 @@ def test_load_config_missing_file(tmp_path: Path) -> None:
 
 def test_load_config_parses_defaults(tmp_path: Path) -> None:
     config_path = tmp_path / "config.json"
-    config_path.write_text('{"app": {"version": "0.1.0"***REMOVED******REMOVED***', encoding="utf-8")
+    config_path.write_text('{"app": {"version": "0.1.0")]', encoding="utf-8")
     config = load_config(tmp_path)
-    assert config["app"***REMOVED***["version"***REMOVED*** == "0.1.0"
+    assert config["app"]["version"] == "0.1.0"

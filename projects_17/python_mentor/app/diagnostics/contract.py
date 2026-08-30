@@ -50,7 +50,7 @@ class Diagnostic:
         if not self.diagnostic_only:
             raise ValueError("Phase F diagnostics must be diagnostic_only")
 
-    def sort_key(self) -> tuple[str, int, int, str, str, str***REMOVED***:
+    def sort_key(self) -> tuple[str, int, int, str, str, str]:
         return (
             self.file,
             self.line,
@@ -60,7 +60,7 @@ class Diagnostic:
             self.message,
         )
 
-    def to_dict(self) -> dict[str, Any***REMOVED***:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "source": self.source,
             "rule_id": self.rule_id,
@@ -72,7 +72,7 @@ class Diagnostic:
             "message": self.message,
             "diagnostic_only": self.diagnostic_only,
             "competency_id": self.competency_id,
-        ***REMOVED***
+        }
 
 
 @dataclass(frozen=True)
@@ -81,7 +81,7 @@ class SensorReport:
 
     source: str
     status: SensorStatus
-    diagnostics: tuple[Diagnostic, ...***REMOVED*** = ()
+    diagnostics: tuple[Diagnostic, ...] = ()
     stderr: str = ""
     exit_code: int | None = None
 
@@ -100,12 +100,12 @@ class SensorReport:
             exit_code=self.exit_code,
         )
 
-    def to_dict(self) -> dict[str, Any***REMOVED***:
+    def to_dict(self) -> dict[str, Any]:
         ordered = self.ordered()
         return {
             "source": ordered.source,
             "status": ordered.status.value,
-            "diagnostics": [item.to_dict() for item in ordered.diagnostics***REMOVED***,
+            "diagnostics": [item.to_dict() for item in ordered.diagnostics],
             "stderr": ordered.stderr,
             "exit_code": ordered.exit_code,
-        ***REMOVED***
+        }

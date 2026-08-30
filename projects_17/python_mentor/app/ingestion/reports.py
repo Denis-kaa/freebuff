@@ -32,19 +32,19 @@ def ingest_chart(conn: sqlite3.Connection) -> str:
         """
     ).fetchall()
     lines = [
-        f"{'competency':22s***REMOVED*** {'n':>3s***REMOVED*** {'concept':>7s***REMOVED*** {'practice':>8s***REMOVED*** {'diff':>6s***REMOVED***"
-    ***REMOVED***
+        f"{'competency':22s} {'n':>3s} {'concept':>7s} {'practice':>8s} {'diff':>6s}"
+    ]
     total = 0
     for r in rows:
-        total += r["n"***REMOVED***
+        total += r["n"]
         lines.append(
-            f"{r['id'***REMOVED***:22s***REMOVED*** {r['n'***REMOVED***:3d***REMOVED*** {r['concepts'***REMOVED***:7d***REMOVED*** {r['practices'***REMOVED***:8d***REMOVED***"
-            f" {r['min_d'***REMOVED******REMOVED***-{r['max_d'***REMOVED***:>3d***REMOVED***"
+            f"{r['id']:22s} {r['n']:3d} {r['concepts']:7d} {r['practices']:8d}"
+            f" {r['min_d']}-{r['max_d']:>3d}"
         )
     for c in cm.competencies:
-        if not any(r["id"***REMOVED*** == c.id for r in rows):
-            lines.append(f"{c.id:22s***REMOVED***   0       0       0     —")
-    lines.append(f"{'TOTAL':22s***REMOVED*** {total:3d***REMOVED***")
+        if not any(r["id"] == c.id for r in rows):
+            lines.append(f"{c.id:22s}   0       0       0     —")
+    lines.append(f"{'TOTAL':22s} {total:3d}")
     return "\n".join(lines)
 
 
@@ -60,24 +60,24 @@ def gap_report(conn: sqlite3.Connection) -> str:
         GROUP BY c.id ORDER BY c.id
         """
     ).fetchall()
-    out = ["Gap-анализ (v0.1, данные не «ремонтируются» автоматически):"***REMOVED***
-    gaps = [***REMOVED***
+    out = ["Gap-анализ (v0.1, данные не «ремонтируются» автоматически):"]
+    gaps = []
     for r in rows:
-        if r["n"***REMOVED*** == 0:
-            gaps.append(f"  - {r['cid'***REMOVED******REMOVED***: 0 упражнений (CONTENT GAP)")
-        elif r["n"***REMOVED*** == 1:
-            gaps.append(f"  - {r['cid'***REMOVED******REMOVED***: 1 упражнение (слабое покрытие)")
-        elif r["rungs"***REMOVED*** < 2:
-            gaps.append(f"  - {r['cid'***REMOVED******REMOVED***: только 1 rung ({r['rungs'***REMOVED******REMOVED***) — нет прогрессии")
+        if r["n"] == 0:
+            gaps.append(f"  - {r['cid']}: 0 упражнений (CONTENT GAP)")
+        elif r["n"] == 1:
+            gaps.append(f"  - {r['cid']}: 1 упражнение (слабое покрытие)")
+        elif r["rungs"] < 2:
+            gaps.append(f"  - {r['cid']}: только 1 rung ({r['rungs']}) — нет прогрессии")
     if not gaps:
         out.append("  пробелов нет")
     else:
         out.extend(gaps)
-    out.append(f"\nВсего компетенций с пробелами: {len(gaps)***REMOVED***")
+    out.append(f"\nВсего компетенций с пробелами: {len(gaps)}")
     return "\n".join(out)
 
 
-def low_confidence_report(conn: sqlite3.Connection) -> list[dict***REMOVED***:
+def low_confidence_report(conn: sqlite3.Connection) -> list[dict]:
     """Упражнения с low/medium confidence маппинга (для ручного ревью)."""
     rows = conn.execute(
         """
@@ -90,18 +90,18 @@ def low_confidence_report(conn: sqlite3.Connection) -> list[dict***REMOVED***:
     ).fetchall()
     return [
         {
-            "exercise_id": r["slug"***REMOVED***,
-            "current_mapping": r["competency_id"***REMOVED***,
-            "confidence": r["confidence"***REMOVED***,
-            "source": r["source"***REMOVED***,
-            "reason": "ручной override" if r["source"***REMOVED*** == "override" else "одно совпадение concepts / эвристика",
-            "source_url": r["source_url"***REMOVED***,
-        ***REMOVED***
+            "exercise_id": r["slug"],
+            "current_mapping": r["competency_id"],
+            "confidence": r["confidence"],
+            "source": r["source"],
+            "reason": "ручной override" if r["source"] == "override" else "одно совпадение concepts / эвристика",
+            "source_url": r["source_url"],
+        }
         for r in rows
-    ***REMOVED***
+    ]
 
 
-def license_report(conn: sqlite3.Connection) -> list[dict***REMOVED***:
+def license_report(conn: sqlite3.Connection) -> list[dict]:
     """Статус источников и ограничения (из exercise_sources)."""
     rows = conn.execute(
         """
@@ -112,13 +112,13 @@ def license_report(conn: sqlite3.Connection) -> list[dict***REMOVED***:
     ).fetchall()
     return [
         {
-            "source_id": r["id"***REMOVED***,
-            "name": r["source_name"***REMOVED***,
-            "license": r["license"***REMOVED***,
-            "status": r["status"***REMOVED***,
-            "redistribution_allowed": bool(r["redistribution_allowed"***REMOVED***),
-            "modification_allowed": bool(r["modification_allowed"***REMOVED***),
-            "attribution_required": bool(r["attribution_required"***REMOVED***),
-        ***REMOVED***
+            "source_id": r["id"],
+            "name": r["source_name"],
+            "license": r["license"],
+            "status": r["status"],
+            "redistribution_allowed": bool(r["redistribution_allowed"]),
+            "modification_allowed": bool(r["modification_allowed"]),
+            "attribution_required": bool(r["attribution_required"]),
+        }
         for r in rows
-    ***REMOVED***
+    ]

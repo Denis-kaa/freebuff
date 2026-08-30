@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 import os
 import sys
-***REMOVED***
+}
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -34,7 +34,7 @@ class TestStreamBridgeInit:
     def test_init_defaults(self, tmp_path, monkeypatch):
         """StreamBridge initializes with no session."""
         monkeypatch.setattr("scripts_01.stream_bridge.WORKSPACE", tmp_path)
-        monkeypatch.setattr("scripts_01.stream_bridge._prune_all", MagicMock(return_value={***REMOVED***))
+        monkeypatch.setattr("scripts_01.stream_bridge._prune_all", MagicMock(return_value={}))
 
         bridge = StreamBridge(auto_bootstrap=False, run_gc=False)
         assert bridge._session_dir is None
@@ -43,7 +43,7 @@ class TestStreamBridgeInit:
 
     def test_init_runs_gc(self, tmp_path, monkeypatch):
         """StreamBridge runs GC on init if run_gc=True."""
-        mock_prune = MagicMock(return_value={"streams": 0, "abandoned": 0***REMOVED***)
+        mock_prune = MagicMock(return_value={"streams": 0, "abandoned": 0})
         monkeypatch.setattr("scripts_01.stream_bridge._prune_all", mock_prune)
         monkeypatch.setattr("scripts_01.stream_bridge.WORKSPACE", tmp_path)
 
@@ -151,7 +151,7 @@ class TestStreamBridgeCheckpoint:
         bridge.checkpoint("Manual checkpoint")
         mock_cm.save_checkpoint.assert_called_once()
 
-    @pytest.mark.parametrize("summary", ["Test", "Longer summary with details"***REMOVED***)
+    @pytest.mark.parametrize("summary", ["Test", "Longer summary with details"])
     def test_checkpoint_with_summary(self, tmp_path, monkeypatch, summary):
         """checkpoint passes the summary correctly."""
         mock_cm = MagicMock()
@@ -160,8 +160,8 @@ class TestStreamBridgeCheckpoint:
         bridge._context_manager = mock_cm
 
         bridge.checkpoint(summary)
-        call_kwargs = mock_cm.save_checkpoint.call_args[1***REMOVED***
-        assert call_kwargs["summary"***REMOVED*** == summary
+        call_kwargs = mock_cm.save_checkpoint.call_args[1]
+        assert call_kwargs["summary"] == summary
 
 
 class TestStreamBridgeEndSession:
@@ -276,11 +276,11 @@ class TestStreamBridgeGetStatus:
 
         bridge = StreamBridge(auto_bootstrap=False, run_gc=False)
         status = bridge.get_status()
-        assert status["status"***REMOVED*** == "no_session"
+        assert status["status"] == "no_session"
 
     def test_get_status_with_session(self, tmp_path, monkeypatch):
         """get_status returns session info when active."""
-        mock_status = {"token_estimate": 100, "threshold": 28000, "usage_percent": 0.36, "is_full": False***REMOVED***
+        mock_status = {"token_estimate": 100, "threshold": 28000, "usage_percent": 0.36, "is_full": False}
         mock_cm = MagicMock()
         mock_cm.get_context_status.return_value = mock_status
 
@@ -291,7 +291,7 @@ class TestStreamBridgeGetStatus:
 
         status = bridge.get_status()
         assert "token_estimate" in status
-        assert status["token_estimate"***REMOVED*** == 100
+        assert status["token_estimate"] == 100
 
 
 class TestStreamBridgeProperties:
@@ -318,8 +318,8 @@ class TestStreamBridgeAutoBootstrap:
         """auto_bootstrap restores an active session if available."""
         mock_cm = MagicMock()
         mock_cm.list_sessions.return_value = [
-            {"session_id": "test-active-sid-001", "topic": "Active Session"***REMOVED***
-        ***REMOVED***
+            {"session_id": "test-active-sid-001", "topic": "Active Session"}
+        ]
         mock_attach = MagicMock(return_value=tmp_path / "attached_session")
 
         monkeypatch.setattr("scripts_01.stream_bridge._attach_session", mock_attach)
@@ -337,7 +337,7 @@ class TestStreamBridgeAutoBootstrap:
     def test_auto_bootstrap_no_active_sessions(self, tmp_path, monkeypatch):
         """auto_bootstrap does nothing with no active sessions."""
         mock_cm = MagicMock()
-        mock_cm.list_sessions.return_value = [***REMOVED***
+        mock_cm.list_sessions.return_value = []
 
         bridge = StreamBridge.__new__(StreamBridge)
         bridge._context_manager = mock_cm
@@ -353,8 +353,8 @@ class TestStreamBridgeAutoBootstrap:
         """auto_bootstrap handles attach errors gracefully."""
         mock_cm = MagicMock()
         mock_cm.list_sessions.return_value = [
-            {"session_id": "test-sid", "topic": "Test"***REMOVED***
-        ***REMOVED***
+            {"session_id": "test-sid", "topic": "Test"}
+        ]
         mock_attach = MagicMock(side_effect=Exception("Attach failed"))
 
         monkeypatch.setattr("scripts_01.stream_bridge._attach_session", mock_attach)

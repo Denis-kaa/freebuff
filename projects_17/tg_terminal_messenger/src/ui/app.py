@@ -38,7 +38,7 @@ tg-terminal-toolkit — Textual TUI для Telegram.
 import asyncio
 import json
 import os
-***REMOVED***
+}
 import shutil
 import signal
 import subprocess
@@ -47,7 +47,7 @@ import tempfile
 import time
 from dataclasses import dataclass
 from datetime import datetime
-***REMOVED***
+}
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -72,7 +72,7 @@ from src.telegram.client import ThreadedTGClient, _is_animated
 
 # ── Константы ──────────────────────────────────────────────────
 
-SPINNER = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"***REMOVED***
+SPINNER = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
 FAVORITES_FILE = Path(__file__).resolve().parent.parent / "favorites.json"
 CACHE_DB = PROJECT_ROOT / "tg_cache.db"
 MANUAL_PATH = "::manual::"   # sentinel: выбрать «ввести путь вручную» в браузере
@@ -85,7 +85,7 @@ _DEFAULT_SETTINGS = {
     "mode": "advance",     # light — чисто переписка; advance — все функции
     "cache_cap": 200,      # максимум сообщений на чат в кэше (автоподгрузка останавливается)
     "cache_days": 30,      # срок хранения кэша: старше N дней удаляются при старте
-***REMOVED***
+}
 
 
 def _load_settings() -> dict:
@@ -101,16 +101,16 @@ def _load_settings() -> dict:
                 out = dict(_DEFAULT_SETTINGS)
                 for k in _DEFAULT_SETTINGS:
                     if k in data:
-                        out[k***REMOVED*** = data[k***REMOVED***
+                        out[k] = data[k]
                 for num_key in ("history_limit", "cache_cap", "cache_days"):
                     try:
                         hi = 1000 if num_key != "cache_days" else 3650
                         lo = 0 if num_key == "cache_days" else 1   # 0 = очистка выключена
-                        out[num_key***REMOVED*** = max(lo, min(int(out[num_key***REMOVED***), hi))
+                        out[num_key] = max(lo, min(int(out[num_key]), hi))
                     except Exception:
-                        out[num_key***REMOVED*** = _DEFAULT_SETTINGS[num_key***REMOVED***
-                if out["mode"***REMOVED*** not in ("light", "advance"):
-                    out["mode"***REMOVED*** = _DEFAULT_SETTINGS["mode"***REMOVED***
+                        out[num_key] = _DEFAULT_SETTINGS[num_key]
+                if out["mode"] not in ("light", "advance"):
+                    out["mode"] = _DEFAULT_SETTINGS["mode"]
                 return out
     except Exception:
         pass
@@ -131,12 +131,12 @@ _SETTINGS = _load_settings()
 
 def _get_setting(key: str):
     """Значение настройки (без падения на отсутствующий ключ)."""
-    return _SETTINGS.get(key, _DEFAULT_SETTINGS[key***REMOVED***)
+    return _SETTINGS.get(key, _DEFAULT_SETTINGS[key])
 
 
 def _set_setting(key: str, value) -> None:
     """Записать настройку и сохранить в settings.json."""
-    _SETTINGS[key***REMOVED*** = value
+    _SETTINGS[key] = value
     _save_settings(_SETTINGS)
 
 
@@ -159,7 +159,7 @@ def media_dir() -> Path:
         Path.home() / "storage" / "downloads" / "tg_terminal",
         Path.home() / ".tg_terminal_media",
         Path(__file__).resolve().parent.parent.parent / "media",
-    ***REMOVED***
+    ]
     for d in candidates:
         try:
             d.mkdir(parents=True, exist_ok=True)
@@ -167,12 +167,12 @@ def media_dir() -> Path:
             return d
         except Exception:
             continue
-    _MEDIA_DIR = candidates[-1***REMOVED***
+    _MEDIA_DIR = candidates[-1]
     return _MEDIA_DIR
 
 
 def _sanitize(name: str) -> str:
-    return re.sub(r"[^\w.\-***REMOVED***+", "_", name).strip("._")[:120***REMOVED*** or "file"
+    return re.sub(r"[^\w.\-)+", "_", name).strip("._")[:120] or "file"
 
 
 def _ext_for_mime(mime: str) -> str:
@@ -180,7 +180,7 @@ def _ext_for_mime(mime: str) -> str:
         "image/jpeg": "jpg", "image/png": "png", "image/gif": "gif",
         "image/webp": "webp", "video/mp4": "mp4", "audio/mpeg": "mp3",
         "audio/mp4": "m4a", "audio/ogg": "ogg", "audio/opus": "opus",
-    ***REMOVED***
+    }
     return table.get(mime, "bin")
 
 
@@ -188,25 +188,25 @@ def media_filename(m) -> str:
     """Понятное имя файла для медиа из сообщения."""
     doc = getattr(m, "document", None)
     if doc:
-        for a in getattr(doc, "attributes", [***REMOVED***):
+        for a in getattr(doc, "attributes", []):
             fn = getattr(a, "file_name", None)
             if fn:
                 return _sanitize(fn)
-        return f"media_{m.id***REMOVED***.{_ext_for_mime(getattr(doc, 'mime_type', '') or '')***REMOVED***"
+        return f"media_{m.id}.{_ext_for_mime(getattr(doc, 'mime_type', '') or '')}"
     if getattr(m, "photo", None):
-        return f"photo_{m.id***REMOVED***.jpg"
+        return f"photo_{m.id}.jpg"
     if getattr(m, "video", None):
-        return f"video_{m.id***REMOVED***.mp4"
+        return f"video_{m.id}.mp4"
     if getattr(m, "audio", None):
-        return f"audio_{m.id***REMOVED***.{_ext_for_mime(getattr(m.audio, 'mime_type', '') or '')***REMOVED***"
-    return f"media_{m.id***REMOVED***.bin"
+        return f"audio_{m.id}.{_ext_for_mime(getattr(m.audio, 'mime_type', '') or '')}"
+    return f"media_{m.id}.bin"
 
 
-_IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tif", ".tiff"***REMOVED***
-_ANIM_EXTS = {".gif", ".webp"***REMOVED***
-_VIDEO_EXTS = {".mp4", ".mkv", ".webm", ".avi", ".mov", ".3gp", ".m4v", ".ts", ".mpg", ".mpeg"***REMOVED***
-_AUDIO_EXTS = {".mp3", ".ogg", ".opus", ".m4a", ".m4b", ".m4p", ".wav", ".aac", ".flac", ".amr", ".3gp", ".mka", ".oga", ".mid"***REMOVED***
-_CSI_FINAL = set("@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz[\\***REMOVED***^_`{|***REMOVED***~")
+_IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".tif", ".tiff"}
+_ANIM_EXTS = {".gif", ".webp"}
+_VIDEO_EXTS = {".mp4", ".mkv", ".webm", ".avi", ".mov", ".3gp", ".m4v", ".ts", ".mpg", ".mpeg"}
+_AUDIO_EXTS = {".mp3", ".ogg", ".opus", ".m4a", ".m4b", ".m4p", ".wav", ".aac", ".flac", ".amr", ".3gp", ".mka", ".oga", ".mid"}
+_CSI_FINAL = set("@ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz[\\)^_`{|]~")
 
 
 def _is_image_path(path) -> bool:
@@ -236,12 +236,12 @@ def _is_audio_path(path) -> bool:
         return True
     if head.startswith(b"OggS"):                                 # ogg / opus
         return True
-    if head.startswith(b"RIFF") and len(head) >= 12 and head[8:12***REMOVED*** == b"WAVE":
+    if head.startswith(b"RIFF") and len(head) >= 12 and head[8:12] == b"WAVE":
         return True                                              # wav
     if head.startswith(b"fLaC"):
         return True                                              # flac
-    if len(head) >= 12 and head[4:8***REMOVED*** == b"ftyp":
-        return head[8:12***REMOVED*** in (b"M4A ", b"M4B ", b"M4P ")        # m4a / m4b / m4p
+    if len(head) >= 12 and head[4:8] == b"ftyp":
+        return head[8:12] in (b"M4A ", b"M4B ", b"M4P ")        # m4a / m4b / m4p
     return False
 
 
@@ -261,9 +261,9 @@ def _file_media_kind(path) -> str:
         return "other"
     if head.startswith((b"\xff\xd8\xff", b"\x89PNG\r\n\x1a\n", b"GIF87a", b"GIF89a", b"BM")):
         return "image"
-    if head.startswith(b"RIFF") and len(head) >= 12 and head[8:12***REMOVED*** == b"WEBP":
+    if head.startswith(b"RIFF") and len(head) >= 12 and head[8:12] == b"WEBP":
         return "image"
-    if len(head) >= 12 and head[4:8***REMOVED*** == b"ftyp":        # mp4 / m4v / mov
+    if len(head) >= 12 and head[4:8] == b"ftyp":        # mp4 / m4v / mov
         return "video"
     if head.startswith((b"\x1aE\xdf\xa3", b"OggS")):
         return "video"                                   # webm/mkv (EBML), ogg
@@ -288,13 +288,13 @@ def _magic_ext(path) -> str | None:
         return ".png"
     if head.startswith((b"GIF87a", b"GIF89a")):
         return ".gif"
-    if head.startswith(b"RIFF") and len(head) >= 12 and head[8:12***REMOVED*** == b"WEBP":
+    if head.startswith(b"RIFF") and len(head) >= 12 and head[8:12] == b"WEBP":
         return ".webp"
     if head.startswith(b"BM"):
         return ".bmp"
-    if len(head) >= 12 and head[4:8***REMOVED*** == b"ftyp":
+    if len(head) >= 12 and head[4:8] == b"ftyp":
         # m4a/m4b/m4p — аудио-контейнеры MP4 (бренд в bytes 8..12)
-        if head[8:12***REMOVED*** in (b"M4A ", b"M4B ", b"M4P "):
+        if head[8:12] in (b"M4A ", b"M4B ", b"M4P "):
             return ".m4a"
         return ".mp4"
     if head.startswith(b"\x1aE\xdf\xa3"):
@@ -345,37 +345,37 @@ def _is_animatable(path) -> bool:
 
 def _strip_csi_non_sgr(s: str) -> str:
     """Удалить CSI-последовательности, кроме SGR-цветов (заканчиваются на 'm')."""
-    out: list[str***REMOVED*** = [***REMOVED***
+    out: list[str] = []
     i = 0
     while True:
         j = s.find("\x1b[", i)
         if j < 0:
-            out.append(s[i:***REMOVED***)
+            out.append(s[i:])
             break
-        out.append(s[i:j***REMOVED***)
+        out.append(s[i:j])
         k = j + 2
-        while k < len(s) and s[k***REMOVED*** not in _CSI_FINAL:
+        while k < len(s) and s[k] not in _CSI_FINAL:
             k += 1
         if k < len(s):
-            if s[k***REMOVED*** == "m":
-                out.append(s[j:k + 1***REMOVED***)   # SGR — оставить (цвета)
+            if s[k] == "m":
+                out.append(s[j:k + 1])   # SGR — оставить (цвета)
             i = k + 1
         else:
             i = len(s)
     return "".join(out)
 
 
-def _gif_durations(path) -> list[float***REMOVED***:
+def _gif_durations(path) -> list[float]:
     """Длительности кадров в мс (PIL). Пусто — не удалось прочитать."""
     try:
         from PIL import Image, ImageSequence
         img = Image.open(path)
-        return [float(f.info.get("duration") or 100) for f in ImageSequence.Iterator(img)***REMOVED***
+        return [float(f.info.get("duration") or 100) for f in ImageSequence.Iterator(img)]
     except Exception:
-        return [***REMOVED***
+        return []
 
 
-def _frame_interval(durations: list[float***REMOVED***) -> float:
+def _frame_interval(durations: list[float]) -> float:
     """Средняя длительность кадра в секундах (0.05..0.5; дефолт 0.1)."""
     if not durations:
         return 0.1
@@ -393,7 +393,7 @@ def _gif_first_frame(path) -> Path | None:
         img = Image.open(path)
         img.seek(0)
         frame = img.convert("RGB")
-        dest = Path(tempfile.gettempdir()) / f"gif_preview_{time.time_ns()***REMOVED***.jpg"
+        dest = Path(tempfile.gettempdir()) / f"gif_preview_{time.time_ns()}.jpg"
         frame.save(dest, "JPEG", quality=85)
         return dest
     except Exception:
@@ -417,7 +417,7 @@ def media_hint(m) -> str | None:
         if doc:
             if any(
                 isinstance(a, DocumentAttributeAnimated)
-                for a in getattr(doc, "attributes", [***REMOVED***)
+                for a in getattr(doc, "attributes", [])
             ):
                 return "🎞 GIF"
             mime = getattr(doc, "mime_type", "") or ""
@@ -428,7 +428,7 @@ def media_hint(m) -> str | None:
             if mime.startswith("image"):
                 return "🖼 Картинка"
             size = getattr(doc, "size", 0) or 0
-            return f"📄 Файл ({size // 1024***REMOVED*** КБ)" if size else "📄 Файл"
+            return f"📄 Файл ({size // 1024} КБ)" if size else "📄 Файл"
         if getattr(m, "contact", None):
             return "👤 Контакт"
         if getattr(m, "geo", None):
@@ -446,7 +446,7 @@ class NavListView(ListView):
     BINDINGS = [
         Binding("j", "cursor_down", show=False),
         Binding("k", "cursor_up", show=False),
-    ***REMOVED***
+    ]
 
 
 def _throttled_progress(state: dict, done: int, total: int) -> bool:
@@ -461,10 +461,10 @@ def _throttled_progress(state: dict, done: int, total: int) -> bool:
         pct = int(done * 100 / total)
         if pct == state.get("last_pct") and done != total:
             return False
-        state["last_pct"***REMOVED*** = pct
+        state["last_pct"] = pct
     elif now - state.get("last_t", 0.0) < 0.1:
         return False
-    state["last_t"***REMOVED*** = now
+    state["last_t"] = now
     return True
 
 
@@ -483,13 +483,13 @@ def _highlight_text(text: str, query: str) -> str:
     """Подсветить вхождения query в тексте (для списков)."""
     if not query:
         return text
-    safe = text.replace("[", "\\[").replace("***REMOVED***", "\\***REMOVED***")
+    safe = text.replace("[", "\\[").replace(")", "\\]")
     ql = query.lower()
     idx = safe.lower().find(ql)
     if idx < 0:
         return safe
-    matched = safe[idx:idx + len(query)***REMOVED***
-    return safe[:idx***REMOVED*** + f"[bold yellow***REMOVED***{matched***REMOVED***[/***REMOVED***" + safe[idx + len(query):***REMOVED***
+    matched = safe[idx:idx + len(query)]
+    return safe[:idx] + f"[bold yellow]{matched}[/]" + safe[idx + len(query):]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -513,27 +513,27 @@ class ChatListScreen(Screen):
     def on_mount(self) -> None:
         self.query_one("#search-input", Input).display = False
         self.query_one("#search-count", Label).display = False
-        self._all_dialogs: list[object***REMOVED*** = [***REMOVED***
-        self._visible_dialogs: list[object***REMOVED*** = [***REMOVED***
+        self._all_dialogs: list[object] = []
+        self._visible_dialogs: list[object] = []
         self._current_query = ""
-        self._favorites: set[int***REMOVED*** = self._load_favorites()
+        self._favorites: set[int] = self._load_favorites()
 
-    def _load_favorites(self) -> set[int***REMOVED***:
+    def _load_favorites(self) -> set[int]:
         try:
             if FAVORITES_FILE.exists():
                 data = json.loads(FAVORITES_FILE.read_text())
-                return set(data.get("ids", [***REMOVED***))
+                return set(data.get("ids", []))
         except Exception:
             pass
         return set()
 
     def _save_favorites(self) -> None:
         try:
-            FAVORITES_FILE.write_text(json.dumps({"ids": list(self._favorites)***REMOVED***))
+            FAVORITES_FILE.write_text(json.dumps({"ids": list(self._favorites)}))
         except Exception:
             pass
 
-    def show_dialogs(self, dialogs: list[object***REMOVED***) -> None:
+    def show_dialogs(self, dialogs: list[object]) -> None:
         self._all_dialogs = dialogs
         if self._current_query:
             self.apply_filter(self._current_query)
@@ -543,24 +543,24 @@ class ChatListScreen(Screen):
 
     def get_dialog(self, idx: int) -> object | None:
         if 0 <= idx < len(self._visible_dialogs):
-            return self._visible_dialogs[idx***REMOVED***
+            return self._visible_dialogs[idx]
         return None
 
     def _highlight(self, text: str, query: str) -> str:
         return _highlight_text(text, query)
 
-    def _render_list(self, dialogs: list[object***REMOVED***) -> None:
+    def _render_list(self, dialogs: list[object]) -> None:
         lst = self.query_one("#chat-list", ListView)
         lst.clear()
         q = self._current_query
         # Избранные сверху
-        favs = [d for d in dialogs if d.id in self._favorites***REMOVED***
-        rest = [d for d in dialogs if d.id not in self._favorites***REMOVED***
+        favs = [d for d in dialogs if d.id in self._favorites]
+        rest = [d for d in dialogs if d.id not in self._favorites]
         for d in favs + rest:
             star = "⭐ " if d.id in self._favorites else ""
-            unread = f" [bold cyan***REMOVED***{d.unread_count***REMOVED***[/***REMOVED***" if d.unread_count else ""
-            name = self._highlight(d.name, q) if q else d.name.replace("[", "\\[").replace("***REMOVED***", "\\***REMOVED***")
-            lst.append(ListItem(Label(f"{star***REMOVED***{name***REMOVED***{unread***REMOVED***")))
+            unread = f" [bold cyan]{d.unread_count}[/]" if d.unread_count else ""
+            name = self._highlight(d.name, q) if q else d.name.replace("[", "\\[").replace(")", "\\]")
+            lst.append(ListItem(Label(f"{star}{name}{unread}")))
 
     def toggle_search(self) -> None:
         si = self.query_one("#search-input", Input)
@@ -581,18 +581,18 @@ class ChatListScreen(Screen):
         if not self._current_query:
             self._visible_dialogs = self._all_dialogs
             self._render_list(self._all_dialogs)
-            sc.update(f"🔍 Все: {len(self._all_dialogs)***REMOVED***")
+            sc.update(f"🔍 Все: {len(self._all_dialogs)}")
             return
         q = self._current_query.lower()
-        filtered = [d for d in self._all_dialogs if q in d.name.lower()***REMOVED***
+        filtered = [d for d in self._all_dialogs if q in d.name.lower()]
         self._visible_dialogs = filtered
         self._render_list(filtered)
-        sc.update(f"🔍 Найдено: {len(filtered)***REMOVED*** из {len(self._all_dialogs)***REMOVED***")
+        sc.update(f"🔍 Найдено: {len(filtered)} из {len(self._all_dialogs)}")
 
     def show_error(self, msg: str) -> None:
         lst = self.query_one("#chat-list", ListView)
         lst.clear()
-        lst.append(ListItem(Label(f"❌ {msg***REMOVED***")))
+        lst.append(ListItem(Label(f"❌ {msg}")))
 
     def action_toggle_favorite(self) -> None:
         """Добавить/убрать чат из избранного."""
@@ -605,10 +605,10 @@ class ChatListScreen(Screen):
             return
         if dialog.id in self._favorites:
             self._favorites.discard(dialog.id)
-            self.app.notify(f"❌ Убран из избранного: {dialog.name[:20***REMOVED******REMOVED***", timeout=2)
+            self.app.notify(f"❌ Убран из избранного: {dialog.name[:20]}", timeout=2)
         else:
             self._favorites.add(dialog.id)
-            self.app.notify(f"⭐ Добавлен в избранное: {dialog.name[:20***REMOVED******REMOVED***", timeout=2)
+            self.app.notify(f"⭐ Добавлен в избранное: {dialog.name[:20]}", timeout=2)
         self._save_favorites()
         self._render_list(self._visible_dialogs)
 
@@ -627,17 +627,17 @@ class ChatViewScreen(Screen):
         Binding("up", "msg_up", show=False),
         Binding("down", "msg_down", show=False),
         Binding("v", "view_cached", "👁 Открыть", show=True),
-    ***REMOVED***
+    ]
 
     def __init__(self, dialog, tg_app):
         super().__init__()
         self._dialog = dialog
         self._tg_app = tg_app
         self._saved_subtitle = ""
-        self._messages: list = [***REMOVED***
+        self._messages: list = []
         self._attach_mode = False
         self._gif_attach_mode = False   # ручной путь в режиме GIF (валидировать при отправке)
-        self._visible_idx: list[int***REMOVED*** | None = None   # поиск: индексы показанных сообщений
+        self._visible_idx: list[int] | None = None   # поиск: индексы показанных сообщений
         self._search_query = ""
         self._loading_older = False
         self._can_load_older = True
@@ -716,13 +716,13 @@ class ChatViewScreen(Screen):
         """Текст строки сообщения + эмодзи-метка медиа."""
         body = text.strip()
         if hint:
-            body = f"{hint***REMOVED***  {body***REMOVED***" if body else hint
-        return body[:200***REMOVED*** or "[italic dim***REMOVED***сообщение[/***REMOVED***"
+            body = f"{hint}  {body}" if body else hint
+        return body[:200] or "[italic dim]сообщение[/]"
 
     @staticmethod
     def _msg_label(sender: str, ts: str, body: str) -> Label:
-        s = f"[bold green***REMOVED***{sender***REMOVED***[/***REMOVED*** " if sender else ""
-        return Label(f"{s***REMOVED***[dim***REMOVED***{ts***REMOVED***[/***REMOVED***  {body***REMOVED***")
+        s = f"[bold green]{sender}[/] " if sender else ""
+        return Label(f"{s}[dim]{ts}[/]  {body}")
 
     # ── Прогресс-бар передачи файлов ─────────────────────────
 
@@ -732,7 +732,7 @@ class ChatViewScreen(Screen):
         Приложение захватываем один раз здесь (на event loop), чтобы не
         дёргать Widget.app из чужого потока."""
         app = self.app
-        state: dict = {***REMOVED***
+        state: dict = {}
 
         def cb(done: int, total: int) -> None:
             try:
@@ -785,13 +785,13 @@ class ChatViewScreen(Screen):
         return m.date.timestamp() if m.date else 0
 
     @staticmethod
-    def _rows_to_cached(rows: list[dict***REMOVED***) -> list[CachedMsg***REMOVED***:
+    def _rows_to_cached(rows: list[dict]) -> list[CachedMsg]:
         """Превратить строки кэша в CachedMsg-записи."""
         return [
-            CachedMsg(msg_id=r["msg_id"***REMOVED***, sender=r["sender"***REMOVED***, ts=r["ts"***REMOVED***,
-                      text=r["text"***REMOVED***, media=r["media"***REMOVED***)
+            CachedMsg(msg_id=r["msg_id"], sender=r["sender"], ts=r["ts"],
+                      text=r["text"], media=r["media"])
             for r in rows
-        ***REMOVED***
+        ]
 
     def _query_match(self, m, q: str) -> bool:
         q = q.lower()
@@ -809,7 +809,7 @@ class ChatViewScreen(Screen):
             else self._visible_idx
         )
         for mi in order:
-            m = self._messages[mi***REMOVED***
+            m = self._messages[mi]
             sender, ts, text, hint = self._row_of(m)
             body = self._compose_body(text, hint)
             if self._search_query:
@@ -832,14 +832,14 @@ class ChatViewScreen(Screen):
         n = len(self._messages)
         try:
             if self._history_end:
-                label = f"{n***REMOVED*** сообщений"
+                label = f"{n} сообщений"
             else:
                 cap = _get_setting("cache_cap")
-                label = f"{n***REMOVED***/∞" if n >= cap else f"{n***REMOVED***/{cap***REMOVED***"
-            self.app.sub_title = f"💬 {self._dialog.name***REMOVED*** — {label***REMOVED***"
+                label = f"{n}/∞" if n >= cap else f"{n}/{cap}"
+            self.app.sub_title = f"💬 {self._dialog.name} — {label}"
         except Exception:
             try:
-                self.app.sub_title = f"💬 {self._dialog.name***REMOVED***"
+                self.app.sub_title = f"💬 {self._dialog.name}"
             except Exception:
                 pass
 
@@ -881,7 +881,7 @@ class ChatViewScreen(Screen):
                     rows = [
                         (m.id, self._sender_name(m), self._ts_of(m), m.message or "", media_hint(m))
                         for m in messages
-                    ***REMOVED***
+                    ]
                     await cache.save_messages(
                         self._dialog.id, rows, cap=_get_setting("cache_cap")
                     )
@@ -892,7 +892,7 @@ class ChatViewScreen(Screen):
                     self._can_load_older = True
                     self.notify("🌐 Сеть недоступна — показан кэш", timeout=3)
                 else:
-                    self.notify(f"❌ {e***REMOVED***", severity="error")
+                    self.notify(f"❌ {e}", severity="error")
                 return
         if cache_shown:
             self._can_load_older = True
@@ -937,7 +937,7 @@ class ChatViewScreen(Screen):
             if not self._cap_notified:
                 self._cap_notified = True
                 self.notify(
-                    f"⏹ Кэш: {cap***REMOVED*** сообщений — старее подгружаются скроллом вверх",
+                    f"⏹ Кэш: {cap} сообщений — старее подгружаются скроллом вверх",
                     timeout=3,
                 )
             return
@@ -950,7 +950,7 @@ class ChatViewScreen(Screen):
                 self._can_load_older = False
                 return
             cache = self._tg_app._cache
-            oldest = self._messages[0***REMOVED***
+            oldest = self._messages[0]
             limit = _get_setting("history_limit")
             # Не превышаем cache_cap: грузим не больше, чем не хватает до лимита
             remaining = _get_setting("cache_cap") - len(self._messages)
@@ -977,7 +977,7 @@ class ChatViewScreen(Screen):
                     )
                 )
             except Exception:
-                older = [***REMOVED***
+                older = []
             if not older:
                 # История кончилась ИЛИ сеть отвалилась — сначала пробуем кэш,
                 # и только если там пусто, объявляем конец истории.
@@ -998,7 +998,7 @@ class ChatViewScreen(Screen):
                 rows = [
                     (m.id, self._sender_name(m), self._ts_of(m), m.message or "", media_hint(m))
                     for m in older
-                ***REMOVED***
+                ]
                 await cache.save_messages(
                     self._dialog.id, rows, cap=_get_setting("cache_cap")
                 )
@@ -1037,10 +1037,10 @@ class ChatViewScreen(Screen):
             self._render_messages()
             sc.update("")
             return
-        hits = [i for i, m in enumerate(self._messages) if self._query_match(m, self._search_query)***REMOVED***
+        hits = [i for i, m in enumerate(self._messages) if self._query_match(m, self._search_query)]
         self._visible_idx = hits
         self._render_messages()
-        sc.update(f"🔍 Найдено: {len(hits)***REMOVED***")
+        sc.update(f"🔍 Найдено: {len(hits)}")
 
     @on(Input.Changed, "#chat-search")
     def _on_chat_search_changed(self, event: Input.Changed) -> None:
@@ -1087,9 +1087,9 @@ class ChatViewScreen(Screen):
         if self._visible_idx is not None:
             if idx >= len(self._visible_idx):
                 return None
-            idx = self._visible_idx[idx***REMOVED***
+            idx = self._visible_idx[idx]
         if 0 <= idx < len(self._messages):
-            return self._messages[idx***REMOVED***
+            return self._messages[idx]
         return None
 
     async def download_and_open(self, m) -> None:
@@ -1097,7 +1097,7 @@ class ChatViewScreen(Screen):
         if self._tg_app._tg is None:
             return
         hint = media_hint(m) or "медиа"
-        self.notify(f"⬇️ Скачиваю {hint***REMOVED***...", timeout=2)
+        self.notify(f"⬇️ Скачиваю {hint}...", timeout=2)
         try:
             dest = media_dir() / media_filename(m)
             path = await self._tg_app._await_tg(
@@ -1114,10 +1114,10 @@ class ChatViewScreen(Screen):
                 # просмотрщик — Android покажет «повреждено»
                 self.notify("⚠️ Файл скачан, но пустой — попробуй ещё раз", severity="warning")
                 return
-            self.notify(f"✅ Скачано: {p.name***REMOVED***", timeout=3)
+            self.notify(f"✅ Скачано: {p.name}", timeout=3)
             await self._open_local_media(p, hint)
         except Exception as e:
-            self.notify(f"❌ {e***REMOVED***", severity="error")
+            self.notify(f"❌ {e}", severity="error")
         finally:
             self._hide_progress()
 
@@ -1153,7 +1153,7 @@ class ChatViewScreen(Screen):
             frame = await self._extract_video_frame(path)
             if frame is not None:
                 await self.app.push_screen(
-                    ImagePreviewScreen(frame, f"{hint***REMOVED*** (первый кадр)", external=str(path))
+                    ImagePreviewScreen(frame, f"{hint} (первый кадр)", external=str(path))
                 )
                 return
         self._tg_app.open_file(str(path))
@@ -1162,7 +1162,7 @@ class ChatViewScreen(Screen):
         """Первый кадр видео через ffmpeg в jpg рядом с файлом. None — не вышло."""
         if not shutil.which("ffmpeg"):
             return None
-        dest = media_dir() / f"{_sanitize(video.stem)***REMOVED***_frame.jpg"
+        dest = media_dir() / f"{_sanitize(video.stem)}_frame.jpg"
         proc = None
         try:
             proc = await asyncio.create_subprocess_exec(
@@ -1196,9 +1196,9 @@ class ChatViewScreen(Screen):
         """
         if isinstance(m, CachedMsg):
             try:
-                hits = sorted(media_dir().glob(f"*_{m.msg_id***REMOVED***.*"))
+                hits = sorted(media_dir().glob(f"*_{m.msg_id}.*"))
                 if hits:
-                    return hits[0***REMOVED***
+                    return hits[0]
             except Exception:
                 pass
             return None
@@ -1226,7 +1226,7 @@ class ChatViewScreen(Screen):
         if path is None:
             self.notify("ℹ️ Файл не скачан — нажми Enter, чтобы загрузить", timeout=2)
             return
-        self.notify(f"👁 Открываю из папки: {path.name***REMOVED***", timeout=2)
+        self.notify(f"👁 Открываю из папки: {path.name}", timeout=2)
         self.run_worker(self._open_local_media(path, hint))
 
     def action_attach(self) -> None:
@@ -1248,7 +1248,7 @@ class ChatViewScreen(Screen):
         )
 
     @staticmethod
-    def _system_picker_cmd() -> list[str***REMOVED*** | None:
+    def _system_picker_cmd() -> list[str] | None:
         """Команда системного пикера (termux-api) или None.
 
         В termux-api НЕТ бинаря termux-file-picker (распространённое заблуждение):
@@ -1257,9 +1257,9 @@ class ChatViewScreen(Screen):
         termux-file-picker (если вдруг установлен) держим как запасной вариант.
         """
         if shutil.which("termux-storage-get"):
-            return ["termux-storage-get"***REMOVED***
+            return ["termux-storage-get"]
         if shutil.which("termux-file-picker"):
-            return ["termux-file-picker"***REMOVED***
+            return ["termux-file-picker"]
         return None
 
     @on(Button.Pressed, "#btn-attach")
@@ -1321,15 +1321,15 @@ class ChatViewScreen(Screen):
 
     def _start_recording(self, recorder: str) -> None:
         """Начать запись голосового через termux-microphone-recorder."""
-        path = str(media_dir() / f"voice_{time.time_ns()***REMOVED***.m4a")
+        path = str(media_dir() / f"voice_{time.time_ns()}.m4a")
         try:
             proc = subprocess.Popen(
-                [recorder, "-f", path***REMOVED***,
+                [recorder, "-f", path],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
         except Exception as e:
-            self.notify(f"❌ Не удалось начать запись: {e***REMOVED***", severity="error")
+            self.notify(f"❌ Не удалось начать запись: {e}", severity="error")
             return
         self._rec_proc = proc
         self._rec_path = path
@@ -1371,7 +1371,7 @@ class ChatViewScreen(Screen):
             return
         elapsed = int(time.monotonic() - self._rec_started)
         try:
-            self.query_one("#btn-voice", Button).label = f"⏹ {elapsed // 60***REMOVED***:{elapsed % 60:02d***REMOVED***"
+            self.query_one("#btn-voice", Button).label = f"⏹ {elapsed // 60}:{elapsed % 60:02d}"
         except Exception:
             pass
 
@@ -1537,15 +1537,15 @@ class ChatViewScreen(Screen):
         Бинарь блокируется, пока пользователь не сделает/не отменит фото
         в камере Android; файл сохраняется в media_dir (foto_*.jpg).
         """
-        path = str(media_dir() / f"foto_{time.time_ns()***REMOVED***.jpg")
+        path = str(media_dir() / f"foto_{time.time_ns()}.jpg")
         try:
             proc = subprocess.Popen(
-                [camera, path***REMOVED***,
+                [camera, path],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
         except Exception as e:
-            self.notify(f"❌ Не удалось открыть камеру: {e***REMOVED***", severity="error")
+            self.notify(f"❌ Не удалось открыть камеру: {e}", severity="error")
             return
         self._capture_proc = proc
         self._capture_path = path
@@ -1696,7 +1696,7 @@ class ChatViewScreen(Screen):
         inp.placeholder = "Напиши сообщение..."
         inp.value = ""
 
-    async def _pick_and_send(self, picker: list[str***REMOVED***, require_gif: bool = False, require_audio: bool = False, require_video: bool = False) -> None:
+    async def _pick_and_send(self, picker: list[str], require_gif: bool = False, require_audio: bool = False, require_video: bool = False) -> None:
         """Системный пикер. termux-storage-get копирует выбранный файл в dest
         (SAF требует имя выходного файла заранее), termux-file-picker печатает
         путь в stdout. Затем файл отправляется в чат. require_gif=True —
@@ -1707,9 +1707,9 @@ class ChatViewScreen(Screen):
         dest: str | None = None
         try:
             cmd = list(picker)
-            if cmd[0***REMOVED*** == "termux-storage-get":
+            if cmd[0] == "termux-storage-get":
                 # time_ns: два быстрых нажатия 'a' не должны получить один dest
-                dest = str(media_dir() / f"picker_{time.time_ns()***REMOVED***.bin")
+                dest = str(media_dir() / f"picker_{time.time_ns()}.bin")
                 cmd.append(dest)
             proc = await asyncio.create_subprocess_exec(
                 *cmd,
@@ -1753,7 +1753,7 @@ class ChatViewScreen(Screen):
         except asyncio.TimeoutError:
             self.notify("⏱️ Пикер не ответил за 60 c", severity="warning")
         except Exception as e:
-            self.notify(f"❌ {e***REMOVED***", severity="error")
+            self.notify(f"❌ {e}", severity="error")
         finally:
             if proc is not None and proc.returncode is None:
                 try:
@@ -1773,7 +1773,7 @@ class ChatViewScreen(Screen):
             self.notify(msg, severity="warning")
             return
         label = "голосовое" if voice_note else Path(path).name
-        self.notify(f"⬆️ Отправляю {label***REMOVED***...", timeout=2)
+        self.notify(f"⬆️ Отправляю {label}...", timeout=2)
         try:
             await self._tg_app._await_tg(
                 self._tg_app._tg.send_file_async(
@@ -1785,7 +1785,7 @@ class ChatViewScreen(Screen):
             self._tg_app.run_worker(self._load_messages())
             self._refocus_input()
         except Exception as e:
-            self.notify(f"❌ {e***REMOVED***", severity="error")
+            self.notify(f"❌ {e}", severity="error")
         finally:
             self._hide_progress()
 
@@ -1868,7 +1868,7 @@ class ChatViewScreen(Screen):
             self.notify("✅ Отправлено", timeout=1)
             self._tg_app.run_worker(self._load_messages())
         except Exception as e:
-            self.notify(f"❌ {e***REMOVED***", severity="error")
+            self.notify(f"❌ {e}", severity="error")
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1893,12 +1893,12 @@ class ImagePreviewScreen(Screen):
         Binding("p", "toggle_pause", "Пауза", show=False),
         Binding("o", "open_external", "▶ Плеер", show=False),
         # ВАЖНО: в Textual 8 литеральный '+' в key — разделитель модификаторов
-        # (parse_key('+') => ([''***REMOVED***, '')), поэтому используем именованные клавиши:
+        # (parse_key('+') => ([''], '')), поэтому используем именованные клавиши:
         # '+'->plus, '='->equals_sign, '-'->minus, '_'->underscore (_character_to_key).
         Binding("plus,equals_sign", "zoom_in", "＋", show=False),
         Binding("minus,underscore", "zoom_out", "−", show=False),
         Binding("0", "zoom_reset", "1×", show=False),
-    ***REMOVED***
+    ]
 
     CSS = """
     #preview-box {
@@ -1907,18 +1907,18 @@ class ImagePreviewScreen(Screen):
         background: #000000;
         align: center middle;
         padding: 1;
-    ***REMOVED***
+    }
     #preview-label {
         width: auto;
         height: auto;
         color: #e0e0e0;
-    ***REMOVED***
+    }
     #preview-hint {
         dock: bottom;
         height: 1;
         color: #777777;
         text-align: center;
-    ***REMOVED***
+    }
     """
 
     def __init__(self, path: Path, hint: str = "", external: str | None = None):
@@ -1926,7 +1926,7 @@ class ImagePreviewScreen(Screen):
         self._path = path
         self._hint = hint
         self._external = external   # оригинал (видео), если превью — это кадр
-        self._frames: list[Text***REMOVED*** = [***REMOVED***
+        self._frames: list[Text] = []
         self._frame_idx = 0
         self._anim_timer: Timer | None = None
         self._paused = False
@@ -1935,19 +1935,19 @@ class ImagePreviewScreen(Screen):
         self._pending_render = False  # быстрые +/−: нужна повторная отрисовка
 
     def compose(self) -> ComposeResult:
-        hint_text = f"{self._hint***REMOVED***  ·  " if self._hint else ""
+        hint_text = f"{self._hint}  ·  " if self._hint else ""
         yield Container(
             Static("⏳ Рендерю превью...", id="preview-label"),
-            Label(f"{hint_text***REMOVED***{self._hint_close()***REMOVED***", id="preview-hint"),
+            Label(f"{hint_text}{self._hint_close()}", id="preview-hint"),
             id="preview-box",
         )
 
     def _hint_close(self) -> str:
         """Подсказка закрытия/зума внизу превью."""
         extra = " · o — ▶ открыть в плеере" if self._external else ""
-        return f"Esc / Enter / q — закрыть{extra***REMOVED*** · +/− масштаб {self._zoom:.2f***REMOVED***× · 0 — сброс"
+        return f"Esc / Enter / q — закрыть{extra} · +/− масштаб {self._zoom:.2f}× · 0 — сброс"
 
-    def _preview_size(self) -> tuple[int, int***REMOVED***:
+    def _preview_size(self) -> tuple[int, int]:
         """Размер превью в символах с учётом зума (+/−)."""
         base_cols = self.app.size.width - 4
         base_rows = self.app.size.height - 4
@@ -2007,7 +2007,7 @@ class ImagePreviewScreen(Screen):
                 "--format", "symbols",
                 "--colors", "256",
                 "--animate", "off",
-                "--size", f"{cols***REMOVED***x{rows***REMOVED***",
+                "--size", f"{cols}x{rows}",
                 str(self._path),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.DEVNULL,
@@ -2018,7 +2018,7 @@ class ImagePreviewScreen(Screen):
                 st.update("⚠️ chafa не смог отрисовать (файл не картинка?)")
                 return
             st.update(Text.from_ansi(_strip_csi_non_sgr(raw)))
-            prefix = f"{self._hint***REMOVED***  ·  " if self._hint else ""
+            prefix = f"{self._hint}  ·  " if self._hint else ""
             self.query_one("#preview-hint", Label).update(prefix + self._hint_close())
         except asyncio.TimeoutError:
             if proc is not None:
@@ -2027,7 +2027,7 @@ class ImagePreviewScreen(Screen):
         except FileNotFoundError:
             st.update("❌ chafa не установлен — поставь: pkg install chafa")
         except Exception as e:
-            st.update(f"❌ {e***REMOVED***")
+            st.update(f"❌ {e}")
 
     # ── Масштабирование (+/−) ──────────────────────────────
 
@@ -2046,7 +2046,7 @@ class ImagePreviewScreen(Screen):
     def _zoom_rerender(self) -> None:
         """Остановить анимацию и перезапустить chafa с новым размером."""
         self._stop_anim()
-        self._frames = [***REMOVED***
+        self._frames = []
         self._frame_idx = 0
         self._paused = False
         self.run_worker(self._render_preview())
@@ -2061,20 +2061,20 @@ class ImagePreviewScreen(Screen):
             frames = await self._chafa_per_frame_frames(cols, rows)
         if len(frames) < 2 or not self.is_mounted:
             return False
-        self._frames = [Text.from_ansi(_strip_csi_non_sgr(f)) for f in frames***REMOVED***
+        self._frames = [Text.from_ansi(_strip_csi_non_sgr(f)) for f in frames]
         self._frame_idx = 0
         st = self.query_one("#preview-label", Static)
-        st.update(self._frames[0***REMOVED***)
+        st.update(self._frames[0])
         hint = self.query_one("#preview-hint", Label)
-        prefix = f"{self._hint***REMOVED***  ·  " if self._hint else ""
+        prefix = f"{self._hint}  ·  " if self._hint else ""
         hint.update(
             prefix
-            + f"⏵ {len(frames)***REMOVED*** кадров · p — пауза · +/− {self._zoom:.2f***REMOVED***× · Esc — закрыть"
+            + f"⏵ {len(frames)} кадров · p — пауза · +/− {self._zoom:.2f}× · Esc — закрыть"
         )
         self._anim_timer = self.set_interval(_frame_interval(durations), self._next_frame)
         return True
 
-    async def _chafa_animate_on_frames(self, cols: int, rows: int) -> list[str***REMOVED***:
+    async def _chafa_animate_on_frames(self, cols: int, rows: int) -> list[str]:
         """Один прогон chafa --animate on; кадры разделены form feed (\x0c)."""
         try:
             proc = await asyncio.create_subprocess_exec(
@@ -2083,30 +2083,30 @@ class ImagePreviewScreen(Screen):
                 "--colors", "256",
                 "--animate", "on",
                 "--duration", "0",
-                "--size", f"{cols***REMOVED***x{rows***REMOVED***",
+                "--size", f"{cols}x{rows}",
                 str(self._path),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.DEVNULL,
             )
             out, _ = await asyncio.wait_for(proc.communicate(), timeout=30)
             if not out:
-                return [***REMOVED***
+                return []
             raw = out.decode("utf-8", "replace")
             # Формат не документирован: пробуем form feed, иначе — одиночный кадр.
             # Лимит кадров — как в fallback (превью, а не плеер).
             if "\x0c" in raw:
-                return [f for f in raw.split("\x0c") if f.strip()***REMOVED***[:60***REMOVED***
-            return [***REMOVED***
+                return [f for f in raw.split("\x0c") if f.strip()][:60]
+            return []
         except Exception:
-            return [***REMOVED***
+            return []
 
-    async def _chafa_per_frame_frames(self, cols: int, rows: int) -> list[str***REMOVED***:
+    async def _chafa_per_frame_frames(self, cols: int, rows: int) -> list[str]:
         """Fallback: кадры через PIL (ImageSequence) + chafa --animate off по одному.
 
         Лимиты: максимум 60 кадров ИЛИ 45 секунд суммарно — чтобы сломанный/hanging
         chafa не превращал превью в многоминутное ожидание.
         """
-        frames: list[str***REMOVED*** = [***REMOVED***
+        frames: list[str] = []
         deadline = time.monotonic() + 45.0
         try:
             from PIL import Image, ImageSequence
@@ -2125,7 +2125,7 @@ class ImagePreviewScreen(Screen):
                         "--format", "symbols",
                         "--colors", "256",
                         "--animate", "off",
-                        "--size", f"{cols***REMOVED***x{rows***REMOVED***",
+                        "--size", f"{cols}x{rows}",
                         tmp,
                         stdout=asyncio.subprocess.PIPE,
                         stderr=asyncio.subprocess.DEVNULL,
@@ -2151,7 +2151,7 @@ class ImagePreviewScreen(Screen):
             return
         self._frame_idx = (self._frame_idx + 1) % len(self._frames)
         try:
-            self.query_one("#preview-label", Static).update(self._frames[self._frame_idx***REMOVED***)
+            self.query_one("#preview-label", Static).update(self._frames[self._frame_idx])
         except Exception:
             pass
 
@@ -2159,13 +2159,13 @@ class ImagePreviewScreen(Screen):
         self._paused = not self._paused
         hint = self.query_one("#preview-hint", Label)
         if len(self._frames) > 1:
-            state = "⏸ Пауза" if self._paused else f"⏵ {len(self._frames)***REMOVED*** кадров"
+            state = "⏸ Пауза" if self._paused else f"⏵ {len(self._frames)} кадров"
         else:
             state = "⏸ Пауза" if self._paused else "⏳ Рендер..."
-        prefix = f"{self._hint***REMOVED***  ·  " if self._hint else ""
+        prefix = f"{self._hint}  ·  " if self._hint else ""
         hint.update(
             prefix
-            + f"{state***REMOVED*** · p — {'продолжить' if self._paused else 'пауза'***REMOVED*** · +/− {self._zoom:.2f***REMOVED***× · Esc — закрыть"
+            + f"{state} · p — {'продолжить' if self._paused else 'пауза'} · +/− {self._zoom:.2f}× · Esc — закрыть"
         )
 
     def action_open_external(self) -> None:
@@ -2198,7 +2198,7 @@ class GifConfirmScreen(Screen):
     BINDINGS = [
         Binding("y,enter", "confirm", "✅ Отправить", show=True),
         Binding("n,escape,q", "cancel", "❌ Отмена", show=True),
-    ***REMOVED***
+    ]
 
     CSS = """
     #preview-box {
@@ -2207,18 +2207,18 @@ class GifConfirmScreen(Screen):
         background: #000000;
         align: center middle;
         padding: 1;
-    ***REMOVED***
+    }
     #preview-label {
         width: auto;
         height: auto;
         color: #e0e0e0;
-    ***REMOVED***
+    }
     #preview-hint {
         dock: bottom;
         height: 1;
         color: #777777;
         text-align: center;
-    ***REMOVED***
+    }
     """
 
     def __init__(self, path: Path, hint_icon: str = "🎞"):
@@ -2265,7 +2265,7 @@ class GifConfirmScreen(Screen):
                         "--format", "symbols",
                         "--colors", "256",
                         "--animate", "off",
-                        "--size", f"{cols***REMOVED***x{rows***REMOVED***",
+                        "--size", f"{cols}x{rows}",
                         str(source),
                         stdout=asyncio.subprocess.PIPE,
                         stderr=asyncio.subprocess.DEVNULL,
@@ -2279,7 +2279,7 @@ class GifConfirmScreen(Screen):
                         proc.kill()
                     st.update("⏱️ Слишком долгий рендер — можно отправить без превью (y)")
                 except Exception as e:
-                    st.update(f"❌ {e***REMOVED***")
+                    st.update(f"❌ {e}")
             else:
                 st.update("❌ chafa не установлен — pkg install chafa (y — отправить всё равно)")
         finally:
@@ -2293,13 +2293,13 @@ class GifConfirmScreen(Screen):
             size = self._path.stat().st_size // 1024
         except Exception:
             size = 0
-        name = self._path.name[:60***REMOVED***
+        name = self._path.name[:60]
         try:
             # Экран могут закрыть, пока chafa рендерит (query_one на размонтированном
             # экране бросит NoMatches — это не ошибка, просто закрытие)
             if self.is_mounted:
                 self.query_one("#preview-hint", Label).update(
-                    f"{self._hint_icon***REMOVED*** {name***REMOVED*** ({size***REMOVED*** КБ)  ·  y/Enter — отправить · n/Esc — отмена"
+                    f"{self._hint_icon} {name} ({size} КБ)  ·  y/Enter — отправить · n/Esc — отмена"
                 )
         except Exception:
             pass
@@ -2326,7 +2326,7 @@ class VoiceConfirmScreen(Screen):
         Binding("s,enter", "confirm", "📤 Отправить", show=True),
         Binding("p,l", "listen", "▶️ Слушать", show=True),
         Binding("d,escape,q", "delete", "🗑 Удалить", show=True),
-    ***REMOVED***
+    ]
 
     CSS = """
     #voice-box {
@@ -2336,20 +2336,20 @@ class VoiceConfirmScreen(Screen):
         background: #10131c;
         padding: 1;
         align: center middle;
-    ***REMOVED***
+    }
     #voice-title {
         color: #35d07f;
         text-style: bold;
         text-align: center;
-    ***REMOVED***
+    }
     #voice-hint {
         color: #e0e0e0;
         text-align: center;
-    ***REMOVED***
+    }
     #voice-btns {
         align: center middle;
         height: 4;
-    ***REMOVED***
+    }
     #vc-send, #vc-listen, #vc-delete {
         width: auto;
         min-width: 10;
@@ -2357,31 +2357,31 @@ class VoiceConfirmScreen(Screen):
         margin: 0 1;
         background: #24283b;
         text-style: bold;
-    ***REMOVED***
+    }
     #vc-send {
         border: solid #35d07f;
         color: #35d07f;
-    ***REMOVED***
+    }
     #vc-send:focus {
         border: double #7dffa8;
         color: #7dffa8;
-    ***REMOVED***
+    }
     #vc-listen {
         border: solid #4fc3f7;
         color: #4fc3f7;
-    ***REMOVED***
+    }
     #vc-listen:focus {
         border: double #7dc4ff;
         color: #7dc4ff;
-    ***REMOVED***
+    }
     #vc-delete {
         border: solid #f7768e;
         color: #f7768e;
-    ***REMOVED***
+    }
     #vc-delete:focus {
         border: double #ff9eac;
         color: #ff9eac;
-    ***REMOVED***
+    }
     """
 
     def __init__(self, path: Path):
@@ -2395,7 +2395,7 @@ class VoiceConfirmScreen(Screen):
             size = 0
         yield Container(
             Label("🎤 Запись готова", id="voice-title"),
-            Label(f"[dim***REMOVED***{self._path.name[:44***REMOVED******REMOVED*** ({size***REMOVED*** КБ)[/***REMOVED***", id="voice-hint"),
+            Label(f"[dim]{self._path.name[:44]} ({size} КБ)[/]", id="voice-hint"),
             Horizontal(
                 Button("📤 Отправить", id="vc-send"),
                 Button("▶️ Прослушать", id="vc-listen"),
@@ -2439,7 +2439,7 @@ class VoiceConfirmScreen(Screen):
         try:
             if player:
                 subprocess.Popen(
-                    [player, "play", str(self._path)***REMOVED***,
+                    [player, "play", str(self._path)],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                 )
@@ -2448,14 +2448,14 @@ class VoiceConfirmScreen(Screen):
             opener = shutil.which("termux-open") or shutil.which("xdg-open")
             if opener:
                 subprocess.Popen(
-                    [opener, str(self._path)***REMOVED***,
+                    [opener, str(self._path)],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                 )
                 self.notify("▶️ Открыл в плеере — вернись: s — отправить · d — удалить", timeout=5)
                 return
         except Exception as e:
-            self.notify(f"❌ Не удалось проиграть: {e***REMOVED***", severity="error")
+            self.notify(f"❌ Не удалось проиграть: {e}", severity="error")
             return
         self.notify("⚠️ Нет плеера (termux-media-player / termux-open)", severity="warning")
 
@@ -2480,7 +2480,7 @@ class FileBrowserScreen(Screen):
         "pictures": "🖼 Картинки",
         "dcim": "📷 DCIM",
         "music": "🎵 Музыка",
-    ***REMOVED***
+    }
 
     BINDINGS = [
         Binding("escape", "close", show=False),
@@ -2490,7 +2490,7 @@ class FileBrowserScreen(Screen):
         Binding("i", "goto_favorite('pictures')", "🖼 Картинки", show=True),
         Binding("c", "goto_favorite('dcim')", "📷 DCIM", show=True),
         Binding("m", "goto_favorite('music')", "🎵 Музыка", show=True),
-    ***REMOVED***
+    ]
 
     CSS = """
     #fb-header {
@@ -2499,26 +2499,26 @@ class FileBrowserScreen(Screen):
         padding: 1;
         text-align: center;
         text-style: bold;
-    ***REMOVED***
+    }
     #fb-path {
         color: #4fc3f7;
         padding: 0 1;
         text-style: italic;
-    ***REMOVED***
+    }
     #fb-list {
         border: solid #333;
         height: 1fr;
-    ***REMOVED***
+    }
     #fb-hint {
         color: #777777;
         padding: 0 1;
-    ***REMOVED***
+    }
     """
 
     def __init__(self, gif_mode: bool = False, audio_mode: bool = False, video_mode: bool = False):
         super().__init__()
         self._dir: Path = Path.home() / "storage"
-        self._items: list[tuple[str, object***REMOVED******REMOVED*** = [***REMOVED***
+        self._items: list[tuple[str, object]] = []
         self._gif_mode = gif_mode   # показывать только .gif/.webp файлы
         self._audio_mode = audio_mode   # показывать только аудиофайлы (🎤)
         self._video_mode = video_mode   # показывать только видеофайлы (🎬)
@@ -2552,14 +2552,14 @@ class FileBrowserScreen(Screen):
         """Перечитать текущую папку в список."""
         lst = self.query_one("#fb-list", ListView)
         lst.clear()
-        self.query_one("#fb-path", Label).update(f"📂 {self._dir***REMOVED***")
-        self._items = [("manual", None)***REMOVED***
-        labels: list[str***REMOVED*** = ["📝 Ввести путь вручную"***REMOVED***
+        self.query_one("#fb-path", Label).update(f"📂 {self._dir}")
+        self._items = [("manual", None)]
+        labels: list[str] = ["📝 Ввести путь вручную"]
         if self._dir.parent != self._dir and str(self._dir) != "/":
             self._items.append(("up", None))
             labels.append("⬆️ .. (на уровень выше)")
         # Сортировка с защитой от сбоев stat() (права на /sdcard бывают разные)
-        entries: list[tuple[bool, Path***REMOVED******REMOVED*** = [***REMOVED***
+        entries: list[tuple[bool, Path]] = []
         try:
             for p in self._dir.iterdir():
                 try:
@@ -2568,7 +2568,7 @@ class FileBrowserScreen(Screen):
                     continue
         except Exception:
             pass
-        entries.sort(key=lambda t: (t[0***REMOVED***, t[1***REMOVED***.name.lower()))
+        entries.sort(key=lambda t: (t[0], t[1].name.lower()))
         for is_file, p in entries:
             if p.name.startswith("."):
                 continue
@@ -2585,10 +2585,10 @@ class FileBrowserScreen(Screen):
                     size = 0
                 self._items.append(("file", p))
                 icon = "🎵" if self._audio_mode else ("🎬" if self._video_mode else "📄")
-                labels.append(f"{icon***REMOVED*** {p.name***REMOVED***  [dim***REMOVED***({size // 1024***REMOVED*** КБ)[/***REMOVED***")
+                labels.append(f"{icon} {p.name}  [dim]({size // 1024} КБ)[/]")
             else:
                 self._items.append(("dir", p))
-                labels.append(f"📁 {p.name***REMOVED***/")
+                labels.append(f"📁 {p.name}/")
         for label in labels:
             lst.append(ListItem(Label(label)))
 
@@ -2599,7 +2599,7 @@ class FileBrowserScreen(Screen):
         idx = lst.index if lst.index is not None else 0
         if idx < 0 or idx >= len(self._items):
             return
-        kind, payload = self._items[idx***REMOVED***
+        kind, payload = self._items[idx]
         if kind == "manual":
             self.dismiss(MANUAL_PATH)
         elif kind == "up":
@@ -2620,7 +2620,7 @@ class FileBrowserScreen(Screen):
             return
         label = self._FAVORITE_DIRS.get(name, name)
         self.notify(
-            f"Папки нет: {target***REMOVED*** — сделай termux-setup-storage (доступ к {label***REMOVED***)",
+            f"Папки нет: {target} — сделай termux-setup-storage (доступ к {label})",
             severity="warning",
             timeout=3,
         )
@@ -2648,58 +2648,58 @@ class TGApp(App):
         padding: 1;
         text-align: center;
         text-style: bold;
-    ***REMOVED***
+    }
     #chat-list {
         border: solid #333;
         height: 1fr;
-    ***REMOVED***
+    }
     #search-input {
         border: solid #4fc3f7;
         margin: 0 1;
         background: #1a1a2e;
         color: #e0e0e0;
-    ***REMOVED***
+    }
     #search-count {
         color: #4fc3f7;
         padding: 0 1;
         text-style: italic;
-    ***REMOVED***
+    }
     #chat-search {
         border: solid #4fc3f7;
         margin: 0 1;
         background: #1a1a2e;
         color: #e0e0e0;
-    ***REMOVED***
+    }
     #chat-search-count {
         color: #4fc3f7;
         padding: 0 1;
         text-style: italic;
-    ***REMOVED***
+    }
     #transfer-progress {
         display: none;
         margin: 0 1;
         height: 1;
         color: #4fc3f7;
-    ***REMOVED***
+    }
     #msg-area {
         height: 1fr;
         border: solid #333;
-    ***REMOVED***
+    }
     #msg-list {
         height: 1fr;
-    ***REMOVED***
+    }
     #input-bar {
         height: 3;
         padding: 1;
         background: #1a1a2e;
         border-top: solid #333;
-    ***REMOVED***
+    }
     #msg-input {
         width: 1fr;
         background: #24283b;
         color: #e0e0e0;
         border: solid #4fc3f7;
-    ***REMOVED***
+    }
     #btn-attach, #btn-gif {
         width: auto;
         min-width: 9;
@@ -2709,11 +2709,11 @@ class TGApp(App):
         border: solid #4fc3f7;
         color: #4fc3f7;
         text-style: bold;
-    ***REMOVED***
+    }
     #btn-attach:focus, #btn-gif:focus {
         border: double #7dc4ff;
         color: #7dc4ff;
-    ***REMOVED***
+    }
     #btn-voice {
         width: auto;
         min-width: 9;
@@ -2723,11 +2723,11 @@ class TGApp(App):
         border: solid #35d07f;
         color: #35d07f;
         text-style: bold;
-    ***REMOVED***
+    }
     #btn-voice:focus {
         border: double #7dffa8;
         color: #7dffa8;
-    ***REMOVED***
+    }
     #btn-video {
         width: auto;
         min-width: 9;
@@ -2737,14 +2737,14 @@ class TGApp(App):
         border: solid #ff9e64;
         color: #ff9e64;
         text-style: bold;
-    ***REMOVED***
+    }
     #btn-video:focus {
         border: double #ffc9a0;
         color: #ffc9a0;
-    ***REMOVED***
+    }
     ListView:focus {
         border: solid #4fc3f7;
-    ***REMOVED***
+    }
     """
 
     BINDINGS = [
@@ -2758,7 +2758,7 @@ class TGApp(App):
         Binding("ctrl+x", "quit", "Выход", show=True),
         Binding("ctrl+q", "quit", "Выход", show=False),
         Binding("escape", "escape", "", show=False),
-    ***REMOVED***
+    ]
 
     def __init__(self):
         super().__init__()
@@ -2768,7 +2768,7 @@ class TGApp(App):
         self._spinner_idx = 0
         self._spinner_timer: Timer | None = None
         self._refresh_timer: Timer | None = None
-        self._search_history: list[str***REMOVED*** = [***REMOVED***
+        self._search_history: list[str] = []
         self._refreshing = False
         self._total_unread = -1
 
@@ -2795,7 +2795,7 @@ class TGApp(App):
             if days > 0:
                 removed = await cache.prune_older_than(days)
                 if removed:
-                    self.notify(f"🧹 Кэш: удалено {removed***REMOVED*** сообщений старше {days***REMOVED*** дн.", timeout=3)
+                    self.notify(f"🧹 Кэш: удалено {removed} сообщений старше {days} дн.", timeout=3)
         except Exception:
             pass
         # Присваиваем ТОЛЬКО после успешного open(): параллельный _load_chats
@@ -2804,7 +2804,7 @@ class TGApp(App):
 
     def _spin(self) -> None:
         self._spinner_idx = (self._spinner_idx + 1) % len(SPINNER)
-        self.sub_title = f"{SPINNER[self._spinner_idx***REMOVED******REMOVED*** Подключение..."
+        self.sub_title = f"{SPINNER[self._spinner_idx]} Подключение..."
 
     def _stop_spinner(self) -> None:
         if self._spinner_timer is not None:
@@ -2825,9 +2825,9 @@ class TGApp(App):
                 self.sub_title = "⚠️ Нужна авторизация — сначала: python test_tg.py"
                 return
             me = await self._await_tg(self._tg.get_me_async())
-            name = f"{me.first_name***REMOVED*** {me.last_name or ''***REMOVED***" if me else "???"
+            name = f"{me.first_name} {me.last_name or ''}" if me else "???"
             self._stop_spinner()
-            self.sub_title = f"👤 {name***REMOVED***"
+            self.sub_title = f"👤 {name}"
             self._tg_connected = True
             self._refresh_timer = self.set_interval(10, self._auto_refresh)
             await self._load_chats()
@@ -2842,7 +2842,7 @@ class TGApp(App):
                 # SQLite-сессию. Раньше это выглядело как «кнопки не реагируют».
                 self.sub_title = "🔒 База занята другим экземпляром — закрой его (Ctrl+Q) и перезапусти"
             else:
-                self.sub_title = f"❌ {e***REMOVED***"
+                self.sub_title = f"❌ {e}"
 
     def _auto_refresh(self) -> None:
         if self._tg_connected and not self._refreshing:
@@ -2875,20 +2875,20 @@ class TGApp(App):
     async def _load_cached_dialogs(self) -> list:
         """Восстановить список чатов из кэша (офлайн)."""
         from types import SimpleNamespace
-        out = [***REMOVED***
+        out = []
         for row in await self._cache.get_dialogs(limit=50):
             out.append(
                 SimpleNamespace(
-                    id=row["id"***REMOVED***,
-                    name=row["name"***REMOVED***,
-                    unread_count=row["unread_count"***REMOVED***,
+                    id=row["id"],
+                    name=row["name"],
+                    unread_count=row["unread_count"],
                     entity=None,
                     input_entity=None,
                 )
             )
         return out
 
-    def _check_unread(self, dialogs: list[object***REMOVED***) -> None:
+    def _check_unread(self, dialogs: list[object]) -> None:
         if not self._tg_connected:
             return
         total = sum(d.unread_count for d in dialogs)
@@ -2899,8 +2899,8 @@ class TGApp(App):
                 sys.stderr.write("\a"); sys.stderr.flush()
             current = self.sub_title
             if " [" in current:
-                current = current.split(" [")[0***REMOVED***
-            self.sub_title = f"{current***REMOVED*** [{total***REMOVED*** нов***REMOVED***" if total > 0 else current
+                current = current.split(" [")[0]
+            self.sub_title = f"{current} [{total} нов]" if total > 0 else current
 
     # ── Навигация: Enter на чате → полный экран ────────────
 
@@ -2989,7 +2989,7 @@ class TGApp(App):
         new_mode = "light" if not _is_light_mode() else "advance"
         _set_setting("mode", new_mode)
         label = "лайт (чисто переписка)" if new_mode == "light" else "адванс (все функции)"
-        self.notify(f"🔀 Режим: {label***REMOVED***", timeout=3)
+        self.notify(f"🔀 Режим: {label}", timeout=3)
         screen = self.screen
         if isinstance(screen, ChatViewScreen):
             screen._apply_mode_ui()
@@ -3011,7 +3011,7 @@ class TGApp(App):
             return
         try:
             subprocess.Popen(
-                [opener, real***REMOVED***,
+                [opener, real],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
             )
@@ -3049,18 +3049,18 @@ class TGApp(App):
             q = event.value.strip()
             if q not in self._search_history:
                 self._search_history.insert(0, q)
-                self._search_history = self._search_history[:5***REMOVED***
+                self._search_history = self._search_history[:5]
             screen = self.screen
             if isinstance(screen, ChatListScreen):
                 sc = screen.query_one("#search-count", Label)
-                sc.update(f"🔍 Сохранено! История: {', '.join(self._search_history[:3***REMOVED***)***REMOVED***")
+                sc.update(f"🔍 Сохранено! История: {', '.join(self._search_history[:3])}")
 
     def on_chat_list_search_opened(self, event: ChatListScreen.SearchOpened) -> None:
         if self._search_history:
             screen = self.screen
             if isinstance(screen, ChatListScreen):
                 sc = screen.query_one("#search-count", Label)
-                sc.update(f"🔍 История: {', '.join(self._search_history)***REMOVED***")
+                sc.update(f"🔍 История: {', '.join(self._search_history)}")
 
 
 if __name__ == "__main__":

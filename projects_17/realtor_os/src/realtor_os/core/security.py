@@ -5,16 +5,16 @@ from __future__ import annotations
 import base64
 import binascii
 import os
-***REMOVED***
+}
 
 try:
     from Crypto.Cipher import AES
     from Crypto.Protocol.KDF import PBKDF2
     from Crypto.Random import get_random_bytes
 except ImportError as _import_exc:  # pragma: no cover - fallback for missing pycryptodome
-    AES = None  # type: ignore[assignment, misc***REMOVED***
-    PBKDF2 = None  # type: ignore[assignment, misc***REMOVED***
-    get_random_bytes = None  # type: ignore[assignment, misc***REMOVED***
+    AES = None  # type: ignore[assignment, misc]
+    PBKDF2 = None  # type: ignore[assignment, misc]
+    get_random_bytes = None  # type: ignore[assignment, misc]
 
 from realtor_os.constants import PROJECT_ROOT
 
@@ -90,11 +90,11 @@ def decrypt_pii(ciphertext_b64: str, key: str) -> str:
     if len(payload) < _SALT_SIZE + _IV_SIZE + 16:
         raise SecurityError("Ciphertext too short")
 
-    salt = payload[:_SALT_SIZE***REMOVED***
-    nonce = payload[_SALT_SIZE : _SALT_SIZE + _IV_SIZE***REMOVED***
-    rest = payload[_SALT_SIZE + _IV_SIZE :***REMOVED***
-    tag = rest[-16:***REMOVED***
-    ciphertext = rest[:-16***REMOVED***
+    salt = payload[:_SALT_SIZE]
+    nonce = payload[_SALT_SIZE : _SALT_SIZE + _IV_SIZE]
+    rest = payload[_SALT_SIZE + _IV_SIZE :]
+    tag = rest[-16:]
+    ciphertext = rest[:-16]
 
     derived = _derive_key(key.encode("utf-8"), salt)
     cipher = AES.new(derived, AES.MODE_GCM, nonce=nonce)
@@ -124,5 +124,5 @@ def validate_path(path: str | Path) -> Path:
     try:
         resolved.relative_to(PROJECT_ROOT.resolve())
     except ValueError as exc:
-        raise SecurityError(f"Path escapes project root: {path***REMOVED***") from exc
+        raise SecurityError(f"Path escapes project root: {path}") from exc
     return resolved

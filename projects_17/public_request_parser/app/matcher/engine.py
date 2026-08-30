@@ -18,7 +18,7 @@ Word-form обработка намеренно простая (префиксн
 
 from __future__ import annotations
 
-***REMOVED***
+}
 from datetime import datetime, timezone
 from typing import Iterable, Sequence
 
@@ -32,7 +32,7 @@ from app.domain import (
 )
 
 #: Токены, слишком общие для оценки optional-терминов.
-STOPWORDS: frozenset[str***REMOVED*** = frozenset(
+STOPWORDS: frozenset[str] = frozenset(
     {
         "и",
         "в",
@@ -56,13 +56,13 @@ STOPWORDS: frozenset[str***REMOVED*** = frozenset(
         "on",
         "with",
         "and",
-    ***REMOVED***
+    }
 )
 
 #: Offer-формулировки («предлагает услугу») для intent gate.
 #: Список намеренно консервативный: маркер срабатывает только в сочетании с
 #: отсутствием demand-сигнала из профиля.
-OFFER_MARKERS: tuple[str, ...***REMOVED*** = (
+OFFER_MARKERS: tuple[str, ...] = (
     "предлага",
     "оказыва",
     "окажу",
@@ -76,7 +76,7 @@ OFFER_MARKERS: tuple[str, ...***REMOVED*** = (
     "готова ",
 )
 
-_TOKEN_RE = re.compile(r"[^\W_***REMOVED***+", re.UNICODE)
+_TOKEN_RE = re.compile(r"[^\W_)+", re.UNICODE)
 
 
 def normalize_text(value: str) -> str:
@@ -84,7 +84,7 @@ def normalize_text(value: str) -> str:
     return re.sub(r"\s+", " ", value.strip().lower())
 
 
-def tokenize(value: str) -> tuple[str, ...***REMOVED***:
+def tokenize(value: str) -> tuple[str, ...]:
     """Разбить нормализованный текст на слова (поддерживает кириллицу)."""
     return tuple(match.group(0) for match in _TOKEN_RE.finditer(value))
 
@@ -94,7 +94,7 @@ def is_stopword(term: str) -> bool:
     return term.strip().lower() in STOPWORDS
 
 
-def _matches_term(term: str, tokens: Sequence[str***REMOVED***, text: str) -> bool:
+def _matches_term(term: str, tokens: Sequence[str], text: str) -> bool:
     """Проверить совпадение одного термина (слово или точная фраза).
 
     Слово: полное совпадение, либо префиксный word-form доступ для терминов
@@ -108,23 +108,23 @@ def _matches_term(term: str, tokens: Sequence[str***REMOVED***, text: str) -> bo
     if len(parts) > 1:
         window = len(parts)
         return any(
-            tokens[index : index + window***REMOVED*** == parts
+            tokens[index : index + window] == parts
             for index in range(len(tokens) - window + 1)
         )
-    word = parts[0***REMOVED***
+    word = parts[0]
     if len(word) < 4:
         return word in tokens
     return any(token == word or token.startswith(word) for token in tokens)
 
 
 def _matched_terms(
-    terms: Iterable[str***REMOVED***,
-    tokens: tuple[str, ...***REMOVED***,
+    terms: Iterable[str],
+    tokens: tuple[str, ...],
     text: str,
-) -> tuple[tuple[str, ...***REMOVED***, tuple[str, ...***REMOVED******REMOVED***:
+) -> tuple[tuple[str, ...], tuple[str, ...]]:
     """Разделить термины на совпавшие и не совпавшие, сохраняя порядок."""
-    matched: list[str***REMOVED*** = [***REMOVED***
-    missing: list[str***REMOVED*** = [***REMOVED***
+    matched: list[str] = []
+    missing: list[str] = []
     for term in terms:
         if _matches_term(term, tokens, text):
             matched.append(term)
@@ -138,11 +138,11 @@ class RuleMatcher:
 
     def __init__(self, profile: SearchProfile) -> None:
         self.profile = profile
-        self._synonym_map: dict[str, tuple[str, ...***REMOVED******REMOVED*** = {***REMOVED***
+        self._synonym_map: dict[str, tuple[str, ...]] = {}
         for canonical, aliases in profile.synonyms:
             if not canonical.strip():
                 raise ContractValidationError("synonym canonical must be non-empty")
-            self._synonym_map[canonical.strip().lower()***REMOVED*** = tuple(
+            self._synonym_map[canonical.strip().lower()] = tuple(
                 alias.strip().lower() for alias in aliases if alias.strip()
             )
 
@@ -171,13 +171,13 @@ class RuleMatcher:
     def _decide(
         self,
         publication: Publication,
-        tokens: tuple[str, ...***REMOVED***,
+        tokens: tuple[str, ...],
         text: str,
         decided_at: datetime,
     ) -> MatchDecision:
         profile = self.profile
-        reasons: list[str***REMOVED*** = [***REMOVED***
-        rejected_terms: list[str***REMOVED*** = [***REMOVED***
+        reasons: list[str] = []
+        rejected_terms: list[str] = []
 
         matched_required, missing_required = _matched_terms(
             profile.required_terms, tokens, text
@@ -187,7 +187,7 @@ class RuleMatcher:
         matched_intent, _ = _matched_terms(profile.intent_terms, tokens, text)
 
         # Синonimы: совпадение любого алиаса засчитывает canonical.
-        matched_synonyms: list[str***REMOVED*** = [***REMOVED***
+        matched_synonyms: list[str] = []
         for canonical, aliases in self._synonym_map.items():
             hits = tuple(
                 alias for alias in aliases if _matches_term(alias, tokens, text)
@@ -201,19 +201,19 @@ class RuleMatcher:
                     matched_optional += (canonical,)
 
         for term in matched_required:
-            reasons.append(f"required term matched: {term***REMOVED***")
+            reasons.append(f"required term matched: {term}")
         for term in matched_optional:
-            reasons.append(f"optional term matched: {term***REMOVED***")
+            reasons.append(f"optional term matched: {term}")
         for term in matched_synonyms:
-            reasons.append(f"synonym group matched: {term***REMOVED***")
+            reasons.append(f"synonym group matched: {term}")
         for term in matched_intent:
-            reasons.append(f"intent term matched: {term***REMOVED***")
+            reasons.append(f"intent term matched: {term}")
 
         # 1. Жёсткие негативные правила.
         if matched_excluded:
             rejected_terms.extend(matched_excluded)
             for term in matched_excluded:
-                reasons.append(f"excluded term matched: {term***REMOVED***")
+                reasons.append(f"excluded term matched: {term}")
             return self._hard_reject(
                 publication, reasons, rejected_terms, decided_at
             )
@@ -221,7 +221,7 @@ class RuleMatcher:
         if missing_required:
             rejected_terms.extend(missing_required)
             for term in missing_required:
-                reasons.append(f"required term missing: {term***REMOVED***")
+                reasons.append(f"required term missing: {term}")
             return self._hard_reject(
                 publication, reasons, rejected_terms, decided_at
             )
@@ -248,7 +248,7 @@ class RuleMatcher:
             # «ищем кандидата» может встретиться «нужен»).
 
         # 2. Score из доступных компонентов профиля.
-        components: list[float***REMOVED*** = [***REMOVED***
+        components: list[float] = []
         if profile.required_terms:
             components.append(len(matched_required) / len(profile.required_terms))
         scoring_optional = tuple(
@@ -262,9 +262,9 @@ class RuleMatcher:
         elif profile.optional_terms:
             skipped = tuple(term for term in profile.optional_terms if is_stopword(term))
             for term in skipped:
-                reasons.append(f"optional term ignored (stopword): {term***REMOVED***")
+                reasons.append(f"optional term ignored (stopword): {term}")
         if self._synonym_map:
-            unique_groups = {canonical for canonical, _ in profile.synonyms***REMOVED***
+            unique_groups = {canonical for canonical, _ in profile.synonyms}
             components.append(len(matched_synonyms) / max(1, len(unique_groups)))
 
         if not components:
@@ -301,8 +301,8 @@ class RuleMatcher:
     def _hard_reject(
         self,
         publication: Publication,
-        reasons: list[str***REMOVED***,
-        rejected_terms: list[str***REMOVED***,
+        reasons: list[str],
+        rejected_terms: list[str],
         decided_at: datetime,
     ) -> MatchDecision:
         return MatchDecision(
@@ -327,4 +327,4 @@ __all__ = [
     "is_stopword",
     "normalize_text",
     "tokenize",
-***REMOVED***
+]

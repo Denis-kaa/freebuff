@@ -17,16 +17,16 @@ Freebuff Plugin — Intent Detection Router.
     from freebuff_plugin_03.router import IntentRouter
     router = IntentRouter()
     result = router.route("напиши парсер JSON")
-    # → {"target": "freebuff", "confidence": 0.85, "reason": "code keywords"***REMOVED***
+    # → {"target": "freebuff", "confidence": 0.85, "reason": "code keywords"}
 """
 
 from __future__ import annotations
 
 import os
-***REMOVED***
+}
 import subprocess
 import sys
-***REMOVED***
+}
 from typing import Any
 
 from freebuff_plugin_03.config import (
@@ -42,60 +42,60 @@ from freebuff_plugin_03.config import (
 # ═══════════════════════════════════════════════════════════════
 
 # Паттерны для определения намерения (расширенные)
-PATTERNS: dict[str, list[str***REMOVED******REMOVED*** = {
+PATTERNS: dict[str, list[str]] = {
     # → Локально (Qwen 0.5B)
     "local_greeting": [
         r"^(привет|здравствуй|хай|хелло|hello|hi|hey|даров|здарова)",
         r"(как дела|как ты|как жизнь|чё как)",
         r"(спасибо|благодарю|ок|ok|ладно|понял|принял)",
         r"(пока|до свидания|увидимся|bye|goodbye)",
-    ***REMOVED***,
+    ],
     "local_status": [
         r"(статус|состояние|health|здоровье)",
         r"(батарея|батарейка|заряд|battery)",
         r"(время|дата|date|time)",
         r"(погода|weather|температура)",
         r"(который час)",
-    ***REMOVED***,
+    ],
     "local_simple_qa": [
         r"^(что такое|кто такой|что значит|what is|who is)",
         r"(напомни|помнишь|что я просил)",
         r"^(да|нет|не знаю|может быть)",
-    ***REMOVED***,
+    ],
 
     # → Freebuff (сложные задачи)
     "freebuff_code": [
         r"(напиши|создай|напиcать|реализуй|implement|write|create)",
-        r"(код|функци[юя***REMOVED***|класс|модуль|парсер|скрипт)",
+        r"(код|функци[юя]|класс|модуль|парсер|скрипт)",
         r"(рефактори|refactor|перепиши|переделай|исправь)",
-        r"(тест|test|pytest|unittest|проверк[аи***REMOVED***)",
-        r"(тип[ы***REMOVED***|type|mypy|аннотаци[юя***REMOVED***)",
-    ***REMOVED***,
+        r"(тест|test|pytest|unittest|проверк[аи])",
+        r"(тип[ы]|type|mypy|аннотаци[юя])",
+    ],
     "freebuff_architecture": [
-        r"(архитектур[ау***REMOVED***|спроектируй|design|спроектировать)",
-        r"(схем[ау***REMOVED***|диаграмм[ау***REMOVED***|дизайн)",
-        r"(баз[аы***REMOVED*** данных|sqlite|postgres|бд|database)",
+        r"(архитектур[ау]|спроектируй|design|спроектировать)",
+        r"(схем[ау]|диаграмм[ау]|дизайн)",
+        r"(баз[аы] данных|sqlite|postgres|бд|database)",
         r"(api|rest|graphql|grpc|эндпоинт)",
-    ***REMOVED***,
+    ],
     "freebuff_tools": [
-        r"(git|коммит|commit|пуш|push|ветк[ау***REMOVED***|branch|merge)",
-        r"(миграци[юя***REMOVED***|migration|alembic)",
+        r"(git|коммит|commit|пуш|push|ветк[ау]|branch|merge)",
+        r"(миграци[юя]|migration|alembic)",
         r"(докер|docker|контейнер|deploy|деплой)",
         r"(установ|install|npm|pip|apt|пакет)",
-    ***REMOVED***,
+    ],
     "freebuff_investigation": [
         r"(найди|поищи|найти|find|grep|search|lookup)",
-        r"(баг|bug|ошибк[ау***REMOVED***|ошибки|логи|logs|debug)",
-        r"(почем[уу***REMOVED***|отчего|зачем|как исправить|как починить)",
-    ***REMOVED***,
-***REMOVED***
+        r"(баг|bug|ошибк[ау]|ошибки|логи|logs|debug)",
+        r"(почем[уу]|отчего|зачем|как исправить|как починить)",
+    ],
+}
 
 # Confidence thresholds
 LOCAL_THRESHOLD = 0.6    # если уверенность > 60% → Qwen
 FREEBUFF_THRESHOLD = 0.4  # если уверенность > 40% → freebuff
 
 
-def _score_text(text: str, pattern_list: list[str***REMOVED***) -> float:
+def _score_text(text: str, pattern_list: list[str]) -> float:
     """Считает совпадения текста со списком regex."""
     text_lower = text.lower()
     score = 0.0
@@ -124,9 +124,9 @@ def _call_qwen_local(prompt: str) -> str:
     Запускает Qwen 2.5 0.5B через llama.cpp и возвращает ответ.
     """
     if not QWEN_MODEL_0_5B.exists():
-        return "[Qwen 0.5B не найден — используй freebuff***REMOVED***"
+        return "[Qwen 0.5B не найден — используй freebuff]"
 
-    full_prompt = f"{QWEEN_SYSTEM_PROMPT***REMOVED***\n\nПользователь: {prompt***REMOVED***\nАссистент:"
+    full_prompt = f"{QWEEN_SYSTEM_PROMPT}\n\nПользователь: {prompt}\nАссистент:"
 
     try:
         result = subprocess.run(
@@ -134,7 +134,7 @@ def _call_qwen_local(prompt: str) -> str:
              "-p", full_prompt,
              "-n", "256",
              "-t", "2",
-             "--no-display-prompt"***REMOVED***,
+             "--no-display-prompt"],
             capture_output=True,
             text=True,
             timeout=30,
@@ -143,14 +143,14 @@ def _call_qwen_local(prompt: str) -> str:
         # Очищаем ответ от лишнего
         if not output:
             output = result.stderr.strip()
-        return output[:500***REMOVED*** if output else "[Qwen не ответил***REMOVED***"
+        return output[:500] if output else "[Qwen не ответил]"
 
     except FileNotFoundError:
-        return f"[llama-cli не найден. Установи: pkg install llama.cpp***REMOVED***"
+        return f"[llama-cli не найден. Установи: pkg install llama.cpp]"
     except subprocess.TimeoutExpired:
-        return "[Qwen: таймаут***REMOVED***"
+        return "[Qwen: таймаут]"
     except Exception as e:
-        return f"[Qwen: {e***REMOVED******REMOVED***"
+        return f"[Qwen: {e}]"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -164,7 +164,7 @@ class IntentRouter:
     Использование:
         router = IntentRouter()
         decision = router.route("напиши парсер")
-        # → {"target": "freebuff", "confidence": 0.85***REMOVED***
+        # → {"target": "freebuff", "confidence": 0.85}
 
         answer = router.local_response("привет")
         # → "Привет! Чем могу помочь?"
@@ -173,7 +173,7 @@ class IntentRouter:
     def __init__(self):
         self.freebuff_binary = FREEBUFF_BINARY
 
-    def route(self, text: str) -> dict[str, Any***REMOVED***:
+    def route(self, text: str) -> dict[str, Any]:
         """
         Принимает решение: local_qwen или freebuff.
 
@@ -182,13 +182,13 @@ class IntentRouter:
                 target: "local_qwen" | "freebuff"
                 confidence: float 0-1
                 reason: str
-                scores: dict[str, float***REMOVED***
+                scores: dict[str, float]
         """
-        scores: dict[str, float***REMOVED*** = {***REMOVED***
+        scores: dict[str, float] = {}
 
         # Считаем скоры по группам
         for group, patterns in PATTERNS.items():
-            scores[group***REMOVED*** = _score_text(text, patterns)
+            scores[group] = _score_text(text, patterns)
 
         # Суммарные скоры
         local_score = max(
@@ -208,24 +208,24 @@ class IntentRouter:
             return {
                 "target": "local_qwen",
                 "confidence": round(local_score, 2),
-                "reason": f"local score {local_score:.2f***REMOVED*** > {LOCAL_THRESHOLD***REMOVED***",
+                "reason": f"local score {local_score:.2f} > {LOCAL_THRESHOLD}",
                 "scores": scores,
-            ***REMOVED***
+            }
         elif freebuff_score > FREEBUFF_THRESHOLD:
             return {
                 "target": "freebuff",
                 "confidence": round(freebuff_score, 2),
-                "reason": f"freebuff score {freebuff_score:.2f***REMOVED*** > {FREEBUFF_THRESHOLD***REMOVED***",
+                "reason": f"freebuff score {freebuff_score:.2f} > {FREEBUFF_THRESHOLD}",
                 "scores": scores,
-            ***REMOVED***
+            }
         else:
             # Неуверен → freebuff (failover)
             return {
                 "target": "freebuff",
                 "confidence": round(freebuff_score, 2),
-                "reason": f"uncertain (local={local_score:.2f***REMOVED***, freebuff={freebuff_score:.2f***REMOVED***), failover to freebuff",
+                "reason": f"uncertain (local={local_score:.2f}, freebuff={freebuff_score:.2f}), failover to freebuff",
                 "scores": scores,
-            ***REMOVED***
+            }
 
     def local_response(self, prompt: str) -> str:
         """Отвечает через Qwen 0.5B."""
@@ -256,24 +256,24 @@ def main():
                 if not q:
                     continue
                 decision = router.route(q)
-                print(f"  → {decision['target'***REMOVED******REMOVED*** (conf={decision['confidence'***REMOVED******REMOVED***)")
-                print(f"  → {decision['reason'***REMOVED******REMOVED***")
-                if decision['target'***REMOVED*** == 'local_qwen':
-                    print(f"  → {router.local_response(q)***REMOVED***")
+                print(f"  → {decision['target']} (conf={decision['confidence']})")
+                print(f"  → {decision['reason']}")
+                if decision['target'] == 'local_qwen':
+                    print(f"  → {router.local_response(q)}")
                 print()
             except KeyboardInterrupt:
                 print("\nbye")
                 break
     elif args.query:
         decision = router.route(args.query)
-        print(f"Query: {args.query***REMOVED***")
-        print(f"Target: {decision['target'***REMOVED******REMOVED***")
-        print(f"Confidence: {decision['confidence'***REMOVED******REMOVED***")
-        print(f"Reason: {decision['reason'***REMOVED******REMOVED***")
-        print(f"Scores: {decision['scores'***REMOVED******REMOVED***")
+        print(f"Query: {args.query}")
+        print(f"Target: {decision['target']}")
+        print(f"Confidence: {decision['confidence']}")
+        print(f"Reason: {decision['reason']}")
+        print(f"Scores: {decision['scores']}")
 
-        if decision['target'***REMOVED*** == 'local_qwen':
-            print(f"\nLocal response: {router.local_response(args.query)***REMOVED***")
+        if decision['target'] == 'local_qwen':
+            print(f"\nLocal response: {router.local_response(args.query)}")
     else:
         parser.print_help()
 

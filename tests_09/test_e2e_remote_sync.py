@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 import json
 import sys
-***REMOVED***
+}
 from typing import Any, Dict
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -29,8 +29,8 @@ import scripts_01.e2e_remote_sync as ers  # noqa: E402
 async def test_stage0_preflight_log_dir_writable(tmp_path):
     """Pre-flight must report log_dir_writable=True when target dir is writable."""
     pf = await ers.stage0_preflight(skip_tg=True, log_dir=tmp_path)
-    assert pf["log_dir_writable"***REMOVED*** is True
-    assert pf["skip_tg_flag"***REMOVED*** is True
+    assert pf["log_dir_writable"] is True
+    assert pf["skip_tg_flag"] is True
     assert pf.get("log_dir_writable_error") is None
 
 
@@ -38,7 +38,7 @@ async def test_stage0_preflight_log_dir_writable(tmp_path):
 async def test_stage0_preflight_skip_tg_no_tg_call(tmp_path):
     """With skip_tg=True, no TGClient.connect() attempted."""
     pf = await ers.stage0_preflight(skip_tg=True, log_dir=tmp_path)
-    assert pf["tg_session"***REMOVED*** is None
+    assert pf["tg_session"] is None
     assert pf.get("tg_session_error") is None
 
 
@@ -46,7 +46,7 @@ async def test_stage0_preflight_skip_tg_no_tg_call(tmp_path):
 async def test_stage0_preflight_core_02_import_ok(tmp_path):
     """core_02.remote_sync.RemoteSyncCoordinatorImpl must be importable."""
     pf = await ers.stage0_preflight(skip_tg=True, log_dir=tmp_path)
-    assert pf["core_02_import"***REMOVED*** is True
+    assert pf["core_02_import"] is True
     assert pf.get("core_02_import_error") is None
 
 
@@ -58,12 +58,12 @@ def test_stage1_plan_unique_round_ids():
     """Round IDs should be unique per call (UUID-derived)."""
     delta_a = ers.stage1_plan(ers._round_id(), sync_group_active=False)
     delta_b = ers.stage1_plan(ers._round_id(), sync_group_active=False)
-    assert delta_a.updated_keys["round_id"***REMOVED*** != delta_b.updated_keys["round_id"***REMOVED***
+    assert delta_a.updated_keys["round_id"] != delta_b.updated_keys["round_id"]
     assert delta_a.source_device_id == "e2e_remote_sync_runner"
     assert delta_a.revision == 1
     assert delta_a.sync_mode == ers.SyncMode.SAVED_MESSAGES
-    assert delta_a.updated_keys["phase"***REMOVED*** == "5.3-C"
-    assert delta_a.updated_keys["verified_via"***REMOVED*** == "e2e_remote_sync.py"
+    assert delta_a.updated_keys["phase"] == "5.3-C"
+    assert delta_a.updated_keys["verified_via"] == "e2e_remote_sync.py"
 
 
 def test_stage1_plan_sync_group_mode():
@@ -80,9 +80,9 @@ async def test_stage2_push_dry_run_returns_synthetic_msg_ids():
     """--dry-run must return DRY_RUN msg_ids WITHOUT real TG call."""
     delta = ers.stage1_plan(ers._round_id(), sync_group_active=False)
     push = await ers.stage2_push_channels(delta, sync_group_active=False, dry_run=True)
-    assert push["saved_msgs"***REMOVED***["msg_id"***REMOVED*** == "DRY_RUN"
-    assert push["saved_msgs"***REMOVED***["ok"***REMOVED*** is True
-    assert push["litvinov"***REMOVED*** is None
+    assert push["saved_msgs"]["msg_id"] == "DRY_RUN"
+    assert push["saved_msgs"]["ok"] is True
+    assert push["litvinov"] is None
 
 
 @pytest.mark.asyncio
@@ -90,10 +90,10 @@ async def test_stage2_push_dry_run_sync_group_dual_channel():
     """--dry-run + --sync-group should populate both synthetic msg_ids."""
     delta = ers.stage1_plan(ers._round_id(), sync_group_active=True)
     push = await ers.stage2_push_channels(delta, sync_group_active=True, dry_run=True)
-    assert push["saved_msgs"***REMOVED***["msg_id"***REMOVED*** == "DRY_RUN"
-    assert push["litvinov"***REMOVED*** is not None
-    assert push["litvinov"***REMOVED***["msg_id"***REMOVED*** == "DRY_RUN"
-    assert push["litvinov"***REMOVED***["chat_id"***REMOVED*** == 1063827731  # ALEX_LITVINOV_CHAT_ID
+    assert push["saved_msgs"]["msg_id"] == "DRY_RUN"
+    assert push["litvinov"] is not None
+    assert push["litvinov"]["msg_id"] == "DRY_RUN"
+    assert push["litvinov"]["chat_id"] == 1063827731  # ALEX_LITVINOV_CHAT_ID
 
 
 @pytest.mark.asyncio
@@ -101,8 +101,8 @@ async def test_stage2_push_no_sync_group_skips_litvinov():
     """Without --sync-group, litvinov channel must be None (NOT synthetic)."""
     delta = ers.stage1_plan(ers._round_id(), sync_group_active=False)
     push = await ers.stage2_push_channels(delta, sync_group_active=False, dry_run=True)
-    assert push["saved_msgs"***REMOVED*** is not None
-    assert push["litvinov"***REMOVED*** is None
+    assert push["saved_msgs"] is not None
+    assert push["litvinov"] is None
 
 
 # ── Stage 3 — Round-trip (TGClient.get_messages mocked via limit-scan) ──
@@ -122,7 +122,7 @@ class _FakeTGClient:
     """
 
     def __init__(self, msgs: list = None, connect_ok: bool = True):
-        self._msgs = msgs or [***REMOVED***
+        self._msgs = msgs or []
         self._connect_ok = connect_ok
         self.connect_call_count = 0
 
@@ -137,7 +137,7 @@ class _FakeTGClient:
         return MagicMock(user_id=7709651193)
 
     async def get_messages(self, entity, limit=5, **kwargs):
-        return [m for m in self._msgs if limit >= 1***REMOVED***
+        return [m for m in self._msgs if limit >= 1]
 
 
 async def _rt_with_injected_client(push, fake):
@@ -149,39 +149,39 @@ async def _rt_with_injected_client(push, fake):
         "projects_17.tg_terminal_messenger.src": MagicMock(),
         "projects_17.tg_terminal_messenger.src.telegram": MagicMock(),
         "projects_17.tg_terminal_messenger.src.telegram.client": tgclient_module,
-    ***REMOVED***):
+    ]):
         return await ers.stage3_round_trip(push, dry_run=False)
 
 
 @pytest.mark.asyncio
 async def test_stage3_round_trip_dry_run_true():
     """--dry-run returns synthetic TRUE for both channels."""
-    push = {"saved_msgs": {"chat_id": 7709651193, "msg_id": "DRY_RUN"***REMOVED***, "litvinov": None***REMOVED***
+    push = {"saved_msgs": {"chat_id": 7709651193, "msg_id": "DRY_RUN"}, "litvinov": None}
     rt = await ers.stage3_round_trip(push, dry_run=True)
-    assert rt["connected"***REMOVED*** is True
-    assert rt["saved_msg_text_non_empty"***REMOVED*** is True
-    assert rt["saved_msg_id"***REMOVED*** == "DRY_RUN"
+    assert rt["connected"] is True
+    assert rt["saved_msg_text_non_empty"] is True
+    assert rt["saved_msg_id"] == "DRY_RUN"
 
 
 @pytest.mark.asyncio
 async def test_stage3_round_trip_get_text_present_via_limit_scan():
     """Recent msg with non-empty text → saved_msg_text_non_empty=True."""
-    push = {"saved_msgs": {"chat_id": 7709651193, "msg_id": 100500***REMOVED***, "litvinov": None***REMOVED***
-    fake = _FakeTGClient(msgs=[_FakeMessage(100500, "non-empty round-trip text")***REMOVED***)
+    push = {"saved_msgs": {"chat_id": 7709651193, "msg_id": 100500}, "litvinov": None}
+    fake = _FakeTGClient(msgs=[_FakeMessage(100500, "non-empty round-trip text")])
     rt = await _rt_with_injected_client(push, fake)
-    assert rt["saved_msg_text_non_empty"***REMOVED*** is True
-    assert rt["saved_msg_id"***REMOVED*** == 100500
+    assert rt["saved_msg_text_non_empty"] is True
+    assert rt["saved_msg_id"] == 100500
     assert "non-empty round-trip text" in rt.get("saved_msg_text_head", "")
 
 
 @pytest.mark.asyncio
 async def test_stage3_round_trip_get_messages_empty_returns_false():
     """Recent msgs don't include our msg_id → saved_msg_text_non_empty=False."""
-    push = {"saved_msgs": {"chat_id": 7709651193, "msg_id": 100600***REMOVED***, "litvinov": None***REMOVED***
-    fake = _FakeTGClient(msgs=[_FakeMessage(99999, "noise")***REMOVED***)
+    push = {"saved_msgs": {"chat_id": 7709651193, "msg_id": 100600}, "litvinov": None}
+    fake = _FakeTGClient(msgs=[_FakeMessage(99999, "noise")])
     rt = await _rt_with_injected_client(push, fake)
-    assert rt["saved_msg_text_non_empty"***REMOVED*** is False
-    assert rt["connected"***REMOVED*** is True
+    assert rt["saved_msg_text_non_empty"] is False
+    assert rt["connected"] is True
 
 
 # ── write_e2e_log — markdown build ───────────────────────────────────────
@@ -202,29 +202,29 @@ def test_write_e2e_log_happy_path(tmp_path):
         "stage0_preflight": {
             "tg_session": 7709651193, "core_02_import": True,
             "log_dir_writable": True, "skip_tg_flag": False,
-        ***REMOVED***,
+        },
         "stage1_delta_summary": {
             "timestamp_ms": 1700000000000,
             "source_device_id": "e2e_remote_sync_runner", "revision": 1,
-            "updated_keys": {"round_id": "phase_5_3_c_deadbeef", "phase": "5.3-C"***REMOVED***,
-        ***REMOVED***,
+            "updated_keys": {"round_id": "phase_5_3_c_deadbeef", "phase": "5.3-C"},
+        },
         "stage2_push": {
             "saved_msgs": {
                 "chat_id": 7709651193, "msg_id": 138172, "ok": True, "error": None,
                 "chunk_count": 1, "correlation_id": "tg:7709651193:e2e_runner-1-1700000000000",
-            ***REMOVED***,
+            },
             "litvinov": None,
-        ***REMOVED***,
+        },
         "stage3_round_trip": {
             "connected": True, "saved_msg_id": 138172,
             "saved_msg_text_non_empty": True,
             "saved_msg_text_head": "##FB_STATE## V1.0.0 ... CHUNK 0/1\n<json>",
-        ***REMOVED***,
-    ***REMOVED***
+        },
+    }
     log_path = tmp_path / "test_run.md"
     res = ers.write_e2e_log(results, log_path)
-    assert res["status"***REMOVED*** == "written"
-    assert res["line_count"***REMOVED*** > 20
+    assert res["status"] == "written"
+    assert res["line_count"] > 20
     text = log_path.read_text()
     assert "Phase 5.3-C Remote Sync" in text
     assert "Stage 0 — Pre-flight" in text
@@ -247,8 +247,8 @@ def test_write_e2e_log_skip_tg_truncated(tmp_path):
         "stage0_preflight": {
             "tg_session": None, "core_02_import": True,
             "log_dir_writable": True, "skip_tg_flag": True,
-        ***REMOVED***,
-    ***REMOVED***
+        },
+    }
     log_path = tmp_path / "skip_test.md"
     ers.write_e2e_log(results, log_path)
     text = log_path.read_text()
@@ -268,24 +268,24 @@ def test_write_e2e_log_with_bugs_section(tmp_path):
         "stage0_preflight": {
             "tg_session": 7709651193, "core_02_import": True,
             "log_dir_writable": True, "skip_tg_flag": False,
-        ***REMOVED***,
+        },
         "stage1_delta_summary": {
             "timestamp_ms": 1700000001000,
             "source_device_id": "e2e_remote_sync_runner", "revision": 1,
-            "updated_keys": {"round_id": "phase_5_3_c_failpath"***REMOVED***,
-        ***REMOVED***,
+            "updated_keys": {"round_id": "phase_5_3_c_failpath"},
+        },
         "stage2_push": {
             "saved_msgs": {
                 "chat_id": 7709651193, "msg_id": 138173, "ok": True,
                 "chunk_count": 1, "correlation_id": "tg:7709651193:e2e_runner-1-1700000001000",
-            ***REMOVED***,
+            },
             "litvinov": None,
-        ***REMOVED***,
+        },
         "stage3_round_trip": {
             "connected": True, "saved_msg_id": 138173,
             "saved_msg_text_non_empty": False,
-        ***REMOVED***,
-    ***REMOVED***
+        },
+    }
     log_path = tmp_path / "fail_test.md"
     ers.write_e2e_log(results, log_path)
     text = log_path.read_text()
@@ -316,10 +316,10 @@ async def test_run_e2e_pipeline_dry_run_happy(monkeypatch, tmp_path):
       N-5: cross-key consistency - saved_msgs and litvinov blocks have symmetric schema
 
     Schema verified from scripts_01/e2e_remote_sync.py source:
-      result.stage0_preflight.{core_02_import, log_dir_writable***REMOVED***
-      result.stage1_delta_summary.{source_device_id, revision, updated_keys***REMOVED***
-      result.stage2_push.{saved_msgs.{chat_id, msg_id, ok***REMOVED***, litvinov.{same***REMOVED******REMOVED***
-      result.stage3_round_trip.{connected, saved_msg_id, lit_msg_id, saved_msg_text_non_empty, lit_msg_text_non_empty***REMOVED***
+      result.stage0_preflight.{core_02_import, log_dir_writable}
+      result.stage1_delta_summary.{source_device_id, revision, updated_keys}
+      result.stage2_push.{saved_msgs.{chat_id, msg_id, ok}, litvinov.{same}}
+      result.stage3_round_trip.{connected, saved_msg_id, lit_msg_id, saved_msg_text_non_empty, lit_msg_text_non_empty}
     """
     hermetic_log_dir = tmp_path / "e2e_logs_integration"
     hermetic_log_dir.mkdir(exist_ok=True)
@@ -349,7 +349,7 @@ async def test_run_e2e_pipeline_dry_run_happy(monkeypatch, tmp_path):
         run_tag="n_p3_integration_v5_64_0_dry_happy",
     )
 
-    assert isinstance(result, dict), f"Orchestrator must return dict, got {type(result).__name__***REMOVED***"
+    assert isinstance(result, dict), f"Orchestrator must return dict, got {type(result).__name__}"
 
     pre = result.get("stage0_preflight")
     plan_sum = result.get("stage1_delta_summary")
@@ -357,37 +357,37 @@ async def test_run_e2e_pipeline_dry_run_happy(monkeypatch, tmp_path):
     rt = result.get("stage3_round_trip")
 
     # B-1: pre-flight OK (verified names from stage0_preflight source)
-    assert pre is not None, f"pre-flight missing: keys={list(result.keys())***REMOVED***"
-    assert pre.get("core_02_import") is True, f"core_02 import failed: {pre***REMOVED***"
-    assert pre.get("log_dir_writable") is True, f"hermetic log_dir not writable: {pre***REMOVED***"
+    assert pre is not None, f"pre-flight missing: keys={list(result.keys())}"
+    assert pre.get("core_02_import") is True, f"core_02 import failed: {pre}"
+    assert pre.get("log_dir_writable") is True, f"hermetic log_dir not writable: {pre}"
 
     # B-2: plan shape (SyncDelta contract)
-    assert plan_sum is not None, f"stage1_delta_summary missing: keys={list(result.keys())***REMOVED***"
-    assert plan_sum.get("source_device_id") == "e2e_remote_sync_runner", f"source_device_id mismatch: {plan_sum***REMOVED***"
-    assert "updated_keys" in plan_sum, f"updated_keys missing from plan: {plan_sum***REMOVED***"
-    assert plan_sum.get("revision") == 1, f"revision must be 1 (initial): {plan_sum***REMOVED***"
+    assert plan_sum is not None, f"stage1_delta_summary missing: keys={list(result.keys())}"
+    assert plan_sum.get("source_device_id") == "e2e_remote_sync_runner", f"source_device_id mismatch: {plan_sum}"
+    assert "updated_keys" in plan_sum, f"updated_keys missing from plan: {plan_sum}"
+    assert plan_sum.get("revision") == 1, f"revision must be 1 (initial): {plan_sum}"
 
     # B-3: push structural symmetry (N-3 polish: dropped manual DRY_RUN msg_id tautology)
-    assert push is not None, f"stage2_push missing: keys={list(result.keys())***REMOVED***"
+    assert push is not None, f"stage2_push missing: keys={list(result.keys())}"
     saved_msg = push.get("saved_msgs")
     lit_msg = push.get("litvinov")
-    assert saved_msg is not None, f"saved_msgs missing: {push***REMOVED***"
-    assert lit_msg is not None, f"litvinov block missing (sync_group_active=True): {push***REMOVED***"
+    assert saved_msg is not None, f"saved_msgs missing: {push}"
+    assert lit_msg is not None, f"litvinov block missing (sync_group_active=True): {push}"
     # Structural symmetry check (N-5): both channels have same schema keys
     saved_keys = set(saved_msg.keys())
     lit_keys = set(lit_msg.keys())
-    assert saved_keys == lit_keys, f"channel dict schema asymmetric: saved={saved_keys***REMOVED*** lit={lit_keys***REMOVED***"
+    assert saved_keys == lit_keys, f"channel dict schema asymmetric: saved={saved_keys} lit={lit_keys}"
     # Per-channel ok status (orchestrator hardcodes ok=True in dry_run)
-    assert saved_msg.get("ok") is True, f"saved ok=False in dry_run: {saved_msg***REMOVED***"
-    assert lit_msg.get("ok") is True, f"litvinov ok=False in dry_run: {lit_msg***REMOVED***"
+    assert saved_msg.get("ok") is True, f"saved ok=False in dry_run: {saved_msg}"
+    assert lit_msg.get("ok") is True, f"litvinov ok=False in dry_run: {lit_msg}"
     # msg_ids present in both blocks (value arbitrary in dry_run, but key must exist)
-    assert "msg_id" in saved_msg and "msg_id" in lit_msg, f"msg_id key missing: saved={saved_msg***REMOVED*** lit={lit_msg***REMOVED***"
+    assert "msg_id" in saved_msg and "msg_id" in lit_msg, f"msg_id key missing: saved={saved_msg} lit={lit_msg}"
 
     # B-4: round-trip stage shape (N-2 polish: stronger than typeof check)
-    assert rt is not None, f"stage3_round_trip missing: keys={list(result.keys())***REMOVED***"
-    assert isinstance(rt, dict), f"stage3_round_trip must be dict: {rt***REMOVED***"
+    assert rt is not None, f"stage3_round_trip missing: keys={list(result.keys())}"
+    assert isinstance(rt, dict), f"stage3_round_trip must be dict: {rt}"
     # Assert presence of canonical keys (even if dry_run=True, orchestrator produces these)
-    for key in ["connected", "saved_msg_id", "lit_msg_id"***REMOVED***:
-        assert key in rt, f"round-trip missing canonical key '{key***REMOVED***': {rt***REMOVED***"
+    for key in ["connected", "saved_msg_id", "lit_msg_id"]:
+        assert key in rt, f"round-trip missing canonical key '{key}': {rt}"
     # `connected` is bool (preserved even in dry_run since TGClient.connect is still attempted)
-    assert isinstance(rt.get("connected"), bool), f"connected must be bool: {rt***REMOVED***"
+    assert isinstance(rt.get("connected"), bool), f"connected must be bool: {rt}"

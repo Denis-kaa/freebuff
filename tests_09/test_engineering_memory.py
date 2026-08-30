@@ -5,7 +5,7 @@ Tests for scripts_01/engineering_memory.py — Engineering Memory Engine.
 import os
 import shutil
 import sys
-***REMOVED***
+}
 
 import pytest
 
@@ -37,8 +37,8 @@ class TestEMRecordDraft:
 
         entry = em._memory.retrieve(MemoryLevel.PROJECT, draft_id)
         assert entry is not None
-        assert entry.metadata["type"***REMOVED*** == "decision_journal"
-        assert entry.metadata["title"***REMOVED*** == "Use SQLite"
+        assert entry.metadata["type"] == "decision_journal"
+        assert entry.metadata["title"] == "Use SQLite"
         assert "## Decision" in entry.content
         assert "SQLite" in entry.content
 
@@ -51,7 +51,7 @@ class TestEMRecordDraft:
         )
         entry = em._memory.retrieve(MemoryLevel.PROJECT, draft_id)
         assert entry is not None
-        assert entry.metadata["type"***REMOVED*** == "incident_report"
+        assert entry.metadata["type"] == "incident_report"
         assert "## Summary" in entry.content
 
     def test_record_lesson_creates_draft(self, em):
@@ -62,8 +62,8 @@ class TestEMRecordDraft:
         )
         entry = em._memory.retrieve(MemoryLevel.PROJECT, draft_id)
         assert entry is not None
-        assert entry.metadata["type"***REMOVED*** == "lessons_learned"
-        assert entry.metadata["tags"***REMOVED*** == ["lesson"***REMOVED***
+        assert entry.metadata["type"] == "lessons_learned"
+        assert entry.metadata["tags"] == ["lesson"]
 
     def test_record_retrospective_creates_draft(self, em):
         draft_id = em.record_task_retrospective(
@@ -73,30 +73,30 @@ class TestEMRecordDraft:
         )
         entry = em._memory.retrieve(MemoryLevel.PROJECT, draft_id)
         assert entry is not None
-        assert entry.metadata["type"***REMOVED*** == "task_retrospective"
+        assert entry.metadata["type"] == "task_retrospective"
 
     def test_draft_authors_default_to_buffy(self, em):
         draft_id = em.record_decision(
             title="T", decision="D", rationale="R"
         )
         entry = em._memory.retrieve(MemoryLevel.PROJECT, draft_id)
-        assert entry.metadata["authors"***REMOVED*** == ["Buffy"***REMOVED***
+        assert entry.metadata["authors"] == ["Buffy"]
 
     def test_draft_metadata_preserved(self, em):
         draft_id = em.record_decision(
             title="X",
             decision="Y",
             rationale="Z",
-            authors=["Alice"***REMOVED***,
-            tags=["arch"***REMOVED***,
-            related_components=["core_02/router.py"***REMOVED***,
-            related_tasks=["TASK-1"***REMOVED***,
+            authors=["Alice"],
+            tags=["arch"],
+            related_components=["core_02/router.py"],
+            related_tasks=["TASK-1"],
         )
         entry = em._memory.retrieve(MemoryLevel.PROJECT, draft_id)
-        assert entry.metadata["authors"***REMOVED*** == ["Alice"***REMOVED***
-        assert entry.metadata["tags"***REMOVED*** == ["arch"***REMOVED***
-        assert entry.metadata["related_components"***REMOVED*** == ["core_02/router.py"***REMOVED***
-        assert entry.metadata["related_tasks"***REMOVED*** == ["TASK-1"***REMOVED***
+        assert entry.metadata["authors"] == ["Alice"]
+        assert entry.metadata["tags"] == ["arch"]
+        assert entry.metadata["related_components"] == ["core_02/router.py"]
+        assert entry.metadata["related_tasks"] == ["TASK-1"]
 
 
 class TestEMFinalize:
@@ -165,7 +165,7 @@ class TestEMDraftManagement:
         em.record_lesson("L1", "C")
         drafts = em.list_drafts()
         assert len(drafts) == 2
-        assert all(d["draft_id"***REMOVED***.startswith("em_draft_") for d in drafts)
+        assert all(d["draft_id"].startswith("em_draft_") for d in drafts)
 
     def test_discard_draft(self, em):
         draft_id = em.record_decision("D", "A", "B")
@@ -191,11 +191,11 @@ class TestEMQuery:
 
         results = em.query_experience("sqlite state")
         assert len(results) > 0
-        assert any("sqlite" in r["doc_id"***REMOVED***.lower() or "sqlite" in r["snippet"***REMOVED***.lower() for r in results)
+        assert any("sqlite" in r["doc_id"].lower() or "sqlite" in r["snippet"].lower() for r in results)
 
     def test_query_empty_when_no_matches(self, em):
         results = em.query_experience("nonexistent xyz")
-        assert results == [***REMOVED***
+        assert results == []
 
 
 class TestEMEvents:
@@ -204,7 +204,7 @@ class TestEMEvents:
     def test_finalize_publishes_document_finalized_event(self, em):
         from scripts_01.event_bus import Event
 
-        published = [***REMOVED***
+        published = []
 
         class FakeBus:
             def publish(self, event):
@@ -214,9 +214,9 @@ class TestEMEvents:
         draft_id = em.record_decision("T", "D", "R")
         em.finalize_draft(draft_id)
 
-        finalized_events = [e for e in published if e.type == "em.document_finalized"***REMOVED***
+        finalized_events = [e for e in published if e.type == "em.document_finalized"]
         assert len(finalized_events) == 1
-        assert finalized_events[0***REMOVED***.data["type"***REMOVED*** == "decision_journal"
+        assert finalized_events[0].data["type"] == "decision_journal"
 
 
 class TestEMTemplates:
@@ -254,8 +254,8 @@ class TestEMTemplates:
         )
         assert "Avoid shell=True" in rendered
         assert "Never use shell=True with user input" in rendered
-        # unreplaced placeholders remain as {placeholder***REMOVED***
-        assert "{context***REMOVED***" in rendered
+        # unreplaced placeholders remain as {placeholder}
+        assert "{context]" in rendered
 
     def test_create_draft_from_template(self, em):
         draft_id = em.create_draft_from_template(
@@ -270,8 +270,8 @@ class TestEMTemplates:
         )
         entry = em._memory.retrieve(MemoryLevel.PROJECT, draft_id)
         assert entry is not None
-        assert entry.metadata["type"***REMOVED*** == "decision_journal"
-        assert entry.metadata["title"***REMOVED*** == "Use SQLite"
+        assert entry.metadata["type"] == "decision_journal"
+        assert entry.metadata["title"] == "Use SQLite"
         assert "## Context" in entry.content
 
     def test_finalize_draft_from_template_has_single_frontmatter(self, em):
@@ -283,7 +283,7 @@ class TestEMTemplates:
             decision="SQLite",
             rationale="Zero setup",
             consequences="Single-node only",
-            authors=["Buffy"***REMOVED***,
+            authors=["Buffy"],
         )
         path = em.finalize_draft(draft_id)
         content = path.read_text(encoding="utf-8")

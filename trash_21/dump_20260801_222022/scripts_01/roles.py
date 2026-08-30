@@ -24,7 +24,7 @@ roles.py — Collaboration Roles Engine (Phase 7: CoWork / Companion Platform).
     re = RoleEngine()
     re.assign_role("buffy", "developer")
     re.assign_role("alice", "reviewer")
-    roles = re.get_roles("buffy")  # ["developer"***REMOVED***
+    roles = re.get_roles("buffy")  # ["developer"]
     agents_by_role = re.list_by_role("developer")
 
 CLI:
@@ -45,56 +45,56 @@ import threading
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional, Set
 
 WORKSPACE = Path(__file__).resolve().parent
 ROLES_DB = WORKSPACE / "data_13" / "roles.db"
 
-STANDARD_ROLES: Dict[str, Dict[str, Any***REMOVED******REMOVED*** = {
+STANDARD_ROLES: Dict[str, Dict[str, Any]] = {
     "developer": {
         "display_name": "Developer",
         "description": "Код, рефакторинг, тесты",
         "icon": "💻",
-        "capabilities": ["coding", "testing", "refactoring"***REMOVED***,
+        "capabilities": ["coding", "testing", "refactoring"],
         "priority": 1,
-    ***REMOVED***,
+    },
     "reviewer": {
         "display_name": "Reviewer",
         "description": "Code review, архитектурное ревью",
         "icon": "👁️",
-        "capabilities": ["review", "architecture"***REMOVED***,
+        "capabilities": ["review", "architecture"],
         "priority": 2,
-    ***REMOVED***,
+    },
     "documenter": {
         "display_name": "Documenter",
         "description": "Документация, ADR, CHANGELOG",
         "icon": "📝",
-        "capabilities": ["documentation", "writing"***REMOVED***,
+        "capabilities": ["documentation", "writing"],
         "priority": 3,
-    ***REMOVED***,
+    },
     "researcher": {
         "display_name": "Researcher",
         "description": "Исследования, PoC, альтернативы",
         "icon": "🔬",
-        "capabilities": ["research", "analysis"***REMOVED***,
+        "capabilities": ["research", "analysis"],
         "priority": 4,
-    ***REMOVED***,
+    },
     "archiver": {
         "display_name": "Archiver",
         "description": "Память, Knowledge Graph, суммаризация",
         "icon": "🗄️",
-        "capabilities": ["memory", "knowledge", "summarization"***REMOVED***,
+        "capabilities": ["memory", "knowledge", "summarization"],
         "priority": 5,
-    ***REMOVED***,
+    },
     "orchestrator": {
         "display_name": "Orchestrator",
         "description": "Планирование, координация",
         "icon": "🎯",
-        "capabilities": ["planning", "coordination", "delegation"***REMOVED***,
+        "capabilities": ["planning", "coordination", "delegation"],
         "priority": 0,
-    ***REMOVED***,
-***REMOVED***
+    },
+}
 
 
 @dataclass
@@ -105,7 +105,7 @@ class RoleDefinition:
     display_name: str
     description: str
     icon: str
-    capabilities: List[str***REMOVED***
+    capabilities: List[str]
     priority: int
 
     @staticmethod
@@ -116,11 +116,11 @@ class RoleDefinition:
             display_name=data.get("display_name", name),
             description=data.get("description", ""),
             icon=data.get("icon", "❓"),
-            capabilities=list(data.get("capabilities", [***REMOVED***)),
+            capabilities=list(data.get("capabilities", [])),
             priority=int(data.get("priority", 10)),
         )
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         """Сериализация в dict для JSON."""
         return {
             "name": self.name,
@@ -129,7 +129,7 @@ class RoleDefinition:
             "icon": self.icon,
             "capabilities": self.capabilities,
             "priority": self.priority,
-        ***REMOVED***
+        }
 
 
 @dataclass
@@ -141,9 +141,9 @@ class AgentRole:
     role_name: str = ""
     assigned_by: str = "system"
     assigned_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
-    metadata: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         """Сериализация в dict для JSON."""
         return {
             "id": self.id,
@@ -152,7 +152,7 @@ class AgentRole:
             "assigned_by": self.assigned_by,
             "assigned_at": self.assigned_at,
             "metadata": self.metadata,
-        ***REMOVED***
+        }
 
 
 class RoleEngine:
@@ -171,7 +171,7 @@ class RoleEngine:
         self._db_path.parent.mkdir(parents=True, exist_ok=True)
         self._presence_engine = presence_engine
         self._collaboration_engine = collaboration_engine
-        self._custom_roles: Dict[str, RoleDefinition***REMOVED*** = {***REMOVED***
+        self._custom_roles: Dict[str, RoleDefinition] = {}
         self._lock = threading.RLock()
         self._init_db()
 
@@ -195,7 +195,7 @@ class RoleEngine:
                     role_name TEXT NOT NULL,
                     assigned_by TEXT DEFAULT 'system',
                     assigned_at TEXT NOT NULL,
-                    metadata TEXT DEFAULT '{***REMOVED***'
+                    metadata TEXT DEFAULT '{}'
                 )
                 """
                 )
@@ -212,12 +212,12 @@ class RoleEngine:
         with self._lock:
             if definition.name in self._custom_roles:
                 return False
-            self._custom_roles[definition.name***REMOVED*** = definition
+            self._custom_roles[definition.name] = definition
         return True
 
-    def list_roles(self) -> List[RoleDefinition***REMOVED***:
+    def list_roles(self) -> List[RoleDefinition]:
         """Список всех определений ролей (сортировка по приоритету, orchestrator первый)."""
-        roles = [***REMOVED***
+        roles = []
         for name, data in STANDARD_ROLES.items():
             roles.append(RoleDefinition.from_dict(name, data))
         with self._lock:
@@ -225,7 +225,7 @@ class RoleEngine:
         roles.sort(key=lambda r: r.priority)
         return roles
 
-    def get_role(self, name: str) -> Optional[RoleDefinition***REMOVED***:
+    def get_role(self, name: str) -> Optional[RoleDefinition]:
         """Получить определение роли по имени."""
         data = STANDARD_ROLES.get(name)
         if data is not None:
@@ -233,11 +233,11 @@ class RoleEngine:
         with self._lock:
             return self._custom_roles.get(name)
 
-    def get_capabilities_for_role(self, role_name: str) -> List[str***REMOVED***:
+    def get_capabilities_for_role(self, role_name: str) -> List[str]:
         """Получить capabilities, соответствующие роли."""
         role = self.get_role(role_name)
         if role is None:
-            return [***REMOVED***
+            return []
         return list(role.capabilities)
 
     # ── Назначения ────────────────────────────────────────────────────
@@ -275,7 +275,7 @@ class RoleEngine:
                         role_name,
                         assigned_by,
                         datetime.now(timezone.utc).isoformat(),
-                        "{***REMOVED***",
+                        "{]",
                     ),
                 )
                 conn.commit()
@@ -315,7 +315,7 @@ class RoleEngine:
             finally:
                 conn.close()
 
-    def get_roles(self, agent_name: str) -> List[str***REMOVED***:
+    def get_roles(self, agent_name: str) -> List[str]:
         """Получить список ролей агента."""
         with self._lock:
             conn = self._connect()
@@ -324,11 +324,11 @@ class RoleEngine:
                     "SELECT role_name FROM role_assignments WHERE agent_name = ?",
                     (agent_name,),
                 ).fetchall()
-                return [r["role_name"***REMOVED*** for r in rows***REMOVED***
+                return [r["role_name"] for r in rows]
             finally:
                 conn.close()
 
-    def get_agent_roles_detailed(self, agent_name: str) -> List[AgentRole***REMOVED***:
+    def get_agent_roles_detailed(self, agent_name: str) -> List[AgentRole]:
         """Получить детальную информацию о ролях агента."""
         with self._lock:
             conn = self._connect()
@@ -337,11 +337,11 @@ class RoleEngine:
                     "SELECT * FROM role_assignments WHERE agent_name = ?",
                     (agent_name,),
                 ).fetchall()
-                return [self._row_to_agent_role(r) for r in rows***REMOVED***
+                return [self._row_to_agent_role(r) for r in rows]
             finally:
                 conn.close()
 
-    def list_assignments(self) -> List[AgentRole***REMOVED***:
+    def list_assignments(self) -> List[AgentRole]:
         """Список всех назначений ролей."""
         with self._lock:
             conn = self._connect()
@@ -349,11 +349,11 @@ class RoleEngine:
                 rows = conn.execute(
                     "SELECT * FROM role_assignments ORDER BY agent_name, role_name"
                 ).fetchall()
-                return [self._row_to_agent_role(r) for r in rows***REMOVED***
+                return [self._row_to_agent_role(r) for r in rows]
             finally:
                 conn.close()
 
-    def list_by_role(self, role_name: str) -> List[str***REMOVED***:
+    def list_by_role(self, role_name: str) -> List[str]:
         """Список агентов с указанной ролью."""
         with self._lock:
             conn = self._connect()
@@ -362,30 +362,30 @@ class RoleEngine:
                     "SELECT agent_name FROM role_assignments WHERE role_name = ?",
                     (role_name,),
                 ).fetchall()
-                return [r["agent_name"***REMOVED*** for r in rows***REMOVED***
+                return [r["agent_name"] for r in rows]
             finally:
                 conn.close()
 
     @staticmethod
     def _row_to_agent_role(row: sqlite3.Row) -> AgentRole:
         try:
-            metadata = json.loads(row["metadata"***REMOVED***) if row["metadata"***REMOVED*** else {***REMOVED***
+            metadata = json.loads(row["metadata"]) if row["metadata"] else {}
         except (TypeError, ValueError):
-            metadata = {***REMOVED***
+            metadata = {}
         return AgentRole(
-            id=row["id"***REMOVED***,
-            agent_name=row["agent_name"***REMOVED***,
-            role_name=row["role_name"***REMOVED***,
-            assigned_by=row["assigned_by"***REMOVED***,
-            assigned_at=row["assigned_at"***REMOVED***,
+            id=row["id"],
+            agent_name=row["agent_name"],
+            role_name=row["role_name"],
+            assigned_by=row["assigned_by"],
+            assigned_at=row["assigned_at"],
             metadata=metadata,
         )
 
     # ── Capabilities ──────────────────────────────────────────────────
 
-    def get_agent_capabilities(self, agent_name: str) -> List[str***REMOVED***:
+    def get_agent_capabilities(self, agent_name: str) -> List[str]:
         """Получить все capabilities агента на основе его ролей."""
-        caps: Set[str***REMOVED*** = set()
+        caps: Set[str] = set()
         for role_name in self.get_roles(agent_name):
             caps.update(self.get_capabilities_for_role(role_name))
         return sorted(caps)
@@ -439,7 +439,7 @@ class RoleEngine:
             self._presence_engine.update_status(
                 agent_name,
                 "online",
-                metadata={"roles": roles***REMOVED***,
+                metadata={"roles": roles},
             )
             return True
         except Exception:
@@ -461,14 +461,14 @@ class RoleEngine:
 
     # ── Статистика ────────────────────────────────────────────────────
 
-    def get_stats(self) -> Dict[str, Any***REMOVED***:
+    def get_stats(self) -> Dict[str, Any]:
         """Статистика системы ролей."""
         assignments = self.list_assignments()
-        role_counts: Dict[str, int***REMOVED*** = {***REMOVED***
-        agent_role_counts: Dict[str, int***REMOVED*** = {***REMOVED***
+        role_counts: Dict[str, int] = {}
+        agent_role_counts: Dict[str, int] = {}
         for a in assignments:
-            role_counts[a.role_name***REMOVED*** = role_counts.get(a.role_name, 0) + 1
-            agent_role_counts[a.agent_name***REMOVED*** = agent_role_counts.get(a.agent_name, 0) + 1
+            role_counts[a.role_name] = role_counts.get(a.role_name, 0) + 1
+            agent_role_counts[a.agent_name] = agent_role_counts.get(a.agent_name, 0) + 1
         presence_synced = 0
         collab_synced = 0
         if self._presence_engine is not None:
@@ -485,7 +485,7 @@ class RoleEngine:
             "agent_role_counts": agent_role_counts,
             "presence_synced": presence_synced,
             "collab_synced": collab_synced,
-        ***REMOVED***
+        }
 
 
 class Colors:
@@ -507,8 +507,8 @@ def _cmd_list(args: argparse.Namespace) -> None:
     if args.roles:
         print("Defined Roles (")
         for role in engine.list_roles():
-            print(f"  {role.icon***REMOVED*** {role.display_name***REMOVED*** ({role.name***REMOVED***) — {role.description***REMOVED***")
-            print(f"     Capabilities: {', '.join(role.capabilities)***REMOVED***")
+            print(f"  {role.icon} {role.display_name} ({role.name}) — {role.description}")
+            print(f"     Capabilities: {', '.join(role.capabilities)}")
         return
     assignments = engine.list_assignments()
     if not assignments:
@@ -516,67 +516,67 @@ def _cmd_list(args: argparse.Namespace) -> None:
         return
     print("Role Assignments (")
     for a in assignments:
-        print(f"  {a.agent_name***REMOVED*** → {a.role_name***REMOVED*** (by {a.assigned_by***REMOVED*** at {a.assigned_at***REMOVED***)")
+        print(f"  {a.agent_name} → {a.role_name} (by {a.assigned_by} at {a.assigned_at})")
 
 
 def _cmd_get(args: argparse.Namespace) -> None:
     engine = RoleEngine(db_path=args.db_path, presence_engine=None, collaboration_engine=None)
     roles = engine.get_agent_roles_detailed(args.agent)
     if not roles:
-        print(f"📭 No roles for '{args.agent***REMOVED***'")
+        print(f"📭 No roles for '{args.agent}'")
         return
-    print(f"Roles for '{args.agent***REMOVED***':")
+    print(f"Roles for '{args.agent}':")
     for r in roles:
-        print(f"  {r.role_name***REMOVED*** — assigned by {r.assigned_by***REMOVED*** at {r.assigned_at***REMOVED***")
+        print(f"  {r.role_name} — assigned by {r.assigned_by} at {r.assigned_at}")
 
 
 def _cmd_assign(args: argparse.Namespace) -> None:
     engine = RoleEngine(db_path=args.db_path, presence_engine=None, collaboration_engine=None)
     ok = engine.assign_role(args.agent, args.role)
     if ok:
-        print(f"✅ Role '{args.role***REMOVED***' assigned to '{args.agent***REMOVED***'")
+        print(f"✅ Role '{args.role}' assigned to '{args.agent}'")
     else:
-        print(f"❌ Cannot assign '{args.role***REMOVED***' to '{args.agent***REMOVED***' — unknown role or error")
+        print(f"❌ Cannot assign '{args.role}' to '{args.agent}' — unknown role or error")
 
 
 def _cmd_unassign(args: argparse.Namespace) -> None:
     engine = RoleEngine(db_path=args.db_path, presence_engine=None, collaboration_engine=None)
     ok = engine.unassign_role(args.agent, args.role)
     if ok:
-        print(f"✅ Role '{args.role***REMOVED***' removed from '{args.agent***REMOVED***'")
+        print(f"✅ Role '{args.role}' removed from '{args.agent}'")
     else:
-        print(f"⚠️ Role '{args.role***REMOVED***' not found for '{args.agent***REMOVED***'")
+        print(f"⚠️ Role '{args.role}' not found for '{args.agent}'")
 
 
 def _cmd_by_role(args: argparse.Namespace) -> None:
     engine = RoleEngine(db_path=args.db_path, presence_engine=None, collaboration_engine=None)
     agents = engine.list_by_role(args.role)
     if not agents:
-        print(f"📭 No agents with role '{args.role***REMOVED***'")
+        print(f"📭 No agents with role '{args.role}'")
         return
-    print(f"Agents with role '{args.role***REMOVED***':")
+    print(f"Agents with role '{args.role}':")
     for a in agents:
-        print(f"  • {a***REMOVED***")
+        print(f"  • {a}")
 
 
 def _cmd_stats(args: argparse.Namespace) -> None:
     engine = RoleEngine(db_path=args.db_path, presence_engine=None, collaboration_engine=None)
     stats = engine.get_stats()
     print("Role Engine Statistics")
-    print(f"  Assignments:      {stats['total_assignments'***REMOVED******REMOVED***")
-    print(f"  Defined roles:    {stats['defined_roles'***REMOVED******REMOVED***")
-    print(f"  Presence sync:    {stats['presence_synced'***REMOVED******REMOVED***")
-    print(f"  Collab sync:      {stats['collab_synced'***REMOVED******REMOVED***")
-    if stats["role_counts"***REMOVED***:
+    print(f"  Assignments:      {stats['total_assignments']}")
+    print(f"  Defined roles:    {stats['defined_roles']}")
+    print(f"  Presence sync:    {stats['presence_synced']}")
+    print(f"  Collab sync:      {stats['collab_synced']}")
+    if stats["role_counts"]:
         print("  By role:")
-        for role, cnt in sorted(stats["role_counts"***REMOVED***.items()):
-            print(f"    {role***REMOVED***: {cnt***REMOVED***")
+        for role, cnt in sorted(stats["role_counts"].items()):
+            print(f"    {role}: {cnt}")
 
 
 def _cmd_sync(args: argparse.Namespace) -> None:
     engine = RoleEngine(db_path=args.db_path, presence_engine=None, collaboration_engine=None)
     count = engine.sync_all_to_presence()
-    print(f"✅ Synced {count***REMOVED*** agents to PresenceEngine")
+    print(f"✅ Synced {count} agents to PresenceEngine")
 
 
 def main() -> int:
@@ -617,7 +617,7 @@ def main() -> int:
         "by-role": _cmd_by_role,
         "stats": _cmd_stats,
         "sync": _cmd_sync,
-    ***REMOVED***
+    }
     handler = handlers.get(args.command)
     if handler is None:
         parser.print_help()

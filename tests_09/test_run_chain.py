@@ -65,14 +65,14 @@ def registry(tmp_path):
 def _write_yaml_registry(path, pipeline: list) -> None:
     """registry.yaml в формате blueprints_v3 (yaml.safe_dump)."""
     import yaml
-    payload = {"pipeline": pipeline, "metadata": {"version": "test"***REMOVED******REMOVED***
+    payload = {"pipeline": pipeline, "metadata": {"version": "test"}}
     with open(str(path), "w", encoding="utf-8") as f:
         yaml.safe_dump(payload, f, allow_unicode=True, sort_keys=False)
 
 
 def _materialize_outputs(root, patterns: list) -> None:
     """Создаёт файлы-артефакты по паттернам (прямой файл или упрощённый glob)."""
-    ***REMOVED***
+    }
     for pat in patterns:
         if "*" in pat:
             simple = re.sub(r"\*\*?/|\*", "x", pat)
@@ -92,17 +92,17 @@ class TestDataclassesAndConstants:
         assert LIGHT_ROLES == frozenset({
             "explainer", "lisa", "risk", "decomposer",
             "architect", "auditor", "documenter", "retrospective",
-        ***REMOVED***)
+        ])
 
     def test_heavy_roles_count_and_set(self):
         assert len(HEAVY_ROLES) == 4
         assert HEAVY_ROLES == frozenset({
             "developer", "tester", "fixer", "acceptance",
-        ***REMOVED***)
+        ])
 
     def test_light_plus_heavy_plus_conditional_equals_pipeline(self):
         # 14 = 8 LIGHT + 4 HEAVY + 2 CONDITIONAL (frontend/devops).
-        all_classified = LIGHT_ROLES | HEAVY_ROLES | {"frontend", "devops"***REMOVED***
+        all_classified = LIGHT_ROLES | HEAVY_ROLES | {"frontend", "devops"}
         assert PIPELINE_ROLES == all_classified
 
     def test_chainstage_frozen(self):
@@ -116,12 +116,12 @@ class TestDataclassesAndConstants:
         assert stage.status == "ok"
         # frozen: попытка mutation должна raise.
         with pytest.raises((AttributeError, Exception)):
-            stage.role_id = "explainer"  # type: ignore[misc***REMOVED***
+            stage.role_id = "explainer"  # type: ignore[misc]
 
     def test_chainrun_frozen_and_to_dict(self):
         stage = ChainStage(
             role_id="developer", mode="full_cycle",
-            status="run_ok", details="stages=[...***REMOVED***",
+            status="run_ok", details="stages=[...]",
             duration_s=1.0,
         )
         run = ChainRun(
@@ -135,10 +135,10 @@ class TestDataclassesAndConstants:
             validation_summary=None,
         )
         d = run.to_dict()
-        assert d["project_id"***REMOVED*** == "vkusvill-demo"
-        assert d["stage_count"***REMOVED*** == 1
-        assert d["chain"***REMOVED***[0***REMOVED***["role_id"***REMOVED*** == "developer"
-        assert d["validation_summary"***REMOVED*** is None
+        assert d["project_id"] == "vkusvill-demo"
+        assert d["stage_count"] == 1
+        assert d["chain"][0]["role_id"] == "developer"
+        assert d["validation_summary"] is None
 
 
 # ─── Defaults: 14-ролевый chain в PIPELINE_CHAIN-порядке ──────────────────────
@@ -153,7 +153,7 @@ class TestChainDefaults:
         # Порядок должен совпасть с PIPELINE_CHAIN.
         assert tuple(s.role_id for s in result.chain) == PIPELINE_CHAIN
         # Все 14 ролей — в chain.
-        assert {s.role_id for s in result.chain***REMOVED*** == set(PIPELINE_CHAIN)
+        assert {s.role_id for s in result.chain} == set(PIPELINE_CHAIN)
 
     def test_run_chain_role_ids_subset_order_preserved(self, project, registry):
         facade = ForgeFacade(registry=registry)
@@ -175,7 +175,7 @@ class TestLightRoles:
         facade = ForgeFacade(registry=registry)
         result = facade.run_chain(project, role_ids=("lisa",),
                                     compose_artifact_check=False)
-        lisa_stage = result.chain[0***REMOVED***
+        lisa_stage = result.chain[0]
         assert lisa_stage.role_id == "lisa"
         assert lisa_stage.mode == "check_only"
         # compose_artifact_check=False → нет validation → skipped.
@@ -188,12 +188,12 @@ class TestLightRoles:
         rp = tmp_path / "blueprints_v3" / "registry.yaml"
         rp.parent.mkdir(parents=True, exist_ok=True)
         _write_yaml_registry(rp, [
-            {"id": "lisa", "outputs": ["lisa_report.md"***REMOVED******REMOVED***,
-        ***REMOVED***)
+            {"id": "lisa", "outputs": ["lisa_report.md"]},
+        ])
         facade = ForgeFacade(registry=registry)
         result = facade.run_chain(project, role_ids=("lisa",),
                                     registry_path=rp)
-        lisa_stage = result.chain[0***REMOVED***
+        lisa_stage = result.chain[0]
         assert lisa_stage.mode == "check_only"
         assert lisa_stage.status == "missing"  # ни одного матча
         assert "lisa_report.md" in lisa_stage.details
@@ -206,13 +206,13 @@ class TestLightRoles:
         rp = tmp_path / "blueprints_v3" / "registry.yaml"
         rp.parent.mkdir(parents=True, exist_ok=True)
         _write_yaml_registry(rp, [
-            {"id": "explainer", "outputs": ["brief.md", "parsed_requirements.md"***REMOVED******REMOVED***,
-        ***REMOVED***)
-        _materialize_outputs(project.root, ["brief.md", "parsed_requirements.md"***REMOVED***)
+            {"id": "explainer", "outputs": ["brief.md", "parsed_requirements.md"]},
+        ])
+        _materialize_outputs(project.root, ["brief.md", "parsed_requirements.md"])
         facade = ForgeFacade(registry=registry)
         result = facade.run_chain(project, role_ids=("explainer",),
                                     registry_path=rp)
-        stage = result.chain[0***REMOVED***
+        stage = result.chain[0]
         assert stage.mode == "check_only"
         assert stage.status == "ok"
         assert stage.details == "all artifacts present"
@@ -225,7 +225,7 @@ class TestHeavyRoles:
     def test_developer_runs_full_cycle(self, project, registry):
         facade = ForgeFacade(registry=registry)
         result = facade.run_chain(project, role_ids=("developer",))
-        dev_stage = result.chain[0***REMOVED***
+        dev_stage = result.chain[0]
         assert dev_stage.role_id == "developer"
         assert dev_stage.mode == "full_cycle"
         assert dev_stage.status in ("run_ok", "run_failed")
@@ -256,7 +256,7 @@ class TestHeavyRoles:
         facade = ForgeFacade(registry=registry)
         result = facade.run_chain(project, role_ids=("acceptance",),
                                     project_read_only=True)
-        stage = result.chain[0***REMOVED***
+        stage = result.chain[0]
         assert stage.status in ("run_ok", "run_failed")
 
     def test_heavy_exception_marks_init_error_with_soft_continue(self, project,
@@ -267,8 +267,8 @@ class TestHeavyRoles:
         # Используем все валидные skip, но искусственно сломаем через
         # registry+project_type mismatch (acceptance full cycle на script).
         result = facade.run_chain(project, role_ids=("developer",),
-                                    skip_full_cycle_stages={"BUILD", "TEST", "DEPLOY", "REPORT"***REMOVED***)
-        stage = result.chain[0***REMOVED***
+                                    skip_full_cycle_stages={"BUILD", "TEST", "DEPLOY", "REPORT"})
+        stage = result.chain[0]
         assert stage.mode == "full_cycle"
         # Должен быть либо run_ok, либо run_failed — но НЕ init_error (subprocess
         # не должен упасть на пустом проекте без build_cmd).
@@ -297,7 +297,7 @@ class TestHeavyRoles:
         result = facade.run_chain(project, role_ids=("developer",),
                                     compose_artifact_check=False)
         assert result.stage_count == 1
-        stage = result.chain[0***REMOVED***
+        stage = result.chain[0]
         assert stage.role_id == "developer"
         assert stage.mode == "full_cycle"
         # Chain-soft-failure: Exception caught, status='init_error'.
@@ -342,9 +342,9 @@ class TestHeavyRoles:
         result = facade.run_chain(project, role_ids=("lisa", "developer", "frontend"),
                                     compose_artifact_check=False)
         assert result.stage_count == 3
-        lisa_stage = result.chain[0***REMOVED***
-        dev_stage = result.chain[1***REMOVED***
-        front_stage = result.chain[2***REMOVED***
+        lisa_stage = result.chain[0]
+        dev_stage = result.chain[1]
+        front_stage = result.chain[2]
         # lisa (LIGHT) → check_only (compose off → skipped).
         assert lisa_stage.status == "skipped"
         # developer (HEAVY) → init_error chain-soft-failure через monkeypatch.
@@ -353,7 +353,7 @@ class TestHeavyRoles:
         assert "developer-only failure" in dev_stage.details
         # frontend (CONDITIONAL skip, type=script) → skipped (chain продолжается).
         assert front_stage.status == "skipped"
-        # Per decision tree §6.4: full_cycle_stages = [developer***REMOVED*** (только он
+        # Per decision tree §6.4: full_cycle_stages = [developer] (только он
         # full_cycle; lisa=check_only, frontend=conditional_skip). Один full_cycle
         # с init_error = все full_cycle упали → "failed" (catastrophic-single).
         # Chain НЕ aborted (все 3 стадии в result.chain), но overall="failed"
@@ -375,7 +375,7 @@ class TestConditionalRoles:
         # project fixture имеет type=script → frontend skip.
         facade = ForgeFacade(registry=registry)
         result = facade.run_chain(project, role_ids=("frontend",))
-        stage = result.chain[0***REMOVED***
+        stage = result.chain[0]
         assert stage.role_id == "frontend"
         assert stage.mode == "conditional_skip"
         assert stage.status == "skipped"
@@ -386,7 +386,7 @@ class TestConditionalRoles:
                                                        registry):
         facade = ForgeFacade(registry=registry)
         result = facade.run_chain(web_project, role_ids=("frontend",))
-        stage = result.chain[0***REMOVED***
+        stage = result.chain[0]
         assert stage.role_id == "frontend"
         assert stage.mode == "full_cycle"
         assert stage.status in ("run_ok", "run_failed")
@@ -395,7 +395,7 @@ class TestConditionalRoles:
         # devops condition: always → full_cycle даже на type=script.
         facade = ForgeFacade(registry=registry)
         result = facade.run_chain(project, role_ids=("devops",))
-        stage = result.chain[0***REMOVED***
+        stage = result.chain[0]
         assert stage.role_id == "devops"
         assert stage.mode == "full_cycle"
         assert stage.status in ("run_ok", "run_failed")
@@ -430,7 +430,7 @@ class TestOverallAndErrors:
     def test_chain_overall_in_valid_set(self, project, registry):
         facade = ForgeFacade(registry=registry)
         result = facade.run_chain(project, role_ids=("lisa",))
-        # overall ∈ {"ok", "partial", "failed", "degraded"***REMOVED***
+        # overall ∈ {"ok", "partial", "failed", "degraded"}
         assert result.overall in ("ok", "partial", "failed", "degraded")
 
 
@@ -476,4 +476,4 @@ class TestAdditiveInvariant:
         sig = inspect.signature(ForgeFacade.initiate_forge)
         assert "project_read_only" in sig.parameters
         # Default = False (backwards compatible).
-        assert sig.parameters["project_read_only"***REMOVED***.default is False
+        assert sig.parameters["project_read_only"].default is False

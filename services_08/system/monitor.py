@@ -3,15 +3,15 @@ System Monitor: мониторинг состояния устройства.
 v1.0.0: RAM, CPU, батарея, температура — всё что нужно знать о железе.
 
 API (по SPEC.md):
-    get_memory() → {"available_mb": int, "total_mb": int, "percent": float***REMOVED***
-    get_cpu() → {"loadavg": str, "percent": float***REMOVED***
-    get_battery() → {"level": int, "charging": bool***REMOVED*** | None
+    get_memory() → {"available_mb": int, "total_mb": int, "percent": float}
+    get_cpu() → {"loadavg": str, "percent": float}
+    get_battery() → {"level": int, "charging": bool} | None
     get_temperature() → float | None
-    health_check() → {"memory_ok": bool, "cpu_ok": bool, "battery_ok": bool***REMOVED***
+    health_check() → {"memory_ok": bool, "cpu_ok": bool, "battery_ok": bool}
 
 Использование:
     from services_08.system.monitor import health_check
-    if health_check()["memory_ok"***REMOVED***:
+    if health_check()["memory_ok"]:
         print("RAM в норме")
 """
 
@@ -21,7 +21,7 @@ import os
 from typing import Any
 
 
-def get_memory() -> dict[str, int | float***REMOVED***:
+def get_memory() -> dict[str, int | float]:
     """Читает /proc/meminfo и возвращает доступную память в MB."""
     try:
         with open("/proc/meminfo", "r", encoding="utf-8") as f:
@@ -32,12 +32,12 @@ def get_memory() -> dict[str, int | float***REMOVED***:
 
         for line in meminfo.split("\n"):
             if line.startswith("MemTotal:"):
-                total_kb = int(line.split()[1***REMOVED***)
+                total_kb = int(line.split()[1])
             elif line.startswith("MemAvailable:"):
-                available_kb = int(line.split()[1***REMOVED***)
+                available_kb = int(line.split()[1])
 
         if total_kb == 0:
-            return {"available_mb": 0, "total_mb": 0, "percent": 0.0***REMOVED***
+            return {"available_mb": 0, "total_mb": 0, "percent": 0.0}
 
         total_mb = total_kb // 1024
         available_mb = available_kb // 1024 if available_kb else total_mb
@@ -47,18 +47,18 @@ def get_memory() -> dict[str, int | float***REMOVED***:
             "available_mb": available_mb,
             "total_mb": total_mb,
             "percent": used_percent,
-        ***REMOVED***
+        }
     except (OSError, ValueError, IndexError):
-        return {"available_mb": 0, "total_mb": 0, "percent": 0.0***REMOVED***
+        return {"available_mb": 0, "total_mb": 0, "percent": 0.0}
 
 
-def get_cpu() -> dict[str, Any***REMOVED***:
+def get_cpu() -> dict[str, Any]:
     """Читает /proc/loadavg и возвращает загрузку CPU."""
     try:
         with open("/proc/loadavg", "r", encoding="utf-8") as f:
             loadavg = f.read().strip()
         parts = loadavg.split()
-        load_1m = float(parts[0***REMOVED***) if parts else 0.0
+        load_1m = float(parts[0]) if parts else 0.0
 
         # Примерный процент (load / cores)
         try:
@@ -67,17 +67,17 @@ def get_cpu() -> dict[str, Any***REMOVED***:
             cores = 4
         percent = round(min(load_1m / cores * 100, 100), 1)
 
-        return {"loadavg": loadavg, "percent": percent, "error": False***REMOVED***
+        return {"loadavg": loadavg, "percent": percent, "error": False}
     except (OSError, ValueError):
-        return {"loadavg": "unknown", "percent": 0.0, "error": True***REMOVED***
+        return {"loadavg": "unknown", "percent": 0.0, "error": True}
 
 
-def get_battery() -> dict[str, Any***REMOVED*** | None:
+def get_battery() -> dict[str, Any] | None:
     """Читает информацию о батарее из Android sysfs."""
     battery_paths = [
         "/sys/class/power_supply/battery/capacity",
         "/sys/class/power_supply/BAT0/capacity",
-    ***REMOVED***
+    ]
 
     for path in battery_paths:
         try:
@@ -95,7 +95,7 @@ def get_battery() -> dict[str, Any***REMOVED*** | None:
         except OSError:
             pass
 
-        return {"level": level, "charging": charging***REMOVED***
+        return {"level": level, "charging": charging}
 
     return None
 
@@ -105,7 +105,7 @@ def get_temperature() -> float | None:
     thermal_paths = [
         "/sys/class/thermal/thermal_zone0/temp",
         "/sys/class/thermal/thermal_zone1/temp",
-    ***REMOVED***
+    ]
 
     for path in thermal_paths:
         try:
@@ -118,7 +118,7 @@ def get_temperature() -> float | None:
     return None
 
 
-def health_check() -> dict[str, bool***REMOVED***:
+def health_check() -> dict[str, bool]:
     """
     Проверка здоровья системы.
     Возвращает словарь с булевыми флагами.
@@ -128,7 +128,7 @@ def health_check() -> dict[str, bool***REMOVED***:
     battery = get_battery()
 
     return {
-        "memory_ok": mem["available_mb"***REMOVED*** >= 200,  # минимум 200 MB свободно
-        "cpu_ok": not cpu.get("error", False) and cpu["percent"***REMOVED*** <= 90,
-        "battery_ok": battery is None or battery["level"***REMOVED*** >= 10 or battery["charging"***REMOVED***,
-    ***REMOVED***
+        "memory_ok": mem["available_mb"] >= 200,  # минимум 200 MB свободно
+        "cpu_ok": not cpu.get("error", False) and cpu["percent"] <= 90,
+        "battery_ok": battery is None or battery["level"] >= 10 or battery["charging"],
+    }

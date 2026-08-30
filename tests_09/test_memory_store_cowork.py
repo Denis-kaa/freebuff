@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-***REMOVED***
+}
 from typing import Any
 from unittest.mock import MagicMock
 
@@ -34,8 +34,8 @@ def mock_remote() -> MagicMock:
     mock = MagicMock(spec=RemoteDB)
     mock.remote_url = "http://fake:4001"
     mock.local_path = Path("/tmp/fake.db")
-    mock.execute.return_value = [***REMOVED***
-    mock.fetchall.return_value = [***REMOVED***
+    mock.execute.return_value = []
+    mock.fetchall.return_value = []
     mock.fetchone.return_value = None
     mock.executescript = MagicMock()
     mock.close = MagicMock()
@@ -56,12 +56,12 @@ class TestLocalMode:
 
     def test_store_and_get(self, local_store: MemoryStore) -> None:
         kid = local_store.store_knowledge(
-            kind="lesson", title="Test Lesson", content="Content", tags=["test"***REMOVED***
+            kind="lesson", title="Test Lesson", content="Content", tags=["test"]
         )
         assert kid.startswith("ko-")
         ko = local_store.get_knowledge(kid)
         assert ko is not None
-        assert ko["title"***REMOVED*** == "Test Lesson"
+        assert ko["title"] == "Test Lesson"
 
     def test_store_invalid_kind(self, local_store: MemoryStore) -> None:
         with pytest.raises(MemoryStoreError, match="Неизвестный kind"):
@@ -70,7 +70,7 @@ class TestLocalMode:
     def test_update_knowledge(self, local_store: MemoryStore) -> None:
         kid = local_store.store_knowledge(kind="rule", title="Old")
         assert local_store.update_knowledge(kid, title="New") is True
-        assert local_store.get_knowledge(kid)["title"***REMOVED*** == "New"
+        assert local_store.get_knowledge(kid)["title"] == "New"
 
     def test_update_missing(self, local_store: MemoryStore) -> None:
         assert local_store.update_knowledge("ko-fake", title="X") is False
@@ -103,7 +103,7 @@ class TestLocalMode:
         local_store.link_knowledge(a, b, "supports", weight=0.8)
         related = local_store.find_related(a, max_depth=1)
         assert len(related) == 1
-        assert related[0***REMOVED***["knowledge"***REMOVED***["title"***REMOVED*** == "B"
+        assert related[0]["knowledge"]["title"] == "B"
 
     def test_shortest_path(self, local_store: MemoryStore) -> None:
         a = local_store.store_knowledge(kind="adr", title="A")
@@ -152,7 +152,7 @@ class TestCoworkMode:
 
         store.store_knowledge(kind="lesson", title="Remote Lesson")
         assert mock_remote.execute.call_count >= 1
-        calls = [str(c) for c in mock_remote.execute.call_args_list***REMOVED***
+        calls = [str(c) for c in mock_remote.execute.call_args_list]
         combined = " ".join(calls)
         assert "INSERT" in combined or "knowledge_objects" in combined
         store.close()
@@ -162,24 +162,24 @@ class TestCoworkMode:
         mock_remote.fetchall.return_value = [
             _FakeRow(
                 ["id", "kind", "title", "content", "confidence_score", "evidence_count",
-                 "usage_count", "success_count", "failure_count", "created_at", "updated_at"***REMOVED***,
-                ["ko-1", "lesson", "Remote", "", 0.5, 0, 0, 0, 0, "2026-01-01", "2026-01-01"***REMOVED***,
+                 "usage_count", "success_count", "failure_count", "created_at", "updated_at"],
+                ["ko-1", "lesson", "Remote", "", 0.5, 0, 0, 0, 0, "2026-01-01", "2026-01-01"],
             )
-        ***REMOVED***
+        ]
         store = MemoryStore(remote_db=mock_remote)
 
         results = store.query_all()
         assert len(results) == 1
-        assert results[0***REMOVED***["title"***REMOVED*** == "Remote"
+        assert results[0]["title"] == "Remote"
         assert mock_remote.fetchall.call_count >= 1
         store.close()
 
     def test_find_related_calls_remote_fetchall(self, mock_remote: MagicMock) -> None:
-        mock_remote.fetchall.return_value = [***REMOVED***
+        mock_remote.fetchall.return_value = []
         store = MemoryStore(remote_db=mock_remote)
 
         result = store.find_related("ko-1", max_depth=1)
-        assert result == [***REMOVED***
+        assert result == []
         assert mock_remote.fetchall.call_count >= 1
         store.close()
 
@@ -189,18 +189,18 @@ class TestCoworkMode:
             # Первый вызов: SELECT FROM knowledge_objects
             [_FakeRow(
                 ["id", "kind", "title", "content", "confidence_score", "evidence_count",
-                 "usage_count", "success_count", "failure_count", "created_at", "updated_at"***REMOVED***,
-                ["ko-1", "lesson", "Test", "", 0.5, 0, 0, 0, 0, "2026-01-01", "2026-01-01"***REMOVED***,
-            )***REMOVED***,
+                 "usage_count", "success_count", "failure_count", "created_at", "updated_at"],
+                ["ko-1", "lesson", "Test", "", 0.5, 0, 0, 0, 0, "2026-01-01", "2026-01-01"],
+            )],
             # Второй вызов: SELECT tags
-            [_FakeRow(["tag"***REMOVED***, ["cowork"***REMOVED***)***REMOVED***,
-        ***REMOVED***
+            [_FakeRow(["tag"], ["cowork"])],
+        ]
         store = MemoryStore(remote_db=mock_remote)
 
         ko = store.get_knowledge("ko-1")
         assert ko is not None
-        assert ko["title"***REMOVED*** == "Test"
-        assert "cowork" in ko.get("tags", [***REMOVED***)
+        assert ko["title"] == "Test"
+        assert "cowork" in ko.get("tags", [])
         assert mock_remote.fetchall.call_count == 2
         store.close()
 
@@ -220,7 +220,7 @@ class TestIntegrationRqlite:
         import urllib.request
 
         try:
-            req = urllib.request.Request(f"{self.RQLITE_URL***REMOVED***/status?pretty=false")
+            req = urllib.request.Request(f"{self.RQLITE_URL}/status?pretty=false")
             urllib.request.urlopen(req, timeout=2)
         except Exception:
             pytest.skip("rqlite not available")
@@ -239,13 +239,13 @@ class TestIntegrationRqlite:
             kind="lesson",
             title="Integration Test",
             content="Hello from Termux!",
-            tags=["cowork", "smoke"***REMOVED***,
+            tags=["cowork", "smoke"],
         )
         assert kid.startswith("ko-")
         ko = rqlite_store.get_knowledge(kid)
         assert ko is not None
-        assert ko["title"***REMOVED*** == "Integration Test"
-        assert "cowork" in ko.get("tags", [***REMOVED***)
+        assert ko["title"] == "Integration Test"
+        assert "cowork" in ko.get("tags", [])
 
     def test_link_remote(self, rqlite_store: MemoryStore) -> None:
         a = rqlite_store.store_knowledge(kind="adr", title="A")

@@ -18,12 +18,12 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-***REMOVED***
+}
 from typing import List
 
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parents[1***REMOVED***
+REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS_DIR = REPO_ROOT / "scripts_01"
 DATA_13 = REPO_ROOT / "data_13"
 sys.path.insert(0, str(SCRIPTS_DIR))
@@ -79,21 +79,21 @@ def test_statuses_canonical():
     )
     # Per pomt 080_19 §3.3 #8 — these two are terminal only.
     assert TERMINAL_STATUSES == ("PROMOTED_TO_OPPORTUNITY", "DISCARDED")
-    assert "CLASSIFICATIONS" in dir(sys.modules["whim_capture"***REMOVED***)
+    assert "CLASSIFICATIONS" in dir(sys.modules["whim_capture"])
     assert CLASSIFICATIONS == ("KEEP", "DISCARD", "PROMOTE_CANDIDATE")
 
 
 def test_valid_transitions_per_pomt():
     """Per pomt 080_19 §3.1 + thinker design verification."""
     from whim_capture import _TRANSITIONS
-    assert set(_TRANSITIONS["NEW"***REMOVED***) == {"TRIAGED", "DEFERRED", "FAILED"***REMOVED***
-    assert set(_TRANSITIONS["TRIAGED"***REMOVED***) == {"PROMOTED_TO_OPPORTUNITY", "DISCARDED", "DEFERRED", "FAILED"***REMOVED***
-    assert tuple(_TRANSITIONS["PROMOTED_TO_OPPORTUNITY"***REMOVED***) == ()  # terminal
-    assert tuple(_TRANSITIONS["DISCARDED"***REMOVED***) == ()  # terminal
-    assert set(_TRANSITIONS["DEFERRED"***REMOVED***) == {"TRIAGED", "DISCARDED", "FAILED"***REMOVED***
-    assert set(_TRANSITIONS["FAILED"***REMOVED***) == {"NEW"***REMOVED***  # retry path
+    assert set(_TRANSITIONS["NEW"]) == {"TRIAGED", "DEFERRED", "FAILED"}
+    assert set(_TRANSITIONS["TRIAGED"]) == {"PROMOTED_TO_OPPORTUNITY", "DISCARDED", "DEFERRED", "FAILED"}
+    assert tuple(_TRANSITIONS["PROMOTED_TO_OPPORTUNITY"]) == ()  # terminal
+    assert tuple(_TRANSITIONS["DISCARDED"]) == ()  # terminal
+    assert set(_TRANSITIONS["DEFERRED"]) == {"TRIAGED", "DISCARDED", "FAILED"}
+    assert set(_TRANSITIONS["FAILED"]) == {"NEW"}  # retry path
     # NEW cannot skip TRIAGED → PROMOTED_TO_OPPORTUNITY:
-    assert "PROMOTED_TO_OPPORTUNITY" not in _TRANSITIONS["NEW"***REMOVED***
+    assert "PROMOTED_TO_OPPORTUNITY" not in _TRANSITIONS["NEW"]
 
 
 # ─── 2. State machine enforcement ────────────────────────────────────────
@@ -218,15 +218,15 @@ def test_classify_promote_keywords():
         ("Идея tutorial по теме X", "tutorial"),
     ):
         cls, why = classify_heuristic(body)
-        assert cls == "PROMOTE_CANDIDATE", f"body={body!r***REMOVED*** cls={cls!r***REMOVED***"
-        assert why == f"matched-keyword:{stem***REMOVED***", f"body={body!r***REMOVED*** why={why!r***REMOVED***"
+        assert cls == "PROMOTE_CANDIDATE", f"body={body!r} cls={cls!r}"
+        assert why == f"matched-keyword:{stem}", f"body={body!r} why={why!r}"
 
 
 def test_classify_discard_keywords():
     for kw in ("спам", "тест", "junk", "повтор"):
-        cls, why = classify_heuristic(f"Какой-то {kw***REMOVED*** content")
+        cls, why = classify_heuristic(f"Какой-то {kw} content")
         assert cls == "DISCARD"
-        assert why == f"matched-keyword:{kw***REMOVED***"
+        assert why == f"matched-keyword:{kw}"
 
 
 def test_classify_no_keyword_default_keep():
@@ -368,15 +368,15 @@ def test_store_atomic_write_no_tmp_leak(tmp_path: Path):
     store = WhimStore(p)
     store.upsert(_make_whim())
     leftovers = list(tmp_path.glob("*.tmp"))
-    assert leftovers == [***REMOVED***, f"atomic write leaked: {leftovers***REMOVED***"
+    assert leftovers == [], f"atomic write leaked: {leftovers}"
 
 
 def test_store_filter_by_status_and_project(tmp_path: Path):
     p = tmp_path / "whims.yaml"
     store = WhimStore(p)
-    store.upsert(_make_whim(id="w1", **{"status": "NEW", "project_id": "alpha"***REMOVED***))
-    store.upsert(_make_whim(id="w2", **{"status": "TRIAGED", "project_id": "alpha"***REMOVED***))
-    store.upsert(_make_whim(id="w3", **{"status": "NEW", "project_id": "beta"***REMOVED***))
+    store.upsert(_make_whim(id="w1", **{"status": "NEW", "project_id": "alpha"}))
+    store.upsert(_make_whim(id="w2", **{"status": "TRIAGED", "project_id": "alpha"}))
+    store.upsert(_make_whim(id="w3", **{"status": "NEW", "project_id": "beta"}))
     assert len(store.by_status("NEW")) == 2
     assert len(store.by_project("alpha")) == 2
     assert len(store.by_status("DISCARDED")) == 0
@@ -388,14 +388,14 @@ def test_cli_capture_json_is_parseable(tmp_path: Path):
     rc = subprocess.run(
         [sys.executable, str(SCRIPTS_DIR / "whim_capture.py"),
          "--data-path", str(tmp_path / "whims.yaml"),
-         "capture", "Test idea", "--project-id", "proj-cj", "--json"***REMOVED***,
+         "capture", "Test idea", "--project-id", "proj-cj", "--json"],
         capture_output=True, text=True,
     )
-    assert rc.returncode == 0, f"capture failed: stderr={rc.stderr***REMOVED***"
+    assert rc.returncode == 0, f"capture failed: stderr={rc.stderr}"
     parsed = json.loads(rc.stdout)
     assert "whim" in parsed
-    assert parsed["whim"***REMOVED***["status"***REMOVED*** == "NEW"
-    assert parsed["whim"***REMOVED***["body"***REMOVED*** == "Test idea"
+    assert parsed["whim"]["status"] == "NEW"
+    assert parsed["whim"]["body"] == "Test idea"
 
 
 def test_cli_list_json_is_parseable(tmp_path: Path):
@@ -405,19 +405,19 @@ def test_cli_list_json_is_parseable(tmp_path: Path):
     subprocess.run(
         [sys.executable, str(SCRIPTS_DIR / "whim_capture.py"),
          "--data-path", str(p),
-         "capture", "Seeded", "--project-id", "p1"***REMOVED***,
+         "capture", "Seeded", "--project-id", "p1"],
         check=False,
     )
     rc = subprocess.run(
         [sys.executable, str(SCRIPTS_DIR / "whim_capture.py"),
          "--data-path", str(p),
-         "list", "--json"***REMOVED***,
+         "list", "--json"],
         capture_output=True, text=True,
     )
     assert rc.returncode == 0
     parsed = json.loads(rc.stdout)
     assert "items" in parsed
-    assert parsed["count"***REMOVED*** >= 1
+    assert parsed["count"] >= 1
 
 
 # ─── 10. Exit codes ───────────────────────────────────────────────────────
@@ -426,7 +426,7 @@ def test_cli_status_unknown_returns_1():
     rc = subprocess.run(
         [sys.executable, str(SCRIPTS_DIR / "whim_capture.py"),
          "--data-path", "/tmp/unused_whim.yaml",
-         "status", "whim-does-not-exist"***REMOVED***,
+         "status", "whim-does-not-exist"],
         capture_output=True, text=True,
     )
     assert rc.returncode == 1
@@ -436,14 +436,14 @@ def test_cli_capture_empty_body_returns_2(tmp_path: Path):
     rc = subprocess.run(
         [sys.executable, str(SCRIPTS_DIR / "whim_capture.py"),
          "--data-path", str(tmp_path / "whims.yaml"),
-         "capture", "   ", "--project-id", "proj-x"***REMOVED***,
+         "capture", "   ", "--project-id", "proj-x"],
         capture_output=True, text=True,
     )
     assert rc.returncode == 2
 
 
 def test_main_missing_command_returns_2():
-    rc = main([***REMOVED***)
+    rc = main([])
     assert rc == 2
 
 
@@ -453,7 +453,7 @@ def test_module_no_side_effects_on_known_capabilities():
     """whim_capture must NOT mutate core_02/blueprint_v3.py::KNOWN_CAPABILITIES."""
     import importlib
     if "whim_capture" in sys.modules:
-        importlib.reload(sys.modules["whim_capture"***REMOVED***)
+        importlib.reload(sys.modules["whim_capture"])
     else:
         importlib.import_module("whim_capture")
     try:

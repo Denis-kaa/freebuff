@@ -8,7 +8,7 @@ Raises on missing/multi-match patterns to surface drift early.
 Edits:
 1. interior_consultant_register.py
    - Add `import os`
-   - Replace sys.path block (v5.51.0 fix) — still uses `parents[1***REMOVED***` here
+   - Replace sys.path block (v5.51.0 fix) — still uses `parents[1]` here
    - Insert inline `def resolve_interior_planner_home()` (CAP-8 closure)
    - DEFAULT_ARTIFACT: drop `Path(str(...))` cast, use resolver directly
    - DEFAULT_SEED: replace /tmp hardcode with resolver-derived Path
@@ -25,7 +25,7 @@ inline-only decision per thinker-with-files recommendation).
 from __future__ import annotations
 
 import sys
-***REMOVED***
+}
 
 SCRIPTS_DIR = Path(
     "/storage/emulated/0/PROJECTS/workstation/interior_planner_e2e/interior_planner/scripts"
@@ -40,10 +40,10 @@ old_reg_a = (
     "import argparse\n"
     "import shutil\n"
     "import sys\n"
-    "***REMOVED***\n"
+    "]\n"
     "\n"
     "\n"
-    "ROOT = Path(__file__).resolve().parents[1***REMOVED***\n"
+    "ROOT = Path(__file__).resolve().parents[1]\n"
     "if str(ROOT) not in sys.path:\n"
     "    sys.path.insert(0, str(ROOT))\n"
     "\n"
@@ -58,7 +58,7 @@ new_reg_a = (
     "import os\n"
     "import shutil\n"
     "import sys\n"
-    "***REMOVED***\n"
+    "]\n"
     "\n"
     "\n"
     "# --- Workspace locator (CAN-8 closure, v5.57.0) ---\n"
@@ -91,12 +91,12 @@ new_reg_b = (
 
 # ─── Edit 3: register.py help strings L14-15 (artifact + seed-dir defaults) ───
 old_reg_c = (
-    "    [--artifact PATH***REMOVED***                  # default /tmp/interior_planner_e2e/interior_planner/roles/18_interior_consultant.md\n"
-    "    [--seed-dir PATH***REMOVED***                  # default /tmp/interior_planner_seed\n"
+    "    [--artifact PATH]                  # default /tmp/interior_planner_e2e/interior_planner/roles/18_interior_consultant.md\n"
+    "    [--seed-dir PATH]                  # default /tmp/interior_planner_seed\n"
 )
 new_reg_c = (
-    "    [--artifact PATH***REMOVED***                  # default = $INTERIOR_PLANNER_HOME/interior_planner/roles/18_interior_consultant.md\n"
-    "    [--seed-dir PATH***REMOVED***                  # default = $INTERIOR_PLANNER_HOME/interior_planner_seed\n"
+    "    [--artifact PATH]                  # default = $INTERIOR_PLANNER_HOME/interior_planner/roles/18_interior_consultant.md\n"
+    "    [--seed-dir PATH]                  # default = $INTERIOR_PLANNER_HOME/interior_planner_seed\n"
 )
 
 # ─── Edit 4: e2e_promt47.py inline resolver canonical fallback (was /tmp, now /storage/...) ───
@@ -113,20 +113,20 @@ new_e2e = (
 )
 
 
-def apply(path: Path, edits: list[tuple[str, str, str***REMOVED******REMOVED***) -> None:
+def apply(path: Path, edits: list[tuple[str, str, str]]) -> None:
     txt = path.read_text()
     for label, old, new in edits:
         if old not in txt:
             raise SystemExit(
-                f"  ✗ {path.name***REMOVED***: pattern not found for '{label***REMOVED***'\n"
+                f"  ✗ {path.name}: pattern not found for '{label}'\n"
                 f"    Hint: pattern drift — re-read canonical content. ABORT."
             )
         if txt.count(old) > 1:
             raise SystemExit(
-                f"  ✗ {path.name***REMOVED***: '{label***REMOVED***' appears {txt.count(old)***REMOVED*** times (ambiguous). ABORT."
+                f"  ✗ {path.name}: '{label}' appears {txt.count(old)} times (ambiguous). ABORT."
             )
         txt = txt.replace(old, new)
-        print(f"  ✓ {path.name***REMOVED***: {label***REMOVED***")
+        print(f"  ✓ {path.name}: {label}")
     path.write_text(txt)
 
 
@@ -137,17 +137,17 @@ apply(
         ("sys.path + inline def + DEFAULT_ARTIFACT + DEFAULT_SEED", old_reg_a, new_reg_a),
         ("docstring L5 seed path", old_reg_b, new_reg_b),
         ("help strings L14-15", old_reg_c, new_reg_c),
-    ***REMOVED***,
+    ],
 )
 print()
-apply(E2E, [("inline resolver canonical fallback /tmp -> /storage/...", old_e2e, new_e2e)***REMOVED***)
+apply(E2E, [("inline resolver canonical fallback /tmp -> /storage/...", old_e2e, new_e2e)])
 
 # Drop helper file (anti-fragile: function lives inline in both scripts now)
 print()
 if HELPER.exists():
     HELPER.unlink()
-    print(f"  ✓ dropped helper: {HELPER***REMOVED***")
+    print(f"  ✓ dropped helper: {HELPER}")
 else:
-    print(f"  - helper already absent: {HELPER***REMOVED***")
+    print(f"  - helper already absent: {HELPER}")
 
 print("\n=== CAN-8 apply complete ===")

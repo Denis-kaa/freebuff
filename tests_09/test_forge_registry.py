@@ -1,5 +1,5 @@
 # tests_09/test_forge_registry.py — Forge Registry (Этап 4.3)
-***REMOVED***
+}
 
 import pytest
 
@@ -43,11 +43,11 @@ class TestRegistry:
         statuses = registry.list_projects_by_status()
         assert len(statuses) == 2
         assert registry.list_projects_by_status(UNFORGED) == statuses
-        assert registry.list_projects_by_status(DEPLOYED) == [***REMOVED***
+        assert registry.list_projects_by_status(DEPLOYED) == []
 
     def test_record_run_updates_status(self, registry):
         pid = registry.register_project("web_app", "/tmp/web_app")
-        run = {"project_name": "web_app", "overall": "ok", "stages": [{"name": "FORGE", "status": "ok"***REMOVED******REMOVED******REMOVED***
+        run = {"project_name": "web_app", "overall": "ok", "stages": [{"name": "FORGE", "status": "ok"}]}
         st = registry.record_run(pid, run)
         assert st.status == DEPLOYED
         assert st.last_run_at is not None
@@ -55,26 +55,26 @@ class TestRegistry:
 
     def test_record_run_failed(self, registry):
         pid = registry.register_project("broken", "/tmp/broken")
-        registry.record_run(pid, {"overall": "failed"***REMOVED***)
+        registry.record_run(pid, {"overall": "failed"})
         st = registry.get_project_status(pid)
         assert st.status == FAILED
 
     def test_record_run_degraded_keeps_deployed(self, registry):
         """v5.189.7: degraded (exit 0) НЕ даунгрейдит DEPLOYED → сертификация держится."""
         pid = registry.register_project("cert", "/tmp/cert")
-        registry.record_run(pid, {"overall": "ok"***REMOVED***)
-        st = registry.record_run(pid, {"overall": "degraded"***REMOVED***)
+        registry.record_run(pid, {"overall": "ok"})
+        st = registry.record_run(pid, {"overall": "degraded"})
         assert st.status == DEPLOYED
         # last_pipeline при этом сохраняется (нужно для --resume).
         assert st.last_pipeline.get("overall") == "degraded"
         assert len(registry.get_pipeline_history(pid)) == 2
-        assert registry.validate_schema() == [***REMOVED***
+        assert registry.validate_schema() == []
 
     def test_record_run_degraded_keeps_failed(self, registry):
         """v5.189.7: degraded не сертифицирует и не даунгрейдит FAILED."""
         pid = registry.register_project("broken", "/tmp/broken")
-        registry.record_run(pid, {"overall": "failed"***REMOVED***)
-        st = registry.record_run(pid, {"overall": "degraded"***REMOVED***)
+        registry.record_run(pid, {"overall": "failed"})
+        st = registry.record_run(pid, {"overall": "degraded"})
         assert st.status == FAILED
 
     def test_record_run_degraded_on_unforged_preserves_unforged(self, registry):
@@ -83,41 +83,41 @@ class TestRegistry:
         history) пропускается: нет ok/run_ok для --resume, а UNFORGED +
         last_pipeline = B10/R-127 violation. Схема остаётся валидной."""
         pid = registry.register_project("fresh", "/tmp/fresh")
-        st = registry.record_run(pid, {"overall": "degraded"***REMOVED***)
+        st = registry.record_run(pid, {"overall": "degraded"})
         assert st.status == UNFORGED
         assert st.last_run_at is None
-        assert st.last_pipeline == {***REMOVED***
-        assert registry.get_pipeline_history(pid) == [***REMOVED***
-        assert registry.validate_schema() == [***REMOVED***
+        assert st.last_pipeline == {}
+        assert registry.get_pipeline_history(pid) == []
+        assert registry.validate_schema() == []
 
     def test_record_run_degraded_on_transient_preserves_status(self, registry):
         """v5.189.10 (R-1 closure): degraded на транзиентном статусе (CHECKING)
         сохраняет его и персистит last_pipeline (нет last_run_at-ограничения
         для этих статусов → схема валидна)."""
         pid = registry.register_project("mid", "/tmp/mid")
-        registry._data[pid***REMOVED***["status"***REMOVED*** = CHECKING
+        registry._data[pid]["status"] = CHECKING
         registry._save()
-        st = registry.record_run(pid, {"overall": "degraded"***REMOVED***)
+        st = registry.record_run(pid, {"overall": "degraded"})
         assert st.status == CHECKING
         assert st.last_pipeline.get("overall") == "degraded"
-        assert registry.validate_schema() == [***REMOVED***
+        assert registry.validate_schema() == []
 
     def test_record_run_ok_after_degraded_upgrades_to_deployed(self, registry):
         """v5.189.7: последующий ok-прогон корректно апгрейдит degraded-состояние."""
         pid = registry.register_project("upgrade", "/tmp/upgrade")
-        registry.record_run(pid, {"overall": "degraded"***REMOVED***)
-        st = registry.record_run(pid, {"overall": "ok"***REMOVED***)
+        registry.record_run(pid, {"overall": "degraded"})
+        st = registry.record_run(pid, {"overall": "ok"})
         assert st.status == DEPLOYED
-        assert registry.validate_schema() == [***REMOVED***
+        assert registry.validate_schema() == []
 
     def test_record_run_unknown_project(self, registry):
         with pytest.raises(KeyError):
-            registry.record_run("ghost", {"overall": "ok"***REMOVED***)
+            registry.record_run("ghost", {"overall": "ok"})
 
     def test_record_run_caps_history(self, registry):
         pid = registry.register_project("app", "/tmp/app")
         for i in range(25):
-            registry.record_run(pid, {"overall": "ok", "run": i***REMOVED***)
+            registry.record_run(pid, {"overall": "ok", "run": i})
         history = registry.get_pipeline_history(pid)
         assert len(history) == 20
 
@@ -125,7 +125,7 @@ class TestRegistry:
         path = tmp_path / "forge.yaml"
         r1 = ForgeRegistry(path)
         r1.register_project("persist", "/tmp/persist")
-        r1.record_run("persist", {"overall": "ok"***REMOVED***)
+        r1.record_run("persist", {"overall": "ok"})
         r2 = ForgeRegistry(path)  # перечитываем с диска
         st = r2.get_project_status("persist")
         assert st is not None
@@ -140,8 +140,8 @@ class TestRegistry:
     def test_forge_status_to_dict(self):
         st = ForgeStatus(project_id="p1", name="n", root="/r", status=CHECKING)
         d = st.to_dict()
-        assert d["project_id"***REMOVED*** == "p1"
-        assert d["status"***REMOVED*** == CHECKING
+        assert d["project_id"] == "p1"
+        assert d["status"] == CHECKING
 
 
 class TestStateDriftGuard:
@@ -163,7 +163,7 @@ class TestStateDriftGuard:
         reg = ForgeRegistry(tmp_path / "real_like.yaml")
         # Симулируем реальный реестр: путь НЕ под /tmp.
         monkeypatch.setattr(reg, "path", Path("/mnt/sdcard/PROJECTS/workstation/freebuff/data_13/forge_registry.yaml"))
-        captured: dict = {***REMOVED***
+        captured: dict = {}
         monkeypatch.setattr(Path, "write_text", lambda self, data, encoding=None: captured.update(data=data))
         reg.register_project("mock-leak", "/tmp/mock_root")
         # Запись осталась in-memory, но НЕ попала в записанный payload.
@@ -173,7 +173,7 @@ class TestStateDriftGuard:
     def test_ephemeral_root_persists_when_registry_also_ephemeral(self, tmp_path, monkeypatch) -> None:
         """Эфемерный root + эфемерный реестр (unit-тест сценарий) → персист обязателен."""
         reg = ForgeRegistry(tmp_path / "tmp_registry.yaml")
-        captured: dict = {***REMOVED***
+        captured: dict = {}
         monkeypatch.setattr(Path, "write_text", lambda self, data, encoding=None: captured.update(data=data))
         reg.register_project("unit-test-proj", "/tmp/unit_root")
         assert "unit-test-proj" in str(captured.get("data", ""))
@@ -182,7 +182,7 @@ class TestStateDriftGuard:
         """Реальный root + реальный реестр → запись персистится (не ложно-фильтруется)."""
         reg = ForgeRegistry(tmp_path / "real_like.yaml")
         monkeypatch.setattr(reg, "path", Path("/mnt/sdcard/PROJECTS/workstation/freebuff/data_13/forge_registry.yaml"))
-        captured: dict = {***REMOVED***
+        captured: dict = {}
         monkeypatch.setattr(Path, "write_text", lambda self, data, encoding=None: captured.update(data=data))
         reg.register_project("real-proj", "projects_17/real_proj")
         assert "real-proj" in str(captured.get("data", ""))

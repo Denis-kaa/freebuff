@@ -12,7 +12,7 @@
 
 from __future__ import annotations
 
-***REMOVED***
+}
 from typing import Any, Dict, List
 from uuid import uuid4
 
@@ -42,7 +42,7 @@ class _FakeConcreteAgent(Agent):
         *,
         event_bus: Any = None,
     ) -> AgentResult:
-        return self._ok(task=task, data={"executed": True***REMOVED***)
+        return self._ok(task=task, data={"executed": True})
 
 
 class _FakeFailingAgent(Agent):
@@ -55,7 +55,7 @@ class _FakeFailingAgent(Agent):
         *,
         event_bus: Any = None,
     ) -> AgentResult:
-        return self._err(task=task, errors=["simulated failure"***REMOVED***)
+        return self._err(task=task, errors=["simulated failure"])
 
 
 class _FakeRouteDecision:
@@ -75,28 +75,28 @@ class _FakeChainRun:
         self.chain_id = chain_id
         self.status = status
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
-        return {"chain_id": self.chain_id, "status": self.status***REMOVED***
+    def to_dict(self) -> Dict[str, Any]:
+        return {"chain_id": self.chain_id, "status": self.status}
 
 
 class _FakeForgeFacade:
     """Фейк ForgeFacade для тестов run_forge."""
 
     def __init__(self) -> None:
-        self.calls: List[Dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+        self.calls: List[Dict[str, Any]] = []
 
-    def run_chain(self, project: Project, role_ids: List[str***REMOVED***) -> _FakeChainRun:
+    def run_chain(self, project: Project, role_ids: List[str]) -> _FakeChainRun:
         self.calls.append({
             "project_name": project.name,
             "role_ids": list(role_ids),
-        ***REMOVED***)
-        return _FakeChainRun(chain_id=f"chain-{len(self.calls)***REMOVED***")
+        ])
+        return _FakeChainRun(chain_id=f"chain-{len(self.calls)}")
 
 
 class _FakeForgeFacadeRaising:
     """Фейк ForgeFacade, всегда бросающий исключение."""
 
-    def run_chain(self, project: Project, role_ids: List[str***REMOVED***) -> None:  # type: ignore[return***REMOVED***
+    def run_chain(self, project: Project, role_ids: List[str]) -> None:  # type: ignore[return]
         raise RuntimeError("forge unavailable")
 
 
@@ -117,7 +117,7 @@ class TestAgentLifecycleDAG:
             (AgentLifecycle.PAUSED, "paused for maintenance"),
             (AgentLifecycle.ACTIVE, "resumed"),
             (AgentLifecycle.DONE, "completed"),
-        ***REMOVED***
+        ]
         agent = _FakeConcreteAgent()
         for target, reason in transitions:
             agent.transition(target, reason)
@@ -154,13 +154,13 @@ class TestAgentLifecycleDAG:
         agent.transition(AgentLifecycle.DONE, "finished")
         history = agent.lifecycle_history
         assert len(history) == 2
-        assert history[0***REMOVED*** == {"from": "created", "reason": "start work"***REMOVED***
-        assert history[1***REMOVED*** == {"from": "active", "reason": "finished"***REMOVED***
+        assert history[0] == {"from": "created", "reason": "start work"}
+        assert history[1] == {"from": "active", "reason": "finished"}
 
     def test_allowed_transitions_table_is_complete(self) -> None:
         """Каждое состояние имеет запись в ALLOWED_TRANSITIONS."""
         for state in AgentLifecycle:
-            assert state in ALLOWED_TRANSITIONS, f"missing {state***REMOVED***"
+            assert state in ALLOWED_TRANSITIONS, f"missing {state}"
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -171,8 +171,8 @@ class TestCapabilityValidation:
     """ANTI-6b: capabilities — closed subset of KNOWN_CAPABILITIES."""
 
     def test_known_capabilities_accepted(self) -> None:
-        agent = _FakeConcreteAgent(capabilities=frozenset({"code", "review", "summarize"***REMOVED***))
-        assert agent.capabilities == frozenset({"code", "review", "summarize"***REMOVED***)
+        agent = _FakeConcreteAgent(capabilities=frozenset({"code", "review", "summarize"}))
+        assert agent.capabilities == frozenset({"code", "review", "summarize"})
 
     def test_empty_capabilities_accepted(self) -> None:
         agent = _FakeConcreteAgent()
@@ -180,11 +180,11 @@ class TestCapabilityValidation:
 
     def test_unknown_capability_raises_valueerror(self) -> None:
         with pytest.raises(ValueError, match="KNOWN_CAPABILITIES"):
-            _FakeConcreteAgent(capabilities=frozenset({"code", "fantasy_token_xyz"***REMOVED***))
+            _FakeConcreteAgent(capabilities=frozenset({"code", "fantasy_token_xyz"}))
 
     def test_error_message_lists_unknown_tokens(self) -> None:
         with pytest.raises(ValueError) as exc:
-            _FakeConcreteAgent(capabilities=frozenset({"nonexistent_a", "nonexistent_b"***REMOVED***))
+            _FakeConcreteAgent(capabilities=frozenset({"nonexistent_a", "nonexistent_b"}))
         msg = str(exc.value)
         assert "nonexistent_a" in msg
         assert "nonexistent_b" in msg
@@ -206,7 +206,7 @@ class TestRouteModel:
 
     def test_route_model_uses_agent_capabilities(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Проверяет, что route_model передаёт capabilities в SmartRouter.route."""
-        captured_caps: List[List[str***REMOVED******REMOVED*** = [***REMOVED***
+        captured_caps: List[List[str]] = []
 
         class _FakeCatalog:
             @staticmethod
@@ -217,23 +217,23 @@ class TestRouteModel:
             def __init__(self, catalog: Any) -> None:
                 self.catalog = catalog
 
-            def route(self, required_capabilities: List[str***REMOVED*** | None = None, **kwargs: Any) -> _FakeRouteDecision:
-                captured_caps.append(list(required_capabilities or [***REMOVED***))
+            def route(self, required_capabilities: List[str] | None = None, **kwargs: Any) -> _FakeRouteDecision:
+                captured_caps.append(list(required_capabilities or []))
                 return _FakeRouteDecision(model="test-model")
 
         # lazy-import внутри route_model: from core_02.router import ...
         monkeypatch.setattr("core_02.router.SmartRouter", _FakeRouter)
         monkeypatch.setattr("core_02.router.ModelCatalog", _FakeCatalog)
 
-        agent = _FakeConcreteAgent(capabilities=frozenset({"code", "review"***REMOVED***))
+        agent = _FakeConcreteAgent(capabilities=frozenset({"code", "review"}))
         result = agent.route_model()
         assert result == "test-model"
         assert len(captured_caps) == 1
-        assert set(captured_caps[0***REMOVED***) == {"code", "review"***REMOVED***
+        assert set(captured_caps[0]) == {"code", "review"}
 
     def test_route_model_fallback_on_import_error(self, monkeypatch: pytest.MonkeyPatch) -> None:
         """Fail-safe: ошибка импорта → 'fallback'."""
-        agent = _FakeConcreteAgent(capabilities=frozenset({"code"***REMOVED***))
+        agent = _FakeConcreteAgent(capabilities=frozenset({"code"}))
 
         def _fail_import(*args: Any, **kwargs: Any) -> None:
             raise ImportError("no router")
@@ -241,7 +241,7 @@ class TestRouteModel:
         # Ломаем lazy-import внутри route_model
         monkeypatch.setattr(
             "core_02.agent_base.SmartRouter",
-            property(lambda self: _fail_import),  # type: ignore[arg-type***REMOVED***
+            property(lambda self: _fail_import),  # type: ignore[arg-type]
             raising=False,
         )
         # Напрямую monkeypatch-им _lazy часть...
@@ -288,10 +288,10 @@ class TestRunForge:
         )
 
         result = agent.run_forge(tmp_project)
-        assert result["status"***REMOVED*** == "ok"
+        assert result["status"] == "ok"
         assert "chain_id" in result
         assert len(fake_facade.calls) == 1
-        assert fake_facade.calls[0***REMOVED***["role_ids"***REMOVED*** == ["developer", "architect"***REMOVED***
+        assert fake_facade.calls[0]["role_ids"] == ["developer", "architect"]
 
     def test_run_forge_passes_explicit_role_ids(self, tmp_project: Project, monkeypatch: pytest.MonkeyPatch) -> None:
         """Явные role_ids переопределяют self.role_ids."""
@@ -304,10 +304,10 @@ class TestRunForge:
         )
 
         agent.run_forge(tmp_project, role_ids=("architect", "lisa"))
-        assert fake_facade.calls[0***REMOVED***["role_ids"***REMOVED*** == ["architect", "lisa"***REMOVED***
+        assert fake_facade.calls[0]["role_ids"] == ["architect", "lisa"]
 
     def test_run_forge_failsafe_on_error(self, tmp_project: Project, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Fail-safe: исключение в ForgeFacade → {"status": "error", ...***REMOVED***."""
+        """Fail-safe: исключение в ForgeFacade → {"status": "error", ...]."""
         agent = _FakeConcreteAgent(role_ids=("developer",))
 
         monkeypatch.setattr(
@@ -316,12 +316,12 @@ class TestRunForge:
         )
 
         result = agent.run_forge(tmp_project)
-        assert result["status"***REMOVED*** == "error"
+        assert result["status"] == "error"
         assert "error" in result
-        assert "forge unavailable" in result["error"***REMOVED***
+        assert "forge unavailable" in result["error"]
 
     def test_run_forge_failsafe_on_import_error(self, tmp_project: Project, monkeypatch: pytest.MonkeyPatch) -> None:
-        """Fail-safe: ImportError → {"status": "error", ...***REMOVED***."""
+        """Fail-safe: ImportError → {"status": "error", ...]."""
         agent = _FakeConcreteAgent(role_ids=("developer",))
 
         original_import = __import__
@@ -333,7 +333,7 @@ class TestRunForge:
 
         monkeypatch.setattr("builtins.__import__", _fake_import)
         result = agent.run_forge(tmp_project)
-        assert result["status"***REMOVED*** == "error"
+        assert result["status"] == "error"
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -384,7 +384,7 @@ class TestExecuteAndResult:
         assert result.ok is True
         assert result.status == "ok"
         assert result.agent_id == agent.agent_id
-        assert result.data == {"executed": True***REMOVED***
+        assert result.data == {"executed": True}
 
     def test_failing_agent_execute_returns_error(self, tmp_project: Project) -> None:
         agent = _FakeFailingAgent()
@@ -398,17 +398,17 @@ class TestExecuteAndResult:
             status="ok",
             agent_id="agent-001",
             task="build",
-            data={"files": ["out.md"***REMOVED******REMOVED***,
-            warnings=["slow"***REMOVED***,
-            meta={"elapsed": 1.5***REMOVED***,
+            data={"files": ["out.md"]},
+            warnings=["slow"],
+            meta={"elapsed": 1.5},
             model_used="deepseek-v4-flash",
         )
         d = result.to_dict()
-        assert d["status"***REMOVED*** == "ok"
-        assert d["agent_id"***REMOVED*** == "agent-001"
-        assert d["data"***REMOVED*** == {"files": ["out.md"***REMOVED******REMOVED***
-        assert d["warnings"***REMOVED*** == ["slow"***REMOVED***
-        assert d["model_used"***REMOVED*** == "deepseek-v4-flash"
+        assert d["status"] == "ok"
+        assert d["agent_id"] == "agent-001"
+        assert d["data"] == {"files": ["out.md"]}
+        assert d["warnings"] == ["slow"]
+        assert d["model_used"] == "deepseek-v4-flash"
         assert "forge_result" not in d  # None не сериализуется
 
     def test_agent_result_with_forge_result(self) -> None:
@@ -416,10 +416,10 @@ class TestExecuteAndResult:
             status="ok",
             agent_id="agent-002",
             task="forge task",
-            forge_result={"chain_id": "abc", "status": "ok"***REMOVED***,
+            forge_result={"chain_id": "abc", "status": "ok"},
         )
         d = result.to_dict()
-        assert d["forge_result"***REMOVED*** == {"chain_id": "abc", "status": "ok"***REMOVED***
+        assert d["forge_result"] == {"chain_id": "abc", "status": "ok"}
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -434,30 +434,30 @@ class TestSerialisation:
         agent = _FakeConcreteAgent(
             agent_id=agent_id,
             role_ids=("developer", "reviewer"),
-            capabilities=frozenset({"code", "review"***REMOVED***),
+            capabilities=frozenset({"code", "review"}),
             runtime="local",
         )
         d = agent.to_dict()
-        assert d["agent_id"***REMOVED*** == agent_id
-        assert d["role_ids"***REMOVED*** == ["developer", "reviewer"***REMOVED***
-        assert set(d["capabilities"***REMOVED***) == {"code", "review"***REMOVED***
-        assert d["runtime"***REMOVED*** == "local"
-        assert d["lifecycle"***REMOVED*** == "created"
-        assert d["lifecycle_history"***REMOVED*** == [***REMOVED***
+        assert d["agent_id"] == agent_id
+        assert d["role_ids"] == ["developer", "reviewer"]
+        assert set(d["capabilities"]) == {"code", "review"}
+        assert d["runtime"] == "local"
+        assert d["lifecycle"] == "created"
+        assert d["lifecycle_history"] == []
 
     def test_to_dict_includes_lifecycle_history(self) -> None:
         agent = _FakeConcreteAgent()
         agent.transition(AgentLifecycle.ACTIVE, "start")
         agent.transition(AgentLifecycle.DONE, "finish")
         d = agent.to_dict()
-        assert d["lifecycle"***REMOVED*** == "done"
-        assert len(d["lifecycle_history"***REMOVED***) == 2
+        assert d["lifecycle"] == "done"
+        assert len(d["lifecycle_history"]) == 2
 
     def test_repr_includes_key_fields(self) -> None:
         agent = _FakeConcreteAgent(
             agent_id="rep-test",
             role_ids=("dev",),
-            capabilities=frozenset({"code"***REMOVED***),
+            capabilities=frozenset({"code"}),
         )
         r = repr(agent)
         assert "rep-test" in r
@@ -485,6 +485,6 @@ class TestKnownCapabilitiesConsistency:
 
         extra = AB_CAPS - BV3_CAPS
         assert not extra, (
-            f"agent_base.KNOWN_CAPABILITIES содержит токены вне blueprint_v3: {sorted(extra)***REMOVED***. "
+            f"agent_base.KNOWN_CAPABILITIES содержит токены вне blueprint_v3: {sorted(extra)}. "
             f"Синхронизируй оба словаря (ADR-019 §Decision пункт 2)."
         )

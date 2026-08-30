@@ -16,10 +16,10 @@ import httpx
 logger = logging.getLogger(__name__)
 
 try:  # optional dependency (W-2)
-    import curl_cffi.requests as cffi_requests  # type: ignore[import-not-found***REMOVED***
+    import curl_cffi.requests as cffi_requests  # type: ignore[import-not-found]
     HAS_CURL_CFFI = True
 except Exception:  # noqa: BLE001
-    cffi_requests = None  # type: ignore[assignment***REMOVED***
+    cffi_requests = None  # type: ignore[assignment]
     HAS_CURL_CFFI = False
 
 DEFAULT_HEADERS = {
@@ -29,7 +29,7 @@ DEFAULT_HEADERS = {
     ),
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.5",
-***REMOVED***
+}
 
 
 class TLSClient:
@@ -58,13 +58,13 @@ class TLSClient:
 
     async def _client(self) -> httpx.AsyncClient:
         if self._httpx is None:
-            kwargs: dict[str, Any***REMOVED*** = {
+            kwargs: dict[str, Any] = {
                 "headers": dict(DEFAULT_HEADERS),
                 "timeout": self.timeout,
                 "follow_redirects": True,
-            ***REMOVED***
+            }
             if self.proxy:
-                kwargs["proxy"***REMOVED*** = self.proxy
+                kwargs["proxy"] = self.proxy
             self._httpx = httpx.AsyncClient(**kwargs)
         return self._httpx
 
@@ -77,14 +77,14 @@ class TLSClient:
             loop = asyncio.get_running_loop()
             return await loop.run_in_executor(
                 None,
-                lambda: cffi_requests.get(url, impersonate=self.impersonate, timeout=self.timeout).text,  # type: ignore[union-attr***REMOVED***
+                lambda: cffi_requests.get(url, impersonate=self.impersonate, timeout=self.timeout).text,  # type: ignore[union-attr]
             )
         client = await self._client()
         resp = await client.get(url, params=params)
         resp.raise_for_status()
         return resp.text
 
-    async def get_json(self, url: str, **params: Any) -> dict[str, Any***REMOVED***:
+    async def get_json(self, url: str, **params: Any) -> dict[str, Any]:
         """GET и возврат JSON-объекта."""
         client = await self._client()
         resp = await client.get(url, params=params)

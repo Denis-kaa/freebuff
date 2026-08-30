@@ -17,10 +17,10 @@ After fixes:
 """
 from __future__ import annotations
 
-***REMOVED***
+}
 import subprocess
 import sys
-***REMOVED***
+}
 
 ROOT = Path("/storage/emulated/0/PROJECTS/workstation/freebuff")
 VERIFIED_COUNT = 1991  # from consistency_check.py AST count (vs pytest --collect-only = 1992; AST is canonical here)
@@ -48,12 +48,12 @@ for fname, label in [
     ("CHANGELOG.md", "CHANGELOG.md"),
     ("docs_10/core/CODE_QUALITY_STANDARD.md", "CODE_QUALITY_STANDARD.md"),
     ("scripts_01/consistency_check.py", "consistency_check.py"),
-***REMOVED***:
+]:
     n = _bump_counter(ROOT / fname, label)
     counter_replacements += n
-    print(f"  ✓ {label***REMOVED***: replaced {n***REMOVED*** × '1891' → '{VERIFIED_COUNT***REMOVED***'")
+    print(f"  ✓ {label}: replaced {n} × '1891' → '{VERIFIED_COUNT}'")
 
-print(f"  TOTAL: {counter_replacements***REMOVED*** counter replacements")
+print(f"  TOTAL: {counter_replacements} counter replacements")
 
 
 # === STEP 2: CAN-10 — register as DEBT (no rename) ===
@@ -106,7 +106,7 @@ else:
     if found_anchor:
         arch = arch.replace(found_anchor, can13_block + found_anchor, 1)
         ARCH.write_text(arch)
-        print(f"  ✓ ARCHITECTURAL_DEBT.md: added §5.13 (CAN-10) + §5.14 (CAN-12) (anchor: '{found_anchor***REMOVED***')")
+        print(f"  ✓ ARCHITECTURAL_DEBT.md: added §5.13 (CAN-10) + §5.14 (CAN-12) (anchor: '{found_anchor}')")
     else:
         ARCH.write_text(arch + can13_block)
         print("  ✓ ARCHITECTURAL_DEBT.md: appended (anchor missing — fallback)")
@@ -116,26 +116,26 @@ else:
 # Honest reporting: ✓ when exit 0, ✗ when exit != 0 (TG_HUMAN_FORMAT principle).
 print("\n=== STEP 3: drift + consistency verify ===")
 r_drift = subprocess.run(
-    ["python3", str(ROOT / "scripts_01/drift_check.py"), "--force", "--report"***REMOVED***,
+    ["python3", str(ROOT / "scripts_01/drift_check.py"), "--force", "--report"],
     capture_output=True, text=True, cwd=str(ROOT), timeout=60,
 )
 drift_ok = r_drift.returncode == 0
 if drift_ok:
-    print(f"  ✓ drift_check: exit={r_drift.returncode***REMOVED***")
+    print(f"  ✓ drift_check: exit={r_drift.returncode}")
 else:
-    print(f"  ✗ drift_check: exit={r_drift.returncode***REMOVED*** (CAN-10/12 OPEN; expected pre-existing failures)")
-print((r_drift.stdout or "")[-700:***REMOVED***)
+    print(f"  ✗ drift_check: exit={r_drift.returncode} (CAN-10/12 OPEN; expected pre-existing failures)")
+print((r_drift.stdout or "")[-700:])
 
 r_cons = subprocess.run(
-    ["python3", str(ROOT / "scripts_01/consistency_check.py"), "--report"***REMOVED***,
+    ["python3", str(ROOT / "scripts_01/consistency_check.py"), "--report"],
     capture_output=True, text=True, cwd=str(ROOT), timeout=60,
 )
 cons_ok = r_cons.returncode == 0
 if cons_ok:
-    print(f"  ✓ consistency_check: exit={r_cons.returncode***REMOVED***")
+    print(f"  ✓ consistency_check: exit={r_cons.returncode}")
 else:
-    print(f"  ✗ consistency_check: exit={r_cons.returncode***REMOVED*** (CAN-10/12 OPEN)")
-print((r_cons.stdout or "")[-700:***REMOVED***)
+    print(f"  ✗ consistency_check: exit={r_cons.returncode} (CAN-10/12 OPEN)")
+print((r_cons.stdout or "")[-700:])
 
 
 # === STEP 4: TG message in HUMAN FORMAT ===
@@ -164,39 +164,39 @@ ALEX_TEXT = """Здравствуйте, Александр!
 
 TG_MSG_PATH = Path("/tmp/tg_v552_messages.txt")
 TG_MSG_PATH.write_text(
-    f"=== Saved Messages (7709651193) ===\n{SAVED_TEXT***REMOVED***\n\n"
-    f"=== Alexander Litvinov (1063827731) ===\n{ALEX_TEXT***REMOVED***\n"
+    f"=== Saved Messages (7709651193) ===\n{SAVED_TEXT}\n\n"
+    f"=== Alexander Litvinov (1063827731) ===\n{ALEX_TEXT}\n"
 )
-print(f"  ✓ TG message body saved to {TG_MSG_PATH***REMOVED***")
-print(f"  Saved: {len(SAVED_TEXT)***REMOVED*** chars / Alex: {len(ALEX_TEXT)***REMOVED*** chars")
+print(f"  ✓ TG message body saved to {TG_MSG_PATH}")
+print(f"  Saved: {len(SAVED_TEXT)} chars / Alex: {len(ALEX_TEXT)} chars")
 
 # === STEP 5: best-effort TG send via core_02/telegram_contract ===
 print("\n=== STEP 5: best-effort TG send ===")
 try:
     sys.path.insert(0, str(ROOT))
-    from core_02.telegram_contract ***REMOVED***port_to_saved_messages, report_to_litvinov
+    from core_02.telegram_contract ]port_to_saved_messages, report_to_litvinov
     import asyncio
     saved_id = asyncio.run(report_to_saved_messages(SAVED_TEXT))
     if isinstance(saved_id, int):
-        print(f"  ✓ Saved Messages (7709651193): msg_id={saved_id***REMOVED***")
+        print(f"  ✓ Saved Messages (7709651193): msg_id={saved_id}")
     else:
         print(f"  ✗ Saved Messages send FAILED (returned None). Body at /tmp/tg_v552_messages.txt")
     alex_id = asyncio.run(report_to_litvinov(ALEX_TEXT))
     if isinstance(alex_id, int):
-        print(f"  ✓ Alexander Litvinov (1063827731): msg_id={alex_id***REMOVED***")
+        print(f"  ✓ Alexander Litvinov (1063827731): msg_id={alex_id}")
     else:
         print(f"  ✗ Litvinov send FAILED (returned None). Body at /tmp/tg_v552_messages.txt")
 except Exception as e:
-    print(f"  ✗ TG send best-effort EXCEPTION ({type(e).__name__***REMOVED***: {e***REMOVED***)")
+    print(f"  ✗ TG send best-effort EXCEPTION ({type(e).__name__}: {e})")
     print("     Body saved to /tmp/tg_v552_messages.txt — manual send available.")
 
 
 # === SUMMARY ===
 print("\n=== SUMMARY ===")
-print(f"CAN-11 counter bump (1891→{VERIFIED_COUNT***REMOVED***): {counter_replacements***REMOVED*** occurrences replaced")
+print(f"CAN-11 counter bump (1891→{VERIFIED_COUNT}): {counter_replacements} occurrences replaced")
 print(f"CAN-10 register (rename pending): ARCHITECTURAL_DEBT §5.13 added")
 print(f"CAN-12 register (drift tolerance pending): ARCHITECTURAL_DEBT §5.14 added")
-print(f"drift_check: {'✓ exit=0' if drift_ok else '✗ exit=' + str(r_drift.returncode) + ' (CAN-10/12 OPEN — expected)'***REMOVED***")
-print(f"consistency_check: {'✓ exit=0' if cons_ok else '✗ exit=' + str(r_cons.returncode) + ' (CAN-11 still flagging — investigate)'***REMOVED***")
+print(f"drift_check: {'✓ exit=0' if drift_ok else '✗ exit=' + str(r_drift.returncode) + ' (CAN-10/12 OPEN — expected)'}")
+print(f"consistency_check: {'✓ exit=0' if cons_ok else '✗ exit=' + str(r_cons.returncode) + ' (CAN-11 still flagging — investigate)'}")
 print(f"TG message body: /tmp/tg_v552_messages.txt")
 print(f"v5.52.0 PARTIAL ship: counter fix DONE, naming+drift registered as OPEN debt")

@@ -12,7 +12,7 @@ import json
 import shutil
 import subprocess
 import sys
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from freebuff_plugin_03.runtime import (
@@ -34,7 +34,7 @@ try:
     _HAS_YAML = True
 except ImportError:
     _HAS_YAML = False
-    _yaml = None  # type: ignore[assignment***REMOVED***
+    _yaml = None  # type: ignore[assignment]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -56,19 +56,19 @@ class RuntimeRegistry:
 
     def __init__(
         self,
-        storage_path: Optional[Path***REMOVED*** = None,
-        providers_dir: Optional[str***REMOVED*** = None,
+        storage_path: Optional[Path] = None,
+        providers_dir: Optional[str] = None,
     ):
-        self._runtimes: Dict[str, RuntimeDefinition***REMOVED*** = {***REMOVED***
-        self._adapters: Dict[str, RuntimeAdapter***REMOVED*** = {***REMOVED***
-        self._active_name: Optional[str***REMOVED*** = None
+        self._runtimes: Dict[str, RuntimeDefinition] = {}
+        self._adapters: Dict[str, RuntimeAdapter] = {}
+        self._active_name: Optional[str] = None
         self._storage = storage_path or Path("data_13/runtime_registry.json")
         self._providers_dir = providers_dir or self.DEFAULT_PROVIDERS_DIR
 
         # Реестр известных Runtime — загружается из YAML-манифестов
         # при первом вызове load_providers_from_dir() или discover().
         # Hardcoded fallback — только если директория providers/ не найдена.
-        self._known_runtimes: Dict[str, Dict[str, Any***REMOVED******REMOVED*** = {***REMOVED***
+        self._known_runtimes: Dict[str, Dict[str, Any]] = {}
         self._providers_loaded = False
 
     # ── Load / Save ──────────────────────────────────────────
@@ -79,18 +79,18 @@ class RuntimeRegistry:
             return
         try:
             data = json.loads(self._storage.read_text(encoding="utf-8"))
-            for item in data.get("runtimes", [***REMOVED***):
+            for item in data.get("runtimes", []):
                 rt = RuntimeDefinition(
                     name=item.get("name", ""),
                     display_name=item.get("display_name", ""),
                     version=item.get("version", "0.0.0"),
                     adapter_type=item.get("adapter_type", AdapterType.STDIO_MCP.value),
                     status=RuntimeStatus(item.get("status", "unknown")),
-                    capabilities=item.get("capabilities", [***REMOVED***),
+                    capabilities=item.get("capabilities", []),
                     bin_path=item.get("bin_path"),
                     error=item.get("error"),
                 )
-                self._runtimes[rt.name***REMOVED*** = rt
+                self._runtimes[rt.name] = rt
             self._active_name = data.get("active")
         except (json.JSONDecodeError, OSError, ValueError):
             pass  # Повреждённый файл — игнорируем
@@ -111,10 +111,10 @@ class RuntimeRegistry:
                     "capabilities": rt.capabilities,
                     "bin_path": rt.bin_path,
                     "error": rt.error,
-                ***REMOVED***
+                }
                 for rt in self._runtimes.values()
-            ***REMOVED***,
-        ***REMOVED***
+            ],
+        }
         self._storage.write_text(
             json.dumps(data, ensure_ascii=False, indent=2),
             encoding="utf-8",
@@ -124,13 +124,13 @@ class RuntimeRegistry:
 
     def register(self, runtime: RuntimeDefinition) -> None:
         """Зарегистрировать Runtime."""
-        self._runtimes[runtime.name***REMOVED*** = runtime
+        self._runtimes[runtime.name] = runtime
         self.save()
 
     def unregister(self, name: str) -> bool:
         """Удалить Runtime из реестра."""
         if name in self._runtimes:
-            del self._runtimes[name***REMOVED***
+            del self._runtimes[name]
             if self._active_name == name:
                 self._active_name = None
             self.save()
@@ -139,34 +139,34 @@ class RuntimeRegistry:
 
     # ── Query ────────────────────────────────────────────────
 
-    def get(self, name: str) -> Optional[RuntimeDefinition***REMOVED***:
+    def get(self, name: str) -> Optional[RuntimeDefinition]:
         """Получить Runtime по имени."""
         return self._runtimes.get(name)
 
-    def list(self, status: Optional[RuntimeStatus***REMOVED*** = None) -> List[RuntimeDefinition***REMOVED***:
+    def list(self, status: Optional[RuntimeStatus] = None) -> List[RuntimeDefinition]:
         """Список Runtime, опционально фильтр по статусу."""
         if status is None:
             return list(self._runtimes.values())
-        return [rt for rt in self._runtimes.values() if rt.status == status***REMOVED***
+        return [rt for rt in self._runtimes.values() if rt.status == status]
 
-    def list_known(self) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    def list_known(self) -> List[Dict[str, Any]]:
         """Список известных Runtime (включая не установленные)."""
         # Lazy-load providers если ещё не загружены
         if not self._providers_loaded:
             self.load_providers_from_dir()
 
-        result = [***REMOVED***
+        result = []
         for name, info in self._known_runtimes.items():
             existing = self._runtimes.get(name)
             result.append({
                 "name": name,
-                "display_name": info["display_name"***REMOVED***,
+                "display_name": info["display_name"],
                 "installed": existing is not None,
                 "status": existing.status.value if existing else RuntimeStatus.UNKNOWN.value,
-                "capabilities": info.get("capabilities", [***REMOVED***),
-                "platforms": info.get("platforms", [***REMOVED***),
+                "capabilities": info.get("capabilities", []),
+                "platforms": info.get("platforms", []),
                 "requires_api_key": info.get("requires_api_key", False),
-            ***REMOVED***)
+            ])
         return result
 
     # ── Active Runtime ───────────────────────────────────────
@@ -179,21 +179,21 @@ class RuntimeRegistry:
         self.save()
         return True
 
-    def get_active(self) -> Optional[RuntimeDefinition***REMOVED***:
+    def get_active(self) -> Optional[RuntimeDefinition]:
         """Получить активный Runtime."""
         if self._active_name:
             return self._runtimes.get(self._active_name)
         return None
 
     @property
-    def active_name(self) -> Optional[str***REMOVED***:
+    def active_name(self) -> Optional[str]:
         return self._active_name
 
     # ── Discover ─────────────────────────────────────────────
 
     # ── Provider Loading (Marketplace-ready) ───────────────
 
-    def load_providers_from_dir(self, directory: Optional[str***REMOVED*** = None) -> int:
+    def load_providers_from_dir(self, directory: Optional[str] = None) -> int:
         """Загружает все YAML-манифесты из директории providers.
 
         Marketplace-ready: новый Runtime добавляется YAML-файлом,
@@ -217,7 +217,7 @@ class RuntimeRegistry:
             if manifest:
                 name = manifest.get("name", "")
                 if name:
-                    self._known_runtimes[name***REMOVED*** = manifest
+                    self._known_runtimes[name] = manifest
                     count += 1
 
         # Загружаем также .yml файлы
@@ -226,7 +226,7 @@ class RuntimeRegistry:
             if manifest:
                 name = manifest.get("name", "")
                 if name:
-                    self._known_runtimes[name***REMOVED*** = manifest
+                    self._known_runtimes[name] = manifest
                     count += 1
 
         if count == 0:
@@ -235,7 +235,7 @@ class RuntimeRegistry:
         self._providers_loaded = True
         return count
 
-    def register_provider(self, manifest: Dict[str, Any***REMOVED***) -> bool:
+    def register_provider(self, manifest: Dict[str, Any]) -> bool:
         """Зарегистрировать провайдера программно (без YAML-файла).
 
         Args:
@@ -247,12 +247,12 @@ class RuntimeRegistry:
         name = manifest.get("name", "")
         if not name:
             return False
-        self._known_runtimes[name***REMOVED*** = manifest
+        self._known_runtimes[name] = manifest
         if not self._providers_loaded:
             self._providers_loaded = True
         return True
 
-    def _parse_provider_yaml(self, path: Path) -> Optional[Dict[str, Any***REMOVED******REMOVED***:
+    def _parse_provider_yaml(self, path: Path) -> Optional[Dict[str, Any]]:
         """Парсит YAML-манифест провайдера.
 
         Поддерживает PyYAML и fallback на ручной парсинг ключ-значение.
@@ -264,7 +264,7 @@ class RuntimeRegistry:
 
         if _HAS_YAML:
             try:
-                return _yaml.safe_load(content)  # type: ignore[union-attr***REMOVED***
+                return _yaml.safe_load(content)  # type: ignore[union-attr]
             except Exception:
                 return None
 
@@ -272,7 +272,7 @@ class RuntimeRegistry:
         return self._parse_simple_yaml(content)
 
     @staticmethod
-    def _parse_simple_yaml(content: str) -> Optional[Dict[str, Any***REMOVED******REMOVED***:
+    def _parse_simple_yaml(content: str) -> Optional[Dict[str, Any]]:
         """Ручной парсинг простого YAML без зависимостей.
 
         Обрабатывает:
@@ -283,12 +283,12 @@ class RuntimeRegistry:
         Не поддерживает многострочные строки (>, |) —
         для полной поддержки установите PyYAML.
         """
-        result: Dict[str, Any***REMOVED*** = {***REMOVED***
-        capabilities: Dict[str, float***REMOVED*** = {***REMOVED***
-        bin_names: List[str***REMOVED*** = [***REMOVED***
-        platforms: List[str***REMOVED*** = [***REMOVED***
-        args: List[str***REMOVED*** = [***REMOVED***
-        current_section: Optional[str***REMOVED*** = None
+        result: Dict[str, Any] = {}
+        capabilities: Dict[str, float] = {}
+        bin_names: List[str] = []
+        platforms: List[str] = []
+        args: List[str] = []
+        current_section: Optional[str] = None
 
         for line in content.split("\n"):
             stripped = line.strip()
@@ -308,9 +308,9 @@ class RuntimeRegistry:
                         # Индентированный ключ внутри секции capabilities
                         # Формат: coding: 0.85
                         try:
-                            capabilities[key***REMOVED*** = float(value)
+                            capabilities[key] = float(value)
                         except ValueError:
-                            capabilities[key***REMOVED*** = 0.5
+                            capabilities[key] = 0.5
                         continue  # Не сбрасываем current_section
 
                     elif current_section == "install":
@@ -326,21 +326,21 @@ class RuntimeRegistry:
                         # Топ-уровень ключ-значение
                         current_section = None
                         if key == "name":
-                            result["name"***REMOVED*** = value
+                            result["name"] = value
                         elif key == "display_name":
-                            result["display_name"***REMOVED*** = value
+                            result["display_name"] = value
                         elif key == "adapter_type":
-                            result["adapter_type"***REMOVED*** = value
+                            result["adapter_type"] = value
                         elif key == "requires_api_key":
-                            result["requires_api_key"***REMOVED*** = value.lower() == "true"
+                            result["requires_api_key"] = value.lower() == "true"
                         elif key == "api_key_env":
-                            result["api_key_env"***REMOVED*** = value
+                            result["api_key_env"] = value
                         elif key == "docs_url":
-                            result["docs_url"***REMOVED*** = value
+                            result["docs_url"] = value
                         elif key == "recipe":
-                            result["recipe"***REMOVED*** = value
+                            result["recipe"] = value
                         elif key == "maintainer":
-                            result["maintainer"***REMOVED*** = value
+                            result["maintainer"] = value
                         elif key == "version":
                             pass  # version: auto — игнорируем
                 else:
@@ -349,37 +349,37 @@ class RuntimeRegistry:
 
             elif current_section == "capabilities" and stripped.startswith("- "):
                 # Формат: - coding: 0.85 (списковый формат capabilities)
-                item = stripped[2:***REMOVED***
+                item = stripped[2:]
                 if ":" in item:
                     cap_name, _, cap_val = item.partition(":")
                     cap_name = cap_name.strip()
                     try:
-                        capabilities[cap_name***REMOVED*** = float(cap_val.strip())
+                        capabilities[cap_name] = float(cap_val.strip())
                     except ValueError:
-                        capabilities[cap_name***REMOVED*** = 0.5
+                        capabilities[cap_name] = 0.5
                 else:
-                    capabilities[item.strip()***REMOVED*** = 0.5
+                    capabilities[item.strip()] = 0.5
 
             elif current_section == "bin_names" and stripped.startswith("- "):
-                bin_names.append(stripped[2:***REMOVED***.strip())
+                bin_names.append(stripped[2:].strip())
 
             elif current_section == "platforms" and stripped.startswith("- "):
-                platforms.append(stripped[2:***REMOVED***.strip())
+                platforms.append(stripped[2:].strip())
 
             elif current_section == "args" and stripped.startswith("- "):
-                args.append(stripped[2:***REMOVED***.strip())
+                args.append(stripped[2:].strip())
 
         if "name" not in result:
             return None
 
         # Присваиваем собранные значения
-        result["capabilities"***REMOVED*** = capabilities
-        result["bin_names"***REMOVED*** = bin_names if bin_names else [result["name"***REMOVED******REMOVED***
-        result["platforms"***REMOVED*** = platforms if platforms else ["linux"***REMOVED***
-        result["args"***REMOVED*** = args
+        result["capabilities"] = capabilities
+        result["bin_names"] = bin_names if bin_names else [result["name"]]
+        result["platforms"] = platforms if platforms else ["linux"]
+        result["args"] = args
 
         # Defaults для отсутствующих полей
-        result.setdefault("display_name", result["name"***REMOVED***)
+        result.setdefault("display_name", result["name"])
         result.setdefault("adapter_type", AdapterType.STDIO_MCP.value)
         result.setdefault("requires_api_key", False)
 
@@ -399,38 +399,38 @@ class RuntimeRegistry:
                 "capabilities": {
                     "coding": 0.85, "planning": 0.85, "architecture": 0.80,
                     "testing": 0.80, "research": 0.70,
-                ***REMOVED***,
-                "bin_names": ["freebuff", "codebuff"***REMOVED***,
-                "args": ["mcp"***REMOVED***,
-                "platforms": ["linux", "macos", "android"***REMOVED***,
-            ***REMOVED***,
+                },
+                "bin_names": ["freebuff", "codebuff"],
+                "args": ["mcp"],
+                "platforms": ["linux", "macos", "android"],
+            },
             "claude-code": {
                 "display_name": "Claude Code",
                 "adapter_type": AdapterType.STDIO_MCP.value,
                 "capabilities": {
                     "coding": 0.95, "review": 0.95, "architecture": 0.85,
                     "documentation": 0.90, "planning": 0.80,
-                ***REMOVED***,
-                "bin_names": ["claude"***REMOVED***,
-                "args": ["mcp"***REMOVED***,
-                "platforms": ["linux", "macos"***REMOVED***,
-            ***REMOVED***,
+                },
+                "bin_names": ["claude"],
+                "args": ["mcp"],
+                "platforms": ["linux", "macos"],
+            },
             "openclaw": {
                 "display_name": "OpenClaw",
                 "adapter_type": AdapterType.STDIO_MCP.value,
-                "capabilities": {"coding": 0.70, "research": 0.85***REMOVED***,
-                "bin_names": [***REMOVED***,
-                "args": [***REMOVED***,
-                "platforms": ["linux", "macos", "android"***REMOVED***,
-            ***REMOVED***,
-        ***REMOVED***
+                "capabilities": {"coding": 0.70, "research": 0.85},
+                "bin_names": [],
+                "args": [],
+                "platforms": ["linux", "macos", "android"],
+            },
+        }
 
         # Мержим: builtin не перезаписывает уже зарегистрированные
         for name, info in builtins.items():
             if name not in self._known_runtimes:
-                self._known_runtimes[name***REMOVED*** = info
+                self._known_runtimes[name] = info
 
-    def discover(self) -> List[RuntimeDefinition***REMOVED***:
+    def discover(self) -> List[RuntimeDefinition]:
         """Авто-обнаружение установленных Runtime.
 
         Загружает YAML-манифесты из runtime_05/providers/,
@@ -443,39 +443,39 @@ class RuntimeRegistry:
         if not self._providers_loaded:
             self.load_providers_from_dir()
 
-        discovered: List[RuntimeDefinition***REMOVED*** = [***REMOVED***
+        discovered: List[RuntimeDefinition] = []
 
         for name, info in self._known_runtimes.items():
-            bin_path = self._find_binary(info.get("bin_names", [***REMOVED***))
+            bin_path = self._find_binary(info.get("bin_names", []))
             if bin_path:
                 version = self._detect_version(bin_path, name)
                 # Конвертируем capabilities: dict → list для RuntimeDefinition
-                caps_raw = info.get("capabilities", [***REMOVED***)
+                caps_raw = info.get("capabilities", [])
                 if isinstance(caps_raw, dict):
                     caps_list = list(caps_raw.keys())
                 else:
-                    caps_list = list(caps_raw) if caps_raw else [***REMOVED***
+                    caps_list = list(caps_raw) if caps_raw else []
                 rt = RuntimeDefinition(
                     name=name,
-                    display_name=info["display_name"***REMOVED***,
+                    display_name=info["display_name"],
                     version=version,
-                    adapter_type=info["adapter_type"***REMOVED***,
+                    adapter_type=info["adapter_type"],
                     status=RuntimeStatus.DISCOVERED,
                     capabilities=caps_list,
                     bin_path=str(bin_path),
                     config=RuntimeConfig(
                         command=str(bin_path),
-                        args=info.get("args", [***REMOVED***),
+                        args=info.get("args", []),
                     ),
                 )
-                self._runtimes[name***REMOVED*** = rt
+                self._runtimes[name] = rt
                 discovered.append(rt)
 
         if discovered:
             self.save()
         return discovered
 
-    def _find_binary(self, bin_names: List[str***REMOVED***) -> Optional[Path***REMOVED***:
+    def _find_binary(self, bin_names: List[str]) -> Optional[Path]:
         """Ищет бинарник Runtime в PATH."""
         for name in bin_names:
             path = shutil.which(name)
@@ -487,7 +487,7 @@ class RuntimeRegistry:
             Path.home() / ".local" / "bin",
             Path("/usr/local/bin"),
             Path("/data/data/com.termux/files/usr/bin"),
-        ***REMOVED***
+        ]
         for name in bin_names:
             for extra in extra_paths:
                 candidate = extra / name
@@ -499,11 +499,11 @@ class RuntimeRegistry:
         """Определяет версию Runtime."""
         try:
             result = subprocess.run(
-                [str(bin_path), "--version"***REMOVED***,
+                [str(bin_path), "--version"],
                 capture_output=True, text=True, timeout=10,
             )
             if result.returncode == 0:
-                return result.stdout.strip()[:20***REMOVED***
+                return result.stdout.strip()[:20]
         except Exception:
             pass
         return "unknown"
@@ -525,19 +525,19 @@ class RuntimeRegistry:
 
     # ── Adapter Management ───────────────────────────────────
 
-    def get_adapter(self, name: str) -> Optional[RuntimeAdapter***REMOVED***:
+    def get_adapter(self, name: str) -> Optional[RuntimeAdapter]:
         """Получить адаптер для Runtime."""
         return self._adapters.get(name)
 
     def register_adapter(self, name: str, adapter: RuntimeAdapter) -> None:
         """Зарегистрировать экземпляр адаптера."""
-        self._adapters[name***REMOVED*** = adapter
+        self._adapters[name] = adapter
 
     def remove_adapter(self, name: str) -> None:
         """Удалить адаптер."""
         self._adapters.pop(name, None)
 
-    def connect(self, name: str) -> Tuple[bool, str***REMOVED***:
+    def connect(self, name: str) -> Tuple[bool, str]:
         """Подключиться к Runtime: найти бинарник, создать адаптер, выполнить handshake."""
         # Lazy-load providers если ещё не загружены
         if not self._providers_loaded:
@@ -549,25 +549,25 @@ class RuntimeRegistry:
             discovered = self.discover()
             rt = self._runtimes.get(name)
             if rt is None:
-                return False, f"Runtime not found: {name***REMOVED***"
+                return False, f"Runtime not found: {name}"
 
         if name in self._adapters:
-            adapter = self._adapters[name***REMOVED***
+            adapter = self._adapters[name]
             if adapter.is_connected():
-                return True, f"Already connected: {name***REMOVED***"
+                return True, f"Already connected: {name}"
 
         # Создаём адаптер
-        known = self._known_runtimes.get(name, {***REMOVED***)
-        bin_path = rt.bin_path or self._find_binary(known.get("bin_names", [***REMOVED***))
+        known = self._known_runtimes.get(name, {})
+        bin_path = rt.bin_path or self._find_binary(known.get("bin_names", []))
         if not bin_path and name == "freebuff":
             # Fallback: текущий Python
             bin_path = Path(sys.executable)
-            args = ["-m", "freebuff_cli"***REMOVED***
+            args = ["-m", "freebuff_cli"]
         else:
-            args = known.get("args", [***REMOVED***)
+            args = known.get("args", [])
 
         if not bin_path:
-            return False, f"Binary not found for: {name***REMOVED***"
+            return False, f"Binary not found for: {name}"
 
         config = RuntimeConfig(
             command=str(bin_path),
@@ -586,16 +586,16 @@ class RuntimeRegistry:
 
         ok = adapter.connect()
         if ok:
-            self._adapters[name***REMOVED*** = adapter
+            self._adapters[name] = adapter
             rt.status = RuntimeStatus.CONNECTED
             rt.error = None
             self.save()
-            return True, f"Connected to {name***REMOVED***"
+            return True, f"Connected to {name}"
         else:
             rt.status = RuntimeStatus.ERROR
             rt.error = "handshake failed"
             self.save()
-            return False, f"Failed to connect to {name***REMOVED***"
+            return False, f"Failed to connect to {name}"
 
     def disconnect(self, name: str) -> bool:
         """Отключиться от Runtime."""
@@ -624,9 +624,9 @@ class RuntimeRegistry:
 
     # ── Status ───────────────────────────────────────────────
 
-    def get_status(self) -> Dict[str, Any***REMOVED***:
+    def get_status(self) -> Dict[str, Any]:
         """Полный статус реестра Runtime."""
-        runtimes = [***REMOVED***
+        runtimes = []
         for name, rt in self._runtimes.items():
             adapter = self._adapters.get(name)
             runtimes.append({
@@ -638,7 +638,7 @@ class RuntimeRegistry:
                 "active": name == self._active_name,
                 "bin_path": rt.bin_path,
                 "error": rt.error,
-            ***REMOVED***)
+            ])
 
         return {
             "active": self._active_name,
@@ -646,7 +646,7 @@ class RuntimeRegistry:
             "connected": sum(1 for a in self._adapters.values() if a.is_connected()),
             "runtimes": runtimes,
             "known": self.list_known(),
-        ***REMOVED***
+        }
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -666,7 +666,7 @@ class RuntimeCapabilityRegistry:
 
         # Confidence scores — загружаются из provider manifests при первом обращении.
         # Hardcoded здесь ТОЛЬКО если providers/ не найдена (fallback).
-        self._default_scores: Dict[str, Dict[str, float***REMOVED******REMOVED*** = {***REMOVED***
+        self._default_scores: Dict[str, Dict[str, float]] = {}
         self._scores_loaded = False
 
     def _ensure_scores_loaded(self) -> None:
@@ -680,47 +680,47 @@ class RuntimeCapabilityRegistry:
             self._registry.list_known()  # Триггерит load_providers_from_dir()
 
         for name, info in self._registry._known_runtimes.items():
-            caps = info.get("capabilities", {***REMOVED***)
+            caps = info.get("capabilities", {})
             if name not in self._default_scores:
-                self._default_scores[name***REMOVED*** = {***REMOVED***
+                self._default_scores[name] = {}
             if isinstance(caps, list):
-                # Старый формат: ["coding", "planning"***REMOVED*** — default score 0.5
+                # Старый формат: ["coding", "planning"] — default score 0.5
                 for cap in caps:
-                    if cap not in self._default_scores[name***REMOVED***:
-                        self._default_scores[name***REMOVED***[cap***REMOVED*** = 0.5
+                    if cap not in self._default_scores[name]:
+                        self._default_scores[name][cap] = 0.5
             elif isinstance(caps, dict):
-                # Новый формат: {"coding": 0.85, "planning": 0.85***REMOVED***
+                # Новый формат: {"coding": 0.85, "planning": 0.85}
                 # Мержим: не перезаписываем пользовательские оценки (set_score)
                 for cap_name, cap_score in caps.items():
-                    if cap_name not in self._default_scores[name***REMOVED***:
-                        self._default_scores[name***REMOVED***[cap_name***REMOVED*** = cap_score
+                    if cap_name not in self._default_scores[name]:
+                        self._default_scores[name][cap_name] = cap_score
 
         self._scores_loaded = True
 
-    def list_capabilities(self) -> Dict[str, List[Dict[str, Any***REMOVED******REMOVED******REMOVED***:
-        """Все доступные capability: capability_name → [Runtime, ...***REMOVED***."""
-        result: Dict[str, List[Dict[str, Any***REMOVED******REMOVED******REMOVED*** = {***REMOVED***
+    def list_capabilities(self) -> Dict[str, List[Dict[str, Any]]]:
+        """Все доступные capability: capability_name → [Runtime, ...]."""
+        result: Dict[str, List[Dict[str, Any]]] = {}
         for rt in self._registry.list():
             for cap_name in rt.capabilities:
                 if cap_name not in result:
-                    result[cap_name***REMOVED*** = [***REMOVED***
+                    result[cap_name] = []
                 score = self.score_runtime(rt.name, cap_name)
-                result[cap_name***REMOVED***.append({
+                result[cap_name].append({
                     "runtime": rt.name,
                     "status": rt.status.value,
                     "confidence": score,
                     "connected": self._registry.is_connected(rt.name),
-                ***REMOVED***)
+                ])
         # Сортируем по confidence (лучшие первые)
         for cap_name in result:
-            result[cap_name***REMOVED***.sort(key=lambda x: x["confidence"***REMOVED***, reverse=True)
+            result[cap_name].sort(key=lambda x: x["confidence"], reverse=True)
         return result
 
     def get_runtime_for_capability(
         self,
         capability: str,
-        preferred_runtime: Optional[str***REMOVED*** = None,
-    ) -> Optional[Dict[str, Any***REMOVED******REMOVED***:
+        preferred_runtime: Optional[str] = None,
+    ) -> Optional[Dict[str, Any]]:
         """Какой Runtime лучше всего подходит для capability.
 
         Args:
@@ -728,23 +728,23 @@ class RuntimeCapabilityRegistry:
             preferred_runtime: предпочитаемый Runtime (если None — лучший по confidence)
 
         Returns:
-            {runtime, confidence, connected***REMOVED*** или None
+            {runtime, confidence, connected} или None
         """
         caps = self.list_capabilities()
         if capability not in caps:
             return None
 
-        available = caps[capability***REMOVED***
+        available = caps[capability]
 
         if preferred_runtime:
             for item in available:
-                if item["runtime"***REMOVED*** == preferred_runtime:
+                if item["runtime"] == preferred_runtime:
                     return item
             # Предпочитаемый не найден — берём лучший
-            return available[0***REMOVED*** if available else None
+            return available[0] if available else None
 
         # Берём лучший (уже отсортировано по confidence)
-        return available[0***REMOVED*** if available else None
+        return available[0] if available else None
 
     def score_runtime(self, runtime_name: str, capability: str) -> float:
         """Оценка Runtime для capability (0.0 - 1.0).
@@ -754,19 +754,19 @@ class RuntimeCapabilityRegistry:
         - User override через set_score()
         """
         self._ensure_scores_loaded()
-        rt_scores = self._default_scores.get(runtime_name, {***REMOVED***)
+        rt_scores = self._default_scores.get(runtime_name, {})
         return rt_scores.get(capability, 0.3)  # По умолчанию низкая уверенность
 
     def set_score(self, runtime_name: str, capability: str, score: float) -> None:
         """Установить пользовательскую оценку (override)."""
         if runtime_name not in self._default_scores:
-            self._default_scores[runtime_name***REMOVED*** = {***REMOVED***
-        self._default_scores[runtime_name***REMOVED***[capability***REMOVED*** = max(0.0, min(1.0, score))
+            self._default_scores[runtime_name] = {}
+        self._default_scores[runtime_name][capability] = max(0.0, min(1.0, score))
 
-    def all_capability_names(self) -> List[str***REMOVED***:
+    def all_capability_names(self) -> List[str]:
         """Список всех известных названий capability."""
         self._ensure_scores_loaded()
-        names: Set[str***REMOVED*** = set()
+        names: Set[str] = set()
         for rt_name, scores in self._default_scores.items():
             names.update(scores.keys())
         for rt in self._registry.list():

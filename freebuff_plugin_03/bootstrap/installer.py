@@ -13,7 +13,7 @@ import shutil
 import subprocess
 import sys
 import time
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional, Tuple
 
 from freebuff_plugin_03.bootstrap import (
@@ -36,10 +36,10 @@ class IdempotentInstaller:
     def __init__(self, workspace_root: Path, state: EnvironmentState):
         self._workspace = workspace_root
         self._state = state
-        self._steps: List[InstallStep***REMOVED*** = [***REMOVED***
+        self._steps: List[InstallStep] = []
 
     @property
-    def steps(self) -> List[InstallStep***REMOVED***:
+    def steps(self) -> List[InstallStep]:
         return self._steps
 
     # ══════════════════════════════════════════════════════════
@@ -48,11 +48,11 @@ class IdempotentInstaller:
 
     def _run_with_retry(
         self,
-        cmd: List[str***REMOVED***,
+        cmd: List[str],
         max_retries: int = 3,
         timeout: int = 120,
         step_name: str = "install",
-    ) -> Tuple[bool, str, float, InstallStep***REMOVED***:
+    ) -> Tuple[bool, str, float, InstallStep]:
         """Run a command with retry logic and exponential backoff.
 
         Implements spec §8.3: 3 retries with 2^attempt seconds delay.
@@ -84,7 +84,7 @@ class IdempotentInstaller:
                     self._steps.append(step)
                     return True, "", (time.time() - overall_t0) * 1000, step
 
-                last_error = result.stderr[:200***REMOVED***
+                last_error = result.stderr[:200]
             except subprocess.TimeoutExpired:
                 last_error = "timeout"
             except Exception as e:
@@ -111,7 +111,7 @@ class IdempotentInstaller:
     # Main install method
     # ══════════════════════════════════════════════════════════
 
-    def install_profile(self, profile: BootstrapProfile) -> List[InstallResult***REMOVED***:
+    def install_profile(self, profile: BootstrapProfile) -> List[InstallResult]:
         """Устанавливает все компоненты профиля (идемпотентно).
 
         Args:
@@ -120,7 +120,7 @@ class IdempotentInstaller:
         Returns:
             список результатов установки
         """
-        results: List[InstallResult***REMOVED*** = [***REMOVED***
+        results: List[InstallResult] = []
 
         # 1. Системные зависимости
         for pkg in profile.system_packages:
@@ -134,7 +134,7 @@ class IdempotentInstaller:
 
         # 2. Python пакеты
         for pkg in profile.python_packages:
-            pkg_name = pkg.split("==")[0***REMOVED***.split(">=")[0***REMOVED***.split("<")[0***REMOVED***.strip().lower()
+            pkg_name = pkg.split("==")[0].split(">=")[0].split("<")[0].strip().lower()
             if pkg_name not in self._state.pip_packages:
                 result = self._install_pip(pkg)
                 results.append(result)
@@ -145,7 +145,7 @@ class IdempotentInstaller:
 
         # 3. npm пакеты
         for pkg in profile.npm_packages:
-            pkg_name = pkg.split("@")[0***REMOVED*** if pkg.startswith("@") else pkg.split("@")[0***REMOVED***.strip()
+            pkg_name = pkg.split("@")[0] if pkg.startswith("@") else pkg.split("@")[0].strip()
             if pkg_name not in self._state.npm_packages:
                 result = self._install_npm(pkg)
                 results.append(result)
@@ -174,7 +174,7 @@ class IdempotentInstaller:
                 skip_reason="already installed",
             )
 
-        step = InstallStep(name=f"install_runtime:{runtime.name***REMOVED***")
+        step = InstallStep(name=f"install_runtime:{runtime.name}")
         t0 = time.time()
 
         try:
@@ -190,7 +190,7 @@ class IdempotentInstaller:
                 result = InstallResult(
                     component=runtime.name,
                     installed=False,
-                    error=f"Unknown install type: {runtime.install_type***REMOVED***",
+                    error=f"Unknown install type: {runtime.install_type}",
                 )
 
             step.duration_ms = (time.time() - t0) * 1000
@@ -241,12 +241,12 @@ class IdempotentInstaller:
             )
 
         if self._state.is_termux:
-            cmd = ["pkg", "install", "-y", package***REMOVED***
+            cmd = ["pkg", "install", "-y", package]
         else:
-            cmd = ["apt-get", "install", "-y", package***REMOVED***
+            cmd = ["apt-get", "install", "-y", package]
 
         success, error, duration_ms, step = self._run_with_retry(
-            cmd, step_name=f"install_system:{package***REMOVED***",
+            cmd, step_name=f"install_system:{package}",
         )
 
         return InstallResult(
@@ -261,8 +261,8 @@ class IdempotentInstaller:
         Retry: 3 попытки, exponential backoff (1s, 2s, 4s).
         """
         success, error, duration_ms, step = self._run_with_retry(
-            [sys.executable, "-m", "pip", "install", package***REMOVED***,
-            step_name=f"install_pip:{package***REMOVED***",
+            [sys.executable, "-m", "pip", "install", package],
+            step_name=f"install_pip:{package}",
         )
 
         return InstallResult(
@@ -277,8 +277,8 @@ class IdempotentInstaller:
         Retry: 3 попытки, exponential backoff (1s, 2s, 4s).
         """
         success, error, duration_ms, step = self._run_with_retry(
-            ["npm", "install", "-g", package***REMOVED***,
-            step_name=f"install_npm:{package***REMOVED***",
+            ["npm", "install", "-g", package],
+            step_name=f"install_npm:{package}",
         )
 
         return InstallResult(
@@ -299,7 +299,7 @@ class IdempotentInstaller:
         Returns:
             результат установки
         """
-        repo_name = source.split("/")[-1***REMOVED***.replace(".git", "")
+        repo_name = source.split("/")[-1].replace(".git", "")
         if dest_path:
             dest = Path(dest_path)
         else:
@@ -316,8 +316,8 @@ class IdempotentInstaller:
 
         dest.parent.mkdir(parents=True, exist_ok=True)
         success, error, duration_ms, step = self._run_with_retry(
-            ["git", "clone", source, str(dest)***REMOVED***,
-            step_name=f"install_git:{repo_name***REMOVED***",
+            ["git", "clone", source, str(dest)],
+            step_name=f"install_git:{repo_name}",
             timeout=300,
         )
 
@@ -333,11 +333,11 @@ class IdempotentInstaller:
 
         Retry: 3 попытки, exponential backoff (1s, 2s, 4s).
         """
-        dest = Path(runtime.install_path or f"/usr/local/bin/{runtime.bin_name***REMOVED***")
+        dest = Path(runtime.install_path or f"/usr/local/bin/{runtime.bin_name}")
 
         success, error, duration_ms, step = self._run_with_retry(
-            ["curl", "-Lo", str(dest), runtime.source***REMOVED***,
-            step_name=f"install_binary:{runtime.name***REMOVED***",
+            ["curl", "-Lo", str(dest), runtime.source],
+            step_name=f"install_binary:{runtime.name}",
         )
 
         if success:

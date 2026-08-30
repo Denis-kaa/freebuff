@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import sqlite3
 import time
-***REMOVED***
+}
 
 
 class CheckpointStore:
@@ -38,7 +38,7 @@ class CheckpointStore:
         row = self._conn.execute(
             "SELECT last_id FROM checkpoints WHERE source = ?", (source,)
         ).fetchone()
-        return row["last_id"***REMOVED*** if row else None
+        return row["last_id"] if row else None
 
     def set_last(self, source: str, last_id: str) -> None:
         self._conn.execute(

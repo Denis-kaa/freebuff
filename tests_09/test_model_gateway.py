@@ -6,7 +6,7 @@ import json
 import os
 import sys
 import tempfile
-***REMOVED***
+}
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -39,9 +39,9 @@ class TestTokenCounter:
 
     def test_count_messages(self):
         msgs = [
-            {"role": "user", "content": "Hello"***REMOVED***,
-            {"role": "assistant", "content": "Hi there!"***REMOVED***,
-        ***REMOVED***
+            {"role": "user", "content": "Hello"},
+            {"role": "assistant", "content": "Hi there!"},
+        ]
         n = count_messages_tokens(msgs)
         assert n > 0
 
@@ -72,7 +72,7 @@ class TestModelResponse:
     def test_default_values(self):
         r = ModelResponse(content="Hello", model="test", provider="test")
         assert r.finish_reason == "stop"
-        assert r.usage["total_tokens"***REMOVED*** == 0
+        assert r.usage["total_tokens"] == 0
         assert r.latency_ms == 0
         assert not r.fallback_used
         assert not r.cached
@@ -82,11 +82,11 @@ class TestModelResponse:
             content="Hi",
             model="m",
             provider="p",
-            usage={"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15***REMOVED***,
+            usage={"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15},
             latency_ms=200,
             fallback_used=True,
         )
-        assert r.usage["total_tokens"***REMOVED*** == 15
+        assert r.usage["total_tokens"] == 15
         assert r.latency_ms == 200
         assert r.fallback_used
 
@@ -104,21 +104,21 @@ class TestModelGateway:
         gw = ModelGateway()
         status = gw.status()
         assert "providers" in status
-        assert status["total_providers"***REMOVED*** >= 3
+        assert status["total_providers"] >= 3
 
     def test_models_available(self):
         """Проверяем, что все модели из PROVIDER_ENDPOINTS имеют корректную конфигурацию."""
         for pname, cfg in PROVIDER_ENDPOINTS.items():
-            assert "base_url" in cfg, f"{pname***REMOVED*** missing base_url"
-            assert len(cfg["models"***REMOVED***) > 0, f"{pname***REMOVED*** has no models"
-            for mname, minfo in cfg["models"***REMOVED***.items():
-                assert "max_tokens" in minfo, f"{mname***REMOVED*** missing max_tokens"
+            assert "base_url" in cfg, f"{pname} missing base_url"
+            assert len(cfg["models"]) > 0, f"{pname} has no models"
+            for mname, minfo in cfg["models"].items():
+                assert "max_tokens" in minfo, f"{mname} missing max_tokens"
                 # Проверяем, что _model_to_provider маппит модель
                 mapped = _model_to_provider(mname)
-                assert mapped is not None, f"{mname***REMOVED*** not mapped by _model_to_provider"
+                assert mapped is not None, f"{mname} not mapped by _model_to_provider"
                 # OpenRouter модели с / маппятся в openrouter
                 if "/" in mname:
-                    assert mapped == "openrouter", f"{mname***REMOVED*** should map to openrouter, got {mapped***REMOVED***"
+                    assert mapped == "openrouter", f"{mname} should map to openrouter, got {mapped}"
 
     def test_unknown_model_raises(self):
         gw = ModelGateway()
@@ -131,10 +131,10 @@ class TestModelGateway:
         mock_resp = MagicMock()
         mock_resp.status_code = 200
         mock_resp.json.return_value = {
-            "choices": [{"message": {"content": "Hello from mock"***REMOVED***, "finish_reason": "stop"***REMOVED******REMOVED***,
+            "choices": [{"message": {"content": "Hello from mock"}, "finish_reason": "stop"}],
             "model": "deepseek-v4-flash",
-            "usage": {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15***REMOVED***,
-        ***REMOVED***
+            "usage": {"prompt_tokens": 10, "completion_tokens": 5, "total_tokens": 15},
+        }
         mock_instance = MagicMock()
         mock_instance.post.return_value = mock_resp
         mock_client.return_value.__enter__.return_value = mock_instance
@@ -147,12 +147,12 @@ class TestModelGateway:
 
         result = gw.generate(
             model="deepseek-v4-flash",
-            messages=[{"role": "user", "content": "Hi"***REMOVED******REMOVED***,
+            messages=[{"role": "user", "content": "Hi"}],
         )
 
         assert result.content == "Hello from mock"
         assert result.model == "deepseek-v4-flash"
-        assert result.usage["total_tokens"***REMOVED*** == 15
+        assert result.usage["total_tokens"] == 15
         assert result.latency_ms >= 0
 
     def test_fallback_marked_in_response(self):
@@ -168,7 +168,7 @@ class TestModelGateway:
         from scripts_01.event_bus import EventBus, Event
         import tempfile
 
-        received = [***REMOVED***
+        received = []
 
         def handler(e):
             received.append(e.type)
@@ -184,7 +184,7 @@ class TestModelGateway:
 
         # Публикуем вручную (API call не делаем)
         result = ModelResponse(content="test", model="m", provider="p")
-        gw._publish_event(result, [{"role": "user", "content": "test"***REMOVED******REMOVED***)
+        gw._publish_event(result, [{"role": "user", "content": "test"}])
 
         assert "model.called" in received
 
@@ -200,13 +200,13 @@ class TestModelGateway:
             mock_gen.return_value = ModelResponse(content="ok", model="m", provider="p")
 
             gw.generate_by_capabilities(
-                capabilities=["code", "fast"***REMOVED***,
-                messages=[{"role": "user", "content": "write code"***REMOVED******REMOVED***,
+                capabilities=["code", "fast"],
+                messages=[{"role": "user", "content": "write code"}],
             )
 
             # Проверяем что generate вызван с capabilities
             _, kwargs = mock_gen.call_args
-            assert kwargs.get("capabilities") == ["code", "fast"***REMOVED***
+            assert kwargs.get("capabilities") == ["code", "fast"]
 
     def test_provider_rotation(self):
         """Тест ротации ключей."""
@@ -245,8 +245,8 @@ class TestStreamChunk:
         assert c.model == "m"
 
     def test_with_usage(self):
-        c = StreamChunk(content="Hi", model="m", usage={"total_tokens": 42***REMOVED***)
-        assert c.usage["total_tokens"***REMOVED*** == 42
+        c = StreamChunk(content="Hi", model="m", usage={"total_tokens": 42})
+        assert c.usage["total_tokens"] == 42
 
 
 class TestStreaming:
@@ -255,13 +255,13 @@ class TestStreaming:
     @patch("scripts_01.model_gateway.httpx.Client")
     def test_openai_stream_sse_format(self, mock_client):
         """Тест OpenAI-совместимого streaming (SSE format)."""
-        # Мокаем SSE ответ: data: {json***REMOVED*** lines + data: [DONE***REMOVED***
+        # Мокаем SSE ответ: data: {json} lines + data: [DONE]
         sse_lines = [
-            'data: {"choices": [{"delta": {"content": "Hello"***REMOVED***, "finish_reason": null***REMOVED******REMOVED***, "model": "deepseek-v4-flash"***REMOVED***',
-            'data: {"choices": [{"delta": {"content": " world"***REMOVED***, "finish_reason": null***REMOVED******REMOVED***, "model": "deepseek-v4-flash"***REMOVED***',
-            'data: {"choices": [{"delta": {***REMOVED***, "finish_reason": "stop"***REMOVED******REMOVED***, "model": "deepseek-v4-flash", "usage": {"total_tokens": 15***REMOVED******REMOVED***',
-            'data: [DONE***REMOVED***',
-        ***REMOVED***
+            'data: {"choices": [{"delta": {"content": "Hello"], "finish_reason": null]], "model": "deepseek-v4-flash"]',
+            'data: {"choices": [{"delta": {"content": " world"], "finish_reason": null]], "model": "deepseek-v4-flash"]',
+            'data: {"choices": [{"delta": {], "finish_reason": "stop"]], "model": "deepseek-v4-flash", "usage": {"total_tokens": 15]]',
+            'data: [DONE]',
+        ]
 
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -285,7 +285,7 @@ class TestStreaming:
 
         chunks = list(provider.generate_stream(
             model="deepseek-v4-flash",
-            messages=[{"role": "user", "content": "Hi"***REMOVED******REMOVED***,
+            messages=[{"role": "user", "content": "Hi"}],
         ))
 
         # Should get content chunks + final stop chunk
@@ -300,9 +300,9 @@ class TestStreaming:
     def test_gemini_stream_sse_format(self, mock_client):
         """Тест Gemini streaming (streamGenerateContent with alt=sse)."""
         sse_lines = [
-            'data: {"candidates": [{"content": {"parts": [{"text": "Hello"***REMOVED******REMOVED******REMOVED***, "finishReason": null***REMOVED******REMOVED******REMOVED***',
-            'data: {"candidates": [{"content": {"parts": [{"text": " from Gemini"***REMOVED******REMOVED******REMOVED***, "finishReason": "STOP"***REMOVED******REMOVED***, "usageMetadata": {"totalTokenCount": 20***REMOVED******REMOVED***',
-        ***REMOVED***
+            'data: {"candidates": [{"content": {"parts": [{"text": "Hello"]]], "finishReason": null]]]',
+            'data: {"candidates": [{"content": {"parts": [{"text": " from Gemini"]]], "finishReason": "STOP"]], "usageMetadata": {"totalTokenCount": 20]]',
+        ]
 
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -322,7 +322,7 @@ class TestStreaming:
 
         chunks = list(provider.generate_stream(
             model="gemini-2.5-flash",
-            messages=[{"role": "user", "content": "Hi"***REMOVED******REMOVED***,
+            messages=[{"role": "user", "content": "Hi"}],
         ))
 
         contents = "".join(c.content for c in chunks)
@@ -335,10 +335,10 @@ class TestStreaming:
     def test_ollama_stream_newline_json(self, mock_client):
         """Тест Ollama streaming (newline-delimited JSON)."""
         json_lines = [
-            '{"model": "qwen2.5:1.5b", "message": {"content": "Hello"***REMOVED***, "done": false***REMOVED***',
-            '{"model": "qwen2.5:1.5b", "message": {"content": " world"***REMOVED***, "done": false***REMOVED***',
-            '{"model": "qwen2.5:1.5b", "message": {"content": ""***REMOVED***, "done": true, "prompt_eval_count": 10, "eval_count": 5***REMOVED***',
-        ***REMOVED***
+            '{"model": "qwen2.5:1.5b", "message": {"content": "Hello"], "done": false]',
+            '{"model": "qwen2.5:1.5b", "message": {"content": " world"], "done": false]',
+            '{"model": "qwen2.5:1.5b", "message": {"content": ""], "done": true, "prompt_eval_count": 10, "eval_count": 5]',
+        ]
 
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -358,16 +358,16 @@ class TestStreaming:
 
         chunks = list(provider.generate_stream(
             model="qwen2.5:1.5b",
-            messages=[{"role": "user", "content": "Hi"***REMOVED******REMOVED***,
+            messages=[{"role": "user", "content": "Hi"}],
         ))
 
         contents = "".join(c.content for c in chunks)
         assert "Hello" in contents
         assert "world" in contents
         # Final chunk should have usage
-        final_chunks = [c for c in chunks if c.usage is not None***REMOVED***
+        final_chunks = [c for c in chunks if c.usage is not None]
         assert len(final_chunks) >= 1
-        assert final_chunks[-1***REMOVED***.usage["total_tokens"***REMOVED*** == 15
+        assert final_chunks[-1].usage["total_tokens"] == 15
 
     def test_base_provider_stream_fallback(self):
         """Тест fallback streaming в BaseProvider (без реального стриминга)."""
@@ -380,22 +380,22 @@ class TestStreaming:
         provider = FakeProvider()
         chunks = list(provider.generate_stream(
             model="test",
-            messages=[{"role": "user", "content": "Hi"***REMOVED******REMOVED***,
+            messages=[{"role": "user", "content": "Hi"}],
         ))
 
         # BaseProvider fallback yields content then stop
         assert len(chunks) == 2
-        assert chunks[0***REMOVED***.content == "full response"
-        assert chunks[1***REMOVED***.finish_reason == "stop"
+        assert chunks[0].content == "full response"
+        assert chunks[1].finish_reason == "stop"
 
     @patch("scripts_01.model_gateway.httpx.Client")
     def test_gateway_generate_stream(self, mock_client):
         """Тест ModelGateway.generate_stream() с моком провайдера."""
         sse_lines = [
-            'data: {"choices": [{"delta": {"content": "Hi"***REMOVED***, "finish_reason": null***REMOVED******REMOVED***, "model": "deepseek-v4-flash"***REMOVED***',
-            'data: {"choices": [{"delta": {***REMOVED***, "finish_reason": "stop"***REMOVED******REMOVED***, "model": "deepseek-v4-flash"***REMOVED***',
-            'data: [DONE***REMOVED***',
-        ***REMOVED***
+            'data: {"choices": [{"delta": {"content": "Hi"], "finish_reason": null]], "model": "deepseek-v4-flash"]',
+            'data: {"choices": [{"delta": {], "finish_reason": "stop"]], "model": "deepseek-v4-flash"]',
+            'data: [DONE]',
+        ]
 
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -417,7 +417,7 @@ class TestStreaming:
 
         chunks = list(gw.generate_stream(
             model="deepseek-v4-flash",
-            messages=[{"role": "user", "content": "Hello"***REMOVED******REMOVED***,
+            messages=[{"role": "user", "content": "Hello"}],
         ))
 
         assert len(chunks) >= 1
@@ -427,19 +427,19 @@ class TestStreaming:
         """Тест что generate_stream() без model вызывает ValueError."""
         gw = ModelGateway()
         with pytest.raises(ValueError, match="model is required"):
-            list(gw.generate_stream(messages=[{"role": "user", "content": "Hi"***REMOVED******REMOVED***))
+            list(gw.generate_stream(messages=[{"role": "user", "content": "Hi"}]))
 
     @patch("scripts_01.model_gateway.httpx.Client")
     def test_openai_stream_handles_empty_lines(self, mock_client):
         """Тест что streaming игнорирует пустые строки в SSE."""
         sse_lines = [
             '',
-            'data: {"choices": [{"delta": {"content": "A"***REMOVED***, "finish_reason": null***REMOVED******REMOVED******REMOVED***',
+            'data: {"choices": [{"delta": {"content": "A"], "finish_reason": null]]]',
             '',
-            'data: {"choices": [{"delta": {"content": "B"***REMOVED***, "finish_reason": null***REMOVED******REMOVED******REMOVED***',
+            'data: {"choices": [{"delta": {"content": "B"], "finish_reason": null]]]',
             '',
-            'data: [DONE***REMOVED***',
-        ***REMOVED***
+            'data: [DONE]',
+        ]
 
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -462,7 +462,7 @@ class TestStreaming:
 
         chunks = list(provider.generate_stream(
             model="test-model",
-            messages=[{"role": "user", "content": "Hi"***REMOVED******REMOVED***,
+            messages=[{"role": "user", "content": "Hi"}],
         ))
 
         contents = "".join(c.content for c in chunks)
@@ -474,9 +474,9 @@ class TestStreaming:
         """Тест что streaming пропускает невалидный JSON в SSE."""
         sse_lines = [
             'data: {invalid json',
-            'data: {"choices": [{"delta": {"content": "OK"***REMOVED***, "finish_reason": null***REMOVED******REMOVED******REMOVED***',
-            'data: [DONE***REMOVED***',
-        ***REMOVED***
+            'data: {"choices": [{"delta": {"content": "OK"], "finish_reason": null]]]',
+            'data: [DONE]',
+        ]
 
         mock_resp = MagicMock()
         mock_resp.status_code = 200
@@ -499,7 +499,7 @@ class TestStreaming:
 
         chunks = list(provider.generate_stream(
             model="test-model",
-            messages=[{"role": "user", "content": "Hi"***REMOVED******REMOVED***,
+            messages=[{"role": "user", "content": "Hi"}],
         ))
 
         # Invalid JSON should be skipped, valid content should pass
@@ -512,27 +512,27 @@ class TestProviderEndpoints:
 
     def test_all_providers_have_base_url(self):
         for name, cfg in PROVIDER_ENDPOINTS.items():
-            assert "base_url" in cfg, f"{name***REMOVED*** missing base_url"
-            assert cfg["base_url"***REMOVED***.startswith("http"), f"{name***REMOVED*** invalid base_url"
+            assert "base_url" in cfg, f"{name} missing base_url"
+            assert cfg["base_url"].startswith("http"), f"{name} invalid base_url"
 
     def test_all_providers_have_models(self):
         for name, cfg in PROVIDER_ENDPOINTS.items():
-            assert len(cfg["models"***REMOVED***) > 0, f"{name***REMOVED*** has no models"
-            for mname, minfo in cfg["models"***REMOVED***.items():
-                assert "max_tokens" in minfo, f"{mname***REMOVED*** missing max_tokens"
-                assert minfo["max_tokens"***REMOVED*** > 0, f"{mname***REMOVED*** invalid max_tokens"
+            assert len(cfg["models"]) > 0, f"{name} has no models"
+            for mname, minfo in cfg["models"].items():
+                assert "max_tokens" in minfo, f"{mname} missing max_tokens"
+                assert minfo["max_tokens"] > 0, f"{mname} invalid max_tokens"
 
     def test_deepseek_models(self):
-        models = PROVIDER_ENDPOINTS["deepseek"***REMOVED***["models"***REMOVED***
+        models = PROVIDER_ENDPOINTS["deepseek"]["models"]
         assert "deepseek-v4-flash" in models
         assert "deepseek-chat" in models
 
     def test_gemini_models(self):
-        models = PROVIDER_ENDPOINTS["gemini"***REMOVED***["models"***REMOVED***
+        models = PROVIDER_ENDPOINTS["gemini"]["models"]
         assert "gemini-2.5-flash" in models
 
     def test_ollama_models(self):
-        models = PROVIDER_ENDPOINTS["ollama"***REMOVED***["models"***REMOVED***
+        models = PROVIDER_ENDPOINTS["ollama"]["models"]
         assert "qwen2.5:1.5b" in models
 
 
@@ -548,12 +548,12 @@ class TestPolicyRouting:
                 "runtime": "claude-code",
                 "source": "policy",
                 "preferred": "claude-code",
-            ***REMOVED***
+            }
 
     def test_resolve_model_policy_override(self):
         """Policy override возвращает модель назначенного Runtime."""
         gw = ModelGateway(policy_engine=self.FakePolicy())
-        model, fallback, source = gw.resolve_model(["coding"***REMOVED***)
+        model, fallback, source = gw.resolve_model(["coding"])
         assert model == "anthropic/claude-3.5-sonnet"
         assert fallback is None
         assert source == "policy:claude-code"
@@ -571,14 +571,14 @@ class TestPolicyRouting:
                 return Decision()
 
         gw._router = FakeRouter()
-        model, fallback, source = gw.resolve_model(["code"***REMOVED***)
+        model, fallback, source = gw.resolve_model(["code"])
         assert model == "gemini-2.5-flash"
         assert source == "router"
 
     def test_resolve_model_cloud_first_when_ollama_down(self, monkeypatch):
         """Cloud-first (ANTI-6b): Ollama недоступен + есть ключи → облачная модель.
 
-        documenter routing_hint ['summarize','explain'***REMOVED***: без фильтра SmartRouter
+        documenter routing_hint ['summarize','explain']: без фильтра SmartRouter
         выбирает qwen2.5:1.5b (tie-break по latency). С health-check, где Ollama
         не отвечает, а у DeepSeek есть ключ — должен уйти на deepseek-v4-flash.
         """
@@ -588,7 +588,7 @@ class TestPolicyRouting:
         mock_pool = MagicMock()
         mock_pool.has_key.side_effect = lambda p: p == "deepseek"
         gw._keypool = mock_pool
-        model, fallback, source = gw.resolve_model(["summarize", "explain"***REMOVED***)
+        model, fallback, source = gw.resolve_model(["summarize", "explain"])
         assert model == "deepseek-v4-flash"
         assert source == "router"
 
@@ -596,7 +596,7 @@ class TestPolicyRouting:
         """CON-65 (v5.189.52): availability-aware cloud-first.
 
         Когда Ollama доступен И облачные провайдеры имеют валидный ключ И их
-        capabilities совпадают с запросом ['summarize', 'explain'***REMOVED*** — SmartRouter
+        capabilities совпадают с запросом ['summarize', 'explain'] — SmartRouter
         предпочитает CLOUD (gemini-2.5-flash / llama-3.3-70b-versatile / deepseek-v4-flash)
         over local qwen2.5:1.5b. Это закрывает ANTI-6b trap: local НЕ выигрывает
         latency tie-break когда у облака есть ключ (CON-65 / v5.189.52).
@@ -606,19 +606,19 @@ class TestPolicyRouting:
         mock_pool = MagicMock()
         mock_pool.has_key.return_value = True
         gw._keypool = mock_pool
-        model, _fallback, _source = gw.resolve_model(["summarize", "explain"***REMOVED***)
+        model, _fallback, _source = gw.resolve_model(["summarize", "explain"])
         # Cloud-wins over local (CON-65 closes ANTI-6b latency tie-break).
         assert model != "qwen2.5:1.5b", (
             f"CON-65: cloud с summarize+explain caps должен выиграть у "
-            f"qwen2.5:1.5b когда has_key=True; got {model***REMOVED***"
+            f"qwen2.5:1.5b когда has_key=True; got {model}"
         )
         # deepseek-v4-flash имеет только `summarize` (без `explain`),
-        # поэтому для routing ["summarize","explain"***REMOVED*** score=1 — НЕ выигрывает
+        # поэтому для routing ["summarize","explain"] score=1 — НЕ выигрывает
         # tie-break у gemini/llama (score=2). Поэтому deepseek исключён.
         assert model in (
             "gemini-2.5-flash",
             "llama-3.3-70b-versatile",
-        ), f"model {model***REMOVED*** not in summarize+explain-capable cloud tier (CON-65 expectation)"
+        ), f"model {model} not in summarize+explain-capable cloud tier (CON-65 expectation)"
 
     def test_resolve_model_local_wins_when_no_cloud_keys(self, monkeypatch):
         """CON-65 negative case: Ollama reachable + NO cloud keys → local qwen wins.
@@ -635,18 +635,18 @@ class TestPolicyRouting:
         mock_pool = MagicMock()
         mock_pool.has_key.return_value = False  # NO cloud keys
         gw._keypool = mock_pool
-        model, _fallback, _source = gw.resolve_model(["summarize", "explain"***REMOVED***)
+        model, _fallback, _source = gw.resolve_model(["summarize", "explain"])
         # CON-65 closed-loop: без cloud keys → local fallback обязателен.
         assert model == "qwen2.5:1.5b", (
             f"CON-65 negative case violated: when no cloud keys, local "
-            f"qwen должен выиграть; got {model***REMOVED***. Убедиться что ANTI-6b "
+            f"qwen должен выиграть; got {model}. Убедиться что ANTI-6b "
             f"fix (cloud-first) не превратился в local-dead."
         )
 
     def test_resolve_model_cloud_first_on_tied_capability_score(self, monkeypatch):
         """CON-65 (v5.189.52): cloud-first при РАВНОМ capability-score.
 
-        Для ['summarize'***REMOVED*** qwen2.5:1.5b (local, 200ms), deepseek-v4-flash,
+        Для ['summarize'] qwen2.5:1.5b (local, 200ms), deepseek-v4-flash,
         gemini-2.5-flash, llama-3.3-70b-versatile — все score=1. БЕЗ
         cloud-first tie-break latency отдаёт local qwen (200ms). С ним —
         облако (llama 800ms). Честно закрывает ANTI-6b latency trap, а не
@@ -657,10 +657,10 @@ class TestPolicyRouting:
         mock_pool = MagicMock()
         mock_pool.has_key.return_value = True  # all cloud have keys
         gw._keypool = mock_pool
-        model, _fallback, _source = gw.resolve_model(["summarize"***REMOVED***)
+        model, _fallback, _source = gw.resolve_model(["summarize"])
         assert model != "qwen2.5:1.5b", (
             f"CON-65 tied-score cloud-first violated: local qwen won latency "
-            f"tie-break for ['summarize'***REMOVED***; got {model***REMOVED***"
+            f"tie-break for ['summarize']; got {model}"
         )
 
     def test_provider_available_failsafe_when_keypool_broken(self, monkeypatch):
@@ -683,14 +683,14 @@ class TestPolicyRouting:
                 content="ok", model="anthropic/claude-3.5-sonnet", provider="openrouter"
             )
             gw.generate(
-                capabilities=["coding"***REMOVED***,
-                messages=[{"role": "user", "content": "hi"***REMOVED******REMOVED***,
+                capabilities=["coding"],
+                messages=[{"role": "user", "content": "hi"}],
             )
         kwargs = mock_call.call_args.kwargs
-        assert kwargs["model"***REMOVED*** == "anthropic/claude-3.5-sonnet"
+        assert kwargs["model"] == "anthropic/claude-3.5-sonnet"
 
 
-# ─── v5.189.49: cross-provider cloud fallback (chain [deepseek, gemini, dashscope***REMOVED***) ─
+# ─── v5.189.49: cross-provider cloud fallback (chain [deepseek, gemini, dashscope]) ─
 
 from scripts_01.model_gateway import (
     PROVIDER_ENDPOINTS,
@@ -702,7 +702,7 @@ from scripts_01.model_gateway import (
 class TestCrossProviderFallback:
     """v5.189.49: cross-provider cloud fallback в `_call_with_fallback`.
 
-    Hard error {'402/billing', '401/auth', '5xx/server'***REMOVED*** → switch to next
+    Hard error {'402/billing', '401/auth', '5xx/server'} → switch to next
     cloud provider WITH a key (e.g. deepseek → gemini → dashscope). НЕ
     повторяем тот же провайдер на hard error (ANTI-6b defense).
     """
@@ -721,11 +721,11 @@ class TestCrossProviderFallback:
         mock_pool.rotate.return_value = "sk-gemini-fake-key"
         gw._keypool = mock_pool
 
-        call_count = {"deepseek": 0, "gemini": 0***REMOVED***
+        call_count = {"deepseek": 0, "gemini": 0}
 
         def fake_generate(self, model, messages, temperature=0.7, max_tokens=None, timeout=60):
             pname = getattr(self, "_provider_name", "gemini")
-            call_count[pname***REMOVED*** += 1
+            call_count[pname] += 1
             if pname == "deepseek":
                 # Hard error 402 — provider error format: "API error 402: ..."
                 raise RuntimeError("API error 402: Payment Required")
@@ -740,15 +740,15 @@ class TestCrossProviderFallback:
         ):
             result = gw.generate(
                 model="deepseek-v4-flash",
-                messages=[{"role": "user", "content": "hi"***REMOVED******REMOVED***,
+                messages=[{"role": "user", "content": "hi"}],
             )
 
         # Asserts: cross-provider switch from deepseek → gemini
-        assert call_count["deepseek"***REMOVED*** == 1, (
-            f"expected ONLY 1 deepseek attempt (fail-fast), got {call_count['deepseek'***REMOVED******REMOVED***"
+        assert call_count["deepseek"] == 1, (
+            f"expected ONLY 1 deepseek attempt (fail-fast), got {call_count['deepseek']}"
         )
-        assert call_count["gemini"***REMOVED*** == 1, (
-            f"expected 1 gemini attempt (chain fallback), got {call_count['gemini'***REMOVED******REMOVED***"
+        assert call_count["gemini"] == 1, (
+            f"expected 1 gemini attempt (chain fallback), got {call_count['gemini']}"
         )
         assert result.fallback_used is True
         assert result.provider == "gemini"
@@ -774,7 +774,7 @@ class TestCrossProviderFallback:
         ):
             result = gw.generate(
                 model="deepseek-v4-flash",
-                messages=[{"role": "user", "content": "hi"***REMOVED******REMOVED***,
+                messages=[{"role": "user", "content": "hi"}],
             )
         assert result.fallback_used is True
         assert result.provider == "gemini"
@@ -800,7 +800,7 @@ class TestCrossProviderFallback:
         ):
             result = gw.generate(
                 model="deepseek-v4-flash",
-                messages=[{"role": "user", "content": "hi"***REMOVED******REMOVED***,
+                messages=[{"role": "user", "content": "hi"}],
             )
         # dashscope chosen (not gemini, because gemini.has_key=False)
         assert result.provider == "dashscope"
@@ -814,7 +814,7 @@ class TestCrossProviderFallback:
         gw._keypool = mock_pool
 
         def fake_generate(self, model, messages, temperature=0.7, max_tokens=None, timeout=60):
-            raise RuntimeError(f"API error 503: Service Unavailable for {self._provider_name***REMOVED***")
+            raise RuntimeError(f"API error 503: Service Unavailable for {self._provider_name}")
 
         with patch(
             "scripts_01.model_gateway.OpenAICompatibleProvider.generate", new=fake_generate
@@ -822,7 +822,7 @@ class TestCrossProviderFallback:
             with pytest.raises(RuntimeError, match="All fallback providers exhausted"):
                 gw.generate(
                     model="deepseek-v4-flash",
-                    messages=[{"role": "user", "content": "hi"***REMOVED******REMOVED***,
+                    messages=[{"role": "user", "content": "hi"}],
                 )
 
         # CON-17 white-box contract guard: chain order is part of platform
@@ -839,7 +839,7 @@ class TestCrossProviderFallback:
         from core_02.router import ModelCatalog, Provider
 
         catalog = ModelCatalog.default()
-        cloud_providers_with_caps: list[tuple[str, Provider, list[str***REMOVED******REMOVED******REMOVED*** = [***REMOVED***
+        cloud_providers_with_caps: list[tuple[str, Provider, list[str]]] = []
         for entry in catalog.all:
             if entry.provider == Provider.OLLAMA:
                 continue  # only cloud
@@ -850,10 +850,10 @@ class TestCrossProviderFallback:
         qualifying = [
             (name, prov) for name, prov, caps in cloud_providers_with_caps
             if "summarize" in caps and "explain" in caps
-        ***REMOVED***
+        ]
         assert len(qualifying) >= 2, (
             f"expected ≥2 cloud providers with summarize+explain, "
-            f"got {len(qualifying)***REMOVED***: {[n for n, _ in qualifying***REMOVED******REMOVED***"
+            f"got {len(qualifying)}: {[n for n, _ in qualifying]}"
         )
 
     def test_provider_available_ollama_true_when_reachable(self) -> None:

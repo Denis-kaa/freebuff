@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-***REMOVED***
+}
 from typing import Any, Dict, Generator, List
 
 import pytest
@@ -40,7 +40,7 @@ from freebuff_plugin_03.event.pulse import PulseEngine
 
 
 @pytest.fixture
-def tmp_db() -> Generator[Path, None, None***REMOVED***:
+def tmp_db() -> Generator[Path, None, None]:
     """Временная БД для тестов."""
     tmp = tempfile.mktemp(suffix=".db", prefix="event_store_test_")
     yield Path(tmp)
@@ -64,22 +64,22 @@ def populated_store(store: EventStore) -> EventStore:
 def _populate(s: EventStore) -> None:
     """Наполняет EventStore тестовыми событиями."""
     events = [
-        {"event_type": "system.startup", "source": "system", "data": {"version": "4.6.0"***REMOVED******REMOVED***,
-        {"event_type": "session.created", "source": "context_manager", "data": {"topic": "Code Review"***REMOVED***, "session_id": "sess-001"***REMOVED***,
-        {"event_type": "task.created", "source": "orchestrator", "data": {"task_id": "t-001"***REMOVED***, "correlation_id": "corr-001",
-         "session_id": "sess-001"***REMOVED***,
-        {"event_type": "step.started", "source": "orchestrator", "data": {"step_id": "s1", "description": "Analyze code"***REMOVED***,
-         "correlation_id": "corr-001", "session_id": "sess-001"***REMOVED***,
-        {"event_type": "step.completed", "source": "orchestrator", "data": {"step_id": "s1", "duration_ms": 500***REMOVED***,
-         "correlation_id": "corr-001", "session_id": "sess-001"***REMOVED***,
-        {"event_type": "task.completed", "source": "orchestrator", "data": {"task_id": "t-001", "duration_ms": 1200***REMOVED***,
-         "correlation_id": "corr-001", "session_id": "sess-001"***REMOVED***,
-        {"event_type": "session.completed", "source": "context_manager", "data": {***REMOVED***, "session_id": "sess-001"***REMOVED***,
-        {"event_type": "system.error", "source": "system", "data": {"error": "OOM detected"***REMOVED******REMOVED***,
-        {"event_type": "memory.stored", "source": "memory_engine", "data": {"key": "project_config", "level": "project", "content": "Important config data"***REMOVED***,
-         "session_id": "sess-001"***REMOVED***,
-        {"event_type": "knowledge.indexed", "source": "knowledge_engine", "data": {"doc_id": "mem_project_config", "source": "memory/project/project_config"***REMOVED******REMOVED***,
-    ***REMOVED***
+        {"event_type": "system.startup", "source": "system", "data": {"version": "4.6.0"}},
+        {"event_type": "session.created", "source": "context_manager", "data": {"topic": "Code Review"}, "session_id": "sess-001"},
+        {"event_type": "task.created", "source": "orchestrator", "data": {"task_id": "t-001"}, "correlation_id": "corr-001",
+         "session_id": "sess-001"],
+        {"event_type": "step.started", "source": "orchestrator", "data": {"step_id": "s1", "description": "Analyze code"},
+         "correlation_id": "corr-001", "session_id": "sess-001"],
+        {"event_type": "step.completed", "source": "orchestrator", "data": {"step_id": "s1", "duration_ms": 500},
+         "correlation_id": "corr-001", "session_id": "sess-001"],
+        {"event_type": "task.completed", "source": "orchestrator", "data": {"task_id": "t-001", "duration_ms": 1200},
+         "correlation_id": "corr-001", "session_id": "sess-001"],
+        {"event_type": "session.completed", "source": "context_manager", "data": {}, "session_id": "sess-001"},
+        {"event_type": "system.error", "source": "system", "data": {"error": "OOM detected"}},
+        {"event_type": "memory.stored", "source": "memory_engine", "data": {"key": "project_config", "level": "project", "content": "Important config data"},
+         "session_id": "sess-001"],
+        {"event_type": "knowledge.indexed", "source": "knowledge_engine", "data": {"doc_id": "mem_project_config", "source": "memory/project/project_config"}},
+    }
     for ev in events:
         s.store(**ev)
 
@@ -97,16 +97,16 @@ class TestEventStoreCRUD:
         event_id = store.store(
             event_type="test.event",
             source="test",
-            data={"message": "hello"***REMOVED***,
+            data={"message": "hello"},
             correlation_id="corr-1",
         )
         assert event_id is not None
-        assert len(event_id) == 12  # uuid4 hex[:12***REMOVED***
+        assert len(event_id) == 12  # uuid4 hex[:12]
 
         entry = store.get_by_id(event_id)
         assert entry is not None
         assert entry.event_type == "test.event"
-        assert entry.data["message"***REMOVED*** == "hello"
+        assert entry.data["message"] == "hello"
 
     def test_store_duplicate_event(self, store: EventStore):
         """INSERT OR IGNORE — дубликаты игнорируются."""
@@ -129,7 +129,7 @@ class TestEventStoreCRUD:
         entry = store.get_by_id(eid)
         assert entry is not None
         assert entry.source == ""
-        assert entry.data == {***REMOVED***
+        assert entry.data == {}
 
 
 class TestEventStoreQuery:
@@ -181,8 +181,8 @@ class TestEventStoreQuery:
         assert len(first) == 3
         assert len(second) >= 1
         # Убеждаемся что это разные записи
-        first_ids = {e.event_id for e in first***REMOVED***
-        second_ids = {e.event_id for e in second***REMOVED***
+        first_ids = {e.event_id for e in first}
+        second_ids = {e.event_id for e in second}
         assert first_ids.isdisjoint(second_ids)
 
 
@@ -214,10 +214,10 @@ class TestEventStoreBatch:
     def test_store_batch(self, store: EventStore):
         """Batch сохранение."""
         events = [
-            {"event_type": "batch.1", "data": {"n": 1***REMOVED******REMOVED***,
-            {"event_type": "batch.2", "data": {"n": 2***REMOVED******REMOVED***,
-            {"event_type": "batch.3", "data": {"n": 3***REMOVED******REMOVED***,
-        ***REMOVED***
+            {"event_type": "batch.1", "data": {"n": 1}},
+            {"event_type": "batch.2", "data": {"n": 2}},
+            {"event_type": "batch.3", "data": {"n": 3}},
+        ]
         count = store.store_batch(events)
         assert count >= 1
 
@@ -226,7 +226,7 @@ class TestEventStoreBatch:
 
     def test_store_batch_empty(self, store: EventStore):
         """Пустой batch."""
-        count = store.store_batch([***REMOVED***)
+        count = store.store_batch([])
         assert count == 0
 
 
@@ -264,8 +264,8 @@ class TestEventStoreAggregation:
         """count_by_type."""
         counts = populated_store.count_by_type()
         assert "task.created" in counts
-        assert counts["task.created"***REMOVED*** == 1
-        assert counts["task.completed"***REMOVED*** == 1
+        assert counts["task.created"] == 1
+        assert counts["task.completed"] == 1
 
     def test_count_by_type_since(self, populated_store: EventStore):
         """count_by_type с since."""
@@ -275,9 +275,9 @@ class TestEventStoreAggregation:
     def test_get_stats(self, populated_store: EventStore):
         """get_stats."""
         stats = populated_store.get_stats()
-        assert stats["total_events"***REMOVED*** >= 10
-        assert stats["unique_types"***REMOVED*** >= 8
-        assert stats["fts_indexed"***REMOVED*** >= 1
+        assert stats["total_events"] >= 10
+        assert stats["unique_types"] >= 8
+        assert stats["fts_indexed"] >= 1
 
 
 class TestEventStoreClear:
@@ -285,10 +285,10 @@ class TestEventStoreClear:
 
     def test_clear(self, populated_store: EventStore):
         """clear удаляет все данные."""
-        assert populated_store.get_stats()["total_events"***REMOVED*** > 0
+        assert populated_store.get_stats()["total_events"] > 0
         count = populated_store.clear()
         assert count > 0
-        assert populated_store.get_stats()["total_events"***REMOVED*** == 0
+        assert populated_store.get_stats()["total_events"] == 0
 
 
 class TestEventStoreMigration:
@@ -312,7 +312,7 @@ class TestEventStoreMigration:
         )
         old_conn.execute(
             "INSERT INTO event_log (event_id, event_type, source, data_json, timestamp) "
-            "VALUES ('legacy-1', 'test.legacy', 'legacy', '{\"msg\": \"old\"***REMOVED***', '2025-01-01T00:00:00')"
+            "VALUES ('legacy-1', 'test.legacy', 'legacy', '{\"msg\": \"old\"]', '2025-01-01T00:00:00')"
         )
         old_conn.commit()
         old_conn.close()
@@ -323,7 +323,7 @@ class TestEventStoreMigration:
         # Проверяем что данные перенесены
         entries = store.query(EventQuery(event_type="test.legacy"))
         assert len(entries) == 1
-        assert entries[0***REMOVED***.data["msg"***REMOVED*** == "old"
+        assert entries[0].data["msg"] == "old"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -345,7 +345,7 @@ class TestEventReplay:
 
     def test_replay_with_handler(self, populated_store: EventStore):
         """replay: с handler."""
-        processed = [***REMOVED***
+        processed = []
 
         def handler(event):
             processed.append(event.event_type)
@@ -385,7 +385,7 @@ class TestEventReplayRebuild:
     def test_rebuild_basic(self, populated_store: EventStore):
         """rebuild: базовая перестройка."""
         replay = EventReplay(populated_store)
-        processed = [***REMOVED***
+        processed = []
 
         def process(event):
             processed.append(event.event_type)
@@ -400,7 +400,7 @@ class TestEventReplayRebuild:
 
     def test_rebuild_with_clear(self, populated_store: EventStore):
         """rebuild: с clear_func."""
-        cleared = [***REMOVED***
+        cleared = []
 
         def clear_func():
             cleared.append("cleared")
@@ -419,7 +419,7 @@ class TestEventReplayRebuild:
         def only_completed(event):
             return "completed" in event.event_type
 
-        processed = [***REMOVED***
+        processed = []
 
         def process(event):
             processed.append(event.event_type)
@@ -502,7 +502,7 @@ class TestTimelineFormatting:
         result = timeline.get_timeline(limit=3)
         text = timeline.format_timeline_text(result)
         assert len(text) > 0
-        assert any(icon in text for icon in ["🚀", "▶️", "📋", "✅", "🔄", "💾", "📚", "📌"***REMOVED***)
+        assert any(icon in text for icon in ["🚀", "▶️", "📋", "✅", "🔄", "💾", "📚", "📌"])
 
 
     def test_format_timeline_empty(self, store: EventStore):
@@ -531,7 +531,7 @@ class TestAuditEngine:
             runtime_selected="claude-code",
             model_selected="claude-3.5-sonnet",
             cost_estimate=0.02,
-            context={"correlation_id": "corr-audit-1"***REMOVED***,
+            context={"correlation_id": "corr-audit-1"},
         )
         event_id = audit.log_decision(decision)
         assert event_id is not None
@@ -616,7 +616,7 @@ class TestAuditEngine:
         trail = audit.get_audit_trail()
         assert len(trail) >= 1
 
-        text = audit.format_audit_entry(trail[0***REMOVED***)
+        text = audit.format_audit_entry(trail[0])
         assert "DECISION" in text
         assert "test-policy" in text
 
@@ -648,13 +648,13 @@ class TestPulseEngine:
         store.store(
             event_type="task.completed",
             source="orchestrator",
-            data={"task_id": "t-001", "duration_ms": 500, "_pulse": True***REMOVED***,
+            data={"task_id": "t-001", "duration_ms": 500, "_pulse": True},
             session_id="sess-001",
         )
         store.store(
             event_type="memory.stored",
             source="memory_engine",
-            data={"key": "note", "level": "session", "_pulse": True***REMOVED***,
+            data={"key": "note", "level": "session", "_pulse": True},
             session_id="sess-001",
         )
 
@@ -668,13 +668,13 @@ class TestPulseEngine:
         store.store(
             event_type="task.completed",
             source="orchestrator",
-            data={"task_id": "t-done", "duration_ms": 1200, "_pulse": True***REMOVED***,
+            data={"task_id": "t-done", "duration_ms": 1200, "_pulse": True},
         )
 
         pulse = PulseEngine(bus=None, store=store)
         feed = pulse.get_pulse(limit=5)
         assert len(feed) >= 1
-        entry = feed[0***REMOVED***
+        entry = feed[0]
         assert entry.icon != ""
         assert entry.title != ""
         assert entry.severity in ("info", "success", "warning", "error")
@@ -693,7 +693,7 @@ class TestEventPlatformIntegration:
         eid = store.store(
             event_type="integration.test",
             source="test",
-            data={"step": 1, "value": "hello"***REMOVED***,
+            data={"step": 1, "value": "hello"},
             correlation_id="int-corr",
             session_id="int-sess",
             project="test-project",
@@ -710,7 +710,7 @@ class TestEventPlatformIntegration:
         # get_by_id
         entry = store.get_by_id(eid)
         assert entry is not None
-        assert entry.data["value"***REMOVED*** == "hello"
+        assert entry.data["value"] == "hello"
 
     def test_audit_timeline_integration(self, store: EventStore):
         """Audit + Timeline: запись и отображение."""
@@ -742,10 +742,10 @@ class TestEventPlatformIntegration:
     def test_boundary_empty_store(self, store: EventStore):
         """EventStore без данных — все операции корректны."""
         assert store.get_by_id("fake") is None
-        assert store.query(EventQuery(limit=10)) == [***REMOVED***
-        assert store.count_by_type() == {***REMOVED***
+        assert store.query(EventQuery(limit=10)) == []
+        assert store.count_by_type() == {}
         stats = store.get_stats()
-        assert stats["total_events"***REMOVED*** == 0
+        assert stats["total_events"] == 0
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -758,7 +758,7 @@ class TestBoundary:
 
     def test_large_data_json(self, store: EventStore):
         """Большой data_json."""
-        large_data = {"key": "x" * 10000***REMOVED***
+        large_data = {"key": "x" * 10000}
         eid = store.store(
             event_type="test.large",
             source="test",
@@ -766,12 +766,12 @@ class TestBoundary:
         )
         entry = store.get_by_id(eid)
         assert entry is not None
-        assert len(entry.data["key"***REMOVED***) == 10000
+        assert len(entry.data["key"]) == 10000
 
     def test_many_event_types(self, store: EventStore):
         """Много разных типов событий."""
         for i in range(20):
-            store.store(event_type=f"test.type{i***REMOVED***", source="test")
+            store.store(event_type=f"test.type{i}", source="test")
         counts = store.count_by_type()
         assert len(counts) == 20
 
@@ -780,23 +780,23 @@ class TestBoundary:
         for i in range(5):
             import time
             time.sleep(0.01)
-            store.store(event_type="test.order", data={"i": i***REMOVED***)
+            store.store(event_type="test.order", data={"i": i})
 
         result = store.query(EventQuery(event_type="test.order", order="asc"))
         assert len(result) == 5
         # Проверяем что по возрастанию
         for i, e in enumerate(result):
-            assert e.data["i"***REMOVED*** == i
+            assert e.data["i"] == i
 
     def test_query_order_desc(self, store: EventStore):
         """Сортировка desc."""
         for i in range(5):
             import time
             time.sleep(0.01)
-            store.store(event_type="test.order", data={"i": i***REMOVED***)
+            store.store(event_type="test.order", data={"i": i})
 
         result = store.query(EventQuery(event_type="test.order", order="desc"))
         assert len(result) == 5
         # Проверяем что по убыванию
-        assert result[0***REMOVED***.data["i"***REMOVED*** == 4
-        assert result[-1***REMOVED***.data["i"***REMOVED*** == 0
+        assert result[0].data["i"] == 4
+        assert result[-1].data["i"] == 0

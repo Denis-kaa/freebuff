@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
-***REMOVED***
+}
 
 from scripts_01 import tui_history_import as thi
 
@@ -21,7 +21,7 @@ CREATE TABLE sessions (
     message_count INTEGER NOT NULL DEFAULT 0,
     token_estimate INTEGER NOT NULL DEFAULT 0,
     last_summary TEXT NOT NULL DEFAULT '',
-    metadata TEXT NOT NULL DEFAULT '{***REMOVED***',
+    metadata TEXT NOT NULL DEFAULT '{}',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -41,7 +41,7 @@ def _make_session_dir(tmp_path: Path, name: str = "2026-08-20T01-35-09.940Z") ->
     d = tmp_path / "projects" / "root" / "chats" / name
     d.mkdir(parents=True)
     (d / "chat-meta.json").write_text(
-        json.dumps({"firstPrompt": "сгенерируй картинку танка"***REMOVED***), encoding="utf-8"
+        json.dumps({"firstPrompt": "сгенерируй картинку танка"}), encoding="utf-8"
     )
     msgs = [
         {
@@ -49,23 +49,23 @@ def _make_session_dir(tmp_path: Path, name: str = "2026-08-20T01-35-09.940Z") ->
             "variant": "user",
             "content": "сгенерируй мне картинку танка",
             "timestamp": "01:35 PM",
-            "blocks": [***REMOVED***,
-        ***REMOVED***,
+            "blocks": [],
+        },
         {
             "id": "ai-1",
             "variant": "ai",
             "content": "",
             "timestamp": "01:36 PM",
-            "blocks": [{"type": "text", "content": "Вот картинка"***REMOVED******REMOVED***,
-        ***REMOVED***,
+            "blocks": [{"type": "text", "content": "Вот картинка"}],
+        },
         {
             "id": "div-1",
             "variant": "divider",
             "content": "",
             "timestamp": "01:37 PM",
-            "blocks": [{"type": "mode-divider", "mode": "LITE"***REMOVED******REMOVED***,
-        ***REMOVED***,
-    ***REMOVED***
+            "blocks": [{"type": "mode-divider", "mode": "LITE"}],
+        },
+    ]
     (d / "chat-messages.json").write_text(json.dumps(msgs), encoding="utf-8")
     return d
 
@@ -102,24 +102,24 @@ def test_import_creates_session_and_messages(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(thi, "CTX_DB", _fresh_db(tmp_path))
     sess_dir = _make_session_dir(tmp_path)
     sess_id = thi.deterministic_session_id("phone", sess_dir.name)
-    assert thi.import_context_db("phone", [(sess_id, str(sess_dir))***REMOVED***) == 1
+    assert thi.import_context_db("phone", [(sess_id, str(sess_dir))]) == 1
 
     con = sqlite3.connect(thi.CTX_DB)
     row = con.execute(
         "SELECT message_count, topic FROM sessions WHERE session_id = ?", (sess_id,)
     ).fetchone()
     assert row is not None
-    assert row[0***REMOVED*** == 3  # message_count = все исходные сообщения (включая divider)
-    assert "картинку" in row[1***REMOVED***
+    assert row[0] == 3  # message_count = все исходные сообщения (включая divider)
+    assert "картинку" in row[1]
 
     msgs = con.execute(
         "SELECT role, content FROM messages WHERE session_id = ? ORDER BY id",
         (sess_id,),
     ).fetchall()
     assert len(msgs) == 2
-    assert msgs[0***REMOVED***[0***REMOVED*** == "user"
-    assert msgs[1***REMOVED***[0***REMOVED*** == "assistant"
-    assert "Вот картинка" in msgs[1***REMOVED***[1***REMOVED***
+    assert msgs[0][0] == "user"
+    assert msgs[1][0] == "assistant"
+    assert "Вот картинка" in msgs[1][1]
     con.close()
 
 
@@ -127,13 +127,13 @@ def test_import_is_idempotent(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(thi, "CTX_DB", _fresh_db(tmp_path))
     sess_dir = _make_session_dir(tmp_path)
     sess_id = thi.deterministic_session_id("phone", sess_dir.name)
-    pair = [(sess_id, str(sess_dir))***REMOVED***
+    pair = [(sess_id, str(sess_dir))]
     assert thi.import_context_db("phone", pair) == 1
     assert thi.import_context_db("phone", pair) == 0
 
     con = sqlite3.connect(thi.CTX_DB)
     n = con.execute(
         "SELECT COUNT(*) FROM messages WHERE session_id = ?", (sess_id,)
-    ).fetchone()[0***REMOVED***
+    ).fetchone()[0]
     assert n == 2
     con.close()

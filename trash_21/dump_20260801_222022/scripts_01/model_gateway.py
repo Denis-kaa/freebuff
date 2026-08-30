@@ -22,15 +22,15 @@ model_gateway.py — Model Gateway для Buffy Project.
 
     gw = ModelGateway()
     result = gw.generate("deepseek-v4-flash", [
-        {"role": "user", "content": "Hello"***REMOVED***
-    ***REMOVED***)
-    print(result["content"***REMOVED***)
+        {"role": "user", "content": "Hello"}
+    ])
+    print(result["content"])
 
     # С fallback
     result = gw.generate("deepseek-v4-flash", messages, fallback="gemini-2.5-flash")
 
     # По capabilities
-    result = gw.generate_by_capabilities(["code", "fast"***REMOVED***, messages)
+    result = gw.generate_by_capabilities(["code", "fast"], messages)
 
     # Streaming
     for chunk in gw.generate_stream("deepseek-v4-flash", messages):
@@ -47,7 +47,7 @@ import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any, Dict, Iterator, List, Optional, Tuple
 
 import httpx
@@ -65,7 +65,7 @@ def _import_keypool() -> Any:
     kp_path = WORKSPACE / ".keys" / "keypool.py"
     spec = importlib.util.spec_from_file_location("keypool", str(kp_path))
     if spec is None or spec.loader is None:
-        raise ImportError(f"Cannot load KeyPool from {kp_path***REMOVED***")
+        raise ImportError(f"Cannot load KeyPool from {kp_path}")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod.KeyPool()
@@ -83,11 +83,11 @@ class ModelResponse:
     model: str
     provider: str
     finish_reason: str = "stop"
-    usage: Dict[str, int***REMOVED*** = field(default_factory=lambda: {
+    usage: Dict[str, int] = field(default_factory=lambda: {
         "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0,
-    ***REMOVED***)
+    ])
     latency_ms: int = 0
-    id: str = field(default_factory=lambda: uuid.uuid4().hex[:12***REMOVED***)
+    id: str = field(default_factory=lambda: uuid.uuid4().hex[:12])
     cached: bool = False
     fallback_used: bool = False
 
@@ -98,94 +98,94 @@ class StreamChunk:
     content: str = ""
     finish_reason: str | None = None
     model: str = ""
-    usage: Dict[str, int***REMOVED*** | None = None
+    usage: Dict[str, int] | None = None
 
 
 # ── Провайдеры и модели ──────────────────────────────────────
 
-PROVIDER_ENDPOINTS: Dict[str, Dict[str, Any***REMOVED******REMOVED*** = {
+PROVIDER_ENDPOINTS: Dict[str, Dict[str, Any]] = {
     "deepseek": {
         "base_url": "https://api.deepseek.com/v1",
         "models": {
-            "deepseek-v4-flash": {"max_tokens": 128000***REMOVED***,
-            "deepseek-v3-pro": {"max_tokens": 128000***REMOVED***,
-            "deepseek-chat": {"max_tokens": 32000***REMOVED***,
-        ***REMOVED***,
-    ***REMOVED***,
+            "deepseek-v4-flash": {"max_tokens": 128000},
+            "deepseek-v3-pro": {"max_tokens": 128000},
+            "deepseek-chat": {"max_tokens": 32000},
+        },
+    },
     "gemini": {
         "base_url": "https://generativelanguage.googleapis.com/v1beta",
         "models": {
-            "gemini-2.5-flash": {"max_tokens": 1048576***REMOVED***,
-            "gemini-2.0-flash": {"max_tokens": 1048576***REMOVED***,
-            "gemini-1.5-pro": {"max_tokens": 1048576***REMOVED***,
-        ***REMOVED***,
-    ***REMOVED***,
+            "gemini-2.5-flash": {"max_tokens": 1048576},
+            "gemini-2.0-flash": {"max_tokens": 1048576},
+            "gemini-1.5-pro": {"max_tokens": 1048576},
+        },
+    },
     "openrouter": {
         "base_url": "https://openrouter.ai/api/v1",
         "models": {
-            "deepseek/deepseek-chat": {"max_tokens": 128000***REMOVED***,
-            "openai/gpt-4o": {"max_tokens": 128000***REMOVED***,
-            "anthropic/claude-3.5-sonnet": {"max_tokens": 200000***REMOVED***,
-            "google/gemini-2.0-flash-001": {"max_tokens": 1048576***REMOVED***,
-        ***REMOVED***,
-    ***REMOVED***,
+            "deepseek/deepseek-chat": {"max_tokens": 128000},
+            "openai/gpt-4o": {"max_tokens": 128000},
+            "anthropic/claude-3.5-sonnet": {"max_tokens": 200000},
+            "google/gemini-2.0-flash-001": {"max_tokens": 1048576},
+        },
+    },
     "sambanova": {
         "base_url": "https://api.sambanova.ai/v1",
         "models": {
-            "Meta-Llama-3.3-70B-Instruct": {"max_tokens": 128000***REMOVED***,
-            "Meta-Llama-3.1-405B-Instruct": {"max_tokens": 128000***REMOVED***,
-            "Qwen2.5-72B-Instruct": {"max_tokens": 128000***REMOVED***,
-            "DeepSeek-R1-Distill-Llama-70B": {"max_tokens": 32000***REMOVED***,
-        ***REMOVED***,
-    ***REMOVED***,
+            "Meta-Llama-3.3-70B-Instruct": {"max_tokens": 128000},
+            "Meta-Llama-3.1-405B-Instruct": {"max_tokens": 128000},
+            "Qwen2.5-72B-Instruct": {"max_tokens": 128000},
+            "DeepSeek-R1-Distill-Llama-70B": {"max_tokens": 32000},
+        },
+    },
     "ollama": {
         "base_url": "http://localhost:11434",
         "models": {
-            "qwen2.5:1.5b": {"max_tokens": 4096***REMOVED***,
-            "qwen2.5:0.5b": {"max_tokens": 2048***REMOVED***,
-        ***REMOVED***,
-    ***REMOVED***,
+            "qwen2.5:1.5b": {"max_tokens": 4096},
+            "qwen2.5:0.5b": {"max_tokens": 2048},
+        },
+    },
     "dashscope": {
         "base_url": "https://dashscope.aliyuncs.com/compatible-mode/v1",
         "models": {
-            "qwen-max": {"max_tokens": 32000***REMOVED***,
-            "qwen-plus": {"max_tokens": 32000***REMOVED***,
-            "qwen-turbo": {"max_tokens": 8000***REMOVED***,
-        ***REMOVED***,
-    ***REMOVED***,
-***REMOVED***
+            "qwen-max": {"max_tokens": 32000},
+            "qwen-plus": {"max_tokens": 32000},
+            "qwen-turbo": {"max_tokens": 8000},
+        },
+    },
+}
 
 # Маппинг: Runtime (агент) → модель Model Gateway (правило 11 User-Choice Override).
 # Когда policy resolve возвращает Runtime, этот маппинг даёт конкретную модель для вызова.
 # Рантайм без маппинга (напр. openclaw) → graceful fallback на SmartRouter.
-RUNTIME_MODELS: Dict[str, str***REMOVED*** = {
+RUNTIME_MODELS: Dict[str, str] = {
     "freebuff": "deepseek-v4-flash",
     "claude-code": "anthropic/claude-3.5-sonnet",
-***REMOVED***
+}
 
 
 # Маппинг: имя модели → провайдер
 def _model_to_provider(model_name: str) -> str | None:
     """Определяет провайдера по имени модели."""
     for provider, cfg in PROVIDER_ENDPOINTS.items():
-        if model_name in cfg["models"***REMOVED***:
+        if model_name in cfg["models"]:
             return provider
     # Fallback: проверяем префиксы
     model_lower = model_name.lower()
     # OpenRouter: модели вида deepseek/deepseek-chat — contain / and provider/ prefix
     if "/" in model_name:
         return "openrouter"
-    if any(p in model_lower for p in ["deepseek"***REMOVED***):
+    if any(p in model_lower for p in ["deepseek"]):
         return "deepseek"
-    if any(p in model_lower for p in ["gemini"***REMOVED***):
+    if any(p in model_lower for p in ["gemini"]):
         return "gemini"
-    if any(p in model_lower for p in ["qwen", "dashscope"***REMOVED***):
+    if any(p in model_lower for p in ["qwen", "dashscope"]):
         return "dashscope"
-    if any(p in model_lower for p in ["llama", "meta-llama"***REMOVED***):
+    if any(p in model_lower for p in ["llama", "meta-llama"]):
         return "sambanova"
-    if any(p in model_lower for p in ["ollama", "qwen2.5"***REMOVED***):
+    if any(p in model_lower for p in ["ollama", "qwen2.5"]):
         return "ollama"
-    if any(p in model_lower for p in ["openrouter"***REMOVED***):
+    if any(p in model_lower for p in ["openrouter"]):
         return "openrouter"
     return None
 
@@ -208,7 +208,7 @@ def count_tokens(text: str) -> int:
         return len(text)
 
 
-def count_messages_tokens(messages: List[Dict[str, Any***REMOVED******REMOVED***) -> int:
+def count_messages_tokens(messages: List[Dict[str, Any]]) -> int:
     """Подсчёт токенов в списке сообщений."""
     total = 0
     for msg in messages:
@@ -234,7 +234,7 @@ class BaseProvider(ABC):
     def generate(
         self,
         model: str,
-        messages: List[Dict[str, Any***REMOVED******REMOVED***,
+        messages: List[Dict[str, Any]],
         temperature: float = 0.7,
         max_tokens: int | None = None,
         timeout: int = 60,
@@ -244,11 +244,11 @@ class BaseProvider(ABC):
     def generate_stream(
         self,
         model: str,
-        messages: List[Dict[str, Any***REMOVED******REMOVED***,
+        messages: List[Dict[str, Any]],
         temperature: float = 0.7,
         max_tokens: int | None = None,
         timeout: int = 60,
-    ) -> Iterator[StreamChunk***REMOVED***:
+    ) -> Iterator[StreamChunk]:
         """Стриминг (по умолчанию — без стриминга)."""
         result = self.generate(model, messages, temperature, max_tokens, timeout)
         yield StreamChunk(content=result.content, finish_reason=result.finish_reason, model=model)
@@ -263,35 +263,35 @@ class OpenAICompatibleProvider(BaseProvider):
         self.base_url = base_url.rstrip("/")
         self._provider_name = provider_name
 
-    def _headers(self) -> Dict[str, str***REMOVED***:
+    def _headers(self) -> Dict[str, str]:
         return {
-            "Authorization": f"Bearer {self.api_key***REMOVED***",
+            "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
-        ***REMOVED***
+        }
 
     def _build_body(
         self,
         model: str,
-        messages: List[Dict[str, Any***REMOVED******REMOVED***,
+        messages: List[Dict[str, Any]],
         temperature: float,
         max_tokens: int | None,
         stream: bool = False,
-    ) -> Dict[str, Any***REMOVED***:
-        body: Dict[str, Any***REMOVED*** = {
+    ) -> Dict[str, Any]:
+        body: Dict[str, Any] = {
             "model": model,
             "messages": messages,
             "temperature": temperature,
-        ***REMOVED***
+        }
         if max_tokens:
-            body["max_tokens"***REMOVED*** = max_tokens
+            body["max_tokens"] = max_tokens
         if stream:
-            body["stream"***REMOVED*** = True
+            body["stream"] = True
         return body
 
     def generate(
         self,
         model: str,
-        messages: List[Dict[str, Any***REMOVED******REMOVED***,
+        messages: List[Dict[str, Any]],
         temperature: float = 0.7,
         max_tokens: int | None = None,
         timeout: int = 60,
@@ -302,25 +302,25 @@ class OpenAICompatibleProvider(BaseProvider):
         try:
             with httpx.Client(timeout=timeout) as client:
                 resp = client.post(
-                    f"{self.base_url***REMOVED***/chat/completions",
+                    f"{self.base_url}/chat/completions",
                     headers=self._headers(),
                     json=body,
                 )
                 resp.raise_for_status()
                 data = resp.json()
         except httpx.HTTPStatusError as e:
-            raise RuntimeError(f"API error {e.response.status_code***REMOVED***: {e.response.text[:200***REMOVED******REMOVED***") from e
+            raise RuntimeError(f"API error {e.response.status_code}: {e.response.text[:200]}") from e
         except httpx.TimeoutException:
-            raise RuntimeError(f"Timeout after {timeout***REMOVED***s for {model***REMOVED***") from None
+            raise RuntimeError(f"Timeout after {timeout}s for {model}") from None
         except Exception as e:
-            raise RuntimeError(f"Request failed: {e***REMOVED***") from e
+            raise RuntimeError(f"Request failed: {e}") from e
 
         elapsed = int((time.monotonic() - start) * 1000)
-        choice = data.get("choices", [{***REMOVED******REMOVED***)[0***REMOVED***
-        usage = data.get("usage", {***REMOVED***)
+        choice = data.get("choices", [{}])[0]
+        usage = data.get("usage", {})
 
         return ModelResponse(
-            content=choice.get("message", {***REMOVED***).get("content", ""),
+            content=choice.get("message", {}).get("content", ""),
             model=data.get("model", model),
             provider=self._provider_name,
             finish_reason=choice.get("finish_reason", "stop"),
@@ -328,22 +328,22 @@ class OpenAICompatibleProvider(BaseProvider):
                 "prompt_tokens": usage.get("prompt_tokens", 0),
                 "completion_tokens": usage.get("completion_tokens", 0),
                 "total_tokens": usage.get("total_tokens", 0),
-            ***REMOVED***,
+            },
             latency_ms=elapsed,
         )
 
     def generate_stream(
         self,
         model: str,
-        messages: List[Dict[str, Any***REMOVED******REMOVED***,
+        messages: List[Dict[str, Any]],
         temperature: float = 0.7,
         max_tokens: int | None = None,
         timeout: int = 60,
-    ) -> Iterator[StreamChunk***REMOVED***:
+    ) -> Iterator[StreamChunk]:
         """Streaming via SSE (Server-Sent Events).
 
-        Format: `data: {json_chunk***REMOVED***` lines, terminated by `data: [DONE***REMOVED***`.
-        Each chunk has `choices[0***REMOVED***.delta.content` with partial text.
+        Format: `data: {json_chunk}` lines, terminated by `data: [DONE]`.
+        Each chunk has `choices[0].delta.content` with partial text.
         """
         body = self._build_body(model, messages, temperature, max_tokens, stream=True)
 
@@ -351,7 +351,7 @@ class OpenAICompatibleProvider(BaseProvider):
             with httpx.Client(timeout=timeout) as client:
                 with client.stream(
                     "POST",
-                    f"{self.base_url***REMOVED***/chat/completions",
+                    f"{self.base_url}/chat/completions",
                     headers=self._headers(),
                     json=body,
                 ) as resp:
@@ -361,20 +361,20 @@ class OpenAICompatibleProvider(BaseProvider):
                             continue
                         # SSE format: lines start with "data: "
                         if line.startswith("data: "):
-                            data_str = line[len("data: "):***REMOVED***
-                            if data_str.strip() == "[DONE***REMOVED***":
+                            data_str = line[len("data: "):]
+                            if data_str.strip() == "[DONE]":
                                 yield StreamChunk(finish_reason="stop", model=model)
                                 return
                             try:
                                 chunk_data = json.loads(data_str)
                             except json.JSONDecodeError:
                                 continue
-                            choices = chunk_data.get("choices", [***REMOVED***)
+                            choices = chunk_data.get("choices", [])
                             if not choices:
                                 continue
-                            delta = choices[0***REMOVED***.get("delta", {***REMOVED***)
+                            delta = choices[0].get("delta", {})
                             content = delta.get("content", "")
-                            finish = choices[0***REMOVED***.get("finish_reason")
+                            finish = choices[0].get("finish_reason")
                             usage = chunk_data.get("usage")
                             if content or finish:
                                 yield StreamChunk(
@@ -384,11 +384,11 @@ class OpenAICompatibleProvider(BaseProvider):
                                     usage=usage if usage else None,
                                 )
         except httpx.HTTPStatusError as e:
-            raise RuntimeError(f"Stream API error {e.response.status_code***REMOVED***: {e.response.text[:200***REMOVED******REMOVED***") from e
+            raise RuntimeError(f"Stream API error {e.response.status_code}: {e.response.text[:200]}") from e
         except httpx.TimeoutException:
-            raise RuntimeError(f"Stream timeout after {timeout***REMOVED***s for {model***REMOVED***") from None
+            raise RuntimeError(f"Stream timeout after {timeout}s for {model}") from None
         except Exception as e:
-            raise RuntimeError(f"Stream request failed: {e***REMOVED***") from e
+            raise RuntimeError(f"Stream request failed: {e}") from e
 
 
 class GeminiProvider(BaseProvider):
@@ -396,13 +396,13 @@ class GeminiProvider(BaseProvider):
 
     BASE_URL = "https://generativelanguage.googleapis.com/v1beta"
 
-    def _convert_messages(self, messages: List[Dict[str, Any***REMOVED******REMOVED***) -> Tuple[List[Dict[str, Any***REMOVED******REMOVED***, Optional[str***REMOVED******REMOVED***:
+    def _convert_messages(self, messages: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], Optional[str]]:
         """Конвертирует OpenAI-формат сообщений в Gemini format.
 
         Returns:
             (contents, system_instruction)
         """
-        contents = [***REMOVED***
+        contents = []
         system_instruction = None
         for msg in messages:
             role = msg.get("role", "user")
@@ -411,37 +411,37 @@ class GeminiProvider(BaseProvider):
                 system_instruction = content
                 continue
             gemini_role = "model" if role in ("assistant", "model") else "user"
-            contents.append({"role": gemini_role, "parts": [{"text": content***REMOVED******REMOVED******REMOVED***)
+            contents.append({"role": gemini_role, "parts": [{"text": content}]})
         return contents, system_instruction
 
     def _build_body(
         self,
-        messages: List[Dict[str, Any***REMOVED******REMOVED***,
+        messages: List[Dict[str, Any]],
         temperature: float,
         max_tokens: int | None,
-    ) -> Dict[str, Any***REMOVED***:
+    ) -> Dict[str, Any]:
         contents, system_instruction = self._convert_messages(messages)
-        body: Dict[str, Any***REMOVED*** = {
+        body: Dict[str, Any] = {
             "contents": contents,
-            "generationConfig": {"temperature": temperature***REMOVED***,
-        ***REMOVED***
+            "generationConfig": {"temperature": temperature},
+        }
         if system_instruction:
-            body["systemInstruction"***REMOVED*** = {"parts": [{"text": system_instruction***REMOVED******REMOVED******REMOVED***
+            body["systemInstruction"] = {"parts": [{"text": system_instruction}]}
         if max_tokens:
-            body["generationConfig"***REMOVED***["maxOutputTokens"***REMOVED*** = max_tokens
+            body["generationConfig"]["maxOutputTokens"] = max_tokens
         return body
 
     def generate(
         self,
         model: str,
-        messages: List[Dict[str, Any***REMOVED******REMOVED***,
+        messages: List[Dict[str, Any]],
         temperature: float = 0.7,
         max_tokens: int | None = None,
         timeout: int = 60,
     ) -> ModelResponse:
         start = time.monotonic()
         body = self._build_body(messages, temperature, max_tokens)
-        url = f"{self.BASE_URL***REMOVED***/models/{model***REMOVED***:generateContent?key={self.api_key***REMOVED***"
+        url = f"{self.BASE_URL}/models/{model}:generateContent?key={self.api_key}"
 
         try:
             with httpx.Client(timeout=timeout) as client:
@@ -449,20 +449,20 @@ class GeminiProvider(BaseProvider):
                 resp.raise_for_status()
                 data = resp.json()
         except httpx.HTTPStatusError as e:
-            raise RuntimeError(f"Gemini error {e.response.status_code***REMOVED***: {e.response.text[:200***REMOVED******REMOVED***") from e
+            raise RuntimeError(f"Gemini error {e.response.status_code}: {e.response.text[:200]}") from e
         except Exception as e:
-            raise RuntimeError(f"Gemini request failed: {e***REMOVED***") from e
+            raise RuntimeError(f"Gemini request failed: {e}") from e
 
         elapsed = int((time.monotonic() - start) * 1000)
-        candidates = data.get("candidates", [***REMOVED***)
+        candidates = data.get("candidates", [])
         if not candidates:
             return ModelResponse(content="", model=model, provider="gemini", latency_ms=elapsed)
 
-        content_parts = candidates[0***REMOVED***.get("content", {***REMOVED***).get("parts", [***REMOVED***)
+        content_parts = candidates[0].get("content", {}).get("parts", [])
         text = "".join(p.get("text", "") for p in content_parts)
-        finish = candidates[0***REMOVED***.get("finishReason", "STOP").lower()
+        finish = candidates[0].get("finishReason", "STOP").lower()
 
-        usage = data.get("usageMetadata", {***REMOVED***)
+        usage = data.get("usageMetadata", {})
         return ModelResponse(
             content=text,
             model=model,
@@ -472,26 +472,26 @@ class GeminiProvider(BaseProvider):
                 "prompt_tokens": usage.get("promptTokenCount", 0),
                 "completion_tokens": usage.get("candidatesTokenCount", 0),
                 "total_tokens": usage.get("totalTokenCount", 0),
-            ***REMOVED***,
+            },
             latency_ms=elapsed,
         )
 
     def generate_stream(
         self,
         model: str,
-        messages: List[Dict[str, Any***REMOVED******REMOVED***,
+        messages: List[Dict[str, Any]],
         temperature: float = 0.7,
         max_tokens: int | None = None,
         timeout: int = 60,
-    ) -> Iterator[StreamChunk***REMOVED***:
+    ) -> Iterator[StreamChunk]:
         """Streaming via Gemini streamGenerateContent endpoint.
 
         Gemini returns a JSON array of chunk objects (not SSE format).
-        Each chunk has `candidates[0***REMOVED***.content.parts[0***REMOVED***.text`.
+        Each chunk has `candidates[0].content.parts[0].text`.
         """
         body = self._build_body(messages, temperature, max_tokens)
         # streamGenerateContent returns chunked JSON array
-        url = f"{self.BASE_URL***REMOVED***/models/{model***REMOVED***:streamGenerateContent?alt=sse&key={self.api_key***REMOVED***"
+        url = f"{self.BASE_URL}/models/{model}:streamGenerateContent?alt=sse&key={self.api_key}"
 
         try:
             with httpx.Client(timeout=timeout) as client:
@@ -500,20 +500,20 @@ class GeminiProvider(BaseProvider):
                     for line in resp.iter_lines():
                         if not line:
                             continue
-                        # Gemini with alt=sse returns SSE format: data: {json***REMOVED***
+                        # Gemini with alt=sse returns SSE format: data: {json}
                         if line.startswith("data: "):
-                            data_str = line[len("data: "):***REMOVED***
-                            # Gemini doesn't send [DONE***REMOVED***, stream just ends
+                            data_str = line[len("data: "):]
+                            # Gemini doesn't send [DONE], stream just ends
                             try:
                                 chunk_data = json.loads(data_str)
                             except json.JSONDecodeError:
                                 continue
-                            candidates = chunk_data.get("candidates", [***REMOVED***)
+                            candidates = chunk_data.get("candidates", [])
                             if not candidates:
                                 continue
-                            parts = candidates[0***REMOVED***.get("content", {***REMOVED***).get("parts", [***REMOVED***)
+                            parts = candidates[0].get("content", {}).get("parts", [])
                             text = "".join(p.get("text", "") for p in parts)
-                            finish = candidates[0***REMOVED***.get("finishReason")
+                            finish = candidates[0].get("finishReason")
                             usage = chunk_data.get("usageMetadata")
                             if text or finish:
                                 yield StreamChunk(
@@ -524,14 +524,14 @@ class GeminiProvider(BaseProvider):
                                         "prompt_tokens": usage.get("promptTokenCount", 0),
                                         "completion_tokens": usage.get("candidatesTokenCount", 0),
                                         "total_tokens": usage.get("totalTokenCount", 0),
-                                    ***REMOVED*** if usage else None,
+                                    ] if usage else None,
                                 )
         except httpx.HTTPStatusError as e:
-            raise RuntimeError(f"Gemini stream error {e.response.status_code***REMOVED***: {e.response.text[:200***REMOVED******REMOVED***") from e
+            raise RuntimeError(f"Gemini stream error {e.response.status_code}: {e.response.text[:200]}") from e
         except httpx.TimeoutException:
-            raise RuntimeError(f"Gemini stream timeout after {timeout***REMOVED***s") from None
+            raise RuntimeError(f"Gemini stream timeout after {timeout}s") from None
         except Exception as e:
-            raise RuntimeError(f"Gemini stream failed: {e***REMOVED***") from e
+            raise RuntimeError(f"Gemini stream failed: {e}") from e
 
 
 class OllamaProvider(BaseProvider):
@@ -542,29 +542,29 @@ class OllamaProvider(BaseProvider):
     def _build_body(
         self,
         model: str,
-        messages: List[Dict[str, Any***REMOVED******REMOVED***,
+        messages: List[Dict[str, Any]],
         temperature: float,
         max_tokens: int | None,
         stream: bool = False,
-    ) -> Dict[str, Any***REMOVED***:
+    ) -> Dict[str, Any]:
         ollama_messages = [
-            {"role": msg.get("role", "user"), "content": msg.get("content", "")***REMOVED***
+            {"role": msg.get("role", "user"), "content": msg.get("content", "")}
             for msg in messages
-        ***REMOVED***
-        body: Dict[str, Any***REMOVED*** = {
+        ]
+        body: Dict[str, Any] = {
             "model": model,
             "messages": ollama_messages,
-            "options": {"temperature": temperature***REMOVED***,
+            "options": {"temperature": temperature},
             "stream": stream,
-        ***REMOVED***
+        }
         if max_tokens:
-            body["options"***REMOVED***["num_predict"***REMOVED*** = max_tokens
+            body["options"]["num_predict"] = max_tokens
         return body
 
     def generate(
         self,
         model: str,
-        messages: List[Dict[str, Any***REMOVED******REMOVED***,
+        messages: List[Dict[str, Any]],
         temperature: float = 0.7,
         max_tokens: int | None = None,
         timeout: int = 120,
@@ -574,22 +574,22 @@ class OllamaProvider(BaseProvider):
 
         try:
             with httpx.Client(timeout=timeout) as client:
-                resp = client.post(f"{self.BASE_URL***REMOVED***/api/chat", json=body)
+                resp = client.post(f"{self.BASE_URL}/api/chat", json=body)
                 resp.raise_for_status()
                 data = resp.json()
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
-                raise RuntimeError(f"Ollama model '{model***REMOVED***' not found. Run: ollama pull {model***REMOVED***") from e
-            raise RuntimeError(f"Ollama error {e.response.status_code***REMOVED***: {e.response.text[:200***REMOVED******REMOVED***") from e
+                raise RuntimeError(f"Ollama model '{model}' not found. Run: ollama pull {model}") from e
+            raise RuntimeError(f"Ollama error {e.response.status_code}: {e.response.text[:200]}") from e
         except httpx.TimeoutException:
-            raise RuntimeError(f"Ollama timeout after {timeout***REMOVED***s (model may still be loading)") from None
+            raise RuntimeError(f"Ollama timeout after {timeout}s (model may still be loading)") from None
         except httpx.ConnectError:
             raise RuntimeError("Ollama not running. Start with: ollama serve") from None
         except Exception as e:
-            raise RuntimeError(f"Ollama request failed: {e***REMOVED***") from e
+            raise RuntimeError(f"Ollama request failed: {e}") from e
 
         elapsed = int((time.monotonic() - start) * 1000)
-        content = data.get("message", {***REMOVED***).get("content", "")
+        content = data.get("message", {}).get("content", "")
         done = data.get("done", True)
 
         return ModelResponse(
@@ -601,18 +601,18 @@ class OllamaProvider(BaseProvider):
                 "prompt_tokens": data.get("prompt_eval_count", 0),
                 "completion_tokens": data.get("eval_count", 0),
                 "total_tokens": (data.get("prompt_eval_count", 0) + data.get("eval_count", 0)),
-            ***REMOVED***,
+            },
             latency_ms=elapsed,
         )
 
     def generate_stream(
         self,
         model: str,
-        messages: List[Dict[str, Any***REMOVED******REMOVED***,
+        messages: List[Dict[str, Any]],
         temperature: float = 0.7,
         max_tokens: int | None = None,
         timeout: int = 120,
-    ) -> Iterator[StreamChunk***REMOVED***:
+    ) -> Iterator[StreamChunk]:
         """Streaming via Ollama newline-delimited JSON.
 
         Ollama returns individual JSON objects separated by newlines.
@@ -622,7 +622,7 @@ class OllamaProvider(BaseProvider):
 
         try:
             with httpx.Client(timeout=timeout) as client:
-                with client.stream("POST", f"{self.BASE_URL***REMOVED***/api/chat", json=body) as resp:
+                with client.stream("POST", f"{self.BASE_URL}/api/chat", json=body) as resp:
                     resp.raise_for_status()
                     for line in resp.iter_lines():
                         if not line:
@@ -631,7 +631,7 @@ class OllamaProvider(BaseProvider):
                             chunk_data = json.loads(line)
                         except json.JSONDecodeError:
                             continue
-                        content = chunk_data.get("message", {***REMOVED***).get("content", "")
+                        content = chunk_data.get("message", {}).get("content", "")
                         done = chunk_data.get("done", False)
                         if content:
                             yield StreamChunk(
@@ -651,19 +651,19 @@ class OllamaProvider(BaseProvider):
                                         chunk_data.get("prompt_eval_count", 0)
                                         + chunk_data.get("eval_count", 0)
                                     ),
-                                ***REMOVED***,
+                                },
                             )
                             return
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
-                raise RuntimeError(f"Ollama model '{model***REMOVED***' not found. Run: ollama pull {model***REMOVED***") from e
-            raise RuntimeError(f"Ollama stream error {e.response.status_code***REMOVED***") from e
+                raise RuntimeError(f"Ollama model '{model}' not found. Run: ollama pull {model}") from e
+            raise RuntimeError(f"Ollama stream error {e.response.status_code}") from e
         except httpx.TimeoutException:
-            raise RuntimeError(f"Ollama stream timeout after {timeout***REMOVED***s") from None
+            raise RuntimeError(f"Ollama stream timeout after {timeout}s") from None
         except httpx.ConnectError:
             raise RuntimeError("Ollama not running. Start with: ollama serve") from None
         except Exception as e:
-            raise RuntimeError(f"Ollama stream failed: {e***REMOVED***") from e
+            raise RuntimeError(f"Ollama stream failed: {e}") from e
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -687,9 +687,9 @@ class ModelGateway:
         self._event_bus = event_bus
         self._policy_engine = policy_engine  # PolicyEngine (правило 11) — опционально
         self._keypool: Any = None  # Lazy init to avoid import issues
-        self._providers: Dict[str, BaseProvider***REMOVED*** = {***REMOVED***
+        self._providers: Dict[str, BaseProvider] = {}
         self._router: Any = None   # SmartRouter — lazy init
-        self._cache: Dict[str, ModelResponse***REMOVED*** = {***REMOVED***
+        self._cache: Dict[str, ModelResponse] = {}
 
     @property
     def keypool(self):
@@ -709,44 +709,44 @@ class ModelGateway:
         if provider_name not in self._providers:
             cfg = PROVIDER_ENDPOINTS.get(provider_name)
             if not cfg:
-                raise ValueError(f"Unknown provider: {provider_name***REMOVED***")
+                raise ValueError(f"Unknown provider: {provider_name}")
 
             api_key = self.keypool.rotate(provider_name) or ""
 
             if provider_name == "gemini":
-                self._providers[provider_name***REMOVED*** = GeminiProvider(api_key)
+                self._providers[provider_name] = GeminiProvider(api_key)
             elif provider_name == "ollama":
-                self._providers[provider_name***REMOVED*** = OllamaProvider(api_key)
+                self._providers[provider_name] = OllamaProvider(api_key)
             elif provider_name in ("deepseek", "openrouter", "sambanova", "dashscope"):
-                self._providers[provider_name***REMOVED*** = OpenAICompatibleProvider(
-                    base_url=cfg["base_url"***REMOVED***, api_key=api_key,
+                self._providers[provider_name] = OpenAICompatibleProvider(
+                    base_url=cfg["base_url"], api_key=api_key,
                     provider_name=provider_name,
                 )
             else:
-                raise ValueError(f"Unsupported provider: {provider_name***REMOVED***")
+                raise ValueError(f"Unsupported provider: {provider_name}")
 
-        return self._providers[provider_name***REMOVED***
+        return self._providers[provider_name]
 
     def _rotate_key(self, provider_name: str):
         """Ротирует ключ для провайдера (принудительно создаёт нового)."""
         if provider_name in self._providers:
-            del self._providers[provider_name***REMOVED***
+            del self._providers[provider_name]
 
     def generate(
         self,
         model: str | None = None,
-        messages: List[Dict[str, Any***REMOVED******REMOVED*** | None = None,
+        messages: List[Dict[str, Any]] | None = None,
         fallback: str | None = None,
         temperature: float = 0.7,
         max_tokens: int | None = None,
         timeout: int = 60,
-        capabilities: List[str***REMOVED*** | None = None,
+        capabilities: List[str] | None = None,
     ) -> ModelResponse:
         """Генерирует ответ модели.
 
         Args:
             model: имя модели (deepseek-v4-flash, gemini-2.5-flash, ...)
-            messages: список сообщений [{"role": "user", "content": "..."***REMOVED******REMOVED***
+            messages: список сообщений [{"role": "user", "content": "..."}]
             fallback: модель для fallback при ошибке
             temperature: температура (0.0-1.0)
             max_tokens: максимальное количество токенов в ответе
@@ -756,7 +756,7 @@ class ModelGateway:
         Returns:
             ModelResponse
         """
-        messages = messages or [***REMOVED***
+        messages = messages or []
         start = time.monotonic()
 
         # 1. Определяем модель
@@ -770,7 +770,7 @@ class ModelGateway:
 
         provider_name = _model_to_provider(model)
         if not provider_name:
-            raise ValueError(f"Cannot determine provider for model: {model***REMOVED***")
+            raise ValueError(f"Cannot determine provider for model: {model}")
 
         # 2. Вызываем модель
         result = self._call_with_fallback(
@@ -790,8 +790,8 @@ class ModelGateway:
 
     def resolve_model(
         self,
-        capabilities: List[str***REMOVED***,
-    ) -> Tuple[Optional[str***REMOVED***, Optional[str***REMOVED***, str***REMOVED***:
+        capabilities: List[str],
+    ) -> Tuple[Optional[str], Optional[str], str]:
         """Выбирает модель для capabilities: User-Choice Override → SmartRouter.
 
         Правило 11 (User-Choice Override): если пользователь назначил Runtime на
@@ -822,7 +822,7 @@ class ModelGateway:
                         continue
                     model = RUNTIME_MODELS.get(runtime)
                     if model:
-                        return model, None, f"policy:{runtime***REMOVED***"
+                        return model, None, f"policy:{runtime}"
             except Exception:
                 pass  # Graceful degradation → SmartRouter
 
@@ -838,7 +838,7 @@ class ModelGateway:
         self,
         provider_name: str,
         model: str,
-        messages: List[Dict[str, Any***REMOVED******REMOVED***,
+        messages: List[Dict[str, Any]],
         fallback: str | None = None,
         temperature: float = 0.7,
         max_tokens: int | None = None,
@@ -881,23 +881,23 @@ class ModelGateway:
                     return result
 
             raise RuntimeError(
-                f"All attempts failed for {model***REMOVED***: {error_msg***REMOVED***"
+                f"All attempts failed for {model}: {error_msg}"
             ) from e
 
     def generate_stream(
         self,
         model: str | None = None,
-        messages: List[Dict[str, Any***REMOVED******REMOVED*** | None = None,
+        messages: List[Dict[str, Any]] | None = None,
         fallback: str | None = None,
         temperature: float = 0.7,
         max_tokens: int | None = None,
         timeout: int = 60,
-    ) -> Iterator[StreamChunk***REMOVED***:
+    ) -> Iterator[StreamChunk]:
         """Генерирует ответ в streaming-режиме.
 
         Args:
             model: имя модели (deepseek-v4-flash, gemini-2.5-flash, ...)
-            messages: список сообщений [{"role": "user", "content": "..."***REMOVED******REMOVED***
+            messages: список сообщений [{"role": "user", "content": "..."}]
             fallback: модель для fallback при ошибке инициализации стрима
             temperature: температура (0.0-1.0)
             max_tokens: максимальное количество токенов в ответе
@@ -906,14 +906,14 @@ class ModelGateway:
         Yields:
             StreamChunk с частичным контентом и/или finish_reason
         """
-        messages = messages or [***REMOVED***
+        messages = messages or []
 
         if not model:
             raise ValueError("model is required for streaming")
 
         provider_name = _model_to_provider(model)
         if not provider_name:
-            raise ValueError(f"Cannot determine provider for model: {model***REMOVED***")
+            raise ValueError(f"Cannot determine provider for model: {model}")
 
         try:
             provider = self._get_provider(provider_name)
@@ -946,8 +946,8 @@ class ModelGateway:
 
     def generate_by_capabilities(
         self,
-        capabilities: List[str***REMOVED***,
-        messages: List[Dict[str, Any***REMOVED******REMOVED***,
+        capabilities: List[str],
+        messages: List[Dict[str, Any]],
         **kwargs,
     ) -> ModelResponse:
         """Генерирует ответ, выбирая модель по capabilities."""
@@ -973,12 +973,12 @@ class ModelGateway:
                     "provider": provider,
                     "streaming": True,
                     "fallback_used": fallback_used,
-                ***REMOVED***,
+                },
             ))
         except Exception:
             pass
 
-    def _publish_event(self, result: ModelResponse, messages: List[Dict[str, Any***REMOVED******REMOVED***):
+    def _publish_event(self, result: ModelResponse, messages: List[Dict[str, Any]]):
         """Публикует событие вызова модели."""
         if self._event_bus is None:
             return
@@ -1002,27 +1002,27 @@ class ModelGateway:
                     "fallback_used": result.fallback_used,
                     "cached": result.cached,
                     "prompt_tokens": count_messages_tokens(messages),
-                ***REMOVED***,
+                },
             ))
         except Exception:
             pass
 
-    def status(self) -> Dict[str, Any***REMOVED***:
+    def status(self) -> Dict[str, Any]:
         """Статус Gateway: доступные провайдеры и модели."""
-        providers = {***REMOVED***
+        providers = {}
         for pname, cfg in PROVIDER_ENDPOINTS.items():
-            models = list(cfg["models"***REMOVED***.keys())
+            models = list(cfg["models"].keys())
             api_key = self.keypool.rotate(pname)
-            providers[pname***REMOVED*** = {
+            providers[pname] = {
                 "models": models,
                 "has_key": api_key is not None,
-                "base_url": cfg["base_url"***REMOVED***,
-            ***REMOVED***
+                "base_url": cfg["base_url"],
+            }
         return {
             "providers": providers,
             "total_providers": len(providers),
-            "total_models": sum(len(p["models"***REMOVED***) for p in providers.values()),
-        ***REMOVED***
+            "total_models": sum(len(p["models"]) for p in providers.values()),
+        }
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -1067,10 +1067,10 @@ def main():
     gw = ModelGateway()
 
     if args.command == "generate":
-        messages = [***REMOVED***
+        messages = []
         if args.system:
-            messages.append({"role": "system", "content": args.system***REMOVED***)
-        messages.append({"role": "user", "content": args.prompt***REMOVED***)
+            messages.append({"role": "system", "content": args.system})
+        messages.append({"role": "user", "content": args.prompt})
 
         kwargs = {
             "model": args.model,
@@ -1078,70 +1078,70 @@ def main():
             "temperature": args.temp,
             "max_tokens": args.max_tokens,
             "fallback": args.fallback,
-        ***REMOVED***
+        }
 
         try:
-            result = gw.generate(**{k: v for k, v in kwargs.items() if v is not None***REMOVED***)
-            print(f"\n{'─' * 60***REMOVED***")
+            result = gw.generate(**{k: v for k, v in kwargs.items() if v is not None})
+            print(f"\n{'─' * 60}")
             print(result.content)
-            print(f"{'─' * 60***REMOVED***")
-            print(f"  Model: {result.model***REMOVED*** ({result.provider***REMOVED***)")
-            print(f"  Tokens: {result.usage['total_tokens'***REMOVED******REMOVED*** "
-                  f"(prompt {result.usage['prompt_tokens'***REMOVED******REMOVED*** + "
-                  f"completion {result.usage['completion_tokens'***REMOVED******REMOVED***)")
-            print(f"  Latency: {result.latency_ms***REMOVED***ms"
-                  f"{' (fallback)' if result.fallback_used else ''***REMOVED***")
+            print(f"{'─' * 60}")
+            print(f"  Model: {result.model} ({result.provider})")
+            print(f"  Tokens: {result.usage['total_tokens']} "
+                  f"(prompt {result.usage['prompt_tokens']} + "
+                  f"completion {result.usage['completion_tokens']})")
+            print(f"  Latency: {result.latency_ms}ms"
+                  f"{' (fallback)' if result.fallback_used else ''}")
         except Exception as e:
-            print(f"❌ Error: {e***REMOVED***", file=sys.stderr)
+            print(f"❌ Error: {e}", file=sys.stderr)
             sys.exit(1)
 
     elif args.command == "generate-stream":
-        messages = [***REMOVED***
+        messages = []
         if args.system:
-            messages.append({"role": "system", "content": args.system***REMOVED***)
-        messages.append({"role": "user", "content": args.prompt***REMOVED***)
+            messages.append({"role": "system", "content": args.system})
+        messages.append({"role": "user", "content": args.prompt})
 
         kwargs = {
             "model": args.model,
             "messages": messages,
             "temperature": args.temp,
             "timeout": args.timeout,
-        ***REMOVED***
+        }
         if args.max_tokens:
-            kwargs["max_tokens"***REMOVED*** = args.max_tokens
+            kwargs["max_tokens"] = args.max_tokens
 
         try:
-            print(f"\n{'─' * 60***REMOVED***", flush=True)
+            print(f"\n{'─' * 60}", flush=True)
             for chunk in gw.generate_stream(**kwargs):
                 if chunk.content:
                     print(chunk.content, end="", flush=True)
                 if chunk.finish_reason == "stop" and chunk.usage:
-                    print(f"\n{'─' * 60***REMOVED***")
-                    print(f"  Model: {chunk.model***REMOVED***")
-                    print(f"  Tokens: {chunk.usage.get('total_tokens', 0)***REMOVED***")
+                    print(f"\n{'─' * 60}")
+                    print(f"  Model: {chunk.model}")
+                    print(f"  Tokens: {chunk.usage.get('total_tokens', 0)}")
             print(flush=True)
         except Exception as e:
-            print(f"\n❌ Stream error: {e***REMOVED***", file=sys.stderr)
+            print(f"\n❌ Stream error: {e}", file=sys.stderr)
             sys.exit(1)
 
     elif args.command == "status":
         s = gw.status()
         print("📊 MODEL GATEWAY STATUS")
-        print(f"   Total providers: {s['total_providers'***REMOVED******REMOVED***")
-        print(f"   Total models:    {s['total_models'***REMOVED******REMOVED***")
-        for pname, info in s["providers"***REMOVED***.items():
-            key_status = "🔑" if info["has_key"***REMOVED*** else "❌"
-            print(f"\n   {key_status***REMOVED*** {pname***REMOVED***:")
-            print(f"      URL:    {info['base_url'***REMOVED******REMOVED***")
-            for m in info["models"***REMOVED***:
-                print(f"      • {m***REMOVED***")
+        print(f"   Total providers: {s['total_providers']}")
+        print(f"   Total models:    {s['total_models']}")
+        for pname, info in s["providers"].items():
+            key_status = "🔑" if info["has_key"] else "❌"
+            print(f"\n   {key_status} {pname}:")
+            print(f"      URL:    {info['base_url']}")
+            for m in info["models"]:
+                print(f"      • {m}")
 
     elif args.command == "models":
         print("📋 AVAILABLE MODELS")
         for pname, cfg in PROVIDER_ENDPOINTS.items():
-            print(f"\n  {pname***REMOVED***:")
-            for mname, minfo in cfg["models"***REMOVED***.items():
-                print(f"    • {mname***REMOVED*** ({minfo['max_tokens'***REMOVED******REMOVED*** tok)")
+            print(f"\n  {pname}:")
+            for mname, minfo in cfg["models"].items():
+                print(f"    • {mname} ({minfo['max_tokens']} tok)")
 
     else:
         parser.print_help()

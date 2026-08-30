@@ -60,7 +60,7 @@ def live_server(monkeypatch):
         time.sleep(0.05)
     assert server.started, "uvicorn-сервер не стартовал за отведённое время"
 
-    base = f"http://127.0.0.1:{port***REMOVED***"
+    base = f"http://127.0.0.1:{port}"
     yield base
 
     server.should_exit = True
@@ -71,7 +71,7 @@ def _free_port() -> int:
     """Возвращает свободный порт на loopback."""
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
-        return s.getsockname()[1***REMOVED***
+        return s.getsockname()[1]
 
 
 # ---------------------------------------------------------------------------
@@ -82,7 +82,7 @@ def test_e2e_index_serves_html(live_server):
     with httpx.Client() as c:
         r = c.get(live_server + "/")
         assert r.status_code == 200
-        assert r.headers["content-type"***REMOVED***.startswith("text/html")
+        assert r.headers["content-type"].startswith("text/html")
         assert "Северный чай" in r.text
         assert "Заказать" in r.text
         assert "/api/chat" in r.text
@@ -90,16 +90,16 @@ def test_e2e_index_serves_html(live_server):
 
 def test_e2e_chat_roundtrip(live_server):
     with httpx.Client() as c:
-        r = c.post(live_server + "/api/chat", json={"message": "привет"***REMOVED***)
+        r = c.post(live_server + "/api/chat", json={"message": "привет"})
         assert r.status_code == 200
         data = r.json()
-        assert data["reply"***REMOVED*** == "E2E-ответ"
-        assert len(data["session_id"***REMOVED***) == 32
+        assert data["reply"] == "E2E-ответ"
+        assert len(data["session_id"]) == 32
 
 
 def test_e2e_chat_empty_message_400(live_server):
     with httpx.Client() as c:
-        r = c.post(live_server + "/api/chat", json={"message": "   "***REMOVED***)
+        r = c.post(live_server + "/api/chat", json={"message": "   "})
         assert r.status_code == 400
 
 
@@ -111,16 +111,16 @@ def test_e2e_chat_missing_body_422(live_server):
 
 def test_e2e_session_history_kept_over_real_http(live_server):
     with httpx.Client() as c:
-        first = c.post(live_server + "/api/chat", json={"message": "один"***REMOVED***)
-        sid = first.json()["session_id"***REMOVED***
+        first = c.post(live_server + "/api/chat", json={"message": "один"})
+        sid = first.json()["session_id"]
 
-        c.post(live_server + "/api/chat", json={"message": "два", "session_id": sid***REMOVED***)
+        c.post(live_server + "/api/chat", json={"message": "два", "session_id": sid})
 
     # оба реальных запроса дошли до модели; во втором — история (user,model,user)
     calls = m._client.models.generate_content.call_args_list
     assert len(calls) == 2
-    contents = calls[1***REMOVED***.kwargs["contents"***REMOVED***
+    contents = calls[1].kwargs["contents"]
     assert len(contents) == 3
-    assert contents[0***REMOVED***.parts[0***REMOVED***.text == "один"
-    assert contents[1***REMOVED***.role == "model"
-    assert contents[2***REMOVED***.parts[0***REMOVED***.text == "два"
+    assert contents[0].parts[0].text == "один"
+    assert contents[1].role == "model"
+    assert contents[2].parts[0].text == "два"

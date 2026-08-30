@@ -37,7 +37,7 @@ class SourceDocument:
         if len(self.content_hash) != 64:
             raise ValueError("content_hash must be a SHA-256 hex digest")
 
-    def to_dict(self) -> dict[str, Any***REMOVED***:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "document_id": self.document_id,
             "source_relpath": self.source_relpath,
@@ -45,7 +45,7 @@ class SourceDocument:
             "locale": self.locale,
             "content_hash": self.content_hash,
             "characters": len(self.text),
-        ***REMOVED***
+        }
 
 
 @dataclass(frozen=True)
@@ -73,7 +73,7 @@ class TranslationDraft:
         if self.status is TranslationStatus.REVIEWED and self.provider == "":
             raise ValueError("reviewed translations require provider provenance")
 
-    def to_dict(self) -> dict[str, Any***REMOVED***:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "document_id": self.document_id,
             "source_hash": self.source_hash,
@@ -83,7 +83,7 @@ class TranslationDraft:
             "model": self.model,
             "status": self.status.value,
             "characters": len(self.text),
-        ***REMOVED***
+        }
 
 
 @dataclass(frozen=True)

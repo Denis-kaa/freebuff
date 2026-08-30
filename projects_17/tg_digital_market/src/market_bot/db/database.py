@@ -19,7 +19,7 @@ from __future__ import annotations
 import logging
 import sqlite3
 import threading
-***REMOVED***
+}
 from typing import Iterable, Iterator, Optional, Sequence
 
 logger = logging.getLogger(__name__)
@@ -79,8 +79,8 @@ class Database:
         # операций) без deadlock. Также устраняет SQLite InterfaceError
         # при конкурентном использовании одного коннекшна из разных потоков.
         self._lock = threading.RLock()
-        self._conn: Optional[sqlite3.Connection***REMOVED*** = None
-        self._schema_sql: Optional[str***REMOVED*** = None
+        self._conn: Optional[sqlite3.Connection] = None
+        self._schema_sql: Optional[str] = None
 
     # ── lifecycle ───────────────────────────────────────────────────────────
 
@@ -134,25 +134,25 @@ class Database:
 
     def execute(self, sql: str, params: Sequence | None = None) -> None:
         with self._lock:
-            self._get_conn().execute(sql, params or [***REMOVED***)
+            self._get_conn().execute(sql, params or [])
 
-    def executemany(self, sql: str, seq: Iterable[Sequence***REMOVED***) -> None:
+    def executemany(self, sql: str, seq: Iterable[Sequence]) -> None:
         with self._lock:
             self._get_conn().executemany(sql, seq)
 
-    def query(self, sql: str, params: Sequence | None = None) -> list[sqlite3.Row***REMOVED***:
+    def query(self, sql: str, params: Sequence | None = None) -> list[sqlite3.Row]:
         with self._lock:
-            cur = self._get_conn().execute(sql, params or [***REMOVED***)
+            cur = self._get_conn().execute(sql, params or [])
             return cur.fetchall()
 
-    def query_one(self, sql: str, params: Sequence | None = None) -> Optional[sqlite3.Row***REMOVED***:
+    def query_one(self, sql: str, params: Sequence | None = None) -> Optional[sqlite3.Row]:
         with self._lock:
-            cur = self._get_conn().execute(sql, params or [***REMOVED***)
+            cur = self._get_conn().execute(sql, params or [])
             return cur.fetchone()
 
     def scalar(self, sql: str, params: Sequence | None = None):
         row = self.query_one(sql, params)
-        return None if row is None else row[0***REMOVED***
+        return None if row is None else row[0]
 
     @property
     def raw_conn(self) -> sqlite3.Connection:

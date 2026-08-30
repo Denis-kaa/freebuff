@@ -35,7 +35,7 @@ import pytest
 
 import importlib.util as _importlib_util
 import sys
-***REMOVED***
+}
 
 _FB_ROOT = Path("/storage/emulated/0/PROJECTS/workstation/freebuff")
 sys.path.insert(0, ".")  # core_02/ + runtime_05/scenarios resolution
@@ -73,16 +73,16 @@ def _delta(
     src: str = "d1",
     rev: int = 1,
     sync_mode: SyncMode = SyncMode.SAVED_MESSAGES,
-    updated: Optional[Dict[str, Any***REMOVED******REMOVED*** = None,
-    deleted: Optional[List[str***REMOVED******REMOVED*** = None,
+    updated: Optional[Dict[str, Any]] = None,
+    deleted: Optional[List[str]] = None,
 ) -> SyncDelta:
     return SyncDelta(
         timestamp_ms=ts,
         source_device_id=src,
         revision=rev,
         sync_mode=sync_mode,
-        updated_keys=updated or {"a": "v_a"***REMOVED***,
-        deleted_keys=deleted or [***REMOVED***,
+        updated_keys=updated or {"a": "v_a"},
+        deleted_keys=deleted or [],
     )
 
 
@@ -94,8 +94,8 @@ def _envelope(
     return SyncEnvelope(
         delta=delta,
         signature=None,
-        compression=compression,  # type: ignore[arg-type***REMOVED***
-        marker=marker,  # type: ignore[arg-type***REMOVED***
+        compression=compression,  # type: ignore[arg-type]
+        marker=marker,  # type: ignore[arg-type]
     )
 
 
@@ -105,10 +105,10 @@ def _envelope(
 def test_capabilities_closed_vocab_membership():
     impl = RemoteSyncCoordinatorImpl("test-laptop")
     caps = impl.capabilities()
-    expected = {"state-sync", "telegram-mtproto-relay", "delta-resolution", "chunked-large-state"***REMOVED***
-    assert caps == expected, f"closed-vocab mismatch: {caps***REMOVED***"
+    expected = {"state-sync", "telegram-mtproto-relay", "delta-resolution", "chunked-large-state"}
+    assert caps == expected, f"closed-vocab mismatch: {caps}"
     # Verify frozenset backing
-    assert isinstance(_lww_merge_per_key.__globals__["_VALID_CAPABILITIES"***REMOVED***, frozenset)
+    assert isinstance(_lww_merge_per_key.__globals__["_VALID_CAPABILITIES"], frozenset)
 
 
 def test_capability_assertion_rejects_unknown_token():
@@ -131,34 +131,34 @@ def test_constructor_rejects_empty_label():
 
 
 def test_lww_merge_per_key_newer_remote_wins():
-    local = {"a": ("v_local", 100)***REMOVED***
-    remote = {"a": ("v_remote", 200)***REMOVED***
+    local = {"a": ("v_local", 100)}
+    remote = {"a": ("v_remote", 200)}
     merged, dropped = _lww_merge_per_key(local, remote)
-    assert merged == {"a": ("v_remote", 200)***REMOVED***
+    assert merged == {"a": ("v_remote", 200)}
     assert dropped == set()
 
 
 def test_lww_merge_per_key_older_remote_dropped():
-    local = {"a": ("v_local_new", 300)***REMOVED***
-    remote = {"a": ("v_remote_old", 100)***REMOVED***
+    local = {"a": ("v_local_new", 300)}
+    remote = {"a": ("v_remote_old", 100)}
     merged, dropped = _lww_merge_per_key(local, remote)
-    assert merged == {"a": ("v_local_new", 300)***REMOVED***
-    assert dropped == {"a"***REMOVED***
+    assert merged == {"a": ("v_local_new", 300)}
+    assert dropped == {"a"}
 
 
 def test_lww_merge_per_key_tie_keeps_local():
-    local = {"a": ("v_local", 200)***REMOVED***
-    remote = {"a": ("v_remote", 200)***REMOVED***
+    local = {"a": ("v_local", 200)}
+    remote = {"a": ("v_remote", 200)}
     merged, dropped = _lww_merge_per_key(local, remote)
-    assert merged == {"a": ("v_local", 200)***REMOVED***  # tie → local kept (deterministic)
+    assert merged == {"a": ("v_local", 200)}  # tie → local kept (deterministic)
     assert dropped == set()
 
 
 def test_lww_merge_per_key_disjoint_keys_merge():
-    local = {"a": ("v_a", 100)***REMOVED***
-    remote = {"b": ("v_b", 100)***REMOVED***
+    local = {"a": ("v_a", 100)}
+    remote = {"b": ("v_b", 100)}
     merged, dropped = _lww_merge_per_key(local, remote)
-    assert merged == {"a": ("v_a", 100), "b": ("v_b", 100)***REMOVED***
+    assert merged == {"a": ("v_a", 100), "b": ("v_b", 100)}
     assert dropped == set()
 
 
@@ -169,7 +169,7 @@ def test_chunk_envelope_payload_small_single_chunk():
     payload = "small-json-payload" * 10  # 170 chars
     chunks = _chunk_envelope_payload(payload)
     assert len(chunks) == 1
-    assert chunks[0***REMOVED*** == payload
+    assert chunks[0] == payload
 
 
 def test_chunk_envelope_payload_large_splits():
@@ -200,9 +200,9 @@ def test_format_envelope_marker_format():
 async def test_shutdown_idempotent_second_call_errors():
     impl = RemoteSyncCoordinatorImpl("test-laptop")
     res1 = await impl.shutdown()
-    assert res1 == {"ok": True, "drained": 0***REMOVED***
+    assert res1 == {"ok": True, "drained": 0}
     res2 = await impl.shutdown()
-    assert res2 == {"ok": False, "error": "shutdown already called"***REMOVED***
+    assert res2 == {"ok": False, "error": "shutdown already called"}
 
 
 # ── 5. push_state (mocked SendFn) ──────────────────────────────────────────
@@ -212,8 +212,8 @@ async def test_shutdown_idempotent_second_call_errors():
 async def test_push_state_without_register_device_fails_loudly():
     impl = RemoteSyncCoordinatorImpl("test-laptop")
     res = await impl.push_state(_delta())
-    assert res["ok"***REMOVED*** is False
-    assert "not registered" in res["error"***REMOVED***
+    assert res["ok"] is False
+    assert "not registered" in res["error"]
 
 
 @pytest.mark.asyncio
@@ -225,15 +225,15 @@ async def test_push_state_with_injected_send_fn_single_chunk():
     # Inject a pre-registered device (skip register_device to avoid me_fn)
     impl._device_id = "tg:99:test-laptop"
 
-    res = await impl.push_state(_delta(updated={"a": "v_a", "b": "v_b"***REMOVED***))
-    assert res["ok"***REMOVED*** is True
-    assert res["chunk_count"***REMOVED*** == 1
-    assert res["msg_ids"***REMOVED*** == [12345***REMOVED***
+    res = await impl.push_state(_delta(updated={"a": "v_a", "b": "v_b"}))
+    assert res["ok"] is True
+    assert res["chunk_count"] == 1
+    assert res["msg_ids"] == [12345]
     mock_send.assert_awaited_once()
     # Verify the call args: (chat_id, text)
     call_args = mock_send.await_args
-    assert call_args.args[0***REMOVED*** == 7_709_651_193  # SAVED_MESSAGES_CHAT_ID
-    text_arg = call_args.args[1***REMOVED***
+    assert call_args.args[0] == 7_709_651_193  # SAVED_MESSAGES_CHAT_ID
+    text_arg = call_args.args[1]
     assert text_arg.startswith(_SYNC_MARKER_PREFIX)
     assert "CHUNK 0/1" in text_arg
     assert "v_a" in text_arg  # JSON body
@@ -243,30 +243,30 @@ async def test_push_state_with_injected_send_fn_single_chunk():
 async def test_push_state_multichunk_delivers_all_chunks():
     impl = RemoteSyncCoordinatorImpl("test-laptop")
     # Mock send returns incrementing msg_ids
-    mock_send = AsyncMock(side_effect=[1001, 1002, 1003***REMOVED***)
+    mock_send = AsyncMock(side_effect=[1001, 1002, 1003])
     impl._send_fn = mock_send
     impl._device_id = "tg:99:test-laptop"
 
     # Force 3+ chunks: payload > 2*3500 chars
     big = "x" * 7500
     res = await impl.push_state(
-        _delta(updated={"big": big***REMOVED***)
+        _delta(updated={"big": big})
     )
-    assert res["ok"***REMOVED*** is True
-    assert res["chunk_count"***REMOVED*** >= 3
-    assert len(res["msg_ids"***REMOVED***) == res["chunk_count"***REMOVED***
+    assert res["ok"] is True
+    assert res["chunk_count"] >= 3
+    assert len(res["msg_ids"]) == res["chunk_count"]
     assert mock_send.await_count >= 3
     # Verify correlation_id is identical across chunks
-    correlation_id = res["correlation_id"***REMOVED***
-    sent_texts = [c.args[1***REMOVED*** for c in mock_send.await_args_list***REMOVED***
+    correlation_id = res["correlation_id"]
+    sent_texts = [c.args[1] for c in mock_send.await_args_list]
     for text in sent_texts:
         assert correlation_id in text
 
 
 @pytest.mark.asyncio
 async def test_push_state_explicit_send_fn_called_with_chat_id():
-    """SendFn signature: (chat_id: int, text: str) -> Optional[msg_id***REMOVED***."""
-    captured: List[Tuple[int, str***REMOVED******REMOVED*** = [***REMOVED***
+    """SendFn signature: (chat_id: int, text: str) -> Optional[msg_id]."""
+    captured: List[Tuple[int, str]] = []
 
     async def capturing_send(chat_id: int, text: str) -> int:
         captured.append((chat_id, text))
@@ -280,7 +280,7 @@ async def test_push_state_explicit_send_fn_called_with_chat_id():
 
     await impl.push_state(_delta())
     assert len(captured) == 1
-    chat_id, text = captured[0***REMOVED***
+    chat_id, text = captured[0]
     assert chat_id == 7_709_651_193
     assert text.startswith(_SYNC_MARKER_PREFIX)
 
@@ -294,8 +294,8 @@ async def test_quarantine_accepts_fresh_envelope():
     impl._device_id = "tg:42:lab"
     fresh_delta = _delta(ts=rs._now_ms())  # current timestamp → age ~0
     res = await impl.quarantine(_envelope(fresh_delta))
-    assert res["ok"***REMOVED*** is True
-    assert res["age_seconds"***REMOVED*** < 5  # near-immediate
+    assert res["ok"] is True
+    assert res["age_seconds"] < 5  # near-immediate
 
 
 @pytest.mark.asyncio
@@ -306,8 +306,8 @@ async def test_quarantine_rejects_stale_envelope():
     stale_ts = rs._now_ms() - (_QUARANTINE_MAX_AGE_SECONDS + 3600) * 1000
     stale_delta = _delta(ts=stale_ts)
     res = await impl.quarantine(_envelope(stale_delta))
-    assert res["ok"***REMOVED*** is False
-    assert "exceeds quarantine limit" in res["error"***REMOVED***
+    assert res["ok"] is False
+    assert "exceeds quarantine limit" in res["error"]
 
 
 @pytest.mark.asyncio
@@ -327,34 +327,34 @@ async def test_quarantine_buffer_bounded():
 @pytest.mark.asyncio
 async def test_resolve_conflict_lww_per_key():
     impl = RemoteSyncCoordinatorImpl("test-laptop")
-    local = {"a": ("v_local", 100), "b": ("v_b_local", 100)***REMOVED***
-    remote = {"a": ("v_remote", 200), "c": ("v_c", 200)***REMOVED***
+    local = {"a": ("v_local", 100), "b": ("v_b_local", 100)}
+    remote = {"a": ("v_remote", 200), "c": ("v_c", 200)}
     res = await impl.resolve_conflict(local, remote, ConflictResolution.LWW_PER_KEY)
-    assert res["mode"***REMOVED*** == "lww_per_key"
-    assert res["merged"***REMOVED***["a"***REMOVED*** == ("v_remote", 200)  # newer remote wins
-    assert res["merged"***REMOVED***["b"***REMOVED*** == ("v_b_local", 100)  # only-in-local kept
-    assert res["merged"***REMOVED***["c"***REMOVED*** == ("v_c", 200)  # only-in-remote added
-    assert res["quarantined"***REMOVED*** is False
+    assert res["mode"] == "lww_per_key"
+    assert res["merged"]["a"] == ("v_remote", 200)  # newer remote wins
+    assert res["merged"]["b"] == ("v_b_local", 100)  # only-in-local kept
+    assert res["merged"]["c"] == ("v_c", 200)  # only-in-remote added
+    assert res["quarantined"] is False
 
 
 @pytest.mark.asyncio
 async def test_resolve_conflict_whole_doc_lww_picks_newer_max():
     impl = RemoteSyncCoordinatorImpl("test-laptop")
-    local = {"a": ("v_local", 500)***REMOVED***  # max=500
-    remote = {"b": ("v_remote", 100)***REMOVED***  # max=100
+    local = {"a": ("v_local", 500)}  # max=500
+    remote = {"b": ("v_remote", 100)}  # max=100
     res = await impl.resolve_conflict(local, remote, ConflictResolution.WHOLE_DOC_LWW)
-    assert res["mode"***REMOVED*** == "whole_doc_lww"
-    assert res["merged"***REMOVED*** == local  # local has higher max-timestamp
+    assert res["mode"] == "whole_doc_lww"
+    assert res["merged"] == local  # local has higher max-timestamp
 
 
 @pytest.mark.asyncio
 async def test_resolve_conflict_manual_keeps_local_and_logs():
     impl = RemoteSyncCoordinatorImpl("test-laptop")
-    local = {"k": ("v_local", 100)***REMOVED***
-    remote = {"k": ("v_remote", 100)***REMOVED***  # same timestamp + ≠ value → conflict
+    local = {"k": ("v_local", 100)}
+    remote = {"k": ("v_remote", 100)}  # same timestamp + ≠ value → conflict
     res = await impl.resolve_conflict(local, remote, ConflictResolution.MANUAL)
-    assert res["mode"***REMOVED*** == "manual"
-    assert res["merged"***REMOVED*** == local
+    assert res["mode"] == "manual"
+    assert res["merged"] == local
     # Conflict was near-simultaneous (|lts - rts| < 10_000 ms AND values differ)
     # → recorded in conflict log
     assert "k" in impl._conflict_log
@@ -364,12 +364,12 @@ async def test_resolve_conflict_manual_keeps_local_and_logs():
 async def test_resolve_conflict_quarantine_appends_to_buffer():
     impl = RemoteSyncCoordinatorImpl("test-laptop")
     impl._device_id = "tg:42:lab"
-    local = {"k": ("v_local", 100)***REMOVED***
-    remote = {"k": ("v_remote", 100)***REMOVED***
+    local = {"k": ("v_local", 100)}
+    remote = {"k": ("v_remote", 100)}
     pre_buf_len = len(impl._quarantine_buffer)
     res = await impl.resolve_conflict(local, remote, ConflictResolution.QUARANTINE)
-    assert res["mode"***REMOVED*** == "quarantine"
-    assert res["quarantined"***REMOVED*** is True
+    assert res["mode"] == "quarantine"
+    assert res["quarantined"] is True
     assert len(impl._quarantine_buffer) == pre_buf_len + 1
 
 
@@ -407,22 +407,22 @@ def test_reconstruct_envelope_from_parsed_happy():
             "source_device_id": "d-uuid",
             "revision": 5,
             "sync_mode": "saved_messages",
-            "updated_keys": {"a": "v_a"***REMOVED***,
-            "deleted_keys": ["old_k"***REMOVED***,
-        ***REMOVED***,
-    ***REMOVED***
+            "updated_keys": {"a": "v_a"},
+            "deleted_keys": ["old_k"],
+        },
+    }
     env = _reconstruct_envelope_from_parsed(parsed)
     assert env is not None
     assert env.delta.timestamp_ms == 1234567890
     assert env.delta.source_device_id == "d-uuid"
     assert env.delta.revision == 5
-    assert env.delta.updated_keys == {"a": "v_a"***REMOVED***
-    assert env.delta.deleted_keys == ["old_k"***REMOVED***
+    assert env.delta.updated_keys == {"a": "v_a"}
+    assert env.delta.deleted_keys == ["old_k"]
 
 
 def test_reconstruct_envelope_from_parsed_malformed_returns_none():
     # Missing 'delta' key
-    parsed = {"v": "1.0.0", "garbage": {***REMOVED******REMOVED***
+    parsed = {"v": "1.0.0", "garbage": {}}
     assert _reconstruct_envelope_from_parsed(parsed) is None
     # Bad timestamp type
     parsed_bad_ts = {
@@ -431,10 +431,10 @@ def test_reconstruct_envelope_from_parsed_malformed_returns_none():
             "source_device_id": "d",
             "revision": 1,
             "sync_mode": "saved_messages",
-            "updated_keys": {***REMOVED***,
-            "deleted_keys": [***REMOVED***,
-        ***REMOVED***
-    ***REMOVED***
+            "updated_keys": {},
+            "deleted_keys": [],
+        }
+    }
     assert _reconstruct_envelope_from_parsed(parsed_bad_ts) is None
     # Invalid sync_mode
     parsed_bad_mode = {
@@ -443,8 +443,8 @@ def test_reconstruct_envelope_from_parsed_malformed_returns_none():
             "source_device_id": "d",
             "revision": 1,
             "sync_mode": "INVALID_MODE",
-            "updated_keys": {***REMOVED***,
-            "deleted_keys": [***REMOVED***,
-        ***REMOVED***
-    ***REMOVED***
+            "updated_keys": {},
+            "deleted_keys": [],
+        }
+    }
     assert _reconstruct_envelope_from_parsed(parsed_bad_mode) is None

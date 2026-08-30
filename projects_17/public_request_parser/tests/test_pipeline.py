@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import datetime, timedelta, timezone
-***REMOVED***
+}
 
 import pytest
 
@@ -14,7 +14,7 @@ from app.pipeline import format_report, run_offline_slice
 from app.rss_atom import FixtureFeedAdapter
 from app.storage import SqliteCheckpointStore, SqliteStorage
 
-FIXTURES = Path(__file__).parents[1***REMOVED*** / "fixtures"
+FIXTURES = Path(__file__).parents[1] / "fixtures"
 NOW = datetime(2026, 8, 23, 12, 0, tzinfo=timezone.utc)
 
 
@@ -31,7 +31,7 @@ def _profile() -> SearchProfile:
 
 
 @pytest.fixture()
-def storage(tmp_path: Path) -> Iterator[SqliteStorage***REMOVED***:
+def storage(tmp_path: Path) -> Iterator[SqliteStorage]:
     db = SqliteStorage(tmp_path / "pipeline.db")
     yield db
     db.close()

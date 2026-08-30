@@ -14,7 +14,7 @@ Phase-based (анти-OOM):
 from __future__ import annotations
 
 import os
-***REMOVED***
+}
 import shutil
 import subprocess
 import sys
@@ -22,7 +22,7 @@ import tempfile
 import time
 import uuid
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Optional
 
 from freebuff_plugin_03.config import (
@@ -43,26 +43,26 @@ def _run_oom_protection() -> None:
     if _OOM_SCRIPT.exists():
         try:
             result = subprocess.run(
-                ["bash", str(_OOM_SCRIPT), "--check"***REMOVED***,
+                ["bash", str(_OOM_SCRIPT), "--check"],
                 timeout=30,
                 capture_output=True,
                 text=True,
             )
             if result.returncode != 0:
-                print(f"⚠️ OOM protection предупреждение: {result.stdout.strip()***REMOVED***", file=sys.stderr)
+                print(f"⚠️ OOM protection предупреждение: {result.stdout.strip()}", file=sys.stderr)
         except subprocess.TimeoutExpired:
             print("⚠️ OOM protection timeout (30s) — продолжаю без очистки", file=sys.stderr)
         except Exception as e:
-            print(f"⚠️ OOM protection error: {e***REMOVED***", file=sys.stderr)
+            print(f"⚠️ OOM protection error: {e}", file=sys.stderr)
 
 # ── ANSI / управляющие последовательности ─────────────────────
 
-_ANSI_STRIP = re.compile(r"\x1b\[[0-9;***REMOVED****[a-zA-Z***REMOVED***|\x1b\***REMOVED***.*?(\x1b\\|\x07)|\x1b[\[\***REMOVED***()#***REMOVED***")
-_TERMINFO_STRIP = re.compile(r"\x1b[<>***REMOVED***|[\x00-\x08\x0b\x0c\x0e-\x1f***REMOVED***")
-_ERASE_LINE = re.compile(r"\x1b\[[0-9***REMOVED****[JK***REMOVED***|\x1b\[[0-9;***REMOVED****[Hf***REMOVED***")
+_ANSI_STRIP = re.compile(r"\x1b\[[0-9;)*[a-zA-Z]|\x1b\*].*?(\x1b\\|\x07)|\x1b[\[\*]()#]")
+_TERMINFO_STRIP = re.compile(r"\x1b[<>)|[\x00-\x08\x0b\x0c\x0e-\x1f]")
+_ERASE_LINE = re.compile(r"\x1b\[[0-9)*[JK]|\x1b\[[0-9;]*[Hf]")
 _SCREEN_ERASE = re.compile(r"\x1b\[2J\x1b\[H")
 _CONTINUOUS_DOTS = re.compile(r"Connecting…+")
-_PROGRESS_BARS = re.compile(r"█+[░***REMOVED****|●+[○***REMOVED****|[\d***REMOVED***+%")
+_PROGRESS_BARS = re.compile(r"█+[░)*|●+[○]*|[\d]+%")
 
 def clean_tui_output(text: str) -> str:
     """Очищает вывод TUI от управляющих последовательностей."""
@@ -72,7 +72,7 @@ def clean_tui_output(text: str) -> str:
     text = _TERMINFO_STRIP.sub("", text)
     text = _CONTINUOUS_DOTS.sub("", text)
     text = _PROGRESS_BARS.sub("", text)
-    lines = [l for l in text.split("\n") if l.strip()***REMOVED***
+    lines = [l for l in text.split("\n") if l.strip()]
     return "\n".join(lines)
 
 
@@ -84,13 +84,13 @@ def _proot_distro_login_available() -> bool:
     """True если мы можем вызвать `proot-distro login` (т.е. Termux, не proot).
 
     Используется в паре с _is_inside_proot() для выбора пути запуска бинаря:
-    - Termux (outer): `proot-distro login ubuntu -- {bin***REMOVED***`
-    - inside-proot (Ubuntu / sandboxed env): direct exec `{bin***REMOVED***`
+    - Termux (outer): `proot-distro login ubuntu -- {bin}`
+    - inside-proot (Ubuntu / sandboxed env): direct exec `{bin}`
     См. §подробнее v5.73.0 CHANGELOG.
     """
     try:
         r = subprocess.run(
-            ["proot-distro", "list"***REMOVED***,
+            ["proot-distro", "list"],
             capture_output=True, text=True, timeout=2,
         )
         # "should not be executed under PRoot" → returncode != 0
@@ -135,16 +135,16 @@ _SINGLE_INSTANCE_MARKERS = (
 _ROOTFS_CANDIDATES = [
     Path("/data/data/com.termux/files/usr/var/lib/proot-distro/containers/ubuntu/rootfs"),
     Path("/data/data/com.termux/files/usr/var/lib/proot-distro/installed-rootfs/ubuntu"),
-***REMOVED***
+]
 
 
-def _rootfs_loader_prefix() -> Optional[str***REMOVED***:
+def _rootfs_loader_prefix() -> Optional[str]:
     """Возвращает префикс запуска glibc-бинаря через загрузчик Ubuntu rootfs.
 
     Inside-proot direct-exec падает с 'libc.so: cannot open shared object file'
     (exit 127): sandbox не предоставляет glibc по стандартным путям. Явный вызов
     загрузчика rootfs решает:
-        {ld-linux-aarch64.so.1***REMOVED*** --library-path {libdir***REMOVED*** {bin***REMOVED*** --cwd {cwd***REMOVED***
+        {ld-linux-aarch64.so.1} --library-path {libdir} {bin} --cwd {cwd}
 
     Returns:
         Строку-префикс (loader + --library-path) если загрузчик найден,
@@ -155,37 +155,37 @@ def _rootfs_loader_prefix() -> Optional[str***REMOVED***:
             loader = root / rel / "ld-linux-aarch64.so.1"
             libdir = root / rel
             if loader.exists() and libdir.is_dir():
-                return f"{loader***REMOVED*** --library-path {libdir***REMOVED***"
+                return f"{loader} --library-path {libdir}"
     return None
 
 
 def _build_buffer_cmd(work_dir: Path) -> str:
     """Конструирует shell-команду для запуска freebuff binary.
 
-    - В native Termux: `proot-distro login ubuntu -- {bin***REMOVED*** --cwd {cwd***REMOVED***`
+    - В native Termux: `proot-distro login ubuntu -- {bin} --cwd {cwd}`
     - Внутри proot/Ubuntu: rootfs loader prefix (glibc) с fallback на direct exec:
-        `{ld-linux-aarch64.so.1***REMOVED*** --library-path {libdir***REMOVED*** {bin***REMOVED*** --cwd {cwd***REMOVED***`
-    Возвращает shlex-safe строку (используется внутри `script -q ... -c '{cmd***REMOVED***'`).
+        `{ld-linux-aarch64.so.1} --library-path {libdir} {bin} --cwd {cwd}`
+    Возвращает shlex-safe строку (используется внутри `script -q ... -c '{cmd)'`).
     """
     if _is_inside_proot():
         loader_prefix = _rootfs_loader_prefix()
         if loader_prefix:
             print(
-                f"[FreebuffWrapper***REMOVED*** DETECTED inside-proot — rootfs loader: {loader_prefix***REMOVED***",
+                f"[FreebuffWrapper] DETECTED inside-proot — rootfs loader: {loader_prefix}",
                 file=sys.stderr,
             )
             # Termux LD_PRELOAD (libtermux-exec-ld-preload.so, bionic exec-shim)
             # ломает glibc-загрузчик: без снятия freebuff падает с
             # 'libc.so: cannot open shared object file' (exit 127) — проверено
             # в tmux (env -u LD_PRELOAD → TUI стартует, 'Connecting…').
-            return f"env -u LD_PRELOAD {loader_prefix***REMOVED*** {FREEBUFF_BINARY***REMOVED*** --cwd {work_dir***REMOVED***"
+            return f"env -u LD_PRELOAD {loader_prefix} {FREEBUFF_BINARY} --cwd {work_dir}"
         print(
-            f"[FreebuffWrapper***REMOVED*** DETECTED inside-proot — execing binary directly: {FREEBUFF_BINARY***REMOVED***",
+            f"[FreebuffWrapper] DETECTED inside-proot — execing binary directly: {FREEBUFF_BINARY}",
             file=sys.stderr,
         )
         # Тот же glibc-бинарь — LD_PRELOAD (Termux bionic exec-shim) ломает и direct exec.
-        return f"env -u LD_PRELOAD {FREEBUFF_BINARY***REMOVED*** --cwd {work_dir***REMOVED***"
-    return f"proot-distro login {PROOT_DISTRO***REMOVED*** -- {FREEBUFF_BINARY***REMOVED*** --cwd {work_dir***REMOVED***"
+        return f"env -u LD_PRELOAD {FREEBUFF_BINARY} --cwd {work_dir}"
+    return f"proot-distro login {PROOT_DISTRO} -- {FREEBUFF_BINARY} --cwd {work_dir}"
 
 
 _SESSION_DIR = Path(os.environ.get(
@@ -204,9 +204,9 @@ def save_pid_file(sid: str, pid: int, cwd: str) -> str:
     Returns: путь к PID-файлу.
     """
     _ensure_session_dir()
-    pid_file = _SESSION_DIR / f"pid_{sid***REMOVED***"
+    pid_file = _SESSION_DIR / f"pid_{sid}"
     pid_file.write_text(
-        f"{pid***REMOVED***\n{sid***REMOVED***\n{cwd***REMOVED***\n",
+        f"{pid}\n{sid}\n{cwd}\n",
         encoding="utf-8",
     )
     return str(pid_file)
@@ -214,38 +214,38 @@ def save_pid_file(sid: str, pid: int, cwd: str) -> str:
 
 def read_pid_file(sid: str) -> dict | None:
     """Читает PID-файл сессии."""
-    pid_file = _SESSION_DIR / f"pid_{sid***REMOVED***"
+    pid_file = _SESSION_DIR / f"pid_{sid}"
     if not pid_file.exists():
         return None
     lines = pid_file.read_text(encoding="utf-8").strip().split("\n")
     if len(lines) < 3:
         return None
     return {
-        "pid": int(lines[0***REMOVED***),
-        "sid": lines[1***REMOVED***,
-        "cwd": lines[2***REMOVED***,
-    ***REMOVED***
+        "pid": int(lines[0]),
+        "sid": lines[1],
+        "cwd": lines[2],
+    }
 
 
 def remove_pid_file(sid: str) -> None:
     """Удаляет PID-файл."""
-    pid_file = _SESSION_DIR / f"pid_{sid***REMOVED***"
+    pid_file = _SESSION_DIR / f"pid_{sid}"
     if pid_file.exists():
         pid_file.unlink()
 
 
-def list_active_pids() -> list[dict***REMOVED***:
+def list_active_pids() -> list[dict]:
     """Список всех активных PID-файлов."""
     _ensure_session_dir()
-    results = [***REMOVED***
+    results = []
     for f in sorted(_SESSION_DIR.glob("pid_*")):
         lines = f.read_text(encoding="utf-8").strip().split("\n")
         if len(lines) >= 3:
             results.append({
-                "pid": int(lines[0***REMOVED***),
-                "sid": lines[1***REMOVED***,
-                "cwd": lines[2***REMOVED***,
-            ***REMOVED***)
+                "pid": int(lines[0]),
+                "sid": lines[1],
+                "cwd": lines[2],
+            ])
     return results
 
 
@@ -283,16 +283,16 @@ def _make_agents_md(cwd: Path, prompt: str, session_id: str) -> Path:
         # Guard двойного назначения: (1) повторный launch не дублирует session-контент;
         # (2) crash-tolerance — если AGENTS.md остался session-файлом после упавшей сессии,
         # канон не встраивается (пустой), restore сделает monitor.sh на следующей сессии.
-        if "Freebuff Plugin Session" not in existing[:200***REMOVED***:
+        if "Freebuff Plugin Session" not in existing[:200]:
             canonical = existing
     content = f"""# Freebuff Plugin Session
 
-Session ID: {session_id***REMOVED***
-Created: {datetime.now(timezone.utc).isoformat()***REMOVED***
+Session ID: {session_id}
+Created: {datetime.now(timezone.utc).isoformat()}
 
 ## Task
 
-{prompt***REMOVED***
+{prompt}
 
 ## Instructions
 
@@ -306,7 +306,7 @@ Created: {datetime.now(timezone.utc).isoformat()***REMOVED***
 
 ## Канонические правила платформы (AGENTS.md)
 
-{canonical***REMOVED***
+{canonical}
 """
     agents_path.write_text(content, encoding="utf-8")
     return agents_path
@@ -381,11 +381,11 @@ def launch(
                "1".."5" = позиция в списке). Прокидывается в monitor.sh.
 
     Returns:
-        dict: {success, session_id, pid, status***REMOVED***
+        dict: {success, session_id, pid, status}
     """
     from freebuff_plugin_03.bridge import session_start
 
-    sid = session_id or uuid.uuid4().hex[:8***REMOVED***
+    sid = session_id or uuid.uuid4().hex[:8]
     work_dir = Path(cwd) if cwd else Path.cwd()
     work_dir.mkdir(parents=True, exist_ok=True)
 
@@ -394,32 +394,32 @@ def launch(
 
     # Фаза 1: Старт сессии
     try:
-        sid = session_start(topic=prompt[:80***REMOVED***)
+        sid = session_start(topic=prompt[:80])
     except Exception as e:
         return {"success": False, "session_id": "", "pid": None,
-                "status": f"session_start failed: {e***REMOVED***", "error": str(e)***REMOVED***
+                "status": f"session_start failed: {e}", "error": str(e)]
 
     # AGENTS.md для контекста: бэкап канона → session-файл (restore делает monitor.sh)
     _backup_agents_md(work_dir)
     _make_agents_md(work_dir, prompt, sid)
 
     # Выходной файл для захвата вывода
-    out_file = work_dir / f".freebuff_output_{sid***REMOVED***.log"
-    tmux_session = f"fb_{sid***REMOVED***"
+    out_file = work_dir / f".freebuff_output_{sid}.log"
+    tmux_session = f"fb_{sid}"
 
     # Команда Codebuff: внутри proot — direct exec, иначе proot-distro login (v5.73.0)
     proot_cmd = _build_buffer_cmd(work_dir)
-    tmux_cmd = f"script -q {out_file***REMOVED*** -c '{proot_cmd***REMOVED***'"
+    tmux_cmd = f"script -q {out_file} -c '{proot_cmd}'"
 
     # Создаём tmux сессию с Codebuff
     subprocess.run(
-        ["tmux", "new-session", "-d", "-s", tmux_session, tmux_cmd***REMOVED***,
+        ["tmux", "new-session", "-d", "-s", tmux_session, tmux_cmd],
         capture_output=True, timeout=10,
     )
 
     # PID tmux процесса
     pid_result = subprocess.run(
-        ["tmux", "list-panes", "-t", tmux_session, "-F", "#{pane_pid***REMOVED***"***REMOVED***,
+        ["tmux", "list-panes", "-t", tmux_session, "-F", "#{pane_pid]"],
         capture_output=True, text=True, timeout=10,
     )
     tmux_pid = int(pid_result.stdout.strip()) if pid_result.stdout.strip() else 0
@@ -427,12 +427,12 @@ def launch(
     # Сохраняем PID
     save_pid_file(sid, tmux_pid, str(work_dir))
     _ensure_session_dir()
-    (_SESSION_DIR / f"tmux_{sid***REMOVED***").write_text(tmux_session, encoding="utf-8")
+    (_SESSION_DIR / f"tmux_{sid}").write_text(tmux_session, encoding="utf-8")
 
     # Monitor.sh — ждёт приглашения Codebuff, отправляет промпт,
     monitor_sh = FREEBUFF_ROOT / "freebuff_plugin_03" / "monitor.sh"
     subprocess.Popen(
-        ["bash", str(monitor_sh), sid, prompt, str(timeout), str(work_dir), model***REMOVED***,
+        ["bash", str(monitor_sh), sid, prompt, str(timeout), str(work_dir), model],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
     )
 
@@ -440,7 +440,7 @@ def launch(
         "success": True, "session_id": sid, "pid": tmux_pid,
         "status": "launched", "cwd": str(work_dir),
         "message": "Codebuff запущен через tmux, промпт передан в monitor.sh.",
-    ***REMOVED***
+    }
 
 
 def launch_and_wait(
@@ -467,7 +467,7 @@ def launch_and_wait(
                "1".."5" = позиция в списке). Прокидывается в launch() → monitor.sh.
 
     Returns:
-        dict: {success, output, result, session_id, duration, error, returncode***REMOVED***
+        dict: {success, output, result, session_id, duration, error, returncode}
     """
     start = time.time()
     work_dir = Path(cwd) if cwd else Path.cwd()
@@ -496,7 +496,7 @@ def launch_and_wait(
             "duration": round(time.time() - start, 1),
             "error": launched.get("status", "launch failed"),
             "returncode": -1,
-        ***REMOVED***
+        }
 
     sid = launched.get("session_id", "")
     # Опрос нового результата (mtime > baseline)
@@ -504,7 +504,7 @@ def launch_and_wait(
     duration = round(time.time() - start, 1)
 
     raw_output = ""
-    out_file = work_dir / f".freebuff_output_{sid***REMOVED***.log"
+    out_file = work_dir / f".freebuff_output_{sid}.log"
     if out_file.exists():
         try:
             raw_output = out_file.read_text(encoding="utf-8", errors="replace")
@@ -534,7 +534,7 @@ def launch_and_wait(
             "instance is allowed. Задача должна быть отложена (deferral)."
         )
     elif result_text is None:
-        error = f"timeout after {timeout***REMOVED***s (phase-based)"
+        error = f"timeout after {timeout}s (phase-based)"
     else:
         error = None
 
@@ -547,7 +547,7 @@ def launch_and_wait(
         "error": error,
         "returncode": 0 if (result_text is not None and not blocked_single_instance) else -1,
         "blocked_single_instance": blocked_single_instance,
-    ***REMOVED***
+    }
 
 
 def _wait_for_tmux_input(tmux_session: str, timeout: int = 30) -> bool:
@@ -556,7 +556,7 @@ def _wait_for_tmux_input(tmux_session: str, timeout: int = 30) -> bool:
     while time.time() < deadline:
         try:
             r = subprocess.run(
-                ["tmux", "capture-pane", "-t", tmux_session, "-p"***REMOVED***,
+                ["tmux", "capture-pane", "-t", tmux_session, "-p"],
                 capture_output=True, text=True, timeout=5,
             )
             text = r.stdout
@@ -565,7 +565,7 @@ def _wait_for_tmux_input(tmux_session: str, timeout: int = 30) -> bool:
                 return True
             if "Start coding" in text or "RECOMMENDED" in text:
                 subprocess.run(
-                    ["tmux", "send-keys", "-t", tmux_session, "Enter"***REMOVED***,
+                    ["tmux", "send-keys", "-t", tmux_session, "Enter"],
                     capture_output=True, timeout=5,
                 )
         except Exception:
@@ -590,7 +590,7 @@ def synchronous_oneshot(
     """
     from freebuff_plugin_03.bridge import session_start, session_end
 
-    sid = session_id or uuid.uuid4().hex[:8***REMOVED***
+    sid = session_id or uuid.uuid4().hex[:8]
     start = time.time()
 
     work_dir: Path
@@ -611,15 +611,15 @@ def synchronous_oneshot(
         _run_oom_protection()
 
         # Старт сессии
-        sid = session_start(topic=prompt[:80***REMOVED***)
+        sid = session_start(topic=prompt[:80])
 
         # AGENTS.md
         _make_agents_md(work_dir, prompt, sid)
 
-        out_file = work_dir / f".freebuff_output_{sid***REMOVED***.log"
+        out_file = work_dir / f".freebuff_output_{sid}.log"
         # Команда Codebuff: внутри proot — direct exec, иначе proot-distro login (v5.73.0)
         proot_cmd = _build_buffer_cmd(work_dir)
-        cmd = ["script", "-q", str(out_file), "-c", proot_cmd***REMOVED***
+        cmd = ["script", "-q", str(out_file), "-c", proot_cmd]
 
         proc = subprocess.Popen(
             cmd,
@@ -647,7 +647,7 @@ def synchronous_oneshot(
         duration = time.time() - start
 
         # Завершаем сессию
-        session_end(sid, summary=f"freebuff {'OK' if result_text else 'TIMEOUT'***REMOVED***")
+        session_end(sid, summary=f"freebuff {'OK' if result_text else 'TIMEOUT'}")
 
         return {
             "success": result_text is not None,
@@ -657,25 +657,25 @@ def synchronous_oneshot(
             "duration": round(duration, 1),
             "error": None,
             "returncode": proc.returncode,
-        ***REMOVED***
+        }
 
     except Exception as e:
         duration = time.time() - start
         return {
             "success": False,
-            "output": f"Error: {e***REMOVED***",
+            "output": f"Error: {e}",
             "result": "",
             "session_id": sid,
             "duration": round(duration, 1),
             "error": str(e),
             "returncode": -1,
-        ***REMOVED***
+        }
     finally:
         if original_content is not None:
             original_agents.write_text(original_content, encoding="utf-8")
         elif original_agents.exists():
             original_agents.unlink()
-        out_file = work_dir / f".freebuff_output_{sid***REMOVED***.log"
+        out_file = work_dir / f".freebuff_output_{sid}.log"
         if out_file.exists():
             out_file.unlink()
         result_file = work_dir / ".freebuff_result"
@@ -718,9 +718,9 @@ def main():
             cwd=args.cwd,
             timeout=args.timeout,
         )
-        print(f"Session: {result.get('session_id', '?')***REMOVED***")
-        print(f"PID:     {result.get('pid', '?')***REMOVED***")
-        print(f"Status:  {result.get('status', '?')***REMOVED***")
+        print(f"Session: {result.get('session_id', '?')}")
+        print(f"PID:     {result.get('pid', '?')}")
+        print(f"Status:  {result.get('status', '?')}")
 
     elif args.command == "run":
         result = synchronous_oneshot(
@@ -728,24 +728,24 @@ def main():
             cwd=args.cwd,
             timeout=args.timeout,
         )
-        print(f"\n=== Результат (session={result['session_id'***REMOVED******REMOVED***) ===")
-        print(f"Success: {result['success'***REMOVED******REMOVED***")
-        print(f"Duration: {result['duration'***REMOVED******REMOVED***s")
+        print(f"\n=== Результат (session={result['session_id']}) ===")
+        print(f"Success: {result['success']}")
+        print(f"Duration: {result['duration']}s")
         if result.get("error"):
-            print(f"Error: {result['error'***REMOVED******REMOVED***")
+            print(f"Error: {result['error']}")
         if result.get("output"):
-            print(f"\nOutput ({len(result['output'***REMOVED***)***REMOVED*** chars):")
-            print(result["output"***REMOVED***[:1000***REMOVED***)
+            print(f"\nOutput ({len(result['output'])} chars):")
+            print(result["output"][:1000])
 
     elif args.command == "status":
         pids = list_active_pids()
         if not pids:
             print("Нет активных сессий")
         else:
-            print(f"Активных сессий: {len(pids)***REMOVED***")
+            print(f"Активных сессий: {len(pids)}")
             for p in pids:
-                alive = _is_pid_alive(p["pid"***REMOVED***)
-                print(f"  {p['sid'***REMOVED******REMOVED*** PID={p['pid'***REMOVED******REMOVED*** {'🟢' if alive else '⚫'***REMOVED*** {p['cwd'***REMOVED******REMOVED***")
+                alive = _is_pid_alive(p["pid"])
+                print(f"  {p['sid']} PID={p['pid']} {'🟢' if alive else '⚫'} {p['cwd']}")
 
     else:
         parser.print_help()

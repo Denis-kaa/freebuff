@@ -8,4 +8,4 @@ Live-запросы разрешены исключительно для ист�
 from .http_feed import HttpFeedAdapter
 from .trudvsem import TrudvsemAdapter
 
-__all__ = ["HttpFeedAdapter", "TrudvsemAdapter"***REMOVED***
+__all__ = ["HttpFeedAdapter", "TrudvsemAdapter"]

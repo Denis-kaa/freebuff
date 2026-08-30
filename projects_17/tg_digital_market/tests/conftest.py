@@ -9,7 +9,7 @@
 
 from __future__ import annotations
 
-***REMOVED***
+}
 
 import pytest
 
@@ -53,14 +53,14 @@ def services(db: Database):
         "orders": orders,
         "delivery": delivery,
         "notifications": notifications,
-    ***REMOVED***
+    }
 
 
 @pytest.fixture
 def make_seller(services):
     """Хелпер: создать продавца с заданным telegram id."""
     def _make(telegram_id: int, full_name: str = "Seller") -> int:
-        repo = services["repo"***REMOVED***
+        repo = services["repo"]
         repo.upsert_user(telegram_id, None, full_name)
         repo.set_role(telegram_id, UserRole.SELLER)
         return telegram_id
@@ -71,6 +71,6 @@ def make_seller(services):
 def make_buyer(services):
     """Хелпер: создать покупателя (role=user)."""
     def _make(telegram_id: int, full_name: str = "Buyer") -> int:
-        services["repo"***REMOVED***.upsert_user(telegram_id, None, full_name)
+        services["repo"].upsert_user(telegram_id, None, full_name)
         return telegram_id
     return _make

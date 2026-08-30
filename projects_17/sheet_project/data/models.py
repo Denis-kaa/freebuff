@@ -23,7 +23,7 @@ class DataValidationError(ValueError):
 
 def _require_nonempty(field_name: str, value: Any) -> None:
     if not isinstance(value, str) or not value.strip():
-        raise DataValidationError(f"{field_name***REMOVED***: пустое значение")
+        raise DataValidationError(f"{field_name}: пустое значение")
 
 
 @dataclass(frozen=True)
@@ -62,4 +62,4 @@ class Task(Record):
         _require_nonempty("Task.title", self.title)
 
 
-__all__ = ["DataValidationError", "Project", "Record", "Task"***REMOVED***
+__all__ = ["DataValidationError", "Project", "Record", "Task"]

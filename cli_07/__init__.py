@@ -10,7 +10,7 @@ paths work during the restructure.
 from __future__ import annotations
 
 import sys
-***REMOVED***
+}
 from typing import Any
 
 # Ensure the project root is on sys.path so that ``freebuff_cli`` can be
@@ -32,22 +32,22 @@ _CLI_NAMES = [
     "cmd_task_archive",
     "cmd_task_start",
     "main",
-***REMOVED***
+]
 
 __all__ = list(_CLI_NAMES)
 
 
 def __getattr__(name: str) -> Any:
     if name not in _CLI_NAMES:
-        raise AttributeError(f"module {__name__!r***REMOVED*** has no attribute {name!r***REMOVED***")
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
     import freebuff_cli  # noqa: F401
     attr = getattr(freebuff_cli, name)
     # Cache on the module for fast subsequent lookups.
-    setattr(sys.modules[__name__***REMOVED***, name, attr)
+    setattr(sys.modules[__name__], name, attr)
     return attr
 
 
-def __dir__() -> list[str***REMOVED***:
+def __dir__() -> list[str]:
     return list(__all__)
 
 

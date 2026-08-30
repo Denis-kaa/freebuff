@@ -18,7 +18,7 @@ Tests:
 from __future__ import annotations
 
 import sys
-***REMOVED***
+}
 
 import pytest
 
@@ -70,7 +70,7 @@ def _seed_project(db: Path, name: str, description: str = "", category: str = ""
     conn.execute(
         "INSERT OR REPLACE INTO projects (name, path, description, category, status, last_scanned) "
         "VALUES (?, ?, ?, ?, 'active', '2026-08-01T00:00:00+00:00')",
-        (name, f"/tmp/{name***REMOVED***", description, category),
+        (name, f"/tmp/{name}", description, category),
     )
     conn.commit()
     conn.close()
@@ -92,12 +92,12 @@ class TestInitDB:
 
     def test_table_schema(self, db: Path):
         conn = init_db(db)
-        cols = {r[1***REMOVED***: r[2***REMOVED*** for r in conn.execute("PRAGMA table_info(project_resources)").fetchall()***REMOVED***
+        cols = {r[1]: r[2] for r in conn.execute("PRAGMA table_info(project_resources)").fetchall()}
         conn.close()
-        assert set(cols) == {"project_id", "resource_id", "created_at"***REMOVED***
+        assert set(cols) == {"project_id", "resource_id", "created_at"}
         # PK по паре (project_id, resource_id)
-        assert cols["project_id"***REMOVED***.upper() == "TEXT"
-        assert cols["resource_id"***REMOVED***.upper() == "TEXT"
+        assert cols["project_id"].upper() == "TEXT"
+        assert cols["resource_id"].upper() == "TEXT"
 
     def test_idempotent_init(self, db: Path):
         init_db(db)
@@ -114,9 +114,9 @@ class TestLink:
         assert link("CRM", "Telegram", db) is True
         links = list_links(db)
         assert len(links) == 1
-        assert links[0***REMOVED***["project_id"***REMOVED*** == "CRM"
-        assert links[0***REMOVED***["resource_id"***REMOVED*** == "Telegram"
-        assert links[0***REMOVED***["created_at"***REMOVED***
+        assert links[0]["project_id"] == "CRM"
+        assert links[0]["resource_id"] == "Telegram"
+        assert links[0]["created_at"]
 
     def test_link_is_idempotent(self, db: Path):
         assert link("CRM", "Telegram", db) is True
@@ -131,7 +131,7 @@ class TestLink:
 
     def test_link_strips_whitespace(self, db: Path):
         link("  CRM  ", "  Telegram  ", db)
-        assert projects_for_resource("Telegram", db)[0***REMOVED***["project_id"***REMOVED*** == "CRM"
+        assert projects_for_resource("Telegram", db)[0]["project_id"] == "CRM"
 
     def test_link_requires_args(self, db: Path):
         with pytest.raises(ValueError):
@@ -144,7 +144,7 @@ class TestUnlink:
     def test_unlink_removes_relationship(self, db: Path):
         link("CRM", "Telegram", db)
         assert unlink("CRM", "Telegram", db) is True
-        assert list_links(db) == [***REMOVED***
+        assert list_links(db) == []
 
     def test_unlink_missing_returns_false(self, db: Path):
         assert unlink("CRM", "Telegram", db) is False
@@ -155,7 +155,7 @@ class TestUnlink:
         unlink("CRM", "Telegram", db)
         remaining = list_links(db)
         assert len(remaining) == 1
-        assert remaining[0***REMOVED***["resource_id"***REMOVED*** == "Git"
+        assert remaining[0]["resource_id"] == "Git"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -171,15 +171,15 @@ class TestProjectsForResource:
         link("CRM", "Git", db)
 
         projects = projects_for_resource("Telegram", db)
-        assert [p["project_id"***REMOVED*** for p in projects***REMOVED*** == ["CRM", "Контент-завод", "ТСЖ"***REMOVED***
+        assert [p["project_id"] for p in projects] == ["CRM", "Контент-завод", "ТСЖ"]
 
     def test_ignores_other_resources(self, db: Path):
         link("CRM", "Telegram", db)
         projects = projects_for_resource("Git", db)
-        assert projects == [***REMOVED***
+        assert projects == []
 
     def test_empty_resource(self, db: Path):
-        assert projects_for_resource("NoSuchResource", db) == [***REMOVED***
+        assert projects_for_resource("NoSuchResource", db) == []
 
     def test_joins_projects_description(self, db: Path):
         _seed_project(db, "CRM", description="клиенты")
@@ -188,16 +188,16 @@ class TestProjectsForResource:
         link("ТСЖ", "Telegram", db)
 
         projects = projects_for_resource("Telegram", db)
-        by_name = {p["project_id"***REMOVED***: p for p in projects***REMOVED***
-        assert by_name["CRM"***REMOVED***["description"***REMOVED*** == "клиенты"
-        assert by_name["ТСЖ"***REMOVED***["description"***REMOVED*** == "уведомления"
+        by_name = {p["project_id"]: p for p in projects}
+        assert by_name["CRM"]["description"] == "клиенты"
+        assert by_name["ТСЖ"]["description"] == "уведомления"
 
     def test_join_handles_missing_projects_table(self, db: Path):
         # Таблицы projects нет — LEFT JOIN должен отработать с пустыми деталями
         link("CRM", "Telegram", db)
         projects = projects_for_resource("Telegram", db)
-        assert projects[0***REMOVED***["project_id"***REMOVED*** == "CRM"
-        assert projects[0***REMOVED***["description"***REMOVED*** == ""
+        assert projects[0]["project_id"] == "CRM"
+        assert projects[0]["description"] == ""
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -212,11 +212,11 @@ class TestResourcesForProject:
         link("ТСЖ", "Telegram", db)
 
         resources = resources_for_project("CRM", db)
-        assert [r["resource_id"***REMOVED*** for r in resources***REMOVED*** == ["Git", "Telegram"***REMOVED***
-        assert all(r["created_at"***REMOVED*** for r in resources)
+        assert [r["resource_id"] for r in resources] == ["Git", "Telegram"]
+        assert all(r["created_at"] for r in resources)
 
     def test_empty_project(self, db: Path):
-        assert resources_for_project("Ghost", db) == [***REMOVED***
+        assert resources_for_project("Ghost", db) == []
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -228,7 +228,7 @@ class TestCLI:
     def test_main_link(self, db: Path, monkeypatch, capsys):
         from scripts_01.work_area_view import main
 
-        monkeypatch.setattr(sys, "argv", ["work_area_view.py", "link", "CRM", "Telegram"***REMOVED***)
+        monkeypatch.setattr(sys, "argv", ["work_area_view.py", "link", "CRM", "Telegram"])
         monkeypatch.setattr("scripts_01.work_area_view.DB_PATH", db)
         assert main() == 0
         out = capsys.readouterr().out
@@ -241,7 +241,7 @@ class TestCLI:
         link("CRM", "Telegram", db)
         link("ТСЖ", "Telegram", db)
 
-        monkeypatch.setattr(sys, "argv", ["work_area_view.py", "projects", "Telegram"***REMOVED***)
+        monkeypatch.setattr(sys, "argv", ["work_area_view.py", "projects", "Telegram"])
         monkeypatch.setattr("scripts_01.work_area_view.DB_PATH", db)
         assert main() == 0
         out = capsys.readouterr().out
@@ -252,7 +252,7 @@ class TestCLI:
     def test_main_projects_empty(self, db: Path, monkeypatch, capsys):
         from scripts_01.work_area_view import main
 
-        monkeypatch.setattr(sys, "argv", ["work_area_view.py", "projects", "Telegram"***REMOVED***)
+        monkeypatch.setattr(sys, "argv", ["work_area_view.py", "projects", "Telegram"])
         monkeypatch.setattr("scripts_01.work_area_view.DB_PATH", db)
         assert main() == 0
         out = capsys.readouterr().out
@@ -264,7 +264,7 @@ class TestCLI:
         link("CRM", "Telegram", db)
         link("CRM", "Git", db)
 
-        monkeypatch.setattr(sys, "argv", ["work_area_view.py", "resources", "CRM"***REMOVED***)
+        monkeypatch.setattr(sys, "argv", ["work_area_view.py", "resources", "CRM"])
         monkeypatch.setattr("scripts_01.work_area_view.DB_PATH", db)
         assert main() == 0
         out = capsys.readouterr().out
@@ -277,7 +277,7 @@ class TestCLI:
 
         link("CRM", "Telegram", db)
 
-        monkeypatch.setattr(sys, "argv", ["work_area_view.py", "list"***REMOVED***)
+        monkeypatch.setattr(sys, "argv", ["work_area_view.py", "list"])
         monkeypatch.setattr("scripts_01.work_area_view.DB_PATH", db)
         assert main() == 0
         out = capsys.readouterr().out
@@ -287,10 +287,10 @@ class TestCLI:
         from scripts_01.work_area_view import main
 
         link("CRM", "Telegram", db)
-        monkeypatch.setattr(sys, "argv", ["work_area_view.py", "unlink", "CRM", "Telegram"***REMOVED***)
+        monkeypatch.setattr(sys, "argv", ["work_area_view.py", "unlink", "CRM", "Telegram"])
         monkeypatch.setattr("scripts_01.work_area_view.DB_PATH", db)
         assert main() == 0
-        assert list_links(db) == [***REMOVED***
+        assert list_links(db) == []
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -325,7 +325,7 @@ class TestFreebuffCLIResource:
 
         monkeypatch.setattr("scripts_01.work_area_view.DB_PATH", db)
         freebuff_cli.cmd_resource("link", "CRM", "Telegram")
-        assert list_links(db)[0***REMOVED***["project_id"***REMOVED*** == "CRM"
+        assert list_links(db)[0]["project_id"] == "CRM"
 
     def test_freebuff_resource_missing_args(self, capsys):
         import freebuff_cli

@@ -88,7 +88,7 @@ class ArtifactStatus(str, Enum):
 class ValidationRule:
     """Правило data validation (список/диапазон/тип)."""
     kind: ValidationKind
-    values: list[str***REMOVED*** | None = None
+    values: list[str] | None = None
     min: float | None = None
     max: float | None = None
 
@@ -103,7 +103,7 @@ class Field:
     type: FieldType
     required: bool = False
     format: str | None = None
-    validation: list[ValidationRule***REMOVED*** | None = None
+    validation: list[ValidationRule] | None = None
 
     def __post_init__(self) -> None:
         _require_nonempty("Field.name", self.name)
@@ -114,7 +114,7 @@ class Field:
 class DataSource:
     """Привязка листа к коллекции данных (audit H2)."""
     source: str
-    field_map: dict[str, str***REMOVED***
+    field_map: dict[str, str]
 
     def __post_init__(self) -> None:
         _require_nonempty("DataSource.source", self.source)
@@ -135,7 +135,7 @@ class KPI:
 @dataclass(frozen=True)
 class Card:
     template: str
-    fields: list[str***REMOVED*** | None = None
+    fields: list[str] | None = None
 
     def __post_init__(self) -> None:
         _require_nonempty("Card.template", self.template)
@@ -144,7 +144,7 @@ class Card:
 @dataclass(frozen=True)
 class LookupTable:
     name: str
-    values: list[str***REMOVED***
+    values: list[str]
 
     def __post_init__(self) -> None:
         _require_nonempty("LookupTable.name", self.name)
@@ -153,8 +153,8 @@ class LookupTable:
 @dataclass(frozen=True)
 class DashboardBlock:
     title: str
-    kpis: list[KPI***REMOVED*** | None = None
-    cards: list[Card***REMOVED*** | None = None
+    kpis: list[KPI] | None = None
+    cards: list[Card] | None = None
 
     def __post_init__(self) -> None:
         _require_nonempty("DashboardBlock.title", self.title)
@@ -208,12 +208,12 @@ class Reference:
 @dataclass(frozen=True)
 class Sheet:
     name: str
-    columns: list[Field***REMOVED***
+    columns: list[Field]
     data_source: DataSource | None = None
-    formulas: list[Formula***REMOVED*** | None = None
-    blocks: list[DashboardBlock***REMOVED*** | None = None
-    lookup_tables: list[LookupTable***REMOVED*** | None = None
-    references: list[Reference***REMOVED*** | None = None
+    formulas: list[Formula] | None = None
+    blocks: list[DashboardBlock] | None = None
+    lookup_tables: list[LookupTable] | None = None
+    references: list[Reference] | None = None
 
     def __post_init__(self) -> None:
         _require_nonempty("Sheet.name", self.name)
@@ -224,7 +224,7 @@ class Workbook:
     name: str
     template_id: str
     template_version: str
-    sheets: list[Sheet***REMOVED***
+    sheets: list[Sheet]
 
     def __post_init__(self) -> None:
         _require_nonempty("Workbook.name", self.name)
@@ -246,19 +246,19 @@ class GenerationArtifact:
 
     def __post_init__(self) -> None:
         for attr in ("path", "generation_id", "template_id", "template_version"):
-            _require_nonempty(f"GenerationArtifact.{attr***REMOVED***", getattr(self, attr))
+            _require_nonempty(f"GenerationArtifact.{attr}", getattr(self, attr))
         _require_enum("GenerationArtifact.status", self.status, ArtifactStatus)
 
 
 def _require_nonempty(field_name: str, value: Any) -> None:
     if not isinstance(value, str) or not value.strip():
-        raise ConfigValidationError(f"{field_name***REMOVED***: пустое значение")
+        raise ConfigValidationError(f"{field_name}: пустое значение")
 
 
-def _require_enum(field_name: str, value: Any, enum_cls: type[Enum***REMOVED***) -> None:
+def _require_enum(field_name: str, value: Any, enum_cls: type[Enum]) -> None:
     if not isinstance(value, enum_cls):
         raise ConfigValidationError(
-            f"{field_name***REMOVED***: ожидается {enum_cls.__name__***REMOVED***, получено {type(value).__name__***REMOVED***"
+            f"{field_name}: ожидается {enum_cls.__name__}, получено {type(value).__name__}"
         )
 
 
@@ -282,50 +282,50 @@ def validate_workbook(workbook: Workbook) -> None:
     if not workbook.sheets:
         raise ConfigValidationError("Workbook.sheets: пустой (min_items: 1)")
 
-    sheet_by_name: dict[str, Sheet***REMOVED*** = {***REMOVED***
+    sheet_by_name: dict[str, Sheet] = {}
     for sheet in workbook.sheets:
         if sheet.name in sheet_by_name:
-            raise ConfigValidationError(f"Workbook.sheets: дубль имени листа '{sheet.name***REMOVED***'")
-        sheet_by_name[sheet.name***REMOVED*** = sheet
+            raise ConfigValidationError(f"Workbook.sheets: дубль имени листа '{sheet.name}'")
+        sheet_by_name[sheet.name] = sheet
 
     for sheet in workbook.sheets:
         _validate_sheet(sheet, sheet_by_name)
 
 
-def _validate_sheet(sheet: Sheet, sheet_by_name: dict[str, Sheet***REMOVED***) -> None:
+def _validate_sheet(sheet: Sheet, sheet_by_name: dict[str, Sheet]) -> None:
     if not sheet.columns:
-        raise ConfigValidationError(f"Sheet.{sheet.name***REMOVED***.columns: пустой (min_items: 1)")
-    col_names = [c.name for c in sheet.columns***REMOVED***
+        raise ConfigValidationError(f"Sheet.{sheet.name}.columns: пустой (min_items: 1)")
+    col_names = [c.name for c in sheet.columns]
     if len(col_names) != len(set(col_names)):
-        raise ConfigValidationError(f"Sheet.{sheet.name***REMOVED***.columns: дублирующиеся имена колонок")
+        raise ConfigValidationError(f"Sheet.{sheet.name}.columns: дублирующиеся имена колонок")
 
     if sheet.data_source is not None:
         for col in sheet.data_source.field_map:
             if col not in col_names:
                 raise ConfigValidationError(
-                    f"Sheet.{sheet.name***REMOVED***.data_source.field_map: колонка '{col***REMOVED***' отсутствует в columns"
+                    f"Sheet.{sheet.name}.data_source.field_map: колонка '{col}' отсутствует в columns"
                 )
 
-    for formula in (sheet.formulas or [***REMOVED***):
+    for formula in (sheet.formulas or []):
         if formula.anchor.column not in col_names:
             raise ConfigValidationError(
-                f"Sheet.{sheet.name***REMOVED***.formulas: anchor.column '{formula.anchor.column***REMOVED***' отсутствует в columns"
+                f"Sheet.{sheet.name}.formulas: anchor.column '{formula.anchor.column}' отсутствует в columns"
             )
 
-    for ref in (sheet.references or [***REMOVED***):
+    for ref in (sheet.references or []):
         target = sheet_by_name.get(ref.target_sheet)
         if target is None:
             raise ConfigValidationError(
-                f"Sheet.{sheet.name***REMOVED***.references: битая ссылка на лист '{ref.target_sheet***REMOVED***'"
+                f"Sheet.{sheet.name}.references: битая ссылка на лист '{ref.target_sheet}'"
             )
         if ref.kind is ReferenceKind.CROSS_SHEET_REF:
             if ref.anchor is None:
                 raise ConfigValidationError(
-                    f"Sheet.{sheet.name***REMOVED***.references: cross_sheet_ref '{ref.target_sheet***REMOVED***' требует anchor"
+                    f"Sheet.{sheet.name}.references: cross_sheet_ref '{ref.target_sheet}' требует anchor"
                 )
-            if ref.anchor.column not in [c.name for c in target.columns***REMOVED***:
+            if ref.anchor.column not in [c.name for c in target.columns]:
                 raise ConfigValidationError(
-                    f"Sheet.{sheet.name***REMOVED***.references: anchor.column '{ref.anchor.column***REMOVED***' отсутствует в листе '{target.name***REMOVED***'"
+                    f"Sheet.{sheet.name}.references: anchor.column '{ref.anchor.column}' отсутствует в листе '{target.name}'"
                 )
 
 
@@ -338,11 +338,11 @@ def to_dict(obj: Any) -> Any:
     if isinstance(obj, Enum):
         return obj.value
     if dataclasses.is_dataclass(obj):
-        return {f.name: to_dict(getattr(obj, f.name)) for f in dataclasses.fields(obj)***REMOVED***
+        return {f.name: to_dict(getattr(obj, f.name)) for f in dataclasses.fields(obj)}
     if isinstance(obj, (list, tuple)):
-        return [to_dict(x) for x in obj***REMOVED***
+        return [to_dict(x) for x in obj]
     if isinstance(obj, dict):
-        return {key: to_dict(value) for key, value in obj.items()***REMOVED***
+        return {key: to_dict(value) for key, value in obj.items()}
     return obj
 
 
@@ -353,25 +353,25 @@ def from_dict(cls: type, data: Any) -> Any:
         args = typing.get_args(cls)
         if data is None and type(None) in args:
             return None
-        non_none = [a for a in args if a is not type(None)***REMOVED***
+        non_none = [a for a in args if a is not type(None)]
         if len(non_none) != 1:
-            raise ConfigValidationError(f"from_dict: неоднозначный Union {cls!r***REMOVED***")
-        return from_dict(non_none[0***REMOVED***, data)
+            raise ConfigValidationError(f"from_dict: неоднозначный Union {cls!r}")
+        return from_dict(non_none[0], data)
     if origin is list:
         (item_type,) = typing.get_args(cls)
-        return [from_dict(item_type, item) for item in data***REMOVED***
+        return [from_dict(item_type, item) for item in data]
     if origin is dict:
         key_type, value_type = typing.get_args(cls)
-        return {from_dict(key_type, k): from_dict(value_type, v) for k, v in data.items()***REMOVED***
+        return {from_dict(key_type, k): from_dict(value_type, v) for k, v in data.items()}
     if isinstance(cls, type) and issubclass(cls, Enum):
         return cls(data)
     if dataclasses.is_dataclass(cls):
         hints = typing.get_type_hints(cls)
         kwargs = {
-            f.name: from_dict(hints[f.name***REMOVED***, data[f.name***REMOVED***)
+            f.name: from_dict(hints[f.name], data[f.name])
             for f in dataclasses.fields(cls)
             if f.name in data
-        ***REMOVED***
+        }
         return cls(**kwargs)
     return data
 
@@ -402,4 +402,4 @@ __all__ = [
     "from_dict",
     "to_dict",
     "validate_workbook",
-***REMOVED***
+]

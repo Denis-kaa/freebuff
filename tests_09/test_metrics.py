@@ -17,7 +17,7 @@ from __future__ import annotations
 import sqlite3
 import sys
 from datetime import datetime, timezone, timedelta
-***REMOVED***
+}
 
 import pytest
 
@@ -37,7 +37,7 @@ from scripts_01.metrics import (
 # ═══════════════════════════════════════════════════════════════
 
 
-def _seed_context_db(path: Path, rows: list[tuple***REMOVED***) -> None:
+def _seed_context_db(path: Path, rows: list[tuple]) -> None:
     """Создаёт context.db с таблицей action_verifications.
 
     Row: (claimed_status, verified_status, created_at, verified_at)
@@ -64,7 +64,7 @@ def _seed_context_db(path: Path, rows: list[tuple***REMOVED***) -> None:
             )
 
 
-def _seed_verifier_db(path: Path, rows: list[tuple***REMOVED***) -> None:
+def _seed_verifier_db(path: Path, rows: list[tuple]) -> None:
     """Создаёт verifier.db с таблицей verification_results.
 
     Row: (passed, duration_ms)
@@ -88,7 +88,7 @@ def _seed_verifier_db(path: Path, rows: list[tuple***REMOVED***) -> None:
 
 
 @pytest.fixture
-def seeded(tmp_path) -> tuple[Path, Path***REMOVED***:
+def seeded(tmp_path) -> tuple[Path, Path]:
     """Создаёт context.db и verifier.db с детерминированными данными.
 
     5 задач action_verifications:
@@ -104,11 +104,11 @@ def seeded(tmp_path) -> tuple[Path, Path***REMOVED***:
         ("done", "verified_fail", (now - timedelta(hours=5)).isoformat(), (now - timedelta(hours=4, minutes=30)).isoformat()),
         ("done", "verified_fail", (now - timedelta(hours=7)).isoformat(), (now - timedelta(hours=6, minutes=30)).isoformat()),
         ("failed", "verified_ok", (now - timedelta(hours=9)).isoformat(), (now - timedelta(hours=8)).isoformat()),
-    ***REMOVED***
+    ]
     ctx_db = tmp_path / "data_13" / "context.db"
     vrf_db = tmp_path / "data_13" / "verifier.db"
     _seed_context_db(ctx_db, ctx_rows)
-    _seed_verifier_db(vrf_db, [(1, 50.0), (1, 80.0), (0, 200.0)***REMOVED***)
+    _seed_verifier_db(vrf_db, [(1, 50.0), (1, 80.0), (0, 200.0)])
     return ctx_db, vrf_db
 
 
@@ -150,10 +150,10 @@ class TestDataclasses:
         assert m.display_name == "Verified Completion Rate"
 
     def test_metrics_report_to_dict(self):
-        report = MetricsReport(metrics={"vcr": MetricResult(name="vcr", value=0.8)***REMOVED***, total_tasks=5)
+        report = MetricsReport(metrics={"vcr": MetricResult(name="vcr", value=0.8)}, total_tasks=5)
         d = report.to_dict()
-        assert d["total_tasks"***REMOVED*** == 5
-        assert d["metrics"***REMOVED***["vcr"***REMOVED***["value"***REMOVED*** == 0.8
+        assert d["total_tasks"] == 5
+        assert d["metrics"]["vcr"]["value"] == 0.8
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -212,7 +212,7 @@ class TestMetrics:
 class TestReport:
     def test_compute_report_has_all_metrics(self, engine: MetricsEngine):
         report = engine.compute_report(save=False)
-        assert set(report.metrics.keys()) == {"vcr", "srg", "cpvo", "rrr", "ttd"***REMOVED***
+        assert set(report.metrics.keys()) == {"vcr", "srg", "cpvo", "rrr", "ttd"}
         assert report.total_tasks == 5
 
     def test_compute_report_save_snapshot(self, engine: MetricsEngine):
@@ -221,8 +221,8 @@ class TestReport:
         # compute_report сохранил снимок внутри → тренд доступен.
         trend = engine.get_trend("vcr")
         assert len(trend) >= 1
-        assert "value" in trend[0***REMOVED***
-        assert "snapshot_time" in trend[0***REMOVED***
+        assert "value" in trend[0]
+        assert "snapshot_time" in trend[0]
 
     def test_save_snapshot_returns_id(self, engine: MetricsEngine):
         report = engine.compute_report(save=False)
@@ -236,19 +236,19 @@ class TestReport:
         assert len(trend) <= 2
 
     def test_get_trend_empty(self, engine: MetricsEngine):
-        assert engine.get_trend("vcr") == [***REMOVED***
+        assert engine.get_trend("vcr") == []
 
     def test_setup_databases(self, engine: MetricsEngine):
         dbs = engine.setup_databases()
-        assert dbs["context.db"***REMOVED*** is True
-        assert dbs["verifier.db"***REMOVED*** is True
-        assert dbs["metrics.db"***REMOVED*** is True
+        assert dbs["context.db"] is True
+        assert dbs["verifier.db"] is True
+        assert dbs["metrics.db"] is True
 
     def test_get_status(self, engine: MetricsEngine):
         st = engine.get_status()
-        assert st["status"***REMOVED*** == "ok"
-        assert st["databases"***REMOVED***["context.db"***REMOVED*** is True
-        assert st["eventbus_connected"***REMOVED*** is False
+        assert st["status"] == "ok"
+        assert st["databases"]["context.db"] is True
+        assert st["eventbus_connected"] is False
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -273,7 +273,7 @@ class TestDegradation:
 
     def test_no_verifier_db(self, tmp_path):
         ctx_db = tmp_path / "context.db"
-        _seed_context_db(ctx_db, [("done", "verified_ok", "2026-01-01T00:00:00+00:00", "2026-01-01T00:10:00+00:00")***REMOVED***)
+        _seed_context_db(ctx_db, [("done", "verified_ok", "2026-01-01T00:00:00+00:00", "2026-01-01T00:10:00+00:00")])
         engine = MetricsEngine(
             context_db=ctx_db,
             verifier_db=tmp_path / "missing" / "verifier.db",
@@ -291,11 +291,11 @@ class TestDegradation:
         )
         report = engine.compute_report(save=False)
         assert report.total_tasks == 0
-        assert report.metrics["vcr"***REMOVED***.value == 0.0
+        assert report.metrics["vcr"].value == 0.0
 
     def test_ttd_no_failures(self, tmp_path):
         ctx_db = tmp_path / "context.db"
-        _seed_context_db(ctx_db, [("done", "verified_ok", "2026-01-01T00:00:00+00:00", "2026-01-01T00:10:00+00:00")***REMOVED***)
+        _seed_context_db(ctx_db, [("done", "verified_ok", "2026-01-01T00:00:00+00:00", "2026-01-01T00:10:00+00:00")])
         engine = MetricsEngine(
             context_db=ctx_db,
             verifier_db=tmp_path / "v.db",
@@ -315,7 +315,7 @@ class TestCLI:
     def test_main_help(self, monkeypatch):
         from scripts_01.metrics import main
 
-        monkeypatch.setattr(sys, "argv", ["metrics.py", "--help"***REMOVED***)
+        monkeypatch.setattr(sys, "argv", ["metrics.py", "--help"])
         with pytest.raises(SystemExit) as exc:
             main()
         assert exc.value.code == 0

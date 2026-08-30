@@ -14,7 +14,7 @@ import os
 import sys
 import uuid
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Optional
 
 FREEBUFF_ROOT = Path(os.environ.get(
@@ -84,7 +84,7 @@ def create_event(event_type: str, source: str, data: dict):
 
 def _make_sid() -> str:
     """Короткий читаемый ID сессии (8 символов, буквы и цифры)."""
-    return uuid.uuid4().hex[:8***REMOVED***
+    return uuid.uuid4().hex[:8]
 
 
 def _find_stream_dir(sid: str) -> Path | None:
@@ -110,7 +110,7 @@ def _log_json(sid: str, role: str, data: dict) -> None:
         "role": role,
         "source": "freebuff_plugin",
         **data,
-    ***REMOVED***
+    }
     with open(jsonl_file, "a", encoding="utf-8") as f:
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
@@ -134,7 +134,7 @@ def session_start(topic: str = "freebuff session") -> str:
     with contextlib.redirect_stdout(io.StringIO()):
         _start_stream(topic=topic, session_id=sid)
 
-    _log_json(sid, "system", {"event": "session_start", "topic": topic***REMOVED***)
+    _log_json(sid, "system", {"event": "session_start", "topic": topic})
 
     return sid
 
@@ -156,27 +156,27 @@ def session_end(sid: str, summary: str = "Session completed") -> str | None:
     cm = ContextManager(str(FREEBUFF_ROOT))
 
     # Системное событие
-    _log_json(sid, "system", {"event": "session_end", "summary": summary***REMOVED***)
+    _log_json(sid, "system", {"event": "session_end", "summary": summary})
 
     # Ищем сессию в SQLite по точному совпадению session_id
     sessions = cm.list_sessions()
     target = None
     for s in sessions:
-        if s["session_id"***REMOVED*** == sid:
+        if s["session_id"] == sid:
             target = s
             break
 
     if target is None:
         # Пробуем по префиксу (если сохранился старый формат)
         for s in sessions:
-            if s["session_id"***REMOVED***.startswith(sid):
+            if s["session_id"].startswith(sid):
                 target = s
                 break
 
     if target is None:
         return None
 
-    full_id = target["session_id"***REMOVED***
+    full_id = target["session_id"]
 
     # Завершаем сессию и создаём конспект
     from scripts_01.auto_conspect import auto_conspect
@@ -186,11 +186,11 @@ def session_end(sid: str, summary: str = "Session completed") -> str | None:
         filepath = auto_conspect(full_id)
         return filepath if filepath else None
     except Exception as e:
-        print(f"⚠️ session_end error: {e***REMOVED***", file=sys.stderr)
+        print(f"⚠️ session_end error: {e}", file=sys.stderr)
         return None
 
 
-def session_list(status: str | None = None) -> list[dict***REMOVED***:
+def session_list(status: str | None = None) -> list[dict]:
     """
     Список сессий из ContextManager.
 
@@ -198,12 +198,12 @@ def session_list(status: str | None = None) -> list[dict***REMOVED***:
         status: фильтр по статусу ("active", "completed") или None (все).
 
     Returns:
-        list[dict***REMOVED***: список сессий с ключами session_id, topic, status, message_count.
+        list[dict]: список сессий с ключами session_id, topic, status, message_count.
     """
     cm = ContextManager(str(FREEBUFF_ROOT))
     sessions = cm.list_sessions()
     if status:
-        return [s for s in sessions if s.get("status") == status***REMOVED***
+        return [s for s in sessions if s.get("status") == status]
     return sessions
 
 
@@ -242,7 +242,7 @@ def main():
         sid = args.session_id.strip()
         cp = session_end(sid, args.summary)
         if cp:
-            print(f"✔ Конспект: {cp***REMOVED***")
+            print(f"✔ Конспект: {cp}")
         else:
             print("✔ Сессия завершена")
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
-***REMOVED***
+}
 from typing import Any
 
 import pytest
@@ -25,26 +25,26 @@ from scripts_01.freebuff_sync import (
 
 
 class FakeRunner:
-    def __init__(self, outputs: dict[tuple[str, ...***REMOVED***, CommandResult***REMOVED*** | None = None):
-        self.calls: list[tuple[str, ...***REMOVED******REMOVED*** = [***REMOVED***
-        self.outputs = outputs or {***REMOVED***
+    def __init__(self, outputs: dict[tuple[str, ...], CommandResult] | None = None):
+        self.calls: list[tuple[str, ...]] = []
+        self.outputs = outputs or {}
 
     def __call__(self, argv: Any, **kwargs: Any) -> CommandResult:
         key = tuple(str(item) for item in argv)
         self.calls.append(key)
         if key in self.outputs:
-            return self.outputs[key***REMOVED***
-        if key[:3***REMOVED*** == ("git", "-C", str(self.root)) if hasattr(self, "root") else False:
+            return self.outputs[key]
+        if key[:3] == ("git", "-C", str(self.root)) if hasattr(self, "root") else False:
             pass
         if "rev-parse" in key and "--show-toplevel" in key:
             return CommandResult(key, 0, str(self.root) + "\n", "")
         if "symbolic-ref" in key:
             return CommandResult(key, 0, "main\n", "")
-        if "rev-parse" in key and key[-1***REMOVED*** == "HEAD":
+        if "rev-parse" in key and key[-1] == "HEAD":
             return CommandResult(key, 0, "abc123\n", "")
         if "status" in key:
             return CommandResult(key, 0, "", "")
-        if key[:2***REMOVED*** == ("git", "-C") and key[-1***REMOVED*** == "ls-files":
+        if key[:2] == ("git", "-C") and key[-1] == "ls-files":
             return CommandResult(key, 0, "AGENTS.md\nBUFFY.md\ncore_02/app.py\n", "")
         return CommandResult(key, 0, "", "")
 
@@ -64,7 +64,7 @@ def workspace(tmp_path: Path) -> Path:
 
 def test_config_rejects_relative_remote_paths(tmp_path: Path) -> None:
     with pytest.raises(ValueError, match="absolute path"):
-        SyncConfig.from_mapping({"remote": {"workspace_root": "relative"***REMOVED******REMOVED***)
+        SyncConfig.from_mapping({"remote": {"workspace_root": "relative"}})
 
 
 def test_config_rejects_overlapping_remote_paths() -> None:
@@ -75,8 +75,8 @@ def test_config_rejects_overlapping_remote_paths() -> None:
                     "workspace_root": "/srv/freebuff",
                     "worktree": "/srv/freebuff",
                     "bare_repo": "/srv/freebuff/.sync.git",
-                ***REMOVED***
-            ***REMOVED***
+                }
+            }
         )
 
 
@@ -89,19 +89,19 @@ def test_classifier_hard_denies_secret_cache_archive_and_legacy(tmp_path: Path) 
         "notes.log": "log",
         "bundle.tar.gz": "archive",
         "core" + "/legacy.py": "legacy",
-        ".freebuff_result": "{***REMOVED***",
-    ***REMOVED***
+        ".freebuff_result": "{]",
+    }
     for name, content in files.items():
         path = root / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content, encoding="utf-8")
     classifier = FileClassifier(root, FilterConfig())
-    result = {item.path: item for item in classifier.scan()***REMOVED***
-    assert result[".env"***REMOVED***.category == "ignored"
-    assert result["notes.log"***REMOVED***.category == "ignored"
-    assert result["bundle.tar.gz"***REMOVED***.category == "ignored"
-    assert result["core/legacy.py"***REMOVED***.category == "ignored"
-    assert result[".freebuff_result"***REMOVED***.category == "ignored"
+    result = {item.path: item for item in classifier.scan()}
+    assert result[".env"].category == "ignored"
+    assert result["notes.log"].category == "ignored"
+    assert result["bundle.tar.gz"].category == "ignored"
+    assert result["core/legacy.py"].category == "ignored"
+    assert result[".freebuff_result"].category == "ignored"
 
 
 def test_classifier_runtime_is_opt_in(tmp_path: Path) -> None:
@@ -109,11 +109,11 @@ def test_classifier_runtime_is_opt_in(tmp_path: Path) -> None:
     root.mkdir()
     runtime = root / "data_13"
     runtime.mkdir()
-    (runtime / "forge_registry.yaml").write_text("projects: {***REMOVED***\n", encoding="utf-8")
+    (runtime / "forge_registry.yaml").write_text("projects: {)\n", encoding="utf-8")
     (runtime / "context.db").write_bytes(b"not sqlite")
-    result = {item.path: item for item in FileClassifier(root, FilterConfig()).scan()***REMOVED***
-    assert result["data_13/forge_registry.yaml"***REMOVED***.category == "unknown"
-    assert result["data_13/context.db"***REMOVED***.category == "ignored"
+    result = {item.path: item for item in FileClassifier(root, FilterConfig()).scan()}
+    assert result["data_13/forge_registry.yaml"].category == "unknown"
+    assert result["data_13/context.db"].category == "ignored"
 
 
 def test_classifier_explicit_runtime_allowlist(tmp_path: Path) -> None:
@@ -121,10 +121,10 @@ def test_classifier_explicit_runtime_allowlist(tmp_path: Path) -> None:
     root.mkdir()
     runtime = root / "data_13"
     runtime.mkdir()
-    (runtime / "forge_registry.yaml").write_text("projects: {***REMOVED***\n", encoding="utf-8")
+    (runtime / "forge_registry.yaml").write_text("projects: {)\n", encoding="utf-8")
     config = FilterConfig(runtime_data=True)
-    result = {item.path: item for item in FileClassifier(root, config).scan()***REMOVED***
-    assert result["data_13/forge_registry.yaml"***REMOVED***.category == "included"
+    result = {item.path: item for item in FileClassifier(root, config).scan()}
+    assert result["data_13/forge_registry.yaml"].category == "included"
 
 
 def test_parse_probe_rejects_duplicates_and_bad_protocol() -> None:
@@ -136,12 +136,12 @@ def test_parse_probe_rejects_duplicates_and_bad_protocol() -> None:
 
 def test_parse_probe_accepts_versioned_contract() -> None:
     result = parse_probe("protocol=1\nhome=/home/u\ngit=/usr/bin/git\n")
-    assert result["protocol"***REMOVED*** == "1"
-    assert result["home"***REMOVED*** == "/home/u"
+    assert result["protocol"] == "1"
+    assert result["home"] == "/home/u"
 
 
 def test_ssh_probe_uses_argv_and_fixed_probe_script() -> None:
-    calls: list[tuple[tuple[str, ...***REMOVED***, dict[str, Any***REMOVED******REMOVED******REMOVED*** = [***REMOVED***
+    calls: list[tuple[tuple[str, ...], dict[str, Any]]] = []
 
     def runner(argv: Any, **kwargs: Any) -> CommandResult:
         calls.append((tuple(argv), kwargs))
@@ -149,40 +149,40 @@ def test_ssh_probe_uses_argv_and_fixed_probe_script() -> None:
 
     from scripts_01.freebuff_sync import ssh_probe
 
-    assert ssh_probe("wimp", runner)["protocol"***REMOVED*** == "1"
-    argv, kwargs = calls[0***REMOVED***
-    assert argv[:5***REMOVED*** == ("ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10")
-    assert argv[-3:***REMOVED*** == ("sh", "-s", "--")
-    assert kwargs["input_text"***REMOVED*** == REMOTE_PROBE_SCRIPT
+    assert ssh_probe("wimp", runner)["protocol"] == "1"
+    argv, kwargs = calls[0]
+    assert argv[:5] == ("ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10")
+    assert argv[-3:] == ("sh", "-s", "--")
+    assert kwargs["input_text"] == REMOTE_PROBE_SCRIPT
 
 
 def test_dry_run_bootstrap_is_non_mutating(workspace: Path, tmp_path: Path) -> None:
     config = SyncConfig.from_mapping(
         {
-            "local": {"workspace_root": str(workspace)***REMOVED***,
+            "local": {"workspace_root": str(workspace)},
             "remote": {
                 "ssh_alias": "wimp",
                 "workspace_root": "/srv/freebuff",
                 "bare_repo": "/srv/.freebuff-sync.git",
                 "worktree": "/srv/freebuff",
-            ***REMOVED***,
-            "filters": {"unknown_policy": "exclude-and-report"***REMOVED***,
-            "logging": {"external_log_dir": str(tmp_path / "logs")***REMOVED***,
-        ***REMOVED***,
+            },
+            "filters": {"unknown_policy": "exclude-and-report"},
+            "logging": {"external_log_dir": str(tmp_path / "logs")},
+        },
         tmp_path / "sync.yaml",
     )
     runner = FakeRunner()
     runner.root = workspace
     sync = FreebuffSync(config, runner)
-    plan = sync.bootstrap(probe={"protocol": "1", "home": "/home/u", "git": "/usr/bin/git"***REMOVED***)
+    plan = sync.bootstrap(probe={"protocol": "1", "home": "/home/u", "git": "/usr/bin/git"})
     assert plan.dry_run is True
-    assert plan.paths["bare_repo"***REMOVED*** == "/srv/.freebuff-sync.git"
+    assert plan.paths["bare_repo"] == "/srv/.freebuff-sync.git"
     assert any("create/verify remote bare repository" in item for item in plan.actions)
-    assert not any(call[0***REMOVED*** == "ssh" and "init" in call for call in runner.calls)
+    assert not any(call[0] == "ssh" and "init" in call for call in runner.calls)
     reports = list((tmp_path / "logs" / "runs").glob("*.json"))
     assert len(reports) == 1
-    payload = json.loads(reports[0***REMOVED***.read_text(encoding="utf-8"))
-    assert payload["dry_run"***REMOVED*** is True
+    payload = json.loads(reports[0].read_text(encoding="utf-8"))
+    assert payload["dry_run"] is True
 
 
 def test_local_lock_is_exclusive(tmp_path: Path) -> None:
@@ -206,9 +206,9 @@ def test_sqlite_backup_is_integrity_checked(tmp_path: Path) -> None:
         assert db.execute("select value from items").fetchone() == ("ok",)
 
 
-def test_cli_missing_config_returns_config_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str***REMOVED***) -> None:
+def test_cli_missing_config_returns_config_error(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
     monkeypatch.chdir(tmp_path)
-    assert main(["bootstrap", "--dry-run"***REMOVED***) == EXIT_CONFIG
+    assert main(["bootstrap", "--dry-run"]) == EXIT_CONFIG
     assert "sync config not found" in capsys.readouterr().err
 
 

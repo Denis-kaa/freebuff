@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-***REMOVED***
+}
 from typing import Any
 
 
@@ -58,13 +58,13 @@ class SubmissionIdentity:
     student_code_hash: str
     created_at: str
 
-    def to_dict(self) -> dict[str, str***REMOVED***:
+    def to_dict(self) -> dict[str, str]:
         return {
             "submission_id": self.submission_id,
             "exercise_id": self.exercise_id,
             "student_code_hash": self.student_code_hash,
             "created_at": self.created_at,
-        ***REMOVED***
+        }
 
 
 @dataclass(frozen=True)
@@ -88,14 +88,14 @@ class Correctness:
         if self.tests_passed + self.tests_failed + self.tests_error > self.tests_total:
             raise ValueError("test result counts exceed tests_total")
 
-    def to_dict(self) -> dict[str, int | str***REMOVED***:
+    def to_dict(self) -> dict[str, int | str]:
         return {
             "status": self.status,
             "tests_total": self.tests_total,
             "tests_passed": self.tests_passed,
             "tests_failed": self.tests_failed,
             "tests_error": self.tests_error,
-        ***REMOVED***
+        }
 
 
 @dataclass(frozen=True)
@@ -105,15 +105,15 @@ class EvidenceCandidate:
     type: str
     competency_id: str | None
     strength: str
-    metadata: tuple[tuple[str, str***REMOVED***, ...***REMOVED*** = ()
+    metadata: tuple[tuple[str, str], ...] = ()
 
-    def to_dict(self) -> dict[str, Any***REMOVED***:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "type": self.type,
             "competency_id": self.competency_id,
             "strength": self.strength,
             "metadata": dict(self.metadata),
-        ***REMOVED***
+        }
 
 
 @dataclass(frozen=True)
@@ -124,9 +124,9 @@ class GradingResult:
     status: GradingStatus
     failure_kind: FailureKind
     correctness: Correctness
-    diagnostics: tuple[str, ...***REMOVED*** = ()
-    patterns: tuple[str, ...***REMOVED*** = ()
-    evidence_candidates: tuple[EvidenceCandidate, ...***REMOVED*** = ()
+    diagnostics: tuple[str, ...] = ()
+    patterns: tuple[str, ...] = ()
+    evidence_candidates: tuple[EvidenceCandidate, ...] = ()
 
     @property
     def submission_id(self) -> str:
@@ -136,7 +136,7 @@ class GradingResult:
     def exercise_id(self) -> str:
         return self.identity.exercise_id
 
-    def to_dict(self) -> dict[str, Any***REMOVED***:
+    def to_dict(self) -> dict[str, Any]:
         return {
             **self.identity.to_dict(),
             "status": self.status.value,
@@ -146,5 +146,5 @@ class GradingResult:
             "patterns": list(self.patterns),
             "evidence_candidates": [
                 candidate.to_dict() for candidate in self.evidence_candidates
-            ***REMOVED***,
-        ***REMOVED***
+            ],
+        }

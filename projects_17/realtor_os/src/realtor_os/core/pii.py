@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-***REMOVED***
+}
 
 from realtor_os.core.security import decrypt_pii, encrypt_pii
 
@@ -20,9 +20,9 @@ class PIIProcessor:
 
     def mask(self, text: str) -> str:
         """Замаскировать телефоны, email, паспортные серии и номера."""
-        masked = re.sub(r"\+?\d[\d\- ***REMOVED***{7,***REMOVED***\d", "***PHONE***", text)
-        masked = re.sub(r"[\w.\-+***REMOVED***+@[\w.\-***REMOVED***+", "***EMAIL***", masked)
-        masked = re.sub(r"\d{4***REMOVED***[\s-***REMOVED***?\d{6***REMOVED***", "***PASSPORT***", masked)
+        masked = re.sub(r"\+?\d[\d\- ){7,]\d", "***PHONE***", text)
+        masked = re.sub(r"[\w.\-+)+@[\w.\-]+", "***EMAIL***", masked)
+        masked = re.sub(r"\d{4)[\s-]?\d{6]", "***PASSPORT***", masked)
         return masked
 
     def encrypt(self, text: str) -> str:

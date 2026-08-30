@@ -9,7 +9,7 @@
 
 from __future__ import annotations
 
-***REMOVED***
+}
 
 import pytest
 
@@ -29,7 +29,7 @@ class MockRuntimeRegistry:
             class Status:
                 value = "connected"
             status = Status()
-            capabilities = ["coding"***REMOVED***
+            capabilities = ["coding"]
         return FakeRuntime()
 
     def is_connected(self, name: str) -> bool:
@@ -40,7 +40,7 @@ class MockCapabilityRegistry:
     """Minimal capability registry for policy tests."""
 
     def get_runtime_for_capability(self, capability: str, preferred_runtime: str | None = None):
-        return {"runtime": "freebuff", "confidence": 0.8, "connected": True***REMOVED***
+        return {"runtime": "freebuff", "confidence": 0.8, "connected": True}
 
     def score_runtime(self, runtime_name: str, capability: str) -> float:
         return 0.8
@@ -48,7 +48,7 @@ class MockCapabilityRegistry:
 
 def make_engine(tmp_path: Path) -> PolicyEngine:
     policy_file = tmp_path / "policies.json"
-    policy_file.write_text('{"version": "1.0", "policies": {***REMOVED******REMOVED***', encoding="utf-8")
+    policy_file.write_text('{"version": "1.0", "policies": {)]', encoding="utf-8")
     return PolicyEngine(
         MockRuntimeRegistry(),
         MockCapabilityRegistry(),
@@ -121,10 +121,10 @@ class TestApplyOverride:
         engine = make_engine(tmp_path)
         result = apply_override("use deepseek instead of claude for coding", engine)
         assert result is not None
-        assert result["applied"***REMOVED*** is True
-        assert result["capability"***REMOVED*** == "coding"
-        assert result["runtime"***REMOVED*** == "deepseek"
-        assert result["previous_runtime"***REMOVED*** is None
+        assert result["applied"] is True
+        assert result["capability"] == "coding"
+        assert result["runtime"] == "deepseek"
+        assert result["previous_runtime"] is None
         # Предпочтение сохранено и учитывается при resolve
         assert engine.get_policy("coding").preferred_runtime == "deepseek"
         assert engine.select_runtime("coding") == "deepseek"
@@ -134,14 +134,14 @@ class TestApplyOverride:
         engine.set_preference("coding", "claude-code")
         result = apply_override("switch coding to freebuff", engine)
         assert result is not None
-        assert result["previous_runtime"***REMOVED*** == "claude-code"
+        assert result["previous_runtime"] == "claude-code"
         assert engine.get_policy("coding").preferred_runtime == "freebuff"
 
     def test_unrecognized_returns_none(self, tmp_path: Path):
         engine = make_engine(tmp_path)
         assert apply_override("hello world", engine) is None
         # Ничего не изменилось
-        assert engine.list_policies() == {***REMOVED***
+        assert engine.list_policies() == {}
 
     def test_dry_run_does_not_write(self, tmp_path: Path):
         """dry_run=True: интент распознан, но set_preference НЕ вызывается."""
@@ -152,12 +152,12 @@ class TestApplyOverride:
             dry_run=True,
         )
         assert result is not None
-        assert result["applied"***REMOVED*** is False
-        assert result["dry_run"***REMOVED*** is True
-        assert result["capability"***REMOVED*** == "coding"
-        assert result["runtime"***REMOVED*** == "deepseek"
+        assert result["applied"] is False
+        assert result["dry_run"] is True
+        assert result["capability"] == "coding"
+        assert result["runtime"] == "deepseek"
         # Ничего не записано в policies.json
-        assert engine.list_policies() == {***REMOVED***
+        assert engine.list_policies() == {}
         assert engine.get_policy("coding") is None
 
     def test_dry_run_with_existing_preference_shows_previous(self, tmp_path: Path):
@@ -170,8 +170,8 @@ class TestApplyOverride:
             dry_run=True,
         )
         assert result is not None
-        assert result["applied"***REMOVED*** is False
-        assert result["previous_runtime"***REMOVED*** == "claude-code"
+        assert result["applied"] is False
+        assert result["previous_runtime"] == "claude-code"
         # Значение не изменилось
         assert engine.get_policy("coding").preferred_runtime == "claude-code"
 
@@ -184,9 +184,9 @@ class TestApplyOverride:
             capability="research",
         )
         assert result is not None
-        assert result["applied"***REMOVED*** is True
-        assert result["capability"***REMOVED*** == "research"
-        assert result["runtime"***REMOVED*** == "deepseek"
+        assert result["applied"] is True
+        assert result["capability"] == "research"
+        assert result["runtime"] == "deepseek"
         # Запись в research, а не coding
         assert engine.get_policy("coding") is None
         assert engine.get_policy("research").preferred_runtime == "deepseek"
@@ -201,10 +201,10 @@ class TestApplyOverride:
             dry_run=True,
         )
         assert result is not None
-        assert result["applied"***REMOVED*** is False
-        assert result["dry_run"***REMOVED*** is True
-        assert result["capability"***REMOVED*** == "research"
-        assert engine.list_policies() == {***REMOVED***
+        assert result["applied"] is False
+        assert result["dry_run"] is True
+        assert result["capability"] == "research"
+        assert engine.list_policies() == {}
 
     def test_dry_run_without_engine_is_safe(self):
         """dry_run=True с engine=None не падает (get_policy в try/except).
@@ -218,9 +218,9 @@ class TestApplyOverride:
             dry_run=True,
         )
         assert result is not None
-        assert result["applied"***REMOVED*** is False
-        assert result["dry_run"***REMOVED*** is True
-        assert result["previous_runtime"***REMOVED*** is None
+        assert result["applied"] is False
+        assert result["dry_run"] is True
+        assert result["previous_runtime"] is None
 
 
 class TestPolicyResolve:
@@ -229,18 +229,18 @@ class TestPolicyResolve:
     def test_resolve_auto_source(self, tmp_path: Path):
         engine = make_engine(tmp_path)
         resolved = engine.resolve("coding")
-        assert resolved["capability"***REMOVED*** == "coding"
-        assert resolved["runtime"***REMOVED*** == "freebuff"  # через cap registry fallback
-        assert resolved["source"***REMOVED*** == "auto"
-        assert resolved["preferred"***REMOVED*** is None
+        assert resolved["capability"] == "coding"
+        assert resolved["runtime"] == "freebuff"  # через cap registry fallback
+        assert resolved["source"] == "auto"
+        assert resolved["preferred"] is None
 
     def test_resolve_policy_source(self, tmp_path: Path):
         engine = make_engine(tmp_path)
         engine.set_preference("coding", "claude-code")
         resolved = engine.resolve("coding")
-        assert resolved["runtime"***REMOVED*** == "claude-code"
-        assert resolved["source"***REMOVED*** == "policy"
-        assert resolved["preferred"***REMOVED*** == "claude-code"
+        assert resolved["runtime"] == "claude-code"
+        assert resolved["source"] == "policy"
+        assert resolved["preferred"] == "claude-code"
 
 
 class TestPolicyOverrideCLI:
@@ -278,7 +278,7 @@ class TestPolicyOverrideCLI:
         freebuff_cli.cmd_policy("override", "непонятная фраза")
         out = capsys.readouterr().out
         assert "Не удалось распознать" in out
-        assert engine.list_policies() == {***REMOVED***
+        assert engine.list_policies() == {}
 
     def test_override_missing_message(self, tmp_path: Path, monkeypatch, capsys):
         import freebuff_cli

@@ -29,7 +29,7 @@ class WorkflowMiddleware(BaseMiddleware):
         self.services = services
 
     async def __call__(self, handler, event, data: dict):
-        data["services"***REMOVED*** = self.services
+        data["services"] = self.services
         return await handler(event, data)
 
 
@@ -50,7 +50,7 @@ def _recover_one_order(services: Services, order_id: int) -> None:
             services.notifications.notify_user(
                 user_id=user_id,
                 kind=NotificationKind.ORDER_DELIVERED,
-                text=f"✅ Заказ #{order_id***REMOVED*** доставлен (recovery).\n\nКод:\n<code>{code or '?'***REMOVED***</code>",
+                text=f"✅ Заказ #{order_id} доставлен (recovery).\n\nКод:\n<code>{code or '?'}</code>",
             )
         )
         logger.info("Recovery: заказ #%s доставлен.", order_id)
@@ -99,7 +99,7 @@ async def main_async() -> None:
     cfg = load_config(".env")
     logging.basicConfig(
         level=cfg.log_level,
-        format="%(asctime)s [%(levelname)s***REMOVED*** %(name)s: %(message)s",
+        format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
     logger.info("Запуск tg_digital_market (provider=%s)", cfg.payment_provider)
 

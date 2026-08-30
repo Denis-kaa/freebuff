@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import os
-***REMOVED***
+}
 from typing import Any
 
-***REMOVED***quests
+]quests
 
 from realtor_os.logger import setup_logger
 
@@ -24,12 +24,12 @@ class YandexDiskClient:
         self.token = token or os.environ.get("YANDEX_DISK_TOKEN", "")
         self.api_url = api_url
 
-    def _headers(self) -> dict[str, str***REMOVED***:
+    def _headers(self) -> dict[str, str]:
         if not self.token:
             raise YandexDiskError("YANDEX_DISK_TOKEN is not set")
-        return {"Authorization": f"OAuth {self.token***REMOVED***", "Accept": "application/json"***REMOVED***
+        return {"Authorization": f"OAuth {self.token}", "Accept": "application/json"}
 
-    def upload(self, local_path: Path, remote_path: str) -> dict[str, Any***REMOVED***:
+    def upload(self, local_path: Path, remote_path: str) -> dict[str, Any]:
         """Загрузить файл на Яндекс Диск.
 
         Args:
@@ -40,15 +40,15 @@ class YandexDiskClient:
             Ответ API.
         """
         if not local_path.exists():
-            raise YandexDiskError(f"File not found: {local_path***REMOVED***")
+            raise YandexDiskError(f"File not found: {local_path}")
 
-        upload_url = f"{self.api_url***REMOVED***/resources/upload"
-        params: dict[str, str***REMOVED*** = {"path": remote_path, "overwrite": "true"***REMOVED***
+        upload_url = f"{self.api_url}/resources/upload"
+        params: dict[str, str] = {"path": remote_path, "overwrite": "true"}
         try:
             resp = requests.get(upload_url, headers=self._headers(), params=params, timeout=30)
             resp.raise_for_status()
         except requests.RequestException as exc:
-            raise YandexDiskError(f"Failed to get upload URL: {exc***REMOVED***") from exc
+            raise YandexDiskError(f"Failed to get upload URL: {exc}") from exc
 
         href = resp.json().get("href")
         if not href:
@@ -59,6 +59,6 @@ class YandexDiskClient:
                 put_resp = requests.put(href, data=f, timeout=60)
                 put_resp.raise_for_status()
         except requests.RequestException as exc:
-            raise YandexDiskError(f"Failed to upload file: {exc***REMOVED***") from exc
+            raise YandexDiskError(f"Failed to upload file: {exc}") from exc
 
-        return {"status": "ok", "remote_path": remote_path***REMOVED***
+        return {"status": "ok", "remote_path": remote_path}

@@ -32,7 +32,7 @@ Bridge Layer — универсальный мост между MCP (Model Conte
     bridge.start()
 
     # Подключить внешний MCP сервер (путь передаётся как параметр)
-    bridge.connect_mcp_stdio("python", ["./mcp_server.py"***REMOVED***, name="local-mcp")
+    bridge.connect_mcp_stdio("python", ["./mcp_server.py"], name="local-mcp")
 
     # Теперь можно отправлять ACP задачи, которые будут выполнены на MCP сервере
     # И наоборот — MCP инструменты доступны как ACP возможности
@@ -66,12 +66,12 @@ class BridgeMCPServer:
     name: str
     client: MCPClientBase
     type: str = "stdio"  # stdio или http
-    tools: List[MCPToolInfo***REMOVED*** = field(default_factory=list)
-    resources: List[Any***REMOVED*** = field(default_factory=list)
+    tools: List[MCPToolInfo] = field(default_factory=list)
+    resources: List[Any] = field(default_factory=list)
     connected_at: float = 0.0
     last_ping: float = 0.0
-    error: Optional[str***REMOVED*** = None
-    connection_params: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    error: Optional[str] = None
+    connection_params: Dict[str, Any] = field(default_factory=dict)
 
 
 class BridgeLayer:
@@ -109,11 +109,11 @@ class BridgeLayer:
         )
 
         # MCP connections
-        self._mcp_servers: Dict[str, BridgeMCPServer***REMOVED*** = {***REMOVED***
+        self._mcp_servers: Dict[str, BridgeMCPServer] = {}
         self._mcp_lock = threading.Lock()
 
         # Sync thread
-        self._sync_thread: Optional[threading.Thread***REMOVED*** = None
+        self._sync_thread: Optional[threading.Thread] = None
         self._running = False
 
         # Register local capabilities
@@ -154,7 +154,7 @@ class BridgeLayer:
         @self._acp.on_tool("bridge.connect_stdio")
         def _handle_connect_stdio(args: dict) -> dict:
             command = args.get("command", "")
-            tool_args = args.get("args", [***REMOVED***)
+            tool_args = args.get("args", [])
             name = args.get("name", command)
             return self.connect_mcp_stdio(command, tool_args, name=name)
 
@@ -168,20 +168,20 @@ class BridgeLayer:
         def _handle_disconnect(args: dict) -> dict:
             name = args.get("name", "")
             success = self.disconnect_mcp(name)
-            return {"success": success***REMOVED***
+            return {"success": success}
 
         @self._acp.on_tool("bridge.rpc")
         def _handle_rpc(args: dict) -> dict:
             server_name = args.get("server", "")
             method = args.get("method", "")
-            params = args.get("params", {***REMOVED***)
+            params = args.get("params", {})
             return self._rpc_to_server(server_name, method, params)
 
         @self._acp.on_tool("bridge.forward")
         def _handle_forward(args: dict) -> dict:
             target = args.get("target", "")
             tool = args.get("tool", "")
-            arguments = args.get("arguments", {***REMOVED***)
+            arguments = args.get("arguments", {})
             return self._forward_to_mcp(target, tool, arguments)
 
     # ── Lifecycle ────────────────────────────────────────────
@@ -199,11 +199,11 @@ class BridgeLayer:
         self._sync_thread = threading.Thread(
             target=self._sync_loop,
             daemon=True,
-            name=f"bridge-sync-{self._agent_name***REMOVED***",
+            name=f"bridge-sync-{self._agent_name}",
         )
         self._sync_thread.start()
 
-        print(f"🔗 Bridge Layer '{self._agent_name***REMOVED***' started")
+        print(f"🔗 Bridge Layer '{self._agent_name}' started")
 
     def stop(self) -> None:
         """Останавливает Bridge Layer."""
@@ -219,37 +219,37 @@ class BridgeLayer:
         # Останавливаем ACP
         self._acp.stop()
 
-        print(f"🔗 Bridge Layer '{self._agent_name***REMOVED***' stopped")
+        print(f"🔗 Bridge Layer '{self._agent_name}' stopped")
 
     # ── MCP Connection Management ────────────────────────────
 
     def connect_mcp_stdio(
         self,
         command: str,
-        args: List[str***REMOVED*** = None,
-        cwd: Optional[str***REMOVED*** = None,
-        name: Optional[str***REMOVED*** = None,
-    ) -> Dict[str, Any***REMOVED***:
+        args: List[str] = None,
+        cwd: Optional[str] = None,
+        name: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """Подключает MCP сервер через stdio транспорт.
 
         Args:
             command: команда для запуска (например, "python")
-            args: аргументы (например, ["scripts_01/mcp_server.py"***REMOVED***)
+            args: аргументы (например, ["scripts_01/mcp_server.py"])
             cwd: рабочая директория
             name: имя для сервера (по умолчанию command + args)
 
         Returns:
             dict с результатом подключения
         """
-        server_name = name or (f"{command***REMOVED*** {' '.join(args)***REMOVED***" if args else command)
+        server_name = name or (f"{command} {' '.join(args)}" if args else command)
 
         # Проверяем, не подключён ли уже
         if server_name in self._mcp_servers:
-            return {"success": True, "message": f"Already connected: {server_name***REMOVED***"***REMOVED***
+            return {"success": True, "message": f"Already connected: {server_name}"}
 
         client = StdioMCPClient(
             command=command,
-            args=args or [***REMOVED***,
+            args=args or [],
             cwd=cwd,
             name=server_name,
         )
@@ -257,7 +257,7 @@ class BridgeLayer:
         try:
             ok = client.connect()
             if not ok:
-                return {"success": False, "error": f"Failed to connect: {server_name***REMOVED***"***REMOVED***
+                return {"success": False, "error": f"Failed to connect: {server_name}"}
 
             # Получаем список инструментов
             tools = client.list_tools()
@@ -273,36 +273,36 @@ class BridgeLayer:
                 last_ping=time.time(),
                 connection_params={
                     "command": command,
-                    "args": args or [***REMOVED***,
+                    "args": args or [],
                     "cwd": cwd,
-                ***REMOVED***,
+                },
             )
 
             with self._mcp_lock:
-                self._mcp_servers[server_name***REMOVED*** = entry
+                self._mcp_servers[server_name] = entry
 
             # Регистрируем инструменты MCP сервера как ACP возможности
             for tool in tools:
-                desc = f"[MCP:{server_name***REMOVED******REMOVED*** {tool.description***REMOVED***"
-                self._acp.register_capability(f"mcp.{server_name***REMOVED***.{tool.name***REMOVED***", desc)
+                desc = f"[MCP:{server_name}] {tool.description}"
+                self._acp.register_capability(f"mcp.{server_name}.{tool.name}", desc)
 
             return {
                 "success": True,
                 "server": server_name,
                 "tools": len(tools),
                 "resources": len(resources),
-                "tool_names": [t.name for t in tools***REMOVED***,
-            ***REMOVED***
+                "tool_names": [t.name for t in tools],
+            }
 
         except Exception as e:
             client.disconnect()
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
     def connect_mcp_http(
         self,
         endpoint: str,
-        name: Optional[str***REMOVED*** = None,
-    ) -> Dict[str, Any***REMOVED***:
+        name: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """Подключает MCP сервер через HTTP транспорт.
 
         Args:
@@ -312,17 +312,17 @@ class BridgeLayer:
         Returns:
             dict с результатом подключения
         """
-        server_name = name or f"http-mcp-{endpoint***REMOVED***"
+        server_name = name or f"http-mcp-{endpoint}"
 
         if server_name in self._mcp_servers:
-            return {"success": True, "message": f"Already connected: {server_name***REMOVED***"***REMOVED***
+            return {"success": True, "message": f"Already connected: {server_name}"}
 
         client = HTTPMCPClient(endpoint=endpoint, name=server_name)
 
         try:
             ok = client.connect()
             if not ok:
-                return {"success": False, "error": f"Failed to connect: {endpoint***REMOVED***"***REMOVED***
+                return {"success": False, "error": f"Failed to connect: {endpoint}"}
 
             tools = client.list_tools()
             resources = client.list_resources()
@@ -337,27 +337,27 @@ class BridgeLayer:
                 last_ping=time.time(),
                 connection_params={
                     "endpoint": endpoint,
-                ***REMOVED***,
+                },
             )
 
             with self._mcp_lock:
-                self._mcp_servers[server_name***REMOVED*** = entry
+                self._mcp_servers[server_name] = entry
 
             for tool in tools:
-                desc = f"[MCP:{server_name***REMOVED******REMOVED*** {tool.description***REMOVED***"
-                self._acp.register_capability(f"mcp.{server_name***REMOVED***.{tool.name***REMOVED***", desc)
+                desc = f"[MCP:{server_name}] {tool.description}"
+                self._acp.register_capability(f"mcp.{server_name}.{tool.name}", desc)
 
             return {
                 "success": True,
                 "server": server_name,
                 "tools": len(tools),
                 "resources": len(resources),
-                "tool_names": [t.name for t in tools***REMOVED***,
-            ***REMOVED***
+                "tool_names": [t.name for t in tools],
+            }
 
         except Exception as e:
             client.disconnect()
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
     def disconnect_mcp(self, name: str) -> bool:
         """Отключает MCP сервер.
@@ -374,7 +374,7 @@ class BridgeLayer:
                 return False
 
             # Удаляем ACP возможности этого сервера
-            prefix = f"mcp.{name***REMOVED***."
+            prefix = f"mcp.{name}."
             for tool_name in list(self._acp._capabilities.keys()):
                 if tool_name.startswith(prefix):
                     self._acp.remove_capability(tool_name)
@@ -382,7 +382,7 @@ class BridgeLayer:
             entry.client.disconnect()
             return True
 
-    def list_mcp_servers(self) -> List[Dict[str, Any***REMOVED******REMOVED***:
+    def list_mcp_servers(self) -> List[Dict[str, Any]]:
         """Список подключённых MCP серверов."""
         with self._mcp_lock:
             servers = [
@@ -390,12 +390,12 @@ class BridgeLayer:
                     "name": s.name,
                     "type": s.type,
                     "tools": len(s.tools),
-                    "tool_names": [t.name for t in s.tools***REMOVED***,
+                    "tool_names": [t.name for t in s.tools],
                     "connected": s.connected_at,
                     "error": s.error,
-                ***REMOVED***
+                }
                 for s in self._mcp_servers.values()
-            ***REMOVED***
+            ]
         return servers
 
     def _list_servers_json(self) -> dict:
@@ -403,7 +403,7 @@ class BridgeLayer:
         return {
             "servers": self.list_mcp_servers(),
             "total": len(self._mcp_servers),
-        ***REMOVED***
+        }
 
     # ── MCP ↔ ACP Translation ───────────────────────────────
 
@@ -411,8 +411,8 @@ class BridgeLayer:
         self,
         server_name: str,
         tool_name: str,
-        arguments: Dict[str, Any***REMOVED***,
-    ) -> Dict[str, Any***REMOVED***:
+        arguments: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """Перенаправляет вызов на MCP сервер.
 
         Args:
@@ -427,7 +427,7 @@ class BridgeLayer:
             server = self._mcp_servers.get(server_name)
 
         if server is None:
-            return {"success": False, "error": f"MCP server not found: {server_name***REMOVED***"***REMOVED***
+            return {"success": False, "error": f"MCP server not found: {server_name}"}
 
         result = server.client.call_tool(tool_name, arguments)
 
@@ -436,7 +436,7 @@ class BridgeLayer:
         for c in result.content:
             if c.get("type") == "text":
                 try:
-                    content_data = json.loads(c.get("text", "{***REMOVED***"))
+                    content_data = json.loads(c.get("text", "{)"))
                 except (json.JSONDecodeError, TypeError):
                     content_data = c.get("text")
 
@@ -445,51 +445,51 @@ class BridgeLayer:
             "data": content_data or result.data,
             "error": result.error,
             "content": result.content,
-        ***REMOVED***
+        }
 
     def _rpc_to_server(
         self,
         server_name: str,
         method: str,
-        params: Dict[str, Any***REMOVED***,
-    ) -> Dict[str, Any***REMOVED***:
+        params: Dict[str, Any],
+    ) -> Dict[str, Any]:
         """Выполняет произвольный JSON-RPC запрос к MCP серверу."""
         with self._mcp_lock:
             server = self._mcp_servers.get(server_name)
 
         if server is None:
-            return {"success": False, "error": f"MCP server not found: {server_name***REMOVED***"***REMOVED***
+            return {"success": False, "error": f"MCP server not found: {server_name}"}
 
         try:
             # Пробуем через стандартные методы
             if method == "tools/list":
                 tools = server.client.list_tools()
-                return {"success": True, "data": [{"name": t.name, "description": t.description***REMOVED*** for t in tools***REMOVED******REMOVED***
+                return {"success": True, "data": [{"name": t.name, "description": t.description} for t in tools]}
             elif method == "resources/list":
                 resources = server.client.list_resources()
-                return {"success": True, "data": [{"uri": r.uri, "name": r.name***REMOVED*** for r in resources***REMOVED******REMOVED***
+                return {"success": True, "data": [{"uri": r.uri, "name": r.name} for r in resources]}
             elif method == "tools/call":
-                return self._forward_to_mcp(server_name, params.get("name", ""), params.get("arguments", {***REMOVED***))
+                return self._forward_to_mcp(server_name, params.get("name", ""), params.get("arguments", {}))
             elif method == "ping":
                 ok = server.client.ping()
-                return {"success": ok, "data": {"alive": ok***REMOVED******REMOVED***
+                return {"success": ok, "data": {"alive": ok}}
             else:
-                return {"success": False, "error": f"Unknown method: {method***REMOVED***"***REMOVED***
+                return {"success": False, "error": f"Unknown method: {method}"}
         except Exception as e:
-            return {"success": False, "error": str(e)***REMOVED***
+            return {"success": False, "error": str(e)}
 
-    def _handle_acp_task_on_mcp(self, task: ACPTask) -> Optional[ACPResult***REMOVED***:
+    def _handle_acp_task_on_mcp(self, task: ACPTask) -> Optional[ACPResult]:
         """Обрабатывает ACP задачу, перенаправляя её на MCP сервер.
 
         Вызывается из ACP handler, когда задача адресована MCP серверу.
         """
-        # Парсим имя сервера из tool: mcp.{server***REMOVED***.{tool***REMOVED***
+        # Парсим имя сервера из tool: mcp.{server}.{tool}
         tool_parts = task.tool.split(".")
-        if len(tool_parts) < 3 or tool_parts[0***REMOVED*** != "mcp":
+        if len(tool_parts) < 3 or tool_parts[0] != "mcp":
             return None  # Не MCP задача
 
-        server_name = tool_parts[1***REMOVED***
-        mcp_tool = ".".join(tool_parts[2:***REMOVED***)
+        server_name = tool_parts[1]
+        mcp_tool = ".".join(tool_parts[2:])
 
         import time
         t0 = time.time()
@@ -541,17 +541,17 @@ class BridgeLayer:
                     except Exception as e:
                         with self._mcp_lock:
                             if server_name in self._mcp_servers:
-                                self._mcp_servers[server_name***REMOVED***.error = str(e)
+                                self._mcp_servers[server_name].error = str(e)
 
                 # Prune offline ACP агентов
                 pruned = self._registry.prune_offline(max_age_seconds=300.0)
                 if pruned:
-                    print(f"🔗 Bridge: pruned {pruned***REMOVED*** offline agents")
+                    print(f"🔗 Bridge: pruned {pruned} offline agents")
 
             except Exception as e:
                 import traceback
                 traceback.print_exc()
-                print(f"⚠️ Bridge sync error: {e***REMOVED***", file=sys.__stdout__)
+                print(f"⚠️ Bridge sync error: {e}", file=sys.__stdout__)
 
     def _reconnect_mcp(self, server_name: str) -> bool:
         """Переподключает MCP сервер используя сохранённые connection_params."""
@@ -568,7 +568,7 @@ class BridgeLayer:
                 if server.type == "stdio":
                     new_client = StdioMCPClient(
                         command=params.get("command", ""),
-                        args=params.get("args", [***REMOVED***),
+                        args=params.get("args", []),
                         cwd=params.get("cwd"),
                         name=server_name,
                     )
@@ -600,7 +600,7 @@ class BridgeLayer:
 
                 return True
             except Exception as e:
-                server.error = f"reconnect error: {e***REMOVED***"
+                server.error = f"reconnect error: {e}"
                 return False
 
     # ── ACP Integration ──────────────────────────────────────
@@ -615,7 +615,7 @@ class BridgeLayer:
         decorator = self._acp.on_tool(tool_name)
         decorator(handler)
 
-    def send_acp_broadcast(self, message: str, data: Dict[str, Any***REMOVED*** = None) -> None:
+    def send_acp_broadcast(self, message: str, data: Dict[str, Any] = None) -> None:
         """Отправляет ACP broadcast."""
         self._acp.send_broadcast(message, data)
 
@@ -623,9 +623,9 @@ class BridgeLayer:
         self,
         target: str,
         tool: str,
-        arguments: Dict[str, Any***REMOVED***,
+        arguments: Dict[str, Any],
         timeout: float = 60.0,
-    ) -> Optional[ACPResult***REMOVED***:
+    ) -> Optional[ACPResult]:
         """Отправляет ACP задачу агенту.
 
         Если агент — MCP сервер, задача автоматически перенаправляется.

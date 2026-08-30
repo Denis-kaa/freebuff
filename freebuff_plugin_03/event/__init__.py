@@ -25,23 +25,23 @@ class EventEntry:
     session_id: str = ""
     project: str = ""
     user_id: str = ""
-    data: Dict[str, Any***REMOVED*** = field(default_factory=dict)
-    metadata: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    data: Dict[str, Any] = field(default_factory=dict)
+    metadata: Dict[str, Any] = field(default_factory=dict)
     timestamp: str = ""
 
 
 @dataclass
 class EventQuery:
     """Запрос к Event Store."""
-    event_type: Optional[str***REMOVED*** = None        # точное совпадение или wildcard "task.*"
-    source: Optional[str***REMOVED*** = None            # "orchestrator", "memory_engine"
-    correlation_id: Optional[str***REMOVED*** = None
-    session_id: Optional[str***REMOVED*** = None
-    project: Optional[str***REMOVED*** = None
-    user_id: Optional[str***REMOVED*** = None
-    since: Optional[str***REMOVED*** = None             # ISO timestamp
-    until: Optional[str***REMOVED*** = None
-    data_search: Optional[str***REMOVED*** = None       # полнотекстовый поиск в data_json
+    event_type: Optional[str] = None        # точное совпадение или wildcard "task.*"
+    source: Optional[str] = None            # "orchestrator", "memory_engine"
+    correlation_id: Optional[str] = None
+    session_id: Optional[str] = None
+    project: Optional[str] = None
+    user_id: Optional[str] = None
+    since: Optional[str] = None             # ISO timestamp
+    until: Optional[str] = None
+    data_search: Optional[str] = None       # полнотекстовый поиск в data_json
     limit: int = 50
     offset: int = 0
     order: str = "desc"                     # asc / desc
@@ -59,7 +59,7 @@ class ReplayResult:
     delivered: int = 0
     errors: int = 0
     duration_ms: float = 0.0
-    errors_list: List[str***REMOVED*** = field(default_factory=list)
+    errors_list: List[str] = field(default_factory=list)
 
 
 @dataclass
@@ -84,7 +84,7 @@ class TimelineEntry:
     icon: str = ""
     title: str = ""
     description: str = ""
-    data: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    data: Dict[str, Any] = field(default_factory=dict)
     correlation_id: str = ""
     session_id: str = ""
 
@@ -92,7 +92,7 @@ class TimelineEntry:
 @dataclass
 class Timeline:
     """Временная шкала."""
-    entries: List[TimelineEntry***REMOVED***
+    entries: List[TimelineEntry]
     total: int = 0
     project: str = ""
     since: str = ""
@@ -114,7 +114,7 @@ class AuditDecision:
     model_selected: str = ""
     fallback_used: bool = False
     cost_estimate: float = 0.0
-    context: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    context: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -123,8 +123,8 @@ class AuditAction:
     actor: str = ""
     action: str = ""
     target: str = ""
-    before: Optional[str***REMOVED*** = None
-    after: Optional[str***REMOVED*** = None
+    before: Optional[str] = None
+    after: Optional[str] = None
     reason: str = ""
 
 
@@ -145,7 +145,7 @@ class AuditEntry:
     id: str = ""
     type: str = ""     # "decision", "action", "config_change"
     timestamp: str = ""
-    data: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    data: Dict[str, Any] = field(default_factory=dict)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -163,14 +163,14 @@ class PulseEntry:
     severity: str = "info"     # info, warning, error, success
     actionable: bool = False
     action_label: str = ""
-    action_data: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    action_data: Dict[str, Any] = field(default_factory=dict)
 
 
 # ═══════════════════════════════════════════════════════════════
 # Icons Mapping
 # ═══════════════════════════════════════════════════════════════
 
-EVENT_ICONS: Dict[str, str***REMOVED*** = {
+EVENT_ICONS: Dict[str, str] = {
     "system.startup": "🚀",
     "system.shutdown": "🛑",
     "system.error": "❌",
@@ -195,7 +195,7 @@ EVENT_ICONS: Dict[str, str***REMOVED*** = {
     "audit.action": "👤",
     "audit.config_change": "⚙️",
     "checkpoint.created": "📌",
-***REMOVED***
+}
 
 
 def get_event_icon(event_type: str) -> str:
@@ -210,7 +210,7 @@ def get_event_icon(event_type: str) -> str:
     # Wildcard: task.completed → ищем task.*
     parts = event_type.split(".")
     if len(parts) > 1:
-        wildcard = f"{parts[0***REMOVED******REMOVED***.*"
+        wildcard = f"{parts[0]}.*"
         return EVENT_ICONS.get(wildcard, "📌")
 
     return "📌"
@@ -230,4 +230,4 @@ __all__ = [
     "PulseEntry",
     "EVENT_ICONS",
     "get_event_icon",
-***REMOVED***
+]

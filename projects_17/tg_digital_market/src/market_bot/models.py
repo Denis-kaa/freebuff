@@ -61,7 +61,7 @@ class NotificationKind(str, Enum):
 class User:
     """Telegram-пользователь. `id` — это telegram_id."""
     id: int
-    username: Optional[str***REMOVED***
+    username: Optional[str]
     full_name: str
     role: UserRole
     created_at: datetime
@@ -87,7 +87,7 @@ class ProductKey:
     product_id: int
     code: str
     status: KeyStatus
-    order_id: Optional[int***REMOVED***
+    order_id: Optional[int]
 
 
 @dataclass(frozen=True)
@@ -97,12 +97,12 @@ class Order:
     user_id: int
     total_stars: int
     status: OrderStatus
-    payment_provider: Optional[str***REMOVED***
-    payment_external_id: Optional[str***REMOVED***
+    payment_provider: Optional[str]
+    payment_external_id: Optional[str]
     created_at: datetime
-    paid_at: Optional[datetime***REMOVED*** = None
-    delivered_at: Optional[datetime***REMOVED*** = None
-    cancelled_at: Optional[datetime***REMOVED*** = None
+    paid_at: Optional[datetime] = None
+    delivered_at: Optional[datetime] = None
+    cancelled_at: Optional[datetime] = None
 
 
 @dataclass(frozen=True)
@@ -121,12 +121,12 @@ class Payment:
     id: int
     order_id: int
     provider: str
-    external_id: Optional[str***REMOVED***
+    external_id: Optional[str]
     amount_stars: int
     status: PaymentStatus
-    payload: Optional[str***REMOVED***
+    payload: Optional[str]
     created_at: datetime
-    finished_at: Optional[datetime***REMOVED*** = None
+    finished_at: Optional[datetime] = None
 
 
 @dataclass(frozen=True)
@@ -143,9 +143,9 @@ class Delivery:
 class Notification:
     """Лог уведомления, отправленного пользователю или админам."""
     id: int
-    user_id: Optional[int***REMOVED***
+    user_id: Optional[int]
     broadcast_to_admins: bool
     kind: NotificationKind
     text: str
-    payload: Optional[str***REMOVED***
+    payload: Optional[str]
     created_at: datetime

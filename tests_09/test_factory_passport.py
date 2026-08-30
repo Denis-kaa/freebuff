@@ -13,7 +13,7 @@ CAN-16 ADDITIVE: этот файл НЕ модифицирует core_02/* ил�
 
 from __future__ import annotations
 
-***REMOVED***
+}
 
 import pytest
 
@@ -39,9 +39,9 @@ def _valid_meta(**overrides) -> dict:
         "version": "1.0.0",
         "status": "production",
         "description": "Forge-семейство для архитектурных решений.",
-        "capabilities": ["architecture", "review", "validate"***REMOVED***,
-        "metadata": {"owner": "core-platform"***REMOVED***,
-    ***REMOVED***
+        "capabilities": ["architecture", "review", "validate"],
+        "metadata": {"owner": "core-platform"},
+    }
     meta.update(overrides)
     return meta
 
@@ -57,8 +57,8 @@ class TestFactoryPassportFromYaml:
         assert fp.version == "1.0.0"
         assert fp.status == "production"
         assert fp.capabilities == ("architecture", "review", "validate")
-        assert fp.metadata == {"owner": "core-platform"***REMOVED***
-        assert fp.validate() == [***REMOVED***
+        assert fp.metadata == {"owner": "core-platform"}
+        assert fp.validate() == []
 
     def test_from_yaml_missing_file_raises(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError):
@@ -66,7 +66,7 @@ class TestFactoryPassportFromYaml:
 
     def test_from_yaml_missing_required_field_raises(self, tmp_path: Path) -> None:
         meta = _valid_meta()
-        del meta["description"***REMOVED***
+        del meta["description"]
         p = _dump_yaml(tmp_path / "factory.yaml", meta)
         with pytest.raises(ValueError):
             FactoryPassport.from_yaml(p)
@@ -86,15 +86,15 @@ class TestFactoryPassportFromYaml:
 
 class TestFactoryPassportVocabulary:
     def test_unknown_capability_violation(self, tmp_path: Path) -> None:
-        p = _dump_yaml(tmp_path / "factory.yaml", _valid_meta(capabilities=["unknown_token"***REMOVED***))
+        p = _dump_yaml(tmp_path / "factory.yaml", _valid_meta(capabilities=["unknown_token"]))
         fp = FactoryPassport.from_yaml(p)
         violations = fp.validate()
         assert any("unknown tokens" in v and "unknown_token" in v for v in violations), violations
 
     def test_known_capabilities_pass(self, tmp_path: Path) -> None:
-        p = _dump_yaml(tmp_path / "factory.yaml", _valid_meta(capabilities=["architecture", "review"***REMOVED***))
+        p = _dump_yaml(tmp_path / "factory.yaml", _valid_meta(capabilities=["architecture", "review"]))
         fp = FactoryPassport.from_yaml(p)
-        assert fp.validate() == [***REMOVED***
+        assert fp.validate() == []
 
 
 # ─── Class 3: roundtrip / serialization ───────────────────────────────────────
@@ -104,10 +104,10 @@ class TestFactoryPassportRoundtrip:
         p = _dump_yaml(tmp_path / "factory.yaml", _valid_meta())
         fp = FactoryPassport.from_yaml(p)
         d = fp.to_dict()
-        assert d["factory_id"***REMOVED*** == "architecture"
-        assert isinstance(d["capabilities"***REMOVED***, list)
-        assert d["capabilities"***REMOVED*** == ["architecture", "review", "validate"***REMOVED***
-        assert d["metadata"***REMOVED*** == {"owner": "core-platform"***REMOVED***
+        assert d["factory_id"] == "architecture"
+        assert isinstance(d["capabilities"], list)
+        assert d["capabilities"] == ["architecture", "review", "validate"]
+        assert d["metadata"] == {"owner": "core-platform"}
 
     def test_required_fields_exported(self) -> None:
         assert "factory_id" in REQUIRED_FIELDS

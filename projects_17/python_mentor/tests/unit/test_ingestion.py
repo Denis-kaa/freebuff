@@ -5,7 +5,7 @@ Hermetic: никакой сети; fixture копирует структуру �
 mapping override, reports.
 """
 
-***REMOVED***
+}
 
 import pytest
 
@@ -21,8 +21,8 @@ from app.ingestion.pipeline import ingest, rung_from_difficulty
 from app.storage import open_corpus
 
 # загружаем пути из conftest
-FIXTURES = Path(__file__).resolve().parents[2***REMOVED*** / "tests" / "fixtures" / "exercism"
-ROOT_PROJ = Path(__file__).resolve().parents[2***REMOVED***
+FIXTURES = Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "exercism"
+ROOT_PROJ = Path(__file__).resolve().parents[2]
 SOURCES_YAML = ROOT_PROJ / "configs" / "sources.yaml"
 MAP_YAML = ROOT_PROJ / "configs" / "competency_map.yaml"
 OVERRIDES_YAML = ROOT_PROJ / "configs" / "exercise_overrides.yaml"
@@ -35,11 +35,11 @@ def cm():
 
 def test_discover_fixture() -> None:
     dirs = discover_exercises(FIXTURES)
-    slugs = {p.name for p in dirs***REMOVED***
+    slugs = {p.name for p in dirs}
     assert slugs == {
         "guidos-gorgeous-lasagna", "black-jack", "log-levels",
         "hello-world", "two-fer", "bob",
-    ***REMOVED***
+    }
 
 
 def test_parse_exercise_record() -> None:
@@ -90,7 +90,7 @@ def test_ingest_change_updates_not_inserts(tmp_path: Path, cm) -> None:
     conn = open_corpus(db)
     h_before = conn.execute(
         "SELECT content_hash FROM exercises WHERE slug='hello-world'"
-    ).fetchone()[0***REMOVED***
+    ).fetchone()[0]
     conn.close()
     # изменяем stub hello-world
     stub = FIXTURES / "exercises" / "practice" / "hello-world" / "hello_world.py"
@@ -103,7 +103,7 @@ def test_ingest_change_updates_not_inserts(tmp_path: Path, cm) -> None:
         conn = open_corpus(db)
         h_after = conn.execute(
             "SELECT content_hash FROM exercises WHERE slug='hello-world'"
-        ).fetchone()[0***REMOVED***
+        ).fetchone()[0]
         conn.close()
         assert h_after != h_before
     finally:
@@ -116,7 +116,7 @@ def test_ingest_with_refs_flag(tmp_path: Path, cm) -> None:
     conn = open_corpus(db)
     refs = conn.execute(
         "SELECT COUNT(*) FROM exercises WHERE reference_solution_ref IS NOT NULL"
-    ).fetchone()[0***REMOVED***
+    ).fetchone()[0]
     conn.close()
     assert refs == 0
 
@@ -125,7 +125,7 @@ def test_ingest_with_refs_flag(tmp_path: Path, cm) -> None:
     conn = open_corpus(db2)
     refs = conn.execute(
         "SELECT COUNT(*) FROM exercises WHERE reference_solution_ref IS NOT NULL"
-    ).fetchone()[0***REMOVED***
+    ).fetchone()[0]
     conn.close()
     assert refs >= 6
 
@@ -133,7 +133,7 @@ def test_ingest_with_refs_flag(tmp_path: Path, cm) -> None:
 def test_mapping_override_wins(tmp_path: Path, cm) -> None:
     """override (hello-world -> functions) приоритетнее эвристики."""
     overrides = load_overrides(OVERRIDES_YAML)
-    assert overrides["hello-world"***REMOVED***["competency_id"***REMOVED*** == "functions"
+    assert overrides["hello-world"]["competency_id"] == "functions"
     mapper = create_mapper(cm, OVERRIDES_YAML)
     db = tmp_path / "c.db"
     r = ingest(FIXTURES, db, SOURCES_YAML, competency_map=cm, mapper=mapper)
@@ -144,9 +144,9 @@ def test_mapping_override_wins(tmp_path: Path, cm) -> None:
     ).fetchone()
     conn.close()
     assert row is not None
-    assert row["competency_id"***REMOVED*** == "functions"
-    assert row["source"***REMOVED*** == "override"
-    assert row["confidence"***REMOVED*** == "high"
+    assert row["competency_id"] == "functions"
+    assert row["source"] == "override"
+    assert row["confidence"] == "high"
 
 
 def test_mapping_unknown_competency_raises(tmp_path: Path) -> None:
@@ -157,7 +157,7 @@ def test_mapping_unknown_competency_raises(tmp_path: Path) -> None:
     bad = tmp_path / "bad_overrides.yaml"
     bad.write_text(
         yaml.safe_dump(
-            {"overrides": [{"exercise_id": "bob", "competency_id": "nope", "confidence": "high"***REMOVED******REMOVED******REMOVED***
+            {"overrides": [{"exercise_id": "bob", "competency_id": "nope", "confidence": "high"}]}
         ),
         encoding="utf-8",
     )

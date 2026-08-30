@@ -17,7 +17,7 @@ Tests:
 from __future__ import annotations
 
 import sys
-***REMOVED***
+}
 
 import pytest
 
@@ -41,10 +41,10 @@ class _StubPresence:
     """Заглушка PresenceEngine: запоминает синхронизированные роли."""
 
     def __init__(self):
-        self.calls = [***REMOVED***
+        self.calls = []
 
     def update_status(self, agent_name, status, metadata=None):
-        self.calls.append((agent_name, status, metadata or {***REMOVED***))
+        self.calls.append((agent_name, status, metadata or {}))
         return True
 
 
@@ -52,7 +52,7 @@ class _StubCollab:
     """Заглушка CollaborationEngine."""
 
     def __init__(self):
-        self.calls = [***REMOVED***
+        self.calls = []
 
     def update_participant_role(self, session_id, participant_name, new_role):
         self.calls.append((session_id, participant_name, new_role))
@@ -71,7 +71,7 @@ def custom_role() -> RoleDefinition:
         display_name="DevOps",
         description="CI/CD и инфраструктура",
         icon="⚙️",
-        capabilities=["ci", "deploy"***REMOVED***,
+        capabilities=["ci", "deploy"],
         priority=6,
     )
 
@@ -85,15 +85,15 @@ class TestStandardRoles:
     def test_six_standard_roles(self):
         assert set(STANDARD_ROLES.keys()) == {
             "developer", "reviewer", "documenter", "researcher", "archiver", "orchestrator",
-        ***REMOVED***
+        }
 
     def test_role_definitions_have_capabilities(self):
         for name, data in STANDARD_ROLES.items():
-            assert data["capabilities"***REMOVED***, f"Role {name***REMOVED*** has no capabilities"
+            assert data["capabilities"], f"Role {name} has no capabilities"
 
     def test_list_roles_returns_definitions(self, engine: RoleEngine):
         roles = engine.list_roles()
-        names = [r.name for r in roles***REMOVED***
+        names = [r.name for r in roles]
         assert "developer" in names
         assert "orchestrator" in names
 
@@ -112,22 +112,22 @@ class TestStandardRoles:
         assert "testing" in caps
 
     def test_get_capabilities_unknown_role(self, engine: RoleEngine):
-        assert engine.get_capabilities_for_role("nonexistent") == [***REMOVED***
+        assert engine.get_capabilities_for_role("nonexistent") == []
 
     def test_role_definition_from_dict(self):
-        role = RoleDefinition.from_dict("x", {"display_name": "X", "capabilities": ["a"***REMOVED******REMOVED***)
+        role = RoleDefinition.from_dict("x", {"display_name": "X", "capabilities": ["a"]})
         assert role.name == "x"
         assert role.display_name == "X"
-        assert role.capabilities == ["a"***REMOVED***
+        assert role.capabilities == ["a"]
         assert role.priority == 10  # default
 
     def test_role_definition_to_dict(self):
         role = RoleDefinition(
-            name="x", display_name="X", description="d", icon="?", capabilities=["a"***REMOVED***, priority=1
+            name="x", display_name="X", description="d", icon="?", capabilities=["a"], priority=1
         )
         d = role.to_dict()
-        assert d["name"***REMOVED*** == "x"
-        assert d["capabilities"***REMOVED*** == ["a"***REMOVED***
+        assert d["name"] == "x"
+        assert d["capabilities"] == ["a"]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -140,7 +140,7 @@ class TestCustomRoles:
         assert engine.add_role(custom_role) is True
         role = engine.get_role("devops")
         assert role is not None
-        assert role.capabilities == ["ci", "deploy"***REMOVED***
+        assert role.capabilities == ["ci", "deploy"]
 
     def test_add_custom_role_duplicate(self, engine: RoleEngine, custom_role: RoleDefinition):
         engine.add_role(custom_role)
@@ -148,19 +148,19 @@ class TestCustomRoles:
 
     def test_cannot_override_standard_role(self, engine: RoleEngine):
         role = RoleDefinition(
-            name="developer", display_name="Hack", description="", icon="", capabilities=[***REMOVED***, priority=9
+            name="developer", display_name="Hack", description="", icon="", capabilities=[], priority=9
         )
         assert engine.add_role(role) is False
 
     def test_list_roles_includes_custom(self, engine: RoleEngine, custom_role: RoleDefinition):
         engine.add_role(custom_role)
-        names = [r.name for r in engine.list_roles()***REMOVED***
+        names = [r.name for r in engine.list_roles()]
         assert "devops" in names
 
     def test_assign_custom_role(self, engine: RoleEngine, custom_role: RoleDefinition):
         engine.add_role(custom_role)
         assert engine.assign_role("buffy", "devops") is True
-        assert engine.get_roles("buffy") == ["devops"***REMOVED***
+        assert engine.get_roles("buffy") == ["devops"]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -171,26 +171,26 @@ class TestCustomRoles:
 class TestAssignments:
     def test_assign_role(self, engine: RoleEngine):
         assert engine.assign_role("buffy", "developer") is True
-        assert engine.get_roles("buffy") == ["developer"***REMOVED***
+        assert engine.get_roles("buffy") == ["developer"]
 
     def test_assign_unknown_role(self, engine: RoleEngine):
         assert engine.assign_role("buffy", "nonexistent") is False
-        assert engine.get_roles("buffy") == [***REMOVED***
+        assert engine.get_roles("buffy") == []
 
     def test_assign_duplicate_is_idempotent(self, engine: RoleEngine):
         engine.assign_role("buffy", "developer")
         engine.assign_role("buffy", "developer")
-        assert engine.get_roles("buffy") == ["developer"***REMOVED***
+        assert engine.get_roles("buffy") == ["developer"]
 
     def test_assign_multiple_roles(self, engine: RoleEngine):
         engine.assign_role("buffy", "developer")
         engine.assign_role("buffy", "reviewer")
-        assert set(engine.get_roles("buffy")) == {"developer", "reviewer"***REMOVED***
+        assert set(engine.get_roles("buffy")) == {"developer", "reviewer"}
 
     def test_unassign_role(self, engine: RoleEngine):
         engine.assign_role("buffy", "developer")
         assert engine.unassign_role("buffy", "developer") is True
-        assert engine.get_roles("buffy") == [***REMOVED***
+        assert engine.get_roles("buffy") == []
 
     def test_unassign_missing_role(self, engine: RoleEngine):
         assert engine.unassign_role("buffy", "developer") is False
@@ -199,10 +199,10 @@ class TestAssignments:
         engine.assign_role("buffy", "developer")
         engine.assign_role("buffy", "reviewer")
         assert engine.unassign_all("buffy") == 2
-        assert engine.get_roles("buffy") == [***REMOVED***
+        assert engine.get_roles("buffy") == []
 
     def test_get_roles_empty(self, engine: RoleEngine):
-        assert engine.get_roles("ghost") == [***REMOVED***
+        assert engine.get_roles("ghost") == []
 
     def test_list_assignments(self, engine: RoleEngine):
         engine.assign_role("buffy", "developer")
@@ -215,15 +215,15 @@ class TestAssignments:
         engine.assign_role("buffy", "developer", assigned_by="admin")
         details = engine.get_agent_roles_detailed("buffy")
         assert len(details) == 1
-        assert details[0***REMOVED***.assigned_by == "admin"
-        assert details[0***REMOVED***.to_dict()["role_name"***REMOVED*** == "developer"
+        assert details[0].assigned_by == "admin"
+        assert details[0].to_dict()["role_name"] == "developer"
 
     def test_list_by_role(self, engine: RoleEngine):
         engine.assign_role("buffy", "developer")
         engine.assign_role("alice", "developer")
         engine.assign_role("bob", "reviewer")
-        assert set(engine.list_by_role("developer")) == {"buffy", "alice"***REMOVED***
-        assert engine.list_by_role("reviewer") == ["bob"***REMOVED***
+        assert set(engine.list_by_role("developer")) == {"buffy", "alice"}
+        assert engine.list_by_role("reviewer") == ["bob"]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -240,7 +240,7 @@ class TestCapabilities:
         assert "documentation" in caps
 
     def test_agent_capabilities_empty(self, engine: RoleEngine):
-        assert engine.get_agent_capabilities("ghost") == [***REMOVED***
+        assert engine.get_agent_capabilities("ghost") == []
 
     def test_agent_capabilities_sorted(self, engine: RoleEngine):
         engine.assign_role("buffy", "developer")
@@ -285,8 +285,8 @@ class TestIntegrations:
         engine = RoleEngine(db_path=tmp_path / "r.db", presence_engine=presence)
         engine.assign_role("buffy", "developer")
         assert engine.sync_to_presence("buffy") is True
-        assert presence.calls and presence.calls[0***REMOVED***[0***REMOVED*** == "buffy"
-        assert presence.calls[0***REMOVED***[2***REMOVED***.get("roles") == ["developer"***REMOVED***
+        assert presence.calls and presence.calls[0][0] == "buffy"
+        assert presence.calls[0][2].get("roles") == ["developer"]
 
     def test_sync_to_presence_without_engine(self, engine: RoleEngine):
         assert engine.sync_to_presence("buffy") is False
@@ -296,7 +296,7 @@ class TestIntegrations:
         engine = RoleEngine(db_path=tmp_path / "r.db", collaboration_engine=collab)
         engine.assign_role("buffy", "developer")
         assert engine.sync_to_collab_session("s1", "buffy") is True
-        assert collab.calls == [("s1", "buffy", "editor")***REMOVED***
+        assert collab.calls == [("s1", "buffy", "editor")]
 
     def test_sync_to_collab_without_engine(self, engine: RoleEngine):
         assert engine.sync_to_collab_session("s1", "buffy") is False
@@ -321,23 +321,23 @@ class TestIntegrations:
 class TestStats:
     def test_get_stats_empty(self, engine: RoleEngine):
         stats = engine.get_stats()
-        assert stats["total_assignments"***REMOVED*** == 0
-        assert stats["defined_roles"***REMOVED*** == 6
-        assert stats["assigned_agents"***REMOVED*** == 0
+        assert stats["total_assignments"] == 0
+        assert stats["defined_roles"] == 6
+        assert stats["assigned_agents"] == 0
 
     def test_get_stats_with_assignments(self, engine: RoleEngine):
         engine.assign_role("buffy", "developer")
         engine.assign_role("buffy", "reviewer")
         engine.assign_role("alice", "developer")
         stats = engine.get_stats()
-        assert stats["total_assignments"***REMOVED*** == 3
-        assert stats["assigned_agents"***REMOVED*** == 2
-        assert stats["role_counts"***REMOVED***["developer"***REMOVED*** == 2
-        assert stats["role_counts"***REMOVED***["reviewer"***REMOVED*** == 1
+        assert stats["total_assignments"] == 3
+        assert stats["assigned_agents"] == 2
+        assert stats["role_counts"]["developer"] == 2
+        assert stats["role_counts"]["reviewer"] == 1
 
     def test_get_stats_with_custom_role(self, engine: RoleEngine, custom_role: RoleDefinition):
         engine.add_role(custom_role)
-        assert engine.get_stats()["defined_roles"***REMOVED*** == 7
+        assert engine.get_stats()["defined_roles"] == 7
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -349,7 +349,7 @@ class TestCLI:
     def test_main_help(self, monkeypatch):
         from scripts_01.roles import main
 
-        monkeypatch.setattr(sys, "argv", ["roles.py", "--help"***REMOVED***)
+        monkeypatch.setattr(sys, "argv", ["roles.py", "--help"])
         with pytest.raises(SystemExit) as exc:
             main()
         assert exc.value.code == 0
@@ -357,6 +357,6 @@ class TestCLI:
     def test_main_no_command(self, monkeypatch, capsys):
         from scripts_01.roles import main
 
-        monkeypatch.setattr(sys, "argv", ["roles.py"***REMOVED***)
+        monkeypatch.setattr(sys, "argv", ["roles.py"])
         code = main()
         assert code == 1

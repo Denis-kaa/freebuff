@@ -7,7 +7,7 @@ import json
 import sys
 import threading
 import time
-***REMOVED***
+}
 from typing import Any, Dict, List
 
 import pytest
@@ -41,7 +41,7 @@ class TestEvent:
     def test_create_minimal(self):
         e = Event(type="test.event")
         assert e.type == "test.event"
-        assert e.data == {***REMOVED***
+        assert e.data == {}
         assert e.source == "system"
         assert e.id is not None
         assert len(e.id) == 12
@@ -49,17 +49,17 @@ class TestEvent:
     def test_create_full(self):
         e = Event(
             type="task.completed",
-            data={"task_id": "wf1", "status": "ok"***REMOVED***,
+            data={"task_id": "wf1", "status": "ok"},
             source="orchestrator",
-            metadata={"priority": "high"***REMOVED***,
+            metadata={"priority": "high"},
         )
         assert e.type == "task.completed"
-        assert e.data["task_id"***REMOVED*** == "wf1"
+        assert e.data["task_id"] == "wf1"
         assert e.source == "orchestrator"
-        assert e.metadata["priority"***REMOVED*** == "high"
+        assert e.metadata["priority"] == "high"
 
     def test_unique_ids(self):
-        ids = {Event(type="test").id for _ in range(100)***REMOVED***
+        ids = {Event(type="test").id for _ in range(100)}
         assert len(ids) == 100  # все уникальны
 
     def test_timestamp_format(self):
@@ -73,42 +73,42 @@ class TestEvent:
 
 class TestPublishSubscribe:
     def test_publish_delivers_to_subscriber(self, event_bus: EventBus):
-        received: List[Event***REMOVED*** = [***REMOVED***
+        received: List[Event] = []
 
         def handler(event: Event):
             received.append(event)
 
         event_bus.subscribe("test.event", handler)
-        event = Event(type="test.event", data={"msg": "hello"***REMOVED***)
+        event = Event(type="test.event", data={"msg": "hello"})
         delivered = event_bus.publish(event)
 
         assert delivered == 1
         assert len(received) == 1
-        assert received[0***REMOVED***.type == "test.event"
-        assert received[0***REMOVED***.data["msg"***REMOVED*** == "hello"
+        assert received[0].type == "test.event"
+        assert received[0].data["msg"] == "hello"
 
     def test_publish_no_subscribers(self, event_bus: EventBus):
         delivered = event_bus.publish(Event(type="lonely.event"))
         assert delivered == 0
 
     def test_multiple_subscribers(self, event_bus: EventBus):
-        count = [0***REMOVED***
+        count = [0]
 
         def h1(e: Event):
-            count[0***REMOVED*** += 1
+            count[0] += 1
 
         def h2(e: Event):
-            count[0***REMOVED*** += 1
+            count[0] += 1
 
         event_bus.subscribe("multi.event", h1)
         event_bus.subscribe("multi.event", h2)
         delivered = event_bus.publish(Event(type="multi.event"))
 
         assert delivered == 2
-        assert count[0***REMOVED*** == 2
+        assert count[0] == 2
 
     def test_subscribe_multiple_types(self, event_bus: EventBus):
-        events: List[str***REMOVED*** = [***REMOVED***
+        events: List[str] = []
 
         def handler(e: Event):
             events.append(e.type)
@@ -123,7 +123,7 @@ class TestPublishSubscribe:
         assert "type.b" in events
 
     def test_unsubscribe(self, event_bus: EventBus):
-        received: List[Event***REMOVED*** = [***REMOVED***
+        received: List[Event] = []
 
         def handler(e: Event):
             received.append(e)
@@ -157,7 +157,7 @@ class TestPublishSubscribe:
 
 class TestWildcardMatching:
     def test_wildcard_star(self, event_bus: EventBus):
-        received: List[str***REMOVED*** = [***REMOVED***
+        received: List[str] = []
 
         def handler(e: Event):
             received.append(e.type)
@@ -169,7 +169,7 @@ class TestWildcardMatching:
         assert len(received) == 2
 
     def test_wildcard_prefix(self, event_bus: EventBus):
-        received: List[str***REMOVED*** = [***REMOVED***
+        received: List[str] = []
 
         def handler(e: Event):
             received.append(e.type)
@@ -185,13 +185,13 @@ class TestWildcardMatching:
 
     def test_wildcard_and_exact(self, event_bus: EventBus):
         """Подписка на task.* + task.completed не дублирует доставку."""
-        received: List[str***REMOVED*** = [***REMOVED***
+        received: List[str] = []
 
         def h1(e: Event):
-            received.append(f"wildcard:{e.type***REMOVED***")
+            received.append(f"wildcard:{e.type}")
 
         def h2(e: Event):
-            received.append(f"exact:{e.type***REMOVED***")
+            received.append(f"exact:{e.type}")
 
         event_bus.subscribe("task.*", h1)
         event_bus.subscribe("task.completed", h2)
@@ -206,7 +206,7 @@ class TestWildcardMatching:
 
 class TestFilterFunctions:
     def test_filter_accept(self, event_bus: EventBus):
-        received: List[Event***REMOVED*** = [***REMOVED***
+        received: List[Event] = []
 
         def handler(e: Event):
             received.append(e)
@@ -215,14 +215,14 @@ class TestFilterFunctions:
             "task.*", handler,
             filter_fn=lambda e: e.data.get("priority") == "high",
         )
-        event_bus.publish(Event(type="task.completed", data={"priority": "high"***REMOVED***))
-        event_bus.publish(Event(type="task.completed", data={"priority": "low"***REMOVED***))
+        event_bus.publish(Event(type="task.completed", data={"priority": "high"}))
+        event_bus.publish(Event(type="task.completed", data={"priority": "low"}))
 
         assert len(received) == 1
-        assert received[0***REMOVED***.data["priority"***REMOVED*** == "high"
+        assert received[0].data["priority"] == "high"
 
     def test_filter_reject_all(self, event_bus: EventBus):
-        received: List[Event***REMOVED*** = [***REMOVED***
+        received: List[Event] = []
 
         def handler(e: Event):
             received.append(e)
@@ -246,7 +246,7 @@ class TestEventLog:
 
         entries = event_bus.get_events()
         assert len(entries) >= 1
-        logged = entries[0***REMOVED***
+        logged = entries[0]
         assert logged.event_type == "test.logged"
         assert logged.source == "pytest"
         assert logged.delivered_to >= 0
@@ -257,7 +257,7 @@ class TestEventLog:
 
         task_events = event_bus.get_events(event_type="task.completed")
         assert len(task_events) == 1
-        assert task_events[0***REMOVED***.event_type == "task.completed"
+        assert task_events[0].event_type == "task.completed"
 
     def test_get_events_limit(self, event_bus: EventBus):
         for i in range(10):
@@ -287,8 +287,8 @@ class TestEventLog:
 class TestStats:
     def test_stats_empty(self, event_bus: EventBus):
         stats = event_bus.get_stats()
-        assert stats["total_events"***REMOVED*** == 0
-        assert stats["active_subscribers"***REMOVED*** == 0
+        assert stats["total_events"] == 0
+        assert stats["active_subscribers"] == 0
 
     def test_stats_with_events(self, event_bus: EventBus):
         event_bus.publish(Event(type="task.completed"))
@@ -296,16 +296,16 @@ class TestStats:
         event_bus.publish(Event(type="task.completed"))
 
         stats = event_bus.get_stats()
-        assert stats["total_events"***REMOVED*** == 3
-        assert stats["event_types"***REMOVED***["task.completed"***REMOVED*** == 2
-        assert stats["event_types"***REMOVED***["task.failed"***REMOVED*** == 1
+        assert stats["total_events"] == 3
+        assert stats["event_types"]["task.completed"] == 2
+        assert stats["event_types"]["task.failed"] == 1
 
     def test_stats_with_subscribers(self, event_bus: EventBus):
         event_bus.subscribe("task.*", lambda e: None)
         event_bus.subscribe("memory.*", lambda e: None)
 
         stats = event_bus.get_stats()
-        assert stats["active_subscribers"***REMOVED*** == 2
+        assert stats["active_subscribers"] == 2
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -320,7 +320,7 @@ class TestClear:
         assert len(event_bus.get_events()) == 0
 
     def test_clear_subscribers(self, event_bus: EventBus):
-        received: List[Event***REMOVED*** = [***REMOVED***
+        received: List[Event] = []
 
         def handler(e: Event):
             received.append(e)
@@ -338,10 +338,10 @@ class TestClear:
 class TestThreadSafety:
     def test_parallel_publishes(self, event_bus: EventBus):
         """Множественные публикации из разных потоков."""
-        count = [0***REMOVED***
+        count = [0]
 
         def handler(e: Event):
-            count[0***REMOVED*** += 1
+            count[0] += 1
 
         event_bus.subscribe("thread.*", handler)
 
@@ -349,13 +349,13 @@ class TestThreadSafety:
             for _ in range(50):
                 event_bus.publish(Event(type="thread.test"))
 
-        threads = [threading.Thread(target=publisher) for _ in range(5)***REMOVED***
+        threads = [threading.Thread(target=publisher) for _ in range(5)]
         for t in threads:
             t.start()
         for t in threads:
             t.join()
 
-        assert count[0***REMOVED*** == 250
+        assert count[0] == 250
 
     def test_subscribe_during_publish(self, event_bus: EventBus):
         """Подписка во время публикации не ломает шину."""
@@ -376,27 +376,27 @@ class TestFactories:
         e = task_event("completed", "wf1", status="ok")
         assert e.type == "task.completed"
         assert e.source == "orchestrator"
-        assert e.data["task_id"***REMOVED*** == "wf1"
-        assert e.data["status"***REMOVED*** == "ok"
+        assert e.data["task_id"] == "wf1"
+        assert e.data["status"] == "ok"
 
     def test_step_event(self):
         e = step_event("started", "s1", "wf1", tool="shell")
         assert e.type == "step.started"
-        assert e.data["step_id"***REMOVED*** == "s1"
-        assert e.data["task_id"***REMOVED*** == "wf1"
-        assert e.data["tool"***REMOVED*** == "shell"
+        assert e.data["step_id"] == "s1"
+        assert e.data["task_id"] == "wf1"
+        assert e.data["tool"] == "shell"
 
     def test_memory_event(self):
         e = memory_event("stored", "working", "doc1", size=1024)
         assert e.type == "memory.stored"
-        assert e.data["level"***REMOVED*** == "working"
-        assert e.data["key"***REMOVED*** == "doc1"
+        assert e.data["level"] == "working"
+        assert e.data["key"] == "doc1"
 
     def test_context_event(self):
         e = context_event("built", tokens=5000, sources=3)
         assert e.type == "context.built"
         assert e.source == "context_builder"
-        assert e.data["tokens"***REMOVED*** == 5000
+        assert e.data["tokens"] == 5000
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -408,12 +408,12 @@ class TestOrchestratorIntegration:
         """Orchestrator публикует события при запуске workflow (если event_bus передан)."""
         from scripts_01.orchestrator import Orchestrator, Workflow
 
-        events: List[str***REMOVED*** = [***REMOVED***
+        events: List[str] = []
 
         def collector(e: Event):
             events.append(e.type)
 
-        bus = EventBus(db_path=Path("/tmp") / f"test_events_{id(1)***REMOVED***.db")
+        bus = EventBus(db_path=Path("/tmp") / f"test_events_{id(1)}.db")
         bus.subscribe("workflow.*", collector)
         bus.subscribe("step.*", collector)
 
@@ -421,47 +421,47 @@ class TestOrchestratorIntegration:
         result = orch.run_workflow("Test event publishing")
 
         # Должны быть события workflow.created и workflow.*
-        workflow_events = [t for t in events if t.startswith("workflow.")***REMOVED***
-        assert len(workflow_events) >= 2, f"Got: {workflow_events***REMOVED***"
-        assert any("created" in e for e in workflow_events), f"Missing created: {workflow_events***REMOVED***"
+        workflow_events = [t for t in events if t.startswith("workflow.")]
+        assert len(workflow_events) >= 2, f"Got: {workflow_events}"
+        assert any("created" in e for e in workflow_events), f"Missing created: {workflow_events}"
         assert any("completed" in e or "failed" in e for e in workflow_events)
 
     def test_orchestrator_publishes_step_events(self):
         """Orchestrator публикует step.started и step.completed/failed."""
         from scripts_01.orchestrator import Orchestrator
 
-        events: List[str***REMOVED*** = [***REMOVED***
+        events: List[str] = []
 
         def collector(e: Event):
             events.append(e.type)
 
-        bus = EventBus(db_path=Path("/tmp") / f"test_events_{id(2)***REMOVED***.db")
+        bus = EventBus(db_path=Path("/tmp") / f"test_events_{id(2)}.db")
         bus.subscribe("step.*", collector)
 
         orch = Orchestrator(event_bus=bus)
         orch.run_workflow("Test step events")
 
-        step_events = [t for t in events if t.startswith("step.")***REMOVED***
+        step_events = [t for t in events if t.startswith("step.")]
         assert len(step_events) >= 1
 
     def test_orchestrator_events_have_data(self):
         """События от Orchestrator содержат task_id/step_id."""
         from scripts_01.orchestrator import Orchestrator
 
-        events: List[Event***REMOVED*** = [***REMOVED***
+        events: List[Event] = []
 
         def collector(e: Event):
             events.append(e)
 
-        bus = EventBus(db_path=Path("/tmp") / f"test_events_{id(3)***REMOVED***.db")
+        bus = EventBus(db_path=Path("/tmp") / f"test_events_{id(3)}.db")
         bus.subscribe("*", collector)
 
         orch = Orchestrator(event_bus=bus)
         orch.run_workflow("Test event data")
 
-        workflow_events = [e for e in events if e.type.startswith("workflow.")***REMOVED***
+        workflow_events = [e for e in events if e.type.startswith("workflow.")]
         for e in workflow_events:
-            assert "task_id" in e.data or "workflow_id" in e.data, f"Missing id in {e.type***REMOVED***: {e.data***REMOVED***"
+            assert "task_id" in e.data or "workflow_id" in e.data, f"Missing id in {e.type}: {e.data}"
 
     def test_orchestrator_works_without_event_bus(self):
         """Orchestrator работает без EventBus (обратная совместимость)."""

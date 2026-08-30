@@ -18,7 +18,7 @@ import json
 import os
 import sys
 import pytest
-***REMOVED***
+}
 
 # Добавляем корень проекта в sys.path для импорта
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -46,8 +46,8 @@ def tmp_workspace(tmp_path: Path) -> Path:
         "## Цель\n"
         "Тестирование Context Builder\n\n"
         "## TODO\n"
-        "- [ ***REMOVED*** Test 1\n"
-        "- [ ***REMOVED*** Test 2\n",
+        "- [ ] Test 1\n"
+        "- [ ] Test 2\n",
         encoding="utf-8",
     )
 
@@ -55,13 +55,13 @@ def tmp_workspace(tmp_path: Path) -> Path:
     changelog_md = ws / "CHANGELOG.md"
     changelog_md.write_text(
         "# Changelog\n\n"
-        "## [3.0.0***REMOVED*** - 2026-07-28\n"
+        "## [3.0.0] - 2026-07-28\n"
         "- Major feature\n\n"
         "---\n\n"
-        "## [2.0.0***REMOVED*** - 2026-07-27\n"
+        "## [2.0.0] - 2026-07-27\n"
         "- Feature 2\n\n"
         "---\n\n"
-        "## [1.0.0***REMOVED*** - 2026-07-26\n"
+        "## [1.0.0] - 2026-07-26\n"
         "- Initial release\n",
         encoding="utf-8",
     )
@@ -152,9 +152,9 @@ class TestBuild:
         assert "active_task" in ctx, "Should include working entries"
 
     def test_build_with_level_filter(self, builder_with_memory: ContextBuilder):
-        """build(levels=[\"working\"***REMOVED***) включает только рабочую память."""
+        """build(levels=[\"working\"]) включает только рабочую память."""
         ctx = builder_with_memory.build(
-            levels=["working"***REMOVED***,
+            levels=["working"],
             include_task=False,
             include_changelog=False,
             include_session=False,
@@ -168,7 +168,7 @@ class TestBuild:
         builder = ContextBuilder(max_tokens=20, workspace_root=tmp_workspace)
         ctx = builder.build()
         # Может быть пустым или очень коротким
-        assert len(ctx) < 300, f"Context too large for 20 tokens: {len(ctx)***REMOVED*** chars"
+        assert len(ctx) < 300, f"Context too large for 20 tokens: {len(ctx)} chars"
 
     def test_build_empty_memory_only(self, empty_workspace: Path):
         """build() без памяти и без файлов возвращает пустую строку."""
@@ -193,41 +193,41 @@ class TestStatus:
         """get_status() возвращает информацию о всех источниках."""
         status = builder_with_memory.get_status()
         assert "memory" in status, "Should have memory stats"
-        assert status["task_exists"***REMOVED*** is True, "TASK.md should exist"
-        assert status["changelog_exists"***REMOVED*** is True, "CHANGELOG.md should exist"
+        assert status["task_exists"] is True, "TASK.md should exist"
+        assert status["changelog_exists"] is True, "CHANGELOG.md should exist"
         assert "sources" in status, "Should have sources"
-        assert "memory_levels" in status["sources"***REMOVED***, "Should list memory levels"
+        assert "memory_levels" in status["sources"], "Should list memory levels"
 
     def test_status_empty_workspace(self, empty_workspace: Path):
         """get_status() в пустой рабочей директории."""
         builder = ContextBuilder(workspace_root=empty_workspace)
         status = builder.get_status()
-        assert status["task_exists"***REMOVED*** is False, "TASK.md should not exist"
-        assert status["changelog_exists"***REMOVED*** is False, "CHANGELOG.md should not exist"
+        assert status["task_exists"] is False, "TASK.md should not exist"
+        assert status["changelog_exists"] is False, "CHANGELOG.md should not exist"
 
     def test_status_memory_after_store(self, tmp_workspace: Path):
         """get_status() отражает новые записи в памяти."""
         builder = ContextBuilder(workspace_root=tmp_workspace)
         status_before = builder.get_status()
-        total_before = status_before["memory"***REMOVED***["total"***REMOVED***
+        total_before = status_before["memory"]["total"]
 
         # Добавляем запись
         engine = MemoryEngine(workspace_root=str(tmp_workspace))
         engine.store(MemoryLevel.WORKING, "new_entry", "test")
 
         status_after = builder.get_status()
-        total_after = status_after["memory"***REMOVED***["total"***REMOVED***
+        total_after = status_after["memory"]["total"]
         assert total_after == total_before + 1, "Total should increase by 1"
 
     def test_status_structure(self, builder_with_memory: ContextBuilder):
         """get_status() возвращает корректную структуру."""
         status = builder_with_memory.get_status()
         # Проверяем структуру memory
-        mem = status["memory"***REMOVED***
-        for level_name in ["working", "project", "knowledge", "personal", "archive"***REMOVED***:
-            assert level_name in mem, f"Missing level: {level_name***REMOVED***"
-            assert "count" in mem[level_name***REMOVED***, f"Missing count in {level_name***REMOVED***"
-            assert "keys" in mem[level_name***REMOVED***, f"Missing keys in {level_name***REMOVED***"
+        mem = status["memory"]
+        for level_name in ["working", "project", "knowledge", "personal", "archive"]:
+            assert level_name in mem, f"Missing level: {level_name}"
+            assert "count" in mem[level_name], f"Missing count in {level_name}"
+            assert "keys" in mem[level_name], f"Missing keys in {level_name}"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -290,7 +290,7 @@ class TestCLI:
         monkeypatch.setattr(
             cb_mod, "WORKSPACE", tmp_workspace
         )
-        monkeypatch.setattr(sys, "argv", ["context_builder.py", "--status"***REMOVED***)
+        monkeypatch.setattr(sys, "argv", ["context_builder.py", "--status"])
         try:
             cb_mod.main()
             # Если дошло сюда без исключения — ок
@@ -298,7 +298,7 @@ class TestCLI:
         except SystemExit:
             assert True
         except Exception as e:
-            pytest.fail(f"main() raised unexpectedly: {e***REMOVED***")
+            pytest.fail(f"main() raised unexpectedly: {e}")
 
     def test_cli_save_output(self, monkeypatch, tmp_path, tmp_workspace: Path):
         """--save записывает контекст в файл."""
@@ -308,14 +308,14 @@ class TestCLI:
         monkeypatch.setattr(cb_mod, "WORKSPACE", tmp_workspace)
         monkeypatch.setattr(
             sys, "argv",
-            ["context_builder.py", "--save", str(save_path), "--no-session"***REMOVED***,
+            ["context_builder.py", "--save", str(save_path), "--no-session"],
         )
         try:
             cb_mod.main()
         except SystemExit:
             pass
         except Exception as e:
-            pytest.fail(f"main() raised unexpectedly: {e***REMOVED***")
+            pytest.fail(f"main() raised unexpectedly: {e}")
 
         assert save_path.exists(), "Save file should exist"
         content = save_path.read_text()

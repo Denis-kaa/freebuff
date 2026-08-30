@@ -20,7 +20,7 @@ from __future__ import annotations
 import ast
 import json
 import sys
-***REMOVED***
+}
 
 import yaml
 
@@ -61,8 +61,8 @@ from scripts_01.consistency_check import (
     extract_engine_rows,
     extract_missing_capabilities,
     run_consistency_check,
-    _PytestCollectionVisitor as V,  # [5.39.3***REMOVED*** top-level: synthetic visitor regression-gate
-    _chain_key,  # [5.39.3***REMOVED*** top-level: e2e Set-A vs Set-B parity helper
+    _PytestCollectionVisitor as V,  # [5.39.3] top-level: synthetic visitor regression-gate
+    _chain_key,  # [5.39.3] top-level: e2e Set-A vs Set-B parity helper
 )
 
 # ── Импорт должен работать и с фактическим проектом.
@@ -105,19 +105,19 @@ def _collect_fingerprint() -> str:
     targets += [
         PROJECT_ROOT / "tests_09" / "conftest.py",
         PROJECT_ROOT / "pytest.ini",
-    ***REMOVED***
+    ]
     for p in targets:
         try:
             st = p.stat()
-            h.update(f"{p.name***REMOVED***:{st.st_mtime_ns***REMOVED***:{st.st_size***REMOVED***;".encode("utf-8"))
+            h.update(f"{p.name}:{st.st_mtime_ns}:{st.st_size};".encode("utf-8"))
         except OSError:
-            h.update(f"{p.name***REMOVED***:missing;".encode("utf-8"))
-    return h.hexdigest()[:16***REMOVED***
+            h.update(f"{p.name}:missing;".encode("utf-8"))
+    return h.hexdigest()[:16]
 
 
-def _collect_only_stdout_lines() -> list[str***REMOVED***:
+def _collect_only_stdout_lines() -> list[str]:
     """`pytest --collect-only -q` stdout lines (кэш в /tmp по fingerprint)."""
-    cache_file = Path("/tmp") / f"{_COLLECT_CACHE_PREFIX***REMOVED***_{_collect_fingerprint()***REMOVED***.json"
+    cache_file = Path("/tmp") / f"{_COLLECT_CACHE_PREFIX}_{_collect_fingerprint()}.json"
     if cache_file.exists():
         try:
             return json.loads(cache_file.read_text(encoding="utf-8"))
@@ -129,7 +129,7 @@ def _collect_only_stdout_lines() -> list[str***REMOVED***:
     # Retry ×2: под параллельной нагрузкой (xdist/другие прогоны) collect может
     # транзиентно упасть (rc!=0, часть модулей не собралась) — повторяем один
     # раз; кэшируем ТОЛЬКО успешный прогон (v5.189.12 hardening).
-    lines: list[str***REMOVED*** = [***REMOVED***
+    lines: list[str] = []
     result = None
     for _attempt in (1, 2):
         result = subprocess.run(
@@ -141,7 +141,7 @@ def _collect_only_stdout_lines() -> list[str***REMOVED***:
                 "--collect-only",
                 "-q",
                 "--no-header",
-            ***REMOVED***,
+            ],
             cwd=str(PROJECT_ROOT),
             capture_output=True,
             text=True,
@@ -154,8 +154,8 @@ def _collect_only_stdout_lines() -> list[str***REMOVED***:
             break
     if result is None or result.returncode != 0:
         raise RuntimeError(
-            f"pytest --collect-only failed (rc={result.returncode if result else '?'***REMOVED***): "
-            f"{result.stderr[:300***REMOVED*** if result else 'no run'!r***REMOVED***"
+            f"pytest --collect-only failed (rc={result.returncode if result else '?'}): "
+            f"{result.stderr[:300] if result else 'no run'!r}"
         )
     try:
         cache_file.write_text(json.dumps(lines, ensure_ascii=False), encoding="utf-8")
@@ -176,10 +176,10 @@ def workspace(tmp_path: Path) -> Path:
 
     # Блок взаимных ссылок ядра — присутствует в КАЖДОМ каноническом документе.
     core_links = (
-        "[ARCHITECTURE_MANIFEST.md***REMOVED***(ARCHITECTURE_MANIFEST.md) "
-        "[ARCHITECTURE_CANONICAL.md***REMOVED***(ARCHITECTURE_CANONICAL.md) "
-        "[GLOSSARY.md***REMOVED***(GLOSSARY.md) [LIFECYCLE.md***REMOVED***(LIFECYCLE.md) "
-        "[MODULE_CONSOLIDATION.md***REMOVED***(MODULE_CONSOLIDATION.md)"
+        "[ARCHITECTURE_MANIFEST.md](ARCHITECTURE_MANIFEST.md) "
+        "[ARCHITECTURE_CANONICAL.md](ARCHITECTURE_CANONICAL.md) "
+        "[GLOSSARY.md](GLOSSARY.md) [LIFECYCLE.md](LIFECYCLE.md) "
+        "[MODULE_CONSOLIDATION.md](MODULE_CONSOLIDATION.md)"
     )
 
     # Канонический реестр: 2 движка, оба с файлами.
@@ -191,7 +191,7 @@ def workspace(tmp_path: Path) -> Path:
 | C1 | `MemoryEngine` | `scripts_01/memory_engine.py` |
 | S1 | `RAGEngine` | `scripts_01/rag_engine.py` |
 
-{core_links***REMOVED***
+{core_links}
 """,
     )
     # LIFECYCLE покрывает оба движка.
@@ -207,25 +207,25 @@ def workspace(tmp_path: Path) -> Path:
 |--------|--------|
 | Создание | ✅ |
 
-{core_links***REMOVED***
+{core_links}
 """,
     )
     # MODULE_CONSOLIDATION покрывает все области (+ перекрёстные ссылки).
-    areas = "\n".join(f"### {letter***REMOVED***. {name***REMOVED***\n" for letter, name in
+    areas = "\n".join(f"### {letter}. {name}\n" for letter, name in
                       zip("ABCDEFGHIJ", ["Router", "Telegram", "MCP", "Memory", "Knowledge",
                                          "Registry", "Context", "Tool Runtime", "Plugin API",
-                                         "Event Bus"***REMOVED***))
-    _write(ws / MODULE_CONSOLIDATION, f"{areas***REMOVED***\n{core_links***REMOVED***\n")
+                                         "Event Bus"]))
+    _write(ws / MODULE_CONSOLIDATION, f"{areas}\n{core_links}\n")
     # GLOSSARY со всеми обязательными терминами (+ перекрёстные ссылки).
-    terms = "\n".join(f"| **{t***REMOVED***** | определение |" for t in
+    terms = "\n".join(f"| **{t}** | определение |" for t in
                       ["Workspace", "Project", "Module", "Agent", "Tool", "Plugin", "Connector",
                        "Integration", "Knowledge", "Memory", "Project Book", "Engineering Memory",
-                       "Lifecycle", "Registry", "Decision Log", "Pulse", "Naming Convention"***REMOVED***)
-    _write(ws / GLOSSARY, f"# GLOSSARY\n\n{terms***REMOVED***\n\n{core_links***REMOVED***\n")
+                       "Lifecycle", "Registry", "Decision Log", "Pulse", "Naming Convention"])
+    _write(ws / GLOSSARY, f"# GLOSSARY\n\n{terms}\n\n{core_links}\n")
     # MANIFEST ссылается на все документы ядра + PROJECT_BOOK.
     _write(
         ws / CANONICAL.parent / "ARCHITECTURE_MANIFEST.md",
-        core_links + f"\nПроект: расширять {PROJECT_BOOK.name***REMOVED***\n",
+        core_links + f"\nПроект: расширять {PROJECT_BOOK.name}\n",
     )
     # PROJECT_BOOK существует в каноническом месте.
     _write(ws / PROJECT_BOOK, "# Project Book\n\nНарратив проекта.\n")
@@ -258,16 +258,16 @@ class TestExtractEngineRows:
                "| S7 | `DriftCheck` | `scripts_01/drift_check.py` |\n"
         rows = extract_engine_rows(text)
         assert len(rows) == 2
-        assert rows[0***REMOVED*** == {"id": "C1", "engine": "MemoryEngine", "file": "scripts_01/memory_engine.py"***REMOVED***
+        assert rows[0] == {"id": "C1", "engine": "MemoryEngine", "file": "scripts_01/memory_engine.py"}
 
     def test_ignores_non_engine_rows(self):
         text = "| A | `ModelCatalog` | `core_02/router.py` |\n| S1 | `RAGEngine` | `scripts_01/rag_engine.py` |\n"
         rows = extract_engine_rows(text)
         assert len(rows) == 1
-        assert rows[0***REMOVED***["engine"***REMOVED*** == "RAGEngine"
+        assert rows[0]["engine"] == "RAGEngine"
 
     def test_empty_text(self):
-        assert extract_engine_rows("") == [***REMOVED***
+        assert extract_engine_rows("") == []
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -277,24 +277,24 @@ class TestExtractEngineRows:
 
 class TestCheckEngineFiles:
     def test_all_clean(self, workspace: Path):
-        assert check_engine_files(workspace) == [***REMOVED***
+        assert check_engine_files(workspace) == []
 
     def test_missing_file_reported(self, tmp_path: Path):
         ws = tmp_path / "ws"
         _write(ws / CANONICAL, "| C1 | `MemoryEngine` | `scripts_01/memory_engine.py` |\n")
         issues = check_engine_files(ws)
         assert len(issues) == 1
-        assert issues[0***REMOVED***["engine"***REMOVED*** == "MemoryEngine"
-        assert issues[0***REMOVED***["check"***REMOVED*** == "engine_files"
+        assert issues[0]["engine"] == "MemoryEngine"
+        assert issues[0]["check"] == "engine_files"
 
     def test_missing_registry_reported(self, tmp_path: Path):
         issues = check_engine_files(tmp_path)
-        assert issues and issues[0***REMOVED***["issue"***REMOVED*** == "ARCHITECTURE_CANONICAL.md missing"
+        assert issues and issues[0]["issue"] == "ARCHITECTURE_CANONICAL.md missing"
 
 
 class TestCheckLifecycleCoverage:
     def test_all_covered(self, workspace: Path):
-        assert check_lifecycle_coverage(workspace) == [***REMOVED***
+        assert check_lifecycle_coverage(workspace) == []
 
     def test_uncovered_engine(self, tmp_path: Path):
         ws = tmp_path / "ws"
@@ -302,45 +302,45 @@ class TestCheckLifecycleCoverage:
         _write(ws / LIFECYCLE, "### Something else\n")
         _write(ws / "scripts_01/memory_engine.py", "class MemoryEngine: pass\n")
         issues = check_lifecycle_coverage(ws)
-        assert any(i["engine"***REMOVED*** == "MemoryEngine" for i in issues)
+        assert any(i["engine"] == "MemoryEngine" for i in issues)
 
 
 class TestCheckModuleAreas:
     def test_all_areas(self, workspace: Path):
-        assert check_module_areas(workspace) == [***REMOVED***
+        assert check_module_areas(workspace) == []
 
     def test_missing_area(self, tmp_path: Path):
         ws = tmp_path / "ws"
         _write(ws / MODULE_CONSOLIDATION, "### A. Router\n")
         issues = check_module_areas(ws)
-        assert any(i["area"***REMOVED*** == "Telegram" for i in issues)
+        assert any(i["area"] == "Telegram" for i in issues)
 
 
 class TestCheckGlossaryTerms:
     def test_all_terms(self, workspace: Path):
-        assert check_glossary_terms(workspace) == [***REMOVED***
+        assert check_glossary_terms(workspace) == []
 
     def test_missing_term(self, tmp_path: Path):
         ws = tmp_path / "ws"
         _write(ws / GLOSSARY, "# GLOSSARY\n| **Workspace** | x |\n")
         issues = check_glossary_terms(ws)
-        assert any(i["term"***REMOVED*** == "Knowledge" for i in issues)
+        assert any(i["term"] == "Knowledge" for i in issues)
 
 
 class TestCheckRoadmapRefs:
     def test_refs_resolve(self, workspace: Path):
-        assert check_roadmap_refs(workspace) == [***REMOVED***
+        assert check_roadmap_refs(workspace) == []
 
     def test_broken_ref(self, tmp_path: Path):
         ws = tmp_path / "ws"
         _write(ws / ROADMAP, "Этап: `docs_10/core/MISSING_DOC.md`")
         issues = check_roadmap_refs(ws)
-        assert any(i["ref"***REMOVED*** == "docs_10/core/MISSING_DOC.md" for i in issues)
+        assert any(i["ref"] == "docs_10/core/MISSING_DOC.md" for i in issues)
 
 
 class TestCheckCrossReferences:
     def test_all_link_each_other(self, workspace: Path):
-        assert check_cross_references(workspace) == [***REMOVED***
+        assert check_cross_references(workspace) == []
 
     def test_missing_sibling_link(self, tmp_path: Path):
         ws = tmp_path / "ws"
@@ -350,11 +350,11 @@ class TestCheckCrossReferences:
             ("GLOSSARY.md", GLOSSARY),
             ("LIFECYCLE.md", LIFECYCLE),
             ("MODULE_CONSOLIDATION.md", MODULE_CONSOLIDATION),
-        ***REMOVED***:
-            _write(ws / rel, f"# {name***REMOVED***\n")
+        ]:
+            _write(ws / rel, f"# {name}\n")
         issues = check_cross_references(ws)
         assert len(issues) >= 1
-        assert issues[0***REMOVED***["check"***REMOVED*** == "cross_references"
+        assert issues[0]["check"] == "cross_references"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -380,22 +380,22 @@ class TestExtractMissingCapabilities:
     def test_parses_all_rows(self):
         items = extract_missing_capabilities(_S20_DOC)
         assert len(items) == 7
-        ids = {i["item_id"***REMOVED*** for i in items***REMOVED***
+        ids = {i["item_id"] for i in items}
         assert ids == {
             "factory_registry", "scenario_engine", "decision_registry",
             "conformance_checker", "model_diagram_autogen",
             "research_web", "lisa_estimator",
-        ***REMOVED***
+        }
 
     def test_status_mapping(self):
-        items = {i["item_id"***REMOVED***: i["status"***REMOVED*** for i in extract_missing_capabilities(_S20_DOC)***REMOVED***
-        assert items["research_web"***REMOVED*** == "implemented"
-        assert items["lisa_estimator"***REMOVED*** == "implemented"
-        assert items["factory_registry"***REMOVED*** == "design_ready"
-        assert items["decision_registry"***REMOVED*** == "registered"
+        items = {i["item_id"]: i["status"] for i in extract_missing_capabilities(_S20_DOC)}
+        assert items["research_web"] == "implemented"
+        assert items["lisa_estimator"] == "implemented"
+        assert items["factory_registry"] == "design_ready"
+        assert items["decision_registry"] == "registered"
 
     def test_no_section_returns_empty(self):
-        assert extract_missing_capabilities("# No §20 here") == [***REMOVED***
+        assert extract_missing_capabilities("# No §20 here") == []
 
 
 class TestCheckMissingRegistrySync:
@@ -408,26 +408,26 @@ class TestCheckMissingRegistrySync:
         return ws
 
     def test_all_synced(self, tmp_path: Path):
-        assert check_missing_registry_sync(self._workspace(tmp_path)) == [***REMOVED***
+        assert check_missing_registry_sync(self._workspace(tmp_path)) == []
 
     def test_missing_doc(self, tmp_path: Path):
         ws = tmp_path / "ws"
         issues = check_missing_registry_sync(ws)
-        assert issues and issues[0***REMOVED***["check"***REMOVED*** == "missing_registry_sync"
-        assert "missing" in issues[0***REMOVED***["issue"***REMOVED***.lower()
+        assert issues and issues[0]["check"] == "missing_registry_sync"
+        assert "missing" in issues[0]["issue"].lower()
 
     def test_missing_registry_file(self, tmp_path: Path):
         ws = tmp_path / "ws"
         _write(ws / "docs_10/engineering-memory/FACTORY_FORGE_ARCHITECTURE_V1.md", _S20_DOC)
         issues = check_missing_registry_sync(ws)
-        assert any("missing_registry.yaml" in i["issue"***REMOVED*** for i in issues)
+        assert any("missing_registry.yaml" in i["issue"] for i in issues)
 
     def test_doc_item_missing_from_registry(self, tmp_path: Path):
         doc = _S20_DOC + "| 8 | **Ghost Tool (`ghost_tool`)** | Research Factory | 🟡 Medium |\n"
         issues = check_missing_registry_sync(self._workspace(tmp_path, doc))
-        ghost = [i for i in issues if i.get("item") == "ghost_tool"***REMOVED***
+        ghost = [i for i in issues if i.get("item") == "ghost_tool"]
         assert len(ghost) == 1
-        assert "register-first" in ghost[0***REMOVED***["issue"***REMOVED***
+        assert "register-first" in ghost[0]["issue"]
 
     def test_registry_item_missing_from_doc(self, tmp_path: Path):
         ws = self._workspace(tmp_path)
@@ -435,9 +435,9 @@ class TestCheckMissingRegistrySync:
         reg = MissingRegistry(ws / "data_13/missing_registry.yaml")
         reg.register_missing("extra_tool", kind="tool", factory="code")
         issues = check_missing_registry_sync(ws)
-        extra = [i for i in issues if i.get("item") == "extra_tool"***REMOVED***
+        extra = [i for i in issues if i.get("item") == "extra_tool"]
         assert len(extra) == 1
-        assert "§20" in extra[0***REMOVED***["issue"***REMOVED***
+        assert "§20" in extra[0]["issue"]
 
     def test_registry_lags_behind_doc(self, tmp_path: Path):
         ws = tmp_path / "ws"
@@ -447,8 +447,8 @@ class TestCheckMissingRegistrySync:
         reg.register_missing("research_web", kind="tool", factory="research",
                              status="registered")  # §20 говорит «реализовано»
         issues = check_missing_registry_sync(ws)
-        lag = [i for i in issues if i.get("item") == "research_web"***REMOVED***
-        assert any("lags behind" in i["issue"***REMOVED*** for i in lag)
+        lag = [i for i in issues if i.get("item") == "research_web"]
+        assert any("lags behind" in i["issue"] for i in lag)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -458,19 +458,19 @@ class TestCheckMissingRegistrySync:
 
 class TestCheckProjectBook:
     def test_all_clean(self, workspace: Path):
-        assert check_project_book(workspace) == [***REMOVED***
+        assert check_project_book(workspace) == []
 
     def test_missing_book_reported(self, tmp_path: Path):
         issues = check_project_book(tmp_path)
-        assert issues and issues[0***REMOVED***["check"***REMOVED*** == "project_book"
-        assert "PROJECT_BOOK.md missing" in issues[0***REMOVED***["issue"***REMOVED***
+        assert issues and issues[0]["check"] == "project_book"
+        assert "PROJECT_BOOK.md missing" in issues[0]["issue"]
 
     def test_missing_manifest_ref(self, tmp_path: Path):
         ws = tmp_path / "ws"
         _write(ws / PROJECT_BOOK, "# Project Book\n")
         _write(ws / MANIFEST, "# Manifest без упоминания книги проекта\n")
         issues = check_project_book(ws)
-        assert any("ARCHITECTURE_MANIFEST" in i["issue"***REMOVED*** for i in issues)
+        assert any("ARCHITECTURE_MANIFEST" in i["issue"] for i in issues)
 
     def test_missing_roadmap_ref(self, tmp_path: Path):
         ws = tmp_path / "ws"
@@ -478,7 +478,7 @@ class TestCheckProjectBook:
         _write(ws / MANIFEST, "# Manifest\n| Запрещено | Вместо |\n| Второй Project Book | расширять PROJECT_BOOK.md |\n")
         _write(ws / ROADMAP, "# Roadmap без упоминания книги проекта\n")
         issues = check_project_book(ws)
-        assert any("ROADMAP_PROMT32" in i["issue"***REMOVED*** for i in issues)
+        assert any("ROADMAP_PROMT32" in i["issue"] for i in issues)
 
 
 class TestNamingConventionLegacyRedirect:
@@ -510,8 +510,8 @@ class TestNamingConventionLegacyRedirect:
         )
         from scripts_01.consistency_check import check_naming_convention
         issues = check_naming_convention(tmp_path)
-        legacy = [i for i in issues if i.get("kind") == "dir" and i.get("name") == "freebuff_plugin"***REMOVED***
-        assert legacy == [***REMOVED***, f"legacy shim должен пропускаться когда canonical существует, issues={issues***REMOVED***"
+        legacy = [i for i in issues if i.get("kind") == "dir" and i.get("name") == "freebuff_plugin"]
+        assert legacy == [], f"legacy shim должен пропускаться когда canonical существует, issues={issues}"
 
     def test_legacy_redirect_flagged_when_canonical_missing(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
@@ -533,11 +533,11 @@ class TestNamingConventionLegacyRedirect:
         legacy = [
             i for i in issues
             if i.get("kind") == "dir" and i.get("name") == "freebuff_plugin"
-        ***REMOVED***
+        ]
         assert len(legacy) == 1, (
-            f"orphan shim должен флагуться как нарушение, issues={issues***REMOVED***"
+            f"orphan shim должен флагуться как нарушение, issues={issues}"
         )
-        assert legacy[0***REMOVED***["issue"***REMOVED***.startswith("top-level dir violates")
+        assert legacy[0]["issue"].startswith("top-level dir violates")
 
     def test_non_legacy_undeclared_dir_still_flagged(
         self, tmp_path: Path
@@ -559,9 +559,9 @@ class TestNamingConventionLegacyRedirect:
         garbage = [
             i for i in issues
             if i.get("kind") == "dir" and i.get("name") == "garbage_dir"
-        ***REMOVED***
+        ]
         assert len(garbage) == 1
-        assert garbage[0***REMOVED***["issue"***REMOVED***.startswith("top-level dir violates")
+        assert garbage[0]["issue"].startswith("top-level dir violates")
 
     def test_legacy_redirect_helper_unit(self) -> None:
         # Unit-тест для _is_legacy_redirect_satisfied.
@@ -580,7 +580,7 @@ class TestNamingConventionLegacyRedirect:
 
 
 class TestNamingConventionEvaluationPackage:
-    """[v5.189.68***REMOVED*** Evaluation-пакеты с каноническим именем от промта-источника.
+    """[v5.189.68] Evaluation-пакеты с каноническим именем от промта-источника.
 
     Каталог `architecture_forensics_v2/` назван ИМЕННО так по требованию
     promt104 §28 REQUIRED OUTPUT (без NN-suffix). Переименование сломало бы
@@ -603,9 +603,9 @@ class TestNamingConventionEvaluationPackage:
         (tmp_path / "architecture_forensics_v2").mkdir()
         from scripts_01.consistency_check import check_naming_convention
         issues = check_naming_convention(tmp_path)
-        pkg = [i for i in issues if i.get("kind") == "dir" and i.get("name") == "architecture_forensics_v2"***REMOVED***
-        assert pkg == [***REMOVED***, (
-            f"evaluation-package dir должен пропускаться (имя от промта), issues={issues***REMOVED***"
+        pkg = [i for i in issues if i.get("kind") == "dir" and i.get("name") == "architecture_forensics_v2"]
+        assert pkg == [], (
+            f"evaluation-package dir должен пропускаться (имя от промта), issues={issues}"
         )
 
     def test_non_declared_bare_dir_still_flagged(self, tmp_path: Path) -> None:
@@ -614,11 +614,11 @@ class TestNamingConventionEvaluationPackage:
         (tmp_path / "random_package_v2").mkdir()
         from scripts_01.consistency_check import check_naming_convention
         issues = check_naming_convention(tmp_path)
-        flagged = [i for i in issues if i.get("kind") == "dir" and i.get("name") == "random_package_v2"***REMOVED***
+        flagged = [i for i in issues if i.get("kind") == "dir" and i.get("name") == "random_package_v2"]
         assert len(flagged) == 1, (
-            f"недекларированный bare-dir должен флагуться, issues={issues***REMOVED***"
+            f"недекларированный bare-dir должен флагуться, issues={issues}"
         )
-        assert flagged[0***REMOVED***["issue"***REMOVED***.startswith("top-level dir violates")
+        assert flagged[0]["issue"].startswith("top-level dir violates")
 
     def test_evaluation_package_dirs_constant_defined(self) -> None:
         """Константа _EVALUATION_PACKAGE_DIRS существует и содержит пакет promt104."""
@@ -626,7 +626,7 @@ class TestNamingConventionEvaluationPackage:
         assert "architecture_forensics_v2" in _EVALUATION_PACKAGE_DIRS
 
     def test_consolidated_forensics_dir_skipped(self, tmp_path: Path) -> None:
-        """[v5.189.73***REMOVED*** Сводный forensic-архив FORENSICS_104_105_106_107 пропускается.
+        """[v5.189.73] Сводный forensic-архив FORENSICS_104_105_106_107 пропускается.
 
         Имя задано задачей (единый пакет 4 проходов); NN-suffix нарушил бы
         соответствие имени архиву FORENSICS_104_105_106_107_v5.189.73.tar.gz.
@@ -639,23 +639,23 @@ class TestNamingConventionEvaluationPackage:
         pkg = [
             i for i in issues
             if i.get("kind") == "dir" and i.get("name") == "FORENSICS_104_105_106_107"
-        ***REMOVED***
-        assert pkg == [***REMOVED***, (
-            f"consolidated forensics dir должен пропускаться, issues={issues***REMOVED***"
+        ]
+        assert pkg == [], (
+            f"consolidated forensics dir должен пропускаться, issues={issues}"
         )
 
 
 class TestRealProject:
     def test_conforming_workspace(self, workspace: Path):
         """Фикстура: каталоги имя_NN, FINAL_STRUCTURE с секцией → чисто."""
-        assert check_naming_convention(workspace) == [***REMOVED***
+        assert check_naming_convention(workspace) == []
 
     def test_bad_top_level_dir_name(self, tmp_path: Path):
         ws = tmp_path / "ws"
         _write(ws / FINAL_STRUCTURE, "### 2.1 Схема именования\n")
         (ws / "old_docs").mkdir()  # без суффикса _NN
         issues = check_naming_convention(ws)
-        assert any(i["kind"***REMOVED*** == "dir" and i["name"***REMOVED*** == "old_docs" for i in issues)
+        assert any(i["kind"] == "dir" and i["name"] == "old_docs" for i in issues)
 
     def test_system_and_hidden_dirs_skipped(self, tmp_path: Path):
         ws = tmp_path / "ws"
@@ -663,7 +663,7 @@ class TestRealProject:
         _write(ws / GLOSSARY, "| **Naming Convention** | x |\n")
         (ws / "__pycache__").mkdir()
         (ws / ".git").mkdir()
-        assert check_naming_convention(ws) == [***REMOVED***
+        assert check_naming_convention(ws) == []
 
     def test_duplicate_dir_suffix(self, tmp_path: Path):
         ws = tmp_path / "ws"
@@ -671,7 +671,7 @@ class TestRealProject:
         (ws / "alpha_01").mkdir()
         (ws / "beta_01").mkdir()
         issues = check_naming_convention(ws)
-        assert any(i["kind"***REMOVED*** == "dir" and i.get("number") == "01" for i in issues)
+        assert any(i["kind"] == "dir" and i.get("number") == "01" for i in issues)
 
     def test_unique_dir_suffixes_ok(self, tmp_path: Path):
         ws = tmp_path / "ws"
@@ -679,7 +679,7 @@ class TestRealProject:
         _write(ws / GLOSSARY, "| **Naming Convention** | x |\n")
         (ws / "alpha_01").mkdir()
         (ws / "beta_02").mkdir()
-        assert check_naming_convention(ws) == [***REMOVED***
+        assert check_naming_convention(ws) == []
 
     def test_prompt_name_violation(self, tmp_path: Path):
         ws = tmp_path / "ws"
@@ -703,7 +703,7 @@ class TestRealProject:
         prompts.mkdir()
         _write(prompts / "099_99_bad_theme.md", "# prompt\n")
         issues = check_naming_convention(ws)
-        assert any(i["kind"***REMOVED*** == "prompt" and i["theme"***REMOVED*** == "99" for i in issues)
+        assert any(i["kind"] == "prompt" and i["theme"] == "99" for i in issues)
 
     def test_prompt_duplicate_number(self, tmp_path: Path):
         ws = tmp_path / "ws"
@@ -713,7 +713,7 @@ class TestRealProject:
         _write(prompts / "001_01_first.md", "# a\n")
         _write(prompts / "001_02_second.md", "# b\n")
         issues = check_naming_convention(ws)
-        assert any(i["kind"***REMOVED*** == "prompt" and i.get("number") == "001" for i in issues)
+        assert any(i["kind"] == "prompt" and i.get("number") == "001" for i in issues)
 
     def test_prompt_gaps_allowed(self, tmp_path: Path):
         """Гэпы в номерах (018–021/035) — намеренные, не нарушение."""
@@ -724,7 +724,7 @@ class TestRealProject:
         prompts.mkdir()
         _write(prompts / "001_01_first.md", "# a\n")
         _write(prompts / "003_01_third.md", "# c\n")
-        assert check_naming_convention(ws) == [***REMOVED***
+        assert check_naming_convention(ws) == []
 
     def test_missing_final_structure_section(self, tmp_path: Path):
         ws = tmp_path / "ws"
@@ -772,7 +772,7 @@ class TestCountTestFunctions:
 
 
 class TestPytestCollectionVisitor:
-    """[5.39.2***REMOVED*** Regression-gate для `_PytestCollectionVisitor` (consistency_check).
+    """[5.39.2] Regression-gate для `_PytestCollectionVisitor` (consistency_check).
 
     Защищает от регрессии в фильтре AST test-functions
     (helper-class / fixture / private / TestCase subclass / async edges),
@@ -787,7 +787,7 @@ class TestPytestCollectionVisitor:
         v = V("synthetic.py")
         v.visit(ast.parse("def test_one(): pass\ndef test_two():\n    pass\n"))
         assert v.count == 2
-        assert v.exclusions == [***REMOVED***
+        assert v.exclusions == []
 
     def test_visitor_counts_test_prefixed_class_method(self) -> None:
         v = V("synthetic.py")
@@ -797,7 +797,7 @@ class TestPytestCollectionVisitor:
             "    def test_endpoint_returns_500(self):\n        pass\n"
         ))
         assert v.count == 2
-        assert v.exclusions == [***REMOVED***
+        assert v.exclusions == []
 
     def test_visitor_skips_helper_class_method(self) -> None:
         v = V("synthetic.py")
@@ -807,7 +807,7 @@ class TestPytestCollectionVisitor:
         ))
         assert v.count == 0
         assert len(v.exclusions) == 1
-        assert "IntegrationHelper" in v.exclusions[0***REMOVED***["reason"***REMOVED***
+        assert "IntegrationHelper" in v.exclusions[0]["reason"]
 
     def test_visitor_skips_pytest_fixture_decorated(self) -> None:
         v = V("synthetic.py")
@@ -818,7 +818,7 @@ class TestPytestCollectionVisitor:
         ))
         assert v.count == 0
         assert len(v.exclusions) == 1
-        assert "fixture" in v.exclusions[0***REMOVED***["reason"***REMOVED***.lower()
+        assert "fixture" in v.exclusions[0]["reason"].lower()
 
     def test_visitor_counts_unittest_testcase_subclass(self) -> None:
         v = V("synthetic.py")
@@ -828,13 +828,13 @@ class TestPytestCollectionVisitor:
             "    def test_legacy_method(self):\n        pass\n"
         ))
         assert v.count == 1
-        assert v.exclusions == [***REMOVED***
+        assert v.exclusions == []
 
     def test_visitor_counts_async_module_level(self) -> None:
         v = V("synthetic.py")
         v.visit(ast.parse("async def test_async_one(): pass\n"))
         assert v.count == 1
-        assert v.exclusions == [***REMOVED***
+        assert v.exclusions == []
 
     def test_visitor_silently_skips_non_test_prefixed_methods(self) -> None:
         """Методы без префикса `test_` молча игнорируются (ни counted, ни excluded).
@@ -853,25 +853,25 @@ class TestPytestCollectionVisitor:
             "    def helper_method(self):\n        pass\n"
             "    def _test_private_helper(self):\n        pass\n"
         ))
-        assert v.count == 1, f"only test_collectible должен считаться, got {v.count***REMOVED***"
-        assert v.exclusions == [***REMOVED***, (
-            f"non-test_-prefixed не должны попадать в exclusions, got {v.exclusions***REMOVED***"
+        assert v.count == 1, f"only test_collectible должен считаться, got {v.count}"
+        assert v.exclusions == [], (
+            f"non-test_-prefixed не должны попадать в exclusions, got {v.exclusions}"
         )
 
     @pytest.mark.slow  # v5.189.10: cross-session кэш; первый прогон платит 39.5s
     def test_count_test_functions_matches_pytest_collect_only_on_real_project(self) -> None:
         """e2e invariant: для PROJECT_ROOT AST count == pytest --collect-only count (deduped).
 
-        Парсит pytest output ТАК ЖЕ как `diagnose_test_count_gap` (strip `[...***REMOVED***` brackets,
+        Парсит pytest output ТАК ЖЕ как `diagnose_test_count_gap` (strip `[...]` brackets,
         dedup by `(file_basename, class_chain, func_name)`). Это настоящий gap-closure
         contract: parametrize-экспансия не раздувает счётчик, потому что все
         расширения одного `test_x` dedup'ятся в одну set-entry. Это и есть
-        то, что `[5.39.2***REMOVED***` закрыл.
+        то, что `[5.39.2]` закрыл.
         v5.189.10: subprocess заменён на `_collect_only_stdout_lines()` —
         cross-session кэш с mtime-инвалидацией (39.5s → ~0 на повторных прогонах).
         """
         # Reproduce Set-A vs Set-B matching from diagnose_test_count_gap.
-        pytest_set: set[tuple[str, str, str***REMOVED******REMOVED*** = set()
+        pytest_set: set[tuple[str, str, str]] = set()
         for line in _collect_only_stdout_lines():
             line = line.strip()
             if "::" not in line:
@@ -879,21 +879,21 @@ class TestPytestCollectionVisitor:
             parts = line.split("::")
             if len(parts) < 2:
                 continue
-            file_basename = Path(parts[0***REMOVED***).name
-            test_parts = parts[1:***REMOVED***
-            func_with_params = test_parts[-1***REMOVED***
+            file_basename = Path(parts[0]).name
+            test_parts = parts[1:]
+            func_with_params = test_parts[-1]
             func_name = (
-                func_with_params.split("[", 1)[0***REMOVED***
+                func_with_params.split("[", 1)[0]
                 if "[" in func_with_params else func_with_params
             )
-            chain = test_parts[:-1***REMOVED***
+            chain = test_parts[:-1]
             pytest_set.add((file_basename, _chain_key(chain), func_name))
 
         ast_count = count_test_functions(PROJECT_ROOT)
         pytest_count = len(pytest_set)
         assert ast_count == pytest_count, (
-            f"AST/pytest (deduped) gap в PROJECT_ROOT: AST={ast_count***REMOVED*** vs "
-            f"pytest={pytest_count***REMOVED***. Типичные причины: (1) дубль class TestX в "
+            f"AST/pytest (deduped) gap в PROJECT_ROOT: AST={ast_count} vs "
+            f"pytest={pytest_count}. Типичные причины: (1) дубль class TestX в "
             f"одном модуле (pytest collects only last), (2) visitor regex bug, "
             f"(3) class_chain/string desync в _chain_key. Если это parametrize "
             f"inflation — вычисли AST/pytest по set, а не по raster lines."
@@ -903,31 +903,31 @@ class TestPytestCollectionVisitor:
 class TestCheckTestCounter:
     def _seed_consistent(self, ws: Path, n: int = 3) -> None:
         """tests_09 с n тестами + CHANGELOG/CQS с совпадающим счётчиком n."""
-        tests = "\n".join(f"def test_{i***REMOVED***(): pass\n" for i in range(n))
+        tests = "\n".join(f"def test_{i}(): pass\n" for i in range(n))
         _write(ws / "tests_09/test_sample.py", tests)
         _write(
             ws / CHANGELOG,
-            f"## [0.0.0***REMOVED***\n- `python -m pytest tests_09/ -q` — **{n***REMOVED*** passed, 0 failures**\n",
+            f"## [0.0.0]\n- `python -m pytest tests_09/ -q` — **{n} passed, 0 failures**\n",
         )
         _write(
             ws / CODE_QUALITY_STANDARD,
-            f"| 11.6 | Регрессионные тесты | (цель: {n***REMOVED***+ passed, 0 failures) |\n",
+            f"| 11.6 | Регрессионные тесты | (цель: {n}+ passed, 0 failures) |\n",
         )
 
     def test_all_clean(self, tmp_path: Path):
         ws = tmp_path / "ws"
         self._seed_consistent(ws, n=3)
-        assert check_test_counter(ws) == [***REMOVED***
+        assert check_test_counter(ws) == []
 
     def test_changelog_stale(self, tmp_path: Path):
         ws = tmp_path / "ws"
         self._seed_consistent(ws, n=3)
         _write(
             ws / CHANGELOG,
-            "## [0.0.0***REMOVED***\n- `python -m pytest tests_09/ -q` — **2 passed, 0 failures**\n",
+            "## [0.0.0]\n- `python -m pytest tests_09/ -q` — **2 passed, 0 failures**\n",
         )
         issues = check_test_counter(ws)
-        assert any(i["doc"***REMOVED*** == "CHANGELOG.md" and i.get("documented") == 2 for i in issues)
+        assert any(i["doc"] == "CHANGELOG.md" and i.get("documented") == 2 for i in issues)
 
     def test_picks_newest_version_even_if_order_broken(self, tmp_path: Path):
         """Keep a Changelog: счётчик берётся из секции с МАКСИМАЛЬНОЙ версией,
@@ -936,11 +936,11 @@ class TestCheckTestCounter:
         self._seed_consistent(ws, n=3)
         _write(
             ws / CHANGELOG,
-            "## [5.34.0***REMOVED***\n- `python -m pytest tests_09/ -q` — **2 passed, 0 failures**\n\n"
+            "## [5.34.0]\n- `python -m pytest tests_09/ -q` — **2 passed, 0 failures**\n\n"
             "---\n\n"
-            "## [5.35.0***REMOVED***\n- `python -m pytest tests_09/ -q` — **3 passed, 0 failures**\n",
+            "## [5.35.0]\n- `python -m pytest tests_09/ -q` — **3 passed, 0 failures**\n",
         )
-        assert check_test_counter(ws) == [***REMOVED***
+        assert check_test_counter(ws) == []
 
     def test_target_stale(self, tmp_path: Path):
         ws = tmp_path / "ws"
@@ -950,27 +950,27 @@ class TestCheckTestCounter:
             "| 11.6 | Регрессионные тесты | (цель: 2+ passed, 0 failures) |\n",
         )
         issues = check_test_counter(ws)
-        assert any(i["doc"***REMOVED*** == "CODE_QUALITY_STANDARD.md" and i.get("target") == 2 for i in issues)
+        assert any(i["doc"] == "CODE_QUALITY_STANDARD.md" and i.get("target") == 2 for i in issues)
 
     def test_missing_changelog_line(self, tmp_path: Path):
         ws = tmp_path / "ws"
         self._seed_consistent(ws, n=3)
-        _write(ws / CHANGELOG, "## [0.0.0***REMOVED***\n- Прочие изменения\n")
+        _write(ws / CHANGELOG, "## [0.0.0)\n- Прочие изменения\n")
         issues = check_test_counter(ws)
-        assert any(i["doc"***REMOVED*** == "CHANGELOG.md" and "not found" in i["issue"***REMOVED*** for i in issues)
+        assert any(i["doc"] == "CHANGELOG.md" and "not found" in i["issue"] for i in issues)
 
     def test_missing_target_line(self, tmp_path: Path):
         ws = tmp_path / "ws"
         self._seed_consistent(ws, n=3)
         _write(ws / CODE_QUALITY_STANDARD, "| 11.6 | Регрессионные тесты | без цели |\n")
         issues = check_test_counter(ws)
-        assert any(i["doc"***REMOVED*** == "CODE_QUALITY_STANDARD.md" and "not found" in i["issue"***REMOVED*** for i in issues)
+        assert any(i["doc"] == "CODE_QUALITY_STANDARD.md" and "not found" in i["issue"] for i in issues)
 
     def test_missing_registries_skipped(self, tmp_path: Path):
         """Нет CHANGELOG/CQS — проверка пропускается (нет якорей для сверки)."""
         ws = tmp_path / "ws"
         _write(ws / "tests_09/test_sample.py", "def test_one(): pass\n")
-        assert check_test_counter(ws) == [***REMOVED***
+        assert check_test_counter(ws) == []
 
     def test_report_includes_test_counter_key(self, workspace: Path):
         report = build_report(workspace)
@@ -980,39 +980,39 @@ class TestCheckTestCounter:
 class TestReport:
     def test_build_report_consistent(self, workspace: Path):
         report = build_report(workspace)
-        assert report["consistent"***REMOVED*** is True
-        assert report["total_issues"***REMOVED*** == 0
+        assert report["consistent"] is True
+        assert report["total_issues"] == 0
 
     def test_build_report_detects_issues(self, tmp_path: Path):
         report = build_report(tmp_path)
-        assert report["consistent"***REMOVED*** is False
-        assert report["total_issues"***REMOVED*** > 0
+        assert report["consistent"] is False
+        assert report["total_issues"] > 0
 
     def test_build_report_includes_naming_convention_key(self, workspace: Path):
         report = build_report(workspace)
         assert "naming_convention" in report
-        assert report["naming_convention"***REMOVED*** == [***REMOVED***
+        assert report["naming_convention"] == []
 
     def test_build_report_includes_anchors_key(self, workspace: Path):
-        """[5.189.4***REMOVED*** check #11 ANCHORS: ключ есть, на пустом workspace — пусто."""
+        """[5.189.4] check #11 ANCHORS: ключ есть, на пустом workspace — пусто."""
         report = build_report(workspace)
         assert "anchors" in report
-        assert report["anchors"***REMOVED*** == [***REMOVED***
+        assert report["anchors"] == []
 
     def test_run_consistency_check_accepts_str(self, workspace: Path):
         report = run_consistency_check(str(workspace))
-        assert report["consistent"***REMOVED*** is True
+        assert report["consistent"] is True
 
     def test_main_exit_zero_when_consistent(self, workspace: Path, monkeypatch):
         from scripts_01.consistency_check import main
 
-        monkeypatch.setattr(sys, "argv", ["consistency_check.py", "--workspace", str(workspace)***REMOVED***)
+        monkeypatch.setattr(sys, "argv", ["consistency_check.py", "--workspace", str(workspace)])
         assert main() == 0
 
     def test_main_exit_one_when_inconsistent(self, tmp_path: Path, monkeypatch):
         from scripts_01.consistency_check import main
 
-        monkeypatch.setattr(sys, "argv", ["consistency_check.py", "--workspace", str(tmp_path)***REMOVED***)
+        monkeypatch.setattr(sys, "argv", ["consistency_check.py", "--workspace", str(tmp_path)])
         assert main() == 1
 
 
@@ -1022,20 +1022,20 @@ class TestReport:
 
 
 class TestRealWorkspaceConsistent:
-    """[5.39.2 rename***REMOVED*** вторая группа с именем TestRealProject теневая первой
+    """[5.39.2 rename] вторая группа с именем TestRealProject теневая первой
     (TestRealProject на строке 381 несёт 12 test_* методов). pytest собирает
     только последний класс с уникальным именем в модуле → первая группа
-    становилась ast_only phantom в [5.39.0***REMOVED*** consistency_check. Теперь обе
+    становилась ast_only phantom в [5.39.0] consistency_check. Теперь обе
     группы под уникальными именами, pytest собирает все 13, gap == 0."""
 
     @pytest.mark.slow  # v5.189.10: полный AST-скан репозитория (~11s)
     def test_real_project_consistent(self):
         """Фактический проект должен проходить проверку (все реестры согласованы)."""
         report = build_report(PROJECT_ROOT)
-        assert report["consistent"***REMOVED*** is True, format(report["total_issues"***REMOVED***)
+        assert report["consistent"] is True, format(report["total_issues"])
     @pytest.mark.slow  # v5.189.63 drift-closure guard
     def test_build_report_idempotent_under_repeat(self) -> None:
-        """[5.189.63***REMOVED*** `build_report(workspace)` MUST be idempotent: N повторных
+        """[5.189.63] `build_report(workspace)` MUST be idempotent: N повторных
         вызовов возвращают ОДИНАКОВЫЙ total_issues / consistent / per-check dicts.
 
         Защита от double-application regression (re-run loop, retry-on-fail hook):
@@ -1049,21 +1049,21 @@ class TestRealWorkspaceConsistent:
           (c) backfill_signature timestamps drift across calls (timestamps != stable)
           (d) anchors resolver accumulates unverified-set between runs
         """
-        reports = [build_report(PROJECT_ROOT) for _ in range(5)***REMOVED***
-        first = reports[0***REMOVED***
-        for nth, r in enumerate(reports[1:***REMOVED***, start=2):
+        reports = [build_report(PROJECT_ROOT) for _ in range(5)]
+        first = reports[0]
+        for nth, r in enumerate(reports[1:], start=2):
             # 1. Cardinal invariant: total_issues stable.
-            assert r["total_issues"***REMOVED*** == first["total_issues"***REMOVED***, (
-                f"build_report not idempotent on repeat #{nth***REMOVED***: "
-                f"first total_issues={first['total_issues'***REMOVED******REMOVED***, "
-                f"repeat #{nth***REMOVED*** total_issues={r['total_issues'***REMOVED******REMOVED***. "
+            assert r["total_issues"] == first["total_issues"], (
+                f"build_report not idempotent on repeat #{nth}: "
+                f"first total_issues={first['total_issues']}, "
+                f"repeat #{nth} total_issues={r['total_issues']}. "
                 f"Hint: check registry YAML mtime, AST cache, or "
                 f"monotonic dedupe counter across calls."
             )
             # 2. Boolean consistent flag must match.
-            assert r["consistent"***REMOVED*** == first["consistent"***REMOVED***, (
-                f"consistent flag flipped between call 1 and call #{nth***REMOVED***: "
-                f"first={first['consistent'***REMOVED******REMOVED***, repeat={r['consistent'***REMOVED******REMOVED***"
+            assert r["consistent"] == first["consistent"], (
+                f"consistent flag flipped between call 1 and call #{nth}: "
+                f"first={first['consistent']}, repeat={r['consistent']}"
             )
             # 3. Per-check dicts MUST be deep-equal — no row accumulation/dropout.
             for check_key in ("test_counter", "missing_registry_sync",
@@ -1072,9 +1072,9 @@ class TestRealWorkspaceConsistent:
                               "glossary_terms", "roadmap_refs",
                               "cross_references", "project_book",
                               "naming_convention", "anchors"):
-                assert r[check_key***REMOVED*** == first[check_key***REMOVED***, (
-                    f"check '{check_key***REMOVED***' diverged on repeat #{nth***REMOVED***: "
-                    f"first={first[check_key***REMOVED***!r***REMOVED***, repeat=#{nth***REMOVED***={r[check_key***REMOVED***!r***REMOVED***"
+                assert r[check_key] == first[check_key], (
+                    f"check '{check_key}' diverged on repeat #{nth}: "
+                    f"first={first[check_key]!r}, repeat=#{nth}={r[check_key]!r}"
                 )
 
 
@@ -1110,11 +1110,11 @@ class TestBackfillSignature:
                     "registered_at": "2026-08-11T22:00:00+00:00",
                     "updated_at": "2026-08-11T22:00:00+00:00",
                     "backfill": True,
-                ***REMOVED***
-            ***REMOVED***,
+                }
+            },
         )
         warnings = check_backfill_signature(tmp_path)
-        assert warnings == [***REMOVED***, f"expected silent, got: {warnings***REMOVED***"
+        assert warnings == [], f"expected silent, got: {warnings}"
 
     def test_missing_backfill_marker_on_retroactive_signature_flagged(
         self, tmp_path: Path
@@ -1131,18 +1131,18 @@ class TestBackfillSignature:
                     "registered_at": "2026-08-11T22:00:00+00:00",
                     "updated_at": "2026-08-11T22:00:00+00:00",
                     # backfill field explicitly absent → flagged.
-                ***REMOVED***
-            ***REMOVED***,
+                }
+            },
         )
         warnings = check_backfill_signature(tmp_path)
-        assert len(warnings) == 1, f"expected 1 warning, got: {warnings***REMOVED***"
-        w = warnings[0***REMOVED***
-        assert w["check"***REMOVED*** == "backfill_signature"
-        assert w["severity"***REMOVED*** == "warning"
-        assert w["doc"***REMOVED*** == "data_13/missing_registry.yaml"
-        assert w["item_id"***REMOVED*** == "retro_omitted"
-        assert "registered_at==updated_at" in w["reason"***REMOVED***
-        assert "backfill:true" in w["reason"***REMOVED***
+        assert len(warnings) == 1, f"expected 1 warning, got: {warnings}"
+        w = warnings[0]
+        assert w["check"] == "backfill_signature"
+        assert w["severity"] == "warning"
+        assert w["doc"] == "data_13/missing_registry.yaml"
+        assert w["item_id"] == "retro_omitted"
+        assert "registered_at==updated_at" in w["reason"]
+        assert "backfill:true" in w["reason"]
 
     def test_normal_lifecycle_with_divergent_timestamps_is_silent(
         self, tmp_path: Path
@@ -1158,11 +1158,11 @@ class TestBackfillSignature:
                     "registered_at": "2026-08-10T22:00:00+00:00",
                     "updated_at": "2026-08-11T22:00:00+00:00",  # +1 day → genuine lifecycle
                     "backfill": False,
-                ***REMOVED***
-            ***REMOVED***,
+                }
+            },
         )
         warnings = check_backfill_signature(tmp_path)
-        assert warnings == [***REMOVED***, f"expected silent, got: {warnings***REMOVED***"
+        assert warnings == [], f"expected silent, got: {warnings}"
 
     def test_seed_entries_are_exempt(self, tmp_path: Path) -> None:
         """SEED items pre-date backfill:bool discipline — must NOT be flagged.
@@ -1171,12 +1171,12 @@ class TestBackfillSignature:
         the test follows platform evolution (we don't hardcode names).
         """
         seed_ids = [
-            str(item["item_id"***REMOVED***)
-            for item in (_MR_SEED or [***REMOVED***)
+            str(item["item_id"])
+            for item in (_MR_SEED or [])
             if isinstance(item, dict) and "item_id" in item
-        ***REMOVED***
+        ]
         assert seed_ids, "test assumes _SEED is non-empty"
-        sample_seed_id = seed_ids[0***REMOVED***
+        sample_seed_id = seed_ids[0]
         _write_yaml(
             tmp_path / "data_13" / "missing_registry.yaml",
             {
@@ -1187,12 +1187,12 @@ class TestBackfillSignature:
                     "registered_at": "2026-08-11T22:00:00+00:00",
                     "updated_at": "2026-08-11T22:00:00+00:00",
                     "backfill": False,
-                ***REMOVED***
-            ***REMOVED***,
+                }
+            },
         )
         warnings = check_backfill_signature(tmp_path)
-        assert warnings == [***REMOVED***, (
-            f"SEED entry {sample_seed_id!r***REMOVED*** must be exempt; got: {warnings***REMOVED***"
+        assert warnings == [], (
+            f"SEED entry {sample_seed_id!r} must be exempt; got: {warnings}"
         )
 
     def test_non_implemented_status_never_flagged(self, tmp_path: Path) -> None:
@@ -1211,11 +1211,11 @@ class TestBackfillSignature:
                     "registered_at": "2026-08-11T22:00:00+00:00",
                     "updated_at": "2026-08-11T22:00:00+00:00",
                     "backfill": False,
-                ***REMOVED***
-            ***REMOVED***,
+                }
+            },
         )
         warnings = check_backfill_signature(tmp_path)
-        assert warnings == [***REMOVED***, f"non-implemented must NOT be flagged; got: {warnings***REMOVED***"
+        assert warnings == [], f"non-implemented must NOT be flagged; got: {warnings}"
 
     def test_aggregated_into_build_report_json(self, tmp_path: Path) -> None:
         """check_backfill_signatures() result appears as `backfill_signature` key
@@ -1233,16 +1233,16 @@ class TestBackfillSignature:
                     "registered_at": "2026-08-11T22:00:00+00:00",
                     "updated_at": "2026-08-11T22:00:00+00:00",
                     "backfill": False,  # WILL be flagged
-                ***REMOVED***
-            ***REMOVED***,
+                }
+            },
         )
         report = build_report(tmp_path)
         assert "backfill_signature" in report, (
-            f"build_report missing backfill_signature key; keys: {sorted(report)***REMOVED***"
+            f"build_report missing backfill_signature key; keys: {sorted(report)}"
         )
-        sigs = report["backfill_signature"***REMOVED***
+        sigs = report["backfill_signature"]
         assert len(sigs) == 1
-        assert sigs[0***REMOVED***["item_id"***REMOVED*** == "real_retro_suspect"
+        assert sigs[0]["item_id"] == "real_retro_suspect"
         # WARNING counted as issue (consistent with severity='warning' convention).
-        assert report["total_issues"***REMOVED*** >= 1
-        assert report["consistent"***REMOVED*** is False  # warning flips consistent
+        assert report["total_issues"] >= 1
+        assert report["consistent"] is False  # warning flips consistent

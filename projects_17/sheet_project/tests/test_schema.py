@@ -32,41 +32,41 @@ def _field(name: str, ftype: FieldType = FieldType.TEXT) -> Field:
 def _minimal_workbook() -> Workbook:
     sheet = Sheet(
         name="Projects",
-        columns=[_field("name"), _field("status")***REMOVED***,
-        data_source=DataSource(source="projects", field_map={"name": "name", "status": "status"***REMOVED***),
+        columns=[_field("name"), _field("status")],
+        data_source=DataSource(source="projects", field_map={"name": "name", "status": "status"}),
     )
     return Workbook(
         name="dashboard",
         template_id="project_management",
         template_version="1.0",
-        sheets=[sheet***REMOVED***,
+        sheets=[sheet],
     )
 
 
 def _full_workbook() -> Workbook:
     projects = Sheet(
         name="Projects",
-        columns=[_field("name"), _field("status")***REMOVED***,
-        data_source=DataSource(source="projects", field_map={"name": "name", "status": "status"***REMOVED***),
-        formulas=[Formula(expression="=COUNTA({status***REMOVED***)", anchor=Anchor(column="status"))***REMOVED***,
+        columns=[_field("name"), _field("status")],
+        data_source=DataSource(source="projects", field_map={"name": "name", "status": "status"}),
+        formulas=[Formula(expression="=COUNTA({status))", anchor=Anchor(column="status"))],
         references=[
             Reference(
                 target_sheet="Tasks",
                 kind=ReferenceKind.CROSS_SHEET_REF,
                 anchor=Anchor(column="project_id"),
             )
-        ***REMOVED***,
+        ],
     )
     tasks = Sheet(
         name="Tasks",
-        columns=[_field("project_id"), _field("title")***REMOVED***,
-        data_source=DataSource(source="tasks", field_map={"project_id": "project_id", "title": "title"***REMOVED***),
+        columns=[_field("project_id"), _field("title")],
+        data_source=DataSource(source="tasks", field_map={"project_id": "project_id", "title": "title"}),
     )
     return Workbook(
         name="dashboard",
         template_id="project_management",
         template_version="1.0",
-        sheets=[projects, tasks***REMOVED***,
+        sheets=[projects, tasks],
     )
 
 
@@ -92,21 +92,21 @@ def test_full_workbook_is_valid():
 
 
 def test_empty_sheets_rejected():
-    wb = Workbook(name="x", template_id="t", template_version="1", sheets=[***REMOVED***)
+    wb = Workbook(name="x", template_id="t", template_version="1", sheets=[])
     with pytest.raises(ConfigValidationError):
         validate_workbook(wb)
 
 
 def test_duplicate_sheet_names_rejected():
-    s = Sheet(name="A", columns=[_field("x")***REMOVED***)
-    wb = Workbook(name="x", template_id="t", template_version="1", sheets=[s, s***REMOVED***)
+    s = Sheet(name="A", columns=[_field("x")])
+    wb = Workbook(name="x", template_id="t", template_version="1", sheets=[s, s])
     with pytest.raises(ConfigValidationError):
         validate_workbook(wb)
 
 
 def test_duplicate_column_names_rejected():
-    s = Sheet(name="A", columns=[_field("x"), _field("x")***REMOVED***)
-    wb = Workbook(name="x", template_id="t", template_version="1", sheets=[s***REMOVED***)
+    s = Sheet(name="A", columns=[_field("x"), _field("x")])
+    wb = Workbook(name="x", template_id="t", template_version="1", sheets=[s])
     with pytest.raises(ConfigValidationError):
         validate_workbook(wb)
 
@@ -114,29 +114,29 @@ def test_duplicate_column_names_rejected():
 def test_field_map_unknown_column_rejected():
     s = Sheet(
         name="A",
-        columns=[_field("name")***REMOVED***,
-        data_source=DataSource(source="projects", field_map={"ghost": "ghost"***REMOVED***),
+        columns=[_field("name")],
+        data_source=DataSource(source="projects", field_map={"ghost": "ghost"}),
     )
-    wb = Workbook(name="x", template_id="t", template_version="1", sheets=[s***REMOVED***)
+    wb = Workbook(name="x", template_id="t", template_version="1", sheets=[s])
     with pytest.raises(ConfigValidationError, match="ghost"):
         validate_workbook(wb)
 
 
 def test_broken_reference_target_sheet_rejected():
-    s = Sheet(name="A", columns=[_field("x")***REMOVED***, references=[Reference(target_sheet="Nope")***REMOVED***)
-    wb = Workbook(name="x", template_id="t", template_version="1", sheets=[s***REMOVED***)
+    s = Sheet(name="A", columns=[_field("x")], references=[Reference(target_sheet="Nope")])
+    wb = Workbook(name="x", template_id="t", template_version="1", sheets=[s])
     with pytest.raises(ConfigValidationError, match="Nope"):
         validate_workbook(wb)
 
 
 def test_cross_sheet_ref_requires_anchor():
-    a = Sheet(name="A", columns=[_field("x")***REMOVED***)
+    a = Sheet(name="A", columns=[_field("x")])
     b = Sheet(
         name="B",
-        columns=[_field("y")***REMOVED***,
-        references=[Reference(target_sheet="A", kind=ReferenceKind.CROSS_SHEET_REF)***REMOVED***,
+        columns=[_field("y")],
+        references=[Reference(target_sheet="A", kind=ReferenceKind.CROSS_SHEET_REF)],
     )
-    wb = Workbook(name="x", template_id="t", template_version="1", sheets=[a, b***REMOVED***)
+    wb = Workbook(name="x", template_id="t", template_version="1", sheets=[a, b])
     with pytest.raises(ConfigValidationError, match="anchor"):
         validate_workbook(wb)
 
@@ -144,10 +144,10 @@ def test_cross_sheet_ref_requires_anchor():
 def test_formula_anchor_column_must_exist():
     s = Sheet(
         name="A",
-        columns=[_field("x")***REMOVED***,
-        formulas=[Formula(expression="=1", anchor=Anchor(column="ghost"))***REMOVED***,
+        columns=[_field("x")],
+        formulas=[Formula(expression="=1", anchor=Anchor(column="ghost"))],
     )
-    wb = Workbook(name="x", template_id="t", template_version="1", sheets=[s***REMOVED***)
+    wb = Workbook(name="x", template_id="t", template_version="1", sheets=[s])
     with pytest.raises(ConfigValidationError, match="ghost"):
         validate_workbook(wb)
 
@@ -158,19 +158,19 @@ def test_empty_required_string_rejected():
             name="",
             template_id="t",
             template_version="1",
-            sheets=[Sheet(name="A", columns=[_field("x")***REMOVED***)***REMOVED***,
+            sheets=[Sheet(name="A", columns=[_field("x")])],
         )
 
 
 def test_empty_columns_rejected():
-    wb = Workbook(name="x", template_id="t", template_version="1", sheets=[Sheet(name="A", columns=[***REMOVED***)***REMOVED***)
+    wb = Workbook(name="x", template_id="t", template_version="1", sheets=[Sheet(name="A", columns=[])])
     with pytest.raises(ConfigValidationError):
         validate_workbook(wb)
 
 
 def test_enum_field_rejects_raw_string():
     with pytest.raises(ConfigValidationError):
-        Field(name="x", type="text")  # type: ignore[arg-type***REMOVED***
+        Field(name="x", type="text")  # type: ignore[arg-type]
 
 
 # ── immutability + defaults ──
@@ -178,7 +178,7 @@ def test_enum_field_rejects_raw_string():
 def test_frozen_immutability():
     f = _field("x")
     with pytest.raises(FrozenInstanceError):
-        f.name = "y"  # type: ignore[misc***REMOVED***
+        f.name = "y"  # type: ignore[misc]
 
 
 def test_anchor_defaults():
@@ -197,7 +197,7 @@ def test_to_dict_from_dict_roundtrip():
 
 def test_to_dict_uses_enum_values():
     d = to_dict(_minimal_workbook())
-    assert d["sheets"***REMOVED***[0***REMOVED***["columns"***REMOVED***[0***REMOVED***["type"***REMOVED*** == "text"
+    assert d["sheets"][0]["columns"][0]["type"] == "text"
 
 
 def test_generation_artifact_roundtrip():

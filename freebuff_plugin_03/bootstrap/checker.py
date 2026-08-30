@@ -11,7 +11,7 @@ import platform
 import shutil
 import subprocess
 import sys
-***REMOVED***
+}
 from typing import Any, Dict, List, Optional, Tuple
 
 from freebuff_plugin_03.bootstrap import EnvironmentState
@@ -26,7 +26,7 @@ class EnvironmentChecker:
         print(state.python_version)
     """
 
-    def __init__(self, workspace_root: Optional[str***REMOVED*** = None):
+    def __init__(self, workspace_root: Optional[str] = None):
         self._workspace = Path(workspace_root or os.getcwd())
 
     def check(self) -> EnvironmentState:
@@ -78,21 +78,21 @@ class EnvironmentChecker:
         if state.is_termux:
             try:
                 result = subprocess.run(
-                    ["pkg", "list-installed"***REMOVED***,
+                    ["pkg", "list-installed"],
                     capture_output=True, text=True, timeout=10,
                 )
                 if result.returncode == 0:
                     state.system_packages = [
-                        line.split("/")[0***REMOVED***.strip()
+                        line.split("/")[0].strip()
                         for line in result.stdout.split("\n")
                         if line.strip() and "/" in line
-                    ***REMOVED***
+                    ]
             except Exception:
                 pass
 
     def _check_python(self, state: EnvironmentState) -> None:
         """Проверяет версию и путь Python."""
-        state.python_version = f"{sys.version_info.major***REMOVED***.{sys.version_info.minor***REMOVED***.{sys.version_info.micro***REMOVED***"
+        state.python_version = f"{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}"
         state.python_path = sys.executable
 
     def _check_node(self, state: EnvironmentState) -> None:
@@ -101,7 +101,7 @@ class EnvironmentChecker:
         if node_path:
             try:
                 result = subprocess.run(
-                    ["node", "--version"***REMOVED***,
+                    ["node", "--version"],
                     capture_output=True, text=True, timeout=5,
                 )
                 if result.returncode == 0:
@@ -130,9 +130,9 @@ class EnvironmentChecker:
                 with open("/proc/meminfo") as f:
                     for line in f:
                         if line.startswith("MemTotal:"):
-                            state.ram_total_mb = int(line.split()[1***REMOVED***) // 1024
+                            state.ram_total_mb = int(line.split()[1]) // 1024
                         elif line.startswith("MemAvailable:"):
-                            state.ram_available_mb = int(line.split()[1***REMOVED***) // 1024
+                            state.ram_available_mb = int(line.split()[1]) // 1024
         except Exception:
             pass
 
@@ -156,7 +156,7 @@ class EnvironmentChecker:
                         ("totalhigh", c_ulong),
                         ("freehigh", c_ulong),
                         ("mem_unit", c_uint),
-                    ***REMOVED***
+                    ]
 
                 si = SysInfo()
                 libc = ctypes.CDLL("libc.so.6")
@@ -170,25 +170,25 @@ class EnvironmentChecker:
         """Проверяет установленные pip пакеты."""
         try:
             result = subprocess.run(
-                [sys.executable, "-m", "pip", "list", "--format=columns"***REMOVED***,
+                [sys.executable, "-m", "pip", "list", "--format=columns"],
                 capture_output=True, text=True, timeout=15,
             )
             if result.returncode == 0:
-                for line in result.stdout.split("\n")[2:***REMOVED***:  # Пропускаем заголовок
+                for line in result.stdout.split("\n")[2:]:  # Пропускаем заголовок
                     parts = line.strip().split()
                     if len(parts) >= 2:
-                        state.pip_packages[parts[0***REMOVED***.lower()***REMOVED*** = parts[1***REMOVED***
+                        state.pip_packages[parts[0].lower()] = parts[1]
         except Exception:
             pass
 
     def _check_path(self, state: EnvironmentState) -> None:
         """Проверяет PATH."""
         state.path_dirs = os.environ.get("PATH", "").split(":")
-        state.env_vars["PATH"***REMOVED*** = os.environ.get("PATH", "")
-        state.env_vars["HOME"***REMOVED*** = os.environ.get("HOME", "")
+        state.env_vars["PATH"] = os.environ.get("PATH", "")
+        state.env_vars["HOME"] = os.environ.get("HOME", "")
         if state.is_termux:
-            state.env_vars["PREFIX"***REMOVED*** = os.environ.get("PREFIX", "")
-            state.env_vars["TERMUX_VERSION"***REMOVED*** = os.environ.get("TERMUX_VERSION", "")
+            state.env_vars["PREFIX"] = os.environ.get("PREFIX", "")
+            state.env_vars["TERMUX_VERSION"] = os.environ.get("TERMUX_VERSION", "")
 
     def _check_env_file(self, state: EnvironmentState) -> None:
         """Проверяет существование .env файла."""
@@ -202,7 +202,7 @@ class EnvironmentChecker:
         if state.has_git:
             try:
                 result = subprocess.run(
-                    ["git", "rev-parse", "--abbrev-ref", "HEAD"***REMOVED***,
+                    ["git", "rev-parse", "--abbrev-ref", "HEAD"],
                     capture_output=True, text=True, timeout=5,
                     cwd=str(self._workspace),
                 )

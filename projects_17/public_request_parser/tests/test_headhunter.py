@@ -3,14 +3,14 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-***REMOVED***
+}
 
 import pytest
 
 from app.adapters.headhunter import HeadhunterAdapter, parse_vacancies_payload
 from app.domain import AdapterError, SourceItem, SourcePolicy, SourcePolicyStatus
 
-FIXTURES = Path(__file__).parents[1***REMOVED*** / "fixtures" / "hh"
+FIXTURES = Path(__file__).parents[1] / "fixtures" / "hh"
 NOW = datetime(2026, 8, 23, 12, 0, tzinfo=timezone.utc)
 
 
@@ -53,7 +53,7 @@ def test_parse_page_builds_source_items() -> None:
     items = parse_vacancies_payload(_fixture("vacancies_page.json"))
 
     assert len(items) == 2
-    first = items[0***REMOVED***
+    first = items[0]
     assert isinstance(first, SourceItem)
     assert first.item_id == "136323698"
     assert first.canonical_url == "https://hh.ru/vacancy/136323698"
@@ -61,7 +61,7 @@ def test_parse_page_builds_source_items() -> None:
     assert first.published_at is not None
     assert first.published_at.astimezone(timezone.utc).hour == 8  # +0300 → 08:00 UTC
     assert "Python" in (first.content or "")
-    assert first.metadata["area"***REMOVED*** == "Москва"
+    assert first.metadata["area"] == "Москва"
 
 
 def test_parse_strips_highlight_tags() -> None:
@@ -71,8 +71,8 @@ def test_parse_strips_highlight_tags() -> None:
         "на <highlighttext>Python</highlighttext>",
     )
     items = parse_vacancies_payload(raw.encode("utf-8"))
-    assert "<highlighttext>" not in (items[0***REMOVED***.content or "")
-    assert "Python" in (items[0***REMOVED***.content or "")
+    assert "<highlighttext>" not in (items[0].content or "")
+    assert "Python" in (items[0].content or "")
 
 
 def test_parse_never_contains_private_fields() -> None:
@@ -81,7 +81,7 @@ def test_parse_never_contains_private_fields() -> None:
     # добавим «опасные» поля, чтобы проверить, что адаптер их игнорирует
     raw = raw.replace(
         '"snippet": {',
-        '"contacts": {"name": "Иванов Иван", "phones": [{"number": "+7-999"***REMOVED******REMOVED******REMOVED***,\n    "address": {"raw": "Москва, ул. Примерная, 1"***REMOVED***,\n    "snippet": {',
+        '"contacts": {"name": "Иванов Иван", "phones": [{"number": "+7-999"]]],\n    "address": {"raw": "Москва, ул. Примерная, 1"],\n    "snippet": {',
     )
     items = parse_vacancies_payload(raw.encode("utf-8"))
 
@@ -100,7 +100,7 @@ def test_parse_error_reports_api_error() -> None:
     import json
 
     payload = json.dumps(
-        {"errors": [{"type": "oauth", "value": "token expired"***REMOVED******REMOVED******REMOVED***
+        {"errors": [{"type": "oauth", "value": "token expired"}]}
     ).encode("utf-8")
 
     with pytest.raises(AdapterError, match="token expired"):
@@ -117,8 +117,8 @@ def test_parse_empty_items_is_not_error() -> None:
     """Пустой список items — легальный ответ (нет совпадений)."""
     import json
 
-    payload = json.dumps({"items": [***REMOVED***, "found": 0, "pages": 0***REMOVED***).encode("utf-8")
-    assert parse_vacancies_payload(payload) == [***REMOVED***
+    payload = json.dumps({"items": [], "found": 0, "pages": 0}).encode("utf-8")
+    assert parse_vacancies_payload(payload) == []
 
 
 # --- Policy gate -------------------------------------------------------------
@@ -133,10 +133,10 @@ async def test_allowed_can_poll_fetches() -> None:
         http_get=_fake_get,
     )
 
-    items = [item async for item in adapter.fetch()***REMOVED***
+    items = [item async for item in adapter.fetch()]
 
     assert len(items) == 2
-    assert items[0***REMOVED***.item_id == "136323698"
+    assert items[0].item_id == "136323698"
     assert await adapter.health() is True
 
 
@@ -155,7 +155,7 @@ async def test_non_allowed_hard_blocked() -> None:
             http_get=_fake_get,
         )
         with pytest.raises(AdapterError, match="ALLOWED"):
-            [item async for item in adapter.fetch()***REMOVED***
+            [item async for item in adapter.fetch()]
 
 
 @pytest.mark.asyncio
@@ -168,7 +168,7 @@ async def test_can_poll_false_blocks_even_allowed() -> None:
     )
 
     with pytest.raises(AdapterError, match="can_poll"):
-        [item async for item in adapter.fetch()***REMOVED***
+        [item async for item in adapter.fetch()]
 
 
 # --- fetch-семантика ---------------------------------------------------------
@@ -183,17 +183,17 @@ async def test_fetch_limit_and_checkpoint() -> None:
         http_get=_fake_get,
     )
 
-    first = [item async for item in adapter.fetch(limit=1)***REMOVED***
-    assert [item.item_id for item in first***REMOVED*** == ["136323698"***REMOVED***
+    first = [item async for item in adapter.fetch(limit=1)]
+    assert [item.item_id for item in first] == ["136323698"]
 
-    resumed = [item async for item in adapter.fetch(checkpoint="136323698")***REMOVED***
-    assert [item.item_id for item in resumed***REMOVED*** == ["136455374"***REMOVED***
+    resumed = [item async for item in adapter.fetch(checkpoint="136323698")]
+    assert [item.item_id for item in resumed] == ["136455374"]
 
 
 @pytest.mark.asyncio
 async def test_fetch_sends_text_and_date_params() -> None:
     """Параметры text и date_from попадают в URL запроса."""
-    captured: list[str***REMOVED*** = [***REMOVED***
+    captured: list[str] = []
 
     async def fake_get_with_capture(url: str) -> bytes:
         captured.append(url)
@@ -206,12 +206,12 @@ async def test_fetch_sends_text_and_date_params() -> None:
     )
 
     since = datetime(2026, 8, 22, 0, 0, tzinfo=timezone.utc)
-    [item async for item in adapter.fetch(text="python", modified_from=since)***REMOVED***
+    [item async for item in adapter.fetch(text="python", modified_from=since)]
 
     assert len(captured) == 1
-    assert "text=python" in captured[0***REMOVED***
-    assert "date_from=" in captured[0***REMOVED***
-    assert "2026-08-22" in captured[0***REMOVED***
+    assert "text=python" in captured[0]
+    assert "date_from=" in captured[0]
+    assert "2026-08-22" in captured[0]
 
 
 @pytest.mark.asyncio
@@ -223,7 +223,7 @@ async def test_fetch_limit_clamped_to_api_max_100() -> None:
         http_get=_fake_get,
     )
 
-    items = [item async for item in adapter.fetch(limit=500)***REMOVED***
+    items = [item async for item in adapter.fetch(limit=500)]
     assert len(items) == 2  # fixture мал; главное — не упал и не запросил >100
 
 
@@ -249,7 +249,7 @@ async def test_fetch_propagates_adapter_error() -> None:
     async def error_get(url: str) -> bytes:
         import json
 
-        return json.dumps({"errors": [{"value": "forbidden"***REMOVED******REMOVED******REMOVED***).encode("utf-8")
+        return json.dumps({"errors": [{"value": "forbidden"}]}).encode("utf-8")
 
     adapter = HeadhunterAdapter(
         "headhunter",
@@ -258,4 +258,4 @@ async def test_fetch_propagates_adapter_error() -> None:
     )
 
     with pytest.raises(AdapterError, match="forbidden"):
-        [item async for item in adapter.fetch()***REMOVED***
+        [item async for item in adapter.fetch()]

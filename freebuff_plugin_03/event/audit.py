@@ -27,7 +27,7 @@ class AuditEngine:
     - Кто (пользователь/агент) что сделал
     - Когда были изменения конфигурации
 
-    Использует EventStore с event_type = "audit.{type***REMOVED***".
+    Использует EventStore с event_type = "audit.{type]".
     """
 
     def __init__(self, store: Any):
@@ -47,7 +47,7 @@ class AuditEngine:
             metadata={
                 "policy_name": decision.policy_name,
                 "capability": decision.capability,
-            ***REMOVED***,
+            },
         )
 
     def log_action(self, action: AuditAction) -> str:
@@ -79,7 +79,7 @@ class AuditEngine:
         target_type: str = "",
         target_id: str = "",
         limit: int = 50,
-    ) -> List[AuditEntry***REMOVED***:
+    ) -> List[AuditEntry]:
         """Получить аудит-трейл для объекта.
 
         Args:
@@ -93,13 +93,13 @@ class AuditEngine:
         query = EventQuery(limit=limit, order="desc")
 
         if target_type:
-            query.event_type = f"audit.{target_type***REMOVED***"
+            query.event_type = f"audit.{target_type}"
 
         entries = self._store.query(query)
 
         # Фильтр по target_id на уровне приложения
         if target_id:
-            filtered = [***REMOVED***
+            filtered = []
             for e in entries:
                 data = e.data
                 if data.get("policy_name") == target_id:
@@ -110,9 +110,9 @@ class AuditEngine:
                     filtered.append(e)
             entries = filtered
 
-        return [self._entry_to_audit_entry(e) for e in entries***REMOVED***
+        return [self._entry_to_audit_entry(e) for e in entries]
 
-    def search_audit(self, query_str: str) -> List[AuditEntry***REMOVED***:
+    def search_audit(self, query_str: str) -> List[AuditEntry]:
         """Поиск по аудит-логу."""
         query = EventQuery(
             data_search=query_str,
@@ -120,7 +120,7 @@ class AuditEngine:
             limit=50,
         )
         entries = self._store.query(query)
-        return [self._entry_to_audit_entry(e) for e in entries***REMOVED***
+        return [self._entry_to_audit_entry(e) for e in entries]
 
     @staticmethod
     def _entry_to_audit_entry(event_entry) -> AuditEntry:
@@ -136,41 +136,41 @@ class AuditEngine:
     @staticmethod
     def format_audit_entry(entry: AuditEntry) -> str:
         """Форматирует AuditEntry в текст."""
-        ts = entry.timestamp[:19***REMOVED***
+        ts = entry.timestamp[:19]
         data = entry.data
 
         if entry.type == "decision":
             return (
-                f"[{ts***REMOVED******REMOVED*** 📝 DECISION: {data.get('capability', '?')***REMOVED***\n"
-                f"  Policy: {data.get('policy_name', '?')***REMOVED***\n"
-                f"  Runtime: {data.get('runtime_selected', '?')***REMOVED*** → Model: {data.get('model_selected', '?')***REMOVED***\n"
-                f"  Cost: ${data.get('cost_estimate', 0):.2f***REMOVED*** | Fallback: {'YES' if data.get('fallback_used') else 'NO'***REMOVED***"
+                f"[{ts}] 📝 DECISION: {data.get('capability', '?')}\n"
+                f"  Policy: {data.get('policy_name', '?')}\n"
+                f"  Runtime: {data.get('runtime_selected', '?')} → Model: {data.get('model_selected', '?')}\n"
+                f"  Cost: ${data.get('cost_estimate', 0):.2f} | Fallback: {'YES' if data.get('fallback_used') else 'NO'}"
             )
 
         elif entry.type == "action":
             return (
-                f"[{ts***REMOVED******REMOVED*** 👤 ACTION: {data.get('action', '?')***REMOVED***\n"
-                f"  Actor: {data.get('actor', '?')***REMOVED***\n"
-                f"  Target: {data.get('target', '?')***REMOVED***\n"
-                f"  Before: {data.get('before', '—')***REMOVED*** → After: {data.get('after', '—')***REMOVED***"
+                f"[{ts}] 👤 ACTION: {data.get('action', '?')}\n"
+                f"  Actor: {data.get('actor', '?')}\n"
+                f"  Target: {data.get('target', '?')}\n"
+                f"  Before: {data.get('before', '—')} → After: {data.get('after', '—')}"
             )
 
         elif entry.type == "config_change":
             return (
-                f"[{ts***REMOVED******REMOVED*** ⚙️ CONFIG: {data.get('setting', '?')***REMOVED***\n"
-                f"  Component: {data.get('component', '?')***REMOVED***\n"
-                f"  Old: {data.get('old_value', '—')***REMOVED*** → New: {data.get('new_value', '—')***REMOVED***\n"
-                f"  By: {data.get('changed_by', '?')***REMOVED***"
+                f"[{ts}] ⚙️ CONFIG: {data.get('setting', '?')}\n"
+                f"  Component: {data.get('component', '?')}\n"
+                f"  Old: {data.get('old_value', '—')} → New: {data.get('new_value', '—')}\n"
+                f"  By: {data.get('changed_by', '?')}"
             )
 
-        return f"[{ts***REMOVED******REMOVED*** {entry.type***REMOVED***: {str(data)[:80***REMOVED******REMOVED***"
+        return f"[{ts}] {entry.type}: {str(data)[:80]}"
 
-    def format_audit_log(self, entries: List[AuditEntry***REMOVED***) -> str:
+    def format_audit_log(self, entries: List[AuditEntry]) -> str:
         """Форматирует список AuditEntry в текст."""
         if not entries:
             return "📭 Нет записей аудита."
 
-        lines = ["=== AUDIT LOG ===", ""***REMOVED***
+        lines = ["=== AUDIT LOG ===", ""]
         for entry in entries:
             lines.append(self.format_audit_entry(entry))
             lines.append("")

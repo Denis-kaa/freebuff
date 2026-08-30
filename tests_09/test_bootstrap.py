@@ -4,7 +4,7 @@ from __future__ import annotations
 import os
 import sys
 from datetime import datetime, timezone
-***REMOVED***
+}
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
@@ -15,7 +15,7 @@ def test_load_buffy_manifest_ok(tmp_path) -> None:
     path = tmp_path / "BUFFY.md"
     path.write_text("# BUFFY\n\nYou are Buffy.", encoding="utf-8")
     warnings = bs._load_buffy_manifest(str(path))
-    assert warnings == [***REMOVED***
+    assert warnings == []
 
 
 def test_load_buffy_manifest_missing(tmp_path) -> None:
@@ -35,8 +35,8 @@ def test_load_last_real_conspect_skips_test(tmp_path) -> None:
     )
     result = bs._load_last_real_conspect(str(tmp_path))
     assert result is not None
-    assert result[0***REMOVED*** == "conspect_tg_2026-07-28_1100.md"
-    assert "Real work summary" in result[1***REMOVED***
+    assert result[0] == "conspect_tg_2026-07-28_1100.md"
+    assert "Real work summary" in result[1]
 
 
 def test_check_task_status_warns_on_stale(tmp_path) -> None:

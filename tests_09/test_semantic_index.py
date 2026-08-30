@@ -8,7 +8,7 @@ from __future__ import annotations
 import sys
 import numpy as np
 import pytest
-***REMOVED***
+}
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -48,12 +48,12 @@ class TestSemanticIndex:
 
     def test_fit_creates_embeddings(self, tmp_workspace: Path):
         si = SemanticIndex(tmp_workspace)
-        vocab = {"router": 0, "memory": 1, "context_12": 2, "engine": 3***REMOVED***
+        vocab = {"router": 0, "memory": 1, "context_12": 2, "engine": 3}
         vectors = np.zeros((3, 4), dtype=np.float32)
-        vectors[0***REMOVED*** = [3, 0, 0, 0***REMOVED***
-        vectors[1***REMOVED*** = [0, 3, 0, 2***REMOVED***
-        vectors[2***REMOVED*** = [0, 0, 3, 0***REMOVED***
-        si.fit(vectors, ["router", "memory", "context_12"***REMOVED***, vocab, n_components=2)
+        vectors[0] = [3, 0, 0, 0]
+        vectors[1] = [0, 3, 0, 2]
+        vectors[2] = [0, 0, 3, 0]
+        si.fit(vectors, ["router", "memory", "context_12"], vocab, n_components=2)
         assert not si.is_empty()
         assert si._u.shape == (3, 2)
         assert si._s.shape == (2,)
@@ -61,31 +61,31 @@ class TestSemanticIndex:
 
     def test_fit_too_few_docs(self, tmp_workspace: Path):
         si = SemanticIndex(tmp_workspace)
-        vocab = {"test": 0***REMOVED***
+        vocab = {"test": 0}
         vectors = np.ones((1, 1), dtype=np.float32)
-        si.fit(vectors, ["doc1"***REMOVED***, vocab, n_components=5)
+        si.fit(vectors, ["doc1"], vocab, n_components=5)
         assert si.is_empty()
 
     def test_search_returns_results(self, tmp_workspace: Path):
         si = SemanticIndex(tmp_workspace)
-        vocab = {"router": 0, "memory": 1, "scoring": 2, "engine": 3***REMOVED***
+        vocab = {"router": 0, "memory": 1, "scoring": 2, "engine": 3}
         vectors = np.zeros((2, 4), dtype=np.float32)
-        vectors[0***REMOVED*** = [3, 0, 2, 0***REMOVED***
-        vectors[1***REMOVED*** = [0, 3, 0, 2***REMOVED***
-        si.fit(vectors, ["router_doc", "memory_doc"***REMOVED***, vocab, n_components=2)
+        vectors[0] = [3, 0, 2, 0]
+        vectors[1] = [0, 3, 0, 2]
+        si.fit(vectors, ["router_doc", "memory_doc"], vocab, n_components=2)
         results = si.search("router scoring", top_k=5)
         assert len(results) >= 1
-        assert results[0***REMOVED***[0***REMOVED*** == "router_doc"
+        assert results[0][0] == "router_doc"
 
     def test_search_empty_index(self, tmp_workspace: Path):
         si = SemanticIndex(tmp_workspace)
-        assert si.search("test") == [***REMOVED***
+        assert si.search("test") == []
 
     def test_persistence(self, tmp_workspace: Path):
         si1 = SemanticIndex(tmp_workspace)
-        vocab = {"alpha": 0, "beta": 1***REMOVED***
-        vectors = np.array([[2, 0***REMOVED***, [0, 2***REMOVED******REMOVED***, dtype=np.float32)
-        si1.fit(vectors, ["doc_alpha", "doc_beta"***REMOVED***, vocab, n_components=1)
+        vocab = {"alpha": 0, "beta": 1}
+        vectors = np.array([[2, 0], [0, 2]], dtype=np.float32)
+        si1.fit(vectors, ["doc_alpha", "doc_beta"], vocab, n_components=1)
         assert not si1.is_empty()
 
         si2 = SemanticIndex(tmp_workspace)
@@ -95,9 +95,9 @@ class TestSemanticIndex:
 
     def test_clear(self, tmp_workspace: Path):
         si = SemanticIndex(tmp_workspace)
-        vocab = {"alpha": 0, "beta": 1***REMOVED***
-        vectors = np.array([[2, 0***REMOVED***, [0, 2***REMOVED******REMOVED***, dtype=np.float32)
-        si.fit(vectors, ["doc_alpha", "doc_beta"***REMOVED***, vocab, n_components=1)
+        vocab = {"alpha": 0, "beta": 1}
+        vectors = np.array([[2, 0], [0, 2]], dtype=np.float32)
+        si.fit(vectors, ["doc_alpha", "doc_beta"], vocab, n_components=1)
         assert not si.is_empty()
         si.clear()
         assert si.is_empty()
@@ -110,7 +110,7 @@ class TestSemanticMLMode:
     def test_semantic_ml_search(self, fitted_ke: KnowledgeEngine):
         results = fitted_ke.search("router routing", mode="semantic_ml")
         assert len(results) >= 1
-        assert results[0***REMOVED***.doc_id == "router_doc"
+        assert results[0].doc_id == "router_doc"
 
     def test_semantic_ml_empty_query(self, fitted_ke: KnowledgeEngine):
         results = fitted_ke.search("", mode="semantic_ml")
@@ -139,10 +139,10 @@ class TestSemanticEdgeCases:
 
     def test_semantic_index_structure(self, fitted_ke: KnowledgeEngine):
         si = fitted_ke.semantic
-        assert si._u.shape[0***REMOVED*** == 5
-        assert si._u.shape[1***REMOVED*** == 3
+        assert si._u.shape[0] == 5
+        assert si._u.shape[1] == 3
         assert len(si._s) == 3
-        assert si._vh.shape[0***REMOVED*** == 3
+        assert si._vh.shape[0] == 3
 
     def test_search_after_clear(self, fitted_ke: KnowledgeEngine):
         fitted_ke.clear()

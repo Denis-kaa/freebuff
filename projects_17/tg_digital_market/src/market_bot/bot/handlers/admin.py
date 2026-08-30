@@ -37,12 +37,12 @@ async def cb_stats(call: CallbackQuery, services) -> None:
     stats = await asyncio.to_thread(services.repo.stats_summary)
     text = (
         "📊 <b>Статистика</b>\n\n"
-        f"👥 Пользователей: <b>{stats['users_total'***REMOVED******REMOVED***</b>\n"
-        f"📦 Товаров: <b>{stats['products_total'***REMOVED******REMOVED***</b>\n"
-        f"🧾 Заказов всего: <b>{stats['orders_total'***REMOVED******REMOVED***</b>\n"
-        f"✅ Доставлено: <b>{stats['orders_delivered'***REMOVED******REMOVED***</b>\n"
-        f"💰 Выручка (stars): <b>{stats['revenue_stars'***REMOVED******REMOVED***</b>\n"
-        f"🗝 Свободных ключей: <b>{stats['keys_available'***REMOVED******REMOVED***</b>"
+        f"👥 Пользователей: <b>{stats['users_total']}</b>\n"
+        f"📦 Товаров: <b>{stats['products_total']}</b>\n"
+        f"🧾 Заказов всего: <b>{stats['orders_total']}</b>\n"
+        f"✅ Доставлено: <b>{stats['orders_delivered']}</b>\n"
+        f"💰 Выручка (stars): <b>{stats['revenue_stars']}</b>\n"
+        f"🗝 Свободных ключей: <b>{stats['keys_available']}</b>"
     )
     await call.message.edit_text(text, reply_markup=admin_kb())
     await call.answer()

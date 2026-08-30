@@ -22,7 +22,7 @@ import pytest
 # ── Imports under test ─────────────────────────────────────────────────────
 
 import sys
-***REMOVED***
+}
 
 sys.path.insert(0, str(Path("/storage/emulated/0/PROJECTS/workstation/freebuff")))
 
@@ -54,8 +54,8 @@ def _make_delta(
         source_device_id=src,
         revision=rev,
         sync_mode=SyncMode.SAVED_MESSAGES,
-        updated_keys=updated or {"a": "v_a"***REMOVED***,
-        deleted_keys=deleted or [***REMOVED***,
+        updated_keys=updated or {"a": "v_a"},
+        deleted_keys=deleted or [],
     )
 
 
@@ -71,12 +71,12 @@ def _make_envelope_text(delta: SyncDelta) -> str:
                 "sync_mode": delta.sync_mode.value,
                 "updated_keys": delta.updated_keys,
                 "deleted_keys": list(delta.deleted_keys),
-            ***REMOVED***,
-        ***REMOVED***,
+            },
+        },
         separators=(",", ":"),
         sort_keys=True,
     )
-    return f"{_SYNC_MARKER_PREFIX***REMOVED*** V1.0.0 corr-{delta.revision***REMOVED*** CHUNK 0/1\n{payload***REMOVED***"
+    return f"{_SYNC_MARKER_PREFIX} V1.0.0 corr-{delta.revision} CHUNK 0/1\n{payload}"
 
 
 class _FakeEvent:
@@ -174,7 +174,7 @@ def test_on_new_message_pushes_to_buffer(listener):
     event = _FakeEvent(msg_id=42, text=text)
     listener._on_new_message(event)
     assert listener.pending_count == 1
-    msg_id, envelope_bytes = listener._incoming_buffer[0***REMOVED***
+    msg_id, envelope_bytes = listener._incoming_buffer[0]
     assert msg_id == 42
     assert text.encode("utf-8") == envelope_bytes
 
@@ -196,17 +196,17 @@ def test_drain_incoming_returns_all_and_clears(listener):
     drained = listener.drain_incoming()
     assert len(drained) == 3
     assert listener.pending_count == 0
-    assert drained[0***REMOVED*** == (1, b"a")
-    assert drained[1***REMOVED*** == (2, b"b")
-    assert drained[2***REMOVED*** == (3, b"c")
+    assert drained[0] == (1, b"a")
+    assert drained[1] == (2, b"b")
+    assert drained[2] == (3, b"c")
 
 
 def test_drain_incoming_returns_empty_when_not_running(listener):
-    """drain_incoming() returns [***REMOVED*** when not running."""
+    """drain_incoming() returns [] when not running."""
     listener._running = False
     listener._incoming_buffer.append((1, b"x"))
     drained = listener.drain_incoming()
-    assert drained == [***REMOVED***
+    assert drained == []
 
 
 # ── 3. Listener loop: drain → apply → pull_state cycle ──────────────────────
@@ -220,7 +220,7 @@ async def test_listener_loop_drains_and_applies(coordinator):
     listener._tg_client = MagicMock()
 
     # Seed the buffer with a real envelope
-    delta = _make_delta(rev=1, updated={"key1": "val1"***REMOVED***)
+    delta = _make_delta(rev=1, updated={"key1": "val1"})
     text = _make_envelope_text(delta)
     listener._incoming_buffer.append((100, text.encode("utf-8")))
 
@@ -233,7 +233,7 @@ async def test_listener_loop_drains_and_applies(coordinator):
         pull_called = True
         return None
 
-    coordinator.pull_state = tracking_pull  # type: ignore[assignment***REMOVED***
+    coordinator.pull_state = tracking_pull  # type: ignore[assignment]
 
     # Run one loop iteration (short poll interval)
     listener._POLL_INTERVAL_SECONDS = 0.01
@@ -270,11 +270,11 @@ async def test_listener_loop_calls_pull_state_when_buffer_non_empty(coordinator)
         call_count += 1
         return None
 
-    coordinator.pull_state = counting_pull  # type: ignore[assignment***REMOVED***
+    coordinator.pull_state = counting_pull  # type: ignore[assignment]
 
     # Seed the buffer so the loop calls pull_state
     # Use a real envelope text (not raw bytes with .encode() on a b-prefix string)
-    text = "##FB_STATE## V1.0.0 test CHUNK 0/1\n" + '{"v":"1.0.0","delta":{"timestamp_ms":100,"source_device_id":"d1","revision":1,"sync_mode":"saved_messages","updated_keys":{"k":"v"***REMOVED***,"deleted_keys":[***REMOVED******REMOVED******REMOVED***'
+    text = "##FB_STATE## V1.0.0 test CHUNK 0/1\n" + '{"v":"1.0.0","delta":{"timestamp_ms":100,"source_device_id":"d1","revision":1,"sync_mode":"saved_messages","updated_keys":{"k":"v"],"deleted_keys":[]]]'
     listener._incoming_buffer.append((1, text.encode("utf-8")))
 
     listener._POLL_INTERVAL_SECONDS = 0.02
@@ -305,7 +305,7 @@ async def test_listener_loop_skips_pull_state_when_buffer_empty(coordinator):
         call_count += 1
         return None
 
-    coordinator.pull_state = counting_pull  # type: ignore[assignment***REMOVED***
+    coordinator.pull_state = counting_pull  # type: ignore[assignment]
 
     listener._POLL_INTERVAL_SECONDS = 0.02
     loop_task = asyncio.ensure_future(listener._listener_loop())
@@ -331,7 +331,7 @@ def test_buffer_overflow_respected(listener):
         listener._incoming_buffer.append((i, b"x"))
     assert listener.pending_count == 128  # maxlen respected
     # Oldest entries evicted
-    oldest_id, _ = listener._incoming_buffer[0***REMOVED***
+    oldest_id, _ = listener._incoming_buffer[0]
     assert oldest_id == 200 - 128  # 72 (first 72 evicted)
 
 
@@ -349,7 +349,7 @@ async def test_listener_loop_continues_on_malformed_envelope(coordinator):
     listener._incoming_buffer.append((999, b"not-json-at-all"))
 
     # Also seed a valid one that should be processed
-    delta = _make_delta(rev=2, updated={"good": "data"***REMOVED***)
+    delta = _make_delta(rev=2, updated={"good": "data"})
     text = _make_envelope_text(delta)
     listener._incoming_buffer.append((1000, text.encode("utf-8")))
 
@@ -360,7 +360,7 @@ async def test_listener_loop_continues_on_malformed_envelope(coordinator):
         call_count += 1
         return None
 
-    coordinator.pull_state = counting_pull  # type: ignore[assignment***REMOVED***
+    coordinator.pull_state = counting_pull  # type: ignore[assignment]
 
     listener._POLL_INTERVAL_SECONDS = 0.01
     loop_task = asyncio.ensure_future(listener._listener_loop())
@@ -389,24 +389,24 @@ async def test_listener_loop_lww_resolve_newer_wins(coordinator):
     listener._tg_client = MagicMock()
 
     # Seed coordinator with old value
-    coordinator._local_state["key_x"***REMOVED*** = ("old_value", 100)
+    coordinator._local_state["key_x"] = ("old_value", 100)
 
     # Newer envelope arrives
-    newer_delta = _make_delta(ts=200, rev=3, updated={"key_x": "new_value"***REMOVED***)
+    newer_delta = _make_delta(ts=200, rev=3, updated={"key_x": "new_value"})
     text = _make_envelope_text(newer_delta)
     listener._incoming_buffer.append((200, text.encode("utf-8")))
 
     async def noop_pull():
         return None
 
-    coordinator.pull_state = noop_pull  # type: ignore[assignment***REMOVED***
+    coordinator.pull_state = noop_pull  # type: ignore[assignment]
 
     listener._POLL_INTERVAL_SECONDS = 0.01
     loop_task = asyncio.ensure_future(listener._listener_loop())
     await asyncio.sleep(0.05)
 
     # LWW: newer (200) > older (100) → new_value wins
-    assert coordinator._local_state["key_x"***REMOVED*** == ("new_value", 200)
+    assert coordinator._local_state["key_x"] == ("new_value", 200)
 
     listener._running = False
     loop_task.cancel()

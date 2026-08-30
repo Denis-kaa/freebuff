@@ -43,14 +43,14 @@ class TestConsistencyCheckIdempotency:
         """
         report1 = _cc.build_report(_cc.PROJECT_ROOT)
         report2 = _cc.build_report(_cc.PROJECT_ROOT)
-        assert report1['total_issues'***REMOVED*** == report2['total_issues'***REMOVED***, (
+        assert report1['total_issues'] == report2['total_issues'], (
             'consistency_check is not idempotent on total_issues: '
-            f'run1={report1["total_issues"***REMOVED******REMOVED*** run2={report2["total_issues"***REMOVED******REMOVED***. '
+            f'run1={report1["total_issues"]} run2={report2["total_issues"]}. '
             'If TRACK-001 closure is broken, replays should NOT toggle.'
         )
-        assert report1['consistent'***REMOVED*** == report2['consistent'***REMOVED***, (
+        assert report1['consistent'] == report2['consistent'], (
             'consistency_check is not idempotent on consistent flag: '
-            f'run1={report1["consistent"***REMOVED******REMOVED*** run2={report2["consistent"***REMOVED******REMOVED***'
+            f'run1={report1["consistent"]} run2={report2["consistent"]}'
         )
 
     def test_three_sequential_runs_all_equal(self) -> None:
@@ -59,18 +59,18 @@ class TestConsistencyCheckIdempotency:
         report2 = _cc.build_report(_cc.PROJECT_ROOT)
         report3 = _cc.build_report(_cc.PROJECT_ROOT)
         assert (
-            report1['total_issues'***REMOVED***
-            == report2['total_issues'***REMOVED***
-            == report3['total_issues'***REMOVED***
+            report1['total_issues']
+            == report2['total_issues']
+            == report3['total_issues']
         ), (
             'consistency_check has lingering state between runs: '
-            f'run1={report1["total_issues"***REMOVED******REMOVED*** run2={report2["total_issues"***REMOVED******REMOVED*** '
-            f'run3={report3["total_issues"***REMOVED******REMOVED***'
+            f'run1={report1["total_issues"]} run2={report2["total_issues"]} '
+            f'run3={report3["total_issues"]}'
         )
         assert (
-            report1['consistent'***REMOVED***
-            == report2['consistent'***REMOVED***
-            == report3['consistent'***REMOVED***
+            report1['consistent']
+            == report2['consistent']
+            == report3['consistent']
         )
 
     def test_run_consistency_when_consistent_true(self) -> None:
@@ -81,16 +81,16 @@ class TestConsistencyCheckIdempotency:
         incomplete and someone re-introduced drift.
         """
         first = _cc.build_report(_cc.PROJECT_ROOT)
-        assert first['consistent'***REMOVED*** is True, (
-            f'TRACK-001 closure incomplete: total_issues={first["total_issues"***REMOVED******REMOVED*** '
+        assert first['consistent'] is True, (
+            f'TRACK-001 closure incomplete: total_issues={first["total_issues"]} '
             '(expected 0 baseline). If you see this in CI, refresh CHANGELOG/CQS '
             'counters or close TRACK-001 first.'
         )
         for n in range(2, 5):
             report = _cc.build_report(_cc.PROJECT_ROOT)
-            assert report['consistent'***REMOVED*** is True, (
-                f'after first consistent run, run #{n***REMOVED*** returned consistent=False '
-                f'(total_issues={report["total_issues"***REMOVED******REMOVED***) -> '
+            assert report['consistent'] is True, (
+                f'after first consistent run, run #{n} returned consistent=False '
+                f'(total_issues={report["total_issues"]}) -> '
                 'consistency_check is not idempotent on baseline assertion'
             )
 
@@ -101,7 +101,7 @@ class TestConsistencyCheckIdempotency:
         Time invariant: any filesystem write the checker makes is an
         unattributed side effect (= drift paradoxically).
         """
-        ***REMOVED***
+        }
 
         sample_path = Path('CHANGELOG.md')
         if not sample_path.exists():
@@ -116,10 +116,10 @@ class TestConsistencyCheckIdempotency:
         after_size = sample_path.stat().st_size
 
         assert before_mtime == after_mtime, (
-            f'CHANGELOG.md mtime changed ({before_mtime***REMOVED*** -> {after_mtime***REMOVED***): '
+            f'CHANGELOG.md mtime changed ({before_mtime} -> {after_mtime}): '
             'consistency_check wrote to it (unexpected side effect)'
         )
         assert before_size == after_size, (
-            f'CHANGELOG.md size changed ({before_size***REMOVED*** -> {after_size***REMOVED***): '
+            f'CHANGELOG.md size changed ({before_size} -> {after_size}): '
             'consistency_check mutated it (side effect)'
         )

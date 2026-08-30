@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-***REMOVED***
+}
 
 import pytest
 
@@ -34,13 +34,13 @@ def make_publication(
     return Publication(
         source_id=source_id,
         item_id=item_id,
-        canonical_url=f"https://example.test/items/{item_id***REMOVED***",
+        canonical_url=f"https://example.test/items/{item_id}",
         title=title,
         summary="Short summary",
         content=content,
         published_at=NOW,
         fetched_at=NOW,
-        metadata={"feed_format": "rss", "categories": "python"***REMOVED***,
+        metadata={"feed_format": "rss", "categories": "python"},
     )
 
 
@@ -59,13 +59,13 @@ def make_decision(
         score=0.9,
         matched_terms=("python",),
         reasons=("required term matched: python",),
-        rules_snapshot={"required_terms": ("python",)***REMOVED***,
+        rules_snapshot={"required_terms": ("python",)},
         decided_at=NOW,
     )
 
 
 @pytest.fixture()
-def storage(tmp_path: Path) -> Iterator[SqliteStorage***REMOVED***:
+def storage(tmp_path: Path) -> Iterator[SqliteStorage]:
     """Файловая SQLite-БД в tmp_path; WAL активен."""
     db = SqliteStorage(tmp_path / "test.db")
     yield db
@@ -74,7 +74,7 @@ def storage(tmp_path: Path) -> Iterator[SqliteStorage***REMOVED***:
 
 def test_wal_mode_and_schema_version(storage: SqliteStorage, tmp_path: Path) -> None:
     """WAL включён, миграции доводят user_version до 2 и идемпотентны."""
-    mode = storage._conn.execute("PRAGMA journal_mode").fetchone()[0***REMOVED***
+    mode = storage._conn.execute("PRAGMA journal_mode").fetchone()[0]
     assert mode == "wal"
     assert storage.schema_version() == 2
 
@@ -116,7 +116,7 @@ def test_publication_roundtrip_keeps_fields(storage: SqliteStorage) -> None:
     assert loaded.source_id == "fixture-source"
     assert loaded.published_at == NOW
     assert loaded.fetched_at == NOW
-    assert loaded.metadata == {"feed_format": "rss", "categories": "python"***REMOVED***
+    assert loaded.metadata == {"feed_format": "rss", "categories": "python"}
     assert loaded.status is PublicationStatus.NEW
 
 
@@ -131,7 +131,7 @@ def test_ttl_cleanup_removes_content_keeps_metadata(storage: SqliteStorage) -> N
     assert loaded is not None
     assert loaded.content is None
     assert loaded.title == "Need a python backend"
-    assert loaded.metadata == {"feed_format": "rss", "categories": "python"***REMOVED***
+    assert loaded.metadata == {"feed_format": "rss", "categories": "python"}
     # Повторный cleanup идемпотентен.
     assert storage.expire_full_text(NOW + timedelta(days=3)) == 0
 
@@ -203,7 +203,7 @@ def test_decision_roundtrip_and_idempotency(storage: SqliteStorage) -> None:
     assert loaded.outcome is MatchOutcome.ACCEPT
     assert loaded.matched_terms == ("python",)
     assert loaded.reasons == ("required term matched: python",)
-    assert loaded.rules_snapshot == {"required_terms": ("python",)***REMOVED***
+    assert loaded.rules_snapshot == {"required_terms": ("python",)}
     assert loaded.score == 0.9
     assert loaded.profile_version == 1
 
@@ -225,7 +225,7 @@ def test_delivery_attempt_idempotent(storage: SqliteStorage) -> None:
     publication = make_publication()
     storage.save_publication(publication)
     attempt = DeliveryAttempt(
-        delivery_key=f"{publication.item_key***REMOVED***:profile-1",
+        delivery_key=f"{publication.item_key}:profile-1",
         status=DeliveryStatus.SENT,
         provider_message_id="tg-msg-1",
         attempted_at=NOW,

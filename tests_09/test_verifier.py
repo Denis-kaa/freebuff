@@ -20,7 +20,7 @@ import json
 import sqlite3
 import sys
 import tempfile
-***REMOVED***
+}
 from typing import Any, Dict, List
 from unittest.mock import MagicMock, patch
 
@@ -80,7 +80,7 @@ def sample_rule() -> VerificationRule:
         description="A test verification rule",
         task_type="test",
         check_type="file_exists",
-        check_params={"path": "test_file.py"***REMOVED***,
+        check_params={"path": "test_file.py"},
         expected="exists",
         severity="major",
     )
@@ -122,7 +122,7 @@ class TestVerificationRule:
             assert rule.severity == sev
 
     def test_weight_clamped(self):
-        """weight зажимается в [0, 1***REMOVED***."""
+        """weight зажимается в [0, 1]."""
         rule = VerificationRule(name="test", check_type="file_exists", weight=5.0)
         assert rule.weight == 1.0
         rule2 = VerificationRule(name="test", check_type="file_exists", weight=-1.0)
@@ -173,7 +173,7 @@ class TestVerifierStorage:
         tables = conn.execute(
             "SELECT name FROM sqlite_master WHERE type='table'"
         ).fetchall()
-        table_names = [t[0***REMOVED*** for t in tables***REMOVED***
+        table_names = [t[0] for t in tables]
         assert "verification_rules" in table_names
         assert "verification_results" in table_names
         conn.close()
@@ -209,7 +209,7 @@ class TestVerifierStorage:
 
         filtered = storage.list_rules(task_type="test")
         assert len(filtered) == 1
-        assert filtered[0***REMOVED***.name == "Rule 1"
+        assert filtered[0].name == "Rule 1"
 
     def test_list_rules_enabled_only(self, storage: VerifierStorage):
         """Фильтр только активных правил."""
@@ -220,7 +220,7 @@ class TestVerifierStorage:
 
         enabled = storage.list_rules(enabled_only=True)
         assert len(enabled) == 1
-        assert enabled[0***REMOVED***.name == "Active"
+        assert enabled[0].name == "Active"
 
     def test_save_and_get_result(self, storage: VerifierStorage):
         """Сохранение и получение результатов."""
@@ -229,14 +229,14 @@ class TestVerifierStorage:
 
         results = storage.get_results("task1")
         assert len(results) == 1
-        assert results[0***REMOVED***.passed is True
-        assert results[0***REMOVED***.rule_id == "r1"
+        assert results[0].passed is True
+        assert results[0].rule_id == "r1"
 
     def test_get_summary(self, storage: VerifierStorage):
         """Сводка по результатам."""
         for i in range(3):
             storage.save_result(VerificationResult(
-                rule_id=f"r{i***REMOVED***", task_id="task1", task_type="test", passed=True,
+                rule_id=f"r{i}", task_id="task1", task_type="test", passed=True,
             ))
         storage.save_result(VerificationResult(
             rule_id="r3", task_id="task1", task_type="test", passed=False,
@@ -261,10 +261,10 @@ class TestVerifierStorage:
         storage.save_result(VerificationResult(rule_id="r3", task_id="t2", passed=True))
 
         stats = storage.get_stats()
-        assert stats["total_results"***REMOVED*** == 3
-        assert stats["total_passed"***REMOVED*** == 2
-        assert stats["total_failed"***REMOVED*** == 1
-        assert stats["unique_tasks"***REMOVED*** == 2
+        assert stats["total_results"] == 3
+        assert stats["total_passed"] == 2
+        assert stats["total_failed"] == 1
+        assert stats["unique_tasks"] == 2
 
     def test_count_rules(self, storage: VerifierStorage):
         """Количество правил."""
@@ -282,28 +282,28 @@ class TestTemplateResolution:
     """Проверка _resolve_template."""
 
     def test_simple_variable(self):
-        """Замена {{variable***REMOVED******REMOVED***."""
-        result = _resolve_template("{{path***REMOVED******REMOVED***/test.py", {"path": "src_06"***REMOVED***)
+        """Замена {{variable]]."""
+        result = _resolve_template("{{path)]/test.py", {"path": "src_06"})
         assert result == "src_06/test.py"
 
     def test_multiple_variables(self):
         """Несколько переменных."""
-        result = _resolve_template("{{dir***REMOVED******REMOVED***/{{file***REMOVED******REMOVED***.py", {"dir": "src_06", "file": "main"***REMOVED***)
+        result = _resolve_template("{{dir)]/{{file]].py", {"dir": "src_06", "file": "main"})
         assert result == "src_06/main.py"
 
     def test_unknown_variable(self):
         """Неизвестная переменная остаётся как есть."""
-        result = _resolve_template("{{unknown***REMOVED******REMOVED***/test.py", {***REMOVED***)
-        assert result == "{{unknown***REMOVED******REMOVED***/test.py"
+        result = _resolve_template("{{unknown)]/test.py", {})
+        assert result == "{{unknown]]/test.py"
 
     def test_no_variables(self):
         """Без переменных — без изменений."""
-        result = _resolve_template("src_06/main.py", {"foo": "bar"***REMOVED***)
+        result = _resolve_template("src_06/main.py", {"foo": "bar"})
         assert result == "src_06/main.py"
 
     def test_empty_template(self):
         """Пустой шаблон."""
-        result = _resolve_template("", {"key": "val"***REMOVED***)
+        result = _resolve_template("", {"key": "val"})
         assert result == ""
 
 
@@ -338,7 +338,7 @@ class TestVerifier:
         """Добавление правила."""
         rule_id = verifier.add_rule(VerificationRule(
             name="Custom", check_type="file_exists",
-            check_params={"path": "any.txt"***REMOVED***,
+            check_params={"path": "any.txt"},
         ))
         assert len(rule_id) == 12
         rule = verifier.get_rule(rule_id)
@@ -360,12 +360,12 @@ class TestVerifier:
 
         test_rules = verifier.list_rules(task_type="test")
         assert len(test_rules) == 1
-        assert test_rules[0***REMOVED***.name == "R1"
+        assert test_rules[0].name == "R1"
 
     def test_verify_no_rules(self, verifier: Verifier):
         """Если нет подходящих правил — пустой результат."""
         results = verifier.verify(task_id="task1", task_type="unknown_type")
-        assert results == [***REMOVED***
+        assert results == []
 
     def test_verify_with_default_rules(self, verifier: Verifier):
         """Верификация с дефолтными правилами."""
@@ -379,7 +379,7 @@ class TestVerifier:
             results = verifier.verify(
                 task_id="task-impl-1",
                 task_type="implement",
-                context={"output_path": test_path***REMOVED***,
+                context={"output_path": test_path},
             )
             # Должны найти хотя бы одно правило (Check file exists after implementation)
             assert len(results) >= 1
@@ -395,8 +395,8 @@ class TestVerifier:
         ))
         results = verifier.verify(task_id="task1", task_type="any")
         assert len(results) == 1
-        assert results[0***REMOVED***.passed is False
-        assert "unknown check_type" in results[0***REMOVED***.actual.lower()
+        assert results[0].passed is False
+        assert "unknown check_type" in results[0].actual.lower()
 
     def test_get_summary(self, verifier: Verifier):
         """Сводка после верификации."""
@@ -409,7 +409,7 @@ class TestVerifier:
             verifier.verify(
                 task_id="task-summary",
                 task_type="implement",
-                context={"output_path": test_path***REMOVED***,
+                context={"output_path": test_path},
             )
             summary = verifier.get_summary("task-summary")
             assert summary is not None
@@ -422,7 +422,7 @@ class TestVerifier:
         """Результаты после верификации."""
         verifier.add_rule(VerificationRule(
             name="Test result", check_type="file_exists",
-            check_params={"path": str(tmp_dir / "test_file.py")***REMOVED***,
+            check_params={"path": str(tmp_dir / "test_file.py")},
         ))
         verifier.verify(task_id="task-results", task_type="any")
         results = verifier.get_results("task-results")
@@ -437,9 +437,9 @@ class TestVerifier:
     def test_diagnose(self, verifier: Verifier):
         """Диагностика."""
         diag = verifier.diagnose()
-        assert diag["status"***REMOVED*** == "ok"
+        assert diag["status"] == "ok"
         assert "check_types_available" in diag
-        assert len(diag["check_types_available"***REMOVED***) > 0
+        assert len(diag["check_types_available"]) > 0
 
     def test_eventbus_auto_verification(self, verifier: Verifier):
         """Авто-верификация через EventBus."""
@@ -461,23 +461,23 @@ class TestCheckers:
 
     def test_file_exists_found(self, tmp_dir: Path):
         """file_exists находит существующий файл."""
-        context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"***REMOVED***
-        result = _check_file_exists({"path": str(tmp_dir / "test_file.py")***REMOVED***, context)
+        context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"}
+        result = _check_file_exists({"path": str(tmp_dir / "test_file.py")}, context)
         assert result.passed is True
         assert result.actual == "exists"
 
     def test_file_exists_not_found(self, tmp_dir: Path):
         """file_exists не находит отсутствующий файл."""
-        context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"***REMOVED***
-        result = _check_file_exists({"path": str(tmp_dir / "nonexistent.py")***REMOVED***, context)
+        context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"}
+        result = _check_file_exists({"path": str(tmp_dir / "nonexistent.py")}, context)
         assert result.passed is False
         assert result.actual == "not found"
 
     def test_file_contains_found(self, tmp_dir: Path):
         """file_contains находит паттерн в файле."""
-        context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"***REMOVED***
+        context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"}
         result = _check_file_contains(
-            {"path": str(tmp_dir / "test_file.py"), "pattern": "test content"***REMOVED***,
+            {"path": str(tmp_dir / "test_file.py"), "pattern": "test content"},
             context,
         )
         assert result.passed is True
@@ -485,19 +485,19 @@ class TestCheckers:
 
     def test_file_contains_not_found(self, tmp_dir: Path):
         """file_contains не находит паттерн."""
-        context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"***REMOVED***
+        context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"}
         result = _check_file_contains(
-            {"path": str(tmp_dir / "test_file.py"), "pattern": "nonexistent pattern"***REMOVED***,
+            {"path": str(tmp_dir / "test_file.py"), "pattern": "nonexistent pattern"},
             context,
         )
         assert result.passed is False
         assert result.actual == "not found"
 
     def test_file_contains_min_length(self, tmp_dir: Path):
-        """file_contains с паттерном {100,***REMOVED*** проверяет длину."""
-        context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"***REMOVED***
+        """file_contains с паттерном {100,] проверяет длину."""
+        context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"}
         result = _check_file_contains(
-            {"path": str(tmp_dir / "output.md"), "pattern": ".{100,***REMOVED***"***REMOVED***,
+            {"path": str(tmp_dir / "output.md"), "pattern": ".{100,}"],
             context,
         )
         assert result.passed is True
@@ -505,9 +505,9 @@ class TestCheckers:
 
     def test_file_contains_file_not_found(self, tmp_dir: Path):
         """file_contains с несуществующим файлом."""
-        context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"***REMOVED***
+        context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"}
         result = _check_file_contains(
-            {"path": str(tmp_dir / "missing.txt"), "pattern": "test"***REMOVED***,
+            {"path": str(tmp_dir / "missing.txt"), "pattern": "test"},
             context,
         )
         assert result.passed is False
@@ -521,9 +521,9 @@ class TestCheckers:
         conn.commit()
         conn.close()
 
-        context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"***REMOVED***
+        context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"}
         result = _check_sqlite(
-            {"db_path": str(tmp_db), "query": "SELECT COUNT(*) FROM test", "min_rows": 1***REMOVED***,
+            {"db_path": str(tmp_db), "query": "SELECT COUNT(*) FROM test", "min_rows": 1},
             context,
         )
         assert result.passed is True
@@ -536,9 +536,9 @@ class TestCheckers:
         conn.commit()
         conn.close()
 
-        context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"***REMOVED***
+        context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"}
         result = _check_sqlite(
-            {"db_path": str(tmp_db), "query": "SELECT COUNT(*) FROM test", "min_rows": 5***REMOVED***,
+            {"db_path": str(tmp_db), "query": "SELECT COUNT(*) FROM test", "min_rows": 5},
             context,
         )
         assert result.passed is False
@@ -546,9 +546,9 @@ class TestCheckers:
 
     def test_sqlite_db_not_found(self):
         """sqlite с несуществующей БД."""
-        context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"***REMOVED***
+        context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"}
         result = _check_sqlite(
-            {"db_path": "/nonexistent/db.sqlite", "query": "SELECT 1"***REMOVED***,
+            {"db_path": "/nonexistent/db.sqlite", "query": "SELECT 1"},
             context,
         )
         assert result.passed is False
@@ -561,9 +561,9 @@ class TestCheckers:
             mock_response.status = 200
             mock_urlopen.return_value = mock_response
 
-            context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"***REMOVED***
+            context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"}
             result = _check_http(
-                {"url": "https://example.com/health", "timeout": 5***REMOVED***,
+                {"url": "https://example.com/health", "timeout": 5},
                 context,
             )
             assert result.passed is True
@@ -575,11 +575,11 @@ class TestCheckers:
         with patch('urllib.request.urlopen') as mock_urlopen:
             mock_urlopen.side_effect = HTTPError(
                 url="https://example.com/404", code=404, msg="Not Found",
-                hdrs={***REMOVED***, fp=None,
+                hdrs={}, fp=None,
             )
-            context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"***REMOVED***
+            context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"}
             result = _check_http(
-                {"url": "https://example.com/404", "timeout": 5***REMOVED***,
+                {"url": "https://example.com/404", "timeout": 5},
                 context,
             )
             assert result.passed is False
@@ -588,7 +588,7 @@ class TestCheckers:
     def test_checker_registry_has_all_types(self):
         """CHECKER_REGISTRY содержит все заявленные типы."""
         for check_type in CHECK_TYPES:
-            assert check_type in CHECKER_REGISTRY, f"Missing checker: {check_type***REMOVED***"
+            assert check_type in CHECKER_REGISTRY, f"Missing checker: {check_type}"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -603,7 +603,7 @@ class TestEdgeCases:
         """Верификация с пустым контекстом не падает."""
         verifier.seed_default_rules()
         # Используем тип 'research' — там есть правило с file_contains
-        results = verifier.verify(task_id="edge-empty", task_type="research", context={***REMOVED***)
+        results = verifier.verify(task_id="edge-empty", task_type="research", context={})
         # Не должно упасть, даже если нет подходящих файлов
         assert isinstance(results, list)
 
@@ -611,7 +611,7 @@ class TestEdgeCases:
         """Повторная верификация той же задачи."""
         verifier.add_rule(VerificationRule(
             name="Marker", check_type="file_exists",
-            check_params={"path": str(tmp_dir / "test_file.py")***REMOVED***,
+            check_params={"path": str(tmp_dir / "test_file.py")},
         ))
         r1 = verifier.verify(task_id="dup-task", task_type="any")
         r2 = verifier.verify(task_id="dup-task", task_type="any")
@@ -627,8 +627,8 @@ class TestEdgeCases:
             import inspect
             sig = inspect.signature(checker)
             params = list(sig.parameters.keys())
-            assert "params" in params, f"{name***REMOVED***: missing 'params' parameter"
-            assert "context" in params, f"{name***REMOVED***: missing 'context' parameter"
+            assert "params" in params, f"{name}: missing 'params' parameter"
+            assert "context" in params, f"{name}: missing 'context' parameter"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -644,13 +644,13 @@ class TestInjectionPrevention:
     def test_pytest_injection_via_test_path(self, verifier: Verifier, tmp_path: Path):
         """Метасимволы в test_path не должны выполнять отдельную команду."""
         canary = tmp_path / "pwned_pytest_injection"
-        payload = f"tests_09/nonexistent_for_module.py; touch {canary***REMOVED***"
+        payload = f"tests_09/nonexistent_for_module.py; touch {canary}"
         verifier.add_rule(VerificationRule(
             name="Pytest injection probe",
             check_type="pytest",
-            check_params={"test_path": payload, "timeout": 30***REMOVED***,
+            check_params={"test_path": payload, "timeout": 30},
         ))
-        verifier.verify(task_id="inj-pytest", task_type="any", context={***REMOVED***)
+        verifier.verify(task_id="inj-pytest", task_type="any", context={})
         assert not canary.exists(), (
             "VULNERABILITY: pytest check executed shell-injected payload"
         )
@@ -662,9 +662,9 @@ class TestInjectionPrevention:
         verifier.add_rule(VerificationRule(
             name="Legacy shell probe",
             check_type="shell",  # намеренно: удалён из CHECKER_REGISTRY
-            check_params={"command": f"touch {canary***REMOVED***"***REMOVED***,
+            check_params={"command": f"touch {canary}"},
         ))
-        results = verifier.verify(task_id="inj-shell", task_type="any", context={***REMOVED***)
+        results = verifier.verify(task_id="inj-shell", task_type="any", context={})
         assert results, "Should still get a result row for unknown check_type"
         assert any("unknown check_type" in r.actual.lower() for r in results), (
             "Legacy shell rule must be rejected by the registry"

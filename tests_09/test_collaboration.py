@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import sys
 from datetime import datetime, timezone, timedelta
-***REMOVED***
+}
 
 import pytest
 
@@ -42,20 +42,20 @@ class _StubEventBus:
     """Минимальный EventBus: публикация в память."""
 
     def __init__(self):
-        self.events = [***REMOVED***
+        self.events = []
 
     def publish(self, event):
         self.events.append(event)
 
     def get_events(self, limit=100):
-        return self.events[-limit:***REMOVED***
+        return self.events[-limit:]
 
 
 class _StubPresence:
     """Минимальный PresenceEngine: offline для заданных агентов."""
 
-    def __init__(self, offline: list[str***REMOVED*** | None = None):
-        self.offline = set(offline or [***REMOVED***)
+    def __init__(self, offline: list[str] | None = None):
+        self.offline = set(offline or [])
 
     def get(self, name):
         class _P:
@@ -75,7 +75,7 @@ def session(engine: CollaborationEngine) -> CollaborationSession:
     return engine.create_session(
         topic="Code Review",
         owner="buffy",
-        participants=["alice", "bob"***REMOVED***,
+        participants=["alice", "bob"],
     )
 
 
@@ -114,7 +114,7 @@ class TestRolesAndStatus:
 
 class TestSessions:
     def test_create_session(self, engine: CollaborationEngine):
-        s = engine.create_session(topic="Planning", owner="buffy", participants=["alice"***REMOVED***)
+        s = engine.create_session(topic="Planning", owner="buffy", participants=["alice"])
         assert s.session_id.startswith("collab-")
         assert s.topic == "Planning"
         assert s.status == SessionStatus.ACTIVE
@@ -129,8 +129,8 @@ class TestSessions:
         assert owner_p.role == ParticipantRole.OWNER
 
     def test_create_session_with_participants(self, engine: CollaborationEngine):
-        s = engine.create_session(topic="T", owner="buffy", participants=["alice", "bob"***REMOVED***)
-        assert set(s.participant_names()) == {"buffy", "alice", "bob"***REMOVED***
+        s = engine.create_session(topic="T", owner="buffy", participants=["alice", "bob"])
+        assert set(s.participant_names()) == {"buffy", "alice", "bob"}
         alice = s.get_participant("alice")
         assert alice is not None
         assert alice.role == ParticipantRole.EDITOR
@@ -139,7 +139,7 @@ class TestSessions:
         # Контракт: owner вторым позиционным аргументом может быть список участников.
         # Примечание: движок всегда вставляет участника-владельца (здесь name=""),
         # поэтому проверяем только членство alice/bob.
-        s = engine.create_session("T", ["alice", "bob"***REMOVED***)
+        s = engine.create_session("T", ["alice", "bob"])
         names = s.participant_names()
         assert "alice" in names
         assert "bob" in names
@@ -155,20 +155,20 @@ class TestSessions:
         assert len(loaded.participants) == 3
 
     def test_list_sessions_empty(self, engine: CollaborationEngine):
-        assert engine.list_sessions() == [***REMOVED***
+        assert engine.list_sessions() == []
 
     def test_list_sessions_filter_by_status(self, engine: CollaborationEngine, session: CollaborationSession):
         engine.close_session(session.session_id)
         sessions = engine.list_sessions(status=SessionStatus.ACTIVE)
         assert all(s.session_id != session.session_id for s in sessions)
         closed = engine.list_sessions(status=SessionStatus.CLOSED)
-        assert [s.session_id for s in closed***REMOVED*** == [session.session_id***REMOVED***
+        assert [s.session_id for s in closed] == [session.session_id]
 
     def test_list_sessions_filter_by_participant(self, engine: CollaborationEngine):
-        s1 = engine.create_session(topic="A", owner="buffy", participants=["alice"***REMOVED***)
+        s1 = engine.create_session(topic="A", owner="buffy", participants=["alice"])
         s2 = engine.create_session(topic="B", owner="alice")
         mine = engine.list_sessions(participant_name="alice")
-        ids = {s.session_id for s in mine***REMOVED***
+        ids = {s.session_id for s in mine}
         assert s1.session_id in ids
         assert s2.session_id in ids
 
@@ -188,9 +188,9 @@ class TestSessions:
 
     def test_session_to_dict(self, session: CollaborationSession):
         d = session.to_dict()
-        assert d["session_id"***REMOVED*** == session.session_id
-        assert d["topic"***REMOVED*** == "Code Review"
-        assert d["participant_count"***REMOVED*** == 3
+        assert d["session_id"] == session.session_id
+        assert d["topic"] == "Code Review"
+        assert d["participant_count"] == 3
         assert "participants" in d
 
 
@@ -257,9 +257,9 @@ class TestParticipants:
     def test_sync_presence_marks_offline(self, tmp_path):
         engine = CollaborationEngine(
             db_path=tmp_path / "c.db",
-            presence_engine=_StubPresence(offline=["alice"***REMOVED***),
+            presence_engine=_StubPresence(offline=["alice"]),
         )
-        s = engine.create_session(topic="T", owner="buffy", participants=["alice", "bob"***REMOVED***)
+        s = engine.create_session(topic="T", owner="buffy", participants=["alice", "bob"])
         updated = engine.sync_presence()
         assert updated >= 1
         loaded = engine.get_session(s.session_id)
@@ -310,20 +310,20 @@ class TestMessages:
         engine.send_message(session.session_id, "alice", "hello")
         engine.send_message(session.session_id, "bob", "hi there")
         history = engine.get_history(session.session_id)
-        contents = [m.content for m in history***REMOVED***
+        contents = [m.content for m in history]
         assert "hello" in contents
         assert "hi there" in contents
 
     def test_history_includes_system_messages(self, engine: CollaborationEngine, session: CollaborationSession):
         history = engine.get_history(session.session_id)
-        system_msgs = [m for m in history if m.msg_type == "system"***REMOVED***
+        system_msgs = [m for m in history if m.msg_type == "system"]
         assert len(system_msgs) >= 2  # created + joined
         assert any("created" in m.content for m in system_msgs)
         assert any("joined" in m.content for m in system_msgs)
 
     def test_history_pagination_limit(self, engine: CollaborationEngine, session: CollaborationSession):
         for i in range(5):
-            engine.send_message(session.session_id, "alice", f"msg {i***REMOVED***")
+            engine.send_message(session.session_id, "alice", f"msg {i}")
         history = engine.get_history(session.session_id, limit=3)
         assert len(history) <= 3
 
@@ -335,7 +335,7 @@ class TestMessages:
         assert all(m.content == "after" for m in history)
 
     def test_history_missing_session(self, engine: CollaborationEngine):
-        assert engine.get_history("collab-nope") == [***REMOVED***
+        assert engine.get_history("collab-nope") == []
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -350,7 +350,7 @@ class TestEventBus:
         s = engine.create_session(topic="T", owner="buffy")
         engine.send_message(s.session_id, "buffy", "hi")
         engine.close_session(s.session_id)
-        types = [getattr(e, "type", None) for e in bus.events***REMOVED***
+        types = [getattr(e, "type", None) for e in bus.events]
         assert "collab.created" in types
         assert "collab.message" in types
         assert "collab.closed" in types
@@ -361,7 +361,7 @@ class TestEventBus:
         s = engine.create_session(topic="T", owner="buffy")
         engine.join_session(s.session_id, "alice")
         engine.leave_session(s.session_id, "alice")
-        types = [getattr(e, "type", None) for e in bus.events***REMOVED***
+        types = [getattr(e, "type", None) for e in bus.events]
         assert "collab.joined" in types
         assert "collab.left" in types
 
@@ -371,10 +371,10 @@ class TestEventBus:
         s = engine.create_session(topic="T", owner="buffy")
         engine.send_message(s.session_id, "buffy", "hello")
         events = engine.get_recent_events(s.session_id, limit=10)
-        assert any(e["data"***REMOVED***.get("session_id") == s.session_id for e in events)
+        assert any(e["data"].get("session_id") == s.session_id for e in events)
 
     def test_get_recent_events_without_bus(self, engine: CollaborationEngine, session: CollaborationSession):
-        assert engine.get_recent_events(session.session_id) == [***REMOVED***
+        assert engine.get_recent_events(session.session_id) == []
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -386,14 +386,14 @@ class TestStatus:
     def test_get_status(self, engine: CollaborationEngine, session: CollaborationSession):
         engine.send_message(session.session_id, "alice", "hello")
         st = engine.get_status()
-        assert st["status"***REMOVED*** == "running"
-        assert st["running"***REMOVED*** is True
-        assert st["total_sessions"***REMOVED*** >= 1
-        assert st["active_sessions"***REMOVED*** >= 1
-        assert st["total_messages"***REMOVED*** >= 1
-        assert st["total_participants"***REMOVED*** >= 1
-        assert st["eventbus_connected"***REMOVED*** is False
-        assert st["presence_connected"***REMOVED*** is False
+        assert st["status"] == "running"
+        assert st["running"] is True
+        assert st["total_sessions"] >= 1
+        assert st["active_sessions"] >= 1
+        assert st["total_messages"] >= 1
+        assert st["total_participants"] >= 1
+        assert st["eventbus_connected"] is False
+        assert st["presence_connected"] is False
 
     def test_get_status_with_connections(self, tmp_path):
         bus = _StubEventBus()
@@ -403,8 +403,8 @@ class TestStatus:
             presence_engine=_StubPresence(),
         )
         st = engine.get_status()
-        assert st["eventbus_connected"***REMOVED*** is True
-        assert st["presence_connected"***REMOVED*** is True
+        assert st["eventbus_connected"] is True
+        assert st["presence_connected"] is True
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -416,7 +416,7 @@ class TestCLI:
     def test_main_help(self, monkeypatch):
         from scripts_01.collaboration import main
 
-        monkeypatch.setattr(sys, "argv", ["collaboration.py", "--help"***REMOVED***)
+        monkeypatch.setattr(sys, "argv", ["collaboration.py", "--help"])
         with pytest.raises(SystemExit) as exc:
             main()
         assert exc.value.code == 0
@@ -424,6 +424,6 @@ class TestCLI:
     def test_main_no_command(self, monkeypatch, capsys):
         from scripts_01.collaboration import main
 
-        monkeypatch.setattr(sys, "argv", ["collaboration.py"***REMOVED***)
+        monkeypatch.setattr(sys, "argv", ["collaboration.py"])
         code = main()
         assert code == 1

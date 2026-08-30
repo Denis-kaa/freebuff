@@ -44,7 +44,7 @@ class IncomingPayment:
     """Сырые данные от платёжной системы для проверки."""
     external_id: str
     expected_amount: int         # в звёздах/минимальных единицах
-    currency: Optional[str***REMOVED*** = None   # если есть (например "XTR")
+    currency: Optional[str] = None   # если есть (например "XTR")
 
 
 class PaymentProvider(Protocol):
@@ -74,7 +74,7 @@ class MockPaymentProvider:
         # Контроль суммы остаётся в OrderService (сверяется с `total_stars`).
         if incoming.expected_amount <= 0:
             raise PaymentVerificationError(
-                f"Сумма должна быть > 0 (received {incoming.expected_amount***REMOVED***)"
+                f"Сумма должна быть > 0 (received {incoming.expected_amount})"
             )
 
 
@@ -86,11 +86,11 @@ class TelegramStarsVerifyProvider:
     def verify(self, incoming: IncomingPayment) -> None:
         if incoming.expected_amount <= 0:
             raise PaymentVerificationError(
-                f"Сумма должна быть > 0 (received {incoming.expected_amount***REMOVED***)"
+                f"Сумма должна быть > 0 (received {incoming.expected_amount})"
             )
         if incoming.currency is not None and incoming.currency != "XTR":
             raise PaymentVerificationError(
-                f"Неверная валюта: ожидаем XTR, пришло {incoming.currency!r***REMOVED***"
+                f"Неверная валюта: ожидаем XTR, пришло {incoming.currency!r}"
             )
 
 
@@ -101,7 +101,7 @@ def get_provider(name: str) -> PaymentProvider:
         return MockPaymentProvider()
     if name in ("telegram_stars", "stars", "telegram-stars"):
         return TelegramStarsVerifyProvider()
-    raise PaymentError(f"Неизвестный платёжный провайдер: {name!r***REMOVED***")
+    raise PaymentError(f"Неизвестный платёжный провайдер: {name!r}")
 
 
 # ─── Сервис ──────────────────────────────────────────────────────────────────
@@ -131,14 +131,14 @@ class PaymentService:
         """
         if order.status not in (OrderStatus.PENDING,):
             raise PaymentError(
-                f"К платежу можно привязать только pending-заказ; текущий: {order.status.value***REMOVED***"
+                f"К платежу можно привязать только pending-заказ; текущий: {order.status.value}"
             )
         existing = self._repo.get_payment_by_order(order.id)
         if existing is not None:
             if existing.status in (PaymentStatus.SUCCEEDED, PaymentStatus.FAILED):
                 raise PaymentAlreadyProcessedError(
-                    f"Заказ #{order.id***REMOVED*** уже финализирован "
-                    f"(payment #{existing.id***REMOVED***, {existing.status.value***REMOVED***)"
+                    f"Заказ #{order.id} уже финализирован "
+                    f"(payment #{existing.id}, {existing.status.value})"
                 )
             # PENDING → идемпотентно возвращаем тот же.
             return existing
@@ -149,7 +149,7 @@ class PaymentService:
             payload=None,
         )
 
-    def finalize(self, payment: Payment, incoming: IncomingPayment) -> tuple[Payment, bool***REMOVED***:
+    def finalize(self, payment: Payment, incoming: IncomingPayment) -> tuple[Payment, bool]:
         """Проверить платёж через провайдер и обновить статус. Идемпотентен.
 
         Защиты:
@@ -161,11 +161,11 @@ class PaymentService:
         """
         if payment.status != PaymentStatus.PENDING:
             raise PaymentAlreadyProcessedError(
-                f"Платёж #{payment.id***REMOVED*** уже финализирован: {payment.status.value***REMOVED***"
+                f"Платёж #{payment.id} уже финализирован: {payment.status.value}"
             )
         order = self._repo.get_order(payment.order_id)
         if order is None:
-            raise PaymentError(f"Заказ #{payment.order_id***REMOVED*** не найден.")
+            raise PaymentError(f"Заказ #{payment.order_id} не найден.")
         self._provider.verify(incoming)
         self._repo.set_payment_status(
             payment.id,
@@ -194,7 +194,7 @@ class PaymentService:
         """
         if payment.status != PaymentStatus.PENDING:
             raise PaymentAlreadyProcessedError(
-                f"Платёж #{payment.id***REMOVED*** уже финализирован: {payment.status.value***REMOVED***"
+                f"Платёж #{payment.id} уже финализирован: {payment.status.value}"
             )
         self._repo.set_payment_status(
             payment.id,

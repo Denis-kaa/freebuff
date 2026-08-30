@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-***REMOVED***
+}
 from typing import Callable
 
 from app.curriculum.map import CompetencyMap
@@ -26,8 +26,8 @@ from app.storage import open_corpus
 
 SOURCE_ID = "exercism-python"
 
-# Mapping: callable(record) -> list[(competency_id, confidence, source)***REMOVED***
-Mapper = Callable[[ExerciseRecord***REMOVED***, list[tuple[str, str, str***REMOVED******REMOVED******REMOVED***
+# Mapping: callable(record) -> list[(competency_id, confidence, source)]
+Mapper = Callable[[ExerciseRecord], list[tuple[str, str, str]]]
 
 
 def rung_from_difficulty(source_difficulty: int) -> str:
@@ -58,10 +58,10 @@ class IngestReport:
     concept_count: int = 0
     practice_count: int = 0
     mapped_exercises: int = 0
-    low_confidence: list[str***REMOVED*** = field(default_factory=list)
-    errors: list[str***REMOVED*** = field(default_factory=list)
+    low_confidence: list[str] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
 
-    def summary(self) -> dict[str, object***REMOVED***:
+    def summary(self) -> dict[str, object]:
         return {
             "discovered": self.discovered,
             "parsed": self.parsed,
@@ -76,7 +76,7 @@ class IngestReport:
             "mapped_exercises": self.mapped_exercises,
             "low_confidence": len(self.low_confidence),
             "errors": len(self.errors),
-        ***REMOVED***
+        }
 
 
 def sync_competencies(conn, cm: CompetencyMap) -> None:
@@ -123,10 +123,10 @@ def ingest(
     report = IngestReport()
     root = Path(source_root)
     if not root.is_dir():
-        raise FileNotFoundError(f"source не найден: {root***REMOVED***")
+        raise FileNotFoundError(f"source не найден: {root}")
 
     sources = load_sources(sources_yaml)
-    source_status = sources[0***REMOVED***.status if sources else "rejected"
+    source_status = sources[0].status if sources else "rejected"
     source_approved = can_be_live(source_status)
 
     conn = None
@@ -168,14 +168,14 @@ def ingest(
             continue
 
         assert conn is not None  # не dry_run: соединение открыто
-        ex_id = f"{SOURCE_ID***REMOVED***:{rec.slug***REMOVED***"
+        ex_id = f"{SOURCE_ID}:{rec.slug}"
         rung = rung_from_difficulty(rec.source_difficulty)
         ref = rec.reference_solution_ref if with_refs else None
 
         existing = conn.execute(
             "SELECT content_hash FROM exercises WHERE id=?", (ex_id,)
         ).fetchone()
-        if existing is not None and existing["content_hash"***REMOVED*** == rec.content_hash:
+        if existing is not None and existing["content_hash"] == rec.content_hash:
             report.unchanged += 1
         else:
             conn.execute(

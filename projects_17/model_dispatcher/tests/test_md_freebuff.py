@@ -4,18 +4,18 @@
 has_session), поэтому тесты проверяют логику сценария «имитация человека».
 """
 
-***REMOVED***
+}
 from typing import Any, Dict, List
 
 from projects_17.model_dispatcher import md_freebuff
 
-PRIORITY: List[Dict[str, Any***REMOVED******REMOVED*** = [
-    {"name": "glm-5.2", "keywords": ["glm", "5.2"***REMOVED******REMOVED***,
-    {"name": "mimo-2.5-pro", "keywords": ["mimo", "2.5"***REMOVED******REMOVED***,
-    {"name": "minimax-m3", "keywords": ["minimax", "m3"***REMOVED******REMOVED***,
-    {"name": "deepseek-v4-flash", "keywords": ["deepseek"***REMOVED***, "free_fallback": True***REMOVED***,
-***REMOVED***
-MARKERS: List[str***REMOVED*** = ["out of", "sold out", "exhausted"***REMOVED***
+PRIORITY: List[Dict[str, Any]] = [
+    {"name": "glm-5.2", "keywords": ["glm", "5.2"]},
+    {"name": "mimo-2.5-pro", "keywords": ["mimo", "2.5"]},
+    {"name": "minimax-m3", "keywords": ["minimax", "m3"]},
+    {"name": "deepseek-v4-flash", "keywords": ["deepseek"], "free_fallback": True},
+]
+MARKERS: List[str] = ["out of", "sold out", "exhausted"]
 
 
 class FakeTmux:
@@ -24,10 +24,10 @@ class FakeTmux:
     def __init__(self, screen: str = "", alive: bool = True):
         self.screen = screen
         self.alive = alive
-        self.commands: list[list[str***REMOVED******REMOVED*** = [***REMOVED***
-        self.keys: list[str***REMOVED*** = [***REMOVED***
+        self.commands: list[list[str]] = []
+        self.keys: list[str] = []
 
-    def run(self, cmd: list[str***REMOVED***) -> None:
+    def run(self, cmd: list[str]) -> None:
         self.commands.append(cmd)
 
     def capture(self, session: str) -> str:
@@ -58,7 +58,7 @@ def test_build_launch_cmd_fresh_no_continue(tmp_path):
     fake = FakeTmux()
     d = _driver(tmp_path, fake, continue_resume=True, resume=False)
     cmd = d.build_launch_cmd(tmp_path)
-    assert cmd[0***REMOVED*** == "freebuff"
+    assert cmd[0] == "freebuff"
     assert "--cwd" in cmd
     assert "--continue" not in cmd
 
@@ -75,7 +75,7 @@ def test_build_launch_cmd_custom_binary(tmp_path):
     fake = FakeTmux()
     d = _driver(tmp_path, fake, binary_cmd="proot-distro login ubuntu -- freebuff")
     cmd = d.build_launch_cmd(tmp_path)
-    assert cmd[0***REMOVED*** == "proot-distro"
+    assert cmd[0] == "proot-distro"
 
 
 def test_select_best_model_glm(tmp_path):
@@ -85,7 +85,7 @@ def test_select_best_model_glm(tmp_path):
     assert sel.name == "glm-5.2"
     assert d.selected_model == "glm-5.2"
     # Позиция 0 → только Enter (без Down)
-    assert fake.keys == ["Enter"***REMOVED***
+    assert fake.keys == ["Enter"]
 
 
 def test_select_best_model_mimo_down_nav(tmp_path):
@@ -108,7 +108,7 @@ def test_monitor_done_on_result_file(tmp_path):
 
     def _produce():
         time.sleep(0.2)
-        marker.write_text("{\"status\":\"ok\"***REMOVED***", encoding="utf-8")
+        marker.write_text("{\"status\":\"ok\")", encoding="utf-8")
 
     threading.Thread(target=_produce, daemon=True).start()
     res = d.monitor()
@@ -132,7 +132,7 @@ def test_monitor_stale_marker_ignored(tmp_path):
 
     fake = FakeTmux(screen="Enter a coding task", alive=True)
     marker = tmp_path / ".freebuff_result"
-    marker.write_text("{\"status\":\"stale\"***REMOVED***", encoding="utf-8")
+    marker.write_text("{\"status\":\"stale\")", encoding="utf-8")
     baseline = marker.stat().st_mtime_ns
 
     d = _driver(tmp_path, fake, timeout_s=0.3, poll_s=0.05)
@@ -142,7 +142,7 @@ def test_monitor_stale_marker_ignored(tmp_path):
 
     # Новый маркер (mtime > baseline) → done
     time.sleep(0.05)
-    marker.write_text("{\"status\":\"ok\"***REMOVED***", encoding="utf-8")
+    marker.write_text("{\"status\":\"ok\")", encoding="utf-8")
     res2 = d.monitor(baseline_mtime=baseline, result_marker=".freebuff_result")
     # Осторожно: monitor заново; d.timeout_s мал — таймаут может наступить раньше.
     assert res2.status in ("done", "timeout")
@@ -170,7 +170,7 @@ def test_monitor_crash_restart_resends_prompt(tmp_path):
 
         def run(self, cmd):
             super().run(cmd)
-            if cmd[0***REMOVED*** == "tmux" and cmd[1***REMOVED*** == "new-session":
+            if cmd[0] == "tmux" and cmd[1] == "new-session":
                 self.started += 1
                 self.alive = True  # после рестарта сессия жива
 
@@ -195,8 +195,8 @@ def test_save_context_json(tmp_path):
     assert state.exists()
     import json
     data = json.loads(state.read_text(encoding="utf-8"))
-    assert data["model"***REMOVED*** == "glm-5.2"
-    assert data["tmux_session"***REMOVED*** == d.session_name
+    assert data["model"] == "glm-5.2"
+    assert data["tmux_session"] == d.session_name
 
 
 def test_clean_tui_strips_ansi():

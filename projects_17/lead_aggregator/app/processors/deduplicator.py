@@ -22,8 +22,8 @@ class Deduplicator:
 
     def __init__(self, fuzzy_threshold: float = 0.9) -> None:
         self.fuzzy_threshold = fuzzy_threshold
-        self._exact: set[str***REMOVED*** = set()
-        self._texts: list[str***REMOVED*** = [***REMOVED***
+        self._exact: set[str] = set()
+        self._texts: list[str] = []
 
     @staticmethod
     def exact_hash(text: str) -> str:
@@ -43,9 +43,9 @@ class Deduplicator:
         self._exact.add(h)
         self._texts.append(norm)
         if len(self._texts) > 5000:  # bound памяти
-            self._texts = self._texts[-1000:***REMOVED***
+            self._texts = self._texts[-1000:]
         return False
 
-    def register_many(self, leads: Iterable[Lead***REMOVED***) -> list[Lead***REMOVED***:
+    def register_many(self, leads: Iterable[Lead]) -> list[Lead]:
         """Пропускает только уникальные лиды."""
-        return [lead for lead in leads if not self.is_duplicate(lead)***REMOVED***
+        return [lead for lead in leads if not self.is_duplicate(lead)]

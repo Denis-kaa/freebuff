@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
-***REMOVED***
+}
 
 import pytest
 
@@ -80,12 +80,12 @@ class TestParseYamlFrontMatter:
     def test_no_yaml(self) -> None:
         """No --- markers returns empty dict."""
         text = "# Just a title\n\nSome content"
-        assert _parse_yaml_front_matter(text) == {***REMOVED***
+        assert _parse_yaml_front_matter(text) == {}
 
     def test_empty_yaml(self) -> None:
         """Empty --- block returns empty dict."""
         text = "---\n---\n# Title"
-        assert _parse_yaml_front_matter(text) == {***REMOVED***
+        assert _parse_yaml_front_matter(text) == {}
 
     def test_simple_key_value(self) -> None:
         text = """---
@@ -95,8 +95,8 @@ complexity: средняя
 
 # Title"""
         result = _parse_yaml_front_matter(text)
-        assert result["category"***REMOVED*** == "freelancing"
-        assert result["complexity"***REMOVED*** == "средняя"
+        assert result["category"] == "freelancing"
+        assert result["complexity"] == "средняя"
 
     def test_tags_list(self) -> None:
         text = """---
@@ -109,12 +109,12 @@ tags:
 
 # Title"""
         result = _parse_yaml_front_matter(text)
-        assert result["category"***REMOVED*** == "freelancing"
-        assert isinstance(result["tags"***REMOVED***, list)
-        assert "parser" in result["tags"***REMOVED***
-        assert "scraper" in result["tags"***REMOVED***
-        assert "bs4" in result["tags"***REMOVED***
-        assert len(result["tags"***REMOVED***) == 3
+        assert result["category"] == "freelancing"
+        assert isinstance(result["tags"], list)
+        assert "parser" in result["tags"]
+        assert "scraper" in result["tags"]
+        assert "bs4" in result["tags"]
+        assert len(result["tags"]) == 3
 
     def test_tags_single_line(self) -> None:
         text = """---
@@ -124,7 +124,7 @@ tags:
 
 # Title"""
         result = _parse_yaml_front_matter(text)
-        assert result["tags"***REMOVED*** == ["telegram"***REMOVED***
+        assert result["tags"] == ["telegram"]
 
     def test_boolean_value(self) -> None:
         text = """---
@@ -134,8 +134,8 @@ published: false
 
 # Title"""
         result = _parse_yaml_front_matter(text)
-        assert result["enabled"***REMOVED*** is True
-        assert result["published"***REMOVED*** is False
+        assert result["enabled"] is True
+        assert result["published"] is False
 
     def test_integer_value(self) -> None:
         text = """---
@@ -145,8 +145,8 @@ count: 100
 
 # Title"""
         result = _parse_yaml_front_matter(text)
-        assert result["priority"***REMOVED*** == 5
-        assert result["count"***REMOVED*** == 100
+        assert result["priority"] == 5
+        assert result["count"] == 100
 
     def test_multiline_description(self) -> None:
         """Description with colons is handled correctly."""
@@ -157,8 +157,8 @@ description: Это описание с : двоеточием и другими
 
 # Title"""
         result = _parse_yaml_front_matter(text)
-        assert result["category"***REMOVED*** == "test"
-        assert "двоеточием" in result["description"***REMOVED***
+        assert result["category"] == "test"
+        assert "двоеточием" in result["description"]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -210,9 +210,9 @@ class TestScenario:
         assert s.category == ""
         assert s.complexity == ""
         assert s.description == ""
-        assert s.tags == [***REMOVED***
+        assert s.tags == []
         assert s.prompt_template == ""
-        assert s.metadata == {***REMOVED***
+        assert s.metadata == {}
 
     def test_init_full(self) -> None:
         s = Scenario(
@@ -221,17 +221,17 @@ class TestScenario:
             category="freelancing",
             complexity="средняя",
             description="A test scenario",
-            tags=["test", "demo"***REMOVED***,
-            prompt_template="Hello {name***REMOVED***",
-            metadata={"version": 1***REMOVED***,
+            tags=["test", "demo"],
+            prompt_template="Hello {name]",
+            metadata={"version": 1},
         )
         assert s.slug == "my_scenario"
         assert s.title == "My Scenario"
         assert s.category == "freelancing"
         assert s.complexity == "средняя"
-        assert s.tags == ["test", "demo"***REMOVED***
-        assert s.prompt_template == "Hello {name***REMOVED***"
-        assert s.metadata == {"version": 1***REMOVED***
+        assert s.tags == ["test", "demo"]
+        assert s.prompt_template == "Hello {name]"
+        assert s.metadata == {"version": 1}
 
     def test_to_dict(self) -> None:
         s = Scenario(
@@ -240,53 +240,53 @@ class TestScenario:
             category="dev",
             complexity="low",
             description="Desc",
-            tags=["a", "b"***REMOVED***,
-            prompt_template="Template {x***REMOVED***",
+            tags=["a", "b"],
+            prompt_template="Template {x]",
         )
         d = s.to_dict()
-        assert d["slug"***REMOVED*** == "test"
-        assert d["title"***REMOVED*** == "Test"
-        assert d["category"***REMOVED*** == "dev"
-        assert d["complexity"***REMOVED*** == "low"
-        assert d["description"***REMOVED*** == "Desc"
-        assert d["tags"***REMOVED*** == ["a", "b"***REMOVED***
-        assert d["has_template"***REMOVED*** is True
+        assert d["slug"] == "test"
+        assert d["title"] == "Test"
+        assert d["category"] == "dev"
+        assert d["complexity"] == "low"
+        assert d["description"] == "Desc"
+        assert d["tags"] == ["a", "b"]
+        assert d["has_template"] is True
         assert "metadata" in d
 
     def test_to_dict_no_template(self) -> None:
         s = Scenario(slug="test", title="Test")
-        assert s.to_dict()["has_template"***REMOVED*** is False
+        assert s.to_dict()["has_template"] is False
 
     def test_apply_no_vars(self) -> None:
-        s = Scenario(slug="test", title="Test", prompt_template="Hello {name***REMOVED***")
-        result = s.apply()  # type: ignore[arg-type***REMOVED***
-        assert result == "Hello {name***REMOVED***"
+        s = Scenario(slug="test", title="Test", prompt_template="Hello {name)")
+        result = s.apply()  # type: ignore[arg-type]
+        assert result == "Hello {name]"
 
     def test_apply_none_vars(self) -> None:
-        s = Scenario(slug="test", title="Test", prompt_template="Hello {name***REMOVED***")
+        s = Scenario(slug="test", title="Test", prompt_template="Hello {name)")
         result = s.apply(None)
-        assert result == "Hello {name***REMOVED***"
+        assert result == "Hello {name]"
 
     def test_apply_substitution(self) -> None:
-        s = Scenario(slug="test", title="Test", prompt_template="Hello {name***REMOVED*** from {city***REMOVED***")
-        result = s.apply({"name": "Alice", "city": "Moscow"***REMOVED***)
+        s = Scenario(slug="test", title="Test", prompt_template="Hello {name) from {city]")
+        result = s.apply({"name": "Alice", "city": "Moscow"})
         assert result == "Hello Alice from Moscow"
 
     def test_apply_partial_substitution(self) -> None:
-        """Missing variables remain as {placeholders***REMOVED***."""
-        s = Scenario(slug="test", title="Test", prompt_template="Hello {name***REMOVED*** from {city***REMOVED***")
-        result = s.apply({"name": "Alice"***REMOVED***)
+        """Missing variables remain as {placeholders]."""
+        s = Scenario(slug="test", title="Test", prompt_template="Hello {name) from {city]")
+        result = s.apply({"name": "Alice"})
         assert "Alice" in result
-        assert "{city***REMOVED***" in result
+        assert "{city]" in result
 
     def test_apply_empty_vars(self) -> None:
-        s = Scenario(slug="test", title="Test", prompt_template="Hello {name***REMOVED***")
-        result = s.apply({***REMOVED***)
-        assert result == "Hello {name***REMOVED***"
+        s = Scenario(slug="test", title="Test", prompt_template="Hello {name)")
+        result = s.apply({})
+        assert result == "Hello {name]"
 
     def test_apply_no_template(self) -> None:
         s = Scenario(slug="test", title="Test", prompt_template="")
-        result = s.apply({"x": "y"***REMOVED***)
+        result = s.apply({"x": "y"})
         assert result == ""
 
 
@@ -316,32 +316,32 @@ class TestScenarioEngineReal:
         engine = ScenarioEngine()
         freelancing = engine.list_scenarios(category="freelancing")
         for s in freelancing:
-            assert s["category"***REMOVED*** == "freelancing"
+            assert s["category"] == "freelancing"
         assert len(freelancing) >= 5
 
     def test_list_filter_by_category_nonexistent(self) -> None:
         engine = ScenarioEngine()
         result = engine.list_scenarios(category="nonexistent_category_xyz")
-        assert result == [***REMOVED***
+        assert result == []
 
     def test_list_filter_by_tag(self) -> None:
         engine = ScenarioEngine()
         telegram_scenarios = engine.list_scenarios(tag="telegram")
         for s in telegram_scenarios:
-            assert "telegram" in s["tags"***REMOVED***
+            assert "telegram" in s["tags"]
         assert len(telegram_scenarios) >= 1
 
     def test_list_filter_by_tag_nonexistent(self) -> None:
         engine = ScenarioEngine()
         result = engine.list_scenarios(tag="nonexistent_tag_xyz")
-        assert result == [***REMOVED***
+        assert result == []
 
     def test_list_filter_by_category_and_tag(self) -> None:
         engine = ScenarioEngine()
         result = engine.list_scenarios(category="freelancing", tag="parser")
         for s in result:
-            assert s["category"***REMOVED*** == "freelancing"
-            assert "parser" in s["tags"***REMOVED***
+            assert s["category"] == "freelancing"
+            assert "parser" in s["tags"]
 
     def test_get_scenario_exists(self) -> None:
         engine = ScenarioEngine()
@@ -362,26 +362,26 @@ class TestScenarioEngineReal:
     def test_search_finds_by_title(self) -> None:
         engine = ScenarioEngine()
         results = engine.search_scenarios("парсер")
-        slugs = [r["slug"***REMOVED*** for r in results***REMOVED***
+        slugs = [r["slug"] for r in results]
         assert "freelance_parser" in slugs
 
     def test_search_finds_by_description(self) -> None:
         engine = ScenarioEngine()
         results = engine.search_scenarios("telegram")
-        slugs = [r["slug"***REMOVED*** for r in results***REMOVED***
+        slugs = [r["slug"] for r in results]
         assert "freelance_tg_bot" in slugs
 
     def test_search_finds_by_tag(self) -> None:
         engine = ScenarioEngine()
         results = engine.search_scenarios("api")
-        slugs = [r["slug"***REMOVED*** for r in results***REMOVED***
+        slugs = [r["slug"] for r in results]
         # freelance_api and freelance_integration both have 'api' tag
         assert "freelance_api" in slugs
 
     def test_search_finds_by_category(self) -> None:
         engine = ScenarioEngine()
         results = engine.search_scenarios("agent")
-        slugs = [r["slug"***REMOVED*** for r in results***REMOVED***
+        slugs = [r["slug"] for r in results]
         assert "agent_setup" in slugs
 
     def test_search_case_insensitive(self) -> None:
@@ -393,7 +393,7 @@ class TestScenarioEngineReal:
     def test_search_no_results(self) -> None:
         engine = ScenarioEngine()
         results = engine.search_scenarios("xyznonexistent123456")
-        assert results == [***REMOVED***
+        assert results == []
 
     def test_search_empty_query(self) -> None:
         """Empty query returns everything (empty string is in all text)."""
@@ -405,16 +405,16 @@ class TestScenarioEngineReal:
         engine = ScenarioEngine()
         result = engine.apply_scenario("freelance_parser")
         assert "error" not in result
-        assert result["slug"***REMOVED*** == "freelance_parser"
-        assert "Парсер сайта" in result["title"***REMOVED***
-        assert len(result["prompt"***REMOVED***) > 50
-        assert result["has_template"***REMOVED*** is True
+        assert result["slug"] == "freelance_parser"
+        assert "Парсер сайта" in result["title"]
+        assert len(result["prompt"]) > 50
+        assert result["has_template"] is True
 
     def test_apply_scenario_with_vars(self) -> None:
         engine = ScenarioEngine()
-        result = engine.apply_scenario("freelance_parser", {"URL": "https://test.com"***REMOVED***)
+        result = engine.apply_scenario("freelance_parser", {"URL": "https://test.com"})
         assert "error" not in result
-        assert "https://test.com" in result["prompt"***REMOVED***
+        assert "https://test.com" in result["prompt"]
 
     def test_apply_scenario_all_vars(self) -> None:
         """Substitute all placeholders in freelance_parser."""
@@ -425,31 +425,31 @@ class TestScenarioEngineReal:
             "поле2": "price",
             "поле3": "description",
             "формат": "JSON",
-        ***REMOVED***)
+        ])
         assert "error" not in result
-        prompt = result["prompt"***REMOVED***
+        prompt = result["prompt"]
         assert "https://test.com" in prompt
         assert "title" in prompt
         assert "price" in prompt
         assert "JSON" in prompt
         # Placeholders should be filled
-        assert "{URL***REMOVED***" not in prompt
-        assert "{формат***REMOVED***" not in prompt
+        assert "{URL]" not in prompt
+        assert "{формат]" not in prompt
 
     def test_apply_scenario_not_found(self) -> None:
         engine = ScenarioEngine()
         result = engine.apply_scenario("nonexistent")
         assert "error" in result
         assert "available" in result
-        assert "freelance_parser" in result["available"***REMOVED***
+        assert "freelance_parser" in result["available"]
 
     def test_apply_scenario_no_template(self) -> None:
         """task_framework has no ## Промт для freebuff section."""
         engine = ScenarioEngine()
         result = engine.apply_scenario("task_framework")
         assert "error" not in result
-        assert result["has_template"***REMOVED*** is False
-        assert result["prompt"***REMOVED*** == ""
+        assert result["has_template"] is False
+        assert result["prompt"] == ""
 
     def test_reload(self) -> None:
         engine = ScenarioEngine()
@@ -501,7 +501,7 @@ class TestScenarioEngineCustom:
             "Description paragraph.\n\n"
             "## Промт для freebuff\n\n"
             "```\n"
-            "Hello {name***REMOVED*** from {city***REMOVED***\n"
+            "Hello {name] from {city]\n"
             "```\n",
             encoding="utf-8",
         )
@@ -512,7 +512,7 @@ class TestScenarioEngineCustom:
             "Just a description.\n\n"
             "## Промт для freebuff\n\n"
             "```\n"
-            "Some prompt {var***REMOVED***\n"
+            "Some prompt {var]\n"
             "```\n",
             encoding="utf-8",
         )
@@ -543,9 +543,9 @@ class TestScenarioEngineCustom:
         assert scenario.category == "test"
         assert scenario.complexity == "низкая"
         assert scenario.description == "A test scenario"
-        assert scenario.tags == ["test", "demo"***REMOVED***
-        assert "Hello {name***REMOVED***" in scenario.prompt_template
-        assert scenario.to_dict()["has_template"***REMOVED*** is True
+        assert scenario.tags == ["test", "demo"]
+        assert "Hello {name]" in scenario.prompt_template
+        assert scenario.to_dict()["has_template"] is True
 
     def test_load_no_yaml_scenario(self, tmp_scenarios: Path) -> None:
         """Scenario without YAML should still load with defaults."""
@@ -555,13 +555,13 @@ class TestScenarioEngineCustom:
         assert scenario.slug == "no_yaml"
         assert scenario.category == ""  # no YAML → empty category
         assert scenario.complexity == ""
-        assert scenario.tags == [***REMOVED***
+        assert scenario.tags == []
         # Title from # heading
         assert scenario.title == "No YAML"
         # Description from first paragraph (title without #)
         assert "No YAML" in scenario.description
         # Template from ## Промт для freebuff
-        assert "Some prompt {var***REMOVED***" in scenario.prompt_template
+        assert "Some prompt {var]" in scenario.prompt_template
 
     def test_load_no_template_scenario(self, tmp_scenarios: Path) -> None:
         """Scenario without prompt template should have has_template=False."""
@@ -569,26 +569,26 @@ class TestScenarioEngineCustom:
         scenario = engine.get_scenario("no_template")
         assert scenario is not None
         assert scenario.prompt_template == ""
-        assert scenario.to_dict()["has_template"***REMOVED*** is False
+        assert scenario.to_dict()["has_template"] is False
 
     def test_apply_custom(self, tmp_scenarios: Path) -> None:
         engine = ScenarioEngine(tmp_scenarios)
-        result = engine.apply_scenario("full_scenario", {"name": "Alice", "city": "Moscow"***REMOVED***)
+        result = engine.apply_scenario("full_scenario", {"name": "Alice", "city": "Moscow"})
         assert "error" not in result
-        assert "Alice" in result["prompt"***REMOVED***
-        assert "Moscow" in result["prompt"***REMOVED***
+        assert "Alice" in result["prompt"]
+        assert "Moscow" in result["prompt"]
 
     def test_search_custom(self, tmp_scenarios: Path) -> None:
         engine = ScenarioEngine(tmp_scenarios)
         results = engine.search_scenarios("test")
         assert len(results) >= 1
-        slugs = [r["slug"***REMOVED*** for r in results***REMOVED***
+        slugs = [r["slug"] for r in results]
         assert "full_scenario" in slugs
 
     def test_list_empty_filter(self, tmp_scenarios: Path) -> None:
         engine = ScenarioEngine(tmp_scenarios)
         result = engine.list_scenarios(category="nonexistent")
-        assert result == [***REMOVED***
+        assert result == []
 
     def test_reload_custom(self, tmp_scenarios: Path) -> None:
         engine = ScenarioEngine(tmp_scenarios)
@@ -610,7 +610,7 @@ class TestScenarioEngineEdgeCases:
         scenarios_dir = tmp_path / "scenarios"
         scenarios_dir.mkdir()
         (scenarios_dir / "full_scenario.md").write_text(
-            "---\ncategory: test\n---\n# Full Scenario\n\n## Промт для freebuff\n\n```\nHello {name***REMOVED***\n```\n",
+            "---\ncategory: test\n---\n# Full Scenario\n\n## Промт для freebuff\n\n```\nHello {name]\n```\n",
             encoding="utf-8",
         )
         return scenarios_dir
@@ -620,14 +620,14 @@ class TestScenarioEngineEdgeCases:
         empty_dir = tmp_path / "empty"
         empty_dir.mkdir()
         engine = ScenarioEngine(empty_dir)
-        assert engine.list_scenarios() == [***REMOVED***
+        assert engine.list_scenarios() == []
         assert engine.reload() == 0
 
     def test_nonexistent_directory(self, tmp_path: Path) -> None:
         """Non-existent dir loads 0 scenarios."""
         fake_dir = tmp_path / "does_not_exist"
         engine = ScenarioEngine(fake_dir)
-        assert engine.list_scenarios() == [***REMOVED***
+        assert engine.list_scenarios() == []
 
     def test_ignore_init_md(self, tmp_path: Path) -> None:
         """__init__.md should be ignored during loading."""
@@ -662,20 +662,20 @@ class TestScenarioEngineEdgeCases:
         scenarios2 = engine.list_scenarios()
         # Modifying one should not affect the other
         if scenarios1:
-            scenarios1[0***REMOVED***["title"***REMOVED*** = "HACKED"
-            assert scenarios2[0***REMOVED***["title"***REMOVED*** != "HACKED"
+            scenarios1[0]["title"] = "HACKED"
+            assert scenarios2[0]["title"] != "HACKED"
 
     def test_apply_scenario_none_vars(self) -> None:
         """apply with None should work same as empty dict."""
         engine = ScenarioEngine()
         result = engine.apply_scenario("freelance_parser", None)
         assert "error" not in result
-        assert result["variables"***REMOVED*** == {***REMOVED***
+        assert result["variables"] == {}
 
     def test_application_results_contain_all_fields(self, tmp_scenarios: Path) -> None:
         """apply_scenario result contains all expected fields."""
         engine = ScenarioEngine(tmp_scenarios)
-        result = engine.apply_scenario("full_scenario", {"name": "Alice"***REMOVED***)
+        result = engine.apply_scenario("full_scenario", {"name": "Alice"})
         assert "slug" in result
         assert "title" in result
         assert "category" in result
@@ -686,7 +686,7 @@ class TestScenarioEngineEdgeCases:
     def test_all_real_scenarios_have_unique_slugs(self) -> None:
         """All real scenarios should have unique slugs."""
         engine = ScenarioEngine()
-        slugs = [s["slug"***REMOVED*** for s in engine.list_scenarios()***REMOVED***
+        slugs = [s["slug"] for s in engine.list_scenarios()]
         assert len(slugs) == len(set(slugs))
 
 
@@ -767,7 +767,7 @@ class TestScenarioEngineCLI:
         import subprocess
         script = Path(__file__).resolve().parent.parent / "freebuff_plugin_03" / "scenario_engine.py"
         result = subprocess.run(
-            [sys.executable, str(script), "list"***REMOVED***,
+            [sys.executable, str(script), "list"],
             capture_output=True, text=True, timeout=15,
         )
         assert "Scenarios:" in result.stdout
@@ -778,7 +778,7 @@ class TestScenarioEngineCLI:
         import subprocess
         script = Path(__file__).resolve().parent.parent / "freebuff_plugin_03" / "scenario_engine.py"
         result = subprocess.run(
-            [sys.executable, str(script), "list", "--category", "agent"***REMOVED***,
+            [sys.executable, str(script), "list", "--category", "agent"],
             capture_output=True, text=True, timeout=15,
         )
         assert "agent_setup" in result.stdout
@@ -788,7 +788,7 @@ class TestScenarioEngineCLI:
         import subprocess
         script = Path(__file__).resolve().parent.parent / "freebuff_plugin_03" / "scenario_engine.py"
         result = subprocess.run(
-            [sys.executable, str(script), "get", "freelance_parser"***REMOVED***,
+            [sys.executable, str(script), "get", "freelance_parser"],
             capture_output=True, text=True, timeout=15,
         )
         assert "freelance_parser" in result.stdout
@@ -799,20 +799,20 @@ class TestScenarioEngineCLI:
         import subprocess
         script = Path(__file__).resolve().parent.parent / "freebuff_plugin_03" / "scenario_engine.py"
         result = subprocess.run(
-            [sys.executable, str(script), "search", "telegram"***REMOVED***,
+            [sys.executable, str(script), "search", "telegram"],
             capture_output=True, text=True, timeout=15,
         )
         assert "freelance_tg_bot" in result.stdout
 
     def test_cli_apply(self) -> None:
-        """`apply freelance_parser --vars '{\"URL\":\"x\"***REMOVED***'` returns prompt."""
+        """`apply freelance_parser --vars '{\"URL\":\"x\"]'` returns prompt."""
         import subprocess
         script = Path(__file__).resolve().parent.parent / "freebuff_plugin_03" / "scenario_engine.py"
         result = subprocess.run(
             [
                 sys.executable, str(script), "apply", "freelance_parser",
-                "--vars", '{"URL":"https://test.com"***REMOVED***',
-            ***REMOVED***,
+                "--vars", '{"URL":"https://test.com"]',
+            ],
             capture_output=True, text=True, timeout=15,
         )
         assert "Prompt" in result.stdout or "Scenario" in result.stdout
@@ -823,7 +823,7 @@ class TestScenarioEngineCLI:
         import subprocess
         script = Path(__file__).resolve().parent.parent / "freebuff_plugin_03" / "scenario_engine.py"
         result = subprocess.run(
-            [sys.executable, str(script), "apply", "nonexistent"***REMOVED***,
+            [sys.executable, str(script), "apply", "nonexistent"],
             capture_output=True, text=True, timeout=15,
         )
         assert "Error" in result.stdout
@@ -833,7 +833,7 @@ class TestScenarioEngineCLI:
         import subprocess
         script = Path(__file__).resolve().parent.parent / "freebuff_plugin_03" / "scenario_engine.py"
         result = subprocess.run(
-            [sys.executable, str(script), "reload"***REMOVED***,
+            [sys.executable, str(script), "reload"],
             capture_output=True, text=True, timeout=15,
         )
         assert "Reloaded" in result.stdout

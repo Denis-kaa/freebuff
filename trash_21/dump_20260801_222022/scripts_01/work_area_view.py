@@ -21,7 +21,7 @@ import os
 import sqlite3
 import sys
 from datetime import datetime, timezone
-***REMOVED***
+}
 from typing import Any
 
 WORKSPACE = Path(__file__).resolve().parent.parent
@@ -88,7 +88,7 @@ def unlink(project_id: str, resource_id: str, db_path: Path | str | None = None)
         conn.close()
 
 
-def projects_for_resource(resource_id: str, db_path: Path | str | None = None) -> list[dict[str, Any***REMOVED******REMOVED***:
+def projects_for_resource(resource_id: str, db_path: Path | str | None = None) -> list[dict[str, Any]]:
     """Work Area as View: список проектов, связанных с ресурсом.
 
     Args:
@@ -97,7 +97,7 @@ def projects_for_resource(resource_id: str, db_path: Path | str | None = None) -
 
     Returns:
         Список проектов с деталями из таблицы projects (если она есть):
-        [{"project_id", "description", "category", "status"***REMOVED******REMOVED***. Если таблицы
+        [{"project_id", "description", "category", "status"}]. Если таблицы
         projects в БД нет (scan_projects не запускался) — детали пустые.
     """
     conn = init_db(db_path)
@@ -126,12 +126,12 @@ def projects_for_resource(resource_id: str, db_path: Path | str | None = None) -
     finally:
         conn.close()
     return [
-        {"project_id": r[0***REMOVED***, "description": r[1***REMOVED***, "category": r[2***REMOVED***, "status": r[3***REMOVED******REMOVED***
+        {"project_id": r[0], "description": r[1], "category": r[2], "status": r[3]}
         for r in rows
-    ***REMOVED***
+    ]
 
 
-def resources_for_project(project_id: str, db_path: Path | str | None = None) -> list[dict[str, str***REMOVED******REMOVED***:
+def resources_for_project(project_id: str, db_path: Path | str | None = None) -> list[dict[str, str]]:
     """Список ресурсов, связанных с проектом."""
     conn = init_db(db_path)
     try:
@@ -142,10 +142,10 @@ def resources_for_project(project_id: str, db_path: Path | str | None = None) ->
         ).fetchall()
     finally:
         conn.close()
-    return [{"resource_id": r[0***REMOVED***, "created_at": r[1***REMOVED******REMOVED*** for r in rows***REMOVED***
+    return [{"resource_id": r[0], "created_at": r[1]} for r in rows]
 
 
-def list_links(db_path: Path | str | None = None) -> list[dict[str, str***REMOVED******REMOVED***:
+def list_links(db_path: Path | str | None = None) -> list[dict[str, str]]:
     """Все связи проект ↔ ресурс."""
     conn = init_db(db_path)
     try:
@@ -155,7 +155,7 @@ def list_links(db_path: Path | str | None = None) -> list[dict[str, str***REMOVE
         ).fetchall()
     finally:
         conn.close()
-    return [{"project_id": r[0***REMOVED***, "resource_id": r[1***REMOVED***, "created_at": r[2***REMOVED******REMOVED*** for r in rows***REMOVED***
+    return [{"project_id": r[0], "resource_id": r[1], "created_at": r[2]} for r in rows]
 
 
 # ── CLI ───────────────────────────────────────────────────────
@@ -166,13 +166,13 @@ def print_projects(resource_id: str, db_path: Path | str | None = None) -> None:
     Используется и модульным CLI, и командой `freebuff resource projects`.
     """
     projects = projects_for_resource(resource_id, db_path)
-    print(f"Проекты, связанные с {resource_id***REMOVED***:")
+    print(f"Проекты, связанные с {resource_id}:")
     if not projects:
         print("  (нет связей)")
         return
     for p in projects:
-        suffix = f" ({p['description'***REMOVED******REMOVED***)" if p["description"***REMOVED*** else ""
-        print(f"  - {p['project_id'***REMOVED******REMOVED***{suffix***REMOVED***")
+        suffix = f" ({p['description']})" if p["description"] else ""
+        print(f"  - {p['project_id']}{suffix}")
 
 
 def main() -> int:
@@ -203,26 +203,26 @@ def main() -> int:
 
     if args.command == "link":
         created = link(args.project_id, args.resource_id)
-        print(f"🔗 {'Связь создана' if created else 'Связь уже существует'***REMOVED***: "
-              f"{args.project_id***REMOVED*** ↔ {args.resource_id***REMOVED***")
+        print(f"🔗 {'Связь создана' if created else 'Связь уже существует'}: "
+              f"{args.project_id} ↔ {args.resource_id}")
     elif args.command == "unlink":
         removed = unlink(args.project_id, args.resource_id)
-        print(f"🗑 {'Связь удалена' if removed else 'Связь не найдена'***REMOVED***: "
-              f"{args.project_id***REMOVED*** ↔ {args.resource_id***REMOVED***")
+        print(f"🗑 {'Связь удалена' if removed else 'Связь не найдена'}: "
+              f"{args.project_id} ↔ {args.resource_id}")
     elif args.command == "projects":
         print_projects(args.resource_id)
     elif args.command == "resources":
         resources = resources_for_project(args.project_id)
-        print(f"Ресурсы, связанные с {args.project_id***REMOVED***:")
+        print(f"Ресурсы, связанные с {args.project_id}:")
         if not resources:
             print("  (нет связей)")
         for r in resources:
-            print(f"  - {r['resource_id'***REMOVED******REMOVED***")
+            print(f"  - {r['resource_id']}")
     elif args.command == "list":
         links = list_links()
-        print(f"Связи проект ↔ ресурс ({len(links)***REMOVED***):")
+        print(f"Связи проект ↔ ресурс ({len(links)}):")
         for l in links:
-            print(f"  - {l['project_id'***REMOVED******REMOVED*** ↔ {l['resource_id'***REMOVED******REMOVED***")
+            print(f"  - {l['project_id']} ↔ {l['resource_id']}")
     return 0
 
 

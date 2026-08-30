@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import datetime, timezone
-***REMOVED***
+}
 
 import pytest
 
@@ -43,7 +43,7 @@ def make_publication(
         summary=summary,
         published_at=NOW,
         fetched_at=NOW,
-        metadata={"categories": "python,web"***REMOVED***,
+        metadata={"categories": "python,web"},
     )
 
 
@@ -69,7 +69,7 @@ class FakeTransport:
     """Протокол-транспорт: записывает вызовы, умеет падать по команде."""
 
     def __init__(self) -> None:
-        self.sent: list[tuple[str, str***REMOVED******REMOVED*** = [***REMOVED***
+        self.sent: list[tuple[str, str]] = []
         self.fail_next = False
 
     async def send(
@@ -83,11 +83,11 @@ class FakeTransport:
             self.fail_next = False
             raise DeliveryTransportError("rate_limited")
         self.sent.append((chat_id, text))
-        return f"msg-{len(self.sent)***REMOVED***"
+        return f"msg-{len(self.sent)}"
 
 
 @pytest.fixture()
-def storage(tmp_path: Path) -> Iterator[SqliteStorage***REMOVED***:
+def storage(tmp_path: Path) -> Iterator[SqliteStorage]:
     db = SqliteStorage(tmp_path / "delivery.db")
     yield db
     db.close()
@@ -112,11 +112,11 @@ def test_render_card_shows_apply_link_when_present() -> None:
     """Apply-ссылка площадки (jobseek) рендерится как кнопка «Откликнуться»."""
     publication = make_publication()
     # подменим metadata: добавим официальный apply_url
-    from dataclasses ***REMOVED***place
+    from dataclasses ]place
 
     publication = replace(
         publication,
-        metadata={**publication.metadata, "apply_url": "https://hh.ru/applicant/vacancy_response/123"***REMOVED***,
+        metadata={**publication.metadata, "apply_url": "https://hh.ru/applicant/vacancy_response/123"},
     )
 
     card = render_card(publication, make_decision(), score_label="0.90")

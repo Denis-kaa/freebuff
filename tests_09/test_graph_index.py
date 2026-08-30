@@ -20,7 +20,7 @@ import json
 import os
 import sys
 import pytest
-***REMOVED***
+}
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -80,7 +80,7 @@ class TestNodes:
 
     def test_add_and_get_node(self, graph: GraphIndex):
         graph.add_node("doc1", node_type="document", label="Test Doc",
-                       metadata={"source": "test"***REMOVED***)
+                       metadata={"source": "test"})
         node = graph.get_node("doc1")
         assert node is not None
         assert node.doc_id == "doc1"
@@ -135,11 +135,11 @@ class TestEdges:
 
         # parent → child
         related = graph.get_related("parent_doc", rel_type="parent")
-        assert any(r[0***REMOVED*** == "child_doc" for r in related)
+        assert any(r[0] == "child_doc" for r in related)
 
         # child → parent (обратное ребро)
         related = graph.get_related("child_doc", rel_type="child")
-        assert any(r[0***REMOVED*** == "parent_doc" for r in related)
+        assert any(r[0] == "parent_doc" for r in related)
 
     def test_add_edge_symmetric(self, graph: GraphIndex):
         """related — симметричное отношение (оба направления)."""
@@ -147,8 +147,8 @@ class TestEdges:
 
         r1 = graph.get_related("doc1", rel_type="related")
         r2 = graph.get_related("doc2", rel_type="related")
-        assert any(r[0***REMOVED*** == "doc2" for r in r1)
-        assert any(r[0***REMOVED*** == "doc1" for r in r2)
+        assert any(r[0] == "doc2" for r in r1)
+        assert any(r[0] == "doc1" for r in r2)
 
     def test_add_edge_invalid_type(self, graph: GraphIndex):
         with pytest.raises(ValueError):
@@ -172,7 +172,7 @@ class TestEdges:
         graph.add_edge("doc1", "doc2", "depends")
 
         related = graph.get_related("doc1")
-        types = {r[1***REMOVED*** for r in related***REMOVED***
+        types = {r[1] for r in related}
         assert "references" in types
         assert "depends" in types
 
@@ -192,7 +192,7 @@ class TestGetRelated:
     def test_get_related_direct(self, populated_graph: GraphIndex):
         """Прямые связи doc1 (включая обратные рёбра)."""
         results = populated_graph.get_related("doc1", max_depth=1)
-        ids = {r[0***REMOVED*** for r in results***REMOVED***
+        ids = {r[0] for r in results}
         assert "doc2" in ids  # references + referenced_by
         assert "doc3" in ids  # parent + child
         assert len(results) >= 2  # как минимум прямые связи
@@ -201,7 +201,7 @@ class TestGetRelated:
     def test_get_related_depth_2(self, populated_graph: GraphIndex):
         """Связи doc1 глубиной 2."""
         results = populated_graph.get_related("doc1", max_depth=2)
-        ids = {r[0***REMOVED*** for r in results***REMOVED***
+        ids = {r[0] for r in results}
         assert "doc2" in ids
         assert "doc3" in ids
         assert "doc4" in ids  # через doc1→doc3→doc4 или doc1→doc2→doc4
@@ -210,13 +210,13 @@ class TestGetRelated:
     def test_get_related_filter_by_type(self, populated_graph: GraphIndex):
         """Фильтрация по типу связи."""
         results = populated_graph.get_related("doc1", rel_type="parent")
-        assert all(r[1***REMOVED*** == "parent" for r in results)
-        ids = {r[0***REMOVED*** for r in results***REMOVED***
+        assert all(r[1] == "parent" for r in results)
+        ids = {r[0] for r in results}
         assert "doc3" in ids
 
     def test_get_related_references_filter(self, populated_graph: GraphIndex):
         results = populated_graph.get_related("doc1", rel_type="references")
-        ids = {r[0***REMOVED*** for r in results***REMOVED***
+        ids = {r[0] for r in results}
         assert "doc2" in ids
 
     def test_get_related_isolated_node(self, graph: GraphIndex):
@@ -275,7 +275,7 @@ class TestSubgraph:
 
     def test_subgraph_depth_1(self, populated_graph: GraphIndex):
         nodes, edges = populated_graph.subgraph("doc1", depth=1)
-        doc_ids = {n.doc_id for n in nodes***REMOVED***
+        doc_ids = {n.doc_id for n in nodes}
         assert "doc1" in doc_ids
         assert "doc2" in doc_ids
         assert "doc3" in doc_ids
@@ -283,7 +283,7 @@ class TestSubgraph:
 
     def test_subgraph_depth_2(self, populated_graph: GraphIndex):
         nodes, edges = populated_graph.subgraph("doc1", depth=2)
-        doc_ids = {n.doc_id for n in nodes***REMOVED***
+        doc_ids = {n.doc_id for n in nodes}
         assert "doc4" in doc_ids  # достигается на глубине 2
         assert "doc5" in doc_ids  # через doc3
 
@@ -295,7 +295,7 @@ class TestSubgraph:
     def test_subgraph_filtered(self, populated_graph: GraphIndex):
         """Подграф только с references."""
         nodes, edges = populated_graph.subgraph("doc1", depth=2, rel_type="references")
-        ref_types = {e.rel_type for e in edges***REMOVED***
+        ref_types = {e.rel_type for e in edges}
         assert all(t == "references" for t in ref_types)
 
 
@@ -332,7 +332,7 @@ class TestAutoDiscover:
         count = graph.auto_discover([
             ("doc1", "capability router scoring model routing",
              "doc2", "router capability model implementation"),
-        ***REMOVED***, min_shared_terms=2)
+        ], min_shared_terms=2)
         assert count >= 1
 
         # Проверяем, что связь создана
@@ -344,7 +344,7 @@ class TestAutoDiscover:
         count = graph.auto_discover([
             ("doc1", "router capability model",
              "doc2", "weather forecast sunny rain"),
-        ***REMOVED***, min_shared_terms=3)
+        ], min_shared_terms=3)
         assert count == 0
 
     def test_auto_discover_custom_threshold(self, graph: GraphIndex):
@@ -352,7 +352,7 @@ class TestAutoDiscover:
         count = graph.auto_discover([
             ("doc1", "router capability",
              "doc2", "router capability model scoring"),
-        ***REMOVED***, min_shared_terms=5)
+        ], min_shared_terms=5)
         assert count == 0  # только 2 общих термина
 
 
@@ -405,8 +405,8 @@ class TestKnowledgeEngineIntegration:
         ke.add_graph_edge("doc1", "doc2", "references")
 
         result = ke.graph_search("doc1", mode="related")
-        assert result["mode"***REMOVED*** == "related"
-        assert result["count"***REMOVED*** >= 1
+        assert result["mode"] == "related"
+        assert result["count"] >= 1
 
     def test_graph_search_subgraph(self, tmp_path: Path):
         from scripts_01.knowledge_engine import KnowledgeEngine
@@ -416,8 +416,8 @@ class TestKnowledgeEngineIntegration:
         ke.add_graph_edge("b", "c", "references")
 
         result = ke.graph_search("a", mode="subgraph", max_depth=2)
-        assert result["mode"***REMOVED*** == "subgraph"
-        assert len(result["nodes"***REMOVED***) >= 2
+        assert result["mode"] == "subgraph"
+        assert len(result["nodes"]) >= 2
 
     def test_graph_search_traverse(self, tmp_path: Path):
         from scripts_01.knowledge_engine import KnowledgeEngine
@@ -427,7 +427,7 @@ class TestKnowledgeEngineIntegration:
         ke.add_graph_edge("b", "c", "depends")
 
         result = ke.graph_search("a", mode="traverse", rel_type="references")
-        assert result["mode"***REMOVED*** == "traverse"
+        assert result["mode"] == "traverse"
 
     def test_graph_auto_discover_integration(self, tmp_path: Path):
         from scripts_01.knowledge_engine import KnowledgeEngine
@@ -467,4 +467,4 @@ class TestKnowledgeEngineIntegration:
         ke.add_graph_edge("y", "z", "depends")
 
         related = ke.graph_search("x", mode="related")
-        assert related["count"***REMOVED*** >= 1
+        assert related["count"] >= 1

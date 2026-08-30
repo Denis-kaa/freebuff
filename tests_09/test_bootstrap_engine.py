@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-***REMOVED***
+}
 from typing import Any, Dict, Generator, List
 from unittest.mock import MagicMock, Mock, patch
 
@@ -42,7 +42,7 @@ from freebuff_plugin_03.bootstrap.engine import BootstrapEngine
 
 
 @pytest.fixture
-def tmp_ws() -> Generator[Path, None, None***REMOVED***:
+def tmp_ws() -> Generator[Path, None, None]:
     """Временная рабочая директория."""
     tmp = Path(tempfile.mkdtemp(prefix="bootstrap_test_"))
     yield tmp
@@ -62,9 +62,9 @@ def env_state() -> EnvironmentState:
         disk_free_gb=10.0,
         ram_total_mb=4096,
         ram_available_mb=2048,
-        pip_packages={"requests": "2.31.0", "pyyaml": "6.0"***REMOVED***,
-        system_packages=["curl", "git"***REMOVED***,
-        path_dirs=["/usr/bin", "/data/data/com.termux/files/usr/bin"***REMOVED***,
+        pip_packages={"requests": "2.31.0", "pyyaml": "6.0"},
+        system_packages=["curl", "git"],
+        path_dirs=["/usr/bin", "/data/data/com.termux/files/usr/bin"],
     )
 
 
@@ -87,7 +87,7 @@ class TestTypes:
             success=True,
             profile="minimal",
             duration_ms=1500.0,
-            steps=[InstallStep(name="check", status="passed")***REMOVED***,
+            steps=[InstallStep(name="check", status="passed")],
         )
         summary = report.summary()
         assert "✅" in summary
@@ -95,7 +95,7 @@ class TestTypes:
         assert "1500" in summary
 
     def test_report_has_warnings(self):
-        report = BootstrapReport(warnings=["low disk"***REMOVED***)
+        report = BootstrapReport(warnings=["low disk"])
         assert report.has_warnings() is True
         assert report.has_errors() is False
 
@@ -124,7 +124,7 @@ class TestEnvironmentChecker:
     def test_check_os_termux(self):
         """Определяет Termux (Android)."""
         with patch("platform.system", return_value="linux"):
-            with patch.dict(os.environ, {"TERMUX_VERSION": "0.118.0"***REMOVED***):
+            with patch.dict(os.environ, {"TERMUX_VERSION": "0.118.0"}):
                 checker = EnvironmentChecker("/tmp")
                 state = checker.check_quick()
                 assert state.os_type == "android"
@@ -189,18 +189,18 @@ class TestBootstrapState:
     def test_save_and_load(self, tmp_ws: Path):
         """Сохранение и загрузка."""
         state = BootstrapState(tmp_ws)
-        state.save({"profile": "minimal", "status": "complete"***REMOVED***)
+        state.save({"profile": "minimal", "status": "complete"})
         assert (tmp_ws / "bootstrap_state.json").exists()
         data = state.load()
         assert data is not None
-        assert data["profile"***REMOVED*** == "minimal"
-        assert data["status"***REMOVED*** == "complete"
+        assert data["profile"] == "minimal"
+        assert data["status"] == "complete"
         assert "timestamp" in data
 
     def test_is_complete_true(self, tmp_ws: Path):
         """is_complete после успешного сохранения."""
         state = BootstrapState(tmp_ws)
-        state.save({"profile": "test", "status": "complete"***REMOVED***)
+        state.save({"profile": "test", "status": "complete"})
         assert state.is_complete() is True
 
     def test_is_complete_false(self, tmp_ws: Path):
@@ -218,7 +218,7 @@ class TestBootstrapState:
     def test_clear(self, tmp_ws: Path):
         """clear удаляет файл."""
         state = BootstrapState(tmp_ws)
-        state.save({"test": True***REMOVED***)
+        state.save({"test": True})
         assert (tmp_ws / "bootstrap_state.json").exists()
         state.clear()
         assert not (tmp_ws / "bootstrap_state.json").exists()
@@ -227,11 +227,11 @@ class TestBootstrapState:
         """get_component_version."""
         state = BootstrapState(tmp_ws)
         data = {
-            "environment": {"python": "3.14.1"***REMOVED***,
+            "environment": {"python": "3.14.1"},
             "runtimes": {
-                "freebuff": {"installed": True, "version": "1.0.0"***REMOVED***
-            ***REMOVED***,
-        ***REMOVED***
+                "freebuff": {"installed": True, "version": "1.0.0"}
+            },
+        }
         state.save(data)
         assert state.get_component_version("python") == "3.14.1"
         assert state.get_component_version("freebuff") == "1.0.0"
@@ -240,12 +240,12 @@ class TestBootstrapState:
     def test_to_report_dict(self, tmp_ws: Path, env_state: EnvironmentState):
         """to_report_dict формирует правильную структуру."""
         state = BootstrapState(tmp_ws)
-        steps = [InstallStep(name="check_env", status="passed")***REMOVED***
-        data = state.to_report_dict(env_state, steps, [***REMOVED***, [***REMOVED***, "minimal")
-        assert data["profile"***REMOVED*** == "minimal"
-        assert data["environment"***REMOVED***["python"***REMOVED*** == "3.14.1"
-        assert data["environment"***REMOVED***["os"***REMOVED*** == "android"
-        assert data["steps"***REMOVED***[0***REMOVED***["name"***REMOVED*** == "check_env"
+        steps = [InstallStep(name="check_env", status="passed")]
+        data = state.to_report_dict(env_state, steps, [], [], "minimal")
+        assert data["profile"] == "minimal"
+        assert data["environment"]["python"] == "3.14.1"
+        assert data["environment"]["os"] == "android"
+        assert data["steps"][0]["name"] == "check_env"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -281,7 +281,7 @@ class TestProfiles:
         engine = BootstrapEngine()
         profiles = engine.list_profiles()
         assert len(profiles) >= 3
-        names = [p["name"***REMOVED*** for p in profiles***REMOVED***
+        names = [p["name"] for p in profiles]
         assert "minimal" in names
         assert "developer" in names
 
@@ -304,7 +304,7 @@ class TestInstaller:
     def test_init(self, tmp_ws: Path, env_state: EnvironmentState):
         """Инициализация."""
         installer = IdempotentInstaller(tmp_ws, env_state)
-        assert installer.steps == [***REMOVED***
+        assert installer.steps == []
 
     def test_install_pip_requests(self, tmp_ws: Path, env_state: EnvironmentState):
         """Install pip (mocked)."""
@@ -394,7 +394,7 @@ class TestInstaller:
         with patch("subprocess.run") as mock_run:
             mock_run.return_value.returncode = 0
             success, error, duration, step = installer._run_with_retry(
-                ["echo", "ok"***REMOVED***, step_name="test",
+                ["echo", "ok"], step_name="test",
             )
             assert success is True
             assert error == ""
@@ -407,12 +407,12 @@ class TestInstaller:
             with patch("time.sleep") as mock_sleep:
                 # Первые 2 вызова возвращают returncode=1, третий — 0
                 mock_run.side_effect = [
-                    type("Result", (), {"returncode": 1, "stderr": "fail1"***REMOVED***)(),
-                    type("Result", (), {"returncode": 1, "stderr": "fail2"***REMOVED***)(),
-                    type("Result", (), {"returncode": 0, "stderr": ""***REMOVED***)(),
-                ***REMOVED***
+                    type("Result", (), {"returncode": 1, "stderr": "fail1"})(),
+                    type("Result", (), {"returncode": 1, "stderr": "fail2"})(),
+                    type("Result", (), {"returncode": 0, "stderr": ""})(),
+                ]
                 success, error, duration, step = installer._run_with_retry(
-                    ["cmd"***REMOVED***, max_retries=3, step_name="test_retry",
+                    ["cmd"], max_retries=3, step_name="test_retry",
                 )
                 assert success is True
                 assert mock_run.call_count == 3
@@ -427,7 +427,7 @@ class TestInstaller:
                 mock_run.return_value.returncode = 1
                 mock_run.return_value.stderr = "network error"
                 success, error, duration, step = installer._run_with_retry(
-                    ["cmd"***REMOVED***, max_retries=3, step_name="test_fail",
+                    ["cmd"], max_retries=3, step_name="test_fail",
                 )
                 assert success is False
                 assert "network error" in error
@@ -479,7 +479,7 @@ class TestRuntimeDoctor:
         env = EnvironmentState(
             os_type="linux",
             python_version="3.9.0",
-            path_dirs=["/usr/bin"***REMOVED***,
+            path_dirs=["/usr/bin"],
         )
         doctor = RuntimeDoctor(env, tmp_ws)
         report = doctor.diagnose()
@@ -488,7 +488,7 @@ class TestRuntimeDoctor:
 
     def test_diagnose_missing_keys(self, tmp_ws: Path):
         """Отсутствуют ключи."""
-        env = EnvironmentState(os_type="linux", path_dirs=["/usr/bin"***REMOVED***)
+        env = EnvironmentState(os_type="linux", path_dirs=["/usr/bin"])
         doctor = RuntimeDoctor(env, tmp_ws)
         report = doctor.diagnose()
         assert len(report.key_issues) >= 1
@@ -497,8 +497,8 @@ class TestRuntimeDoctor:
         """Отсутствуют зависимости."""
         env = EnvironmentState(
             os_type="linux",
-            pip_packages={***REMOVED***,
-            path_dirs=["/usr/bin"***REMOVED***,
+            pip_packages={},
+            path_dirs=["/usr/bin"],
         )
         doctor = RuntimeDoctor(env, tmp_ws)
         report = doctor.diagnose()
@@ -506,7 +506,7 @@ class TestRuntimeDoctor:
 
     def test_health_score_calculation(self, tmp_ws: Path):
         """Health score calculation."""
-        env = EnvironmentState(os_type="linux", path_dirs=[***REMOVED***)
+        env = EnvironmentState(os_type="linux", path_dirs=[])
         doctor = RuntimeDoctor(env, tmp_ws)
         report = doctor.diagnose()
         assert 0.0 <= report.health_score <= 1.0
@@ -559,16 +559,16 @@ class TestBootstrapEngine:
         """Статус когда bootstrap никогда не запускался."""
         engine = BootstrapEngine(str(tmp_ws))
         status = engine.get_status()
-        assert status["status"***REMOVED*** == "never_run"
+        assert status["status"] == "never_run"
 
     def test_get_status_after_run(self, tmp_ws: Path):
         """Статус после запуска."""
         state_mgr = BootstrapState(tmp_ws)
-        state_mgr.save({"profile": "minimal", "status": "complete"***REMOVED***)
+        state_mgr.save({"profile": "minimal", "status": "complete"})
         engine = BootstrapEngine(str(tmp_ws))
         status = engine.get_status()
-        assert status["status"***REMOVED*** == "complete"
-        assert status["profile"***REMOVED*** == "minimal"
+        assert status["status"] == "complete"
+        assert status["profile"] == "minimal"
 
     def test_run_completes(self, tmp_ws: Path):
         """Полный цикл bootstrap."""
@@ -589,8 +589,8 @@ class TestBootstrapEngine:
             engine = BootstrapEngine(str(tmp_ws), profile="minimal", event_bus=mock_bus)
             engine.run()
             # Проверяем что publish был вызван с bootstrap.started
-            calls = [c for c in mock_bus.publish.call_args_list***REMOVED***
-            types = [c[0***REMOVED***[0***REMOVED***.type for c in calls***REMOVED***
+            calls = [c for c in mock_bus.publish.call_args_list]
+            types = [c[0][0].type for c in calls]
             assert "bootstrap.started" in types
             assert "bootstrap.checked" in types
             assert "bootstrap.profile_loaded" in types
@@ -612,14 +612,14 @@ class TestBootstrapEngine:
                     engine = BootstrapEngine(str(tmp_ws), profile="minimal", event_bus=mock_bus)
                     report = engine.run()
                     assert report.success is False
-                    calls = [c for c in mock_bus.publish.call_args_list***REMOVED***
-                    types = [c[0***REMOVED***[0***REMOVED***.type for c in calls***REMOVED***
+                    calls = [c for c in mock_bus.publish.call_args_list]
+                    types = [c[0][0].type for c in calls]
                     assert "bootstrap.failed" in types
                     # Verify event data contains the error
                     failed_events = [c for c in mock_bus.publish.call_args_list
-                                    if c[0***REMOVED***[0***REMOVED***.type == "bootstrap.failed"***REMOVED***
+                                    if c[0][0].type == "bootstrap.failed"]
                     assert len(failed_events) > 0
-                    event_data = failed_events[0***REMOVED***[0***REMOVED***[0***REMOVED***.data
+                    event_data = failed_events[0][0][0].data
                     assert "network error" in str(event_data.get("error", ""))
 
     def test_event_bus_silent_when_not_configured(self, tmp_ws: Path):
@@ -679,8 +679,8 @@ class TestIntegration:
             engine.run()
 
             status = engine.get_status()
-            assert status["status"***REMOVED*** == "complete"
-            assert status["profile"***REMOVED*** == "minimal"
+            assert status["status"] == "complete"
+            assert status["profile"] == "minimal"
 
     def test_bootstrap_diagnosis(self, tmp_ws: Path):
         """Bootstrap включает диагностику."""

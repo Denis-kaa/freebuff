@@ -23,7 +23,7 @@ import json
 import os
 import sys
 import time
-***REMOVED***
+}
 from typing import Any
 
 FREEBUFF_ROOT = Path(os.environ.get(
@@ -60,7 +60,7 @@ class MCPServer:
 
     # ── Event tools ──────────────────────────────────────────
 
-    def _list_event_tools(self) -> list[dict***REMOVED***:
+    def _list_event_tools(self) -> list[dict]:
         return [
             {
                 "name": "event_search",
@@ -71,40 +71,40 @@ class MCPServer:
                         "event_type": {
                             "type": "string",
                             "description": "Фильтр по типу (task.*, audit.decision)",
-                        ***REMOVED***,
-                        "session_id": {"type": "string", "description": "Фильтр по сессии"***REMOVED***,
-                        "data_search": {"type": "string", "description": "Полнотекстовый поиск"***REMOVED***,
-                        "limit": {"type": "number", "default": 20***REMOVED***,
-                    ***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
+                        },
+                        "session_id": {"type": "string", "description": "Фильтр по сессии"},
+                        "data_search": {"type": "string", "description": "Полнотекстовый поиск"},
+                        "limit": {"type": "number", "default": 20},
+                    },
+                },
+            },
             {
                 "name": "event_timeline",
                 "description": "Временная шкала событий проекта",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
-                        "project": {"type": "string", "description": "Фильтр по проекту"***REMOVED***,
-                        "limit": {"type": "number", "default": 30***REMOVED***,
-                    ***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
+                        "project": {"type": "string", "description": "Фильтр по проекту"},
+                        "limit": {"type": "number", "default": 30},
+                    },
+                },
+            },
             {
                 "name": "event_replay",
                 "description": "Воспроизвести события из Event Store",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
-                        "event_type": {"type": "string", "description": "Фильтр по типу"***REMOVED***,
-                        "session_id": {"type": "string", "description": "Фильтр по сессии"***REMOVED***,
+                        "event_type": {"type": "string", "description": "Фильтр по типу"},
+                        "session_id": {"type": "string", "description": "Фильтр по сессии"},
                         "speed": {
                             "type": "string",
-                            "enum": ["instant", "realtime"***REMOVED***,
+                            "enum": ["instant", "realtime"],
                             "default": "instant",
-                        ***REMOVED***,
-                    ***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
+                        },
+                    },
+                },
+            },
             {
                 "name": "event_audit",
                 "description": "Аудит решений Policy Engine и действий пользователя",
@@ -113,29 +113,29 @@ class MCPServer:
                     "properties": {
                         "target_type": {
                             "type": "string",
-                            "enum": ["decision", "action", "config_change"***REMOVED***,
+                            "enum": ["decision", "action", "config_change"],
                             "description": "Тип аудита",
-                        ***REMOVED***,
-                        "limit": {"type": "number", "default": 20***REMOVED***,
-                    ***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
+                        },
+                        "limit": {"type": "number", "default": 20},
+                    },
+                },
+            },
             {
                 "name": "event_pulse",
                 "description": "Лента активных событий проекта",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
-                        "project": {"type": "string", "description": "Фильтр по проекту"***REMOVED***,
-                        "limit": {"type": "number", "default": 10***REMOVED***,
-                    ***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
-        ***REMOVED***
+                        "project": {"type": "string", "description": "Фильтр по проекту"},
+                        "limit": {"type": "number", "default": 10},
+                    },
+                },
+            },
+        ]
 
     # ── Сценарии ────────────────────────────────────────────
 
-    def _list_scenario_tools(self) -> list[dict***REMOVED***:
+    def _list_scenario_tools(self) -> list[dict]:
         return [
             {
                 "name": "list_scenarios",
@@ -146,52 +146,52 @@ class MCPServer:
                         "category": {
                             "type": "string",
                             "description": "Фильтр: freelancing / agent / templates",
-                        ***REMOVED***
-                    ***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
+                        }
+                    },
+                },
+            },
             {
                 "name": "get_scenario",
                 "description": "Детали одного сценария",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
-                        "slug": {"type": "string", "description": "ID сценария (напр. freelance_parser)"***REMOVED***,
-                    ***REMOVED***,
-                    "required": ["slug"***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
+                        "slug": {"type": "string", "description": "ID сценария (напр. freelance_parser)"},
+                    },
+                    "required": ["slug"],
+                },
+            },
             {
                 "name": "apply_scenario",
                 "description": "Применить сценарий — получить готовый промт с подставленными переменными",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
-                        "slug": {"type": "string", "description": "ID сценария"***REMOVED***,
+                        "slug": {"type": "string", "description": "ID сценария"},
                         "variables": {
                             "type": "object",
-                            "description": "Переменные для подстановки, например: {\"URL\": \"https://...\"***REMOVED***",
-                        ***REMOVED***,
-                    ***REMOVED***,
-                    "required": ["slug"***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
+                            "description": "Переменные для подстановки, например: {\"URL\": \"https://...\"]",
+                        },
+                    },
+                    "required": ["slug"],
+                },
+            },
             {
                 "name": "search_scenarios",
                 "description": "Поиск сценариев по тексту",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
-                        "query": {"type": "string", "description": "Поисковый запрос"***REMOVED***,
-                    ***REMOVED***,
-                    "required": ["query"***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
-        ***REMOVED***
+                        "query": {"type": "string", "description": "Поисковый запрос"},
+                    },
+                    "required": ["query"],
+                },
+            },
+        ]
 
     # ── Инструменты ──────────────────────────────────────────
 
-    def _list_tools(self) -> list[dict***REMOVED***:
+    def _list_tools(self) -> list[dict]:
         tools = [
             {
                 "name": "start_session",
@@ -202,11 +202,11 @@ class MCPServer:
                         "topic": {
                             "type": "string",
                             "description": "Тема сессии",
-                        ***REMOVED***
-                    ***REMOVED***,
-                    "required": ["topic"***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
+                        }
+                    },
+                    "required": ["topic"],
+                },
+            },
             {
                 "name": "log_message",
                 "description": "Записать сообщение в текущую стрим-сессию",
@@ -215,77 +215,77 @@ class MCPServer:
                     "properties": {
                         "role": {
                             "type": "string",
-                            "enum": ["user", "assistant", "system"***REMOVED***,
-                        ***REMOVED***,
-                        "content": {"type": "string"***REMOVED***,
+                            "enum": ["user", "assistant", "system"],
+                        },
+                        "content": {"type": "string"},
                         "session_id": {
                             "type": "string",
                             "description": "ID сессии (если не указан — последняя активная)",
-                        ***REMOVED***,
-                    ***REMOVED***,
-                    "required": ["role", "content"***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
+                        },
+                    },
+                    "required": ["role", "content"],
+                },
+            },
             {
                 "name": "get_context",
                 "description": "Получить конспект последней завершённой сессии",
-                "inputSchema": {"type": "object", "properties": {***REMOVED******REMOVED***,
-            ***REMOVED***,
+                "inputSchema": {"type": "object", "properties": {}},
+            },
             {
                 "name": "get_status",
                 "description": "Статус системы и активных задач",
-                "inputSchema": {"type": "object", "properties": {***REMOVED******REMOVED***,
-            ***REMOVED***,
+                "inputSchema": {"type": "object", "properties": {}},
+            },
             {
                 "name": "run_freebuff",
                 "description": "Запустить Codebuff phase-based (Python не ждёт — анти-OOM)",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
-                        "task": {"type": "string", "description": "Задача для freebuff"***REMOVED***,
-                        "topic": {"type": "string", "description": "Тема сессии"***REMOVED***,
-                        "timeout": {"type": "number", "description": "Таймаут в секундах"***REMOVED***,
-                    ***REMOVED***,
-                    "required": ["task"***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
+                        "task": {"type": "string", "description": "Задача для freebuff"},
+                        "topic": {"type": "string", "description": "Тема сессии"},
+                        "timeout": {"type": "number", "description": "Таймаут в секундах"},
+                    },
+                    "required": ["task"],
+                },
+            },
             {
                 "name": "get_task_result",
                 "description": "Проверить результат запущенной задачи (по session_id)",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
-                        "session_id": {"type": "string", "description": "ID сессии из run_freebuff"***REMOVED***
-                    ***REMOVED***,
-                    "required": ["session_id"***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
+                        "session_id": {"type": "string", "description": "ID сессии из run_freebuff"}
+                    },
+                    "required": ["session_id"],
+                },
+            },
             {
                 "name": "end_session",
                 "description": "Завершить сессию с конспектом",
                 "inputSchema": {
                     "type": "object",
                     "properties": {
-                        "summary": {"type": "string"***REMOVED***
-                    ***REMOVED***,
-                    "required": ["summary"***REMOVED***,
-                ***REMOVED***,
-            ***REMOVED***,
-        ***REMOVED***
+                        "summary": {"type": "string"}
+                    },
+                    "required": ["summary"],
+                },
+            },
+        ]
         tools.extend(self._list_event_tools())
         tools.extend(self._list_scenario_tools())
         tools.extend(self._list_sync_tools())
         return tools
 
-    def _list_sync_tools(self) -> list[dict***REMOVED***:
+    def _list_sync_tools(self) -> list[dict]:
         return [
             {
                 "name": "sync_status",
                 "description": "Текущий статус remote-sync (idle/connected/conflict/quarantine) "
                                "для UI-индикатора + последние события",
-                "inputSchema": {"type": "object", "properties": {***REMOVED******REMOVED***,
-            ***REMOVED***,
-        ***REMOVED***
+                "inputSchema": {"type": "object", "properties": {}},
+            },
+        ]
 
     def _call_tool(self, name: str, arguments: dict) -> dict:
         try:
@@ -300,18 +300,18 @@ class MCPServer:
                             "session_id": sid,
                             "topic": topic,
                             "status": "started",
-                        ***REMOVED***, ensure_ascii=False),
-                    ***REMOVED******REMOVED***
-                ***REMOVED***
+                        ], ensure_ascii=False),
+                    ]]
+                }
 
             elif name == "log_message":
-                role = arguments["role"***REMOVED***
-                content = arguments["content"***REMOVED***
+                role = arguments["role"]
+                content = arguments["content"]
                 sid = arguments.get("session_id", self._session_id)
 
                 if sid:
                     # Пишем напрямую в raw.jsonl сессии
-                    plugin_bridge._log_json(sid, role, {"content": content***REMOVED***)
+                    plugin_bridge._log_json(sid, role, {"content": content})
                     # И в conversation.log через StreamBridge
                     try:
                         bridge = plugin_bridge.get_stream_bridge()
@@ -331,9 +331,9 @@ class MCPServer:
                             "role": role,
                             "session_id": sid,
                             "status": "logged",
-                        ***REMOVED***, ensure_ascii=False),
-                    ***REMOVED******REMOVED***
-                ***REMOVED***
+                        ], ensure_ascii=False),
+                    ]]
+                }
 
             elif name == "get_context":
                 bridge = plugin_bridge.get_stream_bridge()
@@ -342,8 +342,8 @@ class MCPServer:
                     "content": [{
                         "type": "text",
                         "text": summary or "Нет завершённых сессий",
-                    ***REMOVED******REMOVED***
-                ***REMOVED***
+                    ]]
+                }
 
             elif name == "get_status":
                 active_pids = plugin_wrapper.list_active_pids()
@@ -352,17 +352,17 @@ class MCPServer:
                     "session_id": self._session_id,
                     "active_tasks": len(active_pids),
                     "tasks": active_pids,
-                ***REMOVED***
+                }
                 return {
                     "content": [{
                         "type": "text",
                         "text": json.dumps(info, ensure_ascii=False),
-                    ***REMOVED******REMOVED***
-                ***REMOVED***
+                    ]]
+                }
 
             elif name == "run_freebuff":
-                task = arguments["task"***REMOVED***
-                topic = arguments.get("topic", task[:80***REMOVED***)
+                task = arguments["task"]
+                topic = arguments.get("topic", task[:80])
                 timeout = arguments.get("timeout", 300)
 
                 # Phase-based launch — Python не ждёт Codebuff
@@ -380,15 +380,15 @@ class MCPServer:
                     "content": [{
                         "type": "text",
                         "text": json.dumps(result, ensure_ascii=False, default=str),
-                    ***REMOVED******REMOVED***
-                ***REMOVED***
+                    ]]
+                }
 
             elif name == "get_task_result":
                 sid = arguments.get("session_id", self._last_task_sid)
                 if not sid:
                     return {
-                        "content": [{"type": "text", "text": "Нет активных задач"***REMOVED******REMOVED***
-                    ***REMOVED***
+                        "content": [{"type": "text", "text": "Нет активных задач"}]
+                    }
 
                 # Проверяем PID-файл
                 pid_info = plugin_wrapper.read_pid_file(sid)
@@ -403,23 +403,23 @@ class MCPServer:
                                 "session_id": sid,
                                 "running": False,
                                 "conspect": conspect,
-                            ***REMOVED***, ensure_ascii=False, default=str),
-                        ***REMOVED******REMOVED***
-                    ***REMOVED***
+                            ], ensure_ascii=False, default=str),
+                        ]]
+                    }
 
                 # Задача ещё выполняется
-                alive = plugin_wrapper._is_pid_alive(pid_info["pid"***REMOVED***)
+                alive = plugin_wrapper._is_pid_alive(pid_info["pid"])
                 return {
                     "content": [{
                         "type": "text",
                         "text": json.dumps({
                             "session_id": sid,
                             "running": alive,
-                            "pid": pid_info["pid"***REMOVED***,
-                            "cwd": pid_info["cwd"***REMOVED***,
-                        ***REMOVED***, ensure_ascii=False),
-                    ***REMOVED******REMOVED***
-                ***REMOVED***
+                            "pid": pid_info["pid"],
+                            "cwd": pid_info["cwd"],
+                        ], ensure_ascii=False),
+                    ]]
+                }
 
             elif name == "end_session":
                 summary = arguments.get("summary", "Session completed")
@@ -434,9 +434,9 @@ class MCPServer:
                         "text": json.dumps({
                             "status": "ended",
                             "conspect_path": str(cp) if cp else None,
-                        ***REMOVED***, ensure_ascii=False),
-                    ***REMOVED******REMOVED***
-                ***REMOVED***
+                        ], ensure_ascii=False),
+                    ]]
+                }
 
             elif name == "list_scenarios":
                 category = arguments.get("category")
@@ -445,8 +445,8 @@ class MCPServer:
                     "content": [{
                         "type": "text",
                         "text": json.dumps(scenarios, ensure_ascii=False, default=str),
-                    ***REMOVED******REMOVED***
-                ***REMOVED***
+                    ]]
+                }
 
             elif name == "get_scenario":
                 slug = arguments.get("slug", "")
@@ -454,30 +454,30 @@ class MCPServer:
                 if not scenario:
                     return {
                         "isError": True,
-                        "content": [{"type": "text", "text": f"Scenario not found: {slug***REMOVED***"***REMOVED******REMOVED***,
-                    ***REMOVED***
+                        "content": [{"type": "text", "text": f"Scenario not found: {slug}"}],
+                    }
                 return {
                     "content": [{
                         "type": "text",
                         "text": json.dumps(scenario.to_dict(), ensure_ascii=False, default=str),
-                    ***REMOVED******REMOVED***
-                ***REMOVED***
+                    ]]
+                }
 
             elif name == "apply_scenario":
                 slug = arguments.get("slug", "")
-                variables = arguments.get("variables", {***REMOVED***)
+                variables = arguments.get("variables", {})
                 result = self._scenario_engine.apply_scenario(slug, variables)
                 if "error" in result:
                     return {
                         "isError": True,
-                        "content": [{"type": "text", "text": result["error"***REMOVED******REMOVED******REMOVED***,
-                    ***REMOVED***
+                        "content": [{"type": "text", "text": result["error"]}],
+                    }
                 return {
                     "content": [{
                         "type": "text",
                         "text": json.dumps(result, ensure_ascii=False, default=str),
-                    ***REMOVED******REMOVED***
-                ***REMOVED***
+                    ]]
+                }
 
             elif name == "search_scenarios":
                 query = arguments.get("query", "")
@@ -486,8 +486,8 @@ class MCPServer:
                     "content": [{
                         "type": "text",
                         "text": json.dumps(results, ensure_ascii=False, default=str),
-                    ***REMOVED******REMOVED***
-                ***REMOVED***
+                    ]]
+                }
 
             elif name == "event_search":
                 store = self._get_event_store()
@@ -507,10 +507,10 @@ class MCPServer:
                             "type": e.event_type,
                             "source": e.source,
                             "data": e.data,
-                            "timestamp": e.timestamp[:19***REMOVED***,
-                        ***REMOVED*** for e in entries***REMOVED***, ensure_ascii=False, default=str),
-                    ***REMOVED******REMOVED***
-                ***REMOVED***
+                            "timestamp": e.timestamp[:19],
+                        ] for e in entries], ensure_ascii=False, default=str),
+                    ]]
+                }
 
             elif name == "event_timeline":
                 store = self._get_event_store()
@@ -524,8 +524,8 @@ class MCPServer:
                     "content": [{
                         "type": "text",
                         "text": timeline.format_timeline_text(result),
-                    ***REMOVED******REMOVED***
-                ***REMOVED***
+                    ]]
+                }
 
             elif name == "event_replay":
                 store = self._get_event_store()
@@ -546,9 +546,9 @@ class MCPServer:
                             "delivered": result.delivered,
                             "errors": result.errors,
                             "duration_ms": result.duration_ms,
-                        ***REMOVED***, ensure_ascii=False),
-                    ***REMOVED******REMOVED***
-                ***REMOVED***
+                        ], ensure_ascii=False),
+                    ]]
+                }
 
             elif name == "event_audit":
                 store = self._get_event_store()
@@ -559,8 +559,8 @@ class MCPServer:
                 trail = audit.get_audit_trail(target_type=target_type, limit=limit)
                 text = audit.format_audit_log(trail)
                 return {
-                    "content": [{"type": "text", "text": text***REMOVED******REMOVED***
-                ***REMOVED***
+                    "content": [{"type": "text", "text": text}]
+                }
 
             elif name == "event_pulse":
                 store = self._get_event_store()
@@ -577,11 +577,11 @@ class MCPServer:
                             "icon": e.icon,
                             "title": e.title,
                             "description": e.description,
-                            "timestamp": e.timestamp[:19***REMOVED***,
+                            "timestamp": e.timestamp[:19],
                             "severity": e.severity,
-                        ***REMOVED*** for e in feed***REMOVED***, ensure_ascii=False),
-                    ***REMOVED******REMOVED***
-                ***REMOVED***
+                        ] for e in feed], ensure_ascii=False),
+                    ]]
+                }
 
             elif name == "sync_status":
                 # Phase 5.4 — status snapshot for the Flutter UI indicator
@@ -592,66 +592,66 @@ class MCPServer:
                 )
                 coord = get_active_coordinator()
                 if coord is None:
-                    snapshot = {"status": "idle", "registered": False***REMOVED***
+                    snapshot = {"status": "idle", "registered": False}
                 else:
                     snapshot = derive_sync_status(coord)
-                    snapshot["registered"***REMOVED*** = True
+                    snapshot["registered"] = True
                 # Recent remote_sync.* events from EventStore (the stream)
                 try:
                     store = self._get_event_store()
                     from freebuff_plugin_03.event import EventQuery
                     entries = store.query(EventQuery(event_type="remote_sync.*", limit=10))
-                    snapshot["recent_events"***REMOVED*** = [{
+                    snapshot["recent_events"] = [{
                         "id": e.event_id,
                         "type": e.event_type,
-                        "status": (e.data or {***REMOVED***).get("status"),
-                        "timestamp": e.timestamp[:19***REMOVED***,
-                    ***REMOVED*** for e in entries***REMOVED***
+                        "status": (e.data or {}).get("status"),
+                        "timestamp": e.timestamp[:19],
+                    ] for e in entries]
                 except Exception:
-                    snapshot["recent_events"***REMOVED*** = [***REMOVED***
+                    snapshot["recent_events"] = []
                 return {
                     "content": [{
                         "type": "text",
                         "text": json.dumps(snapshot, ensure_ascii=False, default=str),
-                    ***REMOVED******REMOVED***
-                ***REMOVED***
+                    ]]
+                }
 
             else:
                 return {
                     "isError": True,
-                    "content": [{"type": "text", "text": f"Unknown tool: {name***REMOVED***"***REMOVED******REMOVED***,
-                ***REMOVED***
+                    "content": [{"type": "text", "text": f"Unknown tool: {name}"}],
+                }
 
         except Exception as e:
             return {
                 "isError": True,
-                "content": [{"type": "text", "text": f"Error: {e***REMOVED***"***REMOVED******REMOVED***,
-            ***REMOVED***
+                "content": [{"type": "text", "text": f"Error: {e}"}],
+            }
 
     # ── Ресурсы ──────────────────────────────────────────────
 
-    def _list_resources(self) -> list[dict***REMOVED***:
+    def _list_resources(self) -> list[dict]:
         return [
             {
                 "uri": "freebuff://session/current",
                 "name": "Текущая сессия",
                 "description": "Информация о текущей активной сессии",
                 "mimeType": "application/json",
-            ***REMOVED***,
+            },
             {
                 "uri": "freebuff://context_12/last",
                 "name": "Последний конспект",
                 "description": "Конспект последней завершённой сессии",
                 "mimeType": "text/markdown",
-            ***REMOVED***,
-        ***REMOVED***
+            },
+        ]
 
     def _read_resource(self, uri: str) -> str | None:
         if uri == "freebuff://session/current":
             return json.dumps({
                 "active": self._session_id is not None,
                 "session_id": self._session_id,
-            ***REMOVED***, ensure_ascii=False)
+            ], ensure_ascii=False)
         elif uri == "freebuff://context_12/last":
             bridge = plugin_bridge.get_stream_bridge()
             return bridge.get_context_resume() or "Нет данных"
@@ -661,7 +661,7 @@ class MCPServer:
 
     def _send(self, msg: dict) -> None:
         line = json.dumps(msg, ensure_ascii=False)
-        sys.stdout.write(f"Content-Length: {len(line.encode('utf-8'))***REMOVED***\r\n\r\n{line***REMOVED***")
+        sys.stdout.write(f"Content-Length: {len(line.encode('utf-8'))}\r\n\r\n{line}")
         sys.stdout.flush()
 
     def _recv(self) -> dict | None:
@@ -672,7 +672,7 @@ class MCPServer:
                 return None
             header = header.strip()
             if header.startswith("Content-Length:"):
-                length = int(header.split(":")[1***REMOVED***.strip())
+                length = int(header.split(":")[1].strip())
             elif not header:
                 break
         if length <= 0:
@@ -690,7 +690,7 @@ class MCPServer:
 
                 msg_id = msg.get("id")
                 method = msg.get("method", "")
-                params = msg.get("params", {***REMOVED***)
+                params = msg.get("params", {})
 
                 if method == "initialize":
                     self._send({
@@ -698,37 +698,37 @@ class MCPServer:
                         "id": msg_id,
                         "result": {
                             "protocolVersion": "2024-11-05",
-                            "capabilities": {"tools": {***REMOVED***, "resources": {***REMOVED******REMOVED***,
+                            "capabilities": {"tools": {}, "resources": {}},
                             "serverInfo": {
                                 "name": MCP_SERVER_NAME,
                                 "version": MCP_SERVER_VERSION,
-                            ***REMOVED***,
-                        ***REMOVED***,
-                    ***REMOVED***)
+                            },
+                        },
+                    ])
                 elif method == "notifications/initialized":
                     pass
                 elif method == "tools/list":
                     self._send({
                         "jsonrpc": "2.0",
                         "id": msg_id,
-                        "result": {"tools": self._list_tools()***REMOVED***,
-                    ***REMOVED***)
+                        "result": {"tools": self._list_tools()},
+                    ])
                 elif method == "tools/call":
                     result = self._call_tool(
                         params.get("name", ""),
-                        params.get("arguments", {***REMOVED***),
+                        params.get("arguments", {}),
                     )
                     self._send({
                         "jsonrpc": "2.0",
                         "id": msg_id,
                         "result": result,
-                    ***REMOVED***)
+                    ])
                 elif method == "resources/list":
                     self._send({
                         "jsonrpc": "2.0",
                         "id": msg_id,
-                        "result": {"resources": self._list_resources()***REMOVED***,
-                    ***REMOVED***)
+                        "result": {"resources": self._list_resources()},
+                    ])
                 elif method == "resources/read":
                     uri = params.get("uri", "")
                     content = self._read_resource(uri)
@@ -737,21 +737,21 @@ class MCPServer:
                             "jsonrpc": "2.0",
                             "id": msg_id,
                             "result": {
-                                "contents": [{"uri": uri, "mimeType": "text/markdown", "text": content***REMOVED******REMOVED***
-                            ***REMOVED***,
-                        ***REMOVED***)
+                                "contents": [{"uri": uri, "mimeType": "text/markdown", "text": content}]
+                            },
+                        ])
                     else:
                         self._send({
                             "jsonrpc": "2.0",
                             "id": msg_id,
-                            "error": {"code": -32000, "message": f"Resource not found: {uri***REMOVED***"***REMOVED***,
-                        ***REMOVED***)
+                            "error": {"code": -32000, "message": f"Resource not found: {uri}"},
+                        ])
                 else:
                     self._send({
                         "jsonrpc": "2.0",
                         "id": msg_id,
-                        "error": {"code": -32601, "message": f"Method not found: {method***REMOVED***"***REMOVED***,
-                    ***REMOVED***)
+                        "error": {"code": -32601, "message": f"Method not found: {method}"},
+                    ])
 
             except json.JSONDecodeError:
                 continue
@@ -764,8 +764,8 @@ class MCPServer:
                     self._send({
                         "jsonrpc": "2.0",
                         "id": None,
-                        "error": {"code": -32000, "message": str(e)***REMOVED***,
-                    ***REMOVED***)
+                        "error": {"code": -32000, "message": str(e)},
+                    ])
                 except Exception:
                     pass
 
@@ -773,7 +773,7 @@ class MCPServer:
 def main():
     import argparse
     parser = argparse.ArgumentParser(description="Freebuff Plugin MCP Server")
-    parser.add_argument("--transport", choices=["stdio", "sse"***REMOVED***, default="stdio")
+    parser.add_argument("--transport", choices=["stdio", "sse"], default="stdio")
     parser.add_argument("--port", type=int, default=8411)
 
     args = parser.parse_args()
@@ -793,21 +793,21 @@ def main():
             def index():
                 return "Freebuff Plugin MCP Server — running"
 
-            @app.route("/sse", methods=["GET"***REMOVED***)
+            @app.route("/sse", methods=["GET"])
             def sse():
                 def event_stream():
                     while True:
                         msg = message_queue.get()
-                        yield f"data: {json.dumps(msg, ensure_ascii=False)***REMOVED***\n\n"
+                        yield f"data: {json.dumps(msg, ensure_ascii=False)}\n\n"
                 return Response(event_stream(), mimetype="text/event-stream")
 
-            @app.route("/message", methods=["POST"***REMOVED***)
+            @app.route("/message", methods=["POST"])
             def message():
                 data = request.json
                 message_queue.put(data)
-                return jsonify({"ok": True***REMOVED***)
+                return jsonify({"ok": True})
 
-            print(f"MCP SSE Server on :{args.port***REMOVED***")
+            print(f"MCP SSE Server on :{args.port}")
             app.run(host="127.0.0.1", port=args.port, debug=False)
         except ImportError:
             print("Flask not available. Install: pip install flask")

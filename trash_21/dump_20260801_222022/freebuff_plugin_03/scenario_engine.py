@@ -11,21 +11,21 @@ Freebuff Plugin — Scenario Engine.
     all_scenarios = engine.list_scenarios()
     freelancing = engine.list_scenarios(category="freelancing")
     scenario = engine.get_scenario("freelance_parser")
-    prompt = engine.apply_scenario("freelance_parser", {"URL": "https://..."***REMOVED***)
+    prompt = engine.apply_scenario("freelance_parser", {"URL": "https://..."})
 """
 
 from __future__ import annotations
 
 import os
-***REMOVED***
+}
 import json
-***REMOVED***
+}
 from typing import Any
 
 
 # ── Парсинг YAML-секции из markdown ─────────────────────────
 
-def _parse_yaml_front_matter(text: str) -> dict[str, Any***REMOVED***:
+def _parse_yaml_front_matter(text: str) -> dict[str, Any]:
     """Парсит YAML-секцию из начала markdown-файла.
     
     Формат:
@@ -37,7 +37,7 @@ def _parse_yaml_front_matter(text: str) -> dict[str, Any***REMOVED***:
         ---
         ... остальной контент ...
     """
-    result: dict[str, Any***REMOVED*** = {***REMOVED***
+    result: dict[str, Any] = {}
     # Ищем блок между двумя ---
     match = re.match(r"^---\s*\n(.*?)\n---", text, re.DOTALL)
     if not match:
@@ -53,22 +53,22 @@ def _parse_yaml_front_matter(text: str) -> dict[str, Any***REMOVED***:
             continue
         
         # Ключ: значение
-        kv_match = re.match(r"^([a-zA-Zа-яА-Я0-9_\-***REMOVED***+):\s*(.*)", line)
+        kv_match = re.match(r"^([a-zA-Zа-яА-Я0-9_\-)+):\s*(.*)", line)
         if kv_match:
             current_key = kv_match.group(1).strip()
             value = kv_match.group(2).strip()
             if value:
-                result[current_key***REMOVED*** = _parse_yaml_value(value)
+                result[current_key] = _parse_yaml_value(value)
             else:
-                result[current_key***REMOVED*** = [***REMOVED***
+                result[current_key] = []
                 in_list = True
             continue
         
         # Элемент списка
-        list_match = re.match(r"^\s*[-****REMOVED***\s+(.*)", line)
+        list_match = re.match(r"^\s*[-*)\s+(.*)", line)
         if list_match and current_key and in_list:
             if isinstance(result.get(current_key), list):
-                result[current_key***REMOVED***.append(_parse_yaml_value(list_match.group(1).strip()))
+                result[current_key].append(_parse_yaml_value(list_match.group(1).strip()))
             continue
         
         in_list = False
@@ -80,9 +80,9 @@ def _parse_yaml_value(value: str) -> Any:
     """Парсит YAML значение (строка, число, bool)."""
     value = value.strip()
     if value.startswith('"') and value.endswith('"'):
-        return value[1:-1***REMOVED***
+        return value[1:-1]
     if value.startswith("'") and value.endswith("'"):
-        return value[1:-1***REMOVED***
+        return value[1:-1]
     if value.lower() == "true":
         return True
     if value.lower() == "false":
@@ -119,20 +119,20 @@ class Scenario:
         category: str = "",
         complexity: str = "",
         description: str = "",
-        tags: list[str***REMOVED*** | None = None,
+        tags: list[str] | None = None,
         prompt_template: str = "",
-        metadata: dict[str, Any***REMOVED*** | None = None,
+        metadata: dict[str, Any] | None = None,
     ):
         self.slug = slug  # имя файла без .md
         self.title = title
         self.category = category
         self.complexity = complexity
         self.description = description
-        self.tags = tags or [***REMOVED***
-        self.prompt_template = prompt_template  # шаблон с {placeholders***REMOVED***
-        self.metadata = metadata or {***REMOVED***
+        self.tags = tags or []
+        self.prompt_template = prompt_template  # шаблон с {placeholders}
+        self.metadata = metadata or {}
 
-    def to_dict(self) -> dict[str, Any***REMOVED***:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "slug": self.slug,
             "title": self.title,
@@ -142,15 +142,15 @@ class Scenario:
             "tags": self.tags,
             "has_template": bool(self.prompt_template),
             "metadata": self.metadata,
-        ***REMOVED***
+        }
 
-    def apply(self, variables: dict[str, str***REMOVED*** | None = None) -> str:
+    def apply(self, variables: dict[str, str] | None = None) -> str:
         """Подставляет переменные в шаблон промта."""
         if not variables:
             return self.prompt_template
         result = self.prompt_template
         for key, value in variables.items():
-            result = result.replace(f"{{{key***REMOVED******REMOVED******REMOVED***", str(value))
+            result = result.replace(f"{{{key}}}", str(value))
         return result
 
 
@@ -161,14 +161,14 @@ class ScenarioEngine:
         self._dir = Path(scenarios_dir) if scenarios_dir else (
             Path(__file__).parent / "scenarios"
         )
-        self._scenarios: dict[str, Scenario***REMOVED*** = {***REMOVED***
+        self._scenarios: dict[str, Scenario] = {}
         self._load_scenarios()
 
     # ── Загрузка ─────────────────────────────────────────────
 
     def _load_scenarios(self) -> None:
         """Сканирует scenarios/ и загружает все .md файлы."""
-        self._scenarios = {***REMOVED***
+        self._scenarios = {}
         if not self._dir.exists():
             return
         
@@ -177,7 +177,7 @@ class ScenarioEngine:
                 continue
             scenario = self._parse_file(filepath)
             if scenario:
-                self._scenarios[scenario.slug***REMOVED*** = scenario
+                self._scenarios[scenario.slug] = scenario
 
     def _parse_file(self, filepath: Path) -> Scenario | None:
         """Парсит .md файл в объект Scenario."""
@@ -205,11 +205,11 @@ class ScenarioEngine:
         desc = meta.get("description", "")
         if not desc and body:
             # Первый абзац как описание
-            desc = body.split("\n\n")[0***REMOVED***.replace("#", "").strip()[:200***REMOVED***
+            desc = body.split("\n\n")[0].replace("#", "").strip()[:200]
 
-        tags = meta.get("tags", [***REMOVED***)
+        tags = meta.get("tags", [])
         if isinstance(tags, str):
-            tags = [tags***REMOVED***
+            tags = [tags]
 
         return Scenario(
             slug=slug,
@@ -228,25 +228,25 @@ class ScenarioEngine:
         self,
         category: str | None = None,
         tag: str | None = None,
-    ) -> list[dict[str, Any***REMOVED******REMOVED***:
+    ) -> list[dict[str, Any]]:
         """Список всех сценариев, опционально фильтр по категории/тегу."""
         scenarios = list(self._scenarios.values())
         
         if category:
-            scenarios = [s for s in scenarios if s.category == category***REMOVED***
+            scenarios = [s for s in scenarios if s.category == category]
         if tag:
-            scenarios = [s for s in scenarios if tag in s.tags***REMOVED***
+            scenarios = [s for s in scenarios if tag in s.tags]
         
-        return [s.to_dict() for s in scenarios***REMOVED***
+        return [s.to_dict() for s in scenarios]
 
     def get_scenario(self, slug: str) -> Scenario | None:
         """Получить сценарий по slug (имя файла без .md)."""
         return self._scenarios.get(slug)
 
-    def search_scenarios(self, query: str) -> list[dict[str, Any***REMOVED******REMOVED***:
+    def search_scenarios(self, query: str) -> list[dict[str, Any]]:
         """Полнотекстовый поиск по названиям и описаниям."""
         query_lower = query.lower()
-        results = [***REMOVED***
+        results = []
         for scenario in self._scenarios.values():
             if (query_lower in scenario.title.lower()
                     or query_lower in scenario.description.lower()
@@ -258,19 +258,19 @@ class ScenarioEngine:
     def apply_scenario(
         self,
         slug: str,
-        variables: dict[str, str***REMOVED*** | None = None,
-    ) -> dict[str, Any***REMOVED***:
+        variables: dict[str, str] | None = None,
+    ) -> dict[str, Any]:
         """Применить сценарий: получить сгенерированный промт.
         
         Returns:
-            dict: {slug, title, prompt, variables***REMOVED***
+            dict: {slug, title, prompt, variables}
         """
         scenario = self.get_scenario(slug)
         if not scenario:
             return {
-                "error": f"Scenario not found: {slug***REMOVED***",
+                "error": f"Scenario not found: {slug}",
                 "available": list(self._scenarios.keys()),
-            ***REMOVED***
+            }
         
         prompt = scenario.apply(variables)
         
@@ -279,9 +279,9 @@ class ScenarioEngine:
             "title": scenario.title,
             "category": scenario.category,
             "prompt": prompt,
-            "variables": variables or {***REMOVED***,
+            "variables": variables or {},
             "has_template": bool(scenario.prompt_template),
-        ***REMOVED***
+        }
 
     def reload(self) -> int:
         """Перезагрузить все сценарии с диска."""
@@ -297,22 +297,22 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(description="Scenario Engine CLI")
-    parser.add_argument("command", choices=["list", "get", "search", "apply", "reload"***REMOVED***,
+    parser.add_argument("command", choices=["list", "get", "search", "apply", "reload"],
                        help="Команда")
     parser.add_argument("arg", nargs="?", help="Аргумент (slug, query)")
     parser.add_argument("--category", "-c", help="Фильтр по категории")
     parser.add_argument("--tag", "-t", help="Фильтр по тегу")
-    parser.add_argument("--vars", "-v", help="Переменные в JSON: {\"URL\": \"...\"***REMOVED***")
+    parser.add_argument("--vars", "-v", help="Переменные в JSON: {\"URL\": \"...\")")
 
     args = parser.parse_args()
     engine = ScenarioEngine()
 
     if args.command == "list":
         scenarios = engine.list_scenarios(category=args.category, tag=args.tag)
-        print(f"Scenarios: {len(scenarios)***REMOVED***")
+        print(f"Scenarios: {len(scenarios)}")
         for s in scenarios:
-            tags = f"[{', '.join(s['tags'***REMOVED***)***REMOVED******REMOVED***" if s['tags'***REMOVED*** else ""
-            print(f"  {s['slug'***REMOVED***:30s***REMOVED*** | {s['category'***REMOVED***:15s***REMOVED*** | {s['title'***REMOVED***[:40***REMOVED******REMOVED*** {tags***REMOVED***")
+            tags = f"[{', '.join(s['tags'])}]" if s['tags'] else ""
+            print(f"  {s['slug']:30s} | {s['category']:15s} | {s['title'][:40]} {tags}")
 
     elif args.command == "get":
         if not args.arg:
@@ -320,23 +320,23 @@ def main():
             return
         s = engine.get_scenario(args.arg)
         if s:
-            print(f"Slug:    {s.slug***REMOVED***")
-            print(f"Title:   {s.title***REMOVED***")
-            print(f"Category:{s.category***REMOVED***")
-            print(f"Complex: {s.complexity***REMOVED***")
-            print(f"Desc:    {s.description[:100***REMOVED******REMOVED***...")
-            print(f"Tags:    {', '.join(s.tags)***REMOVED***")
-            print(f"Prompt:  {len(s.prompt_template)***REMOVED*** chars")
+            print(f"Slug:    {s.slug}")
+            print(f"Title:   {s.title}")
+            print(f"Category:{s.category}")
+            print(f"Complex: {s.complexity}")
+            print(f"Desc:    {s.description[:100]}...")
+            print(f"Tags:    {', '.join(s.tags)}")
+            print(f"Prompt:  {len(s.prompt_template)} chars")
             if s.prompt_template:
-                print(f"---\n{s.prompt_template[:500***REMOVED******REMOVED***...")
+                print(f"---\n{s.prompt_template[:500]}...")
         else:
-            print(f"Scenario not found: {args.arg***REMOVED***")
+            print(f"Scenario not found: {args.arg}")
 
     elif args.command == "search":
         results = engine.search_scenarios(args.arg or "")
-        print(f"Found: {len(results)***REMOVED***")
+        print(f"Found: {len(results)}")
         for s in results:
-            print(f"  {s['slug'***REMOVED***:30s***REMOVED*** | {s['title'***REMOVED******REMOVED***")
+            print(f"  {s['slug']:30s} | {s['title']}")
 
     elif args.command == "apply":
         if not args.arg:
@@ -345,17 +345,17 @@ def main():
         variables = json.loads(args.vars) if args.vars else None
         result = engine.apply_scenario(args.arg, variables)
         if "error" in result:
-            print(f"Error: {result['error'***REMOVED******REMOVED***")
+            print(f"Error: {result['error']}")
             return
-        print(f"Scenario: {result['title'***REMOVED******REMOVED*** ({result['slug'***REMOVED******REMOVED***)")
-        print(f"Variables: {result['variables'***REMOVED******REMOVED***")
-        print(f"Prompt ({len(result['prompt'***REMOVED***)***REMOVED*** chars):")
+        print(f"Scenario: {result['title']} ({result['slug']})")
+        print(f"Variables: {result['variables']}")
+        print(f"Prompt ({len(result['prompt'])} chars):")
         print("---")
-        print(result['prompt'***REMOVED***)
+        print(result['prompt'])
 
     elif args.command == "reload":
         count = engine.reload()
-        print(f"Reloaded: {count***REMOVED*** scenarios")
+        print(f"Reloaded: {count} scenarios")
 
 
 if __name__ == "__main__":

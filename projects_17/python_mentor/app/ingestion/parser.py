@@ -10,13 +10,13 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import dataclass
-***REMOVED***
+}
 from typing import Any
 
 TRACK_CONFIG_JSON = "config.json"
 CONCEPT_DIR = "concept"
 PRACTICE_DIR = "practice"
-SKIP_FOREGONE = {"lens-person", "nucleotide-count", "parallel-letter-frequency"***REMOVED***
+SKIP_FOREGONE = {"lens-person", "nucleotide-count", "parallel-letter-frequency"}
 
 
 @dataclass(frozen=True)
@@ -26,7 +26,7 @@ class ExerciseRecord:
     name: str
     blurb: str
     source_difficulty: int
-    source_concepts: tuple[str, ...***REMOVED***
+    source_concepts: tuple[str, ...]
     statement_relpath: str
     tests_relpath: str
     stub_relpath: str
@@ -35,33 +35,33 @@ class ExerciseRecord:
     content_hash: str
 
 
-def load_track_config(source_root: str | Path) -> dict[str, Any***REMOVED***:
-    """config.json трека: {exercises: {concept: [...***REMOVED***, practice: [...***REMOVED******REMOVED***, concepts: [...***REMOVED******REMOVED***."""
+def load_track_config(source_root: str | Path) -> dict[str, Any]:
+    """config.json трека: {exercises: {concept: [...], practice: [...]], concepts: [...]]."""
     with open(Path(source_root) / TRACK_CONFIG_JSON, encoding="utf-8") as f:
         data = json.load(f)
-    return data if isinstance(data, dict) else {***REMOVED***
+    return data if isinstance(data, dict) else {}
 
-def _track_meta_entry(entry: dict[str, Any***REMOVED***) -> dict[str, Any***REMOVED***:
+def _track_meta_entry(entry: dict[str, Any]) -> dict[str, Any]:
     """Нормализация записи упражнения из config.json."""
     return {
         "name": entry.get("name", entry.get("slug", "")),
         "difficulty": int(entry.get("difficulty", 1)),
         "type": entry.get("type", ""),
-        "practices": list(entry.get("practices", [***REMOVED***)),
-        "prerequisites": list(entry.get("prerequisites", [***REMOVED***)),
+        "practices": list(entry.get("practices", [])),
+        "prerequisites": list(entry.get("prerequisites", [])),
         "blurb": entry.get("blurb", ""),
-    ***REMOVED***
+    }
 
 
-def track_exercise_meta(track: dict[str, Any***REMOVED***) -> dict[str, dict[str, Any***REMOVED******REMOVED***:
-    """slug -> {name, difficulty, practices, prerequisites, blurb***REMOVED*** из config.json."""
-    out: dict[str, dict[str, Any***REMOVED******REMOVED*** = {***REMOVED***
+def track_exercise_meta(track: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """slug -> {name, difficulty, practices, prerequisites, blurb] из config.json."""
+    out: dict[str, dict[str, Any]] = {}
     for ex_type in (CONCEPT_DIR, PRACTICE_DIR):
-        for entry in track.get("exercises", {***REMOVED***).get(ex_type, [***REMOVED***):
+        for entry in track.get("exercises", {}).get(ex_type, []):
             if not isinstance(entry, dict):
                 continue
             slug = entry.get("slug", "")
-            out[slug***REMOVED*** = _track_meta_entry(entry)
+            out[slug] = _track_meta_entry(entry)
     return out
     return out
 
@@ -75,7 +75,7 @@ def _rel_to_root(root: Path, path: Path) -> str:
 
 
 def parse_exercise(
-    exercise_dir: Path, root: Path, track_by_slug: dict[str, dict***REMOVED***
+    exercise_dir: Path, root: Path, track_by_slug: dict[str, dict]
 ) -> ExerciseRecord | None:
     """Разобрать одно упражнение из локального клона."""
     if not exercise_dir.is_dir():
@@ -87,12 +87,12 @@ def parse_exercise(
     if ex_type not in (CONCEPT_DIR, PRACTICE_DIR):
         return None
 
-    meta: dict = {***REMOVED***
+    meta: dict = {}
     meta_path = exercise_dir / ".meta" / "config.json"
     if meta_path.exists():
         meta = json.loads(meta_path.read_text(encoding="utf-8"))
 
-    track = track_by_slug.get(slug, {***REMOVED***)
+    track = track_by_slug.get(slug, {})
 
     # Statement: .docs/instructions.md (у части practice — README.md)
     statement = exercise_dir / ".docs" / "instructions.md"
@@ -100,20 +100,20 @@ def parse_exercise(
         statement = exercise_dir / "README.md"
 
     # Stub: из .meta files.solution, иначе slug.py, иначе первый *.py без _test
-    stub = exercise_dir / f"{slug.replace('-', '_')***REMOVED***.py"
+    stub = exercise_dir / f"{slug.replace('-', '_')}.py"
     if not stub.exists():
-        sol_rel = (meta.get("files") or {***REMOVED***).get("solution") or [***REMOVED***
-        stub = exercise_dir / sol_rel[0***REMOVED*** if sol_rel else stub
+        sol_rel = (meta.get("files") or {}).get("solution") or []
+        stub = exercise_dir / sol_rel[0] if sol_rel else stub
         if not stub.exists():
             candidates = sorted(p for p in exercise_dir.glob("*.py") if "_test" not in p.name)
             if candidates:
-                stub = candidates[0***REMOVED***
+                stub = candidates[0]
 
     # Tests
-    tests = exercise_dir / f"{slug.replace('-', '_')***REMOVED***_test.py"
+    tests = exercise_dir / f"{slug.replace('-', '_')}_test.py"
     if not tests.exists():
-        tst_rel = (meta.get("files") or {***REMOVED***).get("test") or [***REMOVED***
-        tests = exercise_dir / tst_rel[0***REMOVED*** if tst_rel else tests
+        tst_rel = (meta.get("files") or {}).get("test") or []
+        tests = exercise_dir / tst_rel[0] if tst_rel else tests
 
     # Reference solution
     ref = exercise_dir / ".meta" / ("exemplar.py" if ex_type == CONCEPT_DIR else "example.py")
@@ -128,7 +128,7 @@ def parse_exercise(
         name=str(track.get("name") or meta.get("name") or slug),
         blurb=str(meta.get("blurb") or track.get("blurb") or ""),
         source_difficulty=int(track.get("difficulty", 1)),
-        source_concepts=tuple(track.get("practices", [***REMOVED***)) + tuple(track.get("prerequisites", [***REMOVED***)),
+        source_concepts=tuple(track.get("practices", [])) + tuple(track.get("prerequisites", [])),
         statement_relpath=_rel_to_root(root, statement) if statement.exists() else "",
         tests_relpath=_rel_to_root(root, tests) if tests.exists() else "",
         stub_relpath=_rel_to_root(root, stub) if stub.exists() else "",
@@ -150,12 +150,12 @@ def _sha256_file_tree(exercise_dir: Path) -> str:
     return h.hexdigest()
 
 
-def discover_exercises(source_root: str | Path) -> list[Path***REMOVED***:
+def discover_exercises(source_root: str | Path) -> list[Path]:
     """Все каталоги упражнений (concept + practice) в локальном клоне."""
     root = Path(source_root)
-    out: list[Path***REMOVED*** = [***REMOVED***
+    out: list[Path] = []
     for group in (CONCEPT_DIR, PRACTICE_DIR):
-        for p in sorted((root / "exercises" / group).iterdir()) if (root / "exercises" / group).is_dir() else [***REMOVED***:
+        for p in sorted((root / "exercises" / group).iterdir()) if (root / "exercises" / group).is_dir() else []:
             if p.is_dir() and p.name not in SKIP_FOREGONE:
                 out.append(p)
     return out
