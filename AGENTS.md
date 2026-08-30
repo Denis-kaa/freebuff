@@ -60,7 +60,14 @@ Workspace OS — **НЕ** SaaS AI-agent platform, НЕ LLM orchestrator, НЕ wo
 - **Direct Forge call из Scenario — НЕТ (по дизайну).** Scenario НЕ вызывает Forge напрямую — только через Project/Facade.
 - Проверено: 2 реальных инстанса (vkusvill_demo, interior_planner) работают при статусе UNFORGED.
 
-## 5. ANTI-паттерны — правила на будущее (core_02/LESSONS.md)
+## 5. Неприкосновенность промтов
+
+- **Промты в `pompts_11/` нельзя удалять.** Запрещено удалять, перезаписывать или терять существующий промт при переименовании, реорганизации, очистке или массовой обработке.
+- Изменения промта выполняются только аддитивно и с сохранением предыдущего содержимого. При необходимости новой редакции создаётся новый файл или версия, а старый остаётся в `pompts_11/`.
+- Переименование допускается только после проверки, что содержимое сохранено, ссылки обновлены, а исходное имя и история доступны через Git. Удаление допускается только по явному отдельному указанию пользователя.
+- Если промт обнаружен как отсутствующий, сначала искать его в истории, дампах и резервных копиях; не считать его утраченным без проверки.
+
+## 6. ANTI-паттерны — правила на будущее (core_02/LESSONS.md)
 
 - **ANTI-5 (scope discipline):** один сценарий за раз. Не замахиваться на wizard + contracts + AGENTS.md + build разом — непроверяемые модули накапливаются, ревью-петля раздувается.
 - **ANTI-6b (vocabulary drift):** **CLOSE VOCABULARY contract** — каждый токен в `CAPABILITIES_OVERRIDE` ДОЛЖЕН быть в `KNOWN_CAPABILITIES` (closed set, mirrors `ModelCatalog.capabilities`). Иначе silent fallback на слабую модель (qwen2.5:1.5b / gemini-fallback) при «зелёных» тестах. Валидатор поднимает `ValueError` при drift — это фича, не баг.
@@ -79,7 +86,7 @@ Workspace OS — **НЕ** SaaS AI-agent platform, НЕ LLM orchestrator, НЕ wo
 
   Полный операционный manual: **`docs_10/runbook/MISSING_REGISTRY_RUNBOOK.md`**.
 
-## 6. Быстрый протокол сессии
+## 7. Быстрый протокол сессии
 
 1. Прочитать этот файл (правила) → `BUFFY.md` (идентичность) → `TASK.md` (активные задачи) → `CHANGELOG.md` (последние релизы).
 2. Перед изменениями кода — перечитать `docs_10/core/CODE_QUALITY_STANDARD.md` (обязательный регламент).
@@ -87,7 +94,7 @@ Workspace OS — **НЕ** SaaS AI-agent platform, НЕ LLM orchestrator, НЕ wo
 4. Изменения — **аддитивные** (Additive Architecture); никакой перезаписи существующих модулей без явной причины.
 5. Ведение проектов — по `docs_10/core/PROJECT_RULES.md` (канон): **проект = контейнер контекста** (MANIFEST-паспорт, LESSONS, decisions/ADR, ROADMAP, STEPS «почему», RUNNABLE/CHECKLIST); задача идёт через проект; тиражируемое — дополнительно в общую базу; работа по платформе = проект «сама платформа» (корень freebuff/).
 
-## 7. Cross-links (канонические источники)
+## 8. Cross-links (канонические источники)
 
 - `docs_10/engineering-memory/RFC_BUFFY_FORGE_V1.md` — принципы §2, «что НЕ делает Forge» §12
 - `docs_10/engineering-memory/WORKSPACE_OS_ARCHITECTURE_RESEARCH_V1.md` — §31.5 (Definition), §32 (14 границ + B-Rules), §7.3 (Wizard↔Forge)
