@@ -19,7 +19,7 @@ Fail-safe: corrupt JSONL строки пропускаются с warning (looku
     )
 
     result = persist("https://example.com", source="research_web",
-                     title="Example", metadata={"status": 200***REMOVED***)
+                     title="Example", metadata={"status": 200})
     assert isinstance(result, PersistResult)
     assert result.is_duplicate is False
 
@@ -36,11 +36,11 @@ import datetime as _dt
 import hashlib
 import json
 import os
-***REMOVED***
+import re
 import sys
 import threading
 from dataclasses import asdict, dataclass, field
-***REMOVED***
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 __all__ = [
@@ -55,7 +55,7 @@ __all__ = [
     "stats",
     "main",
     "clear",  # для тестов (test-only convenience)
-***REMOVED***
+]
 
 # ─── constants ──────────────────────────────────────────────────────────────
 
@@ -67,7 +67,7 @@ MAX_URL_LEN: int = 2048
 
 # Консистентный URL-предикат: только http(s), path треб. ≥1 char,
 # reject schemes file://, javascript:, data: и прочие небезопасные.
-_URL_RE: "re.Pattern[str***REMOVED***" = re.compile(r"^https?://\S+$")
+_URL_RE: "re.Pattern[str]" = re.compile(r"^https?://\S+$")
 
 # Домен процесса-уровневый lock — single-process model (Freebuff runtime).
 # Для multi-process нужен fcntl — out of scope для v1.
@@ -87,23 +87,23 @@ class CorpusEntry:
     url: str
     source: str
     timestamp: str  # ISO 8601 UTC, всегда 'Z' suffix
-    title: Optional[str***REMOVED*** = None
-    metadata: Dict[str, Any***REMOVED*** = field(default_factory=dict)
+    title: Optional[str] = None
+    metadata: Dict[str, Any] = field(default_factory=dict)
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any***REMOVED***) -> "CorpusEntry":
+    def from_dict(cls, data: Dict[str, Any]) -> "CorpusEntry":
         """Извлечь из dict, игнорируя лишние ключи.
 
         Устойчивость к evolving schema (forward-compat): новые поля не роняют
         парсер (паттерн ``MissingItem.from_dict``).
         """
-        known = {"url", "source", "timestamp", "title", "metadata"***REMOVED***
-        kwargs = {k: v for k, v in data.items() if k in known***REMOVED***
+        known = {"url", "source", "timestamp", "title", "metadata"}
+        kwargs = {k: v for k, v in data.items() if k in known}
         # Гарантируем metadata — даже если отсутствует у читаемой строки.
-        kwargs.setdefault("metadata", {***REMOVED***)
+        kwargs.setdefault("metadata", {})
         return cls(**kwargs)
 
 
@@ -139,34 +139,34 @@ def _validate_url(url: Any) -> None:
         ValueError: если url пустой или не проходит другие проверки.
     """
     if not isinstance(url, str):
-        raise TypeError(f"url must be str, got {type(url).__name__***REMOVED***")
+        raise TypeError(f"url must be str, got {type(url).__name__}")
     if not url:
         raise ValueError("url is empty")
     if len(url) > MAX_URL_LEN:
         raise ValueError(
-            f"url len={len(url)***REMOVED*** > MAX_URL_LEN={MAX_URL_LEN***REMOVED*** (DoS hardcap)"
+            f"url len={len(url)} > MAX_URL_LEN={MAX_URL_LEN} (DoS hardcap)"
         )
     if not _URL_RE.match(url):
         raise ValueError(
-            f"url must match http(s) scheme (got {url[:64***REMOVED***!r***REMOVED***…)"
+            f"url must match http(s) scheme (got {url[:64]!r}…)"
         )
 
 
-def _entry_path(url: str, root: Optional[Path***REMOVED*** = None) -> Path:
+def _entry_path(url: str, root: Optional[Path] = None) -> Path:
     """``<root>/<sha256(url)>.jsonl`` — sha256 hex гарантирует path-safety."""
     base = root if root is not None else DEFAULT_CORPUS_DIR
-    return base / f"{_sha256_url(url)***REMOVED***.jsonl"
+    return base / f"{_sha256_url(url)}.jsonl"
 
 
-def _read_jsonl_safely(path: Path) -> List[Dict[str, Any***REMOVED******REMOVED***:
+def _read_jsonl_safely(path: Path) -> List[Dict[str, Any]]:
     """Прочитать JSONL с corrupt-line recovery (fail-safe).
 
     Empty list если файла нет. Corrupt строки скипаются + warning в stderr
     (lookup resilient к повреждённому jsonl).
     """
     if not path.is_file():
-        return [***REMOVED***
-    out: List[Dict[str, Any***REMOVED******REMOVED*** = [***REMOVED***
+        return []
+    out: List[Dict[str, Any]] = []
     try:
         with path.open("r", encoding="utf-8") as f:
             for line_num, line in enumerate(f, start=1):
@@ -177,11 +177,11 @@ def _read_jsonl_safely(path: Path) -> List[Dict[str, Any***REMOVED******REMOVED*
                     out.append(json.loads(line))
                 except json.JSONDecodeError as exc:
                     sys.stderr.write(
-                        f"corpus_persistence: corrupt JSONL at {path***REMOVED***:{line_num***REMOVED***: {exc***REMOVED***; "
+                        f"corpus_persistence: corrupt JSONL at {path}:{line_num}: {exc}; "
                         f"line skipped\n"
                     )
     except OSError as exc:
-        sys.stderr.write(f"corpus_persistence: read {path***REMOVED***: {exc***REMOVED***\n")
+        sys.stderr.write(f"corpus_persistence: read {path}: {exc}\n")
     return out
 
 
@@ -210,9 +210,9 @@ def persist(
     url: str,
     source: str,
     *,
-    title: Optional[str***REMOVED*** = None,
-    metadata: Optional[Dict[str, Any***REMOVED******REMOVED*** = None,
-    root: Optional[Path***REMOVED*** = None,
+    title: Optional[str] = None,
+    metadata: Optional[Dict[str, Any]] = None,
+    root: Optional[Path] = None,
 ) -> PersistResult:
     """Persist ``CorpusEntry`` для ``(url, source)``. Per-(url, source) idempotent.
 
@@ -231,21 +231,21 @@ def persist(
     """
     _validate_url(url)
     if not source or not isinstance(source, str):
-        raise ValueError(f"source must be non-empty str, got {source!r***REMOVED***")
+        raise ValueError(f"source must be non-empty str, got {source!r}")
 
     entry = CorpusEntry(
         url=url,
         source=source,
         timestamp=_now_iso(),
         title=title,
-        metadata=dict(metadata or {***REMOVED***),
+        metadata=dict(metadata or {}),
     )
 
     path = _entry_path(url, root=root)
     with FILE_LOCK:
         existing = _read_jsonl_safely(path)
         # Option C: дроп существующей записи для ТОГО ЖЕ source; оставляем остальные.
-        kept = [r for r in existing if r.get("source") != source***REMOVED***
+        kept = [r for r in existing if r.get("source") != source]
         is_dup = len(kept) != len(existing)
         kept.append(entry.to_dict())
 
@@ -270,23 +270,23 @@ def persist(
     return PersistResult(entry=entry, is_duplicate=is_dup)
 
 
-def lookup(url: str, *, root: Optional[Path***REMOVED*** = None) -> List[CorpusEntry***REMOVED***:
-    """Все entries для ``url`` across sources. ``[***REMOVED***`` если URL не persist-нут."""
+def lookup(url: str, *, root: Optional[Path] = None) -> List[CorpusEntry]:
+    """Все entries для ``url`` across sources. ``[]`` если URL не persist-нут."""
     _validate_url(url)
     raw = _read_jsonl_safely(_entry_path(url, root=root))
-    return [CorpusEntry.from_dict(r) for r in raw***REMOVED***
+    return [CorpusEntry.from_dict(r) for r in raw]
 
 
 def lookup_by_source(
-    source: str, *, root: Optional[Path***REMOVED*** = None,
-) -> List[CorpusEntry***REMOVED***:
+    source: str, *, root: Optional[Path] = None,
+) -> List[CorpusEntry]:
     """Все entries с ``source == <source>`` across URLs."""
     if not source or not isinstance(source, str):
-        raise ValueError(f"source must be non-empty str, got {source!r***REMOVED***")
+        raise ValueError(f"source must be non-empty str, got {source!r}")
     base = root if root is not None else DEFAULT_CORPUS_DIR
     if not base.is_dir():
-        return [***REMOVED***
-    out: List[CorpusEntry***REMOVED*** = [***REMOVED***
+        return []
+    out: List[CorpusEntry] = []
     for jsonl in sorted(base.glob("*.jsonl")):
         for raw in _read_jsonl_safely(jsonl):
             if raw.get("source") == source:
@@ -294,32 +294,32 @@ def lookup_by_source(
     return out
 
 
-def list_all(*, root: Optional[Path***REMOVED*** = None) -> List[CorpusEntry***REMOVED***:
+def list_all(*, root: Optional[Path] = None) -> List[CorpusEntry]:
     """Все entries в corpus (порядок: sorted by file path → read order)."""
     base = root if root is not None else DEFAULT_CORPUS_DIR
     if not base.is_dir():
-        return [***REMOVED***
-    out: List[CorpusEntry***REMOVED*** = [***REMOVED***
+        return []
+    out: List[CorpusEntry] = []
     for jsonl in sorted(base.glob("*.jsonl")):
         for raw in _read_jsonl_safely(jsonl):
             out.append(CorpusEntry.from_dict(raw))
     return out
 
 
-def stats(*, root: Optional[Path***REMOVED*** = None) -> Dict[str, int***REMOVED***:
-    """Counts по source. ``{source_name: count***REMOVED***``."""
+def stats(*, root: Optional[Path] = None) -> Dict[str, int]:
+    """Counts по source. ``{source_name: count]``."""
     base = root if root is not None else DEFAULT_CORPUS_DIR
     if not base.is_dir():
-        return {***REMOVED***
-    out: Dict[str, int***REMOVED*** = {***REMOVED***
+        return {}
+    out: Dict[str, int] = {}
     for jsonl in sorted(base.glob("*.jsonl")):
         for raw in _read_jsonl_safely(jsonl):
             src = raw.get("source", "(unknown)")
-            out[src***REMOVED*** = out.get(src, 0) + 1
+            out[src] = out.get(src, 0) + 1
     return out
 
 
-def clear(*, root: Optional[Path***REMOVED*** = None) -> int:
+def clear(*, root: Optional[Path] = None) -> int:
     """Удалить все ``*.jsonl`` в ``root`` (test/admin convenience).
 
     Returns: количество удалённых файлов.
@@ -340,17 +340,17 @@ def _print_json(payload: Any) -> None:
     sys.stdout.write("\n")
 
 
-def _parse_metadata_kv(pairs: Optional[List[str***REMOVED******REMOVED***) -> Optional[Dict[str, str***REMOVED******REMOVED***:
+def _parse_metadata_kv(pairs: Optional[List[str]]) -> Optional[Dict[str, str]]:
     """``--metadata`` CLI helper: ``key=value`` (повторяемый)."""
     if pairs is None:
         return None
-    out: Dict[str, str***REMOVED*** = {***REMOVED***
+    out: Dict[str, str] = {}
     for pair in pairs:
         if "=" not in pair:
-            sys.stderr.write(f"metadata must be key=value, got {pair!r***REMOVED***\n")
+            sys.stderr.write(f"metadata must be key=value, got {pair!r}\n")
             raise SystemExit(2)
         k, v = pair.split("=", 1)
-        out[k.strip()***REMOVED*** = v.strip()
+        out[k.strip()] = v.strip()
     return out
 
 
@@ -362,18 +362,18 @@ def _cli_add(args: argparse.Namespace) -> int:
             title=args.title, metadata=md, root=args.corpus_root,
         )
     except (TypeError, ValueError) as exc:
-        sys.stderr.write(f"error: {exc***REMOVED***\n")
+        sys.stderr.write(f"error: {exc}\n")
         return 2
     if args.json:
         _print_json({
             "entry": result.entry.to_dict(),
             "is_duplicate": result.is_duplicate,
-        ***REMOVED***)
+        })
         return 0
     flag = "(duplicate — overwritten)" if result.is_duplicate else "(new)"
     sys.stdout.write(
-        f"persisted {flag***REMOVED***: {args.url***REMOVED*** source={args.source***REMOVED*** "
-        f"sha256={_sha256_url(args.url)[:12***REMOVED******REMOVED***…\n"
+        f"persisted {flag}: {args.url} source={args.source} "
+        f"sha256={_sha256_url(args.url)[:12]}…\n"
     )
     return 0
 
@@ -382,20 +382,20 @@ def _cli_lookup(args: argparse.Namespace) -> int:
     try:
         entries = lookup(args.url, root=args.corpus_root)
     except (TypeError, ValueError) as exc:
-        sys.stderr.write(f"error: {exc***REMOVED***\n")
+        sys.stderr.write(f"error: {exc}\n")
         return 2
     if args.json:
-        _print_json([e.to_dict() for e in entries***REMOVED***)
+        _print_json([e.to_dict() for e in entries])
         return 0
     if not entries:
-        sys.stdout.write(f"(no entries) {args.url***REMOVED***\n")
+        sys.stdout.write(f"(no entries) {args.url}\n")
         return 0
     for e in entries:
-        sys.stdout.write(f"- [{e.source***REMOVED******REMOVED*** {e.timestamp***REMOVED***: {e.url***REMOVED***\n")
+        sys.stdout.write(f"- [{e.source}] {e.timestamp}: {e.url}\n")
         if e.title:
-            sys.stdout.write(f"  title: {e.title***REMOVED***\n")
+            sys.stdout.write(f"  title: {e.title}\n")
         if e.metadata:
-            sys.stdout.write(f"  metadata: {json.dumps(e.metadata, ensure_ascii=False)***REMOVED***\n")
+            sys.stdout.write(f"  metadata: {json.dumps(e.metadata, ensure_ascii=False)}\n")
     return 0
 
 
@@ -404,18 +404,18 @@ def _cli_list(args: argparse.Namespace) -> int:
         try:
             entries = lookup_by_source(args.source, root=args.corpus_root)
         except ValueError as exc:
-            sys.stderr.write(f"error: {exc***REMOVED***\n")
+            sys.stderr.write(f"error: {exc}\n")
             return 2
     else:
         entries = list_all(root=args.corpus_root)
     if args.json:
-        _print_json([e.to_dict() for e in entries***REMOVED***)
+        _print_json([e.to_dict() for e in entries])
         return 0
     if not entries:
         sys.stdout.write("(empty corpus)\n")
         return 0
     for e in entries:
-        sys.stdout.write(f"- [{e.source***REMOVED******REMOVED*** {e.timestamp***REMOVED***: {e.url***REMOVED***\n")
+        sys.stdout.write(f"- [{e.source}] {e.timestamp}: {e.url}\n")
     return 0
 
 
@@ -428,14 +428,14 @@ def _cli_stats(args: argparse.Namespace) -> int:
         sys.stdout.write("(empty corpus)\n")
         return 0
     for src, count in sorted(s.items()):
-        sys.stdout.write(f"- {src***REMOVED***: {count***REMOVED***\n")
+        sys.stdout.write(f"- {src}: {count}\n")
     return 0
 
 
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="corpus_persistence",
-        description=__doc__.splitlines()[0***REMOVED*** if __doc__ else "URL corpus",
+        description=__doc__.splitlines()[0] if __doc__ else "URL corpus",
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument(
@@ -485,21 +485,21 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
+def main(argv: Optional[List[str]] = None) -> int:
     """CLI entry point.
 
     Usage::
 
         python -m scripts_01.corpus_persistence add <URL> --source <SRC> …
-        python -m scripts_01.corpus_persistence lookup <URL> [--json***REMOVED***
-        python -m scripts_01.corpus_persistence list [--source S***REMOVED*** [--json***REMOVED***
-        python -m scripts_01.corpus_persistence stats [--json***REMOVED***
+        python -m scripts_01.corpus_persistence lookup <URL> [--json]
+        python -m scripts_01.corpus_persistence list [--source S] [--json]
+        python -m scripts_01.corpus_persistence stats [--json]
         python -m scripts_01.corpus_persistence --version
     """
     parser = _build_parser()
     args = parser.parse_args(argv)
     func = args.func
-    return func(args)  # type: ignore[no-any-return***REMOVED***  # argparse set_defaults ergases func type
+    return func(args)  # type: ignore[no-any-return]  # argparse set_defaults ergases func type
 
 
 if __name__ == "__main__":

@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS invariants (
     name TEXT UNIQUE NOT NULL,
     description TEXT DEFAULT '',
     assertion_type TEXT NOT NULL,
-    assertion_params TEXT DEFAULT '{***REMOVED***',
+    assertion_params TEXT DEFAULT '{}',
     enabled INTEGER DEFAULT 1,
     severity TEXT DEFAULT 'major',
     last_checked TEXT DEFAULT '',
@@ -95,7 +95,7 @@ CREATE TABLE IF NOT EXISTS action_verifications (
     verified_status TEXT DEFAULT 'unverified',
     verified_by TEXT DEFAULT '',
     verified_at TEXT DEFAULT '',
-    verification_results TEXT DEFAULT '[***REMOVED***',
+    verification_results TEXT DEFAULT '[]',
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL
 );
@@ -145,7 +145,7 @@ class SessionSnapshot:
     token_estimate: int = 0
     last_summary: str = ""
     checkpoint_type: CheckpointType | None = None
-    metadata: dict[str, Any***REMOVED*** = field(default_factory=dict)
+    metadata: dict[str, Any] = field(default_factory=dict)
     created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
@@ -154,13 +154,13 @@ class SessionSnapshot:
 class _CoworkCursor:
     """Обёртка над списком _FakeRow — имитирует sqlite3.Cursor для ContextManager."""
 
-    def __init__(self, rows: list[Any***REMOVED***) -> None:
+    def __init__(self, rows: list[Any]) -> None:
         self._rows = rows
 
     def fetchone(self) -> Any | None:
-        return self._rows[0***REMOVED*** if self._rows else None
+        return self._rows[0] if self._rows else None
 
-    def fetchall(self) -> list[Any***REMOVED***:
+    def fetchall(self) -> list[Any]:
         return self._rows
 
     @property
@@ -200,7 +200,7 @@ class ContextManager:
         cm = ContextManager("/path/to/freebuff")
         cm.start_session(project="termux-ai-agent", topic="v4.0 architecture")
         cm.save_checkpoint(summary="Implemented Worker Queue", ctype=CheckpointType.POST_STEP)
-        cm.add_message({"role": "user", "content": "..."***REMOVED***)
+        cm.add_message({"role": "user", "content": "..."})
         cm.export_markdown()
 
     Cowork-режим (общая БД через rqlite):
@@ -231,7 +231,7 @@ class ContextManager:
         self._event_bus = event_bus  # Optional EventBus instance
         self._cowork_conn: _CoworkConn | None = None
 
-        for d in [self._sessions_dir, self._checkpoints_dir, self._summaries_dir***REMOVED***:
+        for d in [self._sessions_dir, self._checkpoints_dir, self._summaries_dir]:
             os.makedirs(d, exist_ok=True)
 
         self._init_db()
@@ -258,12 +258,12 @@ class ContextManager:
 
         with self._get_conn() as conn:
             # Текущая версия схемы
-            current_version = conn.execute("PRAGMA user_version").fetchone()[0***REMOVED***
+            current_version = conn.execute("PRAGMA user_version").fetchone()[0]
 
             if current_version == 0:
                 # Свежая БД - создаём всё с нуля
                 self._create_schema_v5(conn)
-                conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION***REMOVED***")
+                conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
                 conn.commit()
                 return
 
@@ -280,7 +280,7 @@ class ContextManager:
             # Если версия выше текущей - несовместимость
             if current_version > SCHEMA_VERSION:
                 raise RuntimeError(
-                    f"Schema version {current_version***REMOVED*** > {SCHEMA_VERSION***REMOVED***. "
+                    f"Schema version {current_version} > {SCHEMA_VERSION}. "
                     "Downgrade not supported."
                 )
 
@@ -297,7 +297,7 @@ class ContextManager:
                 message_count INTEGER NOT NULL DEFAULT 0,
                 token_estimate INTEGER NOT NULL DEFAULT 0,
                 last_summary TEXT NOT NULL DEFAULT '',
-                metadata TEXT NOT NULL DEFAULT '{***REMOVED***',
+                metadata TEXT NOT NULL DEFAULT '{}',
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
                 FOREIGN KEY (project_id) REFERENCES projects(name)
@@ -374,7 +374,7 @@ class ContextManager:
                      ")")
 
         # Add project_id column if it doesn't exist yet (safe re-run)
-        columns = [col["name"***REMOVED*** for col in conn.execute("PRAGMA table_info(sessions)").fetchall()***REMOVED***
+        columns = [col["name"] for col in conn.execute("PRAGMA table_info(sessions)").fetchall()]
         if "project_id" not in columns:
             conn.execute(
                 "ALTER TABLE sessions ADD COLUMN project_id TEXT DEFAULT NULL REFERENCES projects(name)"
@@ -385,11 +385,11 @@ class ContextManager:
             "SELECT DISTINCT project FROM sessions WHERE project != ''"
         ).fetchall()
         for row in existing_projects:
-            name = row["project"***REMOVED***
+            name = row["project"]
             conn.execute(
                 """INSERT OR IGNORE INTO projects (name, path, description, category, last_scanned)
                    VALUES (?, ?, ?, ?, ?)""",
-                (name, name, f"Project: {name***REMOVED***", "other",
+                (name, name, f"Project: {name}", "other",
                  datetime.now(timezone.utc).isoformat()),
             )
             conn.execute(
@@ -484,17 +484,17 @@ class ContextManager:
 
             if existing:
                 return SessionSnapshot(
-                    session_id=existing["session_id"***REMOVED***,
-                    status=SessionStatus(existing["status"***REMOVED***),
-                    project=existing["project"***REMOVED***,
-                    project_id=existing["project_id"***REMOVED***,
-                    topic=existing["topic"***REMOVED***,
-                    message_count=existing["message_count"***REMOVED***,
-                    token_estimate=existing["token_estimate"***REMOVED***,
-                    last_summary=existing["last_summary"***REMOVED***,
-                    metadata=json.loads(existing["metadata"***REMOVED***),
-                    created_at=existing["created_at"***REMOVED***,
-                    updated_at=existing["updated_at"***REMOVED***,
+                    session_id=existing["session_id"],
+                    status=SessionStatus(existing["status"]),
+                    project=existing["project"],
+                    project_id=existing["project_id"],
+                    topic=existing["topic"],
+                    message_count=existing["message_count"],
+                    token_estimate=existing["token_estimate"],
+                    last_summary=existing["last_summary"],
+                    metadata=json.loads(existing["metadata"]),
+                    created_at=existing["created_at"],
+                    updated_at=existing["updated_at"],
                 )
 
             # Auto-register project if needed
@@ -519,10 +519,10 @@ class ContextManager:
                     type="session.created",
                     source="context_manager",
                     data={
-                        "session_id": session_id[:12***REMOVED***,
+                        "session_id": session_id[:12],
                         "project": project,
                         "topic": topic,
-                    ***REMOVED***,
+                    },
                 ))
             except Exception:
                 pass
@@ -542,7 +542,7 @@ class ContextManager:
         content: str,
         token_count: int | None = None,
         auto_checkpoint_interval: int = 0,
-    ) -> dict[str, Any***REMOVED*** | None:
+    ) -> dict[str, Any] | None:
         """
         Добавляет сообщение в сессию.
 
@@ -558,7 +558,7 @@ class ContextManager:
             token_count = self._estimate_tokens(content)
 
         now = datetime.now(timezone.utc).isoformat()
-        result_checkpoint: dict[str, Any***REMOVED*** | None = None
+        result_checkpoint: dict[str, Any] | None = None
 
         with self._lock, self._get_conn() as conn:
             conn.execute(
@@ -585,14 +585,14 @@ class ContextManager:
         if row is None:
             return None
 
-        msg_count = row["message_count"***REMOVED***
-        token_est = row["token_estimate"***REMOVED***
+        msg_count = row["message_count"]
+        token_est = row["token_estimate"]
 
         # 1. AUTO_INTERVAL чекпоинт
         if auto_checkpoint_interval > 0 and msg_count % auto_checkpoint_interval == 0:
             result_checkpoint = self.save_checkpoint(
                 session_id=session_id,
-                summary=f"Auto-checkpoint at message {msg_count***REMOVED*** ({token_est***REMOVED*** tokens)",
+                summary=f"Auto-checkpoint at message {msg_count} ({token_est} tokens)",
                 ctype=CheckpointType.AUTO_INTERVAL,
             )
 
@@ -602,7 +602,7 @@ class ContextManager:
                 and token_est >= self._context_threshold):
             result_checkpoint = self.save_checkpoint(
                 session_id=session_id,
-                summary=f"Context nearly full: {token_est***REMOVED*** tokens (threshold {self._context_threshold***REMOVED***). Consider summarizing.",
+                summary=f"Context nearly full: {token_est} tokens (threshold {self._context_threshold}). Consider summarizing.",
                 ctype=CheckpointType.CONTEXT_FULL,
             )
 
@@ -613,7 +613,7 @@ class ContextManager:
         session_id: str,
         summary: str,
         ctype: CheckpointType = CheckpointType.MANUAL,
-    ) -> dict[str, Any***REMOVED***:
+    ) -> dict[str, Any]:
         """Сохраняет чекпоинт с суммаризацией.
 
         Если тип чекпоинта CONTEXT_FULL - дополнительно сохраняет
@@ -632,13 +632,13 @@ class ContextManager:
             ).fetchone()
 
             if row is None:
-                raise ValueError(f"Session not found: {session_id***REMOVED***")
+                raise ValueError(f"Session not found: {session_id}")
 
             conn.execute(
                 """INSERT INTO checkpoints
                    (session_id, checkpoint_type, summary, message_count, token_estimate, created_at)
                    VALUES (?, ?, ?, ?, ?, ?)""",
-                (session_id, ctype.value, summary, row["message_count"***REMOVED***, row["token_estimate"***REMOVED***, now),
+                (session_id, ctype.value, summary, row["message_count"], row["token_estimate"], now),
             )
 
             conn.execute(
@@ -648,7 +648,7 @@ class ContextManager:
             conn.commit()
 
             # Сохраняем в файл для быстрого доступа
-            self._write_checkpoint_file(session_id, summary, ctype, row["message_count"***REMOVED***)
+            self._write_checkpoint_file(session_id, summary, ctype, row["message_count"])
 
         # ═══════════════════════════════════════════════════════
         # CONTEXT_FULL -> автоматический rollup-конспект
@@ -657,7 +657,7 @@ class ContextManager:
             try:
                 rollup_path = self._save_context_rollup(session_id)
             except Exception as e:
-                print(f"⚠️ Rollup error: {e***REMOVED***", file=sys.stderr)
+                print(f"⚠️ Rollup error: {e}", file=sys.stderr)
 
         # Публикуем событие чекпоинта
         if self._event_bus is not None:
@@ -667,12 +667,12 @@ class ContextManager:
                     type="checkpoint.created",
                     source="context_manager",
                     data={
-                        "session_id": session_id[:12***REMOVED***,
+                        "session_id": session_id[:12],
                         "checkpoint_type": ctype.value,
-                        "message_count": row["message_count"***REMOVED***,
-                        "token_estimate": row["token_estimate"***REMOVED***,
-                        "summary": summary[:200***REMOVED***,
-                    ***REMOVED***,
+                        "message_count": row["message_count"],
+                        "token_estimate": row["token_estimate"],
+                        "summary": summary[:200],
+                    },
                 ))
             except Exception:
                 pass
@@ -681,11 +681,11 @@ class ContextManager:
             "session_id": session_id,
             "checkpoint_type": ctype.value,
             "summary": summary,
-            "message_count": row["message_count"***REMOVED***,
-            "token_estimate": row["token_estimate"***REMOVED***,
+            "message_count": row["message_count"],
+            "token_estimate": row["token_estimate"],
             "created_at": now,
             "rollup_path": rollup_path,
-        ***REMOVED***
+        }
 
     def _save_context_rollup(
         self, session_id: str, max_tokens: int = 2000
@@ -705,14 +705,14 @@ class ContextManager:
         # Добавляем заголовок AUTO-ROLLUP
         ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
         rollup = (
-            f"> 🔄 **Auto-Rollup** generated at {ts***REMOVED***\n"
+            f"> 🔄 **Auto-Rollup** generated at {ts}\n"
             f"> *Context threshold reached - inject this into the next session to maintain continuity*\n"
             f">\n"
             f"> File: `context_12/context_full_rollup.md`\n"
             f"\n"
             f"---\n"
             f"\n"
-            f"{conspect***REMOVED***\n"
+            f"{conspect}\n"
         )
 
         filepath = os.path.join(self._root, "context_12", "context_full_rollup.md")
@@ -729,17 +729,17 @@ class ContextManager:
         msg_count: int,
     ) -> None:
         """Записывает чекпоинт в Markdown-файл."""
-        filename = f"checkpoint_{session_id[:8***REMOVED******REMOVED***_{ctype.value***REMOVED***_{msg_count***REMOVED***.md"
+        filename = f"checkpoint_{session_id[:8]}_{ctype.value}_{msg_count}.md"
         filepath = os.path.join(self._checkpoints_dir, filename)
 
         ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-        content = f"""# Checkpoint: {ctype.value***REMOVED***
-**Session:** {session_id***REMOVED***
-**Messages:** {msg_count***REMOVED***
-**Timestamp:** {ts***REMOVED***
+        content = f"""# Checkpoint: {ctype.value}
+**Session:** {session_id}
+**Messages:** {msg_count}
+**Timestamp:** {ts}
 
 ## Summary
-{summary***REMOVED***
+{summary}
 
 ---
 _Generated by ContextManager_
@@ -755,7 +755,7 @@ _Generated by ContextManager_
         conn.execute(
             """INSERT OR IGNORE INTO projects (name, path, description, category, last_scanned)
                VALUES (?, ?, ?, ?, ?)""",
-            (project_name, project_name, f"Project: {project_name***REMOVED***", "other", now),
+            (project_name, project_name, f"Project: {project_name}", "other", now),
         )
         return project_name
 
@@ -770,20 +770,20 @@ _Generated by ContextManager_
                 return None
 
             return SessionSnapshot(
-                session_id=row["session_id"***REMOVED***,
-                status=SessionStatus(row["status"***REMOVED***),
-                project=row["project"***REMOVED***,
-                project_id=row["project_id"***REMOVED***,
-                topic=row["topic"***REMOVED***,
-                message_count=row["message_count"***REMOVED***,
-                token_estimate=row["token_estimate"***REMOVED***,
-                last_summary=row["last_summary"***REMOVED***,
-                metadata=json.loads(row["metadata"***REMOVED***),
-                created_at=row["created_at"***REMOVED***,
-                updated_at=row["updated_at"***REMOVED***,
+                session_id=row["session_id"],
+                status=SessionStatus(row["status"]),
+                project=row["project"],
+                project_id=row["project_id"],
+                topic=row["topic"],
+                message_count=row["message_count"],
+                token_estimate=row["token_estimate"],
+                last_summary=row["last_summary"],
+                metadata=json.loads(row["metadata"]),
+                created_at=row["created_at"],
+                updated_at=row["updated_at"],
             )
 
-    def get_checkpoints(self, session_id: str) -> list[dict[str, Any***REMOVED******REMOVED***:
+    def get_checkpoints(self, session_id: str) -> list[dict[str, Any]]:
         """Возвращает все чекпоинты сессии."""
         with self._lock, self._get_conn() as conn:
             rows = conn.execute(
@@ -793,11 +793,11 @@ _Generated by ContextManager_
                 (session_id,),
             ).fetchall()
 
-        return [dict(row) for row in rows***REMOVED***
+        return [dict(row) for row in rows]
 
     def get_messages(
         self, session_id: str, limit: int = 100
-    ) -> list[dict[str, Any***REMOVED******REMOVED***:
+    ) -> list[dict[str, Any]]:
         """Возвращает последние сообщения сессии (от старых к новым)."""
         with self._lock, self._get_conn() as conn:
             rows = conn.execute(
@@ -809,7 +809,7 @@ _Generated by ContextManager_
                 (session_id, limit),
             ).fetchall()
 
-        return [dict(row) for row in rows***REMOVED***
+        return [dict(row) for row in rows]
 
     def get_message_count(self, session_id: str) -> int:
         """Возвращает количество сообщений в сессии."""
@@ -818,7 +818,7 @@ _Generated by ContextManager_
                 "SELECT COUNT(*) as cnt FROM messages WHERE session_id = ?",
                 (session_id,),
             ).fetchone()
-            return row["cnt"***REMOVED*** if row else 0
+            return row["cnt"] if row else 0
 
     def get_last_summary(self, session_id: str) -> str:
         """Возвращает последнюю суммаризацию для контекста."""
@@ -827,7 +827,7 @@ _Generated by ContextManager_
                 "SELECT last_summary FROM sessions WHERE session_id = ?",
                 (session_id,),
             ).fetchone()
-            return row["last_summary"***REMOVED*** if row else ""
+            return row["last_summary"] if row else ""
 
     def get_total_token_estimate(self, session_id: str) -> int:
         """Возвращает общий token_estimate сессии."""
@@ -836,7 +836,7 @@ _Generated by ContextManager_
                 "SELECT token_estimate FROM sessions WHERE session_id = ?",
                 (session_id,),
             ).fetchone()
-            return row["token_estimate"***REMOVED*** if row else 0
+            return row["token_estimate"] if row else 0
 
     def complete_session(self, session_id: str) -> None:
         """Завершает сессию (помечает как COMPLETED)."""
@@ -854,7 +854,7 @@ _Generated by ContextManager_
                 self._event_bus.publish(Event(
                     type="session.completed",
                     source="context_manager",
-                    data={"session_id": session_id[:12***REMOVED******REMOVED***,
+                    data={"session_id": session_id[:12]},
                 ))
             except Exception:
                 pass
@@ -873,7 +873,7 @@ _Generated by ContextManager_
 
     def list_sessions(
         self, status: SessionStatus | None = None
-    ) -> list[dict[str, Any***REMOVED******REMOVED***:
+    ) -> list[dict[str, Any]]:
         """Список всех сессий."""
         with self._lock, self._get_conn() as conn:
             if status:
@@ -890,7 +890,7 @@ _Generated by ContextManager_
                        FROM sessions ORDER BY updated_at DESC"""
                 ).fetchall()
 
-        return [dict(row) for row in rows***REMOVED***
+        return [dict(row) for row in rows]
 
     # ═══════════════════════════════════════════════════════════
     # Project Management
@@ -922,7 +922,7 @@ _Generated by ContextManager_
             )
             conn.commit()
 
-    def get_project(self, name: str) -> dict[str, Any***REMOVED*** | None:
+    def get_project(self, name: str) -> dict[str, Any] | None:
         """Get a project by name."""
         with self._lock, self._get_conn() as conn:
             row = conn.execute(
@@ -932,7 +932,7 @@ _Generated by ContextManager_
                 return None
             return dict(row)
 
-    def list_projects(self, category: str | None = None) -> list[dict[str, Any***REMOVED******REMOVED***:
+    def list_projects(self, category: str | None = None) -> list[dict[str, Any]]:
         """List all projects, optionally filtered by category."""
         with self._lock, self._get_conn() as conn:
             if category:
@@ -944,7 +944,7 @@ _Generated by ContextManager_
                 rows = conn.execute(
                     "SELECT * FROM projects ORDER BY category, name"
                 ).fetchall()
-        return [dict(row) for row in rows***REMOVED***
+        return [dict(row) for row in rows]
     # ═══════════════════════════════════════════════════════════
 
     def prune_abandoned(self, days: int = 1) -> int:
@@ -964,7 +964,7 @@ _Generated by ContextManager_
             ).fetchall()
 
             for row in rows:
-                sid = row["session_id"***REMOVED***
+                sid = row["session_id"]
                 conn.execute("DELETE FROM messages WHERE session_id = ?", (sid,))
                 conn.execute("DELETE FROM checkpoints WHERE session_id = ?", (sid,))
                 conn.execute("DELETE FROM sessions WHERE session_id = ?", (sid,))
@@ -976,7 +976,7 @@ _Generated by ContextManager_
         # Чистим файлы чекпоинтов
         for row in rows:
             for f in os.listdir(self._checkpoints_dir):
-                if f.startswith(f"checkpoint_{row['session_id'***REMOVED***[:8***REMOVED******REMOVED***"):
+                if f.startswith(f"checkpoint_{row['session_id'][:8]}"):
                     try:
                         os.remove(os.path.join(self._checkpoints_dir, f))
                     except OSError:
@@ -1012,7 +1012,7 @@ _Generated by ContextManager_
                     "UPDATE sessions SET status = ?, updated_at = ? WHERE session_id = ?",
                     (SessionStatus.ABANDONED.value,
                      datetime.now(timezone.utc).isoformat(),
-                     row["session_id"***REMOVED***),
+                     row["session_id"]),
                 )
                 abandoned += 1
 
@@ -1035,31 +1035,31 @@ _Generated by ContextManager_
         messages = self.get_messages(session_id)
 
         lines = [
-            f"# Session: {session.topic or session.session_id[:8***REMOVED******REMOVED***",
-            f"**Project:** {session.project***REMOVED***",
-            f"**Messages:** {session.message_count***REMOVED***",
-            f"**Tokens (est):** {session.token_estimate***REMOVED***",
-            f"**Status:** {session.status.value***REMOVED***",
-            f"**Created:** {session.created_at***REMOVED***",
-            f"**Updated:** {session.updated_at***REMOVED***",
+            f"# Session: {session.topic or session.session_id[:8]}",
+            f"**Project:** {session.project}",
+            f"**Messages:** {session.message_count}",
+            f"**Tokens (est):** {session.token_estimate}",
+            f"**Status:** {session.status.value}",
+            f"**Created:** {session.created_at}",
+            f"**Updated:** {session.updated_at}",
             "",
             "## Checkpoints",
             "",
-        ***REMOVED***
+        ]
 
         for cp in checkpoints:
-            lines.append(f"- [{cp['checkpoint_type'***REMOVED******REMOVED******REMOVED*** ({cp['message_count'***REMOVED******REMOVED*** msgs): {cp['summary'***REMOVED***[:100***REMOVED******REMOVED***")
+            lines.append(f"- [{cp['checkpoint_type']}] ({cp['message_count']} msgs): {cp['summary'][:100]}")
 
-        lines.extend(["", "## Messages", ""***REMOVED***)
+        lines.extend(["", "## Messages", ""])
 
         for msg in messages:
-            role_icon = {"user": "🧑", "assistant": "🤖", "system": "⚙️"***REMOVED***.get(msg["role"***REMOVED***, "❓")
-            content_preview = msg["content"***REMOVED***[:200***REMOVED***.replace("\n", " ")
-            lines.append(f"{role_icon***REMOVED*** **{msg['role'***REMOVED******REMOVED*****: {content_preview***REMOVED***")
+            role_icon = {"user": "🧑", "assistant": "🤖", "system": "⚙️"}.get(msg["role"], "❓")
+            content_preview = msg["content"][:200].replace("\n", " ")
+            lines.append(f"{role_icon} **{msg['role']}**: {content_preview}")
 
         export = "\n".join(lines)
 
-        filepath = os.path.join(self._summaries_dir, f"session_{session_id[:8***REMOVED******REMOVED***.md")
+        filepath = os.path.join(self._summaries_dir, f"session_{session_id[:8]}.md")
         with open(filepath, "w", encoding="utf-8") as f:
             f.write(export)
 
@@ -1076,17 +1076,17 @@ _Generated by ContextManager_
             return ""
 
         lines = [
-            f"# Context Resume: {session.topic***REMOVED***",
-            f"_Session {session.session_id[:8***REMOVED******REMOVED*** | {session.message_count***REMOVED*** messages | {session.token_estimate***REMOVED*** tokens_",
+            f"# Context Resume: {session.topic}",
+            f"_Session {session.session_id[:8]} | {session.message_count} messages | {session.token_estimate} tokens_",
             "",
             "## Key Points",
-        ***REMOVED***
+        ]
 
         for cp in checkpoints:
-            lines.append(f"- {cp['summary'***REMOVED******REMOVED***")
+            lines.append(f"- {cp['summary']}")
 
         lines.append("")
-        lines.append(f"**Latest:** {session.last_summary***REMOVED***")
+        lines.append(f"**Latest:** {session.last_summary}")
 
         result = "\n".join(lines)
 
@@ -1103,16 +1103,16 @@ _Generated by ContextManager_
         max_chars = int(max_tokens * chars_per_token)
         if len(text) <= max_chars:
             return text
-        return text[:max_chars***REMOVED*** + "\n\n... (truncated)"
+        return text[:max_chars] + "\n\n... (truncated)"
 
-    def get_context_status(self, session_id: str) -> dict[str, Any***REMOVED***:
+    def get_context_status(self, session_id: str) -> dict[str, Any]:
         """Возвращает статус контекста для сессии."""
         session = self.get_session(session_id)
         if session is None:
-            return {"error": "Session not found"***REMOVED***
+            return {"error": "Session not found"}
 
         return {
-            "session_id": session_id[:8***REMOVED***,
+            "session_id": session_id[:8],
             "message_count": session.message_count,
             "token_estimate": session.token_estimate,
             "threshold": self._context_threshold,
@@ -1122,4 +1122,4 @@ _Generated by ContextManager_
             "is_full": session.token_estimate >= self._context_threshold
             if self._context_threshold > 0 else False,
             "status": session.status.value,
-        ***REMOVED***
+        }

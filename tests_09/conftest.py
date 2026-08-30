@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os
 import threading
-***REMOVED***
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
@@ -30,7 +30,7 @@ def context_manager(tmp_path) -> "ContextManager":
     manager._lock = threading.Lock()
     manager._event_bus = None
 
-    for d in [manager._sessions_dir, manager._checkpoints_dir, manager._summaries_dir***REMOVED***:
+    for d in [manager._sessions_dir, manager._checkpoints_dir, manager._summaries_dir]:
         os.makedirs(d, exist_ok=True)
 
     manager._init_db()

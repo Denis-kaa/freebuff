@@ -20,8 +20,8 @@ Use cases::
 
     scraper = WebScraper(timeout=10.0)  # real (httpx + bs4)
     enum = PricingEnumerator(scraper=scraper, corpus_source="pricing_enumerator")
-    results = enum.enumerate(["https://geekbrains.ru/courses/123", ...***REMOVED***)
-    # results: List[CoursePrice***REMOVED***; persisted via corpus_persistence (per-URL).
+    results = enum.enumerate(["https://geekbrains.ru/courses/123", ...])
+    # results: List[CoursePrice]; persisted via corpus_persistence (per-URL).
 
 Design invariants (per thinker v5.189.60):
 - **Verbatim + numeric:** price_raw (verbatim string) + optional price_amount/currency.
@@ -40,10 +40,10 @@ import argparse
 import datetime as _dt
 import enum
 import json
-***REMOVED***
+import re
 import sys
 from dataclasses import dataclass
-***REMOVED***
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Protocol
 
 __all__ = [
@@ -56,7 +56,7 @@ __all__ = [
     "PricingEnumerator",
     "PricingEnumeratorNetworkError",
     "main",
-***REMOVED***
+]
 
 # DoS hardcaps (input validation).
 URL_MAX_LEN: int = 2048
@@ -108,12 +108,12 @@ class CoursePrice:
     price_raw: str
     source_url: str
     scrape_timestamp: str  # ISO 8601 UTC 'Z'
-    teacher: Optional[str***REMOVED*** = None
-    price_amount: Optional[float***REMOVED*** = None
-    price_currency: Optional[str***REMOVED*** = None
+    teacher: Optional[str] = None
+    price_amount: Optional[float] = None
+    price_currency: Optional[str] = None
     format: FormatType = FormatType.UNKNOWN
 
-    def to_dict(self) -> Dict[str, Any***REMOVED***:
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "course": self.course,
             "price_raw": self.price_raw,
@@ -123,7 +123,7 @@ class CoursePrice:
             "price_amount": self.price_amount,
             "price_currency": self.price_currency,
             "format": self.format.value,
-        ***REMOVED***
+        }
 
 
 @dataclass
@@ -131,8 +131,8 @@ class ScrapeResult:
     """Wrapper for one scraper.fetch() call — typed payload + status."""
 
     status: ScrapeStatus
-    data: Optional[Dict[str, Any***REMOVED******REMOVED*** = None  # expected: course, price_raw, teacher, format
-    error_msg: Optional[str***REMOVED*** = None
+    data: Optional[Dict[str, Any]] = None  # expected: course, price_raw, teacher, format
+    error_msg: Optional[str] = None
 
 
 class ScraperProtocol(Protocol):
@@ -155,11 +155,11 @@ class PricingEnumeratorNetworkError(RuntimeError):
 
 def _validate_url(url: Any) -> None:
     if not isinstance(url, str):
-        raise TypeError(f"url must be str, got {type(url).__name__***REMOVED***")
+        raise TypeError(f"url must be str, got {type(url).__name__}")
     if not url or not url.strip():
         raise ValueError("url is empty")
     if len(url) > URL_MAX_LEN:
-        raise ValueError(f"url len={len(url)***REMOVED*** > URL_MAX_LEN={URL_MAX_LEN***REMOVED*** (DoS hardcap)")
+        raise ValueError(f"url len={len(url)} > URL_MAX_LEN={URL_MAX_LEN} (DoS hardcap)")
     if not (url.startswith("http://") or url.startswith("https://")):
         raise ValueError("url must be http(s)")
 
@@ -198,10 +198,10 @@ def _is_fresh(timestamp: str, ttl_seconds: int) -> bool:
     return 0 <= age <= ttl_seconds
 
 
-_PRICE_AMOUNT_RE = re.compile(r"\d[\d\s\u00A0***REMOVED****([.,***REMOVED***\d+)?")
+_PRICE_AMOUNT_RE = re.compile(r"\d[\d\s\u00A0)*([.,]\d+)?")
 
 
-def _extract_price_amount(raw: str) -> Optional[float***REMOVED***:
+def _extract_price_amount(raw: str) -> Optional[float]:
     """Best-effort parse of verbatim price → float."""
     if not isinstance(raw, str) or not raw.strip():
         return None
@@ -215,10 +215,10 @@ def _extract_price_amount(raw: str) -> Optional[float***REMOVED***:
         return None
 
 
-def _validate_scrape_data(data: Dict[str, Any***REMOVED***) -> CoursePrice:
+def _validate_scrape_data(data: Dict[str, Any]) -> CoursePrice:
     """Convert ScrapeResult.data dict → CoursePrice (raise ValueError on missing/invalid)."""
     if not isinstance(data, dict):
-        raise ValueError(f"data must be dict, got {type(data).__name__***REMOVED***")
+        raise ValueError(f"data must be dict, got {type(data).__name__}")
     course = data.get("course")
     price_raw = data.get("price_raw")
     if not isinstance(course, str) or not course.strip():
@@ -226,33 +226,33 @@ def _validate_scrape_data(data: Dict[str, Any***REMOVED***) -> CoursePrice:
     if not isinstance(price_raw, str) or not price_raw.strip():
         raise ValueError("missing required field 'price_raw' (non-empty str)")
     if len(course) > COURSE_MAX_LEN:
-        raise ValueError(f"course len={len(course)***REMOVED*** > COURSE_MAX_LEN={COURSE_MAX_LEN***REMOVED***")
+        raise ValueError(f"course len={len(course)} > COURSE_MAX_LEN={COURSE_MAX_LEN}")
     if len(price_raw) > PRICE_RAW_MAX_LEN:
         raise ValueError(
-            f"price_raw len={len(price_raw)***REMOVED*** > PRICE_RAW_MAX_LEN={PRICE_RAW_MAX_LEN***REMOVED***"
+            f"price_raw len={len(price_raw)} > PRICE_RAW_MAX_LEN={PRICE_RAW_MAX_LEN}"
         )
 
     teacher = data.get("teacher")
     if teacher is not None and not isinstance(teacher, str):
-        raise ValueError(f"teacher must be str, got {type(teacher).__name__***REMOVED***")
+        raise ValueError(f"teacher must be str, got {type(teacher).__name__}")
     if isinstance(teacher, str) and len(teacher) > TEACHER_MAX_LEN:
-        raise ValueError(f"teacher len > TEACHER_MAX_LEN={TEACHER_MAX_LEN***REMOVED***")
+        raise ValueError(f"teacher len > TEACHER_MAX_LEN={TEACHER_MAX_LEN}")
 
     # price_amount — explicit if provided, else best-effort parse from price_raw.
     provided_amount = data.get("price_amount")
     if provided_amount is not None:
         if not isinstance(provided_amount, (int, float)):
             raise ValueError(
-                f"price_amount must be numeric, got {type(provided_amount).__name__***REMOVED***"
+                f"price_amount must be numeric, got {type(provided_amount).__name__}"
             )
-        price_amount: Optional[float***REMOVED*** = float(provided_amount)
+        price_amount: Optional[float] = float(provided_amount)
     else:
         price_amount = _extract_price_amount(price_raw)
 
     price_currency = data.get("price_currency")
     if price_currency is not None and not isinstance(price_currency, str):
         raise ValueError(
-            f"price_currency must be str, got {type(price_currency).__name__***REMOVED***"
+            f"price_currency must be str, got {type(price_currency).__name__}"
         )
 
     fmt_raw = data.get("format")
@@ -264,7 +264,7 @@ def _validate_scrape_data(data: Dict[str, Any***REMOVED***) -> CoursePrice:
         except ValueError:
             fmt = FormatType.UNKNOWN  # unknown format → don't crash (forward-compat)
     else:
-        raise ValueError(f"format must be str or None, got {type(fmt_raw).__name__***REMOVED***")
+        raise ValueError(f"format must be str or None, got {type(fmt_raw).__name__}")
 
     return CoursePrice(
         course=course.strip(),
@@ -300,7 +300,7 @@ class WebScraper:
             from bs4 import BeautifulSoup
         except ImportError as exc:
             raise PricingEnumeratorNetworkError(
-                f"httpx + bs4 not available: {exc***REMOVED***. "
+                f"httpx + bs4 not available: {exc}. "
                 f"Install: pip install httpx beautifulsoup4"
             )
         try:
@@ -308,61 +308,61 @@ class WebScraper:
                 response = client.get(url, follow_redirects=True)
         except httpx.ConnectError as exc:
             raise PricingEnumeratorNetworkError(
-                f"Cannot reach {url***REMOVED***: {exc***REMOVED***"
+                f"Cannot reach {url}: {exc}"
             )
         except httpx.TimeoutException as exc:
             return ScrapeResult(
                 status=ScrapeStatus.HTTP_ERROR,
-                error_msg=f"timeout on {url***REMOVED***: {exc***REMOVED***",
+                error_msg=f"timeout on {url}: {exc}",
             )
         if response.status_code >= 400:
             return ScrapeResult(
                 status=ScrapeStatus.HTTP_ERROR,
-                error_msg=f"HTTP {response.status_code***REMOVED*** on {url***REMOVED***",
+                error_msg=f"HTTP {response.status_code} on {url}",
             )
         try:
             soup = BeautifulSoup(response.text, "html.parser")
         except Exception as exc:  # noqa: BLE001
             return ScrapeResult(
                 status=ScrapeStatus.PARSE_ERROR,
-                error_msg=f"BeautifulSoup parse error on {url***REMOVED***: {exc***REMOVED***",
+                error_msg=f"BeautifulSoup parse error on {url}: {exc}",
             )
         data = self._extract(soup, url)
         if not data:
             return ScrapeResult(
                 status=ScrapeStatus.MISSING_FIELDS,
-                error_msg=f"missing course/price on {url***REMOVED***",
+                error_msg=f"missing course/price on {url}",
             )
         return ScrapeResult(status=ScrapeStatus.OK, data=data)
 
     @staticmethod
-    def _extract(soup: Any, url: str) -> Optional[Dict[str, Any***REMOVED******REMOVED***:
+    def _extract(soup: Any, url: str) -> Optional[Dict[str, Any]]:
         """Schema.org microdata first → <h1>+CSS-class fallback."""
-        data: Dict[str, Any***REMOVED*** = {"source_url": url***REMOVED***
+        data: Dict[str, Any] = {"source_url": url}
 
         # 1) Schema.org microdata (Course / Product / Event).
         micro_course = soup.find(
-            attrs={"itemtype": re.compile(r"schema\.org/(Course|Product|Event)", re.I)***REMOVED***
+            attrs={"itemtype": re.compile(r"schema\.org/(Course|Product|Event)", re.I)}
         )
         if micro_course:
-            name = micro_course.find(attrs={"itemprop": "name"***REMOVED***)
+            name = micro_course.find(attrs={"itemprop": "name"})
             if name and name.get_text(strip=True):
-                data["course"***REMOVED*** = name.get_text(strip=True)
-            teacher = micro_course.find(attrs={"itemprop": "instructor"***REMOVED***)
+                data["course"] = name.get_text(strip=True)
+            teacher = micro_course.find(attrs={"itemprop": "instructor"})
             if not teacher:
-                teacher = micro_course.find(attrs={"itemprop": "author"***REMOVED***)
+                teacher = micro_course.find(attrs={"itemprop": "author"})
             if teacher and teacher.get_text(strip=True):
-                data["teacher"***REMOVED*** = teacher.get_text(strip=True)
-            price = micro_course.find(attrs={"itemprop": "price"***REMOVED***)
+                data["teacher"] = teacher.get_text(strip=True)
+            price = micro_course.find(attrs={"itemprop": "price"})
             if price and price.get_text(strip=True):
-                data["price_raw"***REMOVED*** = price.get_text(strip=True)
-            currency = micro_course.find(attrs={"itemprop": "priceCurrency"***REMOVED***)
+                data["price_raw"] = price.get_text(strip=True)
+            currency = micro_course.find(attrs={"itemprop": "priceCurrency"})
             if currency and currency.get("content"):
-                data["price_currency"***REMOVED*** = currency["content"***REMOVED***
-            amount = micro_course.find(attrs={"itemprop": "amount"***REMOVED***)
+                data["price_currency"] = currency["content"]
+            amount = micro_course.find(attrs={"itemprop": "amount"})
             if amount and amount.get_text(strip=True):
                 try:
-                    data["price_amount"***REMOVED*** = float(amount.get_text(strip=True))
+                    data["price_amount"] = float(amount.get_text(strip=True))
                 except ValueError:
                     pass
 
@@ -370,11 +370,11 @@ class WebScraper:
         if "course" not in data:
             h1 = soup.find("h1")
             if h1 and h1.get_text(strip=True):
-                data["course"***REMOVED*** = h1.get_text(strip=True)
+                data["course"] = h1.get_text(strip=True)
         if "price_raw" not in data:
             price_match = soup.find(class_=re.compile(r"price", re.I))
             if price_match and price_match.get_text(strip=True):
-                data["price_raw"***REMOVED*** = price_match.get_text(strip=True)
+                data["price_raw"] = price_match.get_text(strip=True)
 
         if "course" not in data or "price_raw" not in data:
             return None
@@ -399,7 +399,7 @@ class PricingEnumerator:
             raise ValueError("scraper is required (ScraperProtocol)")
         if not isinstance(cache_ttl_seconds, int) or cache_ttl_seconds < 0:
             raise ValueError(
-                f"cache_ttl_seconds must be non-negative int, got {cache_ttl_seconds!r***REMOVED*** "
+                f"cache_ttl_seconds must be non-negative int, got {cache_ttl_seconds!r} "
                 f"(0 ⇒ cache disabled; opt-in via caller)"
             )
         self.scraper = scraper
@@ -407,24 +407,24 @@ class PricingEnumerator:
         self.enabled = enabled  # False ⇒ skip corpus persistence (testing)
         self.cache_ttl_seconds = cache_ttl_seconds  # 0 ⇒ cache disabled (opt-in)
 
-    def enumerate(self, urls: List[str***REMOVED***) -> List[CoursePrice***REMOVED***:
+    def enumerate(self, urls: List[str]) -> List[CoursePrice]:
         if not isinstance(urls, list):
             raise TypeError(
-                f"urls must be list[str***REMOVED***, got {type(urls).__name__***REMOVED***"
+                f"urls must be list[str], got {type(urls).__name__}"
             )
         if len(urls) > BATCH_MAX_URLS:
             raise ValueError(
-                f"batch size={len(urls)***REMOVED*** > BATCH_MAX_URLS={BATCH_MAX_URLS***REMOVED***"
+                f"batch size={len(urls)} > BATCH_MAX_URLS={BATCH_MAX_URLS}"
             )
 
-        results: List[CoursePrice***REMOVED*** = [***REMOVED***
+        results: List[CoursePrice] = []
         for raw in urls:
             # Soft input validation: skip bad URL, continue batch.
             try:
                 _validate_url(raw)
             except (TypeError, ValueError) as exc:
                 sys.stderr.write(
-                    f"pricing_enumerator: skip invalid url: {exc***REMOVED***\n"
+                    f"pricing_enumerator: skip invalid url: {exc}\n"
                 )
                 continue
 
@@ -443,26 +443,26 @@ class PricingEnumerator:
                 raise
             except Exception as exc:  # noqa: BLE001 — soft crash recovery
                 sys.stderr.write(
-                    f"pricing_enumerator: scraper crash on {raw***REMOVED***: {exc***REMOVED***\n"
+                    f"pricing_enumerator: scraper crash on {raw}: {exc}\n"
                 )
                 continue
 
             if scrape_result.status != ScrapeStatus.OK or scrape_result.data is None:
                 sys.stderr.write(
-                    f"pricing_enumerator: {raw***REMOVED*** → {scrape_result.status.value***REMOVED***"
-                    f" ({scrape_result.error_msg or 'no data'***REMOVED***); skipped\n"
+                    f"pricing_enumerator: {raw} → {scrape_result.status.value}"
+                    f" ({scrape_result.error_msg or 'no data'}); skipped\n"
                 )
                 continue
 
             # Apply URL/timestamp overrides + validate required fields.
             try:
                 payload = dict(scrape_result.data)
-                payload["source_url"***REMOVED*** = raw
+                payload["source_url"] = raw
                 payload.setdefault("scrape_timestamp", _now_iso())
                 cp = _validate_scrape_data(payload)
             except ValueError as exc:
                 sys.stderr.write(
-                    f"pricing_enumerator: {raw***REMOVED*** → MISSING_FIELDS ({exc***REMOVED***); "
+                    f"pricing_enumerator: {raw} → MISSING_FIELDS ({exc}); "
                     f"skipped\n"
                 )
                 continue
@@ -472,7 +472,7 @@ class PricingEnumerator:
                 self._persist_to_corpus(cp)
         return results
 
-    def _check_cache(self, url: str) -> Optional[CoursePrice***REMOVED***:
+    def _check_cache(self, url: str) -> Optional[CoursePrice]:
         """Look up cached CoursePrice в corpus_persistence within TTL window.
 
         Uses ``corpus_persistence.lookup()`` filtered by ``(url, source)``.
@@ -492,7 +492,7 @@ class PricingEnumerator:
         # `corpus_persistence.lookup()` returns all entries для url across
         # sources; filter to our subtype (skip cross-source contamination per
         # design — each source is operated independently).
-        entries = [e for e in entries if e.source == self.corpus_source***REMOVED***
+        entries = [e for e in entries if e.source == self.corpus_source]
         if not entries:
             return None
         try:
@@ -501,11 +501,11 @@ class PricingEnumerator:
             return None
         # TTL semantics: for course prices, "fresh" means "page was scraped recently",
         # NOT "corpus row was written recently". persist() rewrites timestamp каждого
-        # call, so use metadata['scrape_timestamp'***REMOVED*** как source of truth (written by
+        # call, so use metadata['scrape_timestamp'] как source of truth (written by
         # pricing_enumerator when the page was actually fetched). Fallback to
-        # latest.timestamp for entries persisted without metadata['scrape_timestamp'***REMOVED***
+        # latest.timestamp for entries persisted without metadata['scrape_timestamp']
         # (e.g., manual corpus writes).
-        md = latest.metadata or {***REMOVED***
+        md = latest.metadata or {}
         scraped_at = md.get("scrape_timestamp") or latest.timestamp
         if not _is_fresh(scraped_at, self.cache_ttl_seconds):
             return None
@@ -531,7 +531,7 @@ class PricingEnumerator:
             from scripts_01.corpus_persistence import persist  # noqa: WPS433
         except ImportError as exc:
             sys.stderr.write(
-                f"pricing_enumerator: corpus_persistence unavailable: {exc***REMOVED***; "
+                f"pricing_enumerator: corpus_persistence unavailable: {exc}; "
                 f"persistence disabled for this run\n"
             )
             return
@@ -547,12 +547,12 @@ class PricingEnumerator:
                     "teacher": cp.teacher,
                     "format": cp.format.value,
                     "scrape_timestamp": cp.scrape_timestamp,
-                ***REMOVED***,
+                },
             )
         except Exception as exc:  # noqa: BLE001 — ADR-016
             sys.stderr.write(
                 f"pricing_enumerator: persist failed for "
-                f"{cp.source_url***REMOVED***: {exc***REMOVED***; continuing\n"
+                f"{cp.source_url}: {exc}; continuing\n"
             )
 
 
@@ -567,8 +567,8 @@ def _print_json(payload: Any) -> None:
 def _format_text(cp: CoursePrice) -> str:
     teacher = cp.teacher or "(unknown)"
     return (
-        f"- {cp.course***REMOVED*** [{cp.format.value***REMOVED******REMOVED*** — {cp.price_raw***REMOVED*** "
-        f"({cp.source_url***REMOVED***) teacher={teacher***REMOVED***"
+        f"- {cp.course} [{cp.format.value}] — {cp.price_raw} "
+        f"({cp.source_url}) teacher={teacher}"
     )
 
 
@@ -620,7 +620,7 @@ def _build_parser() -> argparse.ArgumentParser:
     return p
 
 
-def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
+def main(argv: Optional[List[str]] = None) -> int:
     parser = _build_parser()
     args = parser.parse_args(argv)
 
@@ -633,11 +633,11 @@ def main(argv: Optional[List[str***REMOVED******REMOVED*** = None) -> int:
     try:
         results = enum.enumerate(args.urls)
     except PricingEnumeratorNetworkError as exc:
-        sys.stderr.write(f"pricing_enumerator: NETWORK FATAL: {exc***REMOVED***\n")
+        sys.stderr.write(f"pricing_enumerator: NETWORK FATAL: {exc}\n")
         return 2
 
     if args.json:
-        _print_json([cp.to_dict() for cp in results***REMOVED***)
+        _print_json([cp.to_dict() for cp in results])
         return 0
     if not results:
         sys.stdout.write("(no prices extracted — all URLs returned soft errors)\n")
