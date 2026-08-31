@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import os
-}
+from pathlib import Path
 from typing import Any
 
-]quests
+quests
 
 from realtor_os.logger import setup_logger
 

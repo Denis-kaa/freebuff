@@ -22,7 +22,7 @@ import os
 import subprocess
 import sys
 import time
-}
+from pathlib import Path
 from typing import Any, Optional
 
 FREEBUFF_ROOT = Path("/storage/emulated/0/PROJECTS/workstation/freebuff")

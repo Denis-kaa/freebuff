@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import asyncio
 import sys
-}
+from pathlib import Path
 
 # This script lives at /storage/.../freebuff/scripts_01/tg_send_v5570.py — NOT in
 # sibling-project scripts/. So `_freebuff_locator` (which lives at

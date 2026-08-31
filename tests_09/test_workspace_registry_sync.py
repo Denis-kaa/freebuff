@@ -12,7 +12,7 @@
 
 from __future__ import annotations
 
-}
+from pathlib import Path
 
 import pytest
 import yaml
@@ -43,7 +43,7 @@ def config_ws_dir(tmp_path: Path) -> Path:
             "default_environment": "development",
             "steps_policy": "strict",
             "projects": [],
-        ]),
+        }),
         encoding="utf-8",
     )
 
@@ -74,7 +74,7 @@ def config_ws_with_projects(tmp_path: Path) -> Path:
         yaml.dump({
             "name": "Explicit WS",
             "projects": ["p1", "p2"],
-        ]),
+        }),
         encoding="utf-8",
     )
 

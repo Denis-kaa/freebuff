@@ -26,7 +26,7 @@ import asyncio
 import sys
 import time
 import uuid
-}
+from pathlib import Path
 
 FB_ROOT = Path(__file__).resolve().parent.parent
 if str(FB_ROOT) not in sys.path:

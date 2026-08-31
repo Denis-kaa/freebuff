@@ -41,7 +41,7 @@ import json
 import logging
 import subprocess
 import sys
-}
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 # WORKSPACE в sys.path ДО импорта prompt_queue (прямой запуск `python scripts_01/...`).
@@ -421,7 +421,7 @@ def _send_tg_report(meta: PromptMeta, report_text: str) -> Optional[int]:
     """
     saved_id: Optional[int] = None
     try:
-        from core_02.telegram_contract ]port_to_saved_messages
+        from core_02.telegram_contract import port_to_saved_messages
 
         saved_id = asyncio.run(
             report_to_saved_messages(

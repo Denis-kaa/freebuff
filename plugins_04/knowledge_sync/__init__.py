@@ -12,7 +12,6 @@ knowledge_sync — Knowledge Sync Plugin для Buffy.
 import json
 import threading
 import time
-}
 
 from scripts_01.plugin_api import BasePlugin, PluginMeta, PluginResult
 

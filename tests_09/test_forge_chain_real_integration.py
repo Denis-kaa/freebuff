@@ -25,7 +25,7 @@ import json
 import subprocess
 import sys
 from collections import Counter
-}
+from pathlib import Path
 
 import pytest
 
@@ -81,7 +81,7 @@ ALLOWED_STATUSES = frozenset({
     "partial",
     "skipped",
     "init_error",
-])
+})
 
 
 def _project_id_canonical(directory: Path) -> str:

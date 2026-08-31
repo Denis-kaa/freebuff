@@ -21,7 +21,7 @@ import os
 import shutil
 import sys
 import tempfile
-}
+from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 import pytest
@@ -219,7 +219,7 @@ class TestToolsCall:
         result = server.handle_tools_call({
             "name": "knowledge_search",
             "arguments": {"query": "router capability"},
-        ])
+        })
         # May return empty results if KE not seeded, but shouldn't error
         assert "content" in result
         assert len(result["content"]) == 1
@@ -235,14 +235,14 @@ class TestToolsCall:
                 "content": "test content",
                 "summary": "test summary",
             },
-        ])
+        })
         assert store_result["isError"] is False
 
         # Retrieve
         ret_result = server.handle_tools_call({
             "name": "memory_retrieve",
             "arguments": {"level": "working", "key": "test_key"},
-        ])
+        })
         assert ret_result["isError"] is False
         data = json.loads(ret_result["content"][0]["text"])
         assert data["success"] is True
@@ -252,7 +252,7 @@ class TestToolsCall:
         result = server.handle_tools_call({
             "name": "memory_store",
             "arguments": {"level": "invalid", "key": "k", "content": "c"},
-        ])
+        })
         assert result["isError"] is True
 
     def test_call_memory_list(self, server):
@@ -260,11 +260,11 @@ class TestToolsCall:
         server.handle_tools_call({
             "name": "memory_store",
             "arguments": {"level": "working", "key": "k1", "content": "c1"},
-        ])
+        })
         result = server.handle_tools_call({
             "name": "memory_list",
             "arguments": {"level": "working"},
-        ])
+        })
         assert result["isError"] is False
         data = json.loads(result["content"][0]["text"])
         assert data["success"] is True
@@ -274,7 +274,7 @@ class TestToolsCall:
         result = server.handle_tools_call({
             "name": "session_status",
             "arguments": {},
-        ])
+        })
         assert "content" in result
         assert result["isError"] is False
 
@@ -282,14 +282,14 @@ class TestToolsCall:
         result = server.handle_tools_call({
             "name": "context_resume",
             "arguments": {},
-        ])
+        })
         assert "content" in result
 
     def test_call_plugins_list(self, server):
         result = server.handle_tools_call({
             "name": "plugins_list",
             "arguments": {},
-        ])
+        })
         assert "content" in result
 
     def test_dispatch_tools_call(self, server):
@@ -389,7 +389,7 @@ class TestPrompts:
         result = server.handle_prompts_get({
             "name": "task_start",
             "arguments": {"task": "implement feature X", "project": "freebuff"},
-        ])
+        })
         text = result["messages"][0]["content"]["text"]
         assert "implement feature X" in text
 
@@ -553,7 +553,7 @@ class TestBootstrapTools:
         """Helper: patch subprocess.run with proper return values."""
         return patch("subprocess.run", return_value=type("Proc", (), {
             "returncode": returncode, "stdout": stdout, "stderr": stderr,
-        ])())
+        })())
 
     def _check_result(self, result, expect_success=True):
         """Helper: parse tool call result and return data dict."""
@@ -569,7 +569,7 @@ class TestBootstrapTools:
             result = server.handle_tools_call({
                 "name": "bootstrap_check",
                 "arguments": {},
-            ])
+            })
             data = self._check_result(result)
             assert "python_version" in data["data"]
             assert data["data"]["workspace"] == str(server.workspace)
@@ -580,7 +580,7 @@ class TestBootstrapTools:
             result = server.handle_tools_call({
                 "name": "bootstrap_check",
                 "arguments": {"quick": True},
-            ])
+            })
             data = self._check_result(result)
             assert "os" in data["data"]
 
@@ -590,7 +590,7 @@ class TestBootstrapTools:
             result = server.handle_tools_call({
                 "name": "bootstrap_check",
                 "arguments": {},
-            ])
+            })
             assert result["isError"] is True
             text = result["content"][0]["text"]
             assert "not available" in text
@@ -601,7 +601,7 @@ class TestBootstrapTools:
             result = server.handle_tools_call({
                 "name": "bootstrap_run",
                 "arguments": {"profile": "minimal"},
-            ])
+            })
             data = self._check_result(result)
             assert data["data"]["profile"] == "minimal"
             assert "duration_ms" in data["data"]
@@ -614,7 +614,7 @@ class TestBootstrapTools:
             result = server.handle_tools_call({
                 "name": "bootstrap_run",
                 "arguments": {},
-            ])
+            })
             data = self._check_result(result)
             assert data["data"]["profile"] == "minimal"
 
@@ -624,7 +624,7 @@ class TestBootstrapTools:
             result = server.handle_tools_call({
                 "name": "bootstrap_run",
                 "arguments": {"profile": "developer"},
-            ])
+            })
             data = self._check_result(result)
             assert data["data"]["profile"] == "developer"
 
@@ -634,7 +634,7 @@ class TestBootstrapTools:
             result = server.handle_tools_call({
                 "name": "bootstrap_run",
                 "arguments": {"profile": "nonexistent_profile_xyz"},
-            ])
+            })
             # Engine stores the original profile name in report
             # but internally falls back to 'minimal' profile
             data = self._check_result(result, expect_success=True)
@@ -647,7 +647,7 @@ class TestBootstrapTools:
         result = server.handle_tools_call({
             "name": "bootstrap_status",
             "arguments": {},
-        ])
+        })
         data = self._check_result(result)
         assert data["data"]["status"] == "never_run"
 
@@ -658,12 +658,12 @@ class TestBootstrapTools:
             server.handle_tools_call({
                 "name": "bootstrap_run",
                 "arguments": {"profile": "minimal"},
-            ])
+            })
             # Check status
             result = server.handle_tools_call({
                 "name": "bootstrap_status",
                 "arguments": {},
-            ])
+            })
             data = self._check_result(result)
             assert data["data"]["profile"] == "minimal"
 
@@ -786,7 +786,7 @@ class TestRuntimeTools:
         result = server.handle_tools_call({
             "name": "runtime_generate",
             "arguments": {"name": "freebuff", "prompt": "hello"},
-        ])
+        })
         data = json.loads(result["content"][0]["text"])
         assert data["success"] is True
         assert data["data"]["content"] == "generated text"
@@ -806,7 +806,7 @@ class TestRuntimeTools:
         result = server.handle_tools_call({
             "name": "runtime_generate",
             "arguments": {"capability": "review", "prompt": "review this"},
-        ])
+        })
         data = json.loads(result["content"][0]["text"])
         assert data["success"] is True
         assert data["data"]["runtime"] == "claude-code"
@@ -828,7 +828,7 @@ class TestRuntimeTools:
         result = server.handle_tools_call({
             "name": "runtime_generate",
             "arguments": {"prompt": "hello"},
-        ])
+        })
         data = json.loads(result["content"][0]["text"])
         assert data["success"] is True
         assert data["data"]["content"] == "active runtime response"
@@ -839,7 +839,7 @@ class TestRuntimeTools:
         result = server.handle_tools_call({
             "name": "runtime_generate",
             "arguments": {"name": "freebuff"},
-        ])
+        })
         data = json.loads(result["content"][0]["text"])
         assert data["success"] is False
         assert "prompt or messages is required" in data["error"]
@@ -858,7 +858,7 @@ class TestRuntimeTools:
         result = server.handle_tools_call({
             "name": "runtime_generate",
             "arguments": {"name": "freebuff", "prompt": "hello"},
-        ])
+        })
         data = json.loads(result["content"][0]["text"])
         assert data["success"] is True
         mock_reg.connect.assert_called_once_with("freebuff")
@@ -896,7 +896,7 @@ class TestRuntimeTools:
         result = server.handle_tools_call({
             "name": "runtime_generate",
             "arguments": {"name": "freebuff", "prompt": "hi", "temperature": "hot"},
-        ])
+        })
         data = json.loads(result["content"][0]["text"])
         assert data["success"] is False
         assert "temperature" in data["error"]
@@ -907,7 +907,7 @@ class TestRuntimeTools:
         result = server.handle_tools_call({
             "name": "runtime_generate",
             "arguments": {"name": "freebuff", "prompt": "hi", "max_tokens": -10},
-        ])
+        })
         data = json.loads(result["content"][0]["text"])
         assert data["success"] is False
         assert "max_tokens" in data["error"]
@@ -920,7 +920,7 @@ class TestRuntimeTools:
         result = server.handle_tools_call({
             "name": "runtime_generate",
             "arguments": {"capability": "research", "prompt": "hello"},
-        ])
+        })
         data = json.loads(result["content"][0]["text"])
         assert data["success"] is False
         assert "not registered" in data["error"]
@@ -942,7 +942,7 @@ class TestRuntimeTools:
         result = server.handle_tools_call({
             "name": "runtime_generate",
             "arguments": {"name": "freebuff", "prompt": "hello"},
-        ])
+        })
         data = json.loads(result["content"][0]["text"])
         assert data["success"] is False
         assert "binary not found" in data["error"]
@@ -953,7 +953,7 @@ class TestRuntimeTools:
         result = server.handle_tools_call({
             "name": "runtime_generate",
             "arguments": {"name": "freebuff", "messages": "not a list"},
-        ])
+        })
         data = json.loads(result["content"][0]["text"])
         assert data["success"] is False
         assert "messages must be a list" in data["error"]
@@ -994,7 +994,7 @@ class TestToolRegistryIntegration:
         result = server.handle_tools_call({
             "name": "git",
             "arguments": {"command": "status"},
-        ])
+        })
         assert "content" in result
         # git status should work
         text = result["content"][0]["text"]
@@ -1305,7 +1305,7 @@ class TestHttpTransport:
                 "id": 1,
                 "method": "tools/call",
                 "params": {"name": "session_status", "arguments": {}},
-            ])
+            })
             status, headers, resp_body = _http_request(host, port, "POST", body=body)
             assert status == 200
             data = json.loads(resp_body)
@@ -1462,7 +1462,7 @@ class TestPolicyOverrideTool:
         result = server.handle_tools_call({
             "name": "policy_override",
             "arguments": {"message": "use deepseek instead of claude for coding"},
-        ])
+        })
         data = json.loads(result["content"][0]["text"])
         assert data["success"] is True
         assert data["data"]["capability"] == "coding"
@@ -1475,7 +1475,7 @@ class TestPolicyOverrideTool:
         result = server.handle_tools_call({
             "name": "policy_override",
             "arguments": {"message": "используй freebuff для research"},
-        ])
+        })
         data = json.loads(result["content"][0]["text"])
         assert data["success"] is True
         assert data["data"]["capability"] == "research"
@@ -1488,7 +1488,7 @@ class TestPolicyOverrideTool:
         result = server.handle_tools_call({
             "name": "policy_override",
             "arguments": {"message": "непонятная фраза без интента"},
-        ])
+        })
         data = json.loads(result["content"][0]["text"])
         assert data["success"] is False
         assert "Could not parse" in data["error"]
@@ -1507,7 +1507,7 @@ class TestPolicyOverrideTool:
             result = server.handle_tools_call({
                 "name": "policy_override",
                 "arguments": {"message": "use deepseek instead of claude for coding"},
-            ])
+            })
         data = json.loads(result["content"][0]["text"])
         assert data["success"] is False
         assert "PolicyEngine not available" in data["error"]

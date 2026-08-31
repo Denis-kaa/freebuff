@@ -1,6 +1,6 @@
 """Константы Realtor OS."""
 
-}
+
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 DATA_DIR = PROJECT_ROOT / "data"

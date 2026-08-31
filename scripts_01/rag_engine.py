@@ -29,13 +29,12 @@ from __future__ import annotations
 import argparse
 import json
 import math
-}
+import re
 import sys
 import time
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-}
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 import numpy as np

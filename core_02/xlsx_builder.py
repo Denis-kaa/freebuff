@@ -26,7 +26,7 @@ import os
 import shutil
 import tempfile
 from copy import copy
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import openpyxl

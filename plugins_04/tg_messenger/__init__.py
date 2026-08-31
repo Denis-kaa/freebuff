@@ -15,7 +15,7 @@ tg_messenger — Telegram Messenger Plugin для Buffy.
 import os
 import sys
 import threading
-}
+from pathlib import Path
 
 from scripts_01.plugin_api import BasePlugin, PluginMeta, PluginResult
 

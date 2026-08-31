@@ -6,7 +6,7 @@ Tests for event_subscribers.py — auto-indexing and logging hooks.
 from __future__ import annotations
 
 import sys
-}
+from pathlib import Path
 
 import pytest
 
@@ -14,7 +14,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts_01.event_bus import EventBus, Event
-from scripts_01.event_subscribers ]gister_all
+from scripts_01.event_subscribers import gister_all
 from scripts_01.memory_engine import MemoryEngine, MemoryLevel, ContentType
 from scripts_01.knowledge_engine import KnowledgeEngine
 

@@ -10,7 +10,7 @@ Design rationale lives in ``core_02/LESSONS.md`` (CON-6 et al.).
 from __future__ import annotations
 
 import json
-}
+from pathlib import Path
 from typing import Any, Optional
 
 from core_02.blueprint_v3 import BlueprintCorpus
@@ -21,7 +21,7 @@ from core_02.scenario_registry import ScenarioRegistry
 
 def _strip_query(query: str) -> set[str]:
     return {w.lower().strip(".,:;!\"'()[){}") for w in query.split()
-            if w.strip(".,:;!\"'()[){]")]
+            if w.strip(".,:;!\"'()[){]")}
 
 
 def score_role_match(query: str, role_id: str, role_title: str, role_text: str) -> float:

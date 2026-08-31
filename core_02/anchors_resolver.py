@@ -35,10 +35,10 @@ from __future__ import annotations
 import argparse
 import ast
 import json
-}
+import re
 import sys
 from dataclasses import dataclass
-}
+from pathlib import Path
 from typing import Any, Optional
 
 # ─── Canonical enums (spec §I.3 resolution targets) ─────────────────────────
@@ -253,7 +253,7 @@ class AnchorResolver:
         # 1. Канонический Artifact A (спец §I.3: entity → Artifact A).
         if value in self._entity_ids():
             return {"resolved": True, "status": STATUS_CURRENT,
-                    "evidence": "PLATFORM_CODE_MAP_V1.md §A.6"]
+                    "evidence": "PLATFORM_CODE_MAP_V1.md §A.6"}
         # 2. Fallback: entity-имя → модуль-файл (dot→underscore, strip .py).
         #    Artifact A инвентаризует 25 сущностей, но кодовая база содержит больше
         #    реальных модулей (model.gateway → core_02/model_gateway.py).
@@ -263,16 +263,16 @@ class AnchorResolver:
                 rel = f"{root}/{cand}.py"
                 if (self.workspace / rel).exists():
                     return {"resolved": True, "status": STATUS_CURRENT,
-                            "evidence": rel]
+                            "evidence": rel}
         # 3. Fallback: entity зарегистрирован в MissingRegistry (register-first)
         #    → DESIGN_ONLY (спец §I.5: target planned).
         reg = self._read("data_13/missing_registry.yaml")
         item = value.replace(".", "_")
         if reg is not None and re.search(rf"^{re.escape(item)}:\s*$", reg, re.MULTILINE):
             return {"resolved": True, "status": STATUS_DESIGN_ONLY,
-                    "evidence": "registered in data_13/missing_registry.yaml"]
+                    "evidence": "registered in data_13/missing_registry.yaml"}
         return {"resolved": False, "status": STATUS_UNVERIFIED,
-                "evidence": "not in Artifact A / no module file / not in MissingRegistry"]
+                "evidence": "not in Artifact A / no module file / not in MissingRegistry"}
 
     @staticmethod
     def _entity_module_candidates(value: str) -> list[str]:
@@ -290,9 +290,9 @@ class AnchorResolver:
         parent = ".".join(parts[:2]) if len(parts) >= 2 else value
         if parent in self._entity_ids():
             return {"resolved": True, "status": STATUS_CURRENT,
-                    "evidence": f"subcomponent of @entity {parent}"]
+                    "evidence": f"subcomponent of @entity {parent}"}
         return {"resolved": False, "status": STATUS_UNVERIFIED,
-                "evidence": f"parent @entity {parent} not in Artifact A"]
+                "evidence": f"parent @entity {parent} not in Artifact A"}
 
     def _resolve_module(self, value: str) -> dict[str, Any]:
         candidates = {value, value.split(".")[0], value.split(".")[-1]}
@@ -301,9 +301,9 @@ class AnchorResolver:
                 rel = f"{root}/{cand}.py"
                 if (self.workspace / rel).exists():
                     return {"resolved": True, "status": STATUS_CURRENT,
-                            "evidence": rel]
+                            "evidence": rel}
         return {"resolved": False, "status": STATUS_UNVERIFIED,
-                "evidence": "no scripts_01|core_02|freebuff_plugin_03/<name>.py"]
+                "evidence": "no scripts_01|core_02|freebuff_plugin_03/<name>.py"}
 
     @staticmethod
     def _module_candidates(value: str) -> list[str]:
@@ -339,11 +339,11 @@ class AnchorResolver:
                         if isinstance(node, ast.ClassDef) and node.name == cls:
                             rel = str(py.relative_to(self.workspace))
                             return {"resolved": True, "status": STATUS_CURRENT,
-                                    "evidence": rel]
+                                    "evidence": rel}
         # §I.7 anti-hallucination: отсутствующий символ — STALE, НЕ UNVERIFIED
         # („mark @symbol StaleClass.old_method → STALE if class absent“).
         return {"resolved": False, "status": STATUS_STALE,
-                "evidence": "class/method absent from code roots → STALE (§I.7)"]
+                "evidence": "class/method absent from code roots → STALE (§I.7)"}
 
     def _resolve_contract(self, value: str) -> dict[str, Any]:
         if self._contract_text is None:
@@ -351,22 +351,22 @@ class AnchorResolver:
                 "docs_10/engineering-memory/CONTRACT_REGISTRY_V1.md") or ""
         if value in self._contract_text:
             return {"resolved": True, "status": STATUS_CURRENT,
-                    "evidence": "CONTRACT_REGISTRY_V1.md"]
+                    "evidence": "CONTRACT_REGISTRY_V1.md"}
         return {"resolved": False, "status": STATUS_UNVERIFIED,
-                "evidence": "not in CONTRACT_REGISTRY_V1.md"]
+                "evidence": "not in CONTRACT_REGISTRY_V1.md"}
 
     def _resolve_event(self, value: str) -> dict[str, Any]:
         if value in self._event_text():
             return {"resolved": True, "status": STATUS_CURRENT,
-                    "evidence": "scripts_01|core_02/event_bus.py"]
+                    "evidence": "scripts_01|core_02/event_bus.py"}
         # Fallback: event упомянут в entity-cards Artifact A (events_produced/
         # events_consumed) — канонический инвентарь событий.
         a_text = self._read("docs_10/engineering-memory/PLATFORM_CODE_MAP_V1.md") or ""
         if value in a_text:
             return {"resolved": True, "status": STATUS_CURRENT,
-                    "evidence": "Artifact A entity-card event inventory"]
+                    "evidence": "Artifact A entity-card event inventory"}
         return {"resolved": False, "status": STATUS_UNVERIFIED,
-                "evidence": "not registered in event_bus.py / Artifact A"]
+                "evidence": "not registered in event_bus.py / Artifact A"}
 
     def _resolve_storage(self, value: str) -> dict[str, Any]:
         # 1. Файл в data_13 (yaml/json/jsonl) — спец §I.3 `@storage`.
@@ -380,11 +380,11 @@ class AnchorResolver:
             for name in names:
                 if (base / name).exists():
                     return {"resolved": True, "status": STATUS_CURRENT,
-                            "evidence": f"data_13/{name}"]
+                            "evidence": f"data_13/{name}"}
             # 2. Каталог data_13/<value> (напр. memory/, knowledge_index/).
             if (base / value).is_dir():
                 return {"resolved": True, "status": STATUS_CURRENT,
-                        "evidence": f"data_13/{value}/ (dir)"]
+                        "evidence": f"data_13/{value}/ (dir)"}
         # 3. Известные shorthand'ы storage_used из Artifact A (§A.1-§A.5).
         #    Это ЛОГИЧЕСКИЕ имена хранилищ (memory_dir_yaml, knowledge_index…),
         #    путь материализуется в runtime owning-компонентом (memory_store.py
@@ -402,7 +402,7 @@ class AnchorResolver:
             for owner in shorthand_modules[value]:
                 if (self.workspace / owner).exists():
                     return {"resolved": True, "status": STATUS_CURRENT,
-                            "evidence": f"logical storage, owned by {owner} (runtime dir)"]
+                            "evidence": f"logical storage, owned by {owner} (runtime dir)"}
         shorthands: dict[str, str] = {
             "runtime_05_scenarios_yaml": "runtime_05/scenarios/",
             "projects_dir": "projects_17/",
@@ -411,13 +411,13 @@ class AnchorResolver:
             target = self.workspace / shorthands[value]
             if target.exists():
                 return {"resolved": True, "status": STATUS_CURRENT,
-                        "evidence": shorthands[value]]
+                        "evidence": shorthands[value]}
         # 4. Top-level каталог (data_13, core_02, docs_10, runtime_05…).
         if value and (self.workspace / value).is_dir():
             return {"resolved": True, "status": STATUS_CURRENT,
-                    "evidence": f"{value}/ (dir)"]
+                    "evidence": f"{value}/ (dir)"}
         return {"resolved": False, "status": STATUS_UNVERIFIED,
-                "evidence": "no data_13/<name>.{yaml,json,jsonl] / dir / known shorthand"]
+                "evidence": "no data_13/<name>.{yaml,json,jsonl] / dir / known shorthand"}
 
     def _resolve_test(self, value: str) -> dict[str, Any]:
         # 1. Файл tests_09/test_<name>.py (спец §I.3: @test → тест-файл).
@@ -425,7 +425,7 @@ class AnchorResolver:
         test_file = self.workspace / "tests_09" / f"{file_part}.py"
         if test_file.exists():
             return {"resolved": True, "status": STATUS_CURRENT,
-                    "evidence": f"tests_09/{file_part}.py"]
+                    "evidence": f"tests_09/{file_part}.py"}
         # 2. Fallback: test-функция/класс где-либо в tests_09 (AST, без import).
         tests_dir = self.workspace / "tests_09"
         if tests_dir.is_dir():
@@ -440,12 +440,12 @@ class AnchorResolver:
                     if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) \
                             and node.name == value:
                         return {"resolved": True, "status": STATUS_CURRENT,
-                                "evidence": str(py.relative_to(self.workspace))]
+                                "evidence": str(py.relative_to(self.workspace))}
                     if isinstance(node, ast.ClassDef) and node.name == value:
                         return {"resolved": True, "status": STATUS_CURRENT,
-                                "evidence": str(py.relative_to(self.workspace))]
+                                "evidence": str(py.relative_to(self.workspace))}
         return {"resolved": False, "status": STATUS_UNVERIFIED,
-                "evidence": f"tests_09/{file_part}.py missing (and no function/class match)"]
+                "evidence": f"tests_09/{file_part}.py missing (and no function/class match)"}
 
     def _resolve_decision(self, value: str) -> dict[str, Any]:
         number = value.split("_", 1)[1]
@@ -455,49 +455,49 @@ class AnchorResolver:
                 self.workspace / base).is_dir() else []
             if hits:
                 return {"resolved": True, "status": STATUS_CURRENT,
-                        "evidence": str(hits[0].relative_to(self.workspace))]
+                        "evidence": str(hits[0].relative_to(self.workspace))}
         return {"resolved": False, "status": STATUS_UNVERIFIED,
-                "evidence": f"no ADR_{number}_*.md under docs_10/**/decisions"]
+                "evidence": f"no ADR_{number}_*.md under docs_10/**/decisions"}
 
     def _resolve_requirement(self, value: str) -> dict[str, Any]:
         reg = self._read("docs_10/decisions/REQ_REGISTRY_V1.md")
         if reg is not None and value in reg:
             return {"resolved": True, "status": STATUS_CURRENT,
-                    "evidence": "docs_10/decisions/REQ_REGISTRY_V1.md"]
+                    "evidence": "docs_10/decisions/REQ_REGISTRY_V1.md"}
         return {"resolved": False, "status": STATUS_DESIGN_ONLY,
-                "evidence": "planned: REQ_REGISTRY_V1.md not present (Phase 1.4)"]
+                "evidence": "planned: REQ_REGISTRY_V1.md not present (Phase 1.4)"}
 
     def _resolve_scenario(self, value: str) -> dict[str, Any]:
         for ext in (".yaml", ".yml"):
             rel = f"runtime_05/scenarios/{value}{ext}"
             if (self.workspace / rel).exists():
                 return {"resolved": True, "status": STATUS_CURRENT,
-                        "evidence": rel]
+                        "evidence": rel}
         return {"resolved": False, "status": STATUS_DESIGN_ONLY,
-                "evidence": "planned: runtime_05/scenarios/<name>.yaml absent"]
+                "evidence": "planned: runtime_05/scenarios/<name>.yaml absent"}
 
     def _resolve_factory(self, value: str) -> dict[str, Any]:
         if value in CANONICAL_FACTORIES:
             return {"resolved": True, "status": STATUS_CURRENT,
-                    "evidence": "canonical factory enum (§3 FACTORY_FORGE)"]
+                    "evidence": "canonical factory enum (§3 FACTORY_FORGE)"}
         return {"resolved": False, "status": STATUS_UNVERIFIED,
-                "evidence": f"not in canonical factories {list(CANONICAL_FACTORIES)}"]
+                "evidence": f"not in canonical factories {list(CANONICAL_FACTORIES)}"}
 
     def _resolve_forge(self, value: str) -> dict[str, Any]:
         if value in CANONICAL_FORGES:
             return {"resolved": True, "status": STATUS_CURRENT,
-                    "evidence": "canonical forge enum (RFC_BUFFY_FORGE §3)"]
+                    "evidence": "canonical forge enum (RFC_BUFFY_FORGE §3)"}
         return {"resolved": False, "status": STATUS_UNVERIFIED,
-                "evidence": f"not in canonical forges {list(CANONICAL_FORGES)}"]
+                "evidence": f"not in canonical forges {list(CANONICAL_FORGES)}"}
 
     def _resolve_store_id(self, value: str, rel: str) -> dict[str, Any]:
         """@opportunity/@whim: id присутствует в YAML-store (substring)."""
         text = self._read(rel)
         if text is not None and value in text:
             return {"resolved": True, "status": STATUS_CURRENT,
-                    "evidence": rel]
+                    "evidence": rel}
         return {"resolved": False, "status": STATUS_UNVERIFIED,
-                "evidence": f"{value} not in {rel}"]
+                "evidence": f"{value} not in {rel}"}
 
     def _resolve_opportunity(self, value: str) -> dict[str, Any]:
         return self._resolve_store_id(value, "data_13/opportunities.yaml")
@@ -516,9 +516,9 @@ class AnchorResolver:
             return digits.lower()
         if norm(value) in norm(self._lessons_text) or value in self._lessons_text:
             return {"resolved": True, "status": STATUS_LESSON,
-                    "evidence": "core_02/LESSONS.md"]
+                    "evidence": "core_02/LESSONS.md"}
         return {"resolved": False, "status": STATUS_UNVERIFIED,
-                "evidence": "not found in core_02/LESSONS.md"]
+                "evidence": "not found in core_02/LESSONS.md"}
 
     def _resolve_doc(self, value: str) -> dict[str, Any]:
         if self._doc_map_text is None:
@@ -527,14 +527,14 @@ class AnchorResolver:
         # 1. Полное claim-имя (`doc.factory_forge_arch#20.c4`).
         if value in self._doc_map_text:
             return {"resolved": True, "status": STATUS_CURRENT,
-                    "evidence": "DOCUMENTATION_CODE_MAP_V1.md"]
+                    "evidence": "DOCUMENTATION_CODE_MAP_V1.md"}
         # 2. Fallback: base short-name до `#` зарегистрирован в карте.
         base = value.split("#", 1)[0]
         if base and base in self._doc_map_text:
             return {"resolved": True, "status": STATUS_CURRENT,
-                    "evidence": "DOCUMENTATION_CODE_MAP_V1.md (base)"]
+                    "evidence": "DOCUMENTATION_CODE_MAP_V1.md (base)"}
         return {"resolved": False, "status": STATUS_UNVERIFIED,
-                "evidence": f"not in DOCUMENTATION_CODE_MAP_V1.md (base={base!r})"]
+                "evidence": f"not in DOCUMENTATION_CODE_MAP_V1.md (base={base!r})"}
 
     _DISPATCH = {
         "entity": _resolve_entity, "component": _resolve_component,
@@ -573,7 +573,7 @@ class AnchorResolver:
                     "evidence": result["evidence"],
                 }
         return {"raw": raw.strip(), "namespace": None, "value": "",
-                "resolved": False, "status": STATUS_UNVERIFIED, "evidence": None]
+                "resolved": False, "status": STATUS_UNVERIFIED, "evidence": None}
 
     def resolve_document(self, doc_path: Path) -> dict[str, Any]:
         """Резолв всех анкоров одного .md файла → агрегат."""
@@ -581,7 +581,7 @@ class AnchorResolver:
             text = doc_path.read_text(encoding="utf-8")
         except (OSError, UnicodeDecodeError):
             return {"doc": str(doc_path), "total": 0, "by_status": {},
-                    "by_namespace": {}, "unresolved": []]
+                    "by_namespace": {}, "unresolved": []}
         anchors = extract_anchors(text)
         resolved_list: list[dict[str, Any]] = []
         by_status: dict[str, int] = {}

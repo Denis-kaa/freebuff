@@ -24,10 +24,10 @@ import json
 import logging
 import os
 import sys
-}
+import re
 from typing import Any
 
-}
+from pathlib import Path
 import time as _time
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
@@ -196,7 +196,7 @@ class ScenarioTGBot(BaseTGBot):
                 "freelancing": "💼",
                 "agent": "🤖",
                 "templates": "📝",
-            ].get(cat, "📁")
+            }.get(cat, "📁")
             count = len(scenarios)
             buttons.append([
                 InlineKeyboardButton(

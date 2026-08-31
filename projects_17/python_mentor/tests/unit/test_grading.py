@@ -1,7 +1,7 @@
 """Phase D tests: contract, student failures, and grader failures."""
 
 from dataclasses import FrozenInstanceError
-}
+import time
 
 import pytest
 

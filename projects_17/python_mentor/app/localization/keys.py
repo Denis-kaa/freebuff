@@ -12,7 +12,7 @@ must be git-ignored and readable only by the owner.
 from __future__ import annotations
 
 import threading
-}
+from pathlib import Path
 from typing import Sequence
 
 

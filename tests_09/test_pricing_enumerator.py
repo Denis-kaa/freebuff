@@ -18,7 +18,7 @@ import json
 import subprocess
 import sys
 import threading
-}
+from pathlib import Path
 from typing import Any, Dict, List
 
 import pytest
@@ -141,14 +141,14 @@ class TestSchema:
         cp = _validate_scrape_data({
             "course": "X", "price_raw": "от 12 900 ₽/мес",
             "source_url": "https://x", "scrape_timestamp": "now",
-        ])
+        })
         assert cp.price_amount == 12900.0
 
     def test_validate_scrape_data_unparseable_amount_is_none(self):
         cp = _validate_scrape_data({
             "course": "X", "price_raw": "по запросу",
             "source_url": "https://x", "scrape_timestamp": "now",
-        ])
+        })
         assert cp.price_amount is None  # verbatim preserved
 
     def test_validate_scrape_data_unknown_format_falls_to_unknown(self):
@@ -157,7 +157,7 @@ class TestSchema:
             "course": "X", "price_raw": "100",
             "source_url": "https://x", "scrape_timestamp": "now",
             "format": "unicorn-mode",
-        ])
+        })
         assert cp.format == FormatType.UNKNOWN
 
     def test_validate_scrape_data_rejects_oversize_course(self):
@@ -166,7 +166,7 @@ class TestSchema:
                 "course": "x" * (COURSE_MAX_LEN + 10),
                 "price_raw": "100",
                 "source_url": "https://x", "scrape_timestamp": "now",
-            ])
+            })
 
 
 # ─── TestEnumerator ────────────────────────────────────────────────────────
@@ -179,8 +179,8 @@ class TestEnumerator:
             url: ScrapeResult(status=ScrapeStatus.OK, data={
                 "course": "Vocal Mastery", "price_raw": "12 900 ₽",
                 "teacher": "Иванов И.И.", "format": "cohort_based",
-            ]),
-        ])
+            }),
+        })
         enum = PricingEnumerator(scraper=scraper, enabled=False)
         results = enum.enumerate([url])
         assert len(results) == 1
@@ -196,8 +196,8 @@ class TestEnumerator:
         scraper = FakeScraper({
             url: ScrapeResult(status=ScrapeStatus.OK, data={
                 "course": "Only Course",  # no price_raw
-            ]),
-        ])
+            }),
+        })
         enum = PricingEnumerator(scraper=scraper, enabled=False)
         results = enum.enumerate([url])
         assert results == []  # soft skip
@@ -208,7 +208,7 @@ class TestEnumerator:
             url: ScrapeResult(
                 status=ScrapeStatus.HTTP_ERROR, error_msg="HTTP 404",
             ),
-        ])
+        })
         enum = PricingEnumerator(scraper=scraper, enabled=False)
         results = enum.enumerate([url])
         assert results == []
@@ -219,7 +219,7 @@ class TestEnumerator:
             url: ScrapeResult(
                 status=ScrapeStatus.PARSE_ERROR, error_msg="BeautifulSoup crash",
             ),
-        ])
+        })
         enum = PricingEnumerator(scraper=scraper, enabled=False)
         results = enum.enumerate([url])
         assert results == []
@@ -243,8 +243,8 @@ class TestEnumerator:
         scraper = FakeScraper({
             url: ScrapeResult(status=ScrapeStatus.OK, data={
                 "course": "X", "price_raw": "100",
-            ]),
-        ])
+            }),
+        })
         from scripts_01.corpus_persistence import list_all, DEFAULT_CORPUS_DIR
         enum = PricingEnumerator(
             scraper=scraper, corpus_source="pricing_enumerator", enabled=True,
@@ -263,8 +263,8 @@ class TestEnumerator:
         scraper = FakeScraper({
             url: ScrapeResult(status=ScrapeStatus.OK, data={
                 "course": "X", "price_raw": "100",
-            ]),
-        ])
+            }),
+        })
         from scripts_01.corpus_persistence import list_all, DEFAULT_CORPUS_DIR
         enum = PricingEnumerator(
             scraper=scraper, enabled=False,
@@ -285,8 +285,8 @@ class TestEnumerator:
         scraper = FakeScraper({
             url: ScrapeResult(status=ScrapeStatus.OK, data={
                 "course": "Y", "price_raw": "200",
-            ]),
-        ])
+            }),
+        })
 
         def exploding_persist(*args: Any, **kwargs: Any) -> None:
             raise RuntimeError("simulated persist failure")
@@ -307,11 +307,11 @@ class TestEnumerator:
         scraper = FakeScraper({
             good_url: ScrapeResult(status=ScrapeStatus.OK, data={
                 "course": "Good", "price_raw": "100",
-            ]),
+            }),
             bad_url: ScrapeResult(
                 status=ScrapeStatus.HTTP_ERROR, error_msg="HTTP 503",
             ),
-        ])
+        })
         enum = PricingEnumerator(scraper=scraper, enabled=False)
         results = enum.enumerate([good_url, bad_url])
         # Wait, validate_url rejects invalid because enum fetches bad_url's
@@ -327,8 +327,8 @@ class TestEnumerator:
         scraper = FakeScraper({
             url: ScrapeResult(status=ScrapeStatus.OK, data={
                 "course": "Custom", "price_raw": "по запросу",
-            ]),
-        ])
+            }),
+        })
         enum = PricingEnumerator(scraper=scraper, enabled=False)
         results = enum.enumerate([url])
         assert len(results) == 1
@@ -340,8 +340,8 @@ class TestEnumerator:
         scraper = FakeScraper({
             good_url: ScrapeResult(status=ScrapeStatus.OK, data={
                 "course": "OK", "price_raw": "1",
-            ]),
-        ])
+            }),
+        })
         enum = PricingEnumerator(scraper=scraper, enabled=False)
         # First URL is invalid (no protocol) → soft skip; second URL → success.
         results = enum.enumerate(["not-a-url", good_url])
@@ -410,7 +410,7 @@ class TestConcurrency:
         mappings: Dict[str, ScrapeResult] = {
             url: ScrapeResult(status=ScrapeStatus.OK, data={
                 "course": f"C{idx}", "price_raw": str(100 + idx),
-            ]) for idx, url in enumerate(urls)
+            }) for idx, url in enumerate(urls)
         }
         scraper = FakeScraper(mappings)
         enum = PricingEnumerator(
@@ -469,7 +469,7 @@ class TestCacheLayer:
                 self.call_count += 1
                 return _SR(status=ScrapeStatus.OK, data={
                     "course": "X", "price_raw": "100", "source_url": url,
-                ])
+                })
 
         fake = _Fake()
         enum = PricingEnumerator(scraper=fake, enabled=True, cache_ttl_seconds=0)
@@ -553,7 +553,7 @@ class TestCacheLayer:
                 return _SR(status=ScrapeStatus.OK, data={
                     "course": "Fresh Course", "price_raw": "150",
                     "source_url": url,
-                ])
+                })
 
         scraper = _OneShotScraper()
         enum = PricingEnumerator(scraper=scraper, enabled=True, cache_ttl_seconds=60)
@@ -592,7 +592,7 @@ class TestCacheLayer:
                 self.call_count += 1
                 return _SR(status=ScrapeStatus.OK, data={
                     "course": "Re-fetched", "price_raw": "10", "source_url": url,
-                ])
+                })
 
         scraper = _Counted()
         # enabled=False — cache BOTH sides disabled (no persist, no lookup).

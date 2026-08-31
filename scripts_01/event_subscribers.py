@@ -13,7 +13,7 @@ event_subscribers.py — Подписчики событий для Buffy EventB
   checkpoint_logger → логирование в файл
 
 Использование:
-    from scripts_01.event_subscribers ]gister_all
+    from scripts_01.event_subscribers import gister_all
 
     bus = EventBus()
     register_all(bus, workspace_root=".")
@@ -22,10 +22,10 @@ event_subscribers.py — Подписчики событий для Buffy EventB
 
 from __future__ import annotations
 
-}
+from pathlib import Path
 from typing import Any, Dict
 
-from scripts_01.notification ]gister_notification_subscribers
+from scripts_01.notification import gister_notification_subscribers
 
 
 # ═══════════════════════════════════════════════════════════════

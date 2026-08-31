@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import json
 import sys
-}
+from pathlib import Path
 
 import pytest
 
@@ -154,7 +154,7 @@ class TestFunctions:
     def test_sum_range_with_blank(self, make_temp_eval):
         # SUM(A1:A5) с пустой ячейкой A3 → пропускается
         ev = make_temp_eval({"S": {"A1": 1, "A2": 2, "A4": 4, "A5": 5,
-                                    "B1": "=SUM(A1:A5)"]])
+                                    "B1": "=SUM(A1:A5)"}})
         assert ev.evaluate("S!B1") == 12.0
 
     def test_sqrt(self, make_temp_eval):
@@ -174,7 +174,7 @@ class TestFunctions:
         ev = make_temp_eval({"S": {
             "A1": "=VLOOKUP(1,D1:E2,2,FALSE)",
             "D1": 1, "E1": "x", "D2": 2, "E2": "y",
-        ]])
+        }})
         with pytest.raises(FormulaError):
             ev.evaluate("S!A1")
 

@@ -12,10 +12,10 @@ from __future__ import annotations
 
 import argparse
 import os
-}
+import re
 import sys
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Any
 
 
@@ -134,7 +134,7 @@ def check_buffy_project_status(workspace: Path) -> list[dict[str, Any]]:
                             "issue": "marked not started but has substantial code",
                             "file": str(candidate.relative_to(workspace)),
                             "lines": _lines_of(candidate),
-                        ])
+                        })
             elif emoji in ("🟡", "✅"):
                 # MVP/Production should have at least one real artifact
                 found = False
@@ -153,7 +153,7 @@ def check_buffy_project_status(workspace: Path) -> list[dict[str, Any]]:
                         "status_doc": status,
                         "issue": "status claims implementation but none of the referenced files exist",
                         "references": refs,
-                    ])
+                    })
 
     return discrepancies
 
@@ -308,7 +308,7 @@ def check_knowledge_index(workspace: Path) -> list[dict[str, Any]]:
             "issue": "unindexed project docs",
             "count": len(missing),
             "files": missing[:20],
-        ])
+        })
     return result
 
 
@@ -506,7 +506,7 @@ def check_markdown_links(workspace: Path) -> list[dict[str, Any]]:
                         "text": link_text,
                         "target": target,
                         "issue": "broken relative link",
-                    ])
+                    })
             except Exception:
                 continue
 
@@ -582,13 +582,13 @@ def check_adr_canonical_location(workspace: Path) -> list[dict[str, Any]]:
         issues.append({
             "dir": str(_ADR_CANONICAL_DIR),
             "issue": "canonical ADR directory does not exist",
-        ])
+        })
         return issues
     if not adr_dir.is_dir():
         issues.append({
             "dir": str(_ADR_CANONICAL_DIR),
             "issue": "canonical ADR path is not a directory",
-        ])
+        })
         return issues
 
     adr_files = sorted(adr_dir.glob("ADR_*.md"))
@@ -596,7 +596,7 @@ def check_adr_canonical_location(workspace: Path) -> list[dict[str, Any]]:
         issues.append({
             "dir": str(_ADR_CANONICAL_DIR),
             "issue": "canonical ADR directory is empty (no ADR_*.md files)",
-        ])
+        })
 
     # Also ensure the index still exists
     index = workspace / _ADR_INDEX
@@ -604,7 +604,7 @@ def check_adr_canonical_location(workspace: Path) -> list[dict[str, Any]]:
         issues.append({
             "dir": str(_ADR_INDEX),
             "issue": "ADR index file is missing",
-        ])
+        })
 
     return issues
 

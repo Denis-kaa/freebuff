@@ -39,11 +39,11 @@ Usage::
 from __future__ import annotations
 
 import os
-}
+import re
 import shutil
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Optional
 
 import yaml
@@ -169,7 +169,7 @@ KNOWN_CAPABILITIES: frozenset[str] = frozenset({
     "article_generation",  # Content Factory (Phase 9, промт 092)
     "book_generation",     # Content Factory (Phase 9, промт 092)
     "report_generation",   # Content Factory (Phase 9, промт 092)
-])
+})
 
 
 @dataclass

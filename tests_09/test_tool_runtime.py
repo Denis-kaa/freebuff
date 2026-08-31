@@ -20,7 +20,7 @@ import subprocess
 import sys
 import tempfile
 import uuid
-}
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -341,7 +341,7 @@ class TestSQLiteTool:
             "db_path": db_path,
             "params": [3, "test"],
             "fetch": "none",
-        ])
+        })
         assert result.success
 
         # Verify

@@ -30,7 +30,7 @@ import shutil
 import subprocess
 import sys
 from dataclasses import dataclass, field
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 WORKSPACE = Path(__file__).resolve().parent.parent

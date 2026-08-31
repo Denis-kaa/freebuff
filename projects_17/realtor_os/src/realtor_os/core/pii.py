@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-}
+import re
 
 from realtor_os.core.security import decrypt_pii, encrypt_pii
 

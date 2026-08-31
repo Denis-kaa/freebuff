@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-}
+from pathlib import Path
 from typing import Dict, List, Set
 
 from core_02.capability_gap_auditor import (
@@ -133,7 +133,7 @@ def render_report(project_name: str, task_file_rel: str, analysis: dict) -> str:
     if sec_b:
         # Annotate each Section B with its provenance from the LLM response.
         provenance_by_cap = {item["item_id"]: item.get("_provenance", "—")
-                             for item in analysis["llm_parsed"]]
+                             for item in analysis["llm_parsed"]}
         for cap in sec_b:
             prov = provenance_by_cap.get(cap, "—")
             lines.append(f"- `{cap}` — {prov}")
@@ -224,7 +224,7 @@ def main(argv: List[str] | None = None) -> int:
                 "inferred_gaps": sorted(analysis["inferred_gaps"]),
                 "sec_a_in_taxonomy_not_matched": sorted(analysis["sec_a_in_taxonomy_not_matched"]),
                 "sec_b_not_in_taxonomy": sorted(analysis["sec_b_not_in_taxonomy"]),
-            ], ensure_ascii=False, indent=2,
+            }, ensure_ascii=False, indent=2,
         ) + "\n")
         return 0
 

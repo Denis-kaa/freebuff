@@ -13,7 +13,7 @@
 from __future__ import annotations
 
 import sys
-}
+from pathlib import Path
 
 import pytest
 
@@ -32,7 +32,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 HARD_NAMESPACES = frozenset({
     "entity", "component", "module", "symbol", "test", "decision",
     "storage", "factory", "forge", "lesson", "opportunity", "whim",
-])
+})
 
 
 # ─── extract_anchors ───────────────────────────────────────────────

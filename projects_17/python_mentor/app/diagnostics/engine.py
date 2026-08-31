@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import ast
-}
+from pathlib import Path
 
 from app.diagnostics.ast_rules import ASTRuleRegistry, RuleContext, default_registry
 from app.diagnostics.contract import (

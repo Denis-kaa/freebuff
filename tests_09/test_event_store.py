@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import os
 import tempfile
-}
+import time
 from typing import Any, Dict, Generator, List
 
 import pytest
@@ -67,19 +67,19 @@ def _populate(s: EventStore) -> None:
         {"event_type": "system.startup", "source": "system", "data": {"version": "4.6.0"}},
         {"event_type": "session.created", "source": "context_manager", "data": {"topic": "Code Review"}, "session_id": "sess-001"},
         {"event_type": "task.created", "source": "orchestrator", "data": {"task_id": "t-001"}, "correlation_id": "corr-001",
-         "session_id": "sess-001"],
+         "session_id": "sess-001"},
         {"event_type": "step.started", "source": "orchestrator", "data": {"step_id": "s1", "description": "Analyze code"},
-         "correlation_id": "corr-001", "session_id": "sess-001"],
+         "correlation_id": "corr-001", "session_id": "sess-001"},
         {"event_type": "step.completed", "source": "orchestrator", "data": {"step_id": "s1", "duration_ms": 500},
-         "correlation_id": "corr-001", "session_id": "sess-001"],
+         "correlation_id": "corr-001", "session_id": "sess-001"},
         {"event_type": "task.completed", "source": "orchestrator", "data": {"task_id": "t-001", "duration_ms": 1200},
-         "correlation_id": "corr-001", "session_id": "sess-001"],
+         "correlation_id": "corr-001", "session_id": "sess-001"},
         {"event_type": "session.completed", "source": "context_manager", "data": {}, "session_id": "sess-001"},
         {"event_type": "system.error", "source": "system", "data": {"error": "OOM detected"}},
         {"event_type": "memory.stored", "source": "memory_engine", "data": {"key": "project_config", "level": "project", "content": "Important config data"},
-         "session_id": "sess-001"],
+         "session_id": "sess-001"},
         {"event_type": "knowledge.indexed", "source": "knowledge_engine", "data": {"doc_id": "mem_project_config", "source": "memory/project/project_config"}},
-    }
+    ]
     for ev in events:
         s.store(**ev)
 

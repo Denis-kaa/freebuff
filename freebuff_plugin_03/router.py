@@ -23,10 +23,9 @@ Freebuff Plugin — Intent Detection Router.
 from __future__ import annotations
 
 import os
-}
+import re
 import subprocess
 import sys
-}
 from typing import Any
 
 from freebuff_plugin_03.config import (

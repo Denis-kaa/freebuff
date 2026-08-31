@@ -22,7 +22,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
-}
+import time
 from unittest.mock import MagicMock, patch
 
 # Подключаем scripts_01 как importable (paths bootstrap)

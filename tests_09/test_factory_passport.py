@@ -13,7 +13,7 @@ CAN-16 ADDITIVE: этот файл НЕ модифицирует core_02/* ил�
 
 from __future__ import annotations
 
-}
+from pathlib import Path
 
 import pytest
 

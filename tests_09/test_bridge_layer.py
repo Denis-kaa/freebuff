@@ -17,7 +17,7 @@ import os
 import sys
 import threading
 import time
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 from unittest.mock import MagicMock, patch, PropertyMock
 
@@ -450,7 +450,7 @@ class TestBridgeLayer:
         mock_client.list_resources.return_value = []
         mock_client.call_tool.return_value = MCPCallResult(
             success=True,
-            content=[{"type": "text", "text": '{"results": ["doc1"}]']],
+            content=[{"type": "text", "text": '{"results": ["doc1"}]'}],
         )
 
         with patch("freebuff_plugin_03.bridge_layer.StdioMCPClient", return_value=mock_client):
@@ -484,8 +484,8 @@ class TestBridgeLayer:
                         "runtime": "deepseek",
                         "applied": True,
                     },
-                ]),
-            ]],
+                }),
+            }],
         )
 
         with patch("freebuff_plugin_03.bridge_layer.StdioMCPClient", return_value=mock_client):

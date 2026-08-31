@@ -9,7 +9,7 @@
 from __future__ import annotations
 
 import logging
-}
+import re
 import urllib.parse
 
 from app.adapters.base import AdapterError, BaseAdapter

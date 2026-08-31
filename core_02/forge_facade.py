@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field
-}
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from core_02.forge_pipeline import ForgePipeline, _now as _iso_now
@@ -46,11 +46,11 @@ except ImportError:  # pragma: no cover
 LIGHT_ROLES: frozenset[str] = frozenset({
     "explainer", "lisa", "risk", "decomposer",
     "architect", "auditor", "documenter", "retrospective",
-])
+})
 
 HEAVY_ROLES: frozenset[str] = frozenset({
     "developer", "tester", "fixer", "acceptance",
-])
+})
 
 
 # ForgeRegistry уже импортирован выше. project_id вычисляется через
@@ -76,7 +76,7 @@ PIPELINE_ROLES: frozenset[str] = frozenset({
     "acceptance",
     "documenter",
     "retrospective",
-])
+})
 
 # Правильная полная цепочка (для документации/валидации порядка в будущем).
 # Включена и как источник истины для порядка; "frontend"/"devops"/"fixer" — условные ветки.
@@ -526,7 +526,7 @@ class ForgeFacade:
                 Для ошибок forge-runtime (subprocess fail) — exception подавляется
                 через ``status="init_error"`` в ChainStage (chain продолжается).
         """
-        # 0) Normalise input и gate
+        # 0 Normalise input и gate
         if isinstance(role_ids, list):
             role_ids = tuple(role_ids)
         roles = role_ids if role_ids is not None else PIPELINE_CHAIN
@@ -543,7 +543,7 @@ class ForgeFacade:
 
         started_at = _iso_now()
 
-        # 1) Pre-flight: ValidationSummary (через уже существующий delegate v5.156.0)
+        # 1 Pre-flight: ValidationSummary (через уже существующий delegate v5.156.0)
         validation: Optional[ValidationSummary] = None
         if compose_artifact_check:
             validation = self.validate_role_artifacts(
@@ -553,7 +553,7 @@ class ForgeFacade:
                 registry_path=registry_path,
             )
 
-        # 2) Per-role stage.
+        # 2 Per-role stage.
         stages: List[ChainStage] = []
         preskip = skip_full_cycle_stages or set()
         for rid in roles:
@@ -639,7 +639,7 @@ class ForgeFacade:
                     duration_s=time.monotonic() - stage_start,
                 ))
 
-        # 3) Aggregate overall
+        # 3 Aggregate overall
         finished_at = _iso_now()
         overall, reg_status = _aggregate_chain_overall(stages, validation)
 
@@ -770,11 +770,11 @@ class RoleArtifactValidator:
           - ("loaded", path): путь существует, можно пытаться парсить.
           - ("missing", path_or_None): путь не найден среди кандидатов.
         """
-        # 1) явный путь — приоритет
+        # 1 явный путь — приоритет
         if self.registry_path is not None:
             p = Path(self.registry_path)
             return ("loaded" if p.is_file() else "missing"), p
-        # 2) candidates: per-project → cwd
+        # 2 candidates: per-project → cwd
         for cand in self.registry_candidates:
             for base in (project_root, Path.cwd()):
                 p = base / cand
@@ -951,7 +951,7 @@ class RoleArtifactValidator:
             roles = tuple(roles)
         project_root = Path(project.root)
 
-        # 1) Resolve + load registry (или degraded fallback)
+        # 1 Resolve + load registry (или degraded fallback)
         reg_status, reg_path = self._resolve_registry(project_root)
         registry_data: Optional[Dict[str, Any]] = None
         if reg_status == "loaded" and reg_path is not None:
@@ -959,14 +959,14 @@ class RoleArtifactValidator:
             if registry_data is None:
                 reg_status = "unreadable"
 
-        # 2) Outputs source: registry ИЛИ DEFAULT_ROLE_OUTPUTS fallback
+        # 2 Outputs source: registry ИЛИ DEFAULT_ROLE_OUTPUTS fallback
         outputs_source: Dict[str, Tuple[str, ...]]
         if registry_data is not None:
             outputs_source = self._extract_role_outputs(registry_data, roles)
         else:
             outputs_source = {}
 
-        # 3) Per-role existence check (вкл. fallback для ролей без registry-выхода)
+        # 3 Per-role existence check (вкл. fallback для ролей без registry-выхода)
         role_reports: List[RoleArtifactReport] = []
         for rid in roles:
             patterns = outputs_source.get(rid) or DEFAULT_ROLE_OUTPUTS.get(rid, ())
@@ -992,7 +992,7 @@ class RoleArtifactValidator:
             )
             role_reports.append(rprt)
 
-        # 4) Compose с base CHECK (опционально)
+        # 4 Compose с base CHECK (опционально)
         base_status, base_missing = ("skipped", ())
         if compose_check:
             try:
@@ -1000,7 +1000,7 @@ class RoleArtifactValidator:
             except (AttributeError, OSError):  # pragma: no cover — defensive
                 base_status, base_missing = ("failed", ())
 
-        # 5) Project_id — через ForgeRegistry._slug (@staticmethod, DRY).
+        # 5 Project_id — через ForgeRegistry._slug (@staticmethod, DRY).
         # НЕ дублируем алгоритм здесь: forge_registry._slug — единый источник.
         project_id = ForgeRegistry._slug(project.name)
 

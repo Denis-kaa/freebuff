@@ -41,7 +41,7 @@ import asyncio
 import hmac
 import json
 import os
-}
+import re
 import subprocess
 import sys
 import threading
@@ -49,7 +49,7 @@ import time
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Any, Dict, Optional
 from urllib.parse import urlparse
 
@@ -701,7 +701,7 @@ if HAS_FASTAPI:
                     "capability": result.get("capability"),
                     "runtime": result.get("runtime"),
                     "matched": result.get("matched"),
-                ])
+                })
             except Exception:
                 pass
 
@@ -752,7 +752,7 @@ if HAS_FASTAPI:
                 "preferences": preferences,
                 "policies": serialized,
             },
-        ])
+        })
 
     # ── /api/v1/* — Meeting Tasks REST (для 043 frontend dashboard) ──
     #
@@ -796,7 +796,7 @@ if HAS_FASTAPI:
             return JSONResponse(content={
                 "success": True,
                 "data": {"projects": projects, "count": len(projects)},
-            ])
+            })
         except Exception as e:
             return _policy_error(500, f"projects list failed: {e}")
 
@@ -816,7 +816,7 @@ if HAS_FASTAPI:
             return JSONResponse(content={
                 "success": True,
                 "data": {"tasks": tasks, "count": len(tasks)},
-            ])
+            })
         except ValueError as e:
             return _policy_error(400, str(e))
         except Exception as e:

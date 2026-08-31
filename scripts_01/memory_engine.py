@@ -43,7 +43,7 @@ import uuid
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
 from enum import Enum
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from scripts_01.event_bus import Event

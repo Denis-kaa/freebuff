@@ -9,10 +9,10 @@ Pattern follows tests_09/test_role_executor.py (DI через _FakeGateway style
 
 from __future__ import annotations
 
-}
+import re
 import subprocess
 import sys
-}
+from pathlib import Path
 
 import pytest
 

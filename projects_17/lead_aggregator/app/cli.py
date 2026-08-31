@@ -21,7 +21,7 @@ import json
 import logging
 import sys
 import tempfile
-}
+from pathlib import Path
 from typing import Sequence
 
 # Корень пакета lead_aggregator — чтобы импорты app.* работали при запуске
@@ -142,11 +142,11 @@ async def _cmd_once(config, args: argparse.Namespace) -> int:
         print("  [warn) LA_TG_BOT_TOKEN/LA_TG_CHAT_ID не заданы — доставка не производилась")
     if args.json:
         payload = {"mode": "dry-run" if args.dry_run else "once", "stats": stats,
-                   "sources": [a.name for a in adapters]]
+                   "sources": [a.name for a in adapters]}
         if args.dry_run:
             payload["leads"] = [{"id": l.source_id, "source": l.source,
                                  "score": l.score, "intent": l.intent, "text": l.text,
-                                 "url": l.url] for l in delivery.captured]
+                                 "url": l.url} for l in delivery.captured]
         print(json.dumps(payload, ensure_ascii=False))
     return 0 if stats["errors"] == 0 else 1
 

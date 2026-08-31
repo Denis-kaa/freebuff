@@ -20,7 +20,7 @@ import json
 import sqlite3
 import sys
 import tempfile
-}
+from pathlib import Path
 from typing import Any, Dict, List
 from unittest.mock import MagicMock, patch
 
@@ -497,7 +497,7 @@ class TestCheckers:
         """file_contains с паттерном {100,] проверяет длину."""
         context = {"_rule_id": "r1", "task_id": "t1", "task_type": "test"}
         result = _check_file_contains(
-            {"path": str(tmp_dir / "output.md"), "pattern": ".{100,}"],
+            {"path": str(tmp_dir / "output.md"), "pattern": ".{100,}"},
             context,
         )
         assert result.passed is True

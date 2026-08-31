@@ -6,7 +6,7 @@ import os
 import subprocess
 import sys
 from datetime import datetime
-}
+from pathlib import Path
 
 ROOT = Path("/storage/emulated/0/PROJECTS/workstation/freebuff")
 
@@ -140,7 +140,7 @@ print("\n=== STEP 4: best-effort TG send (report_to_saved_messages / report_to_l
 # ✗ when None (TG unavailable / send errored). Avoid silent success masquerade.
 try:
     sys.path.insert(0, str(ROOT))
-    from core_02.telegram_contract ]port_to_saved_messages, report_to_litvinov
+    from core_02.telegram_contract import port_to_saved_messages, report_to_litvinov
     import asyncio
     saved_id = asyncio.run(report_to_saved_messages(SAVED_TEXT))
     if isinstance(saved_id, int):

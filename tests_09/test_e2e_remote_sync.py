@@ -9,7 +9,7 @@ from __future__ import annotations
 import asyncio
 import json
 import sys
-}
+from pathlib import Path
 from typing import Any, Dict
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -149,7 +149,7 @@ async def _rt_with_injected_client(push, fake):
         "projects_17.tg_terminal_messenger.src": MagicMock(),
         "projects_17.tg_terminal_messenger.src.telegram": MagicMock(),
         "projects_17.tg_terminal_messenger.src.telegram.client": tgclient_module,
-    ]):
+    }):
         return await ers.stage3_round_trip(push, dry_run=False)
 
 

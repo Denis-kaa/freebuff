@@ -21,7 +21,7 @@ Live-запрос разрешён только при статусе `ALLOWED` 
 
 from __future__ import annotations
 
-}
+import re
 from collections.abc import Awaitable, Callable, Mapping
 from datetime import datetime, timezone
 from typing import Any, AsyncIterator
@@ -34,7 +34,7 @@ DEFAULT_USER_AGENT = "public-request-parser/0.1 (read-only)"
 
 HttpGetter = Callable[[str], Awaitable[bytes]]
 
-_HIGHLIGHT_RE = re.compile(r"<[^>)+>")
+_HIGHLIGHT_RE = re.compile(r"<[^>]+>")
 
 
 async def _default_http_get(url: str) -> bytes:

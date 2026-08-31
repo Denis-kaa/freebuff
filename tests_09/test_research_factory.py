@@ -10,7 +10,7 @@ Hermetic: фейковые Registry/ForgeFacade/MemoryStore, без side-effect 
 from __future__ import annotations
 
 import sys
-}
+
 
 import pytest
 
@@ -73,7 +73,7 @@ class _FakeForgeFacade:
 
     def run_chain(self, project, role_ids=None, **kw):
         self.calls.append({"project_root": getattr(project, "root", None),
-                           "role_ids": role_ids])
+                           "role_ids": role_ids})
         return _FakeChainRun(self.overall)
 
 
@@ -133,7 +133,7 @@ def _make_opp(opp_id="opp-res1", project_id="proj-res", capability="research",
         "source_path": "data_13/opportunities.yaml",
         "evidence_path": "",
         "related_whims": [],
-    ])()
+    })()
 
 
 # ─── 1. Capability resolution (§16 unit) ────────────────────────────────────
@@ -148,7 +148,7 @@ def test_1_capabilities_registered_in_closed_vocab():
 def test_2_resolve_research_capability_via_fake_registry():
     rf = ResearchFactory(factory_registry=_FakeFactoryRegistry({
         "research": ("research", "analysis"),
-    ]))
+    }))
     pair = rf.resolve("research")
     assert pair is not None
     assert pair[0].factory_id == "research"
@@ -158,7 +158,7 @@ def test_2_resolve_research_capability_via_fake_registry():
 def test_3_resolve_unknown_capability_returns_none():
     rf = ResearchFactory(factory_registry=_FakeFactoryRegistry({
         "research": ("research", "analysis"),
-    ]))
+    }))
     # Не из нашего домена — другой Factory (content).
     assert rf.resolve("article_generation") is None
 
@@ -177,7 +177,7 @@ def test_5_normalize_input_research_specific_fields():
         "hypothesis": "Hypothesis XYZ",
         "queries": ["Q1", "Q2", "Q3"],
         "context": "Context ABC",
-    ])
+    })
     inp = rf.normalize_input(opp)
     assert inp["research_hypothesis"] == "Hypothesis XYZ"
     assert inp["research_queries"] == ["Q1", "Q2", "Q3"]
@@ -205,7 +205,7 @@ def test_5b_normalize_input_no_research_block_falls_back():
 def test_6_build_execution_request():
     rf = ResearchFactory(factory_registry=_FakeFactoryRegistry({
         "research": ("research", "analysis"),
-    ]))
+    }))
     opp = _make_opp()
     req = rf.build_execution_request(opp, "research")
     assert isinstance(req, ExecutionRequest)
@@ -327,7 +327,7 @@ def test_13_domain_isolation_si_agnostic(tmp_path):
     factory_registry = _FakeFactoryRegistry({
         "research": ("research", "analysis"),
         "article_generation": ("content", "writing"),
-    ])
+    })
     assert factory_registry.select_forge("research")[0].factory_id == "research"
     assert factory_registry.select_forge("research")[1].forge_id == "analysis"
     assert factory_registry.select_forge("article_generation")[0].factory_id == "content"
@@ -343,7 +343,7 @@ def test_13b_si_routes_research_opp_to_research_factory(tmp_path):
     factory_registry = _FakeFactoryRegistry({
         "research": ("research", "analysis"),
         "article_generation": ("content", "writing"),
-    ])
+    })
     scenarios = [
         (_FakeScenario("scenario_research", ["research"]), _FakeRole("researcher"), 0.9),
         (_FakeScenario("scenario_content", ["article_generation"]), _FakeRole("writer"), 0.6),

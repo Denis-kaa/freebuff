@@ -10,7 +10,7 @@ import os
 import shutil
 import subprocess
 import sys
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from freebuff_plugin_03.bootstrap import DiagnosticReport, EnvironmentState

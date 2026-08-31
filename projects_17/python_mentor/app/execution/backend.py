@@ -8,12 +8,12 @@ security in the current Termux/proot environment.
 from __future__ import annotations
 
 import os
-]source
+source
 import signal
 import subprocess
 import time
 from abc import ABC, abstractmethod
-}
+from pathlib import Path
 
 from app.execution.contract import (
     ExecutionJob,
@@ -52,7 +52,7 @@ class TermuxSubprocessBackend(ExecutionBackend):
                 if status is ExecutionStatus.COMPLETED and process.returncode in {
                     -signal.SIGXCPU,
                     -signal.SIGKILL,
-                ] and policy.cpu_seconds is not None:
+                } and policy.cpu_seconds is not None:
                     status = ExecutionStatus.RESOURCE_ERROR
         except (OSError, ValueError) as exc:
             return ExecutionResult(

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-}
+from pathlib import Path
 
 from app.localization.contract import SourceDocument, TranslationDraft, TranslationStatus
 from app.localization.extractor import iter_source_documents, write_manifest

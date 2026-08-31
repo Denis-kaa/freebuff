@@ -60,11 +60,11 @@ from __future__ import annotations
 import argparse
 import ast
 import json
-}
+import re
 import sys
 import yaml
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -131,7 +131,7 @@ _LEGACY_TOP_LEVEL_REDIRECTS: dict[str, tuple[str, ...]] = {
 _EVALUATION_PACKAGE_DIRS: frozenset[str] = frozenset({
     "architecture_forensics_v2",
     "FORENSICS_104_105_106_107",
-])
+})
 
 
 # 10 областей консолидации (Этап 6).
@@ -166,12 +166,12 @@ from core_02.anchors_resolver import (  # noqa: E402 — check #11 ANCHORS (Arti
 HARD_ANCHOR_NAMESPACES: frozenset[str] = frozenset({
     "entity", "component", "module", "symbol", "test", "decision",
     "storage", "factory", "forge", "lesson", "opportunity", "whim",
-])
+})
 # SOFT-namespaces: реестры строятся инкрементально (event/contract/doc/requirement/
 # scenario) → advisory, НЕ блокируют (зеркалит §J.4 WARN-философию doc_code_verify).
 SOFT_ANCHOR_NAMESPACES: frozenset[str] = frozenset({
     "event", "contract", "doc", "requirement", "scenario",
-])
+})
 # Мета-спека (Artifact I §I.5) содержит ПЕДАГОГИЧЕСКИЕ примеры (forge_unknown,
 # StaleClass.old_method) — не live-claims, исключается из скана. Имя файла
 # вынесено в константу: если спека будет переименована/перенесена, обновить
@@ -227,7 +227,7 @@ def check_engine_files(workspace: Path) -> list[dict[str, Any]]:
                 "engine": row["engine"],
                 "file": row["file"],
                 "issue": "registry references missing file",
-            ])
+            })
     return issues
 
 
@@ -245,14 +245,14 @@ def check_lifecycle_coverage(workspace: Path) -> list[dict[str, Any]]:
         return [{
             "check": "lifecycle_coverage",
             "issue": "ARCHITECTURE_CANONICAL.md or LIFECYCLE.md missing",
-        ]]
+        }]
     for row in extract_engine_rows(canonical_text):
         if f"`{row['engine']}`" not in lifecycle_text:
             issues.append({
                 "check": "lifecycle_coverage",
                 "engine": row["engine"],
                 "issue": "engine not covered in LIFECYCLE.md",
-            ])
+            })
     return issues
 
 
@@ -273,7 +273,7 @@ def check_module_areas(workspace: Path) -> list[dict[str, Any]]:
                 "check": "module_areas",
                 "area": area,
                 "issue": "area not covered in MODULE_CONSOLIDATION.md",
-            ])
+            })
     return issues
 
 
@@ -294,7 +294,7 @@ def check_glossary_terms(workspace: Path) -> list[dict[str, Any]]:
                 "check": "glossary_terms",
                 "term": term,
                 "issue": "required term missing in GLOSSARY.md",
-            ])
+            })
     return issues
 
 
@@ -323,7 +323,7 @@ def check_roadmap_refs(workspace: Path) -> list[dict[str, Any]]:
                 "check": "roadmap_refs",
                 "ref": ref,
                 "issue": "roadmap references missing file",
-            ])
+            })
     return issues
 
 
@@ -351,7 +351,7 @@ def check_cross_references(workspace: Path) -> list[dict[str, Any]]:
                     "doc": name,
                     "missing_ref": other,
                     "issue": "canonical doc does not reference its sibling",
-                ])
+                })
     return issues
 
 
@@ -379,14 +379,14 @@ def check_project_book(workspace: Path) -> list[dict[str, Any]]:
         issues.append({
             "check": "project_book",
             "issue": "PROJECT_BOOK.md not referenced from ARCHITECTURE_MANIFEST.md",
-        ])
+        })
 
     roadmap_text = _read(workspace, ROADMAP) or ""
     if "PROJECT_BOOK" not in roadmap_text and "Project Book" not in roadmap_text:
         issues.append({
             "check": "project_book",
             "issue": "Project Book not mentioned in ROADMAP_PROMT32_CONSOLIDATION.md",
-        ])
+        })
 
     return issues
 
@@ -463,7 +463,7 @@ def check_naming_convention(workspace: Path) -> list[dict[str, Any]]:
                 "kind": "dir",
                 "name": name,
                 "issue": "top-level dir violates 'имя_NN' convention (FINAL_STRUCTURE §2.1)",
-            ])
+            })
             continue
         suffix = name.rsplit("_", 1)[1]
         if suffix in seen_dir_suffixes:
@@ -473,7 +473,7 @@ def check_naming_convention(workspace: Path) -> list[dict[str, Any]]:
                 "name": name,
                 "number": suffix,
                 "issue": "duplicate dir suffix _NN (FINAL_STRUCTURE §2.1 assigns unique IDs)",
-            ])
+            })
         seen_dir_suffixes.add(suffix)
 
     # 2–3. Промты: формат NNN_TT_имя.md, код темы, уникальность номера
@@ -491,7 +491,7 @@ def check_naming_convention(workspace: Path) -> list[dict[str, Any]]:
                     "kind": "prompt",
                     "name": name,
                     "issue": "prompt violates 'NNN_TT_имя.md' convention (FINAL_STRUCTURE §2.1)",
-                ])
+                })
                 continue
             number, theme = m.group(1), m.group(2)
             if theme not in _VALID_THEME_CODES:
@@ -501,7 +501,7 @@ def check_naming_convention(workspace: Path) -> list[dict[str, Any]]:
                     "name": name,
                     "theme": theme,
                     "issue": "theme code TT outside canonical 01..14 (FINAL_STRUCTURE §2.1)",
-                ])
+                })
             if number in seen_numbers:
                 issues.append({
                     "check": "naming_convention",
@@ -509,7 +509,7 @@ def check_naming_convention(workspace: Path) -> list[dict[str, Any]]:
                     "name": name,
                     "number": number,
                     "issue": "duplicate prompt number NNN",
-                ])
+                })
             seen_numbers.add(number)
 
     # 4. Правило задокументировано: FINAL_STRUCTURE §2.1 + GLOSSARY (два якоря)
@@ -519,7 +519,7 @@ def check_naming_convention(workspace: Path) -> list[dict[str, Any]]:
             "check": "naming_convention",
             "doc": "FINAL_STRUCTURE.md",
             "issue": "naming convention section §2.1 missing in FINAL_STRUCTURE.md",
-        ])
+        })
 
     glossary_text = _read(workspace, GLOSSARY) or ""
     if "**Naming Convention**" not in glossary_text:
@@ -527,7 +527,7 @@ def check_naming_convention(workspace: Path) -> list[dict[str, Any]]:
             "check": "naming_convention",
             "doc": "GLOSSARY.md",
             "issue": "Naming Convention term missing in GLOSSARY.md",
-        ])
+        })
 
     return issues
 
@@ -790,7 +790,7 @@ class _PytestCollectionVisitor(ast.NodeVisitor):
             "function": node.name,
             "class_chain": tuple(c.name for c in self._class_stack),
             "line": node.lineno,
-        ])
+        })
 
     def _is_testcase_subclass(self, cls: ast.ClassDef) -> bool:
         """Return True если cls явно наследует TestCase (unittest.TestCase)."""
@@ -835,7 +835,7 @@ class _PytestCollectionVisitor(ast.NodeVisitor):
             "function": node.name,
             "line": node.lineno,
             "reason": reason,
-        ])
+        })
 
 
 def _full_suite_count(text: str) -> int | None:
@@ -882,7 +882,7 @@ def check_test_counter(workspace: Path) -> list[dict[str, Any]]:
                 "check": "test_counter",
                 "doc": "CHANGELOG.md",
                 "issue": "full-suite 'N passed' line not found (pytest tests_09/ -q)",
-            ])
+            })
         elif documented != actual:
             issues.append({
                 "check": "test_counter",
@@ -890,7 +890,7 @@ def check_test_counter(workspace: Path) -> list[dict[str, Any]]:
                 "documented": documented,
                 "actual": actual,
                 "issue": "test counter diverges from reality (tests_09)",
-            ])
+            })
 
     standard = _read(workspace, CODE_QUALITY_STANDARD)
     if standard is not None:
@@ -900,7 +900,7 @@ def check_test_counter(workspace: Path) -> list[dict[str, Any]]:
                 "check": "test_counter",
                 "doc": "CODE_QUALITY_STANDARD.md",
                 "issue": "regression test target 'цель: N+ passed' not found (rule 11.6)",
-            ])
+            })
         elif target != actual:
             issues.append({
                 "check": "test_counter",
@@ -908,7 +908,7 @@ def check_test_counter(workspace: Path) -> list[dict[str, Any]]:
                 "target": target,
                 "actual": actual,
                 "issue": "regression test target diverges from reality (tests_09)",
-            ])
+            })
 
     return issues
 
@@ -980,14 +980,14 @@ def check_missing_registry_sync(workspace: Path) -> list[dict[str, Any]]:
         return [{
             "check": "missing_registry_sync",
             "issue": "FACTORY_FORGE_ARCHITECTURE_V1.md missing (§20)",
-        ]]
+        }]
 
     reg_path = workspace / MISSING_REGISTRY_YAML
     if not reg_path.exists():
         return [{
             "check": "missing_registry_sync",
             "issue": f"{MISSING_REGISTRY_YAML} missing (run: python -m core_02.missing_registry seed)",
-        ]]
+        }]
 
     from core_02.missing_registry import MissingRegistry  # local import — держит модуль независимым
 
@@ -1009,7 +1009,7 @@ def check_missing_registry_sync(workspace: Path) -> list[dict[str, Any]]:
                 "check": "missing_registry_sync",
                 "item": item_id,
                 "issue": "in §20 map but missing from MissingRegistry (register-first)",
-            ])
+            })
             continue
         doc_rank = status_rank(doc_status)
         reg_rank = status_rank(reg_items[item_id])
@@ -1020,7 +1020,7 @@ def check_missing_registry_sync(workspace: Path) -> list[dict[str, Any]]:
                 "doc_status": doc_status,
                 "registry_status": reg_items[item_id],
                 "issue": "registry lags behind §20 map (register-first: реестр — источник истины)",
-            ])
+            })
         elif reg_rank > doc_rank:
             issues.append({
                 "check": "missing_registry_sync",
@@ -1028,7 +1028,7 @@ def check_missing_registry_sync(workspace: Path) -> list[dict[str, Any]]:
                 "doc_status": doc_status,
                 "registry_status": reg_items[item_id],
                 "issue": "§20 map lags behind registry (update §20 row)",
-            ])
+            })
 
     for item_id in sorted(reg_items):
         if item_id not in doc_by_id:
@@ -1036,7 +1036,7 @@ def check_missing_registry_sync(workspace: Path) -> list[dict[str, Any]]:
                 "check": "missing_registry_sync",
                 "item": item_id,
                 "issue": "in MissingRegistry but missing from §20 map (update §20)",
-            ])
+            })
 
     return issues
 
@@ -1076,7 +1076,7 @@ def check_anchors(workspace: Path) -> list[dict[str, Any]]:
                 "issue": (
                     f"UNVERIFIED anchor {u.get('raw', '')} — {u.get('evidence', '')}"
                 ),
-            ])
+            })
     return issues
 
 
@@ -1152,7 +1152,7 @@ def check_backfill_signatures(workspace: Path) -> list[dict[str, Any]]:
                 "backfill:true — looks retroactive. Re-register with "
                 "`--backfill` (or bump updated_at to differ from registered_at)."
             ),
-        ])
+        })
     return warnings
 
 

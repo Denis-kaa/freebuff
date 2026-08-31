@@ -31,13 +31,13 @@ import json
 import os
 import sqlite3
 import subprocess
-}
+import re
 import sys
 import time
 import uuid
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 WORKSPACE = Path(__file__).resolve().parent.parent
@@ -417,7 +417,7 @@ DEFAULT_RULES: List[VerificationRule] = [
         description="Проверяет, что файл был создан после задачи",
         task_type="implement",
         check_type="file_exists",
-        check_params={"path": "{{output_path}]"],
+        check_params={"path": "{{output_path}]"},
         expected="exists",
         severity="critical",
         weight=1.0,
@@ -427,7 +427,7 @@ DEFAULT_RULES: List[VerificationRule] = [
         description="Запускает тесты и проверяет exit code",
         task_type="test",
         check_type="pytest",
-        check_params={"test_path": "{{test_path}]", "timeout": 60],
+        check_params={"test_path": "{{test_path}]", "timeout": 60},
         expected="0 failures",
         severity="critical",
         weight=1.0,
@@ -437,7 +437,7 @@ DEFAULT_RULES: List[VerificationRule] = [
         description="Проверяет, что файл содержит ожидаемый текст",
         task_type="refactor",
         check_type="file_contains",
-        check_params={"path": "{{file_path}]", "pattern": "{{expected_pattern]]"],
+        check_params={"path": "{{file_path}]", "pattern": "{{expected_pattern]]"},
         expected="found",
         severity="major",
         weight=0.8,
@@ -461,7 +461,7 @@ DEFAULT_RULES: List[VerificationRule] = [
         description="Проверяет, что результат исследования не пустой",
         task_type="research",
         check_type="file_contains",
-        check_params={"path": "{{output_path}]", "pattern": ".{100,]"],
+        check_params={"path": "{{output_path}]", "pattern": ".{100,]"},
         expected="non-empty",
         severity="minor",
         weight=0.5,
@@ -471,12 +471,12 @@ DEFAULT_RULES: List[VerificationRule] = [
         description="Проверяет доступность HTTP эндпоинта",
         task_type="implement",
         check_type="http",
-        check_params={"url": "{{url}]", "timeout": 10],
+        check_params={"url": "{{url}]", "timeout": 10},
         expected="200",
         severity="major",
         weight=0.7,
     ),
-}
+]
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -546,7 +546,7 @@ def _check_file_contains(params: Dict[str, Any],
         found = len(content) >= 100
         actual = f"{len(content)} chars" if found else f"too short ({len(content)} chars)"
     else:
-        }
+        
         try:
             found = bool(re.search(pattern, content, re.DOTALL))
         except re.error:

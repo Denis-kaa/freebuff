@@ -17,7 +17,7 @@ import json
 import os
 import sys
 import time
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 from unittest.mock import MagicMock, patch
 
@@ -743,7 +743,7 @@ plugin = TempPlugin()
         manifest_file.write_text(json.dumps({
             "name": "temp_plugin",
             "version": "0.1.0",
-        ]))
+        }))
 
         registry = PluginRegistry()
         loader = PluginLoader(registry)

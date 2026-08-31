@@ -10,12 +10,12 @@ import asyncio
 import http.client
 import json
 import os
-}
+import re
 import socket
 import sys
 import threading
 import time
-}
+from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -217,7 +217,7 @@ class TestPostToolsCall:
         body = json.dumps({
             "jsonrpc": "2.0", "id": 1, "method": "tools/call",
             "params": {"name": "session_status", "arguments": {}},
-        ])
+        })
         status, headers, resp = _http(host, port, "POST", body=body)
         assert status == 200
         assert "content" in json.loads(resp)["result"]
@@ -1006,7 +1006,7 @@ class TestPolicyStatusEndpoint:
                 preferred_runtime="freebuff",
                 fallback_chain=["openclaw"],
             ),
-        ])
+        })
         monkeypatch.setattr(_mcp_fastapi, "_get_policy_engine", lambda: engine)
         status, _, body = _http(host, port, "GET", "/policy/status")
         assert status == 200
@@ -1043,7 +1043,7 @@ class TestPolicyStatusEndpoint:
                 preferred_runtime="deepseek",
                 constraints=[PolicyRule(rule_type="min_confidence", params={"value": 0.8})],
             ),
-        ])
+        })
         monkeypatch.setattr(_mcp_fastapi, "_get_policy_engine", lambda: engine)
         status, _, body = _http(host, port, "GET", "/policy/status")
         assert status == 200
@@ -1057,7 +1057,7 @@ class TestPolicyStatusEndpoint:
         from freebuff_plugin_03.policy.config import CapabilityPolicy
         engine = self._make_engine({
             "coding": CapabilityPolicy(fallback_chain=["freebuff"]),
-        ])
+        })
         monkeypatch.setattr(_mcp_fastapi, "_get_policy_engine", lambda: engine)
         status, _, body = _http(host, port, "GET", "/policy/status")
         assert status == 200
@@ -1413,7 +1413,7 @@ class TestMeetingTasksREST:
             body=json.dumps({
                 "project_id": "CRM", "title": "API endpoint",
                 "task_type": "digital",
-            ]),
+            }),
         )
         assert status == 201
         data = json.loads(body)
@@ -1440,7 +1440,7 @@ class TestMeetingTasksREST:
                 "participants": ["Алексей", "Иван"],
                 "priority": "high",
                 "description": "Согласование roadmap",
-            ]),
+            }),
         )
         assert status == 201
         data = json.loads(body)
@@ -1461,7 +1461,7 @@ class TestMeetingTasksREST:
             host, port, "POST", "/api/v1/tasks",
             body=json.dumps({
                 "project_id": "CRM", "title": "", "task_type": "digital",
-            ]),
+            }),
         )
         assert status == 400
         assert json.loads(body)["success"] is False
@@ -1477,7 +1477,7 @@ class TestMeetingTasksREST:
             body=json.dumps({
                 "project_id": "CRM", "title": "x", "task_type": "digital",
                 "meeting_time": "2026-08-02T14:00",
-            ]),
+            }),
         )
         assert status == 400
         assert "meeting_time" in json.loads(body)["error"]

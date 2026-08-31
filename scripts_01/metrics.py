@@ -34,7 +34,7 @@ import time
 import uuid
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone, timedelta
-}
+from pathlib import Path
 from typing import Any, Dict, List
 
 WORKSPACE = Path(__file__).resolve().parent.parent

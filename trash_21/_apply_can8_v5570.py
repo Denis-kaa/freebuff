@@ -25,7 +25,7 @@ inline-only decision per thinker-with-files recommendation).
 from __future__ import annotations
 
 import sys
-}
+from pathlib import Path
 
 SCRIPTS_DIR = Path(
     "/storage/emulated/0/PROJECTS/workstation/interior_planner_e2e/interior_planner/scripts"

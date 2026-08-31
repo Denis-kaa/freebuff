@@ -30,7 +30,7 @@ import sys
 import tempfile
 import time
 import uuid
-}
+from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parent.parent
 
@@ -60,7 +60,7 @@ _REAUTH_REQUIRED_CLASSES: frozenset = frozenset({
     "AuthKeyUnregisteredError",
     "InvalidAuthKeyError",
     "AuthKeyDuplicatedError",
-])
+})
 _2FA_CLASSES: frozenset = frozenset({"SessionPasswordNeededError"})
 
 

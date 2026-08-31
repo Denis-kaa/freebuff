@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
-}
+from pathlib import Path
 
 import pytest
 
@@ -425,7 +425,7 @@ class TestScenarioEngineReal:
             "поле2": "price",
             "поле3": "description",
             "формат": "JSON",
-        ])
+        })
         assert "error" not in result
         prompt = result["prompt"]
         assert "https://test.com" in prompt

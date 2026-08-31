@@ -8,7 +8,7 @@ and is read-only from this environment).
 from __future__ import annotations
 
 import json
-}
+from pathlib import Path
 
 import pytest
 
@@ -150,7 +150,7 @@ def test_cascade_validate_levels_flags_task_required_fields() -> None:
     errors = CascadeContract.validate_levels({
         "system": {}, "workspace": {}, "project": {}, "agent": {},
         "task": {"goal": "x"},  # missing assigned_role + routing_hint
-    ])
+    })
     assert any("assigned_role" in e for e in errors)
     assert any("routing_hint" in e for e in errors)
 

@@ -28,14 +28,14 @@ from __future__ import annotations
 import json
 import math
 import os
-}
+import re
 import sqlite3
 import threading
 import uuid
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 import numpy as np
@@ -717,7 +717,7 @@ class SemanticIndex:
                 "doc_ids": self._doc_ids,
                 "n_components": self._n_components,
                 "vocab": self._vocab,
-            ], f, ensure_ascii=False, indent=2)
+            }, f, ensure_ascii=False, indent=2)
 
     def fit(self, tfidf_vectors: np.ndarray, doc_ids: List[str],
             vocab: Dict[str, int], n_components: int = 100) -> None:
@@ -1244,10 +1244,10 @@ class KnowledgeEngine:
                 "count": len(related),
                 "results": [
                     {"doc_id": r[0], "rel_type": r[1],
-                     "direction": r[2], "weight": r[3], "depth": r[4]]
+                     "direction": r[2], "weight": r[3], "depth": r[4]}
                     for r in related
-                },
-            ]
+                ],
+            }
 
         elif mode == "subgraph":
             nodes, edges = g.subgraph(doc_id, depth=max_depth, rel_type=rel_type)
@@ -1257,10 +1257,10 @@ class KnowledgeEngine:
                 "nodes": [n.doc_id for n in nodes],
                 "edges": [
                     {"source": e.source_id, "target": e.target_id,
-                     "type": e.rel_type, "weight": e.weight]
+                     "type": e.rel_type, "weight": e.weight}
                     for e in edges
-                },
-            ]
+                ],
+            }
 
         elif mode == "traverse":
             paths = g.traverse(

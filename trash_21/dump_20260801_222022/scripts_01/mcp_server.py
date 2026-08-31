@@ -55,7 +55,7 @@ import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-}
+from pathlib import Path
 from queue import Queue, Empty
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
@@ -124,7 +124,7 @@ def rpc_response(req_id: Any, result: Any) -> str:
         "jsonrpc": "2.0",
         "id": req_id,
         "result": result,
-    ], ensure_ascii=False)
+    }, ensure_ascii=False)
 
 
 def rpc_error(req_id: Any, code: int, message: str, data: Any = None) -> str:
@@ -136,7 +136,7 @@ def rpc_error(req_id: Any, code: int, message: str, data: Any = None) -> str:
         "jsonrpc": "2.0",
         "id": req_id,
         "error": err,
-    ], ensure_ascii=False)
+    }, ensure_ascii=False)
 
 
 def rpc_notification(method: str, params: Dict[str, Any]) -> str:
@@ -145,7 +145,7 @@ def rpc_notification(method: str, params: Dict[str, Any]) -> str:
         "jsonrpc": "2.0",
         "method": method,
         "params": params,
-    ], ensure_ascii=False)
+    }, ensure_ascii=False)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -886,7 +886,7 @@ class BuffyMcpServer:
             return {"success": True, "data": engine.get_history_json(
                 agent_name=arguments.get("agent") or arguments.get("agent_name"),
                 limit=int(arguments.get("limit", 50)),
-            )]
+            )}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
@@ -1189,7 +1189,7 @@ class BuffyMcpServer:
                 "source": e.source,
                 "data": e.data,
                 "timestamp": e.timestamp[:19],
-            ] for e in entries]
+            } for e in entries]
             self._publish("event.searched", {"total": len(data)})
             return {"success": True, "data": data}
         except Exception as e:
@@ -1293,7 +1293,7 @@ class BuffyMcpServer:
                     "description": e.description,
                     "timestamp": e.timestamp[:19],
                     "severity": e.severity,
-                ] for e in feed],
+                } for e in feed],
             }
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -2211,7 +2211,7 @@ class BuffyMcpServer:
                 "success": report.success,
                 "duration_ms": report.duration_ms,
                 "steps": len(report.steps),
-            ])
+            })
 
             return {
                 "success": report.success,
@@ -2235,12 +2235,12 @@ class BuffyMcpServer:
                         "runtime_issues": report.diagnosis.runtime_issues if report.diagnosis else [],
                         "dependency_issues": report.diagnosis.dependency_issues if report.diagnosis else [],
                         "key_issues": report.diagnosis.key_issues if report.diagnosis else [],
-                    ] if report.diagnosis else None,
+                    } if report.diagnosis else None,
                     "environment": {
                         "os": report.environment.os_type if report.environment else "unknown",
                         "python": report.environment.python_version if report.environment else "",
                         "git": report.environment.git_available if report.environment else False,
-                    ] if report.environment else None,
+                    } if report.environment else None,
                 },
             }
         except Exception as e:
@@ -2411,7 +2411,7 @@ class BuffyMcpServer:
                 "runtime": runtime_name,
                 "success": result.error is None,
                 "model_used": result.model_used,
-            ])
+            })
             if result.error:
                 return {"success": False, "error": result.error, "data": {"runtime": runtime_name}}
             return {
@@ -2467,7 +2467,7 @@ class BuffyMcpServer:
             "runtime": result.get("runtime"),
             "previous_runtime": result.get("previous_runtime"),
             "applied": result.get("applied", True),
-        ])
+        })
 
         return {"success": True, "data": result}
 
@@ -2481,7 +2481,7 @@ class BuffyMcpServer:
         self._publish("server.initialized", {
             "client": self._client_info.get("name", "unknown"),
             "protocol_version": PROTOCOL_VERSION,
-        ])
+        })
 
         return {
             "protocolVersion": PROTOCOL_VERSION,
@@ -2504,7 +2504,7 @@ class BuffyMcpServer:
                 "name": tool.name,
                 "description": tool.description,
                 "inputSchema": tool.input_schema,
-            ])
+            })
         return {"tools": tools}
 
     def handle_tools_call(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -2526,7 +2526,7 @@ class BuffyMcpServer:
             return {
                 "content": [{"type": "text", "text": json.dumps(
                     {"success": False, "error": str(e)}, ensure_ascii=False,
-                )]],
+                )}],
                 "isError": True,
             }
 
@@ -2550,7 +2550,7 @@ class BuffyMcpServer:
                 "name": res.name,
                 "description": res.description,
                 "mimeType": res.mime_type,
-            ])
+            })
         return {"resources": resources}
 
     def handle_resources_read(self, params: Dict[str, Any]) -> Dict[str, Any]:
@@ -2587,7 +2587,7 @@ class BuffyMcpServer:
                 "name": p.name,
                 "description": p.description,
                 "arguments": p.arguments,
-            ])
+            })
         return {"prompts": prompts}
 
     def handle_prompts_get(self, params: Dict[str, Any]) -> Dict[str, Any]:

@@ -5,7 +5,7 @@ string concatenation (chr(39) for literal apostrophes where needed).
 
 Usage: python3 scripts_01/_v5_86_0_holistic_fix.py
 """
-}
+import re
 import os
 import shutil
 
@@ -37,7 +37,7 @@ NEW_PROBE = '''async def _probe_tg_session() -> bool:
             SessionRevokedError,
             InvalidAuthKeyError,
             FloodWaitError,
-        )
+        
         TG_AUTH_FAILURES = (
             AuthKeyUnregisteredError,
             UserDeactivatedError,
@@ -45,7 +45,7 @@ NEW_PROBE = '''async def _probe_tg_session() -> bool:
             PhoneNumberBannedError,
             SessionRevokedError,
             InvalidAuthKeyError,
-        )
+        
     except ImportError:
         # Some telethon versions may not export all — fallback
         TG_AUTH_FAILURES = (Exception,)
@@ -148,7 +148,7 @@ def main() -> None:
     src = SRC.read_text(encoding="utf-8")
 
     # Locate probe function bounds and replace.
-    }
+    
 
     probe_start_re = re.compile(r"^async def _probe_tg_session", re.M)
     next_def_re = re.compile(r"^async def _round_trip_chat_id|^def _", re.M)

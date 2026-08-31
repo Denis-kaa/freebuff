@@ -13,7 +13,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-}
+from pathlib import Path
 
 import pytest
 
@@ -286,7 +286,7 @@ class TestCorpusEntryFromDict:
             "source": "manual",
             "timestamp": "2026-08-20T12:00:00Z",
             "extra_future_field": "ignored",
-        ])
+        })
         assert e.url == "https://example.com"
         assert e.source == "manual"
 
@@ -295,7 +295,7 @@ class TestCorpusEntryFromDict:
             "url": "https://example.com",
             "source": "manual",
             "timestamp": "2026-08-20T12:00:00Z",
-        ])
+        })
         assert e.metadata == {}
 
     def test_round_trip_via_to_dict(self):

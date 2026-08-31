@@ -12,7 +12,7 @@ user_version для миграций. НЕ создаём таблицы буд�
 from __future__ import annotations
 
 import sqlite3
-}
+from pathlib import Path
 
 SCHEMA_VERSION = 1
 

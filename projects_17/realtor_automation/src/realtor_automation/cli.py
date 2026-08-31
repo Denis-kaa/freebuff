@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
-}
+from pathlib import Path
 from typing import Any, cast
 
 from realtor_automation.config import ConfigError, load_config

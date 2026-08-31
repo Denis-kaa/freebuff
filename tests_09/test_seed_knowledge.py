@@ -6,7 +6,7 @@ Tests for scripts_01/seed_knowledge.py — seeding the Knowledge Memory layer.
 from __future__ import annotations
 
 import sys
-}
+from pathlib import Path
 
 import pytest
 

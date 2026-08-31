@@ -19,7 +19,7 @@ import fnmatch
 import hashlib
 import json
 import os
-}
+from pathlib import Path
 import shutil
 import shlex
 import sqlite3
@@ -29,7 +29,6 @@ import tempfile
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-}
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
 try:
@@ -1060,7 +1059,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             raise ValueError(f"sync config not found: {config_path}; create .freebuff/sync.yaml")
         config = load_config(config_path)
         if args.non_interactive:
-            from dataclasses ]place
+            from dataclasses import place
             config = replace(config, sync=replace(config.sync, non_interactive=True))
         sync = FreebuffSync(config)
         if args.mode == "bootstrap":

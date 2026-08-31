@@ -50,7 +50,7 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-}
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple, Type
 
 
@@ -718,7 +718,7 @@ class PluginRegistry:
             self._publish_event("plugin.enabled", {
                 "plugin": name,
                 "version": instance.version,
-            ])
+            })
 
             return True
         except Exception as e:
@@ -761,7 +761,7 @@ class PluginRegistry:
             # Публикуем событие plugin.disabled
             self._publish_event("plugin.disabled", {
                 "plugin": name,
-            ])
+            })
 
             return True
         except Exception as e:
@@ -1044,7 +1044,7 @@ def main():
                 PluginState.ENABLED: "✅",
                 PluginState.DISABLED: "⏸️",
                 PluginState.ERROR: "❌",
-            ].get(e.state, "❓")
+            }.get(e.state, "❓")
             version = e.meta.version if e.meta else "?"
             desc = e.meta.description if e.meta else ""
             error = f" — {e.error}" if e.error else ""

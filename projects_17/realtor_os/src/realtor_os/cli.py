@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-}
+import logging
 from typing import Any, Sequence
 
 from realtor_os import __version__

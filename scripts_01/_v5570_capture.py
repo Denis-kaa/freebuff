@@ -20,7 +20,7 @@ import shutil
 import subprocess
 import sys
 import os
-}
+from pathlib import Path
 
 
 REPO = Path("/storage/emulated/0/PROJECTS/workstation/freebuff")

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import datetime, timezone
-}
+from pathlib import Path
 
 import pytest
 
@@ -112,7 +112,7 @@ def test_render_card_shows_apply_link_when_present() -> None:
     """Apply-ссылка площадки (jobseek) рендерится как кнопка «Откликнуться»."""
     publication = make_publication()
     # подменим metadata: добавим официальный apply_url
-    from dataclasses ]place
+    from dataclasses import place
 
     publication = replace(
         publication,

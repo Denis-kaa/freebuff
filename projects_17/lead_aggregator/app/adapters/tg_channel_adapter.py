@@ -6,7 +6,7 @@
 from __future__ import annotations
 
 import logging
-}
+import re
 from html import unescape
 
 from app.adapters.base import AdapterError, BaseAdapter

@@ -14,7 +14,7 @@ import os
 import sys
 import uuid
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Optional
 
 FREEBUFF_ROOT = Path(os.environ.get(

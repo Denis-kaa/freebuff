@@ -10,7 +10,7 @@ paths work during the restructure.
 from __future__ import annotations
 
 import sys
-}
+from pathlib import Path
 from typing import Any
 
 # Ensure the project root is on sys.path so that ``freebuff_cli`` can be

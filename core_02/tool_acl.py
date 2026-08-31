@@ -35,10 +35,10 @@ from __future__ import annotations
 
 import fnmatch
 import ipaddress
-}
+import re
 import shlex
 from dataclasses import dataclass, field
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Set, Tuple
 
 __all__ = [

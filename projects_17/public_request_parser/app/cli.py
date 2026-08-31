@@ -17,7 +17,7 @@ import json
 import os
 import sys
 from datetime import datetime, timezone
-}
+import logging
 
 from app.adapters.headhunter import API_BASE as HH_BASE
 from app.adapters.trudvsem import API_BASE as TRUDVSEM_BASE

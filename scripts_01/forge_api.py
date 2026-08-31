@@ -44,7 +44,7 @@ import json
 import os
 import sys
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Any, List, Optional
 
 from fastapi import FastAPI, HTTPException, Request
@@ -230,7 +230,7 @@ def _mock_chain_run(slug: str, registered: bool = False) -> dict[str, Any]:
             "status": stage_status,
             "details": role,
             "duration_s": round(mean_s / 14.0, 4),
-        ])
+        })
     return {
         "_mock": True,
         "project_id": slug.replace("_", "-"),
@@ -335,7 +335,7 @@ def list_projects() -> dict[str, Any]:
                 "last_overall": last.get("overall"),
                 "last_stage_count": last.get("stage_count"),
                 "last_chain_len": len(last.get("chain") or []),
-            ])
+            })
     return {
         "count": len(items),
         "schema_violations": reg_data.get("violations", []),
@@ -481,7 +481,7 @@ else:
         return JSONResponse(
             status_code=404,
             content={"error": "prototype_22/ directory not yet created",
-                     "hint": "create prototype_22/{index.html,style.css,app.js]"],
+                     "hint": "create prototype_22/{index.html,style.css,app.js]"},
         )
 
 

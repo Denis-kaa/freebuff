@@ -57,7 +57,7 @@ import uuid
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
 from enum import Enum
-}
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 
@@ -563,7 +563,7 @@ class Orchestrator:
         self._publish_event("workflow.created", {
             "workflow_id": workflow.id,
             "goal": goal,
-        ])
+        })
 
         # Правило 8 (Context-Aware Routing): перед созданием задачи проверяем
         # Knowledge/Graph на существующие похожие работы — не создаём дубли.
@@ -574,14 +574,14 @@ class Orchestrator:
             "workflow_id": workflow.id,
             "goal": goal,
             "matches": len(context_matches),
-        ])
+        })
 
         # Phase 1: Plan
         workflow.status = WorkflowStatus.PLANNING
         self._publish_event("workflow.planning", {
             "workflow_id": workflow.id,
             "goal": goal,
-        ])
+        })
 
         steps = self._planner.plan(goal)
         workflow.steps = steps
@@ -593,7 +593,7 @@ class Orchestrator:
                 "workflow_id": workflow.id,
                 "goal": goal,
                 "error": "Planner returned no steps",
-            ])
+            })
             return workflow
 
         # Phase 2: Execute (parallel DAG execution)
@@ -602,7 +602,7 @@ class Orchestrator:
             "workflow_id": workflow.id,
             "goal": goal,
             "step_count": len(steps),
-        ])
+        })
 
         active_futures: Dict[concurrent.futures.Future, Step] = {}
 
@@ -687,7 +687,7 @@ class Orchestrator:
             "status": workflow.status.value,
             "step_count": len(workflow.steps),
             "error_count": len(workflow.errors),
-        ])
+        })
 
         workflow.updated_at = datetime.now(timezone.utc).isoformat()
         return workflow
@@ -728,7 +728,7 @@ class Orchestrator:
                     "title": meta.get("title", ""),
                     "doc_type": meta.get("doc_type", ""),
                     "snippet": r.snippet[:160],
-                ])
+                })
         except Exception:
             pass  # Knowledge недоступен — workflow не блокируем
         return matches
@@ -770,21 +770,21 @@ class Orchestrator:
                 "step_id": step.id,
                 "workflow_id": workflow.id,
                 "step_name": step.name or step.id,
-            ])
+            })
         elif status == StepStatus.FAILED:
             self._publish_event("step.failed", {
                 "step_id": step.id,
                 "workflow_id": workflow.id,
                 "step_name": step.name or step.id,
                 "error": step.error,
-            ])
+            })
         elif status == StepStatus.SKIPPED:
             self._publish_event("step.skipped", {
                 "step_id": step.id,
                 "workflow_id": workflow.id,
                 "step_name": step.name or step.id,
                 "error": step.error,
-            ])
+            })
 
     def _execute_step(self, step: Step, workflow: Workflow) -> None:
         """Выполняет один шаг. Thread-safe — вызывается из ThreadPoolExecutor."""
@@ -798,7 +798,7 @@ class Orchestrator:
             "step_name": step.name or step.id,
             "step_type": step.type.value,
             "tool": step.tool.value if step.tool else None,
-        ])
+        })
 
         success = False
         result = None
@@ -883,7 +883,7 @@ class Orchestrator:
                         "retry_count": step.retry_count,
                         "max_retries": step.max_retries,
                         "error": error,
-                    ])
+                    })
                 else:
                     step.status = StepStatus.FAILED
                     workflow.errors.append(
@@ -972,7 +972,7 @@ class Orchestrator:
             "workflow_id": workflow.id,
             "completed_steps": completed,
             "total_steps": total,
-        ])
+        })
 
     def save_workflow(self, workflow: Workflow) -> None:
         """Сохраняет workflow в Memory Engine."""
@@ -1062,7 +1062,7 @@ def main():
                 StepStatus.PENDING: "⏳",
                 StepStatus.READY: "📋",
                 StepStatus.SKIPPED: "⏭️",
-            ].get(step.status, "❓")
+            }.get(step.status, "❓")
             print(f"  {icon} {i}. {step.name or step.id}")
             if step.error:
                 print(f"     Error: {step.error[:100]}")
@@ -1089,7 +1089,7 @@ def main():
                 "completed": "✅",
                 "failed": "❌",
                 "running": "🔄",
-            ].get(w.get("status", ""), "❓")
+            }.get(w.get("status", ""), "❓")
             print(f"  {icon} {w['id']} | {w['goal'][:60]} | {w['status']} | {len(w['steps'])} steps")
 
     elif args.command == "get":

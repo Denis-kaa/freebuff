@@ -25,7 +25,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 try:
@@ -181,7 +181,7 @@ def _finish_with_driver(
         final = md_queue.set_report(running_path, "done", report, cfg)
         return {"handled": True, "status": "done", "task_id": meta.task_id,
                 "title": meta.title, "model_used": model_used,
-                "duration_s": duration, "path": str(final)]
+                "duration_s": duration, "path": str(final)}
 
     if result.status == "timeout":
         # Сессия сохранена для --resume — задача остаётся в running/
@@ -203,7 +203,7 @@ def _finish_with_driver(
             pass
         return {"handled": True, "status": "timeout-saved", "task_id": meta.task_id,
                 "title": meta.title, "model_used": model_used,
-                "duration_s": duration, "path": str(running_path)]
+                "duration_s": duration, "path": str(running_path)}
 
     # failed / crashed / error
     driver.stop()
@@ -219,7 +219,7 @@ def _finish_with_driver(
     final = md_queue.set_report(running_path, "failed", report, cfg)
     return {"handled": True, "status": result.status, "task_id": meta.task_id,
             "title": meta.title, "model_used": model_used,
-            "duration_s": duration, "path": str(final)]
+            "duration_s": duration, "path": str(final)}
 
 
 def process_one(
@@ -269,7 +269,7 @@ def process_one(
         )
         final = md_queue.set_report(running_path, "failed", report, cfg)
         return {"handled": True, "status": "failed", "task_id": meta.task_id,
-                "path": str(final), "error": driver.last_error]
+                "path": str(final), "error": driver.last_error}
 
     try:
         # 3. Стартовый экран → выбор модели → промпт → мониторинг
@@ -325,7 +325,7 @@ def _resume_one(cfg: Dict[str, Any], timeout_s: Optional[int] = None) -> Dict[st
             # W-13 guard: восстановить AGENTS.md при падении запуска.
             _restore_agents(cfg)
             return {"handled": True, "status": "failed", "task_id": meta.task_id,
-                    "error": driver.last_error, "resume": True]
+                    "error": driver.last_error, "resume": True}
         driver.wait_for_screen()
 
     # Модель уже выбрана в прежней сессии — не перевыбираем (resume).
@@ -443,7 +443,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             continue
         st = str(r.get("status") or "")
         icon = {"done": "✅", "failed": "❌", "timeout-saved": "⏸", "dry-run": "🔍",
-                "crashed": "💥", "error": "⚠️"].get(st, "•")
+                "crashed": "💥", "error": "⚠️"}.get(st, "•")
         print(f"{icon} {st} · {r.get('task_id')} · {r.get('title', '')}")
         if r.get("model_used"):
             print(f"   модель: {r['model_used']} · {r.get('duration_s', 0)}s")

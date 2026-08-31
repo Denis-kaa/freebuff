@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
-}
+from pathlib import Path
 
 from realtor_os.constants import DATA_DIR, DEFAULT_CHUNK_SIZE, DEFAULT_MAX_RESULTS, DEFAULT_OVERLAP
 from realtor_os.logger import setup_logger

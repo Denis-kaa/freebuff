@@ -35,7 +35,7 @@ import pytest
 
 import importlib.util as _importlib_util
 import sys
-}
+from pathlib import Path
 
 _FB_ROOT = Path("/storage/emulated/0/PROJECTS/workstation/freebuff")
 sys.path.insert(0, ".")  # core_02/ + runtime_05/scenarios resolution

@@ -1,6 +1,6 @@
 """Тесты файловой очереди промтов (md_queue)."""
 
-}
+from pathlib import Path
 
 from projects_17.model_dispatcher import md_queue
 

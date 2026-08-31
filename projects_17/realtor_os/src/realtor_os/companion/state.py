@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import datetime
 import json
-}
+from pathlib import Path
 from typing import Any
 
 from realtor_os.constants import STATE_PATH

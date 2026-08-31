@@ -11,7 +11,7 @@ Hermetic: фейковые Registry/ForgeFacade/MemoryStore, без side-effect 
 from __future__ import annotations
 
 import sys
-}
+from pathlib import Path
 
 import pytest
 
@@ -74,7 +74,7 @@ class _FakeForgeFacade:
 
     def run_chain(self, project, role_ids=None, **kw):
         self.calls.append({"project_root": getattr(project, "root", None),
-                           "role_ids": role_ids])
+                           "role_ids": role_ids})
         return _FakeChainRun(self.overall)
 
 
@@ -135,7 +135,7 @@ def _make_opp(opp_id="opp-test1", project_id="proj-test", capability="code",
         "source_path": "data_13/opportunities.yaml",
         "evidence_path": "",
         "related_whims": [],
-    ])()
+    })()
 
 
 # ─── 1. Capability resolution (§16 unit) ────────────────────────────────────
@@ -150,7 +150,7 @@ def test_1_capabilities_registered_in_closed_vocab():
 def test_2_resolve_code_capability_via_fake_registry():
     tf = TestFactory(factory_registry=_FakeFactoryRegistry({
         "code": ("test", "verifier"),
-    ]))
+    }))
     pair = tf.resolve("code")
     assert pair is not None
     assert pair[0].factory_id == "test"
@@ -160,7 +160,7 @@ def test_2_resolve_code_capability_via_fake_registry():
 def test_3_resolve_unknown_capability_returns_none():
     tf = TestFactory(factory_registry=_FakeFactoryRegistry({
         "code": ("test", "verifier"),
-    ]))
+    }))
     # Не из нашего домена.
     assert tf.resolve("article_generation") is None
     assert tf.resolve("research") is None
@@ -181,7 +181,7 @@ def test_5_normalize_input_test_specific_fields():
         "assertion": "selected_factory == 'test'",
         "expected_outcome": "ok",
         "context": "Phase 11 verification",
-    ])
+    })
     inp = tf.normalize_input(opp)
     assert inp["requested_code"] == "select_forge_test"
     assert inp["test_assertion"] == "selected_factory == 'test'"
@@ -208,7 +208,7 @@ def test_5b_normalize_input_no_test_block_falls_back():
 def test_6_build_execution_request():
     tf = TestFactory(factory_registry=_FakeFactoryRegistry({
         "code": ("test", "verifier"),
-    ]))
+    }))
     opp = _make_opp()
     req = tf.build_execution_request(opp, "code")
     assert isinstance(req, ExecutionRequest)
@@ -329,7 +329,7 @@ def test_13a_domain_isolation_si_agnostic(tmp_path):
         "code": ("test", "verifier"),
         "article_generation": ("content", "writing"),
         "research": ("research", "analysis"),
-    ])
+    })
     assert factory_registry.select_forge("code")[0].factory_id == "test"
     assert factory_registry.select_forge("article_generation")[0].factory_id == "content"
     assert factory_registry.select_forge("research")[0].factory_id == "research"
@@ -352,7 +352,7 @@ def test_13b_si_routes_code_opp_to_test_factory(tmp_path):
 
     factory_registry = _FakeFactoryRegistry({
         "code": ("test", "verifier"),
-    ])
+    })
     scenarios = [
         (_FakeScenario("scenario_test", ["code"]), _FakeRole("verifier"), 0.9),
         (_FakeScenario("scenario_other", ["x"]), _FakeRole("other"), 0.6),

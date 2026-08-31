@@ -12,7 +12,7 @@ import json
 import shutil
 import subprocess
 import sys
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from freebuff_plugin_03.runtime import (
@@ -166,7 +166,7 @@ class RuntimeRegistry:
                 "capabilities": info.get("capabilities", []),
                 "platforms": info.get("platforms", []),
                 "requires_api_key": info.get("requires_api_key", False),
-            ])
+            })
         return result
 
     # ── Active Runtime ───────────────────────────────────────
@@ -638,7 +638,7 @@ class RuntimeRegistry:
                 "active": name == self._active_name,
                 "bin_path": rt.bin_path,
                 "error": rt.error,
-            ])
+            })
 
         return {
             "active": self._active_name,
@@ -710,7 +710,7 @@ class RuntimeCapabilityRegistry:
                     "status": rt.status.value,
                     "confidence": score,
                     "connected": self._registry.is_connected(rt.name),
-                ])
+                })
         # Сортируем по confidence (лучшие первые)
         for cap_name in result:
             result[cap_name].sort(key=lambda x: x["confidence"], reverse=True)

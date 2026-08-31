@@ -43,7 +43,7 @@ import logging
 import sys
 import time
 import uuid
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 # ── Freebuff root resolution (mirrors tg_send_v5570.py pattern) ───────────

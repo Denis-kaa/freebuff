@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-}
+from pathlib import Path
 
 from realtor_os.constants import DATA_DIR
 from realtor_os.logger import setup_logger

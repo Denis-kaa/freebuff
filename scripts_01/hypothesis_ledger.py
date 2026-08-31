@@ -54,11 +54,11 @@ import enum
 import hashlib
 import json
 import os
-}
+import re
 import sys
 import threading
 from dataclasses import asdict, dataclass, field
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 __all__ = [
@@ -659,7 +659,7 @@ def _cli_add(args: argparse.Namespace) -> int:
                 "criterion": criterion_text,
                 "met": parts.get("met", "false").lower() in ("true", "1", "yes"),
                 "evidence_url": parts.get("evidence_url") or None,
-            ])
+            })
         result = add_hypothesis(
             args.text,
             tags=args.tag,
@@ -714,7 +714,7 @@ def _cli_query(args: argparse.Namespace) -> int:
         _print_json({
             "summary": full.summary.to_dict(),
             "history": [e.to_dict() for e in full.history],
-        ])
+        })
         return 0
     sys.stdout.write(f"hypothesis {full.summary.hid}\n")
     sys.stdout.write(f"  text: {full.summary.text}\n")

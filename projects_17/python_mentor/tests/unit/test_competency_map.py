@@ -5,7 +5,7 @@ prerequisites, ацикличность (цикл → ошибка), coverage п
 Hermetic: только локальные файлы.
 """
 
-}
+from pathlib import Path
 
 import pytest
 import yaml

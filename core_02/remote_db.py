@@ -26,7 +26,7 @@ import logging
 import sqlite3
 import urllib.error
 import urllib.request
-}
+from pathlib import Path
 from typing import Any, Sequence
 
 logger = logging.getLogger(__name__)

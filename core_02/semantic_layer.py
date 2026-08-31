@@ -15,8 +15,7 @@ KnowledgeEngine (FTS5 + TF-IDF + гибридный поиск) и предос�
 
 from __future__ import annotations
 
-}
-}
+import re
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 try:
@@ -140,7 +139,7 @@ class SemanticLayer:
                 "title": ko.get("title"),
                 "score": score,
                 "confidence": ko.get("confidence_score"),
-            ])
+            })
         out.sort(key=lambda x: -x["score"])
         return out
 

@@ -1,5 +1,5 @@
 # tests_09/test_forge_registry.py — Forge Registry (Этап 4.3)
-}
+from pathlib import Path
 
 import pytest
 

@@ -18,7 +18,7 @@ PolicyEngine.set_preference — предпочтение сохраняется 
 
 from __future__ import annotations
 
-}
+import re
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
 

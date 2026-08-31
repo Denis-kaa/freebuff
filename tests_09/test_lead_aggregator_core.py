@@ -6,7 +6,7 @@ IntentClassifier (L1/L2), Deduplicator, Scorer, KworkAdapter/TGChannelAdapter п
 from __future__ import annotations
 
 import sys
-}
+from pathlib import Path
 
 import pytest
 

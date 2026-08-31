@@ -47,10 +47,10 @@ import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
-}
+import re
 from typing import Any, Dict, Iterator, List, Optional, Tuple
 
-}
+from pathlib import Path
 
 import httpx
 import importlib.util
@@ -87,7 +87,7 @@ class ModelResponse:
     finish_reason: str = "stop"
     usage: Dict[str, int] = field(default_factory=lambda: {
         "prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0,
-    ])
+    })
     latency_ms: int = 0
     id: str = field(default_factory=lambda: uuid.uuid4().hex[:12])
     cached: bool = False
@@ -563,7 +563,7 @@ class GeminiProvider(BaseProvider):
                                         "prompt_tokens": usage.get("promptTokenCount", 0),
                                         "completion_tokens": usage.get("candidatesTokenCount", 0),
                                         "total_tokens": usage.get("totalTokenCount", 0),
-                                    ] if usage else None,
+                                    } if usage else None,
                                 )
         except httpx.HTTPStatusError as e:
             raise RuntimeError(f"Gemini stream error {e.response.status_code}: {e.response.text[:200]}") from e

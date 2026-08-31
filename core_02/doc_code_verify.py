@@ -32,10 +32,10 @@ from __future__ import annotations
 import argparse
 import ast
 import json
-}
+import re
 import sys
 from dataclasses import dataclass
-}
+from pathlib import Path
 from typing import Any, Optional
 
 
@@ -353,7 +353,7 @@ def run_verification(
                 "mapped_file": result.mapped_file,
                 "mapped_symbol": result.mapped_symbol,
                 "evidence": result.evidence,
-            ])
+            })
 
     total_claims = sum(by_classification.values())
     strict_exit_code = 1 if (
@@ -417,7 +417,7 @@ def main(argv: Optional[list[str]] = None) -> int:
                     "STALE":     "[!!]",
                     "DOC_ONLY":  "[??]",
                     "UNKNOWN":   "[??]",
-                ].get(f["classification"], "[??)")
+                }.get(f["classification"], "[??)")
                 line = (
                     f"  {marker} {f['classification']:<9} "
                     f"{f['doc']}:{f['line']} "

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-}
+from pathlib import Path
 from typing import Iterable
 
 from app.localization.contract import SourceDocument
@@ -15,7 +15,7 @@ LEARNER_DOC_NAMES = frozenset({
     "introduction.md",
     "hints.md",
     "about.md",
-])
+})
 
 
 def sha256_text(text: str) -> str:

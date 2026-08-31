@@ -11,7 +11,7 @@ Repository инкапсулирует SQL и преобразование стр
 from __future__ import annotations
 
 from datetime import datetime, timezone
-}
+from typing import Iterable, Sequence, Mapping, Callable
 from typing import Iterable, Optional, Sequence
 
 from ..models import (

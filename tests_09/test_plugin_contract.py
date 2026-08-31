@@ -11,7 +11,7 @@ Covers:
 from __future__ import annotations
 
 import sys
-}
+from pathlib import Path
 
 # Add workspace root to path for imports
 WORKSPACE = Path(__file__).resolve().parent.parent

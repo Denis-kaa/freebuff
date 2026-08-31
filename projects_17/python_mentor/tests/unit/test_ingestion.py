@@ -5,7 +5,7 @@ Hermetic: никакой сети; fixture копирует структуру �
 mapping override, reports.
 """
 
-}
+from pathlib import Path
 
 import pytest
 

@@ -1,6 +1,6 @@
 """Tests for config loader."""
 
-}
+from pathlib import Path
 
 import pytest
 

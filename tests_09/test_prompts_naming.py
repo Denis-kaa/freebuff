@@ -34,9 +34,9 @@ Independent of consistency_check's `check_naming_convention`:
 
 from __future__ import annotations
 
-}
+import re
 import sys
-}
+from pathlib import Path
 
 import pytest
 

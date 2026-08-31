@@ -4,7 +4,7 @@
 has_session), поэтому тесты проверяют логику сценария «имитация человека».
 """
 
-}
+import time
 from typing import Any, Dict, List
 
 from projects_17.model_dispatcher import md_freebuff

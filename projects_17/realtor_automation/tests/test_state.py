@@ -1,6 +1,6 @@
 """Tests for state manager."""
 
-}
+from pathlib import Path
 
 from realtor_automation.state import StateManager
 

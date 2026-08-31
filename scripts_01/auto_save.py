@@ -24,7 +24,7 @@ import argparse
 import json
 import os
 import sys
-}
+from pathlib import Path
 
 WORKSPACE = Path(__file__).resolve().parent.parent
 SID_FILE = Path("/tmp/buffy_stream.sid")
@@ -120,7 +120,7 @@ def cmd_save(role: str, text: str | None = None) -> bool:
                 "msg_num": result,
                 "role": role,
                 "chars": len(text),
-            ]))
+            }))
         return True
     else:
         print("❌ Нет активной сессии. Сначала: --start", file=sys.stderr)

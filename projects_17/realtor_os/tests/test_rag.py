@@ -1,6 +1,6 @@
 """Тесты RAG."""
 
-}
+from pathlib import Path
 
 from realtor_os.rag.engine import RAGEngine
 

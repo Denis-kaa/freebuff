@@ -101,7 +101,7 @@ class TestConsistencyCheckIdempotency:
         Time invariant: any filesystem write the checker makes is an
         unattributed side effect (= drift paradoxically).
         """
-        }
+        
 
         sample_path = Path('CHANGELOG.md')
         if not sample_path.exists():

@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 sys.path.insert(0, os.path.dirname(__file__))
 
 from context_manager import ContextManager, SessionStatus, CheckpointType
-from session_utils ]solve_session_id
+from session_utils import solve_session_id
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORKSPACE = os.environ.get("FREEBUFF_ROOT", PROJECT_ROOT)

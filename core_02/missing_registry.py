@@ -29,7 +29,7 @@ import json
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 try:
@@ -277,7 +277,7 @@ class MissingRegistry:
                 "updated_at": now,
                 # backfill — факт регистрации, не откатывается (как lifecycle).
                 "backfill": bool(backfill or existing.get("backfill", False)),
-            ])
+            })
             self._save()
             return item_id
 

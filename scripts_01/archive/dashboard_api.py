@@ -29,7 +29,7 @@ import subprocess
 import sys
 import time
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Any
 
 import uvicorn
@@ -426,7 +426,7 @@ async def get_recent_checkpoints(limit: int = 10) -> dict[str, Any]:
                     "summary": cp.get("summary", "")[:150],
                     "message_count": cp.get("message_count", 0),
                     "created_at": cp.get("created_at", ""),
-                ])
+                })
 
         all_checkpoints.sort(key=lambda x: x.get("created_at", ""), reverse=True)
         return {"total": len(all_checkpoints), "checkpoints": all_checkpoints[:limit]}

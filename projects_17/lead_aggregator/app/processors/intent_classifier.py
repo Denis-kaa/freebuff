@@ -8,7 +8,7 @@ L2: intent — «клиент ищет исполнителя» (горячий 
 """
 from __future__ import annotations
 
-}
+import re
 from typing import Iterable
 
 

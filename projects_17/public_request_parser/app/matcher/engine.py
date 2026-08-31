@@ -18,7 +18,7 @@ Word-form обработка намеренно простая (префиксн
 
 from __future__ import annotations
 
-}
+import re
 from datetime import datetime, timezone
 from typing import Iterable, Sequence
 

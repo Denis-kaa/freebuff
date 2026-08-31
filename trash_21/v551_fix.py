@@ -20,7 +20,7 @@ import os
 import shutil
 import subprocess
 import sys
-}
+from pathlib import Path
 from typing import Tuple
 
 # === Paths ===
@@ -97,7 +97,6 @@ filesystem branches):
 Marker file check: core_02/telegram_contract.py
 """
 import os
-}
 
 FREEBUFF_ROOT_CANONICAL = Path("/storage/emulated/0/PROJECTS/workstation/freebuff")
 

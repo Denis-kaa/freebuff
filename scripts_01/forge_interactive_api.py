@@ -32,12 +32,12 @@ from __future__ import annotations
 import asyncio
 import json
 import os
-}
+import re
 import subprocess
 import sys
 import uuid
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Annotated, Any, AsyncIterator, Optional
 
 from fastapi import APIRouter, HTTPException, Request
@@ -280,7 +280,7 @@ async def start_chain_stream(slug: str, body: ChainRunBody) -> dict[str, Any]:
         "ts": datetime.now(timezone.utc).isoformat(),
         "kind": "info",
         "msg": f"spawned forge.py chain (pid={proc.pid}, argv={' '.join(argv)})",
-    ])
+    })
     # Schedule background task to drain subprocess into sess.log
     try:
         loop = asyncio.get_event_loop()
@@ -292,7 +292,7 @@ async def start_chain_stream(slug: str, body: ChainRunBody) -> dict[str, Any]:
             "ts": datetime.now(timezone.utc).isoformat(),
             "kind": "warn",
             "msg": "no running event loop; subprocess drain deferred to next /stream call",
-        ])
+        })
     return {
         "ok": True,
         "run_id": sess.run_id,
@@ -321,7 +321,7 @@ async def _drain_subprocess_to_session(sess: RunSession, proc: subprocess.Popen)
                 "ts": datetime.now(timezone.utc).isoformat(),
                 "kind": kind,
                 "msg": line.rstrip("\n"),
-            ])
+            })
 
     try:
         await asyncio.gather(
@@ -335,7 +335,7 @@ async def _drain_subprocess_to_session(sess: RunSession, proc: subprocess.Popen)
             "ts": datetime.now(timezone.utc).isoformat(),
             "kind": "error",
             "msg": "subprocess wait() timed out after 10s",
-        ])
+        })
         sess.status = "init_error"
         try:
             proc.terminate()
@@ -346,7 +346,7 @@ async def _drain_subprocess_to_session(sess: RunSession, proc: subprocess.Popen)
             "ts": datetime.now(timezone.utc).isoformat(),
             "kind": "error",
             "msg": f"drain exception: {exc!r}",
-        ])
+        })
         sess.status = "init_error"
         try:
             proc.terminate()
@@ -380,7 +380,7 @@ async def stream_chain(slug: str, run_id: str, request: Request) -> StreamingRes
         "ts": datetime.now(timezone.utc).isoformat(),
         "kind": "info",
         "msg": "SSE client subscribed",
-    ])
+    })
 
     async def event_gen() -> AsyncIterator[bytes]:
         idx = 0
@@ -391,7 +391,7 @@ async def stream_chain(slug: str, run_id: str, request: Request) -> StreamingRes
                         "ts": datetime.now(timezone.utc).isoformat(),
                         "kind": "info",
                         "msg": "SSE client disconnected",
-                    ])
+                    })
                     break
                 # Drain any new entries written since last yield
                 while idx < len(sess.log):

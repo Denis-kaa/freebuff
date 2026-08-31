@@ -38,7 +38,7 @@ import threading
 import time
 import uuid
 from dataclasses import dataclass, field
-}
+from typing import Protocol
 from queue import Queue, Empty
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
@@ -135,7 +135,7 @@ class MCPClientBase:
                 "version": "1.0.0",
             },
             "capabilities": {},
-        ])
+        })
         self._server_info = result
         return result
 
@@ -166,7 +166,7 @@ class MCPClientBase:
             result = self._send_request("tools/call", {
                 "name": name,
                 "arguments": arguments,
-            ])
+            })
             content = result.get("content", [])
             is_error = result.get("isError", False)
             return MCPCallResult(
@@ -405,7 +405,7 @@ class HTTPMCPClient(MCPClientBase):
                     },
                     "capabilities": {},
                 },
-            ])
+            })
             self._server_info = result
             self._connected = True
             return True

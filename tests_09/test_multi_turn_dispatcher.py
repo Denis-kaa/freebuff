@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import json
 import sys
-}
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 import pytest
@@ -68,7 +68,7 @@ def _make_pending_result(pending_text: str, success: bool = True) -> Dict[str, A
             "pending_task": pending_text,
             "session_id": "abc123",
             "timestamp": "2026-08-04T10:00:00Z",
-        ]),
+        }),
         "session_id": "abc123",
         "duration": 1.0,
         "error": None,
@@ -85,7 +85,7 @@ def _make_done_result() -> Dict[str, Any]:
             "status": "ok",
             "message": "done",
             "session_id": "abc123",
-        ]),
+        }),
         "session_id": "abc123",
         "duration": 2.5,
         "error": None,

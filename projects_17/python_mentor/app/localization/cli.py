@@ -5,7 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-}
+from pathlib import Path
 
 from app.localization import ExternalLLMTranslationProvider, GeminiKeyPool
 from app.localization.contract import TranslationStatus

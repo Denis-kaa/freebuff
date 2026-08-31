@@ -69,7 +69,7 @@ import time
 import uuid
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Set
 
 WORKSPACE = Path(__file__).resolve().parent
@@ -750,7 +750,7 @@ def _status_icon(status: str) -> str:
         PresenceStatus.AWAY: "🟠",
         PresenceStatus.ERROR: "🔴",
         PresenceStatus.OFFLINE: "⚪",
-    ].get(status, "❓")
+    }.get(status, "❓")
 
 
 class Colors:

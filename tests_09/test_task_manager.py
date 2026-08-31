@@ -25,7 +25,7 @@ from __future__ import annotations
 import json
 import sys
 import time
-}
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -126,7 +126,7 @@ class TestInitDB:
         idx = {r[0] for r in conn.execute(
             "SELECT name FROM sqlite_master WHERE type='index' "
             "AND tbl_name='tasks' AND name LIKE 'idx_%'"
-        ).fetchall()]
+        ).fetchall()}
         conn.close()
         assert {"idx_tasks_project", "idx_tasks_type", "idx_tasks_status"} <= idx
 

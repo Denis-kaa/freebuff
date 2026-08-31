@@ -72,7 +72,7 @@ def _write_yaml_registry(path, pipeline: list) -> None:
 
 def _materialize_outputs(root, patterns: list) -> None:
     """Создаёт файлы-артефакты по паттернам (прямой файл или упрощённый glob)."""
-    }
+    
     for pat in patterns:
         if "*" in pat:
             simple = re.sub(r"\*\*?/|\*", "x", pat)
@@ -92,13 +92,13 @@ class TestDataclassesAndConstants:
         assert LIGHT_ROLES == frozenset({
             "explainer", "lisa", "risk", "decomposer",
             "architect", "auditor", "documenter", "retrospective",
-        ])
+        })
 
     def test_heavy_roles_count_and_set(self):
         assert len(HEAVY_ROLES) == 4
         assert HEAVY_ROLES == frozenset({
             "developer", "tester", "fixer", "acceptance",
-        ])
+        })
 
     def test_light_plus_heavy_plus_conditional_equals_pipeline(self):
         # 14 = 8 LIGHT + 4 HEAVY + 2 CONDITIONAL (frontend/devops).
@@ -322,7 +322,7 @@ class TestHeavyRoles:
         # Ломаем ТОЛЬКО pipeline-ветку запуска для developer (chain-soft-failure).
         # ForgePipeline инстанцируется под капотом через initiate_forge, поэтому
         # мы monkeypatch'им ForgeFacade.initiate_forge (entry-point с
-        # requested_by_role) — это позволяет селективно сломать одну роль в
+        # requested_by_role — это позволяет селективно сломать одну роль в
         # multi-role chain, не ломая не-heavies. Предыдущий вариант через
         # self.project.name не работал: project передаётся ОДИН на все роли
         # chain, и `developer` не присутствует в name=vkusvill_demo.

@@ -11,7 +11,7 @@ Tests use `tmp_path` fixtures + absolute paths to avoid CWD-relativity bugs
 from __future__ import annotations
 
 import sys
-}
+import logging
 from unittest.mock import patch
 
 import pytest

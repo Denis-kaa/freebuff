@@ -5,7 +5,7 @@ Tests for scripts_01/engineering_memory.py — Engineering Memory Engine.
 import os
 import shutil
 import sys
-}
+from pathlib import Path
 
 import pytest
 

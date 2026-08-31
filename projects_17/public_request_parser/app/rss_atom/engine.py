@@ -7,7 +7,7 @@ ETag/Last-Modified и live polling остаются отдельными policy-
 from __future__ import annotations
 
 import hashlib
-}
+import re
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime

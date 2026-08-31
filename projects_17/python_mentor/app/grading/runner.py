@@ -18,7 +18,7 @@ import sys
 import tempfile
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Iterable
 
 from app.execution import ExecutionJob, ExecutionPolicy, ExecutionStatus, TermuxSubprocessBackend
@@ -313,7 +313,7 @@ class PytestGrader:
             GradingStatus.ERROR: "error",
             GradingStatus.TIMEOUT: "timeout",
             GradingStatus.INFRASTRUCTURE_ERROR: "infrastructure_error",
-        ][status]
+        }[status]
         candidates: tuple[EvidenceCandidate, ...] = ()
         if status in (GradingStatus.PASS, GradingStatus.FAIL, GradingStatus.ERROR):
             strength = "strong" if status is GradingStatus.PASS else "weak"

@@ -15,7 +15,7 @@ from __future__ import annotations
 import json
 import os
 import sys
-}
+import time
 from queue import Queue, Empty
 from unittest.mock import MagicMock, PropertyMock, patch
 

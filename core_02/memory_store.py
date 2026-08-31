@@ -28,7 +28,7 @@ import sqlite3
 import uuid
 from collections import deque
 from datetime import datetime, timedelta, timezone
-}
+from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -323,7 +323,7 @@ class MemoryStore:
     def update_knowledge(self, knowledge_id: str, **fields: Any) -> bool:
         """Обновить поля Knowledge Object. Возвращает True если объект найден."""
         allowed = {"title", "summary", "content", "status", "lifecycle_stage",
-                   "confidence_score", "superseded_by"]
+                   "confidence_score", "superseded_by"}
         # None = «не менять» (позволяет обновлять subset полей без знания остальных)
         updates = {k: v for k, v in fields.items() if k in allowed and v is not None}
         if not updates:
@@ -428,7 +428,7 @@ class MemoryStore:
                         "rel_type": r["rel_type"],
                         "depth": depth + 1,
                         "weight": r["weight"],
-                    ])
+                    })
                 queue.append((neighbor, depth + 1))
         results.sort(key=lambda x: (x["depth"], -x["weight"]))
         return results
@@ -493,7 +493,7 @@ class MemoryStore:
                     "pattern": f"{r1} → {r2}",
                     "occurrences": len(uniq),
                     "examples": uniq,
-                ])
+                })
         result.sort(key=lambda x: -x["occurrences"])
         return result
 

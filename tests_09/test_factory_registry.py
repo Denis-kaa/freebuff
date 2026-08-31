@@ -16,7 +16,7 @@ CAN-16 ADDITIVE: этот файл НЕ модифицирует core_02/* ил�
 from __future__ import annotations
 
 import os
-}
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -274,7 +274,7 @@ class TestFactoryRegistryDuplicate:
         _make_factory_dir(tmp_path, "research", ["scanner"])
         # Drop a second manifest with same forge_id into same factory dir.
         # We'll use a non-direct filename (allowed extension but not .yaml
-        # recognised by forges filter would skip; we need forge_id=='scanner').
+        # recognised by forges filter would skip; we need forge_id=='scanner'.
         import yaml
         dupe_payload = {
             "forge_id": "scanner",
@@ -418,7 +418,7 @@ class TestFactoryRegistryCapabilityCatalog:
             "status": status,
             "description": f"{factory_id} factory.",
             "capabilities": factory_caps,
-        ])
+        })
         for fid in forge_ids:
             _dump_yaml(fdir / f"{fid}.yaml", {
                 "forge_id": fid,
@@ -430,7 +430,7 @@ class TestFactoryRegistryCapabilityCatalog:
                 "metadata": {},
                 "mission": f"mission {fid}",
                 "outputs": [f"{fid}_verdict"],
-            ])
+            })
 
     def test_get_factory_returns_passport(self, tmp_path: Path) -> None:
         self._make_cap_factory(

@@ -12,7 +12,7 @@ v2.0.0: читает BUFFY.md, загружает последний консп�
 from __future__ import annotations
 
 import os
-}
+import re
 import sys
 from datetime import datetime, timezone
 

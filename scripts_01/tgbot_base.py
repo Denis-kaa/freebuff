@@ -26,7 +26,7 @@ import asyncio
 import logging
 import os
 import sys
-}
+from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger("freebuff.tgbot_base")

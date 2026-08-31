@@ -14,7 +14,7 @@ Phase-based (анти-OOM):
 from __future__ import annotations
 
 import os
-}
+import re
 import shutil
 import subprocess
 import sys
@@ -22,7 +22,7 @@ import tempfile
 import time
 import uuid
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Optional
 
 from freebuff_plugin_03.config import (
@@ -245,7 +245,7 @@ def list_active_pids() -> list[dict]:
                 "pid": int(lines[0]),
                 "sid": lines[1],
                 "cwd": lines[2],
-            ])
+            })
     return results
 
 
@@ -397,7 +397,7 @@ def launch(
         sid = session_start(topic=prompt[:80])
     except Exception as e:
         return {"success": False, "session_id": "", "pid": None,
-                "status": f"session_start failed: {e}", "error": str(e)]
+                "status": f"session_start failed: {e}", "error": str(e)}
 
     # AGENTS.md для контекста: бэкап канона → session-файл (restore делает monitor.sh)
     _backup_agents_md(work_dir)

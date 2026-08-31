@@ -17,10 +17,10 @@ After fixes:
 """
 from __future__ import annotations
 
-}
+import re
 import subprocess
 import sys
-}
+from pathlib import Path
 
 ROOT = Path("/storage/emulated/0/PROJECTS/workstation/freebuff")
 VERIFIED_COUNT = 1991  # from consistency_check.py AST count (vs pytest --collect-only = 1992; AST is canonical here)
@@ -174,7 +174,7 @@ print(f"  Saved: {len(SAVED_TEXT)} chars / Alex: {len(ALEX_TEXT)} chars")
 print("\n=== STEP 5: best-effort TG send ===")
 try:
     sys.path.insert(0, str(ROOT))
-    from core_02.telegram_contract ]port_to_saved_messages, report_to_litvinov
+    from core_02.telegram_contract import port_to_saved_messages, report_to_litvinov
     import asyncio
     saved_id = asyncio.run(report_to_saved_messages(SAVED_TEXT))
     if isinstance(saved_id, int):

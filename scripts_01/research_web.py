@@ -22,7 +22,7 @@ import json
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Any, Optional
 
 import httpx
@@ -360,7 +360,7 @@ def research_web(
 
 def _write_report(report: ResearchReport, target: str) -> None:
     """Записать markdown-отчёт (идемпотентно, atomic-запись)."""
-    }
+    
 
     path = Path(target)
     if path.parent and not path.parent.exists():

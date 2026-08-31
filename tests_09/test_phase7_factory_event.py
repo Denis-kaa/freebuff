@@ -22,7 +22,7 @@ from __future__ import annotations
 import json
 import sys
 import types
-}
+from pathlib import Path
 from typing import Any, Dict, List
 
 import pytest
@@ -95,7 +95,7 @@ class _RecordingBus:
             "type": event.type,
             "data": dict(event.data),
             "source": event.source,
-        ])
+        })
         return 1
 
 
@@ -561,6 +561,6 @@ def test_discover_candidates_still_works(tmp_path):
         source_paths={"whims": tmp_path / "no_whims.yaml",
                       "pulse": tmp_path / "no_pulse.db",
                       "events": tmp_path / "no_events.db",
-                      "memory": tmp_path / "no_mem.db"],
+                      "memory": tmp_path / "no_mem.db"},
     )
     assert cands == []

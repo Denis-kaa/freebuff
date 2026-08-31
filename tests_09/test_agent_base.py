@@ -12,7 +12,7 @@
 
 from __future__ import annotations
 
-}
+import re
 from typing import Any, Dict, List
 from uuid import uuid4
 
@@ -89,7 +89,7 @@ class _FakeForgeFacade:
         self.calls.append({
             "project_name": project.name,
             "role_ids": list(role_ids),
-        ])
+        })
         return _FakeChainRun(chain_id=f"chain-{len(self.calls)}")
 
 

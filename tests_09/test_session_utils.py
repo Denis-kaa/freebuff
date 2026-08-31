@@ -4,7 +4,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from scripts_01.session_utils ]solve_session_id
+from scripts_01.session_utils import solve_session_id
 
 
 class TestResolveSessionId:

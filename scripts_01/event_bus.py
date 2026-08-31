@@ -43,7 +43,7 @@ import uuid
 from collections import defaultdict
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 

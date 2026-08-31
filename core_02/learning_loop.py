@@ -21,9 +21,9 @@ AFC-цикл:
 
 from __future__ import annotations
 
-}
+import re
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from core_02.memory_store import MemoryStore
@@ -194,9 +194,9 @@ class LearningLoop:
             raise KeyError(f"Knowledge Object {knowledge_id} не найден")
 
         action: Dict[str, Any] = {"lessons_updated": False, "con_id": None,
-                                  "debt_updated": False, "tg_sent": False]
+                                  "debt_updated": False, "tg_sent": False}
 
-        # 1) LESSONS.md — запись CON-N
+        # 1 LESSONS.md — запись CON-N
         if ko.get("kind") in ("lesson", "pattern", "anti_pattern", "guideline", "rule", "adr", "workflow"):
             con_id = self._next_con_id()
             entry = self._format_con_entry(con_id, ko)
@@ -206,13 +206,13 @@ class LearningLoop:
             action["lessons_updated"] = True
             action["con_id"] = con_id
 
-        # 2) ARCHITECTURAL_DEBT.md — если это архитектурный долг
+        # 2 ARCHITECTURAL_DEBT.md — если это архитектурный долг
         if ko.get("kind") == "adr" and "долг" in (ko.get("summary") or "").lower():
             with self.debt_path.open("a", encoding="utf-8") as f:
                 f.write(f"\n- {ko.get('title')} (OM:{knowledge_id})\n")
             action["debt_updated"] = True
 
-        # 3) Telegram-уведомление
+        # 3 Telegram-уведомление
         if notify_tg:
             try:
                 from core_02.telegram_contract import send_message  # type: ignore

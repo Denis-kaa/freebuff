@@ -17,7 +17,7 @@ import os
 import sys
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Dict, List, Optional
 
 
@@ -324,7 +324,7 @@ def _cat_emoji(cat: str) -> str:
         "voice_audio": "🎤",
         "config_secret": "🔑",
         "docs_knowledge": "📚",
-    ].get(cat, "📦")
+    }.get(cat, "📦")
 
 
 if __name__ == "__main__":

@@ -57,7 +57,7 @@ import os
 import sys
 import uuid
 from dataclasses import dataclass, field, asdict
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 # Lazy imports (additive, forward-portable).
@@ -1000,7 +1000,7 @@ def accumulate(
     MemoryStore = _lazy_import("core_02.memory_store", "MemoryStore")
     if MemoryStore is None:
         return {"accumulated": False, "knowledge_id": None, "learning_event_id": None,
-                "confidence": None, "outcome": "failure", "error": "memory_store unavailable"]
+                "confidence": None, "outcome": "failure", "error": "memory_store unavailable"}
     store = memory_store if memory_store is not None else MemoryStore(memory_db or MEMORY_DB_PATH)
     outcome = "success" if opp.status == "COMPLETED" else "failure"
 
@@ -1020,7 +1020,7 @@ def accumulate(
         )
     except Exception as exc:  # noqa: BLE001
         return {"accumulated": False, "knowledge_id": None, "learning_event_id": None,
-                "confidence": None, "outcome": outcome, "error": f"store_knowledge: {exc}"]
+                "confidence": None, "outcome": outcome, "error": f"store_knowledge: {exc}"}
 
     eid: Optional[str] = None
     try:
@@ -1038,7 +1038,7 @@ def accumulate(
         )
     except Exception as exc:  # noqa: BLE001
         return {"accumulated": True, "knowledge_id": kid, "learning_event_id": None,
-                "confidence": None, "outcome": outcome, "error": f"record_learning_event: {exc}"]
+                "confidence": None, "outcome": outcome, "error": f"record_learning_event: {exc}"}
 
     confidence: Optional[float] = None
     if opp.status == "COMPLETED":
@@ -1056,7 +1056,7 @@ def accumulate(
     opp.provenance["memory_knowledge_id"] = kid
     opp.provenance["learning_event_id"] = eid
     return {"accumulated": True, "knowledge_id": kid, "learning_event_id": eid,
-            "confidence": confidence, "outcome": outcome, "error": None]
+            "confidence": confidence, "outcome": outcome, "error": None}
 
 
 def _accumulate_best_effort(opp: Opportunity, *, memory_store: Any = None, learning_loop: Any = None) -> None:

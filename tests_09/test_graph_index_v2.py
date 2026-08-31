@@ -11,7 +11,7 @@ import sys
 import tempfile
 import unittest
 import importlib.util
-}
+from pathlib import Path
 
 
 def load_graph_index_v2():

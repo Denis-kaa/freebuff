@@ -56,7 +56,7 @@ def _write_yaml_registry(path, pipeline):
 def _materialize_outputs(root, patterns):
     """Создаёт файлы-«артефакты» по каждому паттерну (прямой файл или простой
     path для нескольких glob). Для каждого паттерна создаётся сам файл."""
-    }
+    
     for pat in patterns:
         if "*" in pat:
             # Превращаем "src/**/*.py" → "src/foo.py" (простой путь).
@@ -231,7 +231,7 @@ class TestRegistryResolution:
         registry_path = reg_dir / "registry.yaml"
         _write_yaml_registry(registry_path, [{
             "id": "explainer", "outputs": ["brief.md"],
-        ]])
+        }])
         _materialize_outputs(project.root, ["brief.md"])
 
         # Валидатор БЕЗ явного registry_path: резолвер должен найти registry
@@ -298,14 +298,14 @@ class TestRegistryResolution:
         fallback iter. Без этого test проходит тривиально с cwd fallback
         который никогда не срабатывает.)
         """
-        # 1) explicit registry (cодержит explainer без missing).
+        # 1 explicit registry (cодержит explainer без missing).
         explicit_path = tmp_path / "explicit_registry.yaml"  # НЕ под DEFAULT_REGISTRY_CANDIDATES.
         _write_yaml_registry(explicit_path, [
             {"id": "explainer", "outputs": ["brief.md"]},
         ])
         _materialize_outputs(project.root, ["brief.md"])
 
-        # 2) cwd registry (отличающийся по роли — содержит lisa). Имя = DEFAULT_REGISTRY_CANDIDATES[0].
+        # 2 cwd registry (отличающийся по роли — содержит lisa). Имя = DEFAULT_REGISTRY_CANDIDATES[0].
         # Это имя реально matchится cwd fallback iter (find first match в candidates).
         monkeypatch.chdir(tmp_path)
         cwd_alt_dir = tmp_path / "blueprints_v3"
@@ -435,7 +435,7 @@ class TestGlobSemantics:
         registry_path = tmp_path / "r.yaml"
         _write_yaml_registry(registry_path, [{
             "id": "developer", "outputs": ["src/**/*.py"],
-        ]])
+        }])
         validator = RoleArtifactValidator(registry_path=registry_path)
         summary = validator.validate(project,
                                        role_ids=("developer",),

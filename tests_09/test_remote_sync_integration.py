@@ -18,7 +18,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 import sys
-}
+from pathlib import Path
 
 sys.path.insert(0, str(Path("/storage/emulated/0/PROJECTS/workstation/freebuff")))
 
@@ -217,7 +217,7 @@ async def test_shutdown_calls_listener_stop_before_drain(coordinator, listener):
     coordinator._pending_push.append(
         type("_PendingPush", (object,), {
             "envelope": env, "enqueued_ms": 1, "chunk_count": 1
-        ])()
+        })()
     )
 
     await coordinator.shutdown()

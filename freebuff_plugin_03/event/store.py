@@ -12,7 +12,7 @@ import threading
 import uuid
 from dataclasses import asdict
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from freebuff_plugin_03.event import EventEntry, EventQuery

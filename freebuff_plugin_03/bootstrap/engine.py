@@ -9,7 +9,7 @@ from __future__ import annotations
 import os
 import time
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
 try:
@@ -211,7 +211,7 @@ class BootstrapEngine:
                 "error": report.errors[0] if report.errors else "",
                 "errors_count": len(report.errors),
                 "warnings_count": len(report.warnings),
-            ])
+            })
         except Exception as e:
             report.success = False
             report.errors.append(f"Bootstrap failed: {e}")

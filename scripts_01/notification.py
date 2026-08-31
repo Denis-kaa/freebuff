@@ -41,7 +41,7 @@ import threading
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Dict, List, Optional
 
 if TYPE_CHECKING:
@@ -733,7 +733,7 @@ class ProgressTracker:
             "task_id": self.task_id,
             "task_name": self.task_name,
             "stage": stage,
-        ])
+        })
 
     def update_progress(self, percent: int, message: str = "") -> None:
         data: Dict[str, Any] = {
@@ -759,7 +759,7 @@ class ProgressTracker:
             "status": status,
             "duration": duration,
             "details": details,
-        ])
+        })
 
     def fail(self, error: str, stage: str = "") -> None:
         if self._finalized:
@@ -775,14 +775,14 @@ class ProgressTracker:
             "error": error,
             "stage": stage or self._stage,
             "duration": duration,
-        ])
+        })
 
     def warning(self, message: str) -> None:
         self._emit("task.warning", {
             "task_id": self.task_id,
             "task_name": self.task_name,
             "warning": message,
-        ])
+        })
 
     @staticmethod
     def _format_duration(seconds: float) -> str:

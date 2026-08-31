@@ -13,7 +13,7 @@ Fallback-реализации через /proc/* для Termux-совмести�
 
 import threading
 import time
-}
+from pathlib import Path
 
 from scripts_01.plugin_api import BasePlugin, PluginMeta, PluginResult
 
@@ -248,7 +248,7 @@ class SystemMonitorPlugin(BasePlugin):
         """Читает статус батареи из /sys/class/power_supply."""
         try:
             base = "/sys/class/power_supply"
-            }
+            
 
             batt_dirs = [p for p in Path(base).iterdir() if p.is_dir()]
             for d in batt_dirs:
@@ -269,7 +269,7 @@ class SystemMonitorPlugin(BasePlugin):
     def _read_temp_fallback(self) -> dict:
         """Читает температуру из /sys/class/thermal."""
         try:
-            }
+            
 
             thermal = Path("/sys/class/thermal")
             temps = []

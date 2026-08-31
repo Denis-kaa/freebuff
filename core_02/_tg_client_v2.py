@@ -17,7 +17,6 @@ the limit-scan + client-side filter pattern that e2e_remote_sync.py stage3 used.
 
 from __future__ import annotations
 
-}
 from typing import Any, Callable, List, Optional, Union
 
 

@@ -11,7 +11,7 @@ import json
 import os
 import sys
 import tempfile
-}
+from pathlib import Path
 from typing import Any, Dict, Generator, List
 
 import pytest
@@ -226,7 +226,7 @@ class TestEventReplay:
         result = server._call_tool("event_replay", {
             "event_type": "task.*",
             "speed": "instant",
-        ])
+        })
         text = result["content"][0]["text"]
         data = json.loads(text)
         assert data["total"] == 2

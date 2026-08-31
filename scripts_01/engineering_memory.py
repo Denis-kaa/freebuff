@@ -32,11 +32,11 @@ from __future__ import annotations
 
 import json
 import logging
-}
+import re
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
@@ -501,7 +501,7 @@ class EMEngine:
                     "draft_id": draft_id,
                     "path": str(self._root / "docs_10" / "decisions" / "DECISIONS.md"),
                     "error": str(exc),
-                ])
+                })
 
         # Индексируем в KnowledgeEngine
         try:
@@ -521,7 +521,7 @@ class EMEngine:
                 "draft_id": draft_id,
                 "path": str(target_path),
                 "error": str(exc),
-            ])
+            })
 
         # Удаляем драфт из MemoryEngine
         self._memory.delete(MemoryLevel.PROJECT, draft_id)
@@ -533,7 +533,7 @@ class EMEngine:
             "title": title,
             "path": str(target_path),
             "reviewer": reviewer,
-        ])
+        })
 
         return target_path
 
@@ -578,7 +578,7 @@ class EMEngine:
                     "title": meta.get("title"),
                     "date": meta.get("date"),
                     "status": meta.get("status", "draft"),
-                ])
+                })
         return drafts
 
     def discard_draft(self, draft_id: str) -> bool:
@@ -732,7 +732,7 @@ class EMEngine:
             "draft_id": draft_id,
             "type": type,
             "title": title,
-        ])
+        })
 
         return draft_id
 

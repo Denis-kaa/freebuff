@@ -22,7 +22,7 @@ import pytest
 # ── Imports under test ─────────────────────────────────────────────────────
 
 import sys
-}
+from pathlib import Path
 
 sys.path.insert(0, str(Path("/storage/emulated/0/PROJECTS/workstation/freebuff")))
 

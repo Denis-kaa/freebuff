@@ -38,7 +38,7 @@ tg-terminal-toolkit — Textual TUI для Telegram.
 import asyncio
 import json
 import os
-}
+import re
 import shutil
 import signal
 import subprocess
@@ -47,7 +47,7 @@ import tempfile
 import time
 from dataclasses import dataclass
 from datetime import datetime
-}
+from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))

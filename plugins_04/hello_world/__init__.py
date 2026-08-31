@@ -8,7 +8,6 @@ hello_world — Демонстрационный плагин для Buffy Plugi
   - Подписка на system.* события
 """
 
-}
 from scripts_01.plugin_api import BasePlugin, PluginMeta, PluginResult
 
 
@@ -58,7 +57,7 @@ class HelloWorldPlugin(BasePlugin):
         self._events_received.append({
             "type": event.type, "data_13": getattr(event, 'data_13', {}),
             "timestamp": getattr(event, 'timestamp', ''),
-        ])
+        })
 
     # ── Действия ───────────────────────────────────────────
 

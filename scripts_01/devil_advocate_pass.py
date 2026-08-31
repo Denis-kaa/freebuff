@@ -56,7 +56,7 @@ import argparse
 import json
 import sys
 from dataclasses import dataclass, field
-}
+from pathlib import Path
 from typing import Any, Dict, List, Literal, Optional
 
 __all__ = [
@@ -168,7 +168,7 @@ def _kc_to_dicts(kc_list: Any) -> List[Dict[str, Any]]:
                 "criterion": str(d.get("criterion", "")),
                 "met": bool(d.get("met", False)),
                 "evidence_url": d.get("evidence_url"),
-            ])
+            })
     return out
 
 

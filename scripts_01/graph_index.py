@@ -33,7 +33,7 @@ import threading
 from collections import deque
 from dataclasses import dataclass, field, asdict
 from datetime import datetime, timezone
-}
+import re
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 
@@ -935,7 +935,7 @@ if __name__ == "__main__":
 # interlink(). Both idempotent via PRIMARY KEY (source_id, target_id, rel_type).
 
 import os
-}
+from pathlib import Path
 
 
 def _normalize_artifact_path(self, artifact_path: str | "Path") -> str:

@@ -10,7 +10,7 @@ ChainRun/ExecutionRequest (fixture-стиль, как test_adr018_factory_forge_
 
 from __future__ import annotations
 
-}
+from pathlib import Path
 from typing import Any, Dict
 
 import pytest
@@ -63,7 +63,7 @@ class _FakeRequest:
         self.output_spec = kw.get("output_spec", {
             "artifact_kind": "content_artifact",
             "target": "projects_17/p1/forge/",
-        ])
+        })
 
 
 def _make_run(**kw) -> _FakeChainRun:

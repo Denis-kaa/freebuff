@@ -33,7 +33,7 @@ import os
 import shutil
 import sys
 from datetime import datetime, timezone
-}
+from pathlib import Path
 
 WORKSPACE = os.environ.get("FREEBUFF_ROOT", os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, WORKSPACE)
@@ -45,7 +45,7 @@ from scripts_01.system_monitor import health_check
 from scripts_01.context_builder import ContextBuilder
 from scripts_01.event_bus import get_default_event_bus
 from scripts_01.seed_knowledge import seed as seed_knowledge
-from scripts_01.session_utils ]solve_session_id
+from scripts_01.session_utils import solve_session_id
 
 # MANDATORY RUNTIME CONTRACT (v5.24.0): системные уведомления о завершении CLI-задач.
 # Graceful degradation: если notification-модуль недоступен (FREEBUFF_NO_NOTIFY=1

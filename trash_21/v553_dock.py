@@ -17,11 +17,10 @@ ANTI-11 lesson: holistic patches — both constants AND docstring defaults updat
 from __future__ import annotations
 
 import os
-}
+from pathlib import Path
 import shutil
 import subprocess
 import sys
-}
 
 ROOT = Path("/storage/emulated/0/PROJECTS/workstation/freebuff")
 
@@ -60,7 +59,6 @@ Marker file: `_marker.txt` AT the root of interior_planner_e2e/ — explicit,
 machine-readable, immune to refactoring (unlike script names or human-stable docs).
 """
 import os
-}
 
 INTERIOR_PLANNER_HOME_CANONICAL = Path(
     "/storage/emulated/0/PROJECTS/workstation/interior_planner_e2e"
@@ -296,7 +294,7 @@ env = {**os.environ, "PATH": os.environ.get("PATH", "")}
 test_script = """
 import sys
 sys.path.insert(0, %r)
-from _interior_planner_home ]solve_interior_planner_home
+from _interior_planner_home import solve_interior_planner_home
 home = resolve_interior_planner_home()
 print(f"  ✓ locator resolved: {home}")
 print(f"  ✓ marker exists: {(home / '_marker.txt').is_file()}")
@@ -395,7 +393,7 @@ print(f"  ✓ TG body saved to {TG_MSG_PATH}")
 print("\n=== STEP 8: best-effort TG send ===")
 try:
     sys.path.insert(0, str(ROOT))
-    from core_02.telegram_contract ]port_to_saved_messages, report_to_litvinov
+    from core_02.telegram_contract import port_to_saved_messages, report_to_litvinov
     import asyncio
     saved_id = asyncio.run(report_to_saved_messages(SAVED_TEXT))
     if isinstance(saved_id, int):

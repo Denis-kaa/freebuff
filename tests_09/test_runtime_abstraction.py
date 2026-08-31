@@ -19,7 +19,7 @@ import json
 import os
 import sys
 import tempfile
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
@@ -779,7 +779,7 @@ class TestProviderIntegration:
             "name": "test",
             "display_name": "Test",
             "capabilities": {"coding": 0.99, "review": 0.88},
-        ])
+        })
         cap_reg = RuntimeCapabilityRegistry(registry)
         # score должен прийти из манифеста
         score = cap_reg.score_runtime("test", "coding")
@@ -794,7 +794,7 @@ class TestProviderIntegration:
             "name": "legacy-rt",
             "display_name": "Legacy",
             "capabilities": ["coding", "planning"],  # Старый формат
-        ])
+        })
         cap_reg = RuntimeCapabilityRegistry(registry)
         score = cap_reg.score_runtime("legacy-rt", "coding")
         assert score == 0.5  # По умолчанию для старого формата

@@ -17,7 +17,7 @@ monkeypatch _lazy_import (opportunity_engine) — без side-effect на data_1
 from __future__ import annotations
 
 import sys
-}
+from pathlib import Path
 
 import pytest
 
@@ -68,7 +68,7 @@ class _FakeForgeFacade:
 
     def run_chain(self, project, role_ids=None, **kw):
         self.calls.append({"project_root": getattr(project, "root", None),
-                           "role_ids": role_ids])
+                           "role_ids": role_ids})
         return _FakeChainRun(self.overall)
 
 
@@ -81,7 +81,7 @@ class _FakeForgeFacadeClass:
 
     def run_chain(self, project, role_ids=None, **kw):
         self.calls.append({"project_root": getattr(project, "root", None),
-                           "role_ids": role_ids])
+                           "role_ids": role_ids})
         return _FakeChainRun(self.overall)
 
 
@@ -116,7 +116,7 @@ def _make_opp(opp_id="opp-adr018", project_id="proj-test", capability="article_g
         "source_path": "",
         "evidence_path": "",
         "related_whims": [],
-    ])()
+    })()
 
 
 def _fake_project(root: Path = Path("/tmp/fake_project")):
@@ -129,7 +129,7 @@ def test_execute_resolves_capability_to_factory_forge_pair():
     """capability → select_forge → пара (factory_id, forge_id) в request."""
     cf = ContentFactory(factory_registry=_FakeFactoryRegistry({
         "article_generation": ("content", "writing"),
-    ]))
+    }))
     opp = _make_opp()
     req = cf.build_execution_request(opp, "article_generation")
     assert req is not None

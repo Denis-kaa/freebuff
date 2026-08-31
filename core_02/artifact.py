@@ -33,7 +33,7 @@ from __future__ import annotations
 import datetime as _dt
 import uuid
 from dataclasses import dataclass, field
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 
@@ -276,7 +276,7 @@ class Artifact:
             "factory_id", "forge_id", "overall", "chain", "stage_count",
             "validation", "target", "files", "created_at", "project_root",
             "started_at", "finished_at", "validation_registry_status",
-        ]]
+        }}
         # нормализация списков → кортежи
         if isinstance(known.get("chain"), list):
             known["chain"] = tuple(known["chain"])

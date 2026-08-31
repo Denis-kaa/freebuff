@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from freebuff_plugin_03.policy.config import CapabilityPolicy, PolicyContext, PolicyRule

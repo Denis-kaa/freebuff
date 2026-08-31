@@ -23,7 +23,7 @@ Idempotent: re-running on already-restored state is a no-op.
 """
 from __future__ import annotations
 
-}
+
 
 SCRIPTS_DIR = Path(
     "/storage/emulated/0/PROJECTS/workstation/interior_planner_e2e/interior_planner/scripts"

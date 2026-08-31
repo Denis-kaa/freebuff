@@ -45,7 +45,7 @@ import sqlite3
 import sys
 import uuid
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Any
 
 WORKSPACE = Path(__file__).resolve().parent.parent
@@ -67,7 +67,7 @@ _UPDATABLE_FIELDS = frozenset({
     "meeting_time",
     "location",
     "participants",
-])
+})
 
 
 def _now() -> str:
@@ -561,7 +561,7 @@ def _gather_knowledge_hits(query: str) -> list[dict[str, Any]]:
             "title": (r.metadata or {}).get("title", ""),
             "source": (r.metadata or {}).get("source", ""),
             "matched_terms": list(r.matched_terms or [])[:6],
-        ])
+        })
     return out
 
 

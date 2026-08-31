@@ -32,7 +32,7 @@ import json
 import sys
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Any
 
 DEFAULT_OUT = "lisa_report.md"
@@ -309,11 +309,11 @@ class LisaReport:
                 "GO": "проект пригоден для AI-реализации.",
                 "COND": "условно пригоден: требуется доработка/ручные этапы.",
                 "NO-GO": "не пригоден для AI-реализации на текущем описании.",
-            ][self.verdict],
+            }[self.verdict],
             "",
             "## Предупреждения",
             "",
-        }
+        ]
         if self.warnings:
             for w in self.warnings:
                 lines.append(f"- ⚠️ {w}")

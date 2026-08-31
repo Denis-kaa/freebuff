@@ -24,7 +24,7 @@ import os
 import sys
 import time
 from http.server import HTTPServer, BaseHTTPRequestHandler
-}
+from pathlib import Path
 from datetime import datetime, timezone
 
 
@@ -49,7 +49,7 @@ class SessionState:
                 "started_at": datetime.fromtimestamp(
                     self.started_at, tz=timezone.utc
                 ).isoformat(),
-            ], indent=2)
+            }, indent=2)
         )
 
     def status(self) -> dict:
@@ -116,7 +116,7 @@ class ContinueHandler(BaseHTTPRequestHandler):
                 "message": "continue acknowledged",
                 "timestamp": datetime.now(timezone.utc).isoformat(),
                 **self.state.status(),
-            ])
+            })
         else:
             self._json(404, {"error": "not found"})
 

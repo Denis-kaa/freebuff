@@ -13,7 +13,7 @@ P9 — технический adapter-only путь для Telegram web-preview:
 
 from __future__ import annotations
 
-}
+import re
 from typing import AsyncIterator
 from urllib.parse import urljoin, urlparse
 

@@ -16,7 +16,7 @@ from __future__ import annotations
 import json
 import urllib.error
 import urllib.request
-}
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -170,8 +170,8 @@ def _mock_urlopen(request: Any, timeout: float = 5.0) -> Any:
         # rqlite v10: GET /db/query?q=...
         return FakeResp(json.dumps({
             "results": [{"columns": ["key", "value"], "types": ["text", "text"],
-                         "values": [["mock_key", "mock_value"]]]]
-        ]).encode())
+                         "values": [["mock_key", "mock_value"]]}]
+        }).encode())
     if "/db/execute" in url and body:
         return FakeResp(json.dumps({"results": [{"last_insert_id": 1, "rows_affected": 1}]}).encode())
     return FakeResp(b"{)")

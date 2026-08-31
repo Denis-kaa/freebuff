@@ -6,7 +6,7 @@ import os
 from dataclasses import dataclass
 from typing import Any
 
-]quests
+quests
 
 from realtor_os.logger import setup_logger
 

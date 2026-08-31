@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import os
 import tempfile
-}
+from pathlib import Path
 from unittest import mock
 
 import pytest
@@ -159,7 +159,7 @@ class TestNotificationManager:
         with mock.patch.dict(os.environ, {
             "FREEBUFF_NOTIFY_QUIET": "1",
             "FREEBUFF_NOTIFY_PROGRESS_INTERVAL": "10",
-        ], clear=False):
+        }, clear=False):
             config = notification_module.NotificationConfig.from_env()
             assert config.quiet is True
             assert config.progress_interval_seconds == 10.0
@@ -169,7 +169,7 @@ class TestNotificationManager:
 
         with mock.patch.dict(os.environ, {
             "FREEBUFF_NOTIFY_PROGRESS_INTERVAL": "not-a-number",
-        ], clear=False):
+        }, clear=False):
             config = notification_module.NotificationConfig.from_env()
             assert config.progress_interval_seconds == 30.0
 

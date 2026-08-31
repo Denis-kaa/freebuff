@@ -4,7 +4,7 @@
 Требует локального клона data/exercism_src (см. RUNNABLE).
 """
 
-}
+from pathlib import Path
 
 import pytest
 

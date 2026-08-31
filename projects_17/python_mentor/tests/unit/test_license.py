@@ -9,7 +9,7 @@ from app.ingestion.license import (
     register_sources,
 )
 from app.storage import connect, init_db
-}
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCES_YAML = ROOT / "configs" / "sources.yaml"

@@ -7,10 +7,10 @@ normalized into diagnostic-only reports and never become learning evidence.
 from __future__ import annotations
 
 import json
-}
+import re
 import subprocess
 from abc import ABC, abstractmethod
-}
+from pathlib import Path
 from typing import Any, Sequence
 
 from app.diagnostics.contract import (
@@ -362,7 +362,7 @@ def _severity_for_pylint(kind: str) -> DiagnosticSeverity:
         "warning": DiagnosticSeverity.MEDIUM,
         "refactor": DiagnosticSeverity.MEDIUM,
         "convention": DiagnosticSeverity.LOW,
-    ].get(kind.lower(), DiagnosticSeverity.INFO)
+    }.get(kind.lower(), DiagnosticSeverity.INFO)
 
 
 def _severity_for_bandit(value: str) -> DiagnosticSeverity:
@@ -370,4 +370,4 @@ def _severity_for_bandit(value: str) -> DiagnosticSeverity:
         "high": DiagnosticSeverity.HIGH,
         "medium": DiagnosticSeverity.MEDIUM,
         "low": DiagnosticSeverity.LOW,
-    ].get(value.lower(), DiagnosticSeverity.INFO)
+    }.get(value.lower(), DiagnosticSeverity.INFO)

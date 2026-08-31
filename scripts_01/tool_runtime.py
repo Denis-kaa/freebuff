@@ -44,7 +44,7 @@ import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import httpx
@@ -697,7 +697,7 @@ class ToolRegistry:
                     for p in meta.parameters
                 ],
                 "examples": meta.examples,
-            ])
+            })
         return result
 
     def execute(
@@ -723,7 +723,7 @@ class ToolRegistry:
                 "tool": tool_name,
                 "error": err_msg,
                 "params": params,
-            ])
+            })
             return ToolResult(success=False, error=err_msg, tool_name=tool_name)
 
         # Merge contexts
@@ -740,7 +740,7 @@ class ToolRegistry:
                 "error": err_msg,
                 "params": params,
                 "validation_errors": errors,
-            ])
+            })
             return ToolResult(success=False, error=err_msg, tool_name=tool_name)
 
         # Execute
@@ -757,7 +757,7 @@ class ToolRegistry:
             "duration_ms": result.duration_ms,
             "error": result.error,
             "params": params,
-        ])
+        })
 
         return result
 
@@ -842,7 +842,7 @@ class ToolRegistry:
                 "principal": decision.principal,
                 "reason": decision.reason,
                 "params": params,
-            ])
+            })
             return ToolResult(
                 success=False,
                 error=f"ACL denied ({decision.principal}): {decision.reason}",

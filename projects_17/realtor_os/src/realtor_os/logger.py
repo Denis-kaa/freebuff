@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import sys
-}
+from pathlib import Path
 
 from realtor_os.constants import DEFAULT_LOG_LEVEL, LOGS_DIR
 

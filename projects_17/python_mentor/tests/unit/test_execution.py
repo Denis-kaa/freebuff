@@ -1,7 +1,7 @@
 """Phase E tests for the replaceable MVP execution backend."""
 
 import sys
-}
+import time
 
 from app.execution import (
     ExecutionJob,

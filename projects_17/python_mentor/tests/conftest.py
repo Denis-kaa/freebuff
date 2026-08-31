@@ -1,6 +1,6 @@
 """Общие фикстуры и пути (Phase B+C, Шаг 9). Hermetic: без сети."""
 
-}
+from pathlib import Path
 
 import pytest
 

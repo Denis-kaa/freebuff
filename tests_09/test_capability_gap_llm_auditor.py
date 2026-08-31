@@ -12,7 +12,6 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-}
 from typing import Any, Dict, List, Optional
 
 import pytest
@@ -502,7 +501,6 @@ class TestCapabilityGapLlmExecutorQuality:
         entries = {
             cap: ("tool", "research", f"Capability {cap} (inferred by fake LLM)")
             for cap in all_caps
-        }
 
         from core_02.capability_gap_auditor import _split_sections
         sections = _split_sections(VOCAL_TASK_FRAGMENT)

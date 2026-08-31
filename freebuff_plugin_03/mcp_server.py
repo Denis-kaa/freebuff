@@ -23,7 +23,7 @@ import json
 import os
 import sys
 import time
-}
+from pathlib import Path
 from typing import Any
 
 FREEBUFF_ROOT = Path(os.environ.get(
@@ -300,8 +300,8 @@ class MCPServer:
                             "session_id": sid,
                             "topic": topic,
                             "status": "started",
-                        ], ensure_ascii=False),
-                    ]]
+                        }, ensure_ascii=False),
+                    }]
                 }
 
             elif name == "log_message":
@@ -331,8 +331,8 @@ class MCPServer:
                             "role": role,
                             "session_id": sid,
                             "status": "logged",
-                        ], ensure_ascii=False),
-                    ]]
+                        }, ensure_ascii=False),
+                    }]
                 }
 
             elif name == "get_context":
@@ -342,7 +342,7 @@ class MCPServer:
                     "content": [{
                         "type": "text",
                         "text": summary or "Нет завершённых сессий",
-                    ]]
+                    }]
                 }
 
             elif name == "get_status":
@@ -357,7 +357,7 @@ class MCPServer:
                     "content": [{
                         "type": "text",
                         "text": json.dumps(info, ensure_ascii=False),
-                    ]]
+                    }]
                 }
 
             elif name == "run_freebuff":
@@ -380,7 +380,7 @@ class MCPServer:
                     "content": [{
                         "type": "text",
                         "text": json.dumps(result, ensure_ascii=False, default=str),
-                    ]]
+                    }]
                 }
 
             elif name == "get_task_result":
@@ -403,8 +403,8 @@ class MCPServer:
                                 "session_id": sid,
                                 "running": False,
                                 "conspect": conspect,
-                            ], ensure_ascii=False, default=str),
-                        ]]
+                            }, ensure_ascii=False, default=str),
+                        }]
                     }
 
                 # Задача ещё выполняется
@@ -417,8 +417,8 @@ class MCPServer:
                             "running": alive,
                             "pid": pid_info["pid"],
                             "cwd": pid_info["cwd"],
-                        ], ensure_ascii=False),
-                    ]]
+                        }, ensure_ascii=False),
+                    }]
                 }
 
             elif name == "end_session":
@@ -434,8 +434,8 @@ class MCPServer:
                         "text": json.dumps({
                             "status": "ended",
                             "conspect_path": str(cp) if cp else None,
-                        ], ensure_ascii=False),
-                    ]]
+                        }, ensure_ascii=False),
+                    }]
                 }
 
             elif name == "list_scenarios":
@@ -445,7 +445,7 @@ class MCPServer:
                     "content": [{
                         "type": "text",
                         "text": json.dumps(scenarios, ensure_ascii=False, default=str),
-                    ]]
+                    }]
                 }
 
             elif name == "get_scenario":
@@ -460,7 +460,7 @@ class MCPServer:
                     "content": [{
                         "type": "text",
                         "text": json.dumps(scenario.to_dict(), ensure_ascii=False, default=str),
-                    ]]
+                    }]
                 }
 
             elif name == "apply_scenario":
@@ -476,7 +476,7 @@ class MCPServer:
                     "content": [{
                         "type": "text",
                         "text": json.dumps(result, ensure_ascii=False, default=str),
-                    ]]
+                    }]
                 }
 
             elif name == "search_scenarios":
@@ -486,7 +486,7 @@ class MCPServer:
                     "content": [{
                         "type": "text",
                         "text": json.dumps(results, ensure_ascii=False, default=str),
-                    ]]
+                    }]
                 }
 
             elif name == "event_search":
@@ -508,8 +508,8 @@ class MCPServer:
                             "source": e.source,
                             "data": e.data,
                             "timestamp": e.timestamp[:19],
-                        ] for e in entries], ensure_ascii=False, default=str),
-                    ]]
+                        } for e in entries], ensure_ascii=False, default=str),
+                    }]
                 }
 
             elif name == "event_timeline":
@@ -524,7 +524,7 @@ class MCPServer:
                     "content": [{
                         "type": "text",
                         "text": timeline.format_timeline_text(result),
-                    ]]
+                    }]
                 }
 
             elif name == "event_replay":
@@ -546,8 +546,8 @@ class MCPServer:
                             "delivered": result.delivered,
                             "errors": result.errors,
                             "duration_ms": result.duration_ms,
-                        ], ensure_ascii=False),
-                    ]]
+                        }, ensure_ascii=False),
+                    }]
                 }
 
             elif name == "event_audit":
@@ -579,8 +579,8 @@ class MCPServer:
                             "description": e.description,
                             "timestamp": e.timestamp[:19],
                             "severity": e.severity,
-                        ] for e in feed], ensure_ascii=False),
-                    ]]
+                        } for e in feed], ensure_ascii=False),
+                    }]
                 }
 
             elif name == "sync_status":
@@ -606,14 +606,14 @@ class MCPServer:
                         "type": e.event_type,
                         "status": (e.data or {}).get("status"),
                         "timestamp": e.timestamp[:19],
-                    ] for e in entries]
+                    } for e in entries]
                 except Exception:
                     snapshot["recent_events"] = []
                 return {
                     "content": [{
                         "type": "text",
                         "text": json.dumps(snapshot, ensure_ascii=False, default=str),
-                    ]]
+                    }]
                 }
 
             else:
@@ -651,7 +651,7 @@ class MCPServer:
             return json.dumps({
                 "active": self._session_id is not None,
                 "session_id": self._session_id,
-            ], ensure_ascii=False)
+            }, ensure_ascii=False)
         elif uri == "freebuff://context_12/last":
             bridge = plugin_bridge.get_stream_bridge()
             return bridge.get_context_resume() or "Нет данных"
@@ -704,7 +704,7 @@ class MCPServer:
                                 "version": MCP_SERVER_VERSION,
                             },
                         },
-                    ])
+                    })
                 elif method == "notifications/initialized":
                     pass
                 elif method == "tools/list":
@@ -712,7 +712,7 @@ class MCPServer:
                         "jsonrpc": "2.0",
                         "id": msg_id,
                         "result": {"tools": self._list_tools()},
-                    ])
+                    })
                 elif method == "tools/call":
                     result = self._call_tool(
                         params.get("name", ""),
@@ -722,13 +722,13 @@ class MCPServer:
                         "jsonrpc": "2.0",
                         "id": msg_id,
                         "result": result,
-                    ])
+                    })
                 elif method == "resources/list":
                     self._send({
                         "jsonrpc": "2.0",
                         "id": msg_id,
                         "result": {"resources": self._list_resources()},
-                    ])
+                    })
                 elif method == "resources/read":
                     uri = params.get("uri", "")
                     content = self._read_resource(uri)
@@ -739,19 +739,19 @@ class MCPServer:
                             "result": {
                                 "contents": [{"uri": uri, "mimeType": "text/markdown", "text": content}]
                             },
-                        ])
+                        })
                     else:
                         self._send({
                             "jsonrpc": "2.0",
                             "id": msg_id,
                             "error": {"code": -32000, "message": f"Resource not found: {uri}"},
-                        ])
+                        })
                 else:
                     self._send({
                         "jsonrpc": "2.0",
                         "id": msg_id,
                         "error": {"code": -32601, "message": f"Method not found: {method}"},
-                    ])
+                    })
 
             except json.JSONDecodeError:
                 continue
@@ -765,7 +765,7 @@ class MCPServer:
                         "jsonrpc": "2.0",
                         "id": None,
                         "error": {"code": -32000, "message": str(e)},
-                    ])
+                    })
                 except Exception:
                     pass
 

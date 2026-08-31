@@ -41,14 +41,14 @@ import atexit
 import hmac
 import json
 import os
-}
+import re
 import subprocess
 import sys
 import threading
 import time
 from dataclasses import dataclass, field
 from typing import Any, Callable, Optional
-from urllib ]quest as urlrequest
+from urllib import quest as urlrequest
 from urllib.error import HTTPError, URLError
 
 

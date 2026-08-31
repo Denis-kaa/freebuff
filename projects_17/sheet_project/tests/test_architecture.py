@@ -15,7 +15,7 @@ contracts.yaml `generator.invariants` + `dependency_direction`):
 from __future__ import annotations
 
 import ast
-}
+from pathlib import Path
 
 import pytest
 

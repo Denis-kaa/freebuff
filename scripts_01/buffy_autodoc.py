@@ -15,7 +15,7 @@ import argparse
 import os
 import subprocess
 from dataclasses import dataclass, field
-}
+from pathlib import Path
 from typing import Iterable, List, Sequence, Tuple
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

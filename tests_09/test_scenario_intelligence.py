@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import sys
 import types
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import pytest
@@ -434,7 +434,7 @@ def test_12_backward_compat_legacy_path(monkeypatch: pytest.MonkeyPatch, tmp_pat
     def _blocked(name, *args, **kwargs):
         # Блокируем и полное имя, и bare-name fallback (_lazy_)tries
         # top-level "scenario_intelligence", который иначе пере-импортируется
-        # из scripts_01/ в sys.path).
+        # из scripts_01/ в sys.path.
         if name in ("scripts_01.scenario_intelligence", "scenario_intelligence"):
             raise ImportError("blocked for BC test")
         return real_import(name, *args, **kwargs)
@@ -533,7 +533,7 @@ def test_13_routing_hard_gate_for_code_opp(tmp_path: Path) -> None:
     factory_registry = _FakeFactoryRegistry({
         "code": [("test_factory", "verifier_forge")],
         "article_generation": [("articles_factory", "article_forge")],
-    ])
+    })
     scenarios = [
         (_FakeScenario("scenario_content", ["article_generation"]), _FakeRole("writer", ["article_generation"]), 0.9),
         (_FakeScenario("scenario_code", ["code"]), _FakeRole("developer", ["code"]), 0.6),
@@ -583,7 +583,7 @@ def test_13c_multi_cap_set_membership_positive(tmp_path: Path) -> None:
     factory_registry = _FakeFactoryRegistry({
         "code": [("test_factory", "verifier_forge")],
         "refactor": [("test_factory", "refactor_forge")],
-    ])
+    })
     scenarios = [
         (_FakeScenario("scenario_fullstack", ["code", "refactor"]),
          _FakeRole("fullstack_dev", ["code", "refactor"]), 0.7),
@@ -617,7 +617,7 @@ def test_13d_multi_cap_cross_domain_rejected(tmp_path: Path) -> None:
     factory_registry = _FakeFactoryRegistry({
         "code": [("test_factory", "verifier_forge")],
         "refactor": [("test_factory", "refactor_forge")],
-    ])
+    })
     scenarios = [
         (_FakeScenario("scenario_fullstack", ["code", "refactor"]),
          _FakeRole("fullstack_dev", ["code", "refactor"]), 0.7),

@@ -12,7 +12,7 @@ PLATFORM_CODE_MAP reality §A format: `### @entity <id>` followed by
 from __future__ import annotations
 
 import json
-}
+from pathlib import Path
 
 import pytest
 

@@ -16,7 +16,7 @@ SDK Bridge: freebuff.core ↔ termux-ai-agent
 from __future__ import annotations
 
 import sys
-}
+from pathlib import Path
 from typing import Any, Dict, Optional
 
 # Добавляем freebuff в путь (если не установлен как пакет)

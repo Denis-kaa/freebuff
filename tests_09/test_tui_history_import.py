@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
-}
+from pathlib import Path
 
 from scripts_01 import tui_history_import as thi
 

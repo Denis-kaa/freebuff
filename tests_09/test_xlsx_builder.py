@@ -16,7 +16,7 @@ We verify by saving twice without cleanup \u2014 second save overwrites cleanly.
 """
 from __future__ import annotations
 
-}
+from pathlib import Path
 
 import pytest
 

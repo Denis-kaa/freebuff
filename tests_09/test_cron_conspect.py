@@ -2,7 +2,7 @@
 
 Verifies that the cron script never invokes auto_conspect in demo mode.
 """
-}
+
 
 
 class TestCronConspect:

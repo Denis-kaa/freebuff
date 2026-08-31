@@ -7,7 +7,7 @@ stubbed at the urllib layer; the pool is built from explicit test keys.
 from __future__ import annotations
 
 import json
-}
+from pathlib import Path
 from unittest import mock
 
 import pytest

@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-}
+from pathlib import Path
 
 import pytest
 
@@ -85,7 +85,7 @@ class TestWeights:
             normalize_weights({
                 "confidence": 0.4, "evidence": 0.2, "recency": 0.25,
                 "tag_match": 0.15, "rogue": 0.0,
-            ])
+            })
 
     def test_normalize_weights_allows_zero_tag_match(self) -> None:
         """Zero weight допустимо (operator opts out of tag factor)."""
@@ -93,7 +93,7 @@ class TestWeights:
         out = normalize_weights({
             "confidence": 0.5, "evidence": 0.3, "recency": 0.2,
             "tag_match": 0.0,
-        ])
+        })
         assert sum(out.values()) == 1.0
         assert out["tag_match"] == 0.0
 
@@ -104,7 +104,7 @@ class TestWeights:
             normalize_weights({
                 "confidence": 0.0, "evidence": 0.0, "recency": 0.0,
                 "tag_match": 0.0,
-            ])
+            })
 
     def test_normalize_weights_rescales_to_unit_sum(self) -> None:
         from scripts_01.weighted_scoring_engine import normalize_weights
@@ -112,7 +112,7 @@ class TestWeights:
         out = normalize_weights({
             "confidence": 1.6, "evidence": 0.8, "recency": 1.0,
             "tag_match": 0.6,
-        ])
+        })
         assert abs(sum(out.values()) - 1.0) < 1e-9
         # Ratio between keys preserved.
         assert abs(out["confidence"] / out["evidence"] - 2.0) < 1e-9

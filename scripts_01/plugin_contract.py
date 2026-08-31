@@ -16,7 +16,7 @@ plugin_contract.py — Plugin Contract Specification (правило 9, пром
 
 from __future__ import annotations
 
-}
+import re
 import sys
 from dataclasses import dataclass
 from enum import Enum

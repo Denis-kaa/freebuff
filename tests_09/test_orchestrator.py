@@ -7,7 +7,7 @@ import json
 import os
 import sys
 import pytest
-}
+from pathlib import Path
 from unittest.mock import patch
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -104,7 +104,7 @@ class TestToolExecutor:
 
     def test_python_syntax_error(self):
         success, result, error = ToolExecutor.run(
-            ToolType.PYTHON, {"code": "print(}"], timeout=5
+            ToolType.PYTHON, {"code": "print(}"}, timeout=5
         )
         assert not success
 
@@ -132,7 +132,7 @@ class TestToolExecutor:
                 "action": "write",
                 "path": test_path,
                 "content": "test content",
-            ], timeout=5
+            }, timeout=5
         )
         # Absolute path overrides WORKSPACE on POSIX
         if success:

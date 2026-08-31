@@ -18,7 +18,7 @@ import json
 import os
 import subprocess
 import sys
-}
+from pathlib import Path
 from typing import Any, Dict, List
 
 import pytest
@@ -447,7 +447,7 @@ class TestDedup:
             json.dumps({
                 "url": url, "source": "test", "timestamp": old_ts,
                 "title": None, "metadata": {},
-            ], ensure_ascii=False) + "\n",
+            }, ensure_ascii=False) + "\n",
             encoding="utf-8",
         )
         # Now call evict WITHOUT explicit root — uses autouse-isolated dir.

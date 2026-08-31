@@ -8,7 +8,7 @@ Registry/ForgeFacade/MemoryStore, tmp-директории — без side-effec
 from __future__ import annotations
 
 import sys
-}
+
 
 import pytest
 
@@ -30,7 +30,7 @@ class _FakeScenario:
         self.display_name = scenario_id
         self.capabilities = list(capabilities)
         # SI's evaluate() reads cand.capability (set in real SI.discover()
-        # via _candidate_capability(scenario, role) → scenario.capabilities[0]).
+        # via _candidate_capability(scenario, role) → scenario.capabilities[0].
         # Mirror that contract here so fake proposals are valid for SI ranking.
         self.capability = capabilities[0] if capabilities else None
 
@@ -80,7 +80,7 @@ class _FakeForgeFacade:
 
     def run_chain(self, project, role_ids=None, **kw):
         self.calls.append({"project_root": getattr(project, "root", None),
-                           "role_ids": role_ids])
+                           "role_ids": role_ids})
         return _FakeChainRun(self.overall)
 
 
@@ -129,7 +129,7 @@ def _make_opp(opp_id="opp-test1", project_id="proj-test", capability="article_ge
         "source_path": "data_13/whims.yaml",
         "evidence_path": "",
         "related_whims": ["whim-1"],
-    ])()
+    })()
 
 
 # ─── 1. Capability resolution (§16 unit) ────────────────────────────────────
@@ -144,7 +144,7 @@ def test_1_capabilities_registered_in_closed_vocab():
 def test_2_resolve_content_capability_via_fake_registry():
     cf = ContentFactory(factory_registry=_FakeFactoryRegistry({
         "article_generation": ("content", "writing"),
-    ]))
+    }))
     pair = cf.resolve("article_generation")
     assert pair is not None
     assert pair[0].factory_id == "content"
@@ -154,7 +154,7 @@ def test_2_resolve_content_capability_via_fake_registry():
 def test_3_resolve_unknown_capability_returns_none():
     cf = ContentFactory(factory_registry=_FakeFactoryRegistry({
         "article_generation": ("content", "writing"),
-    ]))
+    }))
     assert cf.resolve("image_generation") is None  # не зарегистрирован → None
 
 
@@ -181,7 +181,7 @@ def test_5_normalize_input_fields():
 def test_6_build_execution_request():
     cf = ContentFactory(factory_registry=_FakeFactoryRegistry({
         "article_generation": ("content", "writing"),
-    ]))
+    }))
     opp = _make_opp()
     req = cf.build_execution_request(opp, "article_generation")
     assert isinstance(req, ExecutionRequest)
@@ -204,7 +204,7 @@ def test_8_execute_dry_run_no_forge_call():
     facade = _FakeForgeFacade()
     cf = ContentFactory(factory_registry=_FakeFactoryRegistry({
         "article_generation": ("content", "writing"),
-    ]), forge_facade=facade)
+    }), forge_facade=facade)
     opp = _make_opp()
     result = cf.execute(opp, dry_run=True)
     assert result["ok"] is True
@@ -302,7 +302,7 @@ def test_13_domain_isolation_si_agnostic(tmp_path):
     factory_registry = _FakeFactoryRegistry({
         "article_generation": ("content", "writing"),
         "code": ("test", "code_forge"),
-    ])
+    })
     assert factory_registry.select_forge("article_generation")[0].factory_id == "content"
     assert factory_registry.select_forge("article_generation")[1].forge_id == "writing"
     assert factory_registry.select_forge("code")[0].factory_id == "test"
@@ -322,7 +322,7 @@ def test_13b_si_routes_code_opp_to_test_factory(tmp_path):
     factory_registry = _FakeFactoryRegistry({
         "article_generation": ("content", "writing"),
         "code": ("test", "code_forge"),
-    ])
+    })
     scenarios = [
         (_FakeScenario("scenario_content", ["article_generation"]), _FakeRole("writer"), 0.9),
         (_FakeScenario("scenario_code", ["code"]), _FakeRole("developer"), 0.6),  # ниже скора content

@@ -23,7 +23,7 @@ import sqlite3
 import subprocess
 import sys
 from datetime import datetime, timezone
-}
+from pathlib import Path
 from typing import Any
 
 # ── Пути ───────────────────────────────────────────────────────
@@ -83,7 +83,7 @@ def detect_language(project_dir: Path) -> str:
             return lang
     # Fallback: count only code-file extensions, exclude non-code
     CODE_EXTS = {"py", "js", "ts", "jsx", "tsx", "go", "rs", "java", "rb", "php",
-                 "c", "cpp", "h", "hpp", "swift", "kt", "scala", "sh", "bash"]
+                 "c", "cpp", "h", "hpp", "swift", "kt", "scala", "sh", "bash"}
     ext_counts: dict[str, int] = {}
     try:
         for f in project_dir.iterdir():
@@ -167,7 +167,7 @@ def scan_projects(scan_path: Path) -> list[dict[str, Any]]:
             "has_pyproject": int(has_pyproject),
             "category": category,
             "status": "active",
-        ])
+        })
 
     return projects
 

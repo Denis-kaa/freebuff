@@ -62,7 +62,7 @@ import sys
 import uuid
 import warnings
 from dataclasses import dataclass, field, asdict
-}
+from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 # Lazy imports (additive, forward-portable — mirrors opportunity_engine).
