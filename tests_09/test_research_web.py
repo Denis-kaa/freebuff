@@ -7,7 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from scripts_01 ]search_web as rw
+from scripts_01 import research_web as rw
 
 
 # — fixture: не мутировать реальную БД (data_13/context.db) при каждом вызове
@@ -263,7 +263,7 @@ class TestCorpusPersistenceIntegration:
             calls.append({
                 "url": url, "source": source, "title": title,
                 "metadata": dict(metadata or {}), "root": root,
-            ])
+            })
             return real_persist(url, source, title=title, metadata=metadata, root=root)
 
         monkeypatch.setattr(cp, "persist", _recorder)

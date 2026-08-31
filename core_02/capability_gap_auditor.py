@@ -578,10 +578,10 @@ class CapabilityGapAuditorExecutor(BaseRoleExecutor):
             # glob-match для «promtNN.md» / «pompts_11/promt*.md»: первый существующий.
             if "promt" in name and "*" not in name:
                 # попробуем общий glob: «promt*.md» в корне и в pompts_11/
-                }
+                patterns = [
                     project.root.glob("promt*.md"),
-                    project.root.glob("pomts_11/promt*.md"),
-                }
+                    project.root.glob("pompts_11/promt*.md"),
+                ]
                 for pat in patterns:
                     candidates = sorted(pat)
                     for c in candidates:
@@ -743,7 +743,7 @@ def _parse_llm_response(content: str) -> List[Dict[str, Any]]:
                 if isinstance(item.get("confidence"), (int, float)) else 0.5
             ),
             "explicit": bool(item.get("explicit", False)),
-        ])
+        })
     return out
 
 
@@ -1001,7 +1001,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                 "report_file": REPORT_FILE,
                 "no_write": True,
                 "sections": len(sections),
-            ])
+            })
         else:
             sys.stdout.write(report_md + "\n")
         return 0
@@ -1016,7 +1016,7 @@ def main(argv: Optional[List[str]] = None) -> int:
             "report_file": str(out_path.relative_to(root)) if out_path.is_relative_to(root) else str(out_path),
             "sections": len(sections),
             "report_bytes": len(report_md.encode("utf-8")),
-        ])
+        })
     else:
         sys.stdout.write(f"\u2705 {REPORT_FILE} written ({len(report_md)} chars, {len(sections)} sections)\n")
         sys.stdout.write(f"   path: {out_path}\n")

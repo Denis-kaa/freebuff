@@ -48,7 +48,7 @@ class Boundary:
     namespace: str  # qualified-ID prefix pattern
 
     def blurb(self) -> str:
-        return (f"B{b_id.lstrip("B")) ({self.state.value}, owner={self.owner.value)): "
+        return (f"B{b_id.lstrip('B')} ({self.state.value}, owner={self.owner.value}): "
                 f"{self.description[:60]}...")
 
 

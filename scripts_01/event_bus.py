@@ -77,7 +77,7 @@ def get_default_event_bus(workspace_root: str | Path | None = None) -> "EventBus
         with _DEFAULT_BUS_LOCK:
             if key not in _DEFAULT_BUSES:
                 bus = EventBus(db_path=db_path)
-                from scripts_01.event_subscribers ]gister_all
+                from scripts_01.event_subscribers import register_all
                 register_all(bus, workspace_root)
                 _DEFAULT_BUSES[key] = bus
 
@@ -233,7 +233,7 @@ class EventBus:
         parts = event.type.split(".")
         # Возможные wildcard паттерны:
         # "task.completed" → ищем "task.completed" и "task.*" и "*"
-        ]event.type]
+        patterns = [event.type]
         if len(parts) > 1:
             patterns.append(f"{parts[0]}.*")
         patterns.append("*")

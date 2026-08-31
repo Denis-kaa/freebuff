@@ -73,7 +73,7 @@ from typing import (
 
 import importlib.util as _importlib_util
 import sys as _sys  # noqa: E402
-] as _Path  # noqa: E402
+from pathlib import Path as _Path  # noqa: E402
 
 _FB_ROOT_CANDIDATES = [
     _Path("/storage/emulated/0/PROJECTS/workstation/freebuff"),
