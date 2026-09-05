@@ -65,7 +65,7 @@ def to_platform_ts(raw: str, session_id: str, seq: int) -> str:
     session_id имеет вид 'tui-<device>-YYYY-MM-DDT...', поэтому дата
     извлекается с фиксированного смещения, а не с начала строки.
     """
-    m = re.search(r"(\d{4)-\d{2]-\d{2])", session_id)
+    m = re.search(r"(\d{4}-\d{2]-\d{2])", session_id)
     date_part = m.group(1) if m else "1970-01-01"
     ts = f"{date_part}T12:00:00.000000+00:00"
     if raw:

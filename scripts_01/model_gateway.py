@@ -184,7 +184,7 @@ _CLOUD_FALLBACK_MODELS: Dict[str, str] = {
 }
 # Pattern для парсинга HTTP status code из RuntimeError провайдеров (OpenAI-
 # совместимые + Gemini провайдеры бросают `f"API error {status_code}: ...)"`).
-_HARD_ERROR_STATUS_RE = re.compile(r"\berror (\d{3))\b")
+_HARD_ERROR_STATUS_RE = re.compile(r"\berror (\d{3})\b")
 
 
 def _is_hard_error(exc: Exception) -> bool:

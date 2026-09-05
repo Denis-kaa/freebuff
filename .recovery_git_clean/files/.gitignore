@@ -1,0 +1,142 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod***REMOVED***
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+.keys/*.keys
+.keys/state.json
+.keys/__pycache__/
+.env
+
+# Telethon session files
+*.session
+*.session-journal
+
+# Project runtime data
+context_12/
+data_13/
+logs_14/
+# Keep the sessions/ directory itself (referenced in BUFFY.md tree)
+sessions_15/*
+!sessions/.gitkeep
+
+# Node (playground)
+buffy-playground/node_modules/
+buffy-playground/dist/
+
+# Backup / cache artifacts
+*.bak
+*.tmp
+*.orig
+.mypy_cache/
+*.pyc
+*.pyo
+*.log
+
+# Freebuff plugin session overlay (transient backup of canonical AGENTS.md)
+.freebuff_original_agents
+
+# Freebuff update script artifacts (update_freebuff_safe.sh)
+.smoke_*
+*.bak-*
+
+# Audit batch hygiene (R22): archived artifacts, generated reports, snapshots
+*.bak
+*.bak.md
+*.sha256
+verify_archive_marker.txt
+books_out/
+qwen-table-*.csv
+status_report_*.txt
+promts_*_complete_work_*.sha256
+
+# API keys — NEVER commit
+.keys/
+
+# HH.ru app credentials (SRC-011) — never commit
+projects_17/public_request_parser/hh/
+projects_17/public_request_parser/hh/*.md
+
+
+# Project Pulse runtime snapshot (workspace root for MCP server)
+*.pulse_snapshot.json
+
+# Generated drift report (drift_check writes it on every run)
+docs_10/DRIFT_REPORT.md
+
+# v5.189.86: hard-deny additions from untracked-file audit (Additive Architecture)
+node_modules/
+*.db-wal
+*.db-shm
+*.tar.gz
+*.tgz
+*.zip
+freebuff.zip
+*.tmp
+nohup.out
+# Local deployment secrets
+projects_17/severny_chay/.env
+**/secrets/**

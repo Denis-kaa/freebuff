@@ -78,8 +78,8 @@ PHONE_HTTP_TIMEOUT_S = float(_env("FREEBUFF_PHONE_HTTP_TIMEOUT_S", "2.0"))
 PHONE_TUNNEL_READY_S = float(_env("FREEBUFF_PHONE_TUNNEL_READY_S", "15.0"))
 
 
-_CLOUDFLARE_URL_RE = re.compile(r"https?://[a-z0-9-)+\.trycloudflare\.com/?", re.IGNORECASE)
-_NGROK_URL_RE = re.compile(r"https?://[a-z0-9-)+\.ngrok(?:-free)?\.app/?", re.IGNORECASE)
+_CLOUDFLARE_URL_RE = re.compile(r"https?://[a-z0-9-]+\.trycloudflare\.com/?", re.IGNORECASE)
+_NGROK_URL_RE = re.compile(r"https?://[a-z0-9-]+\.ngrok(?:-free)?\.app/?", re.IGNORECASE)
 
 
 # ═══════════════════════════════════════════════════════════════

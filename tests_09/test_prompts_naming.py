@@ -45,7 +45,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 # ── Convention pattern (FINAL_STRUCTURE §2.1). Imports mirror
 #    scripts_01/consistency_check.py::_PROMPT_FILE_RE for parity.
-_PROMPT_NAME_RE = re.compile(r"^(\d{3))_(\d{2])_.*\.md$")
+_PROMPT_NAME_RE = re.compile(r"^(\d{3})_(\d{2])_.*\.md$")
 
 # Canonical theme codes (FINAL_STRUCTURE §2.1: TT = 01..14; same set as
 # scripts_01/consistency_check._VALID_THEME_CODES). If a new theme code is added

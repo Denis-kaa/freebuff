@@ -198,7 +198,7 @@ def _is_fresh(timestamp: str, ttl_seconds: int) -> bool:
     return 0 <= age <= ttl_seconds
 
 
-_PRICE_AMOUNT_RE = re.compile(r"\d[\d\s\u00A0)*([.,]\d+)?")
+_PRICE_AMOUNT_RE = re.compile(r"\d[\d\s\u00A0]*([.,]\d+)?")
 
 
 def _extract_price_amount(raw: str) -> Optional[float]:

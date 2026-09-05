@@ -799,7 +799,7 @@ class EMEngine:
             for path in decisions_dir.glob("*.md"):
                 try:
                     text = path.read_text(encoding="utf-8")
-                    for match in re.finditer(r"\bADR-(\d{3,))\b", text):
+                    for match in re.finditer(r"\bADR-(\d{3,})\b", text):
                         max_num = max(max_num, int(match.group(1)))
                 except Exception:
                     continue
@@ -845,11 +845,11 @@ class EMEngine:
                 pass
 
         # Ручной формат: # ADR-XXX: Title, **Дата:** ..., **Статус:** ...
-        h1_match = re.search(r"^# (ADR-\d{3,)):\s*(.+)$", text, re.MULTILINE)
+        h1_match = re.search(r"^# (ADR-\d{3,}):\s*(.+)$", text, re.MULTILINE)
         if h1_match:
             adr_id = h1_match.group(1)
             title = h1_match.group(2).strip()
-            date_match = re.search(r"\*\*Дата:\*\*\s*(\d{4)-\d{2]-\d{2])", text)
+            date_match = re.search(r"\*\*Дата:\*\*\s*(\d{4}-\d{2]-\d{2])", text)
             date = date_match.group(1) if date_match else ""
             status_match = re.search(r"\*\*Статус:\*\*\s*(.+)", text)
             status = status_match.group(1).strip() if status_match else ""

@@ -22,7 +22,7 @@ from typing import Any, Dict, List, Optional
 
 QUEUE_DIRS = ("user", "running", "done", "failed")
 
-_TS_RE = re.compile(r"^(\d{8)_\d{6])_")
+_TS_RE = re.compile(r"^(\d{8}_\d{6])_")
 
 
 # ── Пути ──────────────────────────────────────────────────────

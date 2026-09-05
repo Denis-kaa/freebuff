@@ -28,7 +28,7 @@ from typing import Any, Dict, List, Optional
 # ═══════════════════════════════════════════════════════════════
 
 #: Допустимое имя плагина: только нижний регистр, цифры, подчёркивание.
-NAME_PATTERN = re.compile(r"^[a-z0-9_)+$")
+NAME_PATTERN = re.compile(r"^[a-z0-9_]+$")
 #: SemVer: X.Y.Z (без pre-release/build — контракт строгий).
 VERSION_PATTERN = re.compile(r"^\d+\.\d+\.\d+$")
 #: Шаблон события: domain.event или domain.* (нижний регистр).

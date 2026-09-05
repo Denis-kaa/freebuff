@@ -16,6 +16,7 @@ KnowledgeEngine (FTS5 + TF-IDF + гибридный поиск) и предос�
 from __future__ import annotations
 
 import re
+from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
 try:

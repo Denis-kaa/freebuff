@@ -1,0 +1,10 @@
+[Unit]
+Description=Run PM OS deadline automation tick hourly
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+Unit=pmos-deadline-tick.service
+
+[Install]
+WantedBy=timers.target

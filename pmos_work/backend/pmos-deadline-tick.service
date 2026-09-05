@@ -1,0 +1,9 @@
+[Unit]
+Description=PM OS deadline automation tick
+After=postgresql.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/var/www/pm_os/backend
+ExecStart=/var/www/pm_os/backend/.venv/bin/python /var/www/pm_os/backend/run_deadline_tick.py
+User=root

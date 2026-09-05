@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  @apply bg-slate-50 text-slate-900;
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply bg-indigo-600 text-white hover:bg-indigo-700;
+  }
+  .btn-secondary {
+    @apply border border-slate-300 bg-white text-slate-700 hover:bg-slate-50;
+  }
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700;
+  }
+  .btn-ghost {
+    @apply text-slate-500 hover:bg-slate-100 hover:text-slate-700;
+  }
+  .btn-sm {
+    @apply px-2 py-1 text-xs;
+  }
+  .btn-xs {
+    @apply px-1.5 py-0.5 text-[11px];
+  }
+  .btn-icon {
+    @apply px-2;
+  }
+  .btn-icon-sm {
+    @apply p-1;
+  }
+  .btn-indigo {
+    @apply bg-indigo-100 text-indigo-700 hover:bg-indigo-200;
+  }
+  .input {
+    @apply w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent;
+  }
+  .label {
+    @apply mb-1 block text-xs font-semibold text-slate-600;
+  }
+  .th-col {
+    @apply px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 whitespace-nowrap;
+  }
+  .td-col {
+    @apply px-3 py-2.5 text-sm whitespace-nowrap;
+  }
+}

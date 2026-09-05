@@ -1,216 +1,33 @@
 {
-  "marker": "***REMOVED***",
-  "affected_scanned": 1232,
-  "clean_found": 5,
-  "no_clean_in_history": 1227,
+  "marker": "]",
+  "affected_scanned": 580,
+  "clean_found": 384,
+  "no_clean_in_history": 196,
   "entries": [
     {
-      "path": ".freebuff/config.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": ".freebuff/mcp.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": ".freebuff/sync.yaml",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": ".freebuff_result",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": ".github/workflows/pytest.yml",
-      "status": "no_clean_in_history"
-    },
-    {
       "path": ".gitignore",
+      "status": "clean_found",
+      "commit": "54b769ad8d09c3b68e6181b518012bb7f5bd3c9f",
+      "blob": "547a84ca7fe2",
+      "date": 1788033936
+    },
+    {
+      "path": ".recovery_git_clean/meta/index.json",
       "status": "no_clean_in_history"
     },
     {
-      "path": "AGENTS.md",
-      "status": "clean_found",
-      "commit": "1c989258d42b14576e85f59cc2e2cca186b52556",
-      "blob": "23899327af9b",
-      "date": 1785527594
-    },
-    {
-      "path": "BUFFY.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "BUFFY_PROJECT.md",
-      "status": "clean_found",
-      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
-      "blob": "156ccff4eb63",
-      "date": 1785616641
-    },
-    {
-      "path": "BUFFY_UNFINISHED_TAILS_2026-07-27_to_08-29.md",
+      "path": "BUFFY_REMOVED_RECOVERY_MAP.json",
       "status": "no_clean_in_history"
     },
     {
       "path": "CHANGELOG.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "CHANGELOG.md.backup_before_restore",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "FORENSICS_104_105_106_107/_consolidated/AUDIT_DELTA.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "FORENSICS_104_105_106_107/_consolidated/EVIDENCE_LEDGER_MERGED.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "FORENSICS_104_105_106_107/_consolidated/UNIFIED_CONCLUSIONS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "PHASE12_G116_CODE_ROUTING_MANIFEST.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "PLATFORM.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "SESSION_UNDERSTANDING_2026-08-02.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "SPEC.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "TASK.md",
       "status": "clean_found",
-      "commit": "a79a1fb6c6f942aa861cf7f02e9335124bddfb1f",
-      "blob": "f499a234529e",
-      "date": 1785363058
+      "commit": "98a1f95ce1ad8b59357e1a6cb627a2b6f6bf8550",
+      "blob": "b08f199bc473",
+      "date": 1788030752
     },
     {
-      "path": "anti-slop-design-system.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "architecture_forensics_v2/AGENT_ARCHITECTURE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "architecture_forensics_v2/EVIDENCE_LEDGER.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "architecture_forensics_v2/EXECUTION_PATHS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "architecture_forensics_v2/FACTORY_FORGE_ANALYSIS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "architecture_forensics_v2/FORENSICS_CONSOLIDATED_REPORT.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "architecture_forensics_v2/PLATFORM_ARCHITECTURE_FORENSICS_V2.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "books_out_23/01_ПЛАН_ОБУЧЕНИЯ.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "books_out_23/02_УЧЕБНИК_СБОРНИК.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "books_out_23/03_ПРОМТЫ_CHATGPT.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "books_out_23/04_УЧЕБНИК_ПО_НЕДЕЛЯМ.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "books_out_23/06_ТРЕКЕР_12_НЕДЕЛЬ.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "books_out_23/07_ТЕСТЫ_САМОПРОВЕРКИ.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "books_out_23/08_НАВИГАТОР_ЧТЕНИЯ.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "books_out_23/BIBLE_MANIFESTO_TEXTBOOK_freebuff_workspace_os.html",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "books_out_23/CHAPTER_ARCHITECTURE_PROMT33.html",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "buffy-playground_19/README.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "buffy-playground_19/eslint.config.js",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "buffy-playground_19/package.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "buffy-playground_19/src/App.css",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "buffy-playground_19/src/App.tsx",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "buffy-playground_19/src/assets/vite.svg",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "buffy-playground_19/src/index.css",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "buffy-playground_19/src/main.tsx",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "buffy-playground_19/tsconfig.app.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "buffy-playground_19/tsconfig.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "buffy-playground_19/tsconfig.node.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "buffy-playground_19/vite.config.ts",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "buffy_history_full.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "buffy_history_index.jsonl",
+      "path": "buffy-playground_19/src/assets/hero.png",
       "status": "no_clean_in_history"
     },
     {
@@ -218,92 +35,144 @@
       "status": "no_clean_in_history"
     },
     {
-      "path": "client-projects-permissions.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "core_02/LESSONS.md",
-      "status": "no_clean_in_history"
-    },
-    {
       "path": "core_02/__init__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "7780aacec0d8",
+      "date": 1785616641
     },
     {
       "path": "core_02/_tg_client_v2.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "30743fdb0964958a243c93819528adbdfaf3c9c5",
+      "blob": "5893d26a7fc2",
+      "date": 1785815691
     },
     {
       "path": "core_02/agent_base.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "d5aefc4fdd0a",
+      "date": 1788032337
     },
     {
       "path": "core_02/anchors_resolver.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "bb371453f690",
+      "date": 1788032337
     },
     {
       "path": "core_02/artifact.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "08f07b85a545",
+      "date": 1788032337
     },
     {
       "path": "core_02/blueprint_v3.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "85424dcf2a05",
+      "date": 1788032337
     },
     {
       "path": "core_02/boundaries_v17.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "4f63dd818b29",
+      "date": 1788032337
     },
     {
       "path": "core_02/capability_gap_auditor.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "6c62baee5834",
+      "date": 1788032337
     },
     {
       "path": "core_02/contracts.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "813dfa2f5ca5",
+      "date": 1788032337
     },
     {
       "path": "core_02/dis_engine.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "33d65933eb24",
+      "date": 1788032337
     },
     {
       "path": "core_02/doc_code_verify.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "1ee4332bc590",
+      "date": 1788032337
     },
     {
       "path": "core_02/environment_doctor.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "62ee26b62f8d",
+      "date": 1788032337
     },
     {
       "path": "core_02/factory_base.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "768a7f2fe7c4",
+      "date": 1788032337
     },
     {
       "path": "core_02/factory_passport.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "6f315fd20707",
+      "date": 1788032337
     },
     {
       "path": "core_02/factory_registry.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "22644a660dab",
+      "date": 1788032337
     },
     {
       "path": "core_02/forge_facade.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "cae7a99b5272",
+      "date": 1788032337
     },
     {
       "path": "core_02/forge_passport.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "6b25097c1973",
+      "date": 1788032337
     },
     {
       "path": "core_02/forge_pipeline.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "40ad0ca62031",
+      "date": 1788032337
     },
     {
       "path": "core_02/forge_registry.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "7bd381d75b8b",
+      "date": 1788032337
     },
     {
       "path": "core_02/integration_base.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "84bd12bd1437",
+      "date": 1788032337
     },
     {
       "path": "core_02/interfaces.py",
@@ -311,858 +180,147 @@
     },
     {
       "path": "core_02/learning_loop.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "ba626c1aa7fb",
+      "date": 1788032337
     },
     {
       "path": "core_02/memory_store.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3a46978361f09a331f84e8904c2186dcd843dd5f",
+      "blob": "7fb729c79430",
+      "date": 1787640212
     },
     {
       "path": "core_02/missing_registry.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "85d874726bcd",
+      "date": 1788032337
     },
     {
       "path": "core_02/remote_db.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3a46978361f09a331f84e8904c2186dcd843dd5f",
+      "blob": "1a3ebe990c8b",
+      "date": 1787640212
     },
     {
       "path": "core_02/remote_sync.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "e03edb9c2d77",
+      "date": 1788032337
     },
     {
       "path": "core_02/role_executor.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "9e7dc8dcb76d",
+      "date": 1788032337
     },
     {
       "path": "core_02/router.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "50593dc38260",
+      "date": 1788032337
     },
     {
       "path": "core_02/scenario.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "b851e3cb5684",
+      "date": 1788032337
     },
     {
       "path": "core_02/scenario_registry.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "660b51bbe4a4",
+      "date": 1788032337
     },
     {
       "path": "core_02/semantic_layer.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "85ab0380625e",
+      "date": 1788032337
     },
     {
       "path": "core_02/telegram_contract.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "2b6f92b41a16",
+      "date": 1788032337
     },
     {
       "path": "core_02/tmp_atomic_write.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "17e89997f129",
+      "date": 1788032337
     },
     {
       "path": "core_02/tool_acl.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "9243d4d0ea6f",
+      "date": 1788032337
     },
     {
       "path": "core_02/wizard_lib.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "4c7e21164f7d",
+      "date": 1788032337
     },
     {
       "path": "core_02/workspace.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "11f06afdcd6a",
+      "date": 1788032337
     },
     {
       "path": "core_02/workspace_registry.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "6a6079535c61",
+      "date": 1788032337
     },
     {
       "path": "core_02/xlsx_builder.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "cover-letter-template.md",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "6dc97271c0ad",
+      "date": 1788032337
     },
     {
       "path": "docs_10/DOCUMENT_REGISTRY.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/HOW_TO_LAUNCH_BUFFY.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/INDEX.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/INTERIOR_PLANNER_SETUP_LOG.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/MISSION_CLOSE_20260809.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/PLAN_NEXT_OPERATIONS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/ROADMAP_FORGE_RECONCILIATION.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/ROADMAP_VKUSVILL_DEMO_062.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/ROADMAP_VV_002_RESEARCH.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/audits/ARCHITECTURE_FORENSICS_PROGRESS_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/audits/ARCHITECTURE_WORKSPACE_OS_2026-07-31.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/audits/AUDIT_2026-07-28.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/audits/AUDIT_2026-07-28_FULL_CODE_REVIEW.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/audits/AUDIT_2026-07-29.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/audits/AUDIT_2026-07-29_v5.0.0.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/audits/AUDIT_BOOTSTRAP.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/audits/AUDIT_FULL_2026-07-29.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/audits/AUDIT_STEP0_2026-07-31.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/audits/AUDIT_TEMPLATE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/audits/PROJECT_INVENTORY_REPORT_2026-08-01.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/audits/RECOVERY_REPORT_2026-07-31.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/audits/RECOVERY_REPORT_7_MODULES_2026-07-31.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/audits/TEST_REPORT_2026-08-06.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/audits/evidence/RECOVERY_7_MODULES_TEST_RUN_2026-07-31.txt",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/canonical/INDEX.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/canonical/architecture.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/ARCHITECTURAL_DEBT.md",
       "status": "clean_found",
-      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
-      "blob": "7841a4f23ed1",
-      "date": 1785616641
-    },
-    {
-      "path": "docs_10/core/ARCHITECTURE_3.0.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/ARCHITECTURE_CANONICAL.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/ARCHITECTURE_MANIFEST.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/ARCHITECTURE_PRINCIPLES.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/ARCHITECTURE_REVIEW.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/BOOTSTRAP_SPECIFICATION.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/CAPABILITY_SPECIFICATION.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/CODE_QUALITY_STANDARD.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/COMPATIBILITY_MATRIX.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/CORE_PROMPT.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/DISTRIBUTED_SESSION_SPECIFICATION_v2.0.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/EVENT_PLATFORM_SPECIFICATION.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/FINAL_STRUCTURE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/GLOSSARY.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/LIFECYCLE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/MODULE_CONSOLIDATION.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/POLICY_ENGINE_SPECIFICATION.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/PROJECT_REGISTRY.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/PROJECT_REQUIREMENTS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/PROJECT_RULES.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/RULES.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/RUNTIME_ABSTRACTION_SPECIFICATION.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/RUNTIME_VALIDATION_FRAMEWORK.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/core/SYSTEM_INVENTORY.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/decisions/ADR_001_Vision_3.0_AI_Infrastructure_Layer.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/decisions/DECISIONS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/decisions/IDEAS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/e2e_logs/promt47_run.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/e2e_logs/remote_sync_dry_run_smoke.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/e2e_logs/remote_sync_phase_5_3_c_gate_d_real_v5_64_0.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/e2e_logs/remote_sync_post_n_b2_fix_smoke.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/AGENT_NAVIGATION_MAP_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/AGENT_PROMPT_TEMPLATES_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/ARB_REVIEW_PLATFORM_FORENSICS_PROMPT_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/ARCHITECTURE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/ARCHITECTURE_DECISION_108_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/ARCHITECTURE_DECISION_REGISTRY_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/ARCH_TRACK_SUMMARY_2026-08-05.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/ARTIFACT_CONTRACT_DESIGN_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/AUDIT_WS_OS_P65_RECAP.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/AUDIT_WS_OS_P65_RECAP_V2.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/AUDIT_WS_OS_P65_§10_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/AUDIT_WS_OS_P65_§11_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/AUDIT_WS_OS_P65_§12_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/AUDIT_WS_OS_P65_§13_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/AUDIT_WS_OS_P65_§14_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/AUDIT_WS_OS_P65_§4_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/AUDIT_WS_OS_P65_§5_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/AUDIT_WS_OS_P65_§6_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/AUDIT_WS_OS_P65_§7_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/AUDIT_WS_OS_P65_§8_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/AUDIT_WS_OS_P65_§9_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/CANONICAL_ENGINE_ROUTING_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/CODE_DOCUMENTATION_SYNC_SPEC_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/CONTRACT_GRAPH_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/CONTRACT_REGISTRY_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/DOCUMENTATION_CODE_MAP_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/FACTORY_FORGE_ARCHITECTURE_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/FACTORY_FORGE_PASSPORTS_ARCHITECTURE_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/FORENSICS_CI_FOLLOWUP_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/FORENSICS_CI_REPORT_V1.md",
-      "status": "no_clean_in_history"
+      "commit": "4aedb0582e0f4ed7d3e49552a1d3ac410122dd07",
+      "blob": "9f9129105026",
+      "date": 1788032355
     },
     {
       "path": "docs_10/engineering-memory/FORENSIC_INTERNAL_RETRIEVAL_118_V1.md",
       "status": "no_clean_in_history"
     },
     {
-      "path": "docs_10/engineering-memory/FORGE_PASSPORT_CODE_REPRESENTATION_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/INTELLIGENCE_FACTORY_CONTRACT_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/LEVIATHAN_INVENTORY_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/P3_BLUEPRINT_FORGE_FACADE_RESEARCH.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/P3_FORGE_FACADE_DESIGN.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/P3_IDEA_EXPLORER_RUN_FORGE_FACADE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/PLATFORM_AUDIT_RECOMMENDATIONS_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/PLATFORM_CODE_MAP_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/PROJECT_BOOK.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/RFC_DECISION_INTELLIGENCE_SYSTEM_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/RFC_ORGANIZATIONAL_MEMORY_ENGINE_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/RFC_ORGANIZATIONAL_MEMORY_ENGINE_V1_EVOLUTION.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/ROADMAP_MIN_V0_1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/ROADMAP_PHASE2_CONTINUATION_v1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/ROLE_FORGE_MATRIX_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/RUNTIME_REPRODUCTION_GUIDE_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/SCENARIO_ENGINE_DESIGN_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/SEMANTIC_ANCHOR_SPEC_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/TRACEABILITY_GRAPH_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/WORKSPACE_OS_ARCHITECTURE_RESEARCH_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/decisions/ADR_001_Vision_3.0_AI_Infrastructure_Layer.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/decisions/ADR_002_Model_Gateway.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/decisions/ADR_003_MCP_Server_Pure_Python.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/decisions/ADR_004_MCP_HTTP_Transport.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/decisions/ADR_005_FastAPI_Cloudflare.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/decisions/ADR_006_ContextManager_Bridge.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/decisions/ADR_007_Lightpanda.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/decisions/ADR_008_Consolidation_Promt36_Canonical_Rules.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/decisions/ADR_009_Consolidation_Promt37_User_Choice_Override.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/decisions/ADR_010_Remote_Sync_Telegram_Relay.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/decisions/ADR_012_buffy_swappable_brain.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/decisions/ADR_013_Forge_Facade_Blueprint_v3_Bridge.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/decisions/ADR_014_Lead_Aggregator_Attract_Module.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/decisions/ADR_015_Per_Instance_Import_Warnings.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/decisions/ADR_016_Role_Executor_Auto_Chain_Generation.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/decisions/ADR_018_Factory_Forge_Execution_Bridge.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/decisions/ADR_019_Agent_Base_Class.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/decisions/ADR_021_Artifact_Contract.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/decisions/ADR_022_Cowork_Shared_Database.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/decisions/ADR_023_Cowork_Memory_Integration.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/decisions/ADR_024_FBM_Integration_Strategy.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/templates/README.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/templates/architecture_evolution.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/templates/decision_journal.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/templates/feature_story.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/templates/incident_report.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/templates/lessons_learned.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/templates/milestone_chronicle.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/templates/project_chronicle.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/engineering-memory/templates/task_retrospective.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/history/DAY_SUMMARY_2026-08-02.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/history/DAY_SUMMARY_2026-08-03.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/history/DAY_SUMMARY_2026-08-05.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/history/DAY_SUMMARY_2026-08-06.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/history/SESSION_SAGA_2026-08-05.html",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/history/SESSION_SUMMARY_2026-08-03.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/history/SESSION_UNDERSTANDING_2026-08-02.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/ops/API.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/ops/DOCTOR_GUIDE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/ops/IMPLEMENTATION.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/ops/PROMPT_BASE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/ops/SESSION_GUIDE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/ops/TASK_TEMPLATE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/ops/TROUBLESHOOTING.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/ops/test_plan_bootstrap.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/plugin/BRIDGE_PLATFORM_SPECIFICATION.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/plugin/FREEBUFF_PLUGIN_API.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/plugin/FREEBUFF_PLUGIN_ARCHITECTURE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/plugin/FREEBUFF_PLUGIN_QUICKSTART.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/plugin/PLUGIN_CONTRACT_SPECIFICATION.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/projects_meta/LIGHTPANDA_INTEGRATION.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/projects_meta/PROJECTS_OVERVIEW.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/projects_meta/WORKERS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/projects_meta/termux_agent_README.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/promt48_report.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/runbook/FORGE_CHAIN_RUNBOOK.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/runbook/MISSING_REGISTRY_RUNBOOK.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/runbook/TEST_RESULT_20260822_214057.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/runbook/TEST_RESULT_20260823_064410.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/runbook/TEST_RESULT_20260823_104149.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/runbook/TEST_RESULT_20260823_121447.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/session_dumps/2026-07-27_termux_agent_audit.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/session_dumps/2026-07-28_mcp_server.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/session_dumps/2026-07-28_system_fixes.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/task_archive/TASK_2026-07-28_195617.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/task_archive/TASK_2026-07-28_195620.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/templates/PIPELINE_TEMPLATE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/templates/PROJECT_MIGRATION_TEMPLATE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/vision/PRODUCT_MANIFESTO.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/vision/ROADMAP.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/vision/ROADMAP_2026_2027.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/vision/ROADMAP_PROMT31_WORKSPACE_OS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/vision/ROADMAP_PROMT32_CONSOLIDATION.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/vision/VISION_3.0.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/vision/VISION_3.0_MAP.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/vision/archive/ARCHITECTURE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/vision/archive/VISION_2.0.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/vision/decision_index.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/visual/diagrams/forge_line.mmd",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "docs_10/visual/diagrams/vv_001_to_vv_002.mmd",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "freebuff-sync-spec.md",
-      "status": "no_clean_in_history"
-    },
-    {
       "path": "freebuff_cli.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "freebuff_plugin/monitor.sh",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "freebuff_plugin_03/INTEGRATION_CONTRACT.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "freebuff_plugin_03/README.md",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "a488d1bbe5a2",
+      "date": 1785616641
     },
     {
       "path": "freebuff_plugin_03/__init__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "1c36a1e724ef",
+      "date": 1785616641
     },
     {
       "path": "freebuff_plugin_03/acp_protocol.py",
@@ -1170,7 +328,10 @@
     },
     {
       "path": "freebuff_plugin_03/api.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "34301692185733f75cb085633705eef5b705b32a",
+      "blob": "7a7b2cd41d04",
+      "date": 1788032417
     },
     {
       "path": "freebuff_plugin_03/bootstrap/__init__.py",
@@ -1186,14 +347,13 @@
     },
     {
       "path": "freebuff_plugin_03/bootstrap/engine.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "34301692185733f75cb085633705eef5b705b32a",
+      "blob": "5bc5567baa8d",
+      "date": 1788032417
     },
     {
       "path": "freebuff_plugin_03/bootstrap/installer.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "freebuff_plugin_03/bootstrap/profiles.yaml",
       "status": "no_clean_in_history"
     },
     {
@@ -1202,7 +362,10 @@
     },
     {
       "path": "freebuff_plugin_03/bridge.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "b80c4512457d",
+      "date": 1785616641
     },
     {
       "path": "freebuff_plugin_03/bridge_layer.py",
@@ -1229,10 +392,6 @@
       "status": "no_clean_in_history"
     },
     {
-      "path": "freebuff_plugin_03/event/schema.sql",
-      "status": "no_clean_in_history"
-    },
-    {
       "path": "freebuff_plugin_03/event/store.py",
       "status": "no_clean_in_history"
     },
@@ -1246,15 +405,17 @@
     },
     {
       "path": "freebuff_plugin_03/mcp_server.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "freebuff_plugin_03/monitor.sh",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "34301692185733f75cb085633705eef5b705b32a",
+      "blob": "c3ca58a00392",
+      "date": 1788032417
     },
     {
       "path": "freebuff_plugin_03/policy/__init__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "42a3c8a742bb",
+      "date": 1785616641
     },
     {
       "path": "freebuff_plugin_03/policy/config.py",
@@ -1262,7 +423,10 @@
     },
     {
       "path": "freebuff_plugin_03/policy/conversational.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "dabd7de40eea",
+      "date": 1785616641
     },
     {
       "path": "freebuff_plugin_03/policy/engine.py",
@@ -1305,331 +469,49 @@
       "status": "no_clean_in_history"
     },
     {
-      "path": "freebuff_plugin_03/scenarios/agent_setup.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "freebuff_plugin_03/scenarios/freelance_api.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "freebuff_plugin_03/scenarios/freelance_integration.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "freebuff_plugin_03/scenarios/freelance_landing.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "freebuff_plugin_03/scenarios/freelance_mail_collector.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "freebuff_plugin_03/scenarios/freelance_parser.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "freebuff_plugin_03/scenarios/freelance_report_generator.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "freebuff_plugin_03/scenarios/freelance_seo_auditor.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "freebuff_plugin_03/scenarios/freelance_tg_bot.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "freebuff_plugin_03/scenarios/freelance_tg_parser.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "freebuff_plugin_03/scenarios/task_framework.md",
-      "status": "no_clean_in_history"
-    },
-    {
       "path": "freebuff_plugin_03/tgbot.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "34301692185733f75cb085633705eef5b705b32a",
+      "blob": "19b2d2cb5ce9",
+      "date": 1788032417
     },
     {
       "path": "freebuff_plugin_03/wrapper.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "frontend_18/BuffyDashboard.tsx",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "generate_project_dump.sh",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "imperial_phuket_CLONE_STATUS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "imperial_phuket_clone_audit_estimate.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "imperial_phuket_handoff_README.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "imperial_phuket_handoff_letter_template.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "infa_20/RUNTIME_INTELLIGENCE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "intelligence_forensics_25/03_INTELLIGENCE_INTEGRATION_MAP.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "intelligence_forensics_25/06_GAP_MAP.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "intelligence_forensics_25/08_TRACEABILITY_MAP.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "intelligence_forensics_25/09_INTELLIGENCE_DATA_FLOW.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "intelligence_forensics_25/13_EVIDENCE_LEDGER.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "intelligence_forensics_25/14_EVALUATION_REPORT.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "interview_ai_prompt_engineer.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "leviathan-projects-readiness-report.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "mypy.ini",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase4_evaluation_24/02_FORENSICS_REALITY_MAP.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase4_evaluation_24/04_PHASE4_ARCHITECTURE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase4_evaluation_24/05_PHASE4_IMPLEMENTATION_PLAN.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase4_evaluation_24/09_RUNTIME_VALIDATION.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase4_evaluation_24/10_OPEN_ISSUES.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase4_evaluation_24/12_FILE_MANIFEST.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase4_evaluation_24/13_SELF_AUDIT.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase5_intelligence_loop_26/01_PRE_IMPLEMENTATION_AUDIT.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase5_intelligence_loop_26/02_IMPLEMENTATION_LOG.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase5_intelligence_loop_26/03_POST_IMPLEMENTATION_FORENSICS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase5_intelligence_loop_26/04_GAP_RESOLUTION_MATRIX.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase5_intelligence_loop_26/05_INTELLIGENCE_DATA_FLOW.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase5_intelligence_loop_26/06_CONTRACT_CHANGES.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase5_intelligence_loop_26/08_DOCUMENTATION_CODE_TRACEABILITY.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase5_intelligence_loop_26/09_FUTURE_GAPS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase5_intelligence_loop_26/10_FINAL_ARCHITECTURAL_DECISION.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase5_intelligence_loop_26/11_EVIDENCE_LEDGER.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase5_intelligence_loop_26/README.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase6_code_contract_forensics_27/01_REPOSITORY_BASELINE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase6_code_contract_forensics_27/02_ARCHITECTURE_REALITY_MAP.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase6_code_contract_forensics_27/04_DOCUMENTATION_CODE_TRACEABILITY.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase6_code_contract_forensics_27/05_CONTRACT_FORENSICS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase6_code_contract_forensics_27/07_ENTRYPOINT_TRACEABILITY.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase6_code_contract_forensics_27/12_ARCHITECTURAL_CONFLICTS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase6_code_contract_forensics_27/14_NEXT_VERTICAL_SLICE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase6_code_contract_forensics_27/architecture_graph.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase6_code_contract_forensics_27/traceability.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase7_evaluation_28/02_PHASE7_REPOSITORY_FINDINGS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase7_evaluation_28/03_PHASE7_CONTRACT_RECONCILIATION.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase7_evaluation_28/04_PHASE7_FACTORY_INTEGRATION.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase7_evaluation_28/06_PHASE7_CALL_GRAPH.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase7_evaluation_28/10_PHASE7_FINAL_REPORT.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase7_evaluation_28/PHASE7_EVALUATION.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase8_evaluation_29/PHASE8_GAP_MAP.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase8_evaluation_29/PHASE8_REALITY_MAP.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase8_evaluation_29/SCENARIO_INTELLIGENCE_CONTRACT_V1.md",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "34301692185733f75cb085633705eef5b705b32a",
+      "blob": "8709d0987e80",
+      "date": 1788032417
     },
     {
       "path": "phase8_evaluation_29/changed_files/opportunity_engine.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "34301692185733f75cb085633705eef5b705b32a",
+      "blob": "c5f4cfa612dc",
+      "date": 1788032417
     },
     {
       "path": "phase8_evaluation_29/changed_files/scenario_intelligence.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "34301692185733f75cb085633705eef5b705b32a",
+      "blob": "9f71174e40b0",
+      "date": 1788032417
     },
     {
       "path": "phase8_evaluation_29/tests/test_intelligence_loop_phase5.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "34301692185733f75cb085633705eef5b705b32a",
+      "blob": "bf584851976f",
+      "date": 1788032417
     },
     {
       "path": "phase8_evaluation_29/tests/test_scenario_intelligence.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase9_evaluation_30/PHASE9_FACTORY_CONTRACT_AUDIT.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase9_evaluation_30/PHASE9_IMPLEMENTATION_PLAN.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase9_evaluation_30/PHASE9_REPOSITORY_REALITY_MAP.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase9_implementation_continuation_31/PHASE9_EVIDENCE_LEDGER.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase9_implementation_continuation_31/PHASE9_HANDOFF.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase9_implementation_continuation_31/PHASE9_IMPLEMENTATION_PREFLIGHT.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phase9_implementation_continuation_31/PHASE9_IMPLEMENTATION_REPORT.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "phone-file-inventory.txt",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "platform_architectural_inventory_34/CONTRACT_GRAPH.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "platform_architectural_inventory_34/PLATFORM_ARCHITECTURAL_INVENTORY_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "platform_architectural_inventory_34/RESPONSIBILITY_MATRIX.md",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "34301692185733f75cb085633705eef5b705b32a",
+      "blob": "d979eadea98c",
+      "date": 1788032417
     },
     {
       "path": "plugins_04/hello_world/__init__.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "plugins_04/hello_world/manifest.json",
       "status": "no_clean_in_history"
     },
     {
@@ -1637,15 +519,7 @@
       "status": "no_clean_in_history"
     },
     {
-      "path": "plugins_04/knowledge_sync/manifest.json",
-      "status": "no_clean_in_history"
-    },
-    {
       "path": "plugins_04/system_monitor/__init__.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "plugins_04/system_monitor/manifest.json",
       "status": "no_clean_in_history"
     },
     {
@@ -1653,1482 +527,901 @@
       "status": "no_clean_in_history"
     },
     {
-      "path": "plugins_04/tg_messenger/manifest.json",
+      "path": "pompts_11/118.md",
       "status": "no_clean_in_history"
     },
     {
-      "path": "pompts_11/002_14_planirovshchik_arhitekt.md",
+      "path": "pompts_11/120_20_removed_corruption_manual_recovery.md",
       "status": "no_clean_in_history"
     },
     {
-      "path": "pompts_11/006_08_prototype_lab.md",
+      "path": "pompts_11/121.md",
       "status": "no_clean_in_history"
     },
     {
-      "path": "pompts_11/011_07_session_snapshot.md",
+      "path": "projects_17/imperial_phuket_media/imperial-phuket-handoff-20260823.tar.gz",
       "status": "no_clean_in_history"
     },
     {
-      "path": "pompts_11/015_02_ultimate_architect_termux.md",
+      "path": "projects_17/imperial_phuket_media/imperial-phuket-media-20260823.tar.gz",
       "status": "no_clean_in_history"
     },
     {
-      "path": "pompts_11/016_02_arhitektura_reorganizaciya.md",
+      "path": "projects_17/interior_planner/interior_planner_app_expo/assets/android-icon-background.png",
       "status": "no_clean_in_history"
     },
     {
-      "path": "pompts_11/017_02_struktura_requirements_testy.md",
+      "path": "projects_17/interior_planner/interior_planner_app_expo/assets/android-icon-foreground.png",
       "status": "no_clean_in_history"
     },
     {
-      "path": "pompts_11/033_10_dpe_audit.md",
+      "path": "projects_17/interior_planner/interior_planner_app_expo/assets/android-icon-monochrome.png",
       "status": "no_clean_in_history"
     },
     {
-      "path": "pompts_11/034_10_dpe_realizaciya.md",
+      "path": "projects_17/interior_planner/interior_planner_app_expo/assets/favicon.png",
       "status": "no_clean_in_history"
     },
     {
-      "path": "pompts_11/036_09_full_consolidation_pipeline.md",
+      "path": "projects_17/interior_planner/interior_planner_app_expo/assets/icon.png",
       "status": "no_clean_in_history"
     },
     {
-      "path": "pompts_11/037_11_user_choice_override.md",
+      "path": "projects_17/interior_planner/interior_planner_app_expo/assets/splash-icon.png",
       "status": "no_clean_in_history"
     },
     {
-      "path": "pompts_11/038_03_audit_prompt.md",
+      "path": "projects_17/kwork_site/photo_2026-08-11_12-43-01.jpg",
       "status": "no_clean_in_history"
     },
     {
-      "path": "pompts_11/040_13_code_quality_standard.md",
+      "path": "projects_17/kwork_site/photo_2026-08-13_13-06-20.jpg",
       "status": "no_clean_in_history"
     },
     {
-      "path": "pompts_11/042_06_dokumentaciya_meeting_tasks.md",
+      "path": "projects_17/kwork_site/КТК ТРАСТ 4к ПНГ ИТОГ кроп — копия.png",
       "status": "no_clean_in_history"
     },
     {
-      "path": "pompts_11/043_08_frontend_workspace_os_ui.md",
+      "path": "projects_17/kwork_site/КТК ТРАСТ 4к ПНГ без теней  на белом ава — копия.png",
       "status": "no_clean_in_history"
     },
     {
-      "path": "pompts_11/044_09_canonical_history_mission.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/047_06_e2e_platform_test.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/049_12_tg_buffy_autonomous_invocation.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/050_13_handoff_tg_autonomous_invocation.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/058_21_prioritization_three_debts.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/061_19_roadmap_forge_leviathan.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/068_07_autonomous_project_executor.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/071_02_prompt_architect_1_7.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/075_04_research_web_capability.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/076_13_lisa_estimator_capability.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/077_02_prompt_architect_intelligence_factory.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/078_19_factory_registry.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/079_19_opportunity_engine_capability.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/080_19_whim_capture_capability.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/082_19_doc_code_sync.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/083_19_pomt83_protocols.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/084_19_intelligence_integration_forensics.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/085_19_close_intelligence_loop.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/086_19_opportunity_ranking.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/087_19_phase6_code_contract_forensics.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/088_19_missing_registry_multi_prompt.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/089_19_factory_registry_full.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/090_19_phase7_contract_reconciliation.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/092_19_phase9_universal_factory_vertical_slice.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/094_19_phase10_research_factory_universality.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/096_19_corpus_persistence.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/097_19_capability_gap_auditor_llm.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/098_19_corpus_inspector.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/099_19_hypothesis_ledger.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/100_19_pricing_enumerator.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/101_19_weighted_scoring_engine.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/102_19_devil_advocate_pass.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/103_19_forensic_engineering_reporter.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/104_19_platform_architectural_forensics_v2.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/105_19_repository_organization_refactoring_forensics.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/106_19_repository_forensics_system_modeling.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/107_19_platform_architectural_inventory.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/108_19_artifact_contract.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/113.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/116_19_human_reply_meta_prompt.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/errors.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/user/task_20260804_173159_061861_7709651193.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/user/task_20260804_182856_1df6ae_7709651193.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/user/task_20260804_182954_573c6e_7709651193.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/user/task_20260804_185533_287dcd_7709651193.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/user/task_20260804_190030_29289a_7709651193.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "pompts_11/user/task_20260804_231902_aaeb58_anon.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "profile-site-design-prompts.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/content_factory/concept.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/content_factory/concept_1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/content_factory/concept_2.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/content_factory/promts/2.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/content_factory/promts/3.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/content_factory/promts/4.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/freebuff_flutter_app/README.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/freebuff_flutter_app/android/app/build.gradle.kts",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/freebuff_flutter_app/android/build.gradle.kts",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/freebuff_flutter_app/android/settings.gradle.kts",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/freebuff_flutter_app/assets/manifest.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/freebuff_flutter_app/test/heartbeat_test.dart",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/freebuff_flutter_app/test/hot_start_test.dart",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/freebuff_flutter_app/test/protected_process_test.dart",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/freebuff_flutter_app/test/sync_status_test.dart",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/freebuff_flutter_app/test/wake_lock_test.dart",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/CHECKLIST.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/RUNNABLE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_app_expo/.claude/settings.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_app_expo/App.tsx",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_app_expo/app.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_app_expo/index.ts",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_app_expo/package-lock.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_app_expo/package.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_app_expo/src/components/Canvas2D.tsx",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_app_expo/src/components/RoomEditor.tsx",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_app_expo/src/data/knowledge_base.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_app_expo/src/store/roomStore.ts",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_app_expo/src/types/domain.ts",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_app_expo/tsconfig.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_seed/18_interior_consultant.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_seed/registry.yaml",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_web/index.html",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_web/package-lock.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_web/package.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_web/src/App.tsx",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_web/src/components/Canvas2D.tsx",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_web/src/components/RoomEditor.tsx",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_web/src/data/knowledge_base.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_web/src/data/knowledge_base_ru.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_web/src/index.tsx",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_web/src/main.tsx",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_web/src/store/roomStore.ts",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_web/src/types/domain.ts",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_web/tsconfig.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/interior_planner_web/vite.config.ts",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/interior_planner/roles/18_interior_consultant.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork/доработка сайта/client_followups/defaults_q_b.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork/доработка сайта/client_followups/email_day3_reminder.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork/доработка сайта/client_followups/email_day7_contact_lost.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork/доработка сайта/client_followups/followup_strategy.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork/доработка сайта/client_questions_v1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork/доработка сайта/commercial_proposal_v1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork/доработка сайта/prototypes/DEDUP_AUDIT.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork/доработка сайта/prototypes/README.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork/доработка сайта/prototypes/VISUAL_DIFF.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork/доработка сайта/prototypes/image6_QA.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork/доработка сайта/prototypes/qa_report_pngs.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork/доработка сайта/rokus_master_roadmap_v0.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork/доработка сайта/rokus_master_roadmap_v01.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork/доработка сайта/rokus_session_summary.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork/доработка сайта/rokus_site_audit.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork/доработка сайта/tz_dorabotka.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork_site/01_PLAN_BREAKDOWN.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork_site/CLIENT_ANSWER_INTAKE_PROCEDURE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork_site/CLIENT_QUESTIONS_v1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork_site/LESSONS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork_site/MANIFEST.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork_site/README.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork_site/ROADMAP.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork_site/SPEC.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork_site/STEPS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork_site/decisions/ADR-001_auth_tenant_isolation.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork_site/decisions/ADR-002_python_vs_php.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork_site/decisions/ADR-003_excel_schema_v1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork_site/decisions/DECISIONS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/kwork_site/промт.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/lead_aggregator/ATTRACT_MODULE_RESEARCH.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/lead_aggregator/LESSONS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/lead_aggregator/MANIFEST.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/lead_aggregator/PHASE1_RESEARCH.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/lead_aggregator/PHASE2_ARCHITECTURE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/lead_aggregator/PROMT_ARCHITECT_RUN.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/lead_aggregator/ROADMAP.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/lead_aggregator/STEPS.md",
+      "path": "projects_17/kwork_site/КТК ТРАСТ 4к ПНГ без теней ава — копия.png",
       "status": "no_clean_in_history"
     },
     {
       "path": "projects_17/lead_aggregator/app/adapters/base.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "317b7bae1651",
+      "date": 1788032386
     },
     {
       "path": "projects_17/lead_aggregator/app/adapters/kwork_adapter.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "d06900a42784",
+      "date": 1788032386
     },
     {
       "path": "projects_17/lead_aggregator/app/adapters/tg_channel_adapter.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "7bc48889e2bd",
+      "date": 1788032386
     },
     {
       "path": "projects_17/lead_aggregator/app/cli.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "bc55f9af18ee",
+      "date": 1788032386
     },
     {
       "path": "projects_17/lead_aggregator/app/core/config.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "a7f91b513709",
+      "date": 1788032386
     },
     {
       "path": "projects_17/lead_aggregator/app/core/retry_policy.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "e8700dbce2ce",
+      "date": 1788032386
     },
     {
       "path": "projects_17/lead_aggregator/app/core/tls_client.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "7b519d4d2898",
+      "date": 1788032386
     },
     {
       "path": "projects_17/lead_aggregator/app/delivery/telegram.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "b0b1de199b66",
+      "date": 1788032386
     },
     {
       "path": "projects_17/lead_aggregator/app/models.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "0424bd4cc75d",
+      "date": 1788032386
     },
     {
       "path": "projects_17/lead_aggregator/app/pipeline.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "ba1922ba455e",
+      "date": 1788032386
     },
     {
       "path": "projects_17/lead_aggregator/app/processors/deduplicator.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "66c6daeab064",
+      "date": 1788032386
     },
     {
       "path": "projects_17/lead_aggregator/app/processors/intent_classifier.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "92d8f69edade",
+      "date": 1788032386
     },
     {
       "path": "projects_17/lead_aggregator/app/processors/scorer.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "c129920065aa",
+      "date": 1788032386
     },
     {
       "path": "projects_17/lead_aggregator/app/storage/checkpoint_store.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/lead_aggregator/decisions/ADR-001_pull_model_and_source_order.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/lead_aggregator/decisions/ADR-002_legal_gate_readonly.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/lead_aggregator/decisions/ADR-003_adapter_contracts_embedding.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/lead_aggregator/decisions/DECISIONS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/model_dispatcher/CHECKLIST.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/model_dispatcher/MANIFEST.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/model_dispatcher/README.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/model_dispatcher/RUNNABLE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/model_dispatcher/config.yaml",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/model_dispatcher/decisions/ADR_003_self_contained_queue.md",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "eaf2c4e3cbba",
+      "date": 1788032386
     },
     {
       "path": "projects_17/model_dispatcher/dispatcher.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "43b3ac7e9939",
+      "date": 1788032386
     },
     {
       "path": "projects_17/model_dispatcher/md_freebuff.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "63234bacf52c",
+      "date": 1788032386
     },
     {
       "path": "projects_17/model_dispatcher/md_models.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "9bcdb3b68712",
+      "date": 1788032386
     },
     {
       "path": "projects_17/model_dispatcher/md_queue.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "35e552d166fd",
+      "date": 1788032386
     },
     {
       "path": "projects_17/model_dispatcher/tests/test_dispatcher.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "b1e826ac2fa5",
+      "date": 1788032386
     },
     {
       "path": "projects_17/model_dispatcher/tests/test_md_freebuff.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "27c38fa74076",
+      "date": 1788032386
     },
     {
       "path": "projects_17/model_dispatcher/tests/test_md_models.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "84baf4fb9d4f",
+      "date": 1788032386
     },
     {
       "path": "projects_17/model_dispatcher/tests/test_md_queue.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/profile_site/DEPLOY.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/profile_site/package.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/profile_site/src/main.tsx",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/profile_site/src/styles.css",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/profile_site/tsconfig.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/profile_site/vite.config.ts",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/CALIBRATION.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/CHECKLIST.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/DELIVERY.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/DOMAIN_CONTRACTS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/MANIFEST.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/OPERATIONS_RUNBOOK.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/README.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/ROADMAP.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/RUNNABLE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/SOURCE_POLICY_MATRIX.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/SPEC.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/STEPS.md",
       "status": "clean_found",
-      "commit": "64ded1e15326986882e443e30867ac1e0345c15b",
-      "blob": "ca2945554db5",
-      "date": 1787491827
-    },
-    {
-      "path": "projects_17/public_request_parser/STORAGE.md",
-      "status": "no_clean_in_history"
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "60e73d81245a",
+      "date": 1788032386
     },
     {
       "path": "projects_17/public_request_parser/app/__init__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "64ded1e15326986882e443e30867ac1e0345c15b",
+      "blob": "ab20aa129e74",
+      "date": 1787491827
     },
     {
       "path": "projects_17/public_request_parser/app/adapters/__init__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "617ce3a16d9805286d70bb869b581e3c5472cf63",
+      "blob": "d9dbaf1b4ef6",
+      "date": 1787497436
     },
     {
       "path": "projects_17/public_request_parser/app/adapters/headhunter.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "20b1f048c1f93708a0b9ceeb19b095ca37ffad4a",
+      "blob": "d12b5a46b50e",
+      "date": 1787580786
     },
     {
       "path": "projects_17/public_request_parser/app/adapters/http_feed.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "ff986b44c82479e9a15374af6f2be9f54800539c",
+      "blob": "2390c4cd75a8",
+      "date": 1787493963
     },
     {
       "path": "projects_17/public_request_parser/app/adapters/trudvsem.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "1452198d62bc934d163cfd55742cd43f29f353ad",
+      "blob": "ebe842353b43",
+      "date": 1787496751
     },
     {
       "path": "projects_17/public_request_parser/app/calibration/__init__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7756612375c74056be77cf8183c163446f9e8e87",
+      "blob": "44a400903865",
+      "date": 1787494900
     },
     {
       "path": "projects_17/public_request_parser/app/calibration/engine.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7756612375c74056be77cf8183c163446f9e8e87",
+      "blob": "1fc5e9ad05e4",
+      "date": 1787494900
     },
     {
       "path": "projects_17/public_request_parser/app/canary.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "ddfefe0473dbb3ec72503296d2fb4f9ddcb61763",
+      "blob": "4e44da85b39b",
+      "date": 1787498410
     },
     {
       "path": "projects_17/public_request_parser/app/cli.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "20b1f048c1f93708a0b9ceeb19b095ca37ffad4a",
+      "blob": "418e34741863",
+      "date": 1787580786
     },
     {
       "path": "projects_17/public_request_parser/app/delivery/__init__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "20b1f048c1f93708a0b9ceeb19b095ca37ffad4a",
+      "blob": "09a67a2cf354",
+      "date": 1787580786
     },
     {
       "path": "projects_17/public_request_parser/app/domain/__init__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "20b1f048c1f93708a0b9ceeb19b095ca37ffad4a",
+      "blob": "4d8d96b3c751",
+      "date": 1787580786
     },
     {
       "path": "projects_17/public_request_parser/app/domain/contracts.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "20b1f048c1f93708a0b9ceeb19b095ca37ffad4a",
+      "blob": "93b8cb21272a",
+      "date": 1787580786
     },
     {
       "path": "projects_17/public_request_parser/app/matcher/__init__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "64ded1e15326986882e443e30867ac1e0345c15b",
+      "blob": "d1cb625ad29b",
+      "date": 1787491827
     },
     {
       "path": "projects_17/public_request_parser/app/matcher/engine.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "20b1f048c1f93708a0b9ceeb19b095ca37ffad4a",
+      "blob": "9f3d5faafed2",
+      "date": 1787580786
     },
     {
       "path": "projects_17/public_request_parser/app/ops.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "e038caaccb1c8bdedb9e824a35aa809f9c97ca52",
+      "blob": "9999757582dd",
+      "date": 1787498834
     },
     {
       "path": "projects_17/public_request_parser/app/pipeline/__init__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "ff986b44c82479e9a15374af6f2be9f54800539c",
+      "blob": "e809b3c1027d",
+      "date": 1787493963
     },
     {
       "path": "projects_17/public_request_parser/app/rss_atom/__init__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "64ded1e15326986882e443e30867ac1e0345c15b",
+      "blob": "00fd65ab6bdc",
+      "date": 1787491827
     },
     {
       "path": "projects_17/public_request_parser/app/rss_atom/engine.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "64ded1e15326986882e443e30867ac1e0345c15b",
+      "blob": "980d25668ae6",
+      "date": 1787491827
     },
     {
       "path": "projects_17/public_request_parser/app/storage/__init__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "ff986b44c82479e9a15374af6f2be9f54800539c",
+      "blob": "e7468bb59463",
+      "date": 1787493963
     },
     {
       "path": "projects_17/public_request_parser/app/storage/sqlite.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "20b1f048c1f93708a0b9ceeb19b095ca37ffad4a",
+      "blob": "763603a3bdec",
+      "date": 1787580786
     },
     {
       "path": "projects_17/public_request_parser/app/tgpreview/__init__.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/decisions/ADR-001_parser_boundary_and_source_gates.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/decisions/ADR-002_source_status_and_first_candidate.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/decisions/ADR-007_delivery_contract_and_idempotency.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/decisions/ADR-013_jobseek_supply_mode_outreach_module.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/decisions/DECISIONS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/fixtures/atom/sample_atom.xml",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/fixtures/hh/vacancies_page.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/fixtures/rss/sample_rss.xml",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/fixtures/trudvsem/error_500.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/fixtures/trudvsem/vacancies_copywriter.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/public_request_parser/fixtures/trudvsem/vacancies_page.json",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "ff986b44c82479e9a15374af6f2be9f54800539c",
+      "blob": "3e4dd4a89cb7",
+      "date": 1787493963
     },
     {
       "path": "projects_17/public_request_parser/tests/test_calibration.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7756612375c74056be77cf8183c163446f9e8e87",
+      "blob": "61d550442157",
+      "date": 1787494900
     },
     {
       "path": "projects_17/public_request_parser/tests/test_canary.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "ddfefe0473dbb3ec72503296d2fb4f9ddcb61763",
+      "blob": "5ac2c256da22",
+      "date": 1787498410
     },
     {
       "path": "projects_17/public_request_parser/tests/test_delivery.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "20b1f048c1f93708a0b9ceeb19b095ca37ffad4a",
+      "blob": "a54a1400a64f",
+      "date": 1787580786
     },
     {
       "path": "projects_17/public_request_parser/tests/test_domain_contracts.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "64ded1e15326986882e443e30867ac1e0345c15b",
+      "blob": "8a7a2606a076",
+      "date": 1787491827
     },
     {
       "path": "projects_17/public_request_parser/tests/test_e2e_tg_pipeline.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "d0181aba52a7d5a833cc90f87fcc0f3a8ede7936",
+      "blob": "f943f7dc5f12",
+      "date": 1787495098
     },
     {
       "path": "projects_17/public_request_parser/tests/test_headhunter.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "617ce3a16d9805286d70bb869b581e3c5472cf63",
+      "blob": "12bf6ed1f0ae",
+      "date": 1787497436
     },
     {
       "path": "projects_17/public_request_parser/tests/test_http_feed.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "ff986b44c82479e9a15374af6f2be9f54800539c",
+      "blob": "abd79442b3b0",
+      "date": 1787493963
     },
     {
       "path": "projects_17/public_request_parser/tests/test_integration_pipeline.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "ff986b44c82479e9a15374af6f2be9f54800539c",
+      "blob": "623ec31e57a1",
+      "date": 1787493963
     },
     {
       "path": "projects_17/public_request_parser/tests/test_matcher.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "20b1f048c1f93708a0b9ceeb19b095ca37ffad4a",
+      "blob": "a66e78373866",
+      "date": 1787580786
     },
     {
       "path": "projects_17/public_request_parser/tests/test_multi_tenant.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "ff986b44c82479e9a15374af6f2be9f54800539c",
+      "blob": "131dfee9bba4",
+      "date": 1787493963
     },
     {
       "path": "projects_17/public_request_parser/tests/test_ops.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "e038caaccb1c8bdedb9e824a35aa809f9c97ca52",
+      "blob": "d5f0ddd1867d",
+      "date": 1787498834
     },
     {
       "path": "projects_17/public_request_parser/tests/test_pipeline.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "ff986b44c82479e9a15374af6f2be9f54800539c",
+      "blob": "4748afe47600",
+      "date": 1787493963
     },
     {
       "path": "projects_17/public_request_parser/tests/test_rss_atom.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "64ded1e15326986882e443e30867ac1e0345c15b",
+      "blob": "cd8405c41237",
+      "date": 1787491827
     },
     {
       "path": "projects_17/public_request_parser/tests/test_storage_sqlite.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "ff986b44c82479e9a15374af6f2be9f54800539c",
+      "blob": "2393d98adad1",
+      "date": 1787493963
     },
     {
       "path": "projects_17/public_request_parser/tests/test_tgpreview.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "ff986b44c82479e9a15374af6f2be9f54800539c",
+      "blob": "6918fd2e08d0",
+      "date": 1787493963
     },
     {
       "path": "projects_17/public_request_parser/tests/test_trudvsem.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/CHECKLIST.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/FSRS_NOTE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/MANIFEST.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/PHASE_BC_PLAN.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/README.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/ROADMAP.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/RUNNABLE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/STEPS.md",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "1452198d62bc934d163cfd55742cd43f29f353ad",
+      "blob": "e13a5d94c23a",
+      "date": 1787496751
     },
     {
       "path": "projects_17/python_mentor/app/__main__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "f66b1e3133bf",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/curriculum/__init__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "11b20d8f1c0d",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/curriculum/map.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "c03e89245440",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/diagnostics/__init__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "a620f0fb4d8d",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/diagnostics/adapters.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "9d708cadc607",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/diagnostics/ast_rules.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "5346be2f7ece",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/diagnostics/contract.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/app/diagnostics/engine.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "092cbc34bcdf",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/diagnostics/patterns.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "fbbf3db6f8f1",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/execution/__init__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "2c76093524a6",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/execution/backend.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "16ec59ecb4d0",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/execution/contract.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "cc4925d4f2c3",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/grading/__init__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "9cd1a147ebfe",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/grading/catalog.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "203767a94484",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/grading/contract.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "d02901dcb122",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/grading/runner.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "37039cd5ec66",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/ingestion/__init__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "7efae941b009",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/ingestion/license.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "9a07421808b1",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/ingestion/mapping.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "64cac9d86487",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/ingestion/parser.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "2e7a6f5a2a68",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/ingestion/pipeline.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "544be39fa8a3",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/ingestion/reports.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "f2d3a4cc8e61",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/localization/__init__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "b3efe6af29e0",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/localization/cli.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "9fb73de07fe9",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/localization/contract.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "35ca984bb792",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/localization/extractor.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "e689f2d65ef9",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/localization/gemini.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "cd4c2449e165",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/localization/keys.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "506f5509ee2c",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/localization/provider.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "4bdd2d11be83",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/localization/validator.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "969b71008638",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/localization/workflow.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "7a6148b4f9da",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/app/storage.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/configs/competency_map.yaml",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/configs/exercise_overrides.yaml",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/decisions/ADR-001_deterministic_core_first_llm_external_only.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/decisions/ADR-002_phased_gates_bc_to_n.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/decisions/ADR-003_sandbox_two_tiers_single_interface.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/decisions/ADR-004_license_gate_approved_only_live.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/decisions/ADR-005_rlimit_as_termux_proot_mvp_hardened_boundary.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/decisions/ADR-006_localization_and_llm_content_updates.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/docs/curriculum_v0.1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/docs/diagnostics_v0.1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/docs/execution_v0.1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/docs/exercism_ingestion.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/docs/exercism_research.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/docs/localization_v0.1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/prompt1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/prompt2.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/prompt3.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/pytest.ini",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/python_ai_tutor_blueprint_v0.1.md",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "419d1727c2ad",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/tests/conftest.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/concepts/basics/about.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/concepts/basics/introduction.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/concepts/bools/about.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/concepts/bools/introduction.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/concepts/strings/about.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/concepts/strings/introduction.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/config.json",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "a8cc6bf469e3",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/tests/fixtures/exercism/conftest.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/concept/black-jack/.docs/hints.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/concept/black-jack/.docs/instructions.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/concept/black-jack/.docs/introduction.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/concept/black-jack/.meta/config.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/concept/black-jack/.meta/design.md",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "26f2918c3185",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/concept/black-jack/black_jack_test.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/concept/guidos-gorgeous-lasagna/.docs/hints.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/concept/guidos-gorgeous-lasagna/.docs/instructions.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/concept/guidos-gorgeous-lasagna/.docs/introduction.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/concept/guidos-gorgeous-lasagna/.meta/config.json",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "3c5a35588426",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/concept/guidos-gorgeous-lasagna/lasagna_test.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/concept/log-levels/.docs/hints.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/concept/log-levels/.docs/instructions.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/concept/log-levels/.docs/introduction.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/concept/log-levels/.meta/config.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/concept/log-levels/.meta/design.md",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "e05ef7b3cff3",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/concept/log-levels/.meta/exemplar.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "32d46b9a5b4c",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/concept/log-levels/enums.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "6b32e120cecb",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/concept/log-levels/enums_test.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/bob/.approaches/answer-list/content.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/bob/.approaches/answer-list/snippet.txt",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/bob/.approaches/config.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/bob/.approaches/if-statements-nested/content.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/bob/.approaches/if-statements/content.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/bob/.approaches/introduction.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/bob/.articles/config.json",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "43f70d992ea5",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/bob/.articles/performance/code/Benchmark.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/bob/.articles/performance/content.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/bob/.docs/introduction.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/bob/.meta/config.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/bob/.meta/template.j2",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/bob/.meta/tests.toml",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/hello-world/.docs/instructions.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/hello-world/.meta/config.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/hello-world/.meta/template.j2",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/hello-world/.meta/tests.toml",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "a1c5d0589a10",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/hello-world/hello_world_test.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/two-fer/.meta/config.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/two-fer/.meta/example.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/two-fer/.meta/template.j2",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/python_mentor/tests/fixtures/exercism/exercises/practice/two-fer/.meta/tests.toml",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "d022628582ce",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/tests/integration/test_real_clone.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "51dfc78b4747",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/tests/unit/test_competency_map.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "a53ff40c1617",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/tests/unit/test_diagnostics.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "56f459ed1e2f",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/tests/unit/test_execution.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "f0b993d53bb7",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/tests/unit/test_gemini_rotation.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "d00e8e0c19ea",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/tests/unit/test_grading.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "68d27bb063cf",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/tests/unit/test_ingestion.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "15a4dcbbaf01",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/tests/unit/test_license.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "db88d4a30cff",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/tests/unit/test_localization.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "880fca86496c",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/tests/unit/test_storage.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "4a58c1b4df6b",
+      "date": 1788032386
     },
     {
       "path": "projects_17/python_mentor/tools/gen_competency_map.py",
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "9f558b492bff",
+      "date": 1788032386
+    },
+    {
+      "path": "projects_17/real_estate_parser/10_ACCEPTANCE_CRITERIA.md",
       "status": "no_clean_in_history"
     },
     {
-      "path": "projects_17/realtor_automation/config.json",
+      "path": "projects_17/real_estate_parser/app/bot/bot.py",
       "status": "no_clean_in_history"
     },
     {
-      "path": "projects_17/realtor_automation/pyproject.toml",
+      "path": "projects_17/real_estate_parser/app/core/config.py",
+      "status": "no_clean_in_history"
+    },
+    {
+      "path": "projects_17/real_estate_parser/app/core/proxy_rotator.py",
+      "status": "no_clean_in_history"
+    },
+    {
+      "path": "projects_17/real_estate_parser/app/core/rate_limit.py",
+      "status": "no_clean_in_history"
+    },
+    {
+      "path": "projects_17/real_estate_parser/app/core/retry_policy.py",
+      "status": "no_clean_in_history"
+    },
+    {
+      "path": "projects_17/real_estate_parser/app/core/tls_client.py",
+      "status": "no_clean_in_history"
+    },
+    {
+      "path": "projects_17/real_estate_parser/app/pipeline.py",
+      "status": "no_clean_in_history"
+    },
+    {
+      "path": "projects_17/real_estate_parser/app/scheduler.py",
+      "status": "no_clean_in_history"
+    },
+    {
+      "path": "projects_17/real_estate_parser/app/sources/base.py",
+      "status": "no_clean_in_history"
+    },
+    {
+      "path": "projects_17/real_estate_parser/app/sources/example.py",
+      "status": "no_clean_in_history"
+    },
+    {
+      "path": "projects_17/real_estate_parser/app/storage/db.py",
+      "status": "no_clean_in_history"
+    },
+    {
+      "path": "projects_17/real_estate_parser/app/storage/models.py",
+      "status": "no_clean_in_history"
+    },
+    {
+      "path": "projects_17/real_estate_parser/app/storage/repository.py",
+      "status": "no_clean_in_history"
+    },
+    {
+      "path": "projects_17/real_estate_parser/tests/test_core.py",
+      "status": "no_clean_in_history"
+    },
+    {
+      "path": "projects_17/real_estate_parser/tests/test_pipeline.py",
       "status": "no_clean_in_history"
     },
     {
@@ -3184,34 +1477,6 @@
       "status": "no_clean_in_history"
     },
     {
-      "path": "projects_17/realtor_automation/tests/test_state.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/realtor_os/buffy_manifest.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/realtor_os/docs/ARCHITECTURE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/realtor_os/docs/CHANGELOG.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/realtor_os/docs/ROADMAP.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/realtor_os/pyproject.toml",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/realtor_os/scripts/start_system.sh",
-      "status": "no_clean_in_history"
-    },
-    {
       "path": "projects_17/realtor_os/src/realtor_os/__init__.py",
       "status": "no_clean_in_history"
     },
@@ -3237,10 +1502,6 @@
     },
     {
       "path": "projects_17/realtor_os/src/realtor_os/config.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/realtor_os/src/realtor_os/constants.py",
       "status": "no_clean_in_history"
     },
     {
@@ -3304,10 +1565,6 @@
       "status": "no_clean_in_history"
     },
     {
-      "path": "projects_17/realtor_os/tests/test_config.py",
-      "status": "no_clean_in_history"
-    },
-    {
       "path": "projects_17/realtor_os/tests/test_curator.py",
       "status": "no_clean_in_history"
     },
@@ -3320,492 +1577,373 @@
       "status": "no_clean_in_history"
     },
     {
-      "path": "projects_17/research/promt1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/severny_chay/deploy.sh",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/severny_chay/launch_tunnel.sh",
-      "status": "no_clean_in_history"
-    },
-    {
       "path": "projects_17/severny_chay/main.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/severny_chay/requirements.txt",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/severny_chay/run_app.sh",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "db28a58675b2",
+      "date": 1788032386
     },
     {
       "path": "projects_17/severny_chay/test_api_chat.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "85028cc5998d",
+      "date": 1788032386
     },
     {
       "path": "projects_17/severny_chay/test_e2e_http.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/sheet_project/CHECKLIST.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/sheet_project/RUNNABLE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/sheet_project/adr/ADR-002_layered_generator_architecture.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/sheet_project/architecture.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/sheet_project/audit_report.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/sheet_project/audit_report_arch1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/sheet_project/blueprints_v3/registry.yaml",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "f233cc10c96a",
+      "date": 1788032386
     },
     {
       "path": "projects_17/sheet_project/config/__init__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "48c4bf057860",
+      "date": 1788032386
     },
     {
       "path": "projects_17/sheet_project/config/schema.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/sheet_project/consistency_report.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/sheet_project/contracts.yaml",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "03913e839d0d",
+      "date": 1788032386
     },
     {
       "path": "projects_17/sheet_project/data/__init__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "a2db79d3cda9",
+      "date": 1788032386
     },
     {
       "path": "projects_17/sheet_project/data/models.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "d4f4a5086b2f",
+      "date": 1788032386
     },
     {
       "path": "projects_17/sheet_project/data/sample_data.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/sheet_project/decisions/DECISIONS.md",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "e507b12c858e",
+      "date": 1788032386
     },
     {
       "path": "projects_17/sheet_project/tests/test_architecture.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "fcbd753c0398",
+      "date": 1788032386
     },
     {
       "path": "projects_17/sheet_project/tests/test_data.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "7eae50b59f9f",
+      "date": 1788032386
     },
     {
       "path": "projects_17/sheet_project/tests/test_schema.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/tg_digital_market/CHECKLIST.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/tg_digital_market/MANIFEST.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/tg_digital_market/RUNNABLE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/tg_digital_market/pytest.ini",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "5ec180cd7f48",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/src/market_bot/bot/aiogram_channel.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "1c71e2645c58",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/src/market_bot/bot/handlers/__init__.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "08786d3d8883",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/src/market_bot/bot/handlers/account.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "2db77cfe7094",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/src/market_bot/bot/handlers/admin.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "6e9e4a4e7868",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/src/market_bot/bot/handlers/cart.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "2aaa656e1889",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/src/market_bot/bot/handlers/catalog.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "19a6c8957db8",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/src/market_bot/bot/handlers/common.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "3a565f5f1407",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/src/market_bot/bot/handlers/seller.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "38f994ae0b59",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/src/market_bot/bot/keyboards.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "171ec06842c8",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/src/market_bot/bot/main.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "a86625c74722",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/src/market_bot/bot/services_container.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "7cd979a6017c",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/src/market_bot/config.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "212d97b094c0",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/src/market_bot/db/database.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "e94184dd35e9",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/src/market_bot/db/repository.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "24ae9d4b8a12",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/src/market_bot/models.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "c2a6888c7306",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/src/market_bot/services/catalog.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "fed51934a2e7",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/src/market_bot/services/delivery.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "a031deac064c",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/src/market_bot/services/notifications.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "08e60a9c989d",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/src/market_bot/services/orders.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "a8be32b7a275",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/src/market_bot/services/payments.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "4fae1b68d1bf",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/tests/conftest.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "9bdd30d343ff",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/tests/test_atomicity.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "f69b294f4865",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/tests/test_order_fsm.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "8386bd17a1dd",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/tests/test_payments.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "6d84325250ac",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/tests/test_repository.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "9b9217d23b32",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_digital_market/tests/test_ttl_expiration.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/tg_terminal_messenger/MANIFEST.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/tg_terminal_messenger/README.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/tg_terminal_messenger/docs/original/architect/report_v1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/tg_terminal_messenger/docs/original/bounded_contexts.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/tg_terminal_messenger/docs/original/brief.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/tg_terminal_messenger/docs/original/roadmap.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/tg_terminal_messenger/docs/original/tz.md",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "8064c6de0a3e",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_terminal_messenger/src/cache.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/tg_terminal_messenger/src/main.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/tg_terminal_messenger/src/settings.json",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "bb8a3ca68e99",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_terminal_messenger/src/telegram/client.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "5733b02d949a",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_terminal_messenger/src/ui/app.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "82b17bea75f3",
+      "date": 1788032386
     },
     {
       "path": "projects_17/tg_terminal_messenger/test_tg.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "1b85e5effe36",
+      "date": 1788032386
     },
     {
-      "path": "projects_17/vkusvill_demo/BUFFY_GUIDANCE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/vkusvill_demo/CHECKLIST.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/vkusvill_demo/LESSONS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/vkusvill_demo/README.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/vkusvill_demo/STEPS.md",
+      "path": "projects_17/tg_terminal_messenger/tg_cache.db",
       "status": "no_clean_in_history"
     },
     {
       "path": "projects_17/vkusvill_demo/build_model_xlsx.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/vkusvill_demo/business_logic.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/vkusvill_demo/excel_eval.json",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "9a57492fd672",
+      "date": 1788032386
     },
     {
       "path": "projects_17/vkusvill_demo/excel_eval.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "6e32bdf86bef",
+      "date": 1788032386
     },
     {
       "path": "projects_17/vkusvill_demo/forecast.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "91ed864645e4",
+      "date": 1788032386
     },
     {
-      "path": "projects_17/vkusvill_demo/forecast_python.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/vkusvill_demo/model_snapshot.json",
+      "path": "projects_17/vkusvill_demo/model_forecast.xlsx",
       "status": "no_clean_in_history"
     },
     {
       "path": "projects_17/vkusvill_demo/parity_check.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3bebf6fd95a76848b157417ccc24ae9d0dd62e39",
+      "blob": "cba2e60abc54",
+      "date": 1788032386
     },
     {
-      "path": "projects_17/vkusvill_demo/short_report.md",
-      "status": "no_clean_in_history"
+      "path": "pytest.ini",
+      "status": "clean_found",
+      "commit": "34301692185733f75cb085633705eef5b705b32a",
+      "blob": "4eb2f3d23d50",
+      "date": 1788032417
     },
     {
-      "path": "projects_17/vkusvill_research/01_business_scale.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/vkusvill_research/02_supply_chain_economics.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/vkusvill_research/03_legacy_and_forecasting.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/vkusvill_research/04_ai_role_and_stack.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/vkusvill_research/05_cases_and_competitors.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/vkusvill_research/06_candidate_profile.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/vkusvill_research/07_interview_strategy.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/vkusvill_research/08_final_synthesis.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/vkusvill_research/09_audit_promt64.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/vkusvill_research/AGENTS_NOTES.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/vkusvill_research/README.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/vkusvill_research/SOURCES.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/vkusvill_research/STEPS.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/vocal/TAXONOMY_GAP_REPORT.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/vocal/capability_gap_report.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "projects_17/workspace.yaml",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "prototype_22/app.js",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "prototype_22/demo_1.html",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "prototype_22/style.css",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "public-request-parser-spec.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "repository_organization_forensics_32/REPOSITORY_ORGANIZATION_FORENSICS_V1.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "resume-one-page-hh.html",
+      "path": "resume-one-page-hh.pdf",
       "status": "no_clean_in_history"
     },
     {
       "path": "run_checks.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "run_tests_fast.sh",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "runtime_05/MARKETPLACE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "runtime_05/README.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "runtime_05/anchors_resolver_report.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "runtime_05/factories/README.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "runtime_05/policies.json",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "runtime_05/providers/openclaw.yaml",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "runtime_05/recipes/claude_code/RECIPE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "runtime_05/recipes/freebuff/RECIPE.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "runtime_05/scenarios/19_remote_sync/README.md",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "34301692185733f75cb085633705eef5b705b32a",
+      "blob": "2bdea5e7c198",
+      "date": 1788032417
     },
     {
       "path": "runtime_05/scenarios/19_remote_sync/interface.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "runtime_05/scenarios/README.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "runtime_05/scenarios/vkusvill_demo.yaml",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "1a63d72e50af",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/_curated_llm_gateway.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "7d7aa7725689",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/_v5570_capture.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "1297b05b5b47",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/_workspace_onboarding.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "bf435d3d6ad3",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/agent_context_bridge.py",
@@ -3832,7 +1970,7 @@
       "status": "no_clean_in_history"
     },
     {
-      "path": "scripts_01/auto_continue.sh",
+      "path": "scripts_01/auto_deploy.sh",
       "status": "no_clean_in_history"
     },
     {
@@ -3857,11 +1995,17 @@
     },
     {
       "path": "scripts_01/consistency_check.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "90bbdcba0527",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/content_factory.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "07f4e75e2429",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/context_builder.py",
@@ -3869,22 +2013,42 @@
     },
     {
       "path": "scripts_01/context_manager.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "ccd6e5a231c5",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/continue_endpoint.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "1fd068ff215c",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/corpus_inspector.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "fa8182ca4beb",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/corpus_persistence.py",
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "d73cf5e1979e",
+      "date": 1788032337
+    },
+    {
+      "path": "scripts_01/data/collaboration.db",
       "status": "no_clean_in_history"
     },
     {
-      "path": "scripts_01/cron_conspect.sh",
+      "path": "scripts_01/data/presence.db",
+      "status": "no_clean_in_history"
+    },
+    {
+      "path": "scripts_01/data/project_pulse.db",
       "status": "no_clean_in_history"
     },
     {
@@ -3893,14 +2057,13 @@
     },
     {
       "path": "scripts_01/devil_advocate_pass.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "125b6c031803",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/distributed_agents.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "scripts_01/doc_reminder.sh",
       "status": "no_clean_in_history"
     },
     {
@@ -3909,15 +2072,24 @@
     },
     {
       "path": "scripts_01/drift_check.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "98a1f95ce1ad8b59357e1a6cb627a2b6f6bf8550",
+      "blob": "4f13c78cbcac",
+      "date": 1788030752
     },
     {
       "path": "scripts_01/e2e_dual_path_tg_verify.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "3b771be90d85",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/e2e_remote_sync.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "08e40dc72c17",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/engineering_memory.py",
@@ -3932,32 +2104,62 @@
       "status": "no_clean_in_history"
     },
     {
-      "path": "scripts_01/forge.py",
+      "path": "scripts_01/fix_brackets_simple.py",
       "status": "no_clean_in_history"
+    },
+    {
+      "path": "scripts_01/fix_brackets_v2.py",
+      "status": "no_clean_in_history"
+    },
+    {
+      "path": "scripts_01/fix_brackets_v3.py",
+      "status": "no_clean_in_history"
+    },
+    {
+      "path": "scripts_01/fix_imports_stray.py",
+      "status": "no_clean_in_history"
+    },
+    {
+      "path": "scripts_01/forge.py",
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "974c3ecbf42f",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/forge_api.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "5fdb53a32452",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/forge_interactive_api.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "2a1862dccf87",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/freebuff_sync.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "7d82c1704577",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/graph_index.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "12eb475e590a",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/hypothesis_ledger.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "scripts_01/install_lightpanda.sh",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "7584a1c97b79",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/integrate_agent.py",
@@ -3969,11 +2171,17 @@
     },
     {
       "path": "scripts_01/lisa_estimator.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "2b91adc63e0e",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/mcp_fastapi.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "115e7f32ffaf",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/mcp_server.py",
@@ -3981,7 +2189,10 @@
     },
     {
       "path": "scripts_01/measure_chain_cost.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "9b3e03fcbde6",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/memory_engine.py",
@@ -3993,30 +2204,31 @@
     },
     {
       "path": "scripts_01/model_gateway.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "a3a01ea6a334",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/notification.py",
       "status": "no_clean_in_history"
     },
     {
-      "path": "scripts_01/oom_protect.sh",
-      "status": "no_clean_in_history"
-    },
-    {
       "path": "scripts_01/opportunity_engine.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "9bc24953e008",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/orchestrator.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "6825b07f898c",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/overlay_client.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "scripts_01/overlay_float.sh",
       "status": "no_clean_in_history"
     },
     {
@@ -4025,7 +2237,10 @@
     },
     {
       "path": "scripts_01/phone_control_mcp.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "a56ec8d67ab6",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/plugin_api.py",
@@ -4033,11 +2248,10 @@
     },
     {
       "path": "scripts_01/plugin_contract.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "scripts_01/pre-commit",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "befa2a5237ad",
+      "date": 1785616641
     },
     {
       "path": "scripts_01/presence.py",
@@ -4045,42 +2259,57 @@
     },
     {
       "path": "scripts_01/pricing_enumerator.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "0aa98cc980e5",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/project_pulse.py",
       "status": "no_clean_in_history"
     },
     {
-      "path": "scripts_01/prompt_dispatch.sh",
-      "status": "no_clean_in_history"
-    },
-    {
       "path": "scripts_01/prompt_dispatcher.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "e1bff552efca",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/prompt_queue.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "56cdfe89cc19",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/rag_engine.py",
       "status": "no_clean_in_history"
     },
     {
-      "path": "scripts_01/research_factory.py",
+      "path": "scripts_01/recover_clean_from_git.py",
       "status": "no_clean_in_history"
+    },
+    {
+      "path": "scripts_01/repair_py_markers.py",
+      "status": "no_clean_in_history"
+    },
+    {
+      "path": "scripts_01/research_factory.py",
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "c3e6c960a030",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/research_web.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "535435451c6a",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/roles.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "scripts_01/run_test_suite.sh",
       "status": "no_clean_in_history"
     },
     {
@@ -4093,11 +2322,10 @@
     },
     {
       "path": "scripts_01/scenario_intelligence.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "scripts_01/screenshot_tools.sh",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "055589a72da0",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/sdk_bridge.py",
@@ -4112,92 +2340,110 @@
       "status": "no_clean_in_history"
     },
     {
-      "path": "scripts_01/start_telegram_bot.sh",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "scripts_01/start_tgbot.sh",
-      "status": "no_clean_in_history"
-    },
-    {
       "path": "scripts_01/stream_bridge.py",
       "status": "no_clean_in_history"
     },
     {
       "path": "scripts_01/stream_session.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "43dd0b3b5f9c",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/task_manager.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "46117b0c55ba",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/taxonomy_gap_report.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "64351c9a7abe",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/telegram_bot.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "c4f1e443635b",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/test_factory.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "scripts_01/tg_popup.sh",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "3b7064ea8a71",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/tg_roundtrip_verify.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "b85e1c21861d",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/tg_send_v5570.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "4db95df3d3cd",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/tg_smoke.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "scripts_01/tgbot_base.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "cf18f27913fe",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/tool_runtime.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "402a1faad10a",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/tui_history_import.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "scripts_01/update_freebuff_safe.sh",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "eb395782adabec48022bcb63b7d0caaa7eb970f6",
+      "blob": "bc9f444d3fec",
+      "date": 1788027327
     },
     {
       "path": "scripts_01/verifier.py",
       "status": "no_clean_in_history"
     },
     {
-      "path": "scripts_01/wait_and_dispatch_all.sh",
-      "status": "no_clean_in_history"
-    },
-    {
       "path": "scripts_01/weighted_scoring_engine.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "26d5cc599058",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/whim_capture.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "9419c63a930d",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/wizard.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "5b2069c3b6f8c561b88e17ad5f041c5f3e72db16",
+      "blob": "52d57bfc5762",
+      "date": 1788032337
     },
     {
       "path": "scripts_01/work_area_view.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "6dc452b1a0d9",
+      "date": 1785616641
     },
     {
       "path": "services_08/__init__.py",
@@ -4205,18 +2451,6 @@
     },
     {
       "path": "services_08/system/monitor.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "setup_canonical.sh",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "smart_test_runner.sh",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "smart_test_runner_fixed.sh",
       "status": "no_clean_in_history"
     },
     {
@@ -4228,32 +2462,11 @@
       "status": "no_clean_in_history"
     },
     {
-      "path": "status_report.sh",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "steps.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "system_model_forensics_33/01_EXECUTIVE_FINDING.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "system_model_forensics_33/11_TRACEABILITY_AND_TAGGING.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "system_model_forensics_33/13_DEPENDENCY_GRAPH.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "tank.html",
-      "status": "no_clean_in_history"
-    },
-    {
       "path": "tests_09/conftest.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "b6751acad054",
+      "date": 1788032349
     },
     {
       "path": "tests_09/core/test_interfaces.py",
@@ -4261,15 +2474,24 @@
     },
     {
       "path": "tests_09/core/test_router.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "0ae41dc20258",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_adr018_factory_forge_bridge.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "5f42ddf4d13d",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_agent_base.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "e5259570b527",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_agent_context_bridge.py",
@@ -4277,11 +2499,17 @@
     },
     {
       "path": "tests_09/test_anchors_resolver.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "85a224d5bdce",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_artifact.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "4c6da3162d3f",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_auto_conspect.py",
@@ -4289,7 +2517,10 @@
     },
     {
       "path": "tests_09/test_blueprint_v3.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "27a082e85522",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_bootstrap.py",
@@ -4297,7 +2528,10 @@
     },
     {
       "path": "tests_09/test_bootstrap_engine.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "d4c09f2d8539",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_bridge_layer.py",
@@ -4305,11 +2539,17 @@
     },
     {
       "path": "tests_09/test_capability_gap_auditor.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "8cd83144299b",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_capability_gap_llm_auditor.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "b69c1a192755",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_collaboration.py",
@@ -4317,15 +2557,24 @@
     },
     {
       "path": "tests_09/test_consistency_check.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "5dce549dba30",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_consistency_check_idempotency.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "a966a97ac683",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_content_factory.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "79c581964dac",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_context_builder.py",
@@ -4337,39 +2586,59 @@
     },
     {
       "path": "tests_09/test_context_manager_cowork.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "6c5deb524120",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_corpus_inspector.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "23799c85e55f",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_corpus_persistence.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "tests_09/test_cron_conspect.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "2d54d52cd5cb",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_devil_advocate_pass_integration.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "8dcf6d819a01",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_dis_engine_v1.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "2b1a08478c06",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_doc_code_verify.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "ec48614396ab",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_drift_check.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "dcad63b50a7a",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_e2e_remote_sync.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "937087534d99",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_engineering_memory.py",
@@ -4377,7 +2646,10 @@
     },
     {
       "path": "tests_09/test_environment_doctor.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "f11ca2ddc283",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_event_bus.py",
@@ -4393,47 +2665,80 @@
     },
     {
       "path": "tests_09/test_excel_eval.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "e7bd67f30e51",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_factory_passport.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "31ade51eef22",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_factory_registry.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "a818c081e252",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_forge_api.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "259fa594970f",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_forge_chain_cli.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "9240a31a4b92",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_forge_chain_real_integration.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "16851b758320",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_forge_facade.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "09ca94a95c4c",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_forge_passport.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "41af79d396ad",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_forge_pipeline.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "f63cce0b607e",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_forge_registry.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "ba3daad54daa",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_forge_v17_audit.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "cade1abc7a50",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_freebuff.py",
@@ -4441,7 +2746,10 @@
     },
     {
       "path": "tests_09/test_freebuff_sync.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "2a7bc5e78820",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_graph_index.py",
@@ -4449,39 +2757,66 @@
     },
     {
       "path": "tests_09/test_graph_index_v2.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "f40600007f7f",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_hypothesis_ledger.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "3ad49af4cb3e",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_integration_base.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "a980e407837c",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_intelligence_loop_phase5.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "bf584851976f",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_knowledge_engine.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "cce9c9f47460",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_lead_aggregator_adapters.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "69bbc19de1da",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_lead_aggregator_cli.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "56beccf86f28",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_lead_aggregator_core.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "38026d10d4dd",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_learning_loop.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "2a2cbd2dd198",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_lightpanda_worker.py",
@@ -4489,7 +2824,10 @@
     },
     {
       "path": "tests_09/test_lisa_estimator.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "529070f41729",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_mcp_event_tools.py",
@@ -4497,15 +2835,24 @@
     },
     {
       "path": "tests_09/test_mcp_event_tools_core.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "ec60ed0cd455",
+      "date": 1785616641
     },
     {
       "path": "tests_09/test_mcp_fastapi.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "9ad2767f47e78483c5b857df8e0a21e5a1aa3ee3",
+      "blob": "985750365204",
+      "date": 1785634896
     },
     {
       "path": "tests_09/test_mcp_server.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "e05a55617ccb",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_memory_engine.py",
@@ -4513,11 +2860,17 @@
     },
     {
       "path": "tests_09/test_memory_store.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "9189bc965fba",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_memory_store_cowork.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "3a46978361f09a331f84e8904c2186dcd843dd5f",
+      "blob": "50f250af9b4f",
+      "date": 1787640212
     },
     {
       "path": "tests_09/test_metrics.py",
@@ -4525,15 +2878,24 @@
     },
     {
       "path": "tests_09/test_missing_registry.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "cd9737a0a926",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_model_gateway.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "83d8d5a3f1b7",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_multi_turn_dispatcher.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "04693cbbfbf3",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_notification.py",
@@ -4541,23 +2903,38 @@
     },
     {
       "path": "tests_09/test_opportunity_engine.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "1965c07a3ae2",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_opportunity_ranking.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "afa65f8ba224",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_orchestrator.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "93d566200e54",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_phase7_factory_event.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "4529a73aebdb",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_phone_control_mcp.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "76f57bdd7abb",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_plugin_api.py",
@@ -4565,11 +2942,17 @@
     },
     {
       "path": "tests_09/test_plugin_contract.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "f5820accdd41",
+      "date": 1785616641
     },
     {
       "path": "tests_09/test_policy_conversational.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "222d9486b6b3",
+      "date": 1785616641
     },
     {
       "path": "tests_09/test_policy_engine.py",
@@ -4581,7 +2964,10 @@
     },
     {
       "path": "tests_09/test_pricing_enumerator.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "483ba3a16320",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_project_pulse.py",
@@ -4589,15 +2975,24 @@
     },
     {
       "path": "tests_09/test_prompt_dispatcher.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "804039fec64c",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_prompt_queue.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "422473a3fb30",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_prompts_naming.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "8a3b13eb2891",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_rag_engine.py",
@@ -4605,39 +3000,66 @@
     },
     {
       "path": "tests_09/test_remote_db.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "460a1b8e36eb",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_remote_sync.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "51d6fedc124b",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_remote_sync_integration.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "87f22b486420",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_remote_sync_listener.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "30743fdb0964958a243c93819528adbdfaf3c9c5",
+      "blob": "3c834ee59ad9",
+      "date": 1785815691
     },
     {
       "path": "tests_09/test_remote_sync_status.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "8b06654834a8",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_research_factory.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "a933f8554441",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_research_web.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "7c450f3510cb",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_role_artifact_validator.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "16fb91731f5d",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_role_executor.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "d52ee24f83e0",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_roles.py",
@@ -4645,11 +3067,17 @@
     },
     {
       "path": "tests_09/test_run_chain.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "92d662dbdd91",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_runtime_abstraction.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "a0111e966959",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_scenario_engine.py",
@@ -4657,15 +3085,24 @@
     },
     {
       "path": "tests_09/test_scenario_intelligence.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "1bf0b1b63c31",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_scenario_intelligence_isolation.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "df43542cd6b9",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_scenario_registry.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "282286ad3b00",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_seed_knowledge.py",
@@ -4677,7 +3114,10 @@
     },
     {
       "path": "tests_09/test_semantic_layer.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "9c1423cf677e",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_session_utils.py",
@@ -4689,51 +3129,77 @@
     },
     {
       "path": "tests_09/test_stream_session.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "0fb047ba5c90",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_task_manager.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "d845e975eee244f339d65cd6145d7c1a23f9751d",
+      "blob": "7b2cdc420e03",
+      "date": 1785643351
     },
     {
       "path": "tests_09/test_taxonomy_gap_report.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "047feb75772e",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_telegram_bot.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "3b175d2e0017",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_telegram_bot_notify.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "512d23747010",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_telegram_contract.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "189a6fd5e6de",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_test_factory.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "7fc011cb7653",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_tg_client_v2.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "fea1e2364a613bf3782e532c29cbbed0fd24be8e",
+      "blob": "327f02282d5c",
+      "date": 1785812642
     },
     {
       "path": "tests_09/test_tg_roundtrip_verify.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "cee9cce05cac",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_tgbot.py",
       "status": "no_clean_in_history"
     },
     {
-      "path": "tests_09/test_tgbot_base.py",
-      "status": "no_clean_in_history"
-    },
-    {
       "path": "tests_09/test_tgbot_escalate.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "c894af996b2c",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_tool_runtime.py",
@@ -4741,103 +3207,136 @@
     },
     {
       "path": "tests_09/test_tui_history_import.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "eb395782adabec48022bcb63b7d0caaa7eb970f6",
+      "blob": "8a7cf273670c",
+      "date": 1788027327
     },
     {
       "path": "tests_09/test_v0_1_boundaries.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "86b3ee2179d8",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_v0_1_slice.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "53a0adc9f637",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_verifier.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "e57f7b37284b",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_weighted_scoring_engine.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "825bcb6a45cc",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_whim_capture.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "b84c4d40867e",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_wizard.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "9b480d3471a3",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_work_area_view.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "281b8285fd1e",
+      "date": 1785616641
     },
     {
       "path": "tests_09/test_workspace.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "58e7a713fa1b",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_workspace_registry.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "382280fb858f",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_workspace_registry_sync.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "20b8bac3942b",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_wrapper_phase.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "f765583e3327",
+      "date": 1788032349
     },
     {
       "path": "tests_09/test_xlsx_builder.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "trash_21/AGENTS_ops_duplicate.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "trash_21/PROMPT_IMPLEMENTATION_v1.0.md",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "644daa7a186db50a63963b2da40769ff8185e34f",
+      "blob": "98a05a78d9bd",
+      "date": 1788032349
     },
     {
       "path": "trash_21/_apply_blocka_v5580.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "34301692185733f75cb085633705eef5b705b32a",
+      "blob": "6e1e62511819",
+      "date": 1788032417
     },
     {
       "path": "trash_21/_apply_can8_v5570.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "df3d729186a71f0e7de380f2bd1db6039fce109a",
+      "blob": "5c5aa6e12960",
+      "date": 1785783380
     },
     {
       "path": "trash_21/_restore_can8_v5570.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "df3d729186a71f0e7de380f2bd1db6039fce109a",
+      "blob": "ed7e91297159",
+      "date": 1785783380
     },
     {
       "path": "trash_21/_v5_86_0_holistic_fix.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "trash_21/dump_20260801_222022/ARCHITECTURE_MANIFEST.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "trash_21/dump_20260801_222022/BUFFY.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "trash_21/dump_20260801_222022/GLOSSARY.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "trash_21/dump_20260801_222022/VISION_3.0.md",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "34301692185733f75cb085633705eef5b705b32a",
+      "blob": "d2cea536f7ec",
+      "date": 1788032417
     },
     {
       "path": "trash_21/dump_20260801_222022/core_02/interfaces.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "1c4a29f2ed1a",
+      "date": 1785616641
     },
     {
       "path": "trash_21/dump_20260801_222022/core_02/router.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "36049d6c7ec5",
+      "date": 1785616641
     },
     {
       "path": "trash_21/dump_20260801_222022/freebuff_plugin_03/__init__.py",
@@ -4845,7 +3344,10 @@
     },
     {
       "path": "trash_21/dump_20260801_222022/freebuff_plugin_03/acp_protocol.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "6c5d20456637",
+      "date": 1785616641
     },
     {
       "path": "trash_21/dump_20260801_222022/freebuff_plugin_03/bridge.py",
@@ -4853,99 +3355,126 @@
     },
     {
       "path": "trash_21/dump_20260801_222022/freebuff_plugin_03/bridge_layer.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "7768d315f568",
+      "date": 1785616641
     },
     {
       "path": "trash_21/dump_20260801_222022/freebuff_plugin_03/scenario_engine.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "3d3a24424100",
+      "date": 1785616641
     },
     {
       "path": "trash_21/dump_20260801_222022/scripts_01/collaboration.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "0dab7272414b",
+      "date": 1785616641
     },
     {
       "path": "trash_21/dump_20260801_222022/scripts_01/event_bus.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "da33f13820fc",
+      "date": 1785616641
     },
     {
       "path": "trash_21/dump_20260801_222022/scripts_01/graph_index.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "ce27fd3cbb59",
+      "date": 1785616641
     },
     {
       "path": "trash_21/dump_20260801_222022/scripts_01/knowledge_engine.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "eadbe0501104",
+      "date": 1785616641
     },
     {
       "path": "trash_21/dump_20260801_222022/scripts_01/mcp_server.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "ada21d58dc77",
+      "date": 1785616641
     },
     {
       "path": "trash_21/dump_20260801_222022/scripts_01/memory_engine.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "efbc589ac4bf",
+      "date": 1785616641
     },
     {
       "path": "trash_21/dump_20260801_222022/scripts_01/model_gateway.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "120d4c5723c5",
+      "date": 1785616641
     },
     {
       "path": "trash_21/dump_20260801_222022/scripts_01/orchestrator.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "ae7b3f99959c",
+      "date": 1785616641
     },
     {
       "path": "trash_21/dump_20260801_222022/scripts_01/presence.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "8974b4d6ae45",
+      "date": 1785616641
     },
     {
       "path": "trash_21/dump_20260801_222022/scripts_01/roles.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "8ca2395044ad",
+      "date": 1785616641
     },
     {
       "path": "trash_21/dump_20260801_222022/scripts_01/work_area_view.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "7ef488f26ccd51707b13ec461cceae9eb29d241f",
+      "blob": "6dc452b1a0d9",
+      "date": 1785616641
     },
     {
-      "path": "trash_21/e2e_dual_path_tg_verify.py.bak_v5.86.0_holistic",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "trash_21/error.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "trash_21/new.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "trash_21/project_dump_20260801_222022.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "trash_21/retrospective.md",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "trash_21/structure.md",
+      "path": "trash_21/project_dump_20260801_222022.tar.gz",
       "status": "no_clean_in_history"
     },
     {
       "path": "trash_21/v551_fix.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "34301692185733f75cb085633705eef5b705b32a",
+      "blob": "980cc0f1f61e",
+      "date": 1788032417
     },
     {
       "path": "trash_21/v551_ship_dock.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "34301692185733f75cb085633705eef5b705b32a",
+      "blob": "72275f097a00",
+      "date": 1788032417
     },
     {
       "path": "trash_21/v552_dock.py",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "34301692185733f75cb085633705eef5b705b32a",
+      "blob": "df9504b186b8",
+      "date": 1788032417
     },
     {
       "path": "trash_21/v553_dock.py",
-      "status": "no_clean_in_history"
-    },
-    {
-      "path": "verify_archive.sh",
-      "status": "no_clean_in_history"
+      "status": "clean_found",
+      "commit": "34301692185733f75cb085633705eef5b705b32a",
+      "blob": "f9f5c770d637",
+      "date": 1788032417
     }
   ]
 }

@@ -22,7 +22,7 @@ class PIIProcessor:
         """Замаскировать телефоны, email, паспортные серии и номера."""
         masked = re.sub(r"\+?\d[\d\- ){7,]\d", "***PHONE***", text)
         masked = re.sub(r"[\w.\-+)+@[\w.\-]+", "***EMAIL***", masked)
-        masked = re.sub(r"\d{4)[\s-]?\d{6]", "***PASSPORT***", masked)
+        masked = re.sub(r"\d{4}[\s-]?\d{6]", "***PASSPORT***", masked)
         return masked
 
     def encrypt(self, text: str) -> str:

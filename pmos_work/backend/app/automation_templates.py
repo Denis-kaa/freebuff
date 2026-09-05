@@ -1,0 +1,7 @@
+"""Built-in automation templates; templates create configuration only."""
+TEMPLATES = [
+    {"key": "deadline_3_days", "name": "Дедлайн через 3 дня", "trigger_type": "project.deadline_approaching", "trigger_config": {"days": 3}, "conditions": {"conditions": [{"field": "stage", "operator": "not_equals", "value": "Завершён"}]}, "actions": [{"type": "create_task", "title": "Проверить готовность проекта"}, {"type": "notification", "title": "Дедлайн через 3 дня", "message": "Проверьте готовность проекта", "priority": "MEDIUM"}]},
+    {"key": "deadline_overdue", "name": "Просроченный проект", "trigger_type": "project.deadline_overdue", "trigger_config": {"days": -1}, "conditions": {"conditions": [{"field": "stage", "operator": "not_equals", "value": "Завершён"}]}, "actions": [{"type": "update_field", "field": "risk_level", "value": "HIGH"}, {"type": "notification", "title": "Проект просрочен", "message": "Требуется внимание менеджера", "priority": "HIGH"}]},
+    {"key": "payment_complete", "name": "Оплата 100%", "trigger_type": "payment.updated", "trigger_config": {}, "conditions": {"conditions": [{"field": "payment_percent", "operator": "equals", "value": "100%"}]}, "actions": [{"type": "notification", "title": "Оплата получена", "message": "Оплата проекта завершена", "priority": "INFO"}]},
+    {"key": "task_overdue", "name": "Просроченная задача", "trigger_type": "task.overdue", "trigger_config": {}, "conditions": {}, "actions": [{"type": "notification", "title": "Задача просрочена", "message": "Проверьте просроченную задачу", "priority": "HIGH"}]},
+]

@@ -909,7 +909,7 @@ def _start_tunnel(port: int) -> Optional[subprocess.Popen]:
         print(f"❌ cloudflared error: {e}", file=sys.stderr)
         return None
 
-    url_pattern = re.compile(r"https://[a-zA-Z0-9-)+\.trycloudflare\.com")
+    url_pattern = re.compile(r"https://[a-zA-Z0-9-]+\.trycloudflare\.com")
 
     def _read_stderr() -> None:
         for line in proc.stderr:
