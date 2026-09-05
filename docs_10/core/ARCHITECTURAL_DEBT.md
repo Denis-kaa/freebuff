@@ -72,6 +72,21 @@ This document tracks **architectural debt** identified by the daily self-audit i
 | **Owner** | parent |
 | **Discovered** | 2026-08-03 (v5.54.0 triage of "test counter drift" issue from user) |
 
+### 3.4 Naming-Convention Baseline Re-Broken by Untracked PM-OS Artifacts (7 issues) — 🔴 OPEN
+
+| Field | Value |
+|-------|-------|
+| **ID** | `TRACK-002` (2026-09-04, session-2026-09-04 TeenFreelance audit pass) |
+| **Status** | 🔴 OPEN |
+| **Component** | `check_naming_convention` (scripts_01/consistency_check.py) baseline = 0; current `total_issues=7`: dirs `pmos_frontend`, `pmos_work` (untracked WIP, PM OS stream) + prompts `pompts_11/{113,118,119,121}.md` (bare-number drafts, distinct content from named twins), `pompts_11/задачи.md` (task-registry doc). |
+| **Severity** | 🟡 Medium — baseline gates fail: `test_consistency_check.py::test_real_project_consistent`, `test_consistency_check_idempotency.py::test_run_consistency_when_consistent_true`; TRACK-001 invariant (exit 0) re-broken |
+| **Type** | Structural naming-convention drift from parallel work streams (AGENTS.md ANTI-5 scope-boundary violation by source streams) |
+| **Why not fixed in-place** | (a) pmos_* are untracked WIP of a separate PM OS work stream — renaming/moving them risks breaking that stream's local state; (b) prompts in pompts_11/ are protected by prompt-immutability rules (AGENTS.md §5): deletion/rename requires explicit user instruction; bare-number files hold *different* content than their named twins (working drafts, not duplicates). |
+| **Remediation** | Owner of PM-OS stream: rename dirs to `имя_NN` scheme (e.g. `pmos_frontend_15/`) or move under a numbered root; register bare-number prompts as `NNN_TT_имя.md` versions of the named twins (content preserved) and relocate `задачи.md` out of pompts_11/ (it is a registry doc, not a prompt). Then re-run gate: `python -m scripts_01.consistency_check` exit 0. |
+| **Owner** | parent (PM-OS stream owner) |
+| **Remediation ETA** | next PM-OS consolidation pass |
+| **Discovered** | 2026-09-04 (TeenFreelance audit session: gates re-run after docs+repair pass; consistency_check --json: 2 dir + 5 prompt naming issues) |
+
 ---
 
 ## 4. False Positives and Tooling Debt

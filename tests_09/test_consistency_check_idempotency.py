@@ -27,6 +27,8 @@ toggle BETWEEN runs -- only the determinism of the report is asserted here).
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 import scripts_01.consistency_check as _cc

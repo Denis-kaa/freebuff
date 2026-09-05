@@ -6,6 +6,19 @@
 
 ---
 
+## [5.189.86***REMOVED*** — 2026-09-04
+
+### 📋 Security-аудит TeenFreelance + канон-реестр рекомендаций (docs-only)
+
+- NEW `docs_10/audits/AUDIT_TEENFREELANCE_2026-09-04.md` — послойный security-аудит `projects_17/TeenFreelance-master` (auth → resource authz → files → websocket → minors' data → infra + deep-dive CRUD/raw-SQL + полный endpoint-sweep). 36 находок, 4 critical: placeholder SECRET_KEY (AUTH-01), offers чтение без auth (B1), публичный draft-листинг (D5), Postgres 5433 + plain HTTP (I1/I2). Каждый факт = файл:строка + severity + fix. Read-only — код TeenFreelance в заходе аудита не менялся.
+- NEW `docs_10/RECOMMENDATIONS.md` **[канон]** — единый append-only реестр рекомендаций платформы: REC-001..REC-020 (P0×7 / P1×11 / P2×2, статусы OPEN/IN_PROGRESS/DONE/WONTFIX/OBSOLETE, verify-колонка). Разделение ролей с LESSONS: уроки = что выучили, рекомендации = что сделать.
+- LESSONS **CON-68**: канон-пара AUDIT + RECOMMENDATIONS для всех будущих аудитов (формат факта, регистрация дока в том же заходе, read-only-дисциплина аудита).
+- Реестры обновлены в том же заходе (CON-63/64): `docs_10/DOCUMENT_REGISTRY.md` (+2 записи), `docs_10/core/RULES.md` (doc-type RECOMMENDATIONS.md + правило «При аудите»), `docs_10/INDEX.md` (раздел «Реестры / операционные каноны»). 
+- Test counter refresh (CAN-16/3.3): AST-truth `tests_09/` = **3453** тест-функций; `python -m pytest tests_09/ -q` — **3453 passed, 0 failures** (2026-09-04; −74 vs 2026-08-29 baseline 3527 — часть тестов вне дерева/удалена между сессиями); CODE_QUALITY_STANDARD §11.6 цель обновлена (3527→3453).
+- Repair (pre-existing corruption, не от этого захода): восстановлены regex-константы `core_02/anchors_resolver.py` (17 namespace-паттернов), `scripts_01/consistency_check.py` (_TOP_LEVEL_DIR_RE/_PROMPT_FILE_RE/_FULL_SUITE_COUNT_RE/_VERSION_HEADER_RE + толерантность к `***REMOVED***`-маркеру в version-заголовках) — consistency_check снова исполняем.
+
+---
+
 ## [5.189.85***REMOVED*** — 2026-08-29
 
 ### 🆕 TUI history import в платформенную память (tui_history_import)

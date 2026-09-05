@@ -1494,3 +1494,18 @@ bash scripts_01/run_test_suite.sh --all
 **Связи:** CQS §11 (тестируемость), CON-65 (provider availability), PB-9 (зависимости окружения), ANTI-5 (не блокировать один сценарий множеством непроверяемых шагов), [`TEST_SUITE_RUNBOOK.md`***REMOVED***(../../docs_10/runbook/TEST_SUITE_RUNBOOK.md) (инструкция пользователя).
 
 ---
+
+### CON-68 — Аудит внешнего проекта фиксируется канон-парой AUDIT + RECOMMENDATIONS (2026-09-04)
+
+**Контекст:** security-аудит TeenFreelance (`projects_17/TeenFreelance-master`): послойный проход auth → resource authz → files → websocket → minors' data → infra + deep-dive CRUD/raw-SQL + endpoint-sweep. 36 находок (4 critical), каждая = файл:строка + фрагмент + severity + конкретный fix.
+
+**Правило (канон):**
+
+1. Результат аудита → `docs_10/audits/AUDIT_<object>_<date>.md`; формат факта: файл:строка + фрагмент + severity + fix. «Общие советы» без кода запрещены.
+2. Из аудита немедленно заводится/пополняется `docs_10/RECOMMENDATIONS.md` — единый append-only реестр рекомендаций (REC-NNN, приоритеты P0/P1/P2, статусы OPEN/IN_PROGRESS/DONE/WONTFIX/OBSOLETE, verify-ссылка при закрытии). Разделение ролей: **LESSONS = что выучили, RECOMMENDATIONS = что сделать**.
+3. Новый документ-тип в том же заходе попадает в DOCUMENT_REGISTRY + RULES.md (doc-types) + INDEX.md — зеркало CON-64/CON-63 (register-first, «не догонять отдельным шагом»).
+4. Аудит read-only: код объекта аудита не меняется в заходе аудита; фиксы — отдельные заходы, каждый закрывает REC-записи с verify в таблице реестра.
+
+**Связи:** CON-64 (термин/док в том же заходе), CON-63 (register-first), `docs_10/core/RULES.md` §«Аудит и анализ», `docs_10/core/PROJECT_RULES.md` §3.2 (тиражируемое → общая база), `docs_10/RECOMMENDATIONS.md` (REC-001..020), `docs_10/audits/AUDIT_TEENFREELANCE_2026-09-04.md`.
+
+---

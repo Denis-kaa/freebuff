@@ -42,6 +42,7 @@
 | Документ | Статус | Примечание |
 |----------|--------|------------|
 | `DOCUMENT_REGISTRY.md` | ACTIVE | Настоящий реестр (самодокументирование) |
+| `RECOMMENDATIONS.md` | ACTIVE **[канон]** | **2026-09-04**: Единый append-only реестр рекомендаций платформы (REC-NNN; приоритеты P0/P1/P2; статусы OPEN/IN_PROGRESS/DONE/WONTFIX/OBSOLETE). Создан по итогам security-аудита TeenFreelance (REC-001..020); правило ведения — в шапке дока; пара с LESSONS (урок = что выучили, рекомендация = что сделать), CON-68 |
 | `INDEX.md` | ACTIVE | Навигация по документации |
 | `PLAN_NEXT_OPERATIONS.md` | ACTIVE | **v5.101.0**: Развёрнутый план следующих операций (7 этапов, промты) |
 | `ROADMAP_FORGE_RECONCILIATION.md` | ACTIVE | **ROADMAP-FR-001 (v1.4 CLOSED 2026-08-06)**: Reconciliation-plan между RFC_BUFFY_FORGE_V1.md v1.1 §2a и реализацией; 3 sequential Шага closed (Hypothesis C verified, LEVIATHAN inventory ready); bump-history: v1.1 → v1.2 → v1.3 → v1.4 CLOSED; pre-condition: capability-check через SmartRouter.route(). **Per-bump cross-refs** (CAN-17 audit-trail): v1.1 → LESSONS PB-16; v1.2 → RFC_BUFFY_FORGE_V1.md v1.2 §2a.1-2a.3 (lines 178/195/213); v1.3 → LEVIATHAN_INVENTORY_V1.md v1.1 + LESSONS CON-52; v1.4 → ROADMAP-FR-001 itself (Final Closure Bulletin) |
@@ -127,6 +128,7 @@
 | `AUDIT_STEP0_2026-07-31.md` | ACTIVE | Шаг 0 security-аудита (TASK_SECURE_MCP_ACCESS) |
 | `AUDIT_TEMPLATE.md` | DRAFT | Шаблон для новых аудитов |
 | `CONSOLIDATION_STAGE1_AUDIT_2026-07-31.md` | ACTIVE | Аудит Этапа 1 консолидации (цитируется ROADMAP) |
+| `AUDIT_TEENFREELANCE_2026-09-04.md` | ACTIVE | **2026-09-04**: Security-аудит внешнего проекта TeenFreelance (`projects_17/TeenFreelance-master`): auth → resource authz → files → websocket → minors' data → infra + deep-dive CRUD/raw-SQL + endpoint-sweep. 36 находок; 4 critical (placeholder SECRET_KEY, offers чтение без auth, публичный draft-листинг, Postgres 5433 + plain HTTP). Каждый факт = файл:строка + severity + fix. Read-only, код проекта не менялся. → REC-001..020 в RECOMMENDATIONS.md |
 | `PROJECT_INVENTORY_REPORT_2026-08-01.md` | ACTIVE | Полная инвентаризация проекта (promt41/041_03): документация + код + маппинг + SoT + план |
 | `DOMAIN_MODEL_VERIFICATION_2026-07-31.md` | ACTIVE | Верификация доменной модели |
 | `DOMAIN_MODEL_WORKSPACE_OS_2026-07-31.md` | ACTIVE | Доменная модель Workspace OS |

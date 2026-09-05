@@ -1,0 +1,290 @@
+.profile-setup-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.profile-setup-card {
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-radius: 20px;
+  padding: 32px;
+  box-shadow: var(--shadow);
+}
+
+.profile-setup-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.profile-setup-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.profile-setup-subtitle {
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.profile-setup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.profile-setup-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-setup-form label {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+}
+
+.profile-setup-form textarea {
+  width: 100%;
+  background: var(--card-2);
+  border: 1px solid var(--stroke);
+  color: var(--text);
+  border-radius: 12px;
+  padding: 12px 16px;
+  outline: none;
+  font-size: 15px;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.18s ease;
+}
+
+.profile-setup-form textarea:focus {
+  border-color: rgba(32, 238, 121, 0.4);
+  box-shadow: 0 0 0 3px rgba(32, 238, 121, 0.1);
+}
+
+.profile-setup-form textarea.error {
+  border-color: #ff4444;
+}
+
+.char-count {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: right;
+}
+
+.skills-input-group {
+  display: flex;
+  gap: 8px;
+}
+
+.skills-input-group input {
+  flex: 1;
+}
+
+.skills-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.skill-suggestion-btn {
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--stroke);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.skill-suggestion-btn:hover {
+  background: rgba(32, 238, 121, 0.1);
+  border-color: rgba(32, 238, 121, 0.3);
+  color: var(--accent);
+}
+
+.skills-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.skill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(32, 238, 121, 0.1);
+  border: 1px solid rgba(32, 238, 121, 0.3);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.skill-remove {
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  padding: 0;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.18s ease;
+}
+
+.skill-remove:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ff4444;
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.form-actions .btn.primary {
+  flex: 1;
+}
+
+:root[data-theme="light"] .profile-setup-card {
+  background: #ffffff;
+  border-color: #e1e4e8;
+}
+
+:root[data-theme="light"] .profile-setup-form textarea {
+  background: #ffffff;
+  border-color: #e1e4e8;
+}
+
+:root[data-theme="light"] .skill-suggestion-btn {
+  background: #f8f9fa;
+  border-color: #e1e4e8;
+}
+
+.photo-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.photo-upload-label {
+  cursor: pointer;
+}
+
+.photo-upload-placeholder {
+  width: 100%;
+  min-height: 200px;
+  border: 2px dashed var(--stroke);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--muted);
+  transition: all 0.18s ease;
+}
+
+.photo-upload-placeholder:hover {
+  border-color: rgba(32, 238, 121, 0.4);
+  background: rgba(32, 238, 121, 0.04);
+}
+
+.photo-upload-placeholder span:first-child {
+  font-size: 48px;
+}
+
+.photo-preview {
+  position: relative;
+  width: 100%;
+  max-width: 300px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.photo-preview img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.photo-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.18s ease;
+}
+
+.photo-remove:hover {
+  background: rgba(255, 0, 0, 0.8);
+}
+
+.schedule-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.schedule-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.schedule-label {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+@media (max-width: 480px) {
+  .schedule-inputs {
+    grid-template-columns: 1fr;
+  }
+}
+
+.helper-text {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+:root[data-theme="light"] .photo-upload-placeholder {
+  border-color: #e1e4e8;
+  background: #f8f9fa;
+}
+
+:root[data-theme="light"] .photo-upload-placeholder:hover {
+  border-color: rgba(32, 238, 121, 0.4);
+  background: rgba(32, 238, 121, 0.06);
+}
+
+:root[data-theme="light"] select {
+  background: #ffffff;
+  border-color: #e1e4e8;
+}
+

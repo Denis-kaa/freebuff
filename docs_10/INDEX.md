@@ -6,7 +6,7 @@
 
 # Индекс документации Workspace OS
 
-**Обновлено:** 2026-08-06
+**Обновлено:** 2026-09-04
 
 ---
 
@@ -15,6 +15,9 @@
 ### Positioning / Vision docs — входная точка для новых читателей
 - [PLATFORM.md***REMOVED***(../PLATFORM.md) — что это и зачем (v5.75.0, 2026-08-04; ~6 350 слов, plain language). Канонический positioning-документ платформы.
 - [PRODUCT_MANIFESTO.md***REMOVED***(vision/PRODUCT_MANIFESTO.md) — манифест продукта (vision/)
+
+### Реестры / операционные каноны
+- RECOMMENDATIONS.md (docs_10/RECOMMENDATIONS.md) — единый append-only реестр рекомендаций платформы (REC-NNN): аудит-фиксы, архитектурные улучшения, ops-гигиена. Источник: AUDIT_TEENFREELANCE_2026-09-04.md (docs_10/audits/, REC-001..020, 2026-09-04). Правило «AUDIT + RECOMMENDATIONS пара» — CON-68 (core_02/LESSONS.md).
 
 ### canonical/ — Текущее состояние системы (канон)
 - [INDEX.md***REMOVED***(canonical/INDEX.md) — индекс канонических документов

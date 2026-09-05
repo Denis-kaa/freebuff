@@ -216,7 +216,7 @@ def test_is_external_link_skips_urls_and_anchors() -> None:
 def test_check_markdown_links_reports_broken_link(tmp_path) -> None:
     (tmp_path / "docs_10").mkdir()
     md = tmp_path / "docs_10" / "index.md"
-    md.write_text("[broken)(../missing/file.md)", encoding="utf-8")
+    md.write_text("[broken](../missing/file.md)", encoding="utf-8")
     issues = dc.check_markdown_links(tmp_path)
     assert len(issues) == 1
     assert issues[0]["file"] == "docs_10/index.md"
@@ -227,7 +227,7 @@ def test_check_markdown_links_reports_broken_link(tmp_path) -> None:
 def test_check_markdown_links_ignores_external_and_anchors(tmp_path) -> None:
     (tmp_path / "docs_10").mkdir()
     md = tmp_path / "docs_10" / "index.md"
-    md.write_text("[external)(https://example.com) and [anchor](#section)", encoding="utf-8")
+    md.write_text("[external](https://example.com) and [anchor](#section)", encoding="utf-8")
     issues = dc.check_markdown_links(tmp_path)
     assert issues == []
 
@@ -236,14 +236,14 @@ def test_check_markdown_links_ignores_existing_files(tmp_path) -> None:
     (tmp_path / "docs_10").mkdir()
     (tmp_path / "docs_10" / "RULES.md").write_text("# Rules", encoding="utf-8")
     md = tmp_path / "docs_10" / "index.md"
-    md.write_text("[rules)(./RULES.md)", encoding="utf-8")
+    md.write_text("[rules](./RULES.md)", encoding="utf-8")
     issues = dc.check_markdown_links(tmp_path)
     assert issues == []
 
 
 def test_check_markdown_links_includes_root_level_md(tmp_path) -> None:
     (tmp_path / "README.md").write_text("# README", encoding="utf-8")
-    (tmp_path / "index.md").write_text("[README)(./README.md)", encoding="utf-8")
+    (tmp_path / "index.md").write_text("[README](./README.md)", encoding="utf-8")
     issues = dc.check_markdown_links(tmp_path)
     assert issues == []
 
@@ -314,7 +314,7 @@ def test_check_adr_canonical_location_fails_empty(tmp_path) -> None:
 def test_check_markdown_links_ignores_links_in_code_blocks(tmp_path) -> None:
     (tmp_path / "docs_10").mkdir()
     md = tmp_path / "docs_10" / "index.md"
-    md.write_text("```\n[link)(../missing.md)\n```\n[ok](./existing.md)", encoding="utf-8")
+    md.write_text("```\n[link](../missing.md)\n```\n[ok](./existing.md)", encoding="utf-8")
     (tmp_path / "docs_10" / "existing.md").write_text("# OK", encoding="utf-8")
     issues = dc.check_markdown_links(tmp_path)
     assert len(issues) == 0
@@ -324,7 +324,7 @@ def test_check_markdown_links_handles_absolute_paths(tmp_path) -> None:
     (tmp_path / "docs_10").mkdir()
     (tmp_path / "docs_10" / "RULES.md").write_text("# Rules", encoding="utf-8")
     md = tmp_path / "docs_10" / "index.md"
-    md.write_text("[rules)(/docs_10/RULES.md)", encoding="utf-8")
+    md.write_text("[rules](/docs_10/RULES.md)", encoding="utf-8")
     issues = dc.check_markdown_links(tmp_path)
     assert issues == []
 
@@ -332,7 +332,7 @@ def test_check_markdown_links_handles_absolute_paths(tmp_path) -> None:
 def test_check_markdown_links_reports_absolute_broken_link(tmp_path) -> None:
     (tmp_path / "docs_10").mkdir()
     md = tmp_path / "docs_10" / "index.md"
-    md.write_text("[rules)(/docs_10/MISSING.md)", encoding="utf-8")
+    md.write_text("[rules](/docs_10/MISSING.md)", encoding="utf-8")
     issues = dc.check_markdown_links(tmp_path)
     assert len(issues) == 1
     assert issues[0]["target"] == "/docs_10/MISSING.md"

@@ -1,0 +1,2 @@
+1228: <span className="price-value">{parseFloat(viewingProject.maxPrice).toLocaleString('ru-RU')} ₽</span>
+1235: <div className="meta-value">{viewingProject.deadline} {viewingProject.deadline === 1 ? 'день' : viewingProject.deadline < 5 ? 'дня' : 'дней'}</div>

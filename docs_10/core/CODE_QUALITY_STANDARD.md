@@ -166,7 +166,7 @@
 | 11.3 | Примеры входных данных | `tmp_path` фикстуры, `conftest.py` с shared fixtures |
 | 11.4 | Ожидаемый результат | `assert result["success"***REMOVED*** is True`, `assert count > 0` |
 | 11.5 | Boundary Testing | Тесты для всех интерфейсов (Core↔Plugin, MCP, REST) |
-| 11.6 | Регрессионные тесты | Полный прогон перед каждым merge (**цель: 3527+ passed, 0 failures**); full-suite real count = 3527 (AST truth 2026-08-29; +83 vs v5.189.64 baseline 3444, +4 TestCacheLayer на pricing_enumerator + 30 PRD release-cycles); для traceability — см. §11.7 ниже |
+| 11.6 | Регрессионные тесты | Полный прогон перед каждым merge (**цель: 3453+ passed, 0 failures**); full-suite real count = 3453 (AST truth 2026-09-04; −74 vs 2026-08-29 baseline 3527 — часть тестов удалена/вне дерева; факт на дату аудита); для traceability — см. §11.7 ниже |
 
 ---
 

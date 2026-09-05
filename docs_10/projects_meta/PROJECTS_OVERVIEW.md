@@ -3,9 +3,9 @@
 | Поле | Значение |
 |------|----------|
 | **Документ ID** | PROJECTS-OVERVIEW-001 |
-| **Версия** | 1.2 |
+| **Версия** | 1.3 |
 | **Статус** | 🟢 Актуально |
-| **Дата** | 2026-08-17 (ADR-система добавлена в kwork_site) |
+| **Дата** | 2026-09-05 (добавлен teenfreelance; каркас проекта + аудит) |
 | **Основание** | PLAN_NEXT_OPERATIONS.md Этап 1 + PROJECT_RULES.md §8 (регистрация новых проектов) + kwork_site ADR-система (decisions/DECISIONS.md + 3 ADR-файла) |
 
 ---
@@ -24,10 +24,29 @@
 | `sheet_project` | Python 3 + openpyxl (+ pytest) | 🟡 планирование (каркас + план готовы; код не начат) | — | — (автономный, не зависит от core_02/scripts_01) | LOW |
 | `public_request_parser` | Python 3.11+ + SQLite/WAL + RSS/Atom + Telegram delivery (planned) | 🟡 DRAFT (документационный каркас, код не начат) | operator; user (future) | автономный; Telegram fixture-only до policy approval | MEDIUM |
 | `python_mentor` | Python 3.11+ + SQLite + pytest; по фазам: pylint/radon/flake8/bandit, fsrs, FastAPI, static UI | 🟡 PLANNING (каркас + роадмап B+C…N; код не начат) | learner (future); curator/mentor/client — deterministic (automated) | автономный, без core_02/scripts_01/freebuff_plugin* | MEDIUM |
+| `pm_os` | FastAPI + PostgreSQL + SQLAlchemy + React/Vite | 🟡 Stage 9 implemented; audit/integration review pending | Owner/Admin/Manager/Member/Viewer | отдельный прикладной runtime; кандидат на переносимые workspace/RBAC/event primitives, extraction только после ADR review | HIGH |
+| `teenfreelance` | FastAPI + SQLAlchemy + Alembic + PostgreSQL + JWT; React CRA | 🔴 Deployed-BUT-insecure (P0-карантин, ADR-002 волна 1) | customer / executor (несовершеннолетние) | нет (автономный; платформа = аудитор/деплойер) | HIGH |
 
 ---
 
 ## Детали по проектам
+
+### 🔴 teenfreelance — фриланс-платформа для подростков (деплой + аудит)
+
+- **Стек:** FastAPI + SQLAlchemy + Alembic + PostgreSQL 16 + JWT (python-jose) + bcrypt; frontend React CRA; prod = нативный venv + systemd (:8020) + nginx static (:8021) на whimco (ADR-001).
+- **Статус:** 🔴 Deployed-BUT-insecure — боевой инстанс работает, но с P0-уязвимостями (placeholder SECRET_KEY, plain HTTP, неаутентифицированное чтение offers/files/portfolio).
+- **Каркас:** MANIFEST/STEPS/LESSONS/ROADMAP/RUNNABLE/CHECKLIST/decisions (ADR-001 деплой-топология; ADR-002 план ремедиации волнами P0→P1→P2).
+- **Аудит:** `docs_10/audits/AUDIT_TEENFREELANCE_2026-09-04.md` — 36 находок (4 critical), §11 owner-check sweep 62 эндпоинтов; фиксы — `docs_10/RECOMMENDATIONS.md` REC-001..021 (7×P0). Уроки: CON-01/PB-01/PB-02/ANTI-01/CON-02 project-local.
+- **Платформенные зависимости:** нет — код автономен; платформа выступает аудитором/деплойером (CON-68 канон-пара AUDIT + RECOMMENDATIONS).
+
+### 🟡 pm_os — прикладной runtime и кандидат на переносимые primitives
+
+- **Тип:** проект разработки PM OS в Workspace OS; не runtime-workspace внутри PM OS.
+- **Статус:** Stage 9 реализован; полный аудит промтов 1–9 и architecture review ожидают выполнения.
+- **Runtime:** FastAPI/PostgreSQL + React/Vite, развёрнут на `whimco` (`/var/www/pm_os`).
+- **Ключевая граница:** PM OS runtime-workspaces отделены от platform Workspace OS по lifecycle/namespace/state.
+- **Future review:** отдельно оценить переносимость workspace/RBAC/events/audit/automation/memory contracts в ядро Workspace OS; extraction только через ADR.
+- **Аудит:** `projects_17/pm_os/AUDIT_PLAN.md`.
 
 ### 🟡 interior_planner — боевая задача пайплайна
 

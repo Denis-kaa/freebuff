@@ -104,8 +104,8 @@ REQUIRED_GLOSSARY_TERMS = [
 # Схема именования (FINAL_STRUCTURE §2.1): каталоги `имя_NN`, промты `NNN_TT_имя`.
 #   - Имя каталога: буквы/цифры/`_`/`-`, суффикс `_NN` (NN — двузначный ID).
 #   - Промт: `NNN_TT_имя.md` (NNN — хронологический номер, TT — код темы 01..14).
-_TOP_LEVEL_DIR_RE = re.compile(r"^[a-z0-9)[a-z0-9_-]*_\d{2]$")
-_PROMPT_FILE_RE = re.compile(r"^(\d{3))_(\d{2])_[a-z0-9_]+\.md$")
+_TOP_LEVEL_DIR_RE = re.compile(r"^[a-z0-9][a-z0-9_-]*_\d{2}$")
+_PROMPT_FILE_RE = re.compile(r"^(\d{3})_(\d{2})_[a-z0-9_]+\.md$")
 _VALID_THEME_CODES = {f"{i:02d}" for i in range(1, 22)}  # 01..21: темы 15-21 добавлены (promt52-58: RFC/ARB/AG/Forge)
 # Системные/скрытые каталоги, не подпадающие под схему именования.
 _SKIP_DIR_PREFIXES = (".", "__")
@@ -305,8 +305,8 @@ def check_glossary_terms(workspace: Path) -> list[dict[str, Any]]:
 
 def _extract_file_refs(text: str) -> set[str]:
     """Извлечь backtick-пути к файлам (.md/.py) из текста."""
-    refs = set(re.findall(r"`([\w./\-)+\.(?:md|py))`", text))
-    refs |= set(re.findall(r"(docs_10/[\w./\-)+\.md)", text))
+    refs = set(re.findall(r"`([\w./\-]+\.(?:md|py))`", text))
+    refs |= set(re.findall(r"(docs_10/[\w./\-]+\.md)", text))
     return refs
 
 
@@ -536,9 +536,9 @@ def check_naming_convention(workspace: Path) -> list[dict[str, Any]]:
 # 9. Test counter (CHANGELOG / CODE_QUALITY_STANDARD vs reality)
 # ═══════════════════════════════════════════════════════════════
 
-_FULL_SUITE_COUNT_RE = re.compile(r"pytest tests_09/ -q[\s\S){0,120]?(\d+)\s+passed")
+_FULL_SUITE_COUNT_RE = re.compile(r"pytest tests_09/ -q[\s\S]{0,120}?(\d+)\s+passed")
 _TEST_TARGET_RE = re.compile(r"цель:\s*(\d+)\s*\+\s*passed")
-_VERSION_HEADER_RE = re.compile(r"^## \[(\d+)\.(\d+)\.(\d+)\*)", re.MULTILINE)
+_VERSION_HEADER_RE = re.compile(r"^## \[(\d+)\.(\d+)\.(\d+)(?:\]|\*\*\*REMOVED\*\*\*)", re.MULTILINE)
 
 
 def count_test_functions(workspace: Path) -> int:

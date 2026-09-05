@@ -177,7 +177,7 @@ def _extract_impl_refs(impl: str) -> list[str]:
     are mentioned.
     """
     refs: list[str] = []
-    refs += re.findall(r"[\w/\-)+(?:\.py|\.md)", impl)
+    refs += re.findall(r"[\w/\-]+(?:\.py|\.md)", impl)
     refs += re.findall(r"\b(core_02|scripts_01|src_06|plugins_04|docs_10|freebuff_plugin_03)/[\w/\-)+", impl)
     return refs
 
@@ -263,7 +263,7 @@ _LEGACY_TOP_LEVEL_REDIRECTS: dict[str, tuple[str, ...]] = {
 }
 
 # Markdown link patterns: [text](target) and ![alt](target)
-_MARKDOWN_LINK_RE = re.compile(r"!?\[([^\*)]*)\*]\(([^)]+)\)")
+_MARKDOWN_LINK_RE = re.compile(r"!?\[([^\]]*)\]\(([^)]+)\)")
 # External URLs, anchors and other non-file targets we cannot/should not resolve.
 _EXTERNAL_LINK_PREFIXES = (
     "http://",
@@ -364,13 +364,13 @@ def _extract_tree_paths(text: str) -> list[tuple[str, str]]:
             # A bare root node is the first line without a branch character
             # and matching a plain path-like token, e.g. "freebuff/" or
             # "docs_10/" (full-line comments/prose are ignored).
-            if first and not re.match(r"^[│\s)*(?:├|└)", line) and re.match(r"^[\w.\-/)+/?$", line):
+            if first and not re.match(r"^[│\s]*(?:├|└)", line) and re.match(r"^[\w.\-/]+/?$", line):
                 root = line.strip().rstrip("/")
                 first = False
                 continue
             first = False
             # Match tree item: indentation prefix + ├/└ + name
-            m = re.match(r"^([│\s)*)(?:├|└)──\s*([\w\-.\-/]+)(?:\s+|$)", line)
+            m = re.match(r"^([│\s]*)(?:├|└)──\s*([\w\-.\-/]+)(?:\s+|$)", line)
             if not m:
                 continue
             indent_part, name = m.group(1), m.group(2)

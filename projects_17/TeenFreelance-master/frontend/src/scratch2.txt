@@ -1,0 +1,28 @@
+34: userRole,
+35: toggleUserRole,
+928: console.log('🔄 Загрузка заказов для вкладки myOrders, роль:', currentUser?.role || userRole);
+932: }, [tab, currentUser, userRole]);
+937: const isExecutor = currentUser?.role === 'executor' || currentUser?.role === 'EXECUTOR' || userRole === 'executor' || userRole === 'EXECUTOR';
+957: }, [myOrders, getNote, currentUser, userRole]);
+2209: const isExecutor = currentUser?.role === 'executor' || currentUser?.role === 'EXECUTOR' || userRole === 'executor' || userRole === 'EXECUTOR';
+2255: const isCustomer = currentUser?.role === 'customer' || currentUser?.role === 'CUSTOMER' || userRole === 'customer' || userRole === 'CUSTOMER';
+2357: const isExecutor = currentUser?.role === 'executor' || currentUser?.role === 'EXECUTOR' || userRole === 'executor' || userRole === 'EXECUTOR';
+2358: const isCustomer = currentUser?.role === 'customer' || currentUser?.role === 'CUSTOMER' || userRole === 'customer' || userRole === 'CUSTOMER';
+3130: className={`role-tab ${userRole === 'executor' || userRole === 'EXECUTOR' ? 'active' : ''}`}
+3140: className={`role-tab ${userRole === 'customer' || userRole === 'CUSTOMER' ? 'active' : ''}`}
+4524: currentUserRole: currentUser?.role,
+4968: const dbUserRole = currentUser?.role?.value || currentUser?.role || 'executor';
+4974: return saved || dbUserRole;
+4977: // userRole для отображения - используем viewMode (объявляем ДО использования в fetchMyOrders)
+4978: const userRole = viewMode;
+4986: const userRoleValue = currentUser?.role?.value || currentUser?.role || userRole;
+4987: console.log('📦 fetchMyOrders вызван с ролью:', userRoleValue);
+4988: return fetchMyOrdersBase(params, userRoleValue);
+4989: }, [currentUser, userRole, fetchMyOrdersBase]);
+5022: const toggleUserRole = () => {
+5200: if (userRole === 'executor') {
+5217: }, [t, userRole]);
+5220: if (userRole === 'executor') {
+5237: }, [t, userRole]);
+5488: userRole={userRole}
+5489: toggleUserRole={toggleUserRole}

@@ -60,23 +60,23 @@ CANONICAL_FORGES: tuple[str, ...] = (
 
 # ─── Namespace regexes (spec §I.2 / §I.3 ANCHOR_RE) ─────────────────────────
 ANCHOR_RE: dict[str, re.Pattern[str]] = {
-    "entity":      re.compile(r"@entity\s+([a-z)[a-z0-9_]*(\.[a-z][a-z0-9_]*)+)"),
-    "component":   re.compile(r"@component\s+([a-z)[a-z0-9_]*(\.[a-z][a-z0-9_]*)*)"),
-    "module":      re.compile(r"@module\s+([a-z)[a-z0-9_]*(\.[a-z][a-z0-9_]*)+)"),
-    "symbol":      re.compile(r"@symbol\s+([A-Z)[A-Za-z0-9_]+(\.[a-zA-Z_][A-Za-z0-9_]*)+)"),
-    "contract":    re.compile(r"@contract\s+([a-z)[a-z0-9_]*(\.[a-z][a-z0-9_]*)+)"),
-    "event":       re.compile(r"@event\s+([a-z)[a-z0-9_]*(\.[a-z][a-z0-9_]*)+)"),
-    "storage":     re.compile(r"@storage\s+([a-z)[a-z0-9_]+(_[a-z][a-z0-9_]*)*)"),
-    "test":        re.compile(r"@test\s+(test_[a-z)[a-z0-9_]*)(\.[A-Za-z_][\w]*)*"),
-    "decision":    re.compile(r"@decision\s+(ADR_\d{3))"),
-    "requirement": re.compile(r"@requirement\s+(REQ-[A-Z)[A-Z_]*-?\d{2])"),
-    "scenario":    re.compile(r"@scenario\s+([a-z)[a-z0-9_]*(\.?[a-z0-9_]*)*)"),
-    "factory":     re.compile(r"@factory\s+([a-z)[a-z0-9_]*_factory)"),
-    "forge":       re.compile(r"@forge\s+(forge_[a-z)[a-z0-9_]*)"),
-    "opportunity": re.compile(r"@opportunity\s+(opp-[a-z0-9)+)"),
-    "whim":        re.compile(r"@whim\s+(whim-[a-z0-9)+)"),
-    "lesson":      re.compile(r"@lesson\s+((?:CON|ANTI|CAN|R)[-_)\d{1,3][a-z]?)"),
-    "doc":         re.compile(r"(doc\.[a-z)[a-z0-9_]*\.?[a-z0-9_]*#[\w\.\-]+)"),
+    "entity":      re.compile(r"@entity\s+([a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+)"),
+    "component":   re.compile(r"@component\s+([a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)*)"),
+    "module":      re.compile(r"@module\s+([a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+)"),
+    "symbol":      re.compile(r"@symbol\s+([A-Z][A-Za-z0-9_]+(\.[a-zA-Z_][A-Za-z0-9_]*)+)"),
+    "contract":    re.compile(r"@contract\s+([a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+)"),
+    "event":       re.compile(r"@event\s+([a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+)"),
+    "storage":     re.compile(r"@storage\s+([a-z][a-z0-9_]+(_[a-z][a-z0-9_]*)*)"),
+    "test":        re.compile(r"@test\s+(test_[a-z][a-z0-9_]*)(\.[A-Za-z_][\w]*)*"),
+    "decision":    re.compile(r"@decision\s+(ADR_\d{3})"),
+    "requirement": re.compile(r"@requirement\s+(REQ-[A-Z][A-Z_]*-?\d{2})"),
+    "scenario":    re.compile(r"@scenario\s+([a-z][a-z0-9_]*(\.?[a-z0-9_]*)*)"),
+    "factory":     re.compile(r"@factory\s+([a-z][a-z0-9_]*_factory)"),
+    "forge":       re.compile(r"@forge\s+(forge_[a-z][a-z0-9_]*)"),
+    "opportunity": re.compile(r"@opportunity\s+(opp-[a-z0-9]+)"),
+    "whim":        re.compile(r"@whim\s+(whim-[a-z0-9]+)"),
+    "lesson":      re.compile(r"@lesson\s+((?:CON|ANTI|CAN|R)[-_]\d{1,3}[a-z]?)"),
+    "doc":         re.compile(r"(doc\.[a-z][a-z0-9_]*\.?[a-z0-9_]*#[\w\.\-]+)"),
 }
 
 # Порядок поиска по строке: сначала префиксные @namespace (однозначны),
@@ -188,7 +188,7 @@ class AnchorResolver:
             return self._entity_ids_cache
         ids: set[str] = set()
         text = self._read("docs_10/engineering-memory/PLATFORM_CODE_MAP_V1.md") or ""
-        for m in re.finditer(r"^###\s+@entity[: )+([a-z][a-z0-9_.]+)", text, re.MULTILINE):
+        for m in re.finditer(r"^###\s+@entity[: ]+([a-z][a-z0-9_.]+)", text, re.MULTILINE):
             ids.add(m.group(1).strip().strip("`"))
         # §A.6 таблица: строки `| <id> | <file> | ...` — первая колонка.
         in_a6 = False
@@ -511,8 +511,8 @@ class AnchorResolver:
         # Нормализация [-_] и ведущих нулей: CON_017 ≡ CON-17 ≡ CON17 ≡ CON-017.
         # LESSONS.md использует CON-17, ANTI-6b, R-127; доки часто пишут CON_017.
         def norm(s: str) -> str:
-            digits = re.sub(r"[^0-9a-zA-Z)", "", s)
-            digits = re.sub(r"(?<=[A-Za-z))0+(?=\d)", "", digits)
+            digits = re.sub(r"[^0-9a-zA-Z]", "", s)
+            digits = re.sub(r"(?<=[A-Za-z])0+(?=\d)", "", digits)
             return digits.lower()
         if norm(value) in norm(self._lessons_text) or value in self._lessons_text:
             return {"resolved": True, "status": STATUS_LESSON,
