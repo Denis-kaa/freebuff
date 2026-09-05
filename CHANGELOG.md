@@ -6,6 +6,19 @@
 
 ---
 
+## [5.189.87***REMOVED*** — 2026-09-05
+
+### 🔄 Server-first sync triangle: телефон ↔ GitHub ↔ whimco (инфра + канон)
+
+- **Правило Server-first (canon):** PROJECT_RULES §5.1 — проекты живут и создаются на whimco (`/opt/freebuff`); GitHub = single source of truth; ресёрч можно вести на телефоне, но WIP любого узла попадает в базу в тот же заход. ADR-022 (`docs_10/engineering-memory/decisions/ADR_022_Server_First_Sync_Triangle.md`), LESSONS **CON-69**.
+- NEW `docs_10/runbook/SYNC_RUNBOOK.md` — операционный manual: нормальные циклы в обе стороны, emergency git-bundle через SSH, troubleshooting (credential-chain/CRLF/hard-checkout), инварианты (бэкап перед операциями, secret-scan перед `git add -A`). Зарегистрирован в DOCUMENT_REGISTRY + RULES.md doc-types + INDEX.md (CON-63/64).
+- **Треугольник поднят и проверен живой сессией:** телефон → (116M bundle по SSH, при мёртвом gh-токене) → whimco → push в GitHub; серверный WIP (`plugins_04/`, `whim_store` + `task_watcher_cli` + 5 тестов, 8 промтов, `torrent_dl_web`, profile-site) закоммичен в базу; телефонный WIP (PM OS, smog-repair, recovery payload) — аналогично. Все три узла на одном head.
+- **Инфраструктура:** телефонный push восстановлен (мёртвый gh-токен перехватывал credential-chain → локальный override на `store`); серверный `/root/.git-credentials` настроен; cron `auto_deploy.sh pull` (5 мин) проверен реальным pull. Secret-инцидент предотвращён: Google `client_secret` в `torrent_dl_web/credentials.json` → gitignore до коммита.
+- **TeenFreelance byte-parity:** прод-копия `/opt/teenfreelance` ↔ контейнер в базе нормализованы (58 файлов CRLF→LF, обе стороны); сервис перезапущен, `200 OK`.
+- TASK.md §5.3: note о независимости git-треугольника от TG-Relay (ADR-022).
+
+---
+
 ## [5.189.86***REMOVED*** — 2026-09-04
 
 ### 📋 Security-аудит TeenFreelance + канон-реестр рекомендаций (docs-only)

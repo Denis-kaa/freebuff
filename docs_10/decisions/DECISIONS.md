@@ -25,6 +25,7 @@
 | **ADR-019** | **Agent base class + lifecycle — единая сущность «Агент» (роль → capability → модель, композиция ролей, forward-only lifecycle)** | **2026-08-22** | **✅ Accepted/Implemented** (core_02/agent_base.py) | **[ADR_019_Agent_Base_Class.md***REMOVED***(../engineering-memory/decisions/ADR_019_Agent_Base_Class.md)** |
 | **ADR-020** | **Integration adapter boundary — единая граница для внешних мостов (TG/MCP/phone): AuthSpec + capability-роутинг + нормализация** | **2026-08-22** | **✅ Accepted/Implemented** (core_02/integration_base.py) | **[ADR_020_Integration_Adapter_Boundary.md***REMOVED***(../engineering-memory/decisions/ADR_020_Integration_Adapter_Boundary.md)** |
 | **ADR-021** | **Unified Artifact contract — файл ↔ dict ↔ ChainRun; canonical frozen dataclass + backward-compatible adapters** | **2026-08-22** | **✅ Accepted/Implemented** | **[ADR_021_Artifact_Contract.md***REMOVED***(../engineering-memory/decisions/ADR_021_Artifact_Contract.md)** |
+| **ADR-022** | **Server-first sync triangle — телефон ↔ GitHub ↔ whimco; GitHub = single source of truth; WIP любого узла попадает в базу в тот же заход** | **2026-09-05** | **✅ Accepted/Implemented** (PROJECT_RULES §5.1, auto_deploy cron, SYNC_RUNBOOK) | **[ADR_022_Server_First_Sync_Triangle.md***REMOVED***(../engineering-memory/decisions/ADR_022_Server_First_Sync_Triangle.md)** |
 
 ---
 

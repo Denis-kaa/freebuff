@@ -118,6 +118,7 @@
 
 - [runbook/FORGE_CHAIN_RUNBOOK.md***REMOVED***(runbook/FORGE_CHAIN_RUNBOOK.md) — **v5.171.0 (2026-08-10)**: Operational manual для `forge chain --json`: real-cost matrix (vkusvill 7.49s / interior 14.83s / research 7.87s / --dry-run 14.42s) + 9-key schema reference + status/overall decision tree + resume/serialization semantics + troubleshooting matrix (exit codes, status pathology, known operational issues per CHANGELOG v5.156-v5.170) + G-7.1..3 open questions.
 - [runbook/MISSING_REGISTRY_RUNBOOK.md***REMOVED***(runbook/MISSING_REGISTRY_RUNBOOK.md) — **v1.0 (2026-08-11)**: Operational manual для `python -m core_02.missing_registry` (register-first lifecycle): CLI-справочник (list/seed/register/mark-prompt-written/mark-implemented/check, --path) + lifecycle registered → design_ready → prompt_written → implemented (forward-only) + exit codes + пошаговый гайд регистрации нового элемента + troubleshooting (B10/R-127 инварианты, дрейф §20 ↔ YAML). Связан с AGENTS.md §5 REGISTER-FIRST и FACTORY_FORGE_ARCHITECTURE_V1.md §20.
+- [runbook/SYNC_RUNBOOK.md***REMOVED***(runbook/SYNC_RUNBOOK.md) — **v1.0 (2026-09-05)**: Операционный manual правила Server-first (PROJECT_RULES §5.1, ADR-022, CON-69): git-треугольник телефон ↔ GitHub ↔ whimco, нормальные циклы в обе стороны, emergency git-bundle через SSH, troubleshooting (credential-chain, CRLF, hard-checkout), инварианты. Проверен живой сессией 2026-09-05.
 ### visual/ — Mermaid диаграммы (git-renderable)
 
 ---

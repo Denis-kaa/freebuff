@@ -347,6 +347,7 @@ Bump: ACTIVE 88 → 89.
 | File | Type | Status | Provenance |
 |------|------|--------|------------|
 | `docs_10/runbook/MISSING_REGISTRY_RUNBOOK.md` | Runbook | ACTIVE | Операционный manual для `python -m core_02.missing_registry` (register-first lifecycle): CLI-справочник (list/seed/register/mark-prompt-written/mark-implemented/check, --path) + lifecycle registered → design_ready → prompt_written → implemented (forward-only) + exit codes + пошаговый гайд регистрации нового элемента + troubleshooting (B10/R-127 инварианты, дрейф §20 ↔ YAML). Связан с AGENTS.md §5 REGISTER-FIRST (CLI-блок добавлен) и FACTORY_FORGE_ARCHITECTURE_V1.md §20 |
+| `docs_10/runbook/SYNC_RUNBOOK.md` | Runbook | ACTIVE | Операционный manual правила Server-first (PROJECT_RULES §5.1, ADR-022, CON-69): git-треугольник телефон ↔ GitHub ↔ whimco, нормальный цикл в обе стороны, emergency git-bundle через SSH, troubleshooting (credential-chain, CRLF, hard-checkout), инварианты (бэкап, secret-scan, «WIP одного узла = нарушение»). Проверен живой сессией 2026-09-05 |
 
 ### ACTIVE entries added 2026-08-12
 

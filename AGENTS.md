@@ -93,6 +93,7 @@ Workspace OS — **НЕ** SaaS AI-agent platform, НЕ LLM orchestrator, НЕ wo
 3. После изменений: `python -m pytest tests_09/ -q` + `python -m mypy scripts_01/ core_02/ --ignore-missing-imports`.
 4. Изменения — **аддитивные** (Additive Architecture); никакой перезаписи существующих модулей без явной причины.
 5. Ведение проектов — по `docs_10/core/PROJECT_RULES.md` (канон): **проект = контейнер контекста** (MANIFEST-паспорт, LESSONS, decisions/ADR, ROADMAP, STEPS «почему», RUNNABLE/CHECKLIST); задача идёт через проект; тиражируемое — дополнительно в общую базу; работа по платформе = проект «сама платформа» (корень freebuff/).
+6. **Server-first (ADR-022):** проекты живут на сервере whimco (`/opt/freebuff`); GitHub — общая база (single source of truth); WIP любого узла (телефон/сервер) попадает в базу в тот же заход. Sync-механика — `docs_10/runbook/SYNC_RUNBOOK.md`; перед hard-checkout на сервере — убедиться, что WIP закоммичен (LESSONS CON-69).
 
 ## 8. Cross-links (канонические источники)
 

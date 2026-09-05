@@ -1509,3 +1509,19 @@ bash scripts_01/run_test_suite.sh --all
 **Связи:** CON-64 (термин/док в том же заходе), CON-63 (register-first), `docs_10/core/RULES.md` §«Аудит и анализ», `docs_10/core/PROJECT_RULES.md` §3.2 (тиражируемое → общая база), `docs_10/RECOMMENDATIONS.md` (REC-001..020), `docs_10/audits/AUDIT_TEENFREELANCE_2026-09-04.md`.
 
 ---
+
+### CON-69 — Server-first sync: WIP любого узла обязан попасть в общую базу до hard-checkout (2026-09-05)
+
+**Контекст:** сессия синхронизации телефон ↔ GitHub ↔ whimco. На сервере `/opt/freebuff` обнаружен значимый WIP, которого нет в базе: `plugins_04/` (acp/bridge/mcp_client/policy/runtime/task_watcher), `whim_store.py` + `task_watcher_cli.py` + 5 тест-файлов, 8 промтов, проект `torrent_dl_web`. Планируемый `git checkout -f -B` на свежий master **молча стёр бы** modified-tracked-файлы и оставил бы untracked-WIP невидимым для других узлов.
+
+**Правило (канон):**
+
+1. **Server-first:** проекты живут и создаются на whimco (`/opt/freebuff`); ресёрч можно вести на телефоне, но результат — в общей базе в тот же заход (PROJECT_RULES §5.1).
+2. Перед `checkout -f`/`reset --hard` на любом узле: убедиться, что серверный/локальный WIP закоммичен или застэшен; modified-tracked diff (было 87 → стало 48 записей) анализировать ДО затирания.
+3. Untracked-WIP — это тоже работа: коммитить в базу (после secret-scan), а не считать мусором. Secret-check перед `git add -A` (кейс: Google `client_secret` в `torrent_dl_web/credentials.json` — gitignore ДО коммита).
+4. venv/node_modules/build/htmlcov не попадают в базу — только исходники (`.gitignore` покрыл ~848M из 852M).
+5. Emergency-канал при недоступности GitHub — git-bundle через SSH (SYNC_RUNBOOK §3): телефон → bundle → scp → сервер → push в GitHub.
+
+**Связи:** PROJECT_RULES §5.1 (правило Server-first), `docs_10/runbook/SYNC_RUNBOOK.md` (операционный manual), `docs_10/decisions/DECISIONS.md` ADR-022, AGENTS.md §7 (протокол сессии), SERVER_ACCESS_WHIMCO.md §4 (бэкап перед операциями).
+
+---

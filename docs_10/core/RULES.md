@@ -46,6 +46,7 @@
 | **DEPLOYMENT.md** | Требования, инструкции, env-переменные | Деплой |
 | **SECURITY.md** | Уязвимости, отчёты, практики | Проблема безопасности |
 | **MIGRATION.md** | Версионирование, breaking changes, обновление | Breaking change |
+| **runbook/SYNC_RUNBOOK.md** | Операционный manual Server-first sync (git-треугольник телефон ↔ GitHub ↔ whimco; emergency bundle-через-SSH) | Синхронизация узлов, работа с сервером whimco |
 | **PERFORMANCE.md** | Метрики, бенчмарки, оптимизации | Оптимизация |
 | **TESTING.md** | Стратегия тестирования, coverage | Изменение тестов |
 | **CHANGELOG.md** | Изменения по версиям | Релиз |

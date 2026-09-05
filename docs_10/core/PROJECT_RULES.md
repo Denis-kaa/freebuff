@@ -104,6 +104,17 @@
 
 **Правило:** для платформенных задач «проект» = корень платформы; уроки/решения фиксируются в платформенных канонических местах, а не в projects_17/<slug>.
 
+### 5.1 Правило Server-first (синхронизация телефон ↔ GitHub ↔ whimco)
+
+**Все проекты живут и создаются на сервере whimco (`/opt/freebuff`). Ресёрч или разовые задачи можно вести на телефоне, но их результат обязан попасть в общую базу (git `master`) в тот же заход. WIP, существующий только в одном узле, — нарушение правила.**
+
+- Узлы git-треугольника: телефон (Termux) → GitHub (`Denis-kaa/freebuff`, branch `master`) → whimco (`/opt/freebuff`). GitHub — single source of truth.
+- Обновление серверной копии — только `git fetch` + `git checkout -f -B master origin/master` (не `pull`); прод-копии проектов (`/opt/<project>`) синхронизируются с контейнером в базе.
+- Emergency-путь при недоступности GitHub с одного из узлов — git-bundle через SSH: `docs_10/runbook/SYNC_RUNBOOK.md` §3.
+- Решение зафиксировано в [`docs_10/decisions/DECISIONS.md`](../decisions/DECISIONS.md) (ADR-022) и LESSONS CON-69.
+- Секреты в общую базу не попадают (проверка `.env`/`credentials.*` перед `git add -A`).
+- Операционный manual: [`docs_10/runbook/SYNC_RUNBOOK.md`](../runbook/SYNC_RUNBOOK.md).
+
 ---
 
 ## 6. Память проекта (Engineering Memory)
