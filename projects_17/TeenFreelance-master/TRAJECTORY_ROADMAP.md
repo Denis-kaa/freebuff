@@ -63,7 +63,8 @@
 | **3. Портфолио** | IMG-05/06/07 — промты в `Data.imagePrompts`, `renderPortfolio()` строит плейсхолдер через общий шаблон | `No Image` заглушка исчезла, все 3 карточки с промтами |
 | **4. Валидация** | Счётчики: 7× `data-img-id`, 0× `qwenlm.ai`, HTML-парс без ошибок | grep + python html.parser |
 | **5. (будущее) Генерация** | Прогнать 7 промтов через генератор → `assets/img/IMG-0X.png` → вставить `src` | слои `img` накрывают промты |
-| **6. (будущее) React-миграция** | `<ImgPlaceholder imgId />`-компонент, реестр промтов → `src/assets/prompts.ts` (FSD-структура из задачи.md) | — |
+| **6. React-миграция — Stage 1** ✅ (2026-09-05) | `trajectory/`: канонические типы (`src/types/index.ts`), FSD-скелет (entities/features/widgets/shared/app), реестр промтов → `src/shared/mock/imagePrompts.ts`, алиасы `@entities/*` и т.д. | `tsc --noEmit` strict: clean |
+| **7. (Phase 2) React-миграция — UI/state** | Zustand store + генератор 350 пользователей (mockData), `<ImgPlaceholder />`-компонент, роутер, Skill Graph + Draft System + Parental Gate | `npm run dev` |
 
 ## 4. Промты (итоговые формулировки, v1)
 

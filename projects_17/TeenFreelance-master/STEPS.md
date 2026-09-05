@@ -56,6 +56,21 @@
 - Созданы MANIFEST/STEPS/LESSONS/ROADMAP/RUNNABLE/CHECKLIST/decisions по PROJECT_RULES.md §2/§8.
 - **Почему:** проект = контейнер контекста, а не папка с кодом; деплой- и аудит-контекст обязан жить в проекте (PROJECT_RULES.md §3.1), тиражируемое — на платформе (§3.2).
 
+## Сессия 3 — Концепт «Траектория»: плейсхолдеры + React Stage 1 (2026-09-05)
+
+### Шаг 1. Плейсхолдеры с промтами в `задача.md`
+- Инвентаризация: 7 слотов изображений, 3 с эфемерными `image.qwenlm.ai`-ссылками (hero и аватар делили один файл), 2 пустых. Заменены на двухслойную систему (`.ph-prompt` fallback + `<img>` поверх) с реестром `Data.imagePrompts` (IMG-01..07).
+- **Почему:** эфемерный хост генерации умрёт; промты = ТЗ для регенерации и живут в коде (git = бэкап). Роадмап — `TRAJECTORY_ROADMAP.md`.
+
+### Шаг 2. React Stage 1 — типы + FSD-скелет (`trajectory/`)
+- `src/types/index.ts` — канонические типы (Freelancer/Mentor/Client/Parent, Project/Task + версионность ревью, Skill Score, Proof, ParentalConsent, BudgetDistribution 51/20/20/9).
+- FSD: `entities/{user,project,task,skill}` (барелы реэкспортируют канон), `features/{team-builder,review-system,skill-tree}`, `widgets/{dashboard,parent-control}`, `shared/{api,mock}`, `app/`. Реестр промтов перенесён в `shared/mock/imagePrompts.ts`.
+- **Почему так:** Этапы 1–2 системного промта концепта; FSD-структура задана в самом концепте; Single Source of Truth — типы в одном модуле, слои не переопределяют формы сущностей.
+
+### Шаг 3. Верификация strict-типизацией
+- `tsc --noEmit` (TS 5.4.5, strict + noUncheckedIndexedAccess): **clean** на 12 файлах. Один реальный баг найден и исправлен (баррел `entities/user` не экспортировал `ActivityEntry`), ошибки окружения (FUSE/sdcard) обойдены typecheck-копией в ext4.
+- **Почему не полный `npm install` в папке проекта:** sdcard-FUSE не даёт symlink → node_modules невозможен на `/sdcard`; методика задокументирована в `trajectory/README.md`.
+
 ## Статус
 
 | Что | Где | Состояние |
