@@ -1,0 +1,203 @@
+/*
+ * TRAJECTORY design tokens — ported 1:1 from the prototype (задача.md §1).
+ * Editorial/Cinematic/Brutalist: warm paper, ink, burnt sienna.
+ */
+:root {
+  --c-bg-primary: #f4f2ee;
+  --c-bg-secondary: #eae8e4;
+  --c-text-primary: #1a1a1a;
+  --c-text-secondary: #555555;
+  --c-accent: #c93d28;
+  --c-success: #2e5c43;
+  --c-border: #d1cdc5;
+  --c-overlay: rgba(26, 26, 26, 0.85);
+
+  --font-main: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 32px;
+  --spacing-xl: 64px;
+  --spacing-xxl: 128px;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 200ms;
+  --duration-med: 400ms;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--c-bg-primary);
+  color: var(--c-text-primary);
+  font-family: var(--font-main);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.type-h1 { font-size: clamp(2rem, 5vw, 3.5rem); }
+.type-h2 { font-size: clamp(1.5rem, 3vw, 2.5rem); }
+.type-h3 { font-size: clamp(1.2rem, 2vw, 1.6rem); }
+.type-h4 { font-size: 1.1rem; }
+.type-body { font-size: 1rem; color: var(--c-text-secondary); }
+
+.type-caption {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--c-text-secondary);
+}
+
+.type-mono { font-family: var(--font-mono); font-size: 0.85rem; }
+
+.container {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+.section-padding { padding: var(--spacing-xl) 0; }
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card {
+  background: white;
+  border: 1px solid var(--c-border);
+  padding: var(--spacing-lg);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out-expo);
+  border: 1px solid transparent;
+}
+
+.btn-primary { background-color: var(--c-text-primary); color: var(--c-bg-primary); }
+.btn-primary:hover { background-color: var(--c-accent); }
+.btn-outline { background: transparent; border-color: var(--c-text-primary); color: var(--c-text-primary); }
+
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+}
+
+.badge-status-pending { color: #b8860b; border-color: #b8860b; }
+.badge-status-approved { color: var(--c-success); border-color: var(--c-success); background: rgba(46, 92, 67, 0.05); }
+
+.progress-track { height: 2px; background: var(--c-border); width: 100%; }
+.progress-fill { height: 100%; background: var(--c-text-primary); transition: width 1s var(--ease-out-expo); }
+
+/* Economy distribution bar (concept §11: 51/20/20/9) */
+.economy-bar { display: flex; height: 8px; width: 100%; margin-top: 10px; }
+.eco-segment { height: 100%; }
+.eco-team { background: var(--c-text-primary); }
+.eco-mentor { background: var(--c-success); }
+.eco-platform { background: var(--c-border); }
+.eco-reserve { background: var(--c-accent); }
+
+/* Prompt placeholders (IMG-01..07, roadmap §2) */
+.img-placeholder {
+  background-color: #ddd;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.img-placeholder img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: relative;
+  z-index: 2;
+}
+
+.ph-prompt {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px;
+  background: repeating-linear-gradient(45deg, #ddd, #ddd 8px, #d6d6d6 8px, #d6d6d6 16px);
+  z-index: 1;
+}
+
+.ph-tag {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid #666;
+  padding: 2px 6px;
+  background: #eee;
+}
+
+.ph-text {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  line-height: 1.4;
+  color: #444;
+  max-width: 90%;
+  text-align: center;
+}
+
+/* Dashboard grid */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
+}
+
+@media (max-width: 1024px) {
+  .dashboard-grid { grid-template-columns: 1fr; }
+}
+
+/* Skill node (dashboard list form; graph visual comes in a later phase) */
+.skill-node {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  border-bottom: 1px solid var(--c-border);
+}
+
+.skill-meta { font-size: 0.75rem; color: var(--c-text-secondary); margin-top: 4px; }

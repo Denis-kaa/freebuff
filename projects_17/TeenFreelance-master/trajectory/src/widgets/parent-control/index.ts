@@ -1,5 +1,4 @@
 /**
- * Widget: parent-control — read-only transparency layer + consent gate
- * (concept §1 «Родитель», §2.3; ParentalConsent in @entities/user).
+ * Widget: parent-control — read-only parent view (prototype #view-parent).
  */
-export {};
+export { ParentControl } from './index.tsx';

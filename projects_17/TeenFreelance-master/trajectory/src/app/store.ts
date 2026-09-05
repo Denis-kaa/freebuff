@@ -68,10 +68,18 @@ export function selectCandidates(
   return matched.sort((a, b) => b.avg - a.avg).map(({ f }) => f);
 }
 
-/** Tasks of one freelancer with their project titles (dashboard feed source). */
+/** Tasks of one freelancer with their project metadata (dashboard source). */
 export function selectTasksOfUser(eco: Ecosystem | null, id: string | null) {
   if (!eco || !id) return [];
   return eco.tasks
     .filter((t) => t.freelancerId === id)
-    .map((t) => ({ ...t, projectTitle: eco.projects.find((p) => p.id === t.projectId)?.title ?? '' }));
+    .map((t) => {
+      const project = eco.projects.find((p) => p.id === t.projectId);
+      return {
+        ...t,
+        projectTitle: project?.title ?? '',
+        projectCoverImgId: project?.coverImgId,
+        projectStatus: project?.status,
+      };
+    });
 }

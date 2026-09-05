@@ -1,5 +1,4 @@
 /**
- * Widget: dashboard — teen / mentor / client workspaces (concept Этап 2).
- * Phase 2 assembles entity cards + feature panels here.
+ * Widget: dashboard — teen workspace (ported from prototype #view-dashboard).
  */
-export {};
+export { Dashboard } from './index.tsx';

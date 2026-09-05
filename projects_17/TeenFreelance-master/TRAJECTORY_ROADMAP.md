@@ -65,7 +65,8 @@
 | **5. (будущее) Генерация** | Прогнать 7 промтов через генератор → `assets/img/IMG-0X.png` → вставить `src` | слои `img` накрывают промты |
 | **6. React-миграция — Stage 1** ✅ (2026-09-05) | `trajectory/`: канонические типы (`src/types/index.ts`), FSD-скелет (entities/features/widgets/shared/app), реестр промтов → `src/shared/mock/imagePrompts.ts`, алиасы `@entities/*` и т.д. | `tsc --noEmit` strict: clean |
 | **7. (Phase 2) React-миграция — state/data** ✅ (2026-09-05) | Zustand store (`app/store.ts`), генератор экосистемы 200/50/100/200 (`shared/mock/generator.ts`, seed-детерминированный), ecoStats, селектор-драфт; smoke 26 инвариантов | `tsc` clean + SMOKE PASSED |
-| **8. (Phase 3) React-миграция — UI** | Виджеты дашборда (порт из прототипа), `<ImgPlaceholder imgId />`-компонент, React Router, TeamBuilder UI + Parental Gate UI | `npm run dev` + smoke |
+| **8. (Phase 3) React-миграция — UI** ✅ (2026-09-05) | `shared/ui` (theme.css токены из прототипа + `<ImgPlaceholder imgId />`), widgets/dashboard (дашборд подростка), widgets/parent-control (read-only + economy-bar), hash-router (intro/dashboard/parent), App-host с хедером | `tsc` clean + smoke passed |
+| **9. (Phase 4) Интерактив** | TeamBuilder UI на `selectCandidates`, Review Loop (версии + пины на макете), Skill Graph (пульсация >80), Parental Gate UI, TanStack Query | `npm run dev` + e2e-смоук |
 
 ## 4. Промты (итоговые формулировки, v1)
 

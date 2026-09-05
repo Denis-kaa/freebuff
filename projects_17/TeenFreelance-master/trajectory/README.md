@@ -16,7 +16,15 @@ React-миграция концепта «Траектория» (`../задач
 - `app/store.ts` — Zustand store + селекторы (`selectStats`, `selectCurrentUser`, `selectCandidates` — прообраз драфта, `selectTasksOfUser`).
 - `scripts/smoke.ts` — 26 инвариантов генератора и селекторов: **SMOKE PASSED**.
 
-Ещё нет (Phase 3+): UI-виджеты, React Router, TanStack Query, TeamBuilder UI.
+Ещё нет (Phase 4+): TeamBuilder UI, Review Loop, Skill Graph, Parental Gate UI, React Router v6, TanStack Query.
+
+## Статус Phase 3 (готово)
+
+- `shared/ui/theme.css` — дизайн-токены прототипа (paper/ink/sienna, типографика, кнопки, badges, economy-bar).
+- `shared/ui/ImgPlaceholder.tsx` — React-компонент плейсхолдеров: промт-слой снизу, `<img>` сверху (registry IMG-01..07).
+- `widgets/dashboard` — дашборд подростка: статус-хедер, активная задача (прогресс, награда, обложка-плейсхолдер), лента доказательств, навыки, предложения драфта.
+- `widgets/parent-control` — read-only родительский вид: безопасность, финансы с economy-bar 51/20/20/9, история проектов.
+- `app/router.ts` — hash-роутер (intro/dashboard/parent), `app/App.tsx` — хост с хедером (оборот экосистемы, аватар-плейсхолдер).
 
 ## Запуск
 

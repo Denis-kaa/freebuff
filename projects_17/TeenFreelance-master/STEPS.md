@@ -76,6 +76,11 @@
 - Верификация: `tsc --noEmit` clean + smoke-скрипт на 26 инвариантов — **SMOKE PASSED**. Два реальных бага пойманы проверками: общий seq-счётчик ломал инвариант «f-0001 = первый фрилансер» (переведён на per-prefix counters), readonly-массив в `requiredSkills`.
 - **Почему seed-детерминизм:** одинаковые демо/тесты на всех узлах треугольника; **почему smoke без браузера:** терминальная среда телефона, FUSE-ограничения sdcard (npm невозможен в папке проекта — см. trajectory/README).
 
+### Шаг 5. Phase 3 — UI-порт прототипа
+- `shared/ui/theme.css` (токены 1:1 из прототипа), `ImgPlaceholder.tsx` (React-версия плейсхолдеров), `widgets/dashboard` + `widgets/parent-control` (дашборд и родительский вид на данных store), hash-роутер intro/dashboard/parent.
+- Верификация: `tsc --noEmit` clean + smoke 26/26. Пойман строгим компилятором: `TaskStatus` импортировался не из того барела (перемещён в `@entities/task`), `noUncheckedIndexedAccess` на `STATUS_BADGE[...]` (добавлен fallback).
+- **Почему hash-роутер вместо React Router v6:** прототип использует ровно эту модель (`window.location.hash`); React Router добавляется в Phase 4, когда появятся параметризованные маршруты (задача/профиль).
+
 ## Статус
 
 | Что | Где | Состояние |
