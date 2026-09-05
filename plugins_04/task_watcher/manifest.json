@@ -1,0 +1,14 @@
+{
+  "name": "task_watcher",
+  "version": "1.0.0",
+  "description": "Event plugin for task monitoring: timeline logging, notifications (TG/pulse/log), metrics, and automation",
+  "author": "Buffy",
+  "license": "MIT",
+  "events_subscribed": [
+    "task.created",
+    "task.started",
+    "task.completed",
+    "task.failed"
+  ],
+  "tags": ["event", "monitoring", "metrics", "notifications"]
+}

@@ -1,0 +1,387 @@
+/* Workspace OS Mobile — Design System (ТЗ §17: минимализм, спокойствие, иерархия) */
+
+:root {
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --ink: #1e2633;
+  --ink-2: #5b6675;
+  --ink-3: #94a0b0;
+  --line: #e3e8ef;
+  --accent: #2f6fb2;
+  --accent-soft: #e8f1fa;
+  --ok: #2e8b57;
+  --warn: #b28a2f;
+  --danger: #b23f3f;
+  --radius: 14px;
+  --shadow: 0 1px 3px rgba(20, 30, 45, .08);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+button { font: inherit; cursor: pointer; }
+
+.app {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding-bottom: 96px; /* место под FAB */
+}
+
+/* ---------- Экраны ---------- */
+
+.screen { padding: 16px; }
+
+.screen__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 4px;
+}
+.screen__header h1 { font-size: 20px; margin: 0; flex: 1; }
+.screen__date { color: var(--ink-3); font-size: 13px; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px;
+  margin-bottom: 12px;
+}
+
+.card--clickable { transition: transform .08s ease, box-shadow .12s ease; }
+.card--clickable:active { transform: scale(.985); }
+
+.section-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--ink-3);
+  margin: 20px 4px 8px;
+}
+
+/* ---------- Whim widget (§4) ---------- */
+
+.whim-card { position: relative; }
+.whim-card__label {
+  font-size: 11px;
+  letter-spacing: .12em;
+  color: var(--ink-3);
+}
+.whim-card__text { margin: 8px 44px 8px 0; }
+.whim-card__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--ink-2);
+  font-size: 13px;
+}
+.whim-open-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px; height: 44px;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-size: 20px;
+}
+
+.sync-badge { font-size: 12px; white-space: nowrap; }
+.sync-badge--local      { color: var(--ink-3); }
+.sync-badge--pending    { color: var(--warn); }
+.sync-badge--synced     { color: var(--ok); }
+.sync-badge--conflict   { color: var(--danger); }
+
+/* ---------- Workspace list (§10) ---------- */
+
+.ws-grid { display: grid; gap: 12px; }
+.ws-card h3 { margin: 0 0 2px; }
+.ws-card p { margin: 0; color: var(--ink-2); font-size: 14px; }
+
+/* ---------- Workspace screen (§11–12) ---------- */
+
+.proj-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+.proj-tile {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 14px;
+  min-height: 88px;
+}
+.proj-tile h4 { margin: 0 0 4px; font-size: 15px; }
+.proj-tile span { color: var(--ink-3); font-size: 12px; }
+
+.tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 8px 0;
+  -webkit-overflow-scrolling: touch;
+}
+.tab {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink-2);
+}
+.tab[aria-selected="true"] {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ---------- Chat (§16) ---------- */
+
+.chat { display: flex; flex-direction: column; gap: 8px; }
+.msg { max-width: 82%; padding: 10px 14px; border-radius: 16px; font-size: 15px; }
+.msg--user { align-self: flex-end; background: var(--accent); color: #fff; border-bottom-right-radius: 4px; }
+.msg--ai { align-self: flex-start; background: var(--surface); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+
+.chat-input-row {
+  position: sticky;
+  bottom: 76px;
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+.chat-input-row input {
+  flex: 1;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0 16px;
+  font: inherit;
+  background: var(--surface);
+}
+
+/* ---------- FAB / Quick Whim (§6) ---------- */
+
+.fab {
+  position: fixed;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  min-height: 48px;
+  padding: 12px 26px;
+  border: none;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: .04em;
+  box-shadow: 0 6px 18px rgba(47, 111, 178, .35);
+}
+
+/* ---------- Модалы / overlay (§5) ---------- */
+
+.modal, .overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(20, 28, 40, .45);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal__sheet, .overlay__sheet {
+  width: 100%;
+  max-width: 430px;
+  max-height: 86vh;
+  overflow-y: auto;
+  background: var(--bg);
+  border-radius: 20px 20px 0 0;
+  padding: 18px 16px calc(24px + env(safe-area-inset-bottom));
+}
+.overlay__sheet { animation: slide-up .22s ease; }
+@keyframes slide-up { from { transform: translateY(40%); opacity: .4; } to { transform: none; opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay__sheet { animation: none; }
+  * { transition: none !important; }
+}
+
+.modal__title { font-weight: 600; margin-bottom: 4px; }
+.hint { color: var(--ink-2); font-size: 13px; margin: 0 0 12px; }
+
+textarea, input[type="search"], input[type="text"] {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+  background: var(--surface);
+  min-height: 44px;
+}
+#whimText { resize: vertical; }
+
+.row { display: flex; gap: 8px; align-items: center; margin-top: 12px; }
+.row--end { justify-content: flex-end; }
+
+.btn {
+  min-height: 44px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.btn--primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.btn--ghost { background: transparent; }
+.btn--danger { color: var(--danger); }
+
+.icon-btn {
+  width: 44px; height: 44px;
+  border: none;
+  background: none;
+  font-size: 20px;
+  color: var(--ink-2);
+}
+
+.voice-state { color: var(--danger); font-size: 14px; }
+.voice-state--recording::before {
+  content: "● ";
+  animation: blink 1s infinite;
+}
+@keyframes blink { 50% { opacity: .25; } }
+
+/* ---------- История Whims ---------- */
+
+.overlay__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.day-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--ink-3);
+  margin: 14px 4px 6px;
+}
+.whim-item {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+.whim-item__body { flex: 1; }
+.whim-item__text { margin: 0; }
+.whim-item__meta {
+  font-size: 12px;
+  color: var(--ink-3);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.whim-item__actions { display: flex; }
+.empty {
+  text-align: center;
+  color: var(--ink-3);
+  padding: 32px 0;
+}
+
+/* ---------- Правая панель (§13) ---------- */
+
+.panel-toggle {
+  position: fixed;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  z-index: 25;
+  width: 28px;
+  height: 72px;
+  border: 1px solid var(--line);
+  border-right: none;
+  border-radius: 12px 0 0 12px;
+  background: var(--surface);
+  color: var(--ink-2);
+  font-size: 18px;
+}
+.side-panel {
+  position: fixed;
+  top: 0; right: 0; bottom: 0;
+  width: min(300px, 84vw);
+  z-index: 50;
+  background: var(--surface);
+  border-left: 1px solid var(--line);
+  box-shadow: -8px 0 24px rgba(20, 30, 45, .12);
+  transform: translateX(100%);
+  transition: transform .22s ease;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.side-panel.open { transform: translateX(0); }
+.side-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+}
+.side-panel__nav { display: flex; flex-direction: column; }
+.side-panel__nav a {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  color: var(--ink);
+  text-decoration: none;
+  border-radius: 10px;
+}
+.side-panel__nav a:hover { background: var(--accent-soft); }
+.side-panel__context { color: var(--ink-2); font-size: 14px; }
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  background: rgba(20, 28, 40, .35);
+}
+
+/* ---------- Toast ---------- */
+
+.toast {
+  position: fixed;
+  bottom: calc(88px + env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  background: var(--ink);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+
+/* ---------- Responsive (§18) ---------- */
+
+@media (min-width: 700px) {
+  .app { max-width: 560px; }
+  .modal__sheet, .overlay__sheet { border-radius: 20px; margin-bottom: 24px; }
+  .modal, .overlay { align-items: center; }
+}

@@ -1,0 +1,58 @@
+# Bootstrap Profiles (BOOTSTRAP_SPECIFICATION.md §4)
+# Каждый профиль определяет компоненты и Runtime для установки.
+# Идемпотентность: уже установленные компоненты пропускаются Engine'ом.
+
+profiles:
+  minimal:
+    description: "Быстрый старт — Core только"
+    offline_mode: false
+    pip_packages:
+      - requests
+    system_packages: []
+    runtimes: {}
+
+  developer:
+    description: "Повседневная разработка — Core + Extensions (MCP, Bridge)"
+    offline_mode: false
+    pip_packages:
+      - requests
+      - pyyaml
+    system_packages: []
+    runtimes:
+      freebuff:
+        version: latest
+        install_type: pip
+      claude-code:
+        version: latest
+        install_type: npm
+
+  offline:
+    description: "Работа без интернета — Core + Knowledge + локальные модели"
+    offline_mode: true
+    pip_packages:
+      - requests
+    system_packages: []
+    runtimes:
+      qwen:
+        version: latest
+        install_type: pip
+
+  cloud:
+    description: "Мощные модели по запросу через API"
+    offline_mode: false
+    pip_packages:
+      - requests
+    system_packages: []
+    runtimes: {}
+
+  android:
+    description: "Нативное использование на телефоне (Termux)"
+    offline_mode: true
+    pip_packages:
+      - requests
+    system_packages:
+      - curl
+    runtimes:
+      freebuff:
+        version: latest
+        install_type: pip

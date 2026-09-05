@@ -140,3 +140,5 @@ nohup.out
 # Local deployment secrets
 projects_17/severny_chay/.env
 **/secrets/**
+projects_17/torrent_dl_web/credentials.json
+/'/
