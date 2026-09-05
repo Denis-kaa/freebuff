@@ -42,4 +42,6 @@
 - [x] LESSONS.md (project-local CON/PB/ANTI)
 - [x] ROADMAP.md (привязан к REC-ID)
 - [x] RUNNABLE.md + этот чек-лист
+- [x] AUDIT_REPORT.md — единый отчёт по проходам 1–7
+- [x] TRAJECTORY_ROADMAP.md — роадмап плейсхолдеров концепта (задача.md)
 - [x] Зарегистрирован в docs_10/projects_meta/PROJECTS_OVERVIEW.md

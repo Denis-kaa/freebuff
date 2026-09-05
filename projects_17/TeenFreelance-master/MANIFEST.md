@@ -12,7 +12,7 @@
 | **Статус** | 🔴 Deployed-BUT-insecure: живой инстанс на whimco работает с P0-уязвимостями (REC-001/002 — placeholder SECRET_KEY, plain HTTP) |
 | **Deployment (prod)** | whimco 185.233.184.192 — backend :8020 (systemd `teenfreelance-backend`), frontend :8021 (nginx static), PG 16 локальный (db `teenfreelance`, user `teenapp`) |
 | **Роли** | customer / executor (единая сущность User, роль выбирается при регистрации) |
-| **Аудит** | 36 находок (4 critical, 9 high) — см. §11 endpoint-sweep; карантин-приоритет: P0 ×7 |
+| **Аудит** | Единый клиентский отчёт: [AUDIT_REPORT.md](AUDIT_REPORT.md); подробный канонический аудит — `docs_10/audits/AUDIT_TEENFREELANCE_2026-09-04.md`; remediation — `docs_10/RECOMMENDATIONS.md` REC-001..024; карантин-приоритет: P0 ×7 |
 | **Зависимости от платформы** | НЕТ (код автономен; платформа выступает только как аудитор/деплойер) |
 
 ## Архитектура (как есть)
@@ -42,6 +42,9 @@ React CRA (:8021 nginx static, SPA fallback)
 | [LESSONS.md](LESSONS.md) | Project-local уроки (CON/CAN/ANTI/PB) |
 | [ROADMAP.md](ROADMAP.md) | Дорожная карта ремедиации, привязанная к REC-ID |
 | [RUNNABLE.md](RUNNABLE.md) / [CHECKLIST.md](CHECKLIST.md) | Готовность и проверка запуска |
+| [AUDIT_REPORT.md](AUDIT_REPORT.md) | Единый client-ready отчёт по проходам 1–7: critical/high, medium/low, minors compliance, roadmap S/M/L, сильные стороны |
+| [TRAJECTORY_ROADMAP.md](TRAJECTORY_ROADMAP.md) | Роадмап плейсхолдеров концепта «Траектория» (задача.md): инвентаризация 7 слотов, промты IMG-01..07, этапы |
+| [задача.md](задача.md) | Концепт «Траектория»: HTML-прототип (с плейсхолдерами IMG-01..07 и реестром промтов Data.imagePrompts) + React-архитектура + вижн платформы |
 | README.md | Быстрый старт |
 
 ## Кросс-ссылки (платформенный канон)
