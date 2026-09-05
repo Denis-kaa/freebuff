@@ -1,42 +1,45 @@
 /**
- * App root — Stage 1 skeleton. Renders a single proof-of-wiring screen:
- * alias imports across all FSD layers compile, canonical types are in place.
+ * App root — Phase 2 proof: the store initializes the mock ecosystem and
+ * renders its live stats. Phase 3 replaces this with real widgets.
  */
-import type { ActivityEntry, Freelancer } from '@entities/user';
-import { routes } from './routes';
-
-const freelancer: Freelancer = {
-  id: 'f-0001',
-  name: 'Максим',
-  role: 'freelancer',
-  age: 17,
-  reputation: 84,
-  earnings: 47500,
-  status: 'active',
-  skills: { Figma: 82, Typography: 75, Copywriting: 60 },
-  proofs: [
-    { id: 'p-1', type: 'project', title: 'Ребрендинг «Зерно»', date: '2026-08-30' },
-    { id: 'p-2', type: 'project', title: 'EcoFarm Landing', date: '2026-08-01' },
-  ],
-};
-
-const feed: ActivityEntry[] = [
-  { id: 'a-1', type: 'skill_up', text: 'Навык Figma обновлен (+2)', time: '2 часа назад' },
-  { id: 'a-2', type: 'payment', text: 'Получена оплата за EcoFarm (₽15,000)', time: 'Вчера' },
-];
+import { useEffect } from 'react';
+import type { Freelancer } from '@entities/user';
+import { useTrajectoryStore, selectStats, selectCurrentUser, selectCandidates } from './store';
 
 export default function App() {
+  const status = useTrajectoryStore((s) => s.status);
+  const eco = useTrajectoryStore((s) => s.eco);
+  const currentUserId = useTrajectoryStore((s) => s.currentUserId);
+  const init = useTrajectoryStore((s) => s.init);
+
+  useEffect(() => {
+    if (status === 'idle') init();
+  }, [status, init]);
+
+  if (status !== 'ready' || !eco) return <main style={{ padding: 32 }}>Загрузка экосистемы…</main>;
+
+  const stats = selectStats(eco);
+  const user = selectCurrentUser(eco, currentUserId);
+  const draft = selectCandidates(eco, ['Figma', 'Copywriting'], 50);
+
   return (
     <main style={{ fontFamily: 'monospace', padding: 32 }}>
-      <p>TRAJECTORY · Stage 1 skeleton — FSD layers compile.</p>
-      <p>
-        {freelancer.name} · {freelancer.reputation}/100 · routes.intro = {routes.intro}
-      </p>
-      <ul>
-        {feed.map((a) => (
-          <li key={a.id}>{a.text}</li>
-        ))}
-      </ul>
+      <h1>ТРАЕКТОРИЯ · Phase 2 — экосистема в store</h1>
+      {stats && (
+        <ul>
+          <li>Подростки: {stats.counts.freelancers} · Менторы: {stats.counts.mentors} · Клиенты: {stats.counts.clients}</li>
+          <li>Проекты: {stats.counts.projects} · Задачи: {stats.counts.tasks}</li>
+          <li>Оборот: ₽{stats.turnoverRub.toLocaleString('ru-RU')} (подросткам ₽{stats.teensEarnedRub.toLocaleString('ru-RU')})</li>
+          <li>Топ-навык: {stats.skillCounts[0]?.skill} × {stats.skillCounts[0]?.count}</li>
+        </ul>
+      )}
+      {user && user.role === 'freelancer' && (
+        <p>
+          Текущий юзер: {(user as Freelancer).name} · репутация {user.reputation} · навыков:{' '}
+          {Object.keys((user as Freelancer).skills).length}
+        </p>
+      )}
+      <p>Драфт-кандидаты (Figma + Copywriting ≥ 50): {draft.length}</p>
     </main>
   );
 }

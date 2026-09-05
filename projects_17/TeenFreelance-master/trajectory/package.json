@@ -5,12 +5,14 @@
   "description": "TRAJECTORY — React migration Stage 1: types + FSD skeleton (concept: ../задача.md)",
   "scripts": {
     "typecheck": "tsc --noEmit",
+    "smoke": "node --experimental-strip-types scripts/smoke.ts",
     "build": "tsc --noEmit && vite build",
     "dev": "vite"
   },
   "dependencies": {
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "zustand": "^4.5.2"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",

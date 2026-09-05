@@ -64,7 +64,8 @@
 | **4. Валидация** | Счётчики: 7× `data-img-id`, 0× `qwenlm.ai`, HTML-парс без ошибок | grep + python html.parser |
 | **5. (будущее) Генерация** | Прогнать 7 промтов через генератор → `assets/img/IMG-0X.png` → вставить `src` | слои `img` накрывают промты |
 | **6. React-миграция — Stage 1** ✅ (2026-09-05) | `trajectory/`: канонические типы (`src/types/index.ts`), FSD-скелет (entities/features/widgets/shared/app), реестр промтов → `src/shared/mock/imagePrompts.ts`, алиасы `@entities/*` и т.д. | `tsc --noEmit` strict: clean |
-| **7. (Phase 2) React-миграция — UI/state** | Zustand store + генератор 350 пользователей (mockData), `<ImgPlaceholder />`-компонент, роутер, Skill Graph + Draft System + Parental Gate | `npm run dev` |
+| **7. (Phase 2) React-миграция — state/data** ✅ (2026-09-05) | Zustand store (`app/store.ts`), генератор экосистемы 200/50/100/200 (`shared/mock/generator.ts`, seed-детерминированный), ecoStats, селектор-драфт; smoke 26 инвариантов | `tsc` clean + SMOKE PASSED |
+| **8. (Phase 3) React-миграция — UI** | Виджеты дашборда (порт из прототипа), `<ImgPlaceholder imgId />`-компонент, React Router, TeamBuilder UI + Parental Gate UI | `npm run dev` + smoke |
 
 ## 4. Промты (итоговые формулировки, v1)
 

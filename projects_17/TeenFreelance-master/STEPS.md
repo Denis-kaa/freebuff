@@ -71,6 +71,11 @@
 - `tsc --noEmit` (TS 5.4.5, strict + noUncheckedIndexedAccess): **clean** на 12 файлах. Один реальный баг найден и исправлен (баррел `entities/user` не экспортировал `ActivityEntry`), ошибки окружения (FUSE/sdcard) обойдены typecheck-копией в ext4.
 - **Почему не полный `npm install` в папке проекта:** sdcard-FUSE не даёт symlink → node_modules невозможен на `/sdcard`; методика задокументирована в `trajectory/README.md`.
 
+### Шаг 4. Phase 2 — mock-экосистема + Zustand store
+- `shared/mock/`: rng (mulberry32, seed-детерминизм) → generator (200 фрилансеров 14–18 лет со Skill Score и proofs, 50 менторов с level-гейтами команды, 100 клиентов, 200 проектов, 1–3 задачи на команду) + ecoStats (оборот ₽3.8M, доли 51/20/20/9). `app/store.ts` — Zustand + селекторы, включая `selectCandidates` (прообраз драфта: фильтр по комбинации навыков с ранжированием).
+- Верификация: `tsc --noEmit` clean + smoke-скрипт на 26 инвариантов — **SMOKE PASSED**. Два реальных бага пойманы проверками: общий seq-счётчик ломал инвариант «f-0001 = первый фрилансер» (переведён на per-prefix counters), readonly-массив в `requiredSkills`.
+- **Почему seed-детерминизм:** одинаковые демо/тесты на всех узлах треугольника; **почему smoke без браузера:** терминальная среда телефона, FUSE-ограничения sdcard (npm невозможен в папке проекта — см. trajectory/README).
+
 ## Статус
 
 | Что | Где | Состояние |

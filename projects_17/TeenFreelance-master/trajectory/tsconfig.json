@@ -16,7 +16,9 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "resolveJsonModule": true,
+    "allowImportingTsExtensions": true,
     "noEmit": true,
+    "types": ["node"],
     "baseUrl": ".",
     "paths": {
       "@entities/*": ["src/entities/*"],
@@ -26,5 +28,5 @@
       "@app/*": ["src/app/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src", "scripts"]
 }
