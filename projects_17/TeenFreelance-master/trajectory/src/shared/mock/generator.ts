@@ -126,6 +126,7 @@ export function generateEcosystem(seed = 20260905): Ecosystem {
       type: (rng.chance(0.75) ? 'project' : 'review') as 'project' | 'review',
       title: `Практика: ${s}`,
       date: `2026-${d2(rng.int(1, 9))}-${d2(rng.int(1, 28))}`,
+      skills: [s],
     }));
 
     const earnings = rng.chance(0.55)

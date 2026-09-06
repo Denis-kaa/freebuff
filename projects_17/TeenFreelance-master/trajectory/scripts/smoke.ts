@@ -301,5 +301,31 @@ if (afterRevoke) {
 check('inbox history contains denied+revoked',
   selectConsentInbox(store.getState().eco, parentOfTeen.id).history.length >= 2);
 
+// ---------------- Skill Graph (Этап 3.1, feature layer) ----------------
+import { buildSkillGraph, averageEffective, SKILL_BOOSTS, GRAPH_SKILLS } from '../src/features/skill-tree/index.ts';
+
+const graphFreelancer = eco.freelancers[0]!;
+const graph = buildSkillGraph(graphFreelancer);
+
+check('skill graph: one node per closed-vocabulary skill', graph.length === GRAPH_SKILLS.length);
+check('skill graph: stored level matches freelancer.skills',
+  graph.every((n) => n.level === (graphFreelancer.skills[n.skill] ?? 0)));
+check('skill graph: effective = min(100, round(stored + boost))',
+  graph.every((n) => n.effective === Math.min(100, Math.round(n.level + n.boost))));
+check('skill graph: boost rules stay inside closed vocabulary',
+  SKILL_BOOSTS.every((r) => GRAPH_SKILLS.includes(r.from) && GRAPH_SKILLS.includes(r.to)));
+check('skill graph: boost ≤ weight·from/100 (cap respected)',
+  graph.every((n) => n.boost <= SKILL_BOOSTS.filter((r) => r.to === n.skill).reduce((s, r) => s + r.weight, 0)));
+check('skill graph: pulse flag ⇔ effective > 80',
+  graph.every((n) => n.pulsing === n.effective > 80));
+check('skill graph: proofs counted from evidence with skills[] tag',
+  graph.every((n) => n.proofs === graphFreelancer.proofs.filter((p) => (p.skills ?? []).includes(n.skill)).length));
+check('skill graph: zero-skill freelancer → effective 0, no pulse', (() => {
+  const empty = buildSkillGraph({ ...graphFreelancer, skills: {}, proofs: [] });
+  return empty.every((n) => n.effective === 0 && !n.pulsing && n.boost === 0);
+})());
+check('skill graph: averageEffective = rounded mean',
+  averageEffective(graph) === Math.round(graph.reduce((s, n) => s + n.effective, 0) / graph.length));
+
 console.log(failures === 0 ? '\n🔥 SMOKE PASSED — all checks green' : `\n💥 SMOKE FAILED — ${failures} failing`);
 process.exit(failures === 0 ? 0 : 1);

@@ -10,6 +10,7 @@ import { Dashboard } from '@widgets/dashboard';
 import { ParentControl } from '@widgets/parent-control';
 import { TeamBuilder } from '@widgets/team-builder';
 import { ReviewLoop } from '@widgets/review-loop';
+import { SkillGraphView } from '@widgets/skill-graph';
 import { ImgPlaceholder } from '@shared/ui';
 import { BRAND, BRAND_LOGO } from '@shared/concept/content';
 
@@ -18,6 +19,7 @@ const NAV: Array<{ id: ViewName; label: string }> = [
   { id: 'dashboard', label: 'Обзор' },
   { id: 'team', label: 'Драфт' },
   { id: 'review', label: 'Ревью' },
+  { id: 'skills', label: 'Навыки' },
   { id: 'parent', label: 'Родитель' },
 ];
 
@@ -78,6 +80,7 @@ export default function App() {
       {view === 'dashboard' && <Dashboard />}
       {view === 'team' && <TeamBuilder />}
       {view === 'review' && <ReviewLoop />}
+      {view === 'skills' && <SkillGraphView />}
       {view === 'parent' && <ParentControl />}
 
       {view === 'intro' && (

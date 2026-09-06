@@ -53,6 +53,8 @@ export interface Proof {
   date: ISODate;
   /** Project/URL reference that makes the proof checkable. */
   ref?: string;
+  /** Which skills this artefact backs (optional for legacy shapes). */
+  skills?: SkillName[];
 }
 
 /* ------------------------------------------------------------------ */

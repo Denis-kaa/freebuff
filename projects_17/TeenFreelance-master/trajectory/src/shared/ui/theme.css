@@ -333,6 +333,24 @@ html { scroll-behavior: smooth; }
   .progress-fill { transition: none; }
 }
 
+/* Skill Graph (concept Этап 3.1): nodes with effective > 80 pulse */
+.skill-pulse {
+  animation: skill-pulse 2.2s ease-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes skill-pulse {
+  0% { transform: scale(0.9); opacity: 0.9; }
+  70% { transform: scale(1.25); opacity: 0.15; }
+  100% { transform: scale(1.25); opacity: 0; }
+}
+.skill-node-num { font-family: var(--font-mono); font-size: 15px; font-weight: 700; }
+.skill-node-label { font-family: var(--font-mono); font-size: 12px; fill: var(--c-text-secondary); }
+.skill-center-name { font-family: var(--font-main); font-size: 20px; font-weight: 700; fill: var(--c-text-primary); }
+@media (prefers-reduced-motion: reduce) {
+  .skill-pulse { animation: none; opacity: 0.35; }
+}
+
 /* branded boot screen (before React mounts) */
 .boot-splash { min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); color: var(--c-text-secondary); letter-spacing: 0.08em; }
 

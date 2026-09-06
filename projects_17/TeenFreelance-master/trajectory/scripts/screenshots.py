@@ -114,6 +114,11 @@ with sync_playwright() as pw:
     page.wait_for_timeout(900)
     shot(page, "09-desktop-review")
 
+    # Skill Graph (Этап 3.1)
+    page.evaluate("window.location.hash = 'skills'")
+    page.wait_for_timeout(900)
+    shot(page, "12-desktop-skills")
+
     # ---------- MOBILE ----------
     mob = browser.new_page(
         viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, device_scale_factor=2
@@ -161,8 +166,8 @@ if ARGS.strict:
         problems.append("video paused (autoplay blocked?)")
     elif v2.get("currentTime", 0) <= v1.get("currentTime", 0):
         problems.append(f"video not advancing: {v1.get('currentTime')} → {v2.get('currentTime')}")
-    if len(report["shots"]) < 11:
-        problems.append(f"expected 11 shots, got {len(report['shots'])}")
+    if len(report["shots"]) < 12:
+        problems.append(f"expected 12 shots, got {len(report['shots'])}")
     if problems:
         print("---STRICT: FAIL---")
         for p in problems:
