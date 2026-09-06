@@ -1,6 +1,15 @@
-# trajectory — TRAJECTORY React app (Stage 1)
+# Freeстарт — концепт-презентация + интерактивный макет
 
-React-миграция концепта «Траектория» (`../задача.md`), Этапы 1–2 из системного промта: типы + Feature-Sliced Design скелет.
+> Продуктовое имя: **Freeстарт** (Free латиницей + старт кириллицей). «Траектория» — концептуальное описание направления, НЕ название проекта (pompts_11/122.md §3).
+
+React-приложение: концепт-презентация по `FreeStart_Concept.docx` + интерактивный макет экосистемы (миграция концепта «Траектория» из `../задача.md`).
+
+## Статус Freeстарт-рework (pompts_11/122.md, готово)
+
+- **Концепт-презентация** — `widgets/concept-view` + `shared/concept/content.ts` (единственный источник текстов). Все блоки из документа: диагноз → видение/траектория → командная механика → свобода (нет «владельца») → Skill Score → соло-порог → компании → бренд-блок → защита от копирования → открытые вопросы. Каждый блок несёт статус-бейдж: **концепция / механика / гипотеза / открытый вопрос** — гипотезы не выдаются за принятые решения (§1/§7 промта).
+- **Брендинг** — хедер: аутентичный знак, извлечённый из промо-кадра (`public/logo-mark.png`, alpha-keying уголка `media/promo.jpg`) + текстовый воркмарк «Freeстарт_» (сиенна-акцент). Favicon/иконки: `favicon-32.png`, `icon-192.png`, `apple-touch-icon.png` (знак на paper-плитке), `icon-192-dark.png` (инверсия), `logo-ink-512.png` (мастер). Черновые SVG-варианты удалены — используется существующий рабочий знак (§3: «не изобретать заново»).
+- **Медиа** — `public/media/promo.jpg` (промо-кадр 1380×752 в hero) и `public/media/concept.mp4` (видео-манифест 10s): автовоспроизведение muted+loop+playsInline, poster `concept-poster.jpg`, controls, `<source>`-fallback со ссылкой на файл (§5: корректное воспроизведение и деградация).
+- **index.html** — title/description/OG, favicon-связки, theme-color.
 
 ## Статус Stage 1 (готово)
 
@@ -54,6 +63,7 @@ npm install
 npm run typecheck   # tsc --noEmit
 npm run smoke       # node --experimental-strip-types scripts/smoke.ts (82 проверки)
 npm run dev         # vite
+npm run build       # прод-сборка в dist/
 ```
 
 > **Termux/sdcard caveat:** `/sdcard` (FUSE) не поддерживает symlink → `npm install` в этой папке падает.

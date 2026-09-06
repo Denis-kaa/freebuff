@@ -201,3 +201,91 @@ h1, h2, h3, h4 {
 }
 
 .skill-meta { font-size: 0.75rem; color: var(--c-text-secondary); margin-top: 4px; }
+
+/*
+ * ------------------------------------------------------------------
+ * CONCEPT VIEW (FreeStart_Concept.docx presentation, pompts_11/122.md)
+ * ------------------------------------------------------------------
+ */
+.status-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid var(--c-border);
+  color: var(--c-text-secondary);
+  background: var(--c-bg-secondary);
+  padding: 3px 8px;
+}
+
+.status-concept { border-color: var(--c-success); color: var(--c-success); background: rgba(46, 92, 67, 0.06); }
+.status-mechanic { border-color: #b8860b; color: #b8860b; background: rgba(184, 134, 11, 0.06); }
+.status-hypothesis { border-color: #7a5fb5; color: #7a5fb5; background: rgba(122, 95, 181, 0.07); }
+.status-open { border-color: var(--c-accent); color: var(--c-accent); background: rgba(201, 61, 40, 0.06); }
+
+.concept-section { padding: var(--spacing-xl) 0; border-bottom: 1px solid var(--c-border); }
+.concept-section:last-of-type { border-bottom: none; }
+.concept-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-md); margin-bottom: var(--spacing-lg); }
+.concept-quote {
+  border-left: 3px solid var(--c-accent);
+  padding: var(--spacing-sm) var(--spacing-md);
+  color: var(--c-text-secondary);
+  font-style: italic;
+  margin: var(--spacing-lg) 0 0;
+  max-width: 760px;
+}
+
+/* trajectory chain */
+.chain { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm); margin-top: var(--spacing-lg); }
+.chain-step { font-family: var(--font-mono); font-size: 0.78rem; padding: 6px 10px; border: 1px solid var(--c-border); background: white; }
+.chain-arrow { color: var(--c-accent); font-family: var(--font-mono); user-select: none; }
+
+/* diagnosis cards */
+.diag-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--spacing-md); margin-top: var(--spacing-lg); }
+.diag-card .diag-who { font-weight: 600; margin-bottom: var(--spacing-sm); }
+
+/* promo media block */
+.promo-figure { margin: var(--spacing-lg) 0 0; max-width: 980px; }
+.promo-figure img { width: 100%; height: auto; display: block; border: 1px solid var(--c-border); }
+.promo-figure figcaption { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--c-text-secondary); margin-top: var(--spacing-sm); }
+
+/* hero video (autoplaying loop, muted, no controls — ambient support of the hero statement) */
+.hero-media { margin: var(--spacing-xl) auto 0; max-width: 920px; border: 1px solid var(--c-border); background: var(--c-text-primary); }
+.hero-media video { display: block; width: 100%; height: auto; }
+.hero-media-note { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--c-text-secondary); text-align: center; margin-top: var(--spacing-sm); }
+
+/* skill score table */
+.score-grid { display: grid; grid-template-columns: 1fr auto; row-gap: 10px; max-width: 560px; margin-top: var(--spacing-lg); }
+.score-name { border-bottom: 1px solid var(--c-border); padding-bottom: 8px; }
+.score-val { font-family: var(--font-mono); text-align: right; border-bottom: 1px solid var(--c-border); padding-bottom: 8px; }
+.score-counters { display: flex; gap: var(--spacing-lg); margin-top: var(--spacing-md); }
+.score-counters .num { font-family: var(--font-mono); font-size: 1.4rem; font-weight: 700; }
+
+/* solo-rule decision split */
+.solo-split { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md); margin-top: var(--spacing-lg); max-width: 860px; }
+.solo-yes { border: 1px solid var(--c-success); padding: var(--spacing-md); }
+.solo-no { border: 1px solid var(--c-border); padding: var(--spacing-md); }
+.solo-verdict { font-family: var(--font-mono); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; margin-top: var(--spacing-sm); }
+.solo-yes .solo-verdict { color: var(--c-success); }
+
+/* Free/START two-column */
+.freestart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-md); margin-top: var(--spacing-lg); max-width: 860px; }
+.ladder { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); margin-top: var(--spacing-lg); }
+.ladder-step { font-family: var(--font-mono); font-size: 0.78rem; border: 1px solid var(--c-text-primary); padding: 6px 12px; background: white; }
+.ladder-step.first { background: var(--c-text-primary); color: var(--c-bg-primary); }
+
+/* open questions list */
+.open-list { margin: var(--spacing-lg) 0 0; padding-left: 20px; max-width: 720px; }
+.open-list li { margin-bottom: var(--spacing-sm); color: var(--c-text-secondary); }
+
+@media (max-width: 720px) {
+  .solo-split,
+  .freestart-grid { grid-template-columns: 1fr; }
+  .concept-section { padding: var(--spacing-lg) 0; }
+}
+
+/* brand header mark (inline SVG logo + wordmark) */
+.brand-mark { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
+.brand-word { font-family: var(--font-main); font-weight: 700; letter-spacing: -0.02em; }
+.brand-word .free { font-style: normal; }

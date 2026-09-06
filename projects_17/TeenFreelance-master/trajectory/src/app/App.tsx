@@ -1,43 +1,17 @@
 /**
- * App host — Phase 3: hash-routed views over the store.
- * intro → dashboard (teen) → parent (read-only), mirroring the prototype flow.
+ * App host — Freeстарт (pompts_11/122.md): концепт-презентация как главный вид,
+ * демо-дашборд/драфт/ревью/родитель — интерактивный макет за ней.
  */
 import { useEffect } from 'react';
 import { useTrajectoryStore, selectStats, selectCurrentUser } from './store';
-import { useHashRoute, navigate, type ViewName } from './router';
+import { useHashRoute, type ViewName } from './router';
+import { ConceptView } from '@widgets/concept-view';
 import { Dashboard } from '@widgets/dashboard';
 import { ParentControl } from '@widgets/parent-control';
 import { TeamBuilder } from '@widgets/team-builder';
 import { ReviewLoop } from '@widgets/review-loop';
 import { ImgPlaceholder } from '@shared/ui';
-
-function Intro() {
-  return (
-    <main className="container" style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', position: 'relative' }}>
-      <div style={{ position: 'absolute', inset: 0, opacity: 0.15, zIndex: -1, filter: 'grayscale(100%) contrast(1.2)' }}>
-        <ImgPlaceholder imgId="IMG-01" height={480} />
-      </div>
-      <div style={{ position: 'relative', zIndex: 2, maxWidth: 800 }}>
-        <p className="type-caption" style={{ marginBottom: 'var(--spacing-md)' }}>
-          Система профессиональной ориентации v2.6
-        </p>
-        <h1 className="type-h1">
-          Тебе 14.
-          <br />
-          У тебя есть четыре года,
-          <br />
-          чтобы создать что-то настоящее.
-        </h1>
-        <p className="type-body" style={{ margin: 'var(--spacing-lg) 0', maxWidth: 500 }}>
-          Никаких игр. Никаких бейджей. Только реальные проекты, менторы из индустрии и портфолио, которое работает на тебя.
-        </p>
-        <button className="btn btn-primary" onClick={() => navigate('dashboard')}>
-          Войти в систему
-        </button>
-      </div>
-    </main>
-  );
-}
+import { BRAND, BRAND_LOGO } from '@shared/concept/content';
 
 const NAV: Array<{ id: ViewName; label: string }> = [
   { id: 'dashboard', label: 'Обзор' },
@@ -45,6 +19,20 @@ const NAV: Array<{ id: ViewName; label: string }> = [
   { id: 'review', label: 'Ревью' },
   { id: 'parent', label: 'Родитель' },
 ];
+
+function BrandMark() {
+  return (
+    <a className="brand-mark" href="#intro" title={BRAND}>
+      <img src={BRAND_LOGO} alt={BRAND} style={{ height: 26, width: 'auto', display: 'block' }} />
+      <span className="brand-word" style={{ fontSize: '1.15rem' }}>
+        Free<span style={{ color: 'var(--c-accent)' }}>старт</span>
+        <span className="type-mono" style={{ color: 'var(--c-accent)' }}>
+          _
+        </span>
+      </span>
+    </a>
+  );
+}
 
 export default function App() {
   const status = useTrajectoryStore((s) => s.status);
@@ -78,7 +66,7 @@ export default function App() {
         }}
       >
         <div className="container flex-between">
-          <span className="type-mono" style={{ fontWeight: 700, fontSize: '1.2rem' }}>TRAJECTORY_</span>
+          <BrandMark />
           <nav>
             {NAV.map((n) => (
               <a
@@ -108,7 +96,7 @@ export default function App() {
         </div>
       </header>
 
-      {view === 'intro' && <Intro />}
+      {view === 'intro' && <ConceptView />}
       {view === 'dashboard' && <Dashboard />}
       {view === 'team' && <TeamBuilder />}
       {view === 'review' && <ReviewLoop />}
@@ -118,10 +106,10 @@ export default function App() {
         <div className="container" style={{ paddingBottom: 'var(--spacing-xl)' }}>
           <p className="type-caption">
             Демо-режим: экосистема {stats?.counts.freelancers} подростков / {stats?.counts.mentors} менторов /{' '}
-            {stats?.counts.clients} клиентов · вид {view.toUpperCase()} · юзер: {user?.name ?? '—'}
+            {stats?.counts.clients} клиентов · юзер: {user?.name ?? '—'}
           </p>
           <button className="btn btn-outline" style={{ marginTop: 'var(--spacing-sm)' }} onClick={() => setView('dashboard')}>
-            Пропустить → дашборд
+            {view === 'intro' ? 'Пропустить → демо-дашборд' : 'Назад к концепции'}
           </button>
         </div>
       )}

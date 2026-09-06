@@ -44,7 +44,7 @@ React CRA (:8021 nginx static, SPA fallback)
 | [RUNNABLE.md](RUNNABLE.md) / [CHECKLIST.md](CHECKLIST.md) | Готовность и проверка запуска |
 | [AUDIT_REPORT.md](AUDIT_REPORT.md) | Единый client-ready отчёт по проходам 1–7: critical/high, medium/low, minors compliance, roadmap S/M/L, сильные стороны |
 | [TRAJECTORY_ROADMAP.md](TRAJECTORY_ROADMAP.md) | Роадмап плейсхолдеров концепта «Траектория» (задача.md): инвентаризация 7 слотов, промты IMG-01..07, этапы (Stage 1 React-миграции ✅) |
-| [trajectory/](trajectory/README.md) | React-приложение «Траектория» (Stage 1: канонические типы + FSD-скелет, `tsc` strict clean) |
+| [trajectory/](trajectory/README.md) | React-приложение «Freeстарт» (концепт-презентация FreeStart_Concept + интерактивный макет экосистемы; `tsc` strict clean, smoke 82) |
 | [задача.md](задача.md) | Концепт «Траектория»: HTML-прототип (с плейсхолдерами IMG-01..07 и реестром промтов Data.imagePrompts) + React-архитектура + вижн платформы |
 | README.md | Быстрый старт |
 
