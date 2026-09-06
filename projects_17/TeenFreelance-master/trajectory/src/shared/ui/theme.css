@@ -217,6 +217,7 @@ h1, h2, h3, h4 {
   color: var(--c-text-secondary);
   background: var(--c-bg-secondary);
   padding: 3px 8px;
+  white-space: nowrap;
 }
 
 .status-concept { border-color: var(--c-success); color: var(--c-success); background: rgba(46, 92, 67, 0.06); }
@@ -224,9 +225,19 @@ h1, h2, h3, h4 {
 .status-hypothesis { border-color: #7a5fb5; color: #7a5fb5; background: rgba(122, 95, 181, 0.07); }
 .status-open { border-color: var(--c-accent); color: var(--c-accent); background: rgba(201, 61, 40, 0.06); }
 
-.concept-section { padding: var(--spacing-xl) 0; border-bottom: 1px solid var(--c-border); }
+.concept-section { padding: var(--spacing-xl) 0; border-bottom: 1px solid var(--c-border); scroll-margin-top: 84px; }
 .concept-section:last-of-type { border-bottom: none; }
-.concept-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-md); margin-bottom: var(--spacing-lg); }
+
+/* hero: display type + vertical air (was missing → H1 fell back to browser default) */
+.type-display-xl {
+  font-size: clamp(2.5rem, 7vw, 5rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+.hero-block { padding: var(--spacing-xxl) 0 var(--spacing-lg); }
+.concept-head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--spacing-sm) var(--spacing-md); margin-bottom: var(--spacing-lg); }
+.concept-head .type-h2 { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .concept-quote {
   border-left: 3px solid var(--c-accent);
   padding: var(--spacing-sm) var(--spacing-md);
@@ -250,7 +261,7 @@ h1, h2, h3, h4 {
 .promo-figure img { width: 100%; height: auto; display: block; border: 1px solid var(--c-border); }
 .promo-figure figcaption { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--c-text-secondary); margin-top: var(--spacing-sm); }
 
-/* hero video (autoplaying loop, muted, no controls — ambient support of the hero statement) */
+/* hero media (video) — ambient support of the hero statement */
 .hero-media { margin: var(--spacing-xl) auto 0; max-width: 920px; border: 1px solid var(--c-border); background: var(--c-text-primary); }
 .hero-media video { display: block; width: 100%; height: auto; }
 .hero-media-note { font-family: var(--font-mono); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--c-text-secondary); text-align: center; margin-top: var(--spacing-sm); }
@@ -284,6 +295,33 @@ h1, h2, h3, h4 {
   .freestart-grid { grid-template-columns: 1fr; }
   .concept-section { padding: var(--spacing-lg) 0; }
 }
+
+/*
+ * ------------------------------------------------------------------
+ * APP HEADER (Freeстарт brand lockup + responsive nav)
+ * ------------------------------------------------------------------
+ */
+.app-header { position: sticky; top: 0; z-index: 1000; background: rgba(244, 242, 238, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--c-border); padding: var(--spacing-md) 0; }
+.app-header .container { display: flex; align-items: center; justify-content: space-between; gap: var(--spacing-md); flex-wrap: wrap; }
+.header-nav { display: flex; align-items: center; flex-wrap: wrap; gap: var(--spacing-md) var(--spacing-lg); }
+.header-nav a { text-decoration: none; padding-bottom: 2px; border-bottom: 1px solid transparent; white-space: nowrap; }
+.header-nav a.active { color: var(--c-text-primary); border-bottom-color: var(--c-accent); }
+.header-eco { display: flex; align-items: center; gap: 10px; }
+
+/* Hide the turnover on narrow screens; nav stays reachable */
+@media (max-width: 720px) {
+  .header-eco { display: none; }
+}
+
+/* smooth anchor travel for in-page concept navigation */
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .progress-fill { transition: none; }
+}
+
+/* branded boot screen (before React mounts) */
+.boot-splash { min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); color: var(--c-text-secondary); letter-spacing: 0.08em; }
 
 /* brand header mark (inline SVG logo + wordmark) */
 .brand-mark { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }

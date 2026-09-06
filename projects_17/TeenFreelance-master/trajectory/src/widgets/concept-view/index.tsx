@@ -69,17 +69,17 @@ export default function ConceptView() {
   return (
     <main>
       {/* HERO — промо-кадр как обложка концепции + видео как эмоциональное подтверждение тезиса */}
-      <section style={{ paddingTop: 'var(--spacing-xl)' }}>
+      <section className="hero-block">
         <div className="container">
           <p className="type-caption" style={{ marginBottom: 'var(--spacing-md)' }}>
             {DEMO_INTRO.caption}
           </p>
-          <h1 className="type-display-xl">
+          <h1 className="type-display-xl" style={{ overflowWrap: 'anywhere' }}>
             Не биржа для школьников.
             <br />
             Профессиональная траектория.
           </h1>
-          <p className="type-body" style={{ margin: 'var(--spacing-lg) 0', maxWidth: 620 }}>
+          <p className="type-body" style={{ margin: 'var(--spacing-lg) 0', maxWidth: 620, fontSize: '1.1rem' }}>
             {BRAND} — это место, где начинается профессиональный путь подростка: интерес → навык →
             практика → ментор → команда → реальный проект → портфолио.
           </p>
@@ -92,14 +92,14 @@ export default function ConceptView() {
             </button>
           </div>
 
-          <figure className="promo-figure">
+          <div className="promo-figure">
             <img src="/media/promo.jpg" alt="Freeстарт — промо-кадр: подросток делает первый шаг" loading="eager" />
             <figcaption>Промо-кадр · первый шаг</figcaption>
-          </figure>
+          </div>
 
           <div className="hero-media">
             {/* Автовоспроизведение без звука как атмосферный носитель тезиса «первого шага»;
-                poster показывается до загрузки, fallback-ссылка — если видео не поддерживается. */}
+                poster до загрузки, controls+fallback-ссылка — если видео не поддерживается. */}
             <video
               controls
               autoPlay
