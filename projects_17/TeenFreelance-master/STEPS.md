@@ -116,6 +116,7 @@
 - nginx: `/etc/nginx/sites-available/freestart` → `listen 8022`, root `/opt/teenfreelance/frontend/freestart` (копия `dist/`), `try_files $uri $uri/ /index.html`, кэш `/assets/` 30d, `/media/` 7d. `nginx -t` ok → reload. Старый :8021 (TeenFreelance-платформа) не тронут.
 - **Проверка на развёрнутом окружении (§8 промта):** `/` 200 + title «Freeстарт…»; `/media/promo.jpg` 200 image/jpeg; `/media/concept.mp4` 200 video/mp4 + **206 Partial Content** на Range (seek работает); favicon-32/icon-192/apple-touch-icon/logo-mark 200; deep-link → 200 (SPA-fallback); публично `http://185.233.184.192:8022/` → 200. `/assets/` 403 — норма (запрет листинга, сами ассеты по хэш-именам отдаются).
 - **Почему :8022, а не перезапись :8021:** презентация — отдельный артефакт концепции; прод-топология платформы задокументирована в RUNNABLE как :8020/:8021 и не должна молча менять смысл порта (Backward Compatibility, AGENTS §1).
+- **Полиш-проход (2a9c1ea) по итогам проверки живой страницы:** og:type исправлен (name→property), хедер flex-wrap + «Концепция» в навигации + скрытие оборота на узких экранах, **найден реальный баг: `.type-display-xl` использовался, но не был объявлен в theme.css** — H1 hero тихо рендерился дефолтным стилем браузера (вирус import-vs-define: tsc CSS не проверяет); добавлены scroll-margin-top под sticky-хедер для якорей, smooth-scroll (с prefers-reduced-motion), boot-splash в index.html против вспышки нестилизованного UI, убран дублирующий CTA внизу. Пересобрано и переоверно на :8022 (новые хэши assets в проде).
 
 ## Статус
 
