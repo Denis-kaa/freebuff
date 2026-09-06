@@ -2,11 +2,15 @@
 Playwright browser pass over the deployed Freeстарт presentation (:8022).
 
 Runs on whimco (python playwright + chromium cache):
-    python3 scripts/screenshots.py
+    python3 scripts/screenshots.py                    # human output
+    python3 scripts/screenshots.py --report PATH      # JSON report to file (for cron)
+    python3 scripts/screenshots.py --strict           # exit 1 on console/page errors,
+                                                      # failed requests, or video not advancing
 
 Produces: /opt/teenfreelance/frontend/freestart/shots/*.png
 Report:   console errors, page errors, failed requests, video autoplay state.
 """
+import argparse
 import json
 import os
 import sys
@@ -17,6 +21,11 @@ from playwright.sync_api import sync_playwright
 BASE = "http://127.0.0.1:8022"
 OUT = "/opt/teenfreelance/frontend/freestart/shots"
 os.makedirs(OUT, exist_ok=True)
+
+_parser = argparse.ArgumentParser(description="Playwright browser pass over :8022")
+_parser.add_argument("--report", metavar="PATH", help="write the JSON report to PATH")
+_parser.add_argument("--strict", action="store_true", help="exit 1 on errors / video not advancing")
+ARGS = _parser.parse_args()
 
 report = {"console": [], "pageErrors": [], "requestFailed": [], "video": {}, "shots": []}
 
@@ -130,6 +139,35 @@ with sync_playwright() as pw:
 
     browser.close()
 
+if ARGS.report:
+    with open(ARGS.report, "w", encoding="utf-8") as f:
+        json.dump(report, f, ensure_ascii=False, indent=2)
+
 print("---REPORT---")
 print(json.dumps(report, ensure_ascii=False, indent=2))
+
+if ARGS.strict:
+    problems = []
+    if report["console"]:
+        problems.append(f"console errors: {report['console']}")
+    if report["pageErrors"]:
+        problems.append(f"page errors: {report['pageErrors']}")
+    if report["requestFailed"]:
+        problems.append(f"failed requests: {report['requestFailed']}")
+    v1, v2 = report.get("video", {}), report.get("video_second_read") or {}
+    if not v1.get("present"):
+        problems.append("video missing")
+    elif v1.get("paused") or (v2 or {}).get("paused"):
+        problems.append("video paused (autoplay blocked?)")
+    elif v2.get("currentTime", 0) <= v1.get("currentTime", 0):
+        problems.append(f"video not advancing: {v1.get('currentTime')} → {v2.get('currentTime')}")
+    if len(report["shots"]) < 11:
+        problems.append(f"expected 11 shots, got {len(report['shots'])}")
+    if problems:
+        print("---STRICT: FAIL---")
+        for p in problems:
+            print("  *", p)
+        sys.exit(1)
+    print("---STRICT: PASS---")
+
 sys.exit(0)

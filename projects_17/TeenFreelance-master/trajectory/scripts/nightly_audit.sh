@@ -29,15 +29,28 @@ if [ "$HTTP" != "200" ]; then
   exit 1
 fi
 
-# 2. run the audit, keep full output as a timestamped report
+# 2. layout audit (exit non-zero on layout defects)
 TS=$(date +%Y-%m-%d_%H%M%S)
 REPORT="$LOG_DIR/report-$TS.log"
 if (cd "$TRAJ_DIR" && timeout 240 python3 scripts/layout_audit.py) > "$REPORT" 2>&1; then
-  log "PASS audit ok (report: $REPORT)"
+  log "PASS layout audit ok (report: $REPORT)"
 else
-  log "FAIL audit (report: $REPORT); last lines:"
+  log "FAIL layout audit (report: $REPORT); last lines:"
   tail -8 "$REPORT" | sed 's/^/    /' >> "$LOG"
 fi
 
-# 3. rotate: keep the newest $KEEP reports
-ls -1t "$LOG_DIR"/report-*.log 2>/dev/null | tail -n +$((KEEP + 1)) | xargs -r rm -f
+# 3. media/console pass: screenshots + console/page errors + video motion
+#    (--strict: exit 1 on any console/page error, failed request, paused or
+#     non-advancing video, or missing shots)
+MEDIA_REPORT="$LOG_DIR/media-$TS.json"
+if (cd "$TRAJ_DIR" && timeout 300 python3 scripts/screenshots.py --report "$MEDIA_REPORT" --strict) > "$LOG_DIR/media-$TS.log" 2>&1; then
+  log "PASS media/console ok (report: $MEDIA_REPORT)"
+else
+  log "FAIL media/console (report: $MEDIA_REPORT); last lines:"
+  tail -8 "$LOG_DIR/media-$TS.log" | sed 's/^/    /' >> "$LOG"
+fi
+
+# 4. rotate: keep the newest $KEEP reports of each kind
+ls -1t "$LOG_DIR"/report-*.log  2>/dev/null | tail -n +$((KEEP + 1)) | xargs -r rm -f
+ls -1t "$LOG_DIR"/media-*.log   2>/dev/null | tail -n +$((KEEP + 1)) | xargs -r rm -f
+ls -1t "$LOG_DIR"/media-*.json 2>/dev/null | tail -n +$((KEEP + 1)) | xargs -r rm -f
