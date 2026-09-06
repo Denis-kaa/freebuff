@@ -32,7 +32,8 @@ def main() -> int:
             print(f"FAIL sidebar button count = {sidebar_btn.count()}")
             return 1
         btn_text = sidebar_btn.inner_text()
-        if "Граф навыков" not in btn_text:
+        # CSS text-transform: uppercase changes rendered text — compare case-insensitively.
+        if "граф навыков" not in btn_text.lower():
             print(f"FAIL sidebar button text: {btn_text!r}")
             return 1
 
@@ -52,7 +53,7 @@ def main() -> int:
         if not page.locator("svg").count():
             print("FAIL no SVG graph on #skills")
             return 1
-        if "Граф навыков" not in page.locator("main").inner_text():
+        if "граф навыков" not in page.locator("main").inner_text().lower():
             print("FAIL #skills heading missing")
             return 1
 
