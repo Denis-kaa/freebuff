@@ -39,12 +39,20 @@ React-миграция концепта «Траектория» (`../задач
 - `widgets/review-loop` — очередь + карточка задачи: история версий (новые сверху) с пинами, форма сабмита версии, зоны пинов A–F над превью, менторские действия. Новый вид `#review` в роутере и навигации.
 - Smoke расширен до **58 инвариантов** (+15: гейты стейт-машины на каждый неверный переход, пины, аппрув, null-safety селектора).
 
+## Статус Phase 4c — Parental Gate (готово)
+
+- **Генератор:** 100 родителей (по 2 детей — точное разбиение 200 подростков) + стартовый консент `platform_rules` на каждого ребёнка. `Rng.hex()` — детерминированные токены (сид сохранён).
+- **Тип `ParentalConsent`:** lifecycle `pending → granted | denied` (по одному консенту на (подросток, проект)), `granted → revoked`; токен выдаётся только при grant, не при запросе.
+- **Store:** `requestConsent` (идемпотентен: активный/pending побеждает), `grantConsent`, `denyConsent`, `revokeConsent`; **гейт в `approveTask`** — аппрув без активного `project_payment`-консента отклоняется (деньги не двигаются, concept Часть 1 §5). Селекторы: `selectConsentInbox` (pending/active/history с контекстом), `selectConsentForProject`.
+- **`widgets/parent-control`:** консент-инбокс — выдача/отказ/отзыв согласия; это единственная action-поверхность родителя, остальное остаётся read-only (concept §1).
+- Smoke: **82 инварианта** (+24: гейт без/pending/после отказа/после отзыва, идемпотентность, токены, инбокс, разбиение родителей).
+
 ## Запуск
 
 ```bash
 npm install
 npm run typecheck   # tsc --noEmit
-npm run smoke       # node --experimental-strip-types scripts/smoke.ts (58 проверок)
+npm run smoke       # node --experimental-strip-types scripts/smoke.ts (82 проверки)
 npm run dev         # vite
 ```
 

@@ -9,6 +9,7 @@ import type {
   Freelancer,
   Mentor,
   MentorLevel,
+  ParentalConsent,
   Project,
   SkillName,
   TaskStatus,
@@ -106,8 +107,17 @@ interface TrajectoryState {
   addReviewNote: (taskId: string, area: string, note: string, authorId: string) => boolean;
   /** Mentor requests changes: in_review → changes_requested. */
   requestChanges: (taskId: string) => boolean;
-  /** Mentor approves: in_review → done, progress 100. */
+  /** Mentor approves: in_review → done, progress 100 — requires active parental consent. */
   approveTask: (taskId: string) => boolean;
+  /* --- parental consent (Parental Gate, concept Часть 1 §5) --- */
+  /** Teen requests parental consent for a project payment; idempotent per (teen, project). */
+  requestConsent: (freelancerId: string, projectId: string) => ParentalConsent | null;
+  /** Parent grants a pending consent (scoped: one project payment). */
+  grantConsent: (consentId: string) => boolean;
+  /** Parent denies a pending consent. */
+  denyConsent: (consentId: string) => boolean;
+  /** Parent revokes a previously granted consent (future payments blocked). */
+  revokeConsent: (consentId: string) => boolean;
 }
 
 export const useTrajectoryStore = create<TrajectoryState>((set, get) => ({
@@ -252,20 +262,113 @@ export const useTrajectoryStore = create<TrajectoryState>((set, get) => ({
   requestChanges: (taskId) =>
     transitionReviewTask(set, get, taskId, 'in_review', 'changes_requested'),
   approveTask: (taskId) => {
-    const ok = transitionReviewTask(set, get, taskId, 'in_review', 'done');
-    if (!ok) return false;
-    // Approved ⇒ the assignment is complete: progress pinned to 100.
     const eco = get().eco;
     if (!eco) return false;
+    // Parental Gate (concept §5): approval completes the task and moves money —
+    // the freelancer's parent must hold an ACTIVE payment consent for this project.
+    const task = eco.tasks.find((t) => t.id === taskId);
+    if (!task) return false;
+    if (!hasActiveConsent(eco, task.freelancerId, task.projectId)) return false;
+    if (!transitionReviewTask(set, get, taskId, 'in_review', 'done')) return false;
+    // Approved ⇒ the assignment is complete: progress pinned to 100.
     set({
       eco: {
-        ...eco,
-        tasks: eco.tasks.map((t) => (t.id === taskId ? { ...t, progress: 100 } : t)),
+        ...get().eco!,
+        tasks: get().eco!.tasks.map((t) => (t.id === taskId ? { ...t, progress: 100 } : t)),
       },
     });
     return true;
   },
+
+  /* --- parental consent actions --- */
+  requestConsent: (freelancerId, projectId) => {
+    const { eco } = get();
+    if (!eco) return null;
+    // Idempotent: an active or pending consent for the same (teen, project) wins.
+    const existing = eco.consents.find(
+      (c) =>
+        c.freelancerId === freelancerId &&
+        c.projectId === projectId &&
+        (c.status === 'pending' || c.status === 'granted'),
+    );
+    if (existing) return existing;
+    const parent = eco.parents.find((p) => p.childIds.includes(freelancerId));
+    if (!parent) return null;
+    const reqNum = eco.consents.filter((c) => c.id.startsWith('cons-req-')).length + 1;
+    const consent: ParentalConsent = {
+      id: `cons-req-${String(reqNum).padStart(4, '0')}`,
+      parentId: parent.id,
+      freelancerId,
+      scope: 'project_payment',
+      projectId,
+      requestedAt: new Date().toISOString().slice(0, 10),
+      token: '', // token issued on grant, not on request
+      status: 'pending',
+    };
+    set({ eco: { ...eco, consents: [...eco.consents, consent] } });
+    return consent;
+  },
+  grantConsent: (consentId) => {
+    const { eco } = get();
+    if (!eco) return false;
+    const c = eco.consents.find((x) => x.id === consentId);
+    if (!c || c.status !== 'pending') return false;
+    set({
+      eco: {
+        ...eco,
+        consents: eco.consents.map((x) =>
+          x.id === consentId
+            ? { ...x, status: 'granted' as const, grantedAt: new Date().toISOString().slice(0, 10), token: `tok-${get().eco!.consents.length}-granted` }
+            : x,
+        ),
+      },
+    });
+    return true;
+  },
+  denyConsent: (consentId) =>
+    setConsentStatus(set, get, consentId, 'pending', 'denied'),
+  revokeConsent: (consentId) =>
+    setConsentStatus(set, get, consentId, 'granted', 'revoked'),
 }));
+
+/** Parental Gate check: active (granted, not revoked) payment consent for teen+project. */
+function hasActiveConsent(
+  eco: Ecosystem,
+  freelancerId: string,
+  projectId: string,
+): boolean {
+  return eco.consents.some(
+    (c) =>
+      c.freelancerId === freelancerId &&
+      c.projectId === projectId &&
+      c.scope === 'project_payment' &&
+      c.status === 'granted' &&
+      !c.revokedAt,
+  );
+}
+
+/** Shared consent status transition: from → to, only via this helper. */
+function setConsentStatus(
+  set: (partial: { eco: Ecosystem }) => void,
+  get: () => TrajectoryState,
+  consentId: string,
+  from: ParentalConsent['status'],
+  to: NonNullable<ParentalConsent['status']>,
+): boolean {
+  const eco = get().eco;
+  if (!eco) return false;
+  const c = eco.consents.find((x) => x.id === consentId);
+  if (!c || c.status !== from) return false;
+  const patch: Partial<ParentalConsent> =
+    to === 'revoked' ? { status: 'revoked', revokedAt: new Date().toISOString().slice(0, 10) } : { status: to };
+  set({
+    eco: {
+      ...eco,
+      consents: eco.consents.map((x) => (x.id === consentId ? { ...x, ...patch } : x)),
+    },
+  });
+  return true;
+}
 
 /** Shared status-transition helper for mentor review actions. */
 function transitionReviewTask(
@@ -341,6 +444,43 @@ export function selectMentorCapacity(
     (p) => p.mentorId === mentor.id && (p.status === 'in_progress' || p.status === 'review'),
   ).length;
   return { mentor, limit: MENTOR_TEAM_LIMIT[mentor.level], activeProjects };
+}
+
+/**
+ * Parent's consent inbox: pending requests + active (granted) consents,
+ * each enriched with child/project context. Pending = needs decision.
+ */
+export function selectConsentInbox(eco: Ecosystem | null, parentId: string | null) {
+  if (!eco || !parentId) return { pending: [], active: [], history: [] };
+  const mine = eco.consents.filter((c) => c.parentId === parentId);
+  const withContext = (c: ParentalConsent) => {
+    const child = eco.freelancers.find((f) => f.id === c.freelancerId);
+    const project = c.projectId ? eco.projects.find((p) => p.id === c.projectId) : undefined;
+    return { consent: c, childName: child?.name ?? c.freelancerId, projectTitle: project?.title ?? '—' };
+  };
+  return {
+    pending: mine.filter((c) => c.status === 'pending').map(withContext),
+    active: mine.filter((c) => c.status === 'granted').map(withContext),
+    history: mine.filter((c) => c.status === 'denied' || c.status === 'revoked').map(withContext),
+  };
+}
+
+/** Teen's consent status for one project: has active payment consent? */
+export function selectConsentForProject(
+  eco: Ecosystem | null,
+  freelancerId: string | null,
+  projectId: string | null,
+): ParentalConsent | null {
+  if (!eco || !freelancerId || !projectId) return null;
+  return (
+    eco.consents.find(
+      (c) =>
+        c.freelancerId === freelancerId &&
+        c.projectId === projectId &&
+        c.scope === 'project_payment' &&
+        (c.status === 'granted' || c.status === 'pending'),
+    ) ?? null
+  );
 }
 
 /**

@@ -45,6 +45,15 @@ check(
   'freelancer ages in 14..18',
   eco.freelancers.every((f) => f.age >= 14 && f.age <= 18),
 );
+check('100 parents generated', eco.parents.length === 100);
+check(
+  'parents+consents partition teens (2 children each, rules consent)',
+  eco.parents.length === 100 &&
+    eco.parents.every((p) => p.childIds.length === 2) &&
+    [...eco.parents.flatMap((p) => p.childIds)].sort().join() ===
+      [...eco.freelancers.map((f) => f.id)].sort().join() &&
+    eco.consents.filter((c) => c.scope === 'platform_rules').length === 200,
+);
 check(
   'every non-draft project has a mentor',
   eco.projects.every((p) => (p.status === 'draft' ? true : p.mentorId !== null)),
@@ -171,10 +180,15 @@ check('selectMentorCapacity reports level limit', capSel.limit === capSenior && 
 
 /* ---------------- review loop (Review Loop, concept §2) ---------------- */
 
-import { selectReviewQueue, selectTaskDetail } from '../src/app/store.ts';
+import { selectReviewQueue, selectTaskDetail, selectConsentInbox, selectConsentForProject } from '../src/app/store.ts';
 
 const r = store.getState();
 const rEco = r.eco!;
+
+// Return any task already in_review to a pre-review state so the loop below
+// starts from a known point (generator distribution is deterministic but
+// the happy-path task must not already be mid-review).
+for (const t of rEco.tasks) if (t.status === 'in_review') r.requestChanges(t.id);
 
 // queue selector: only cycle tasks
 const queueIds = new Set(selectReviewQueue(rEco).map((q) => q.task.id));
@@ -212,6 +226,14 @@ check('requestChanges on done rejected', store.getState().requestChanges(workTas
 const v2 = store.getState().submitVersion(workTask.id, 'Правки по пину B');
 check('resubmit after changes works', v2 !== null && v2.version === beforeCount + 2);
 store.getState().startReview(workTask.id);
+// Parental Gate: approval completes the task ⇒ consent must be active first.
+const wConsent = selectConsentForProject(store.getState().eco, workTask.freelancerId, workTask.projectId);
+if (wConsent?.status === 'pending') store.getState().grantConsent(wConsent.id);
+else if (!wConsent) {
+  const wreq = store.getState().requestConsent(workTask.freelancerId, workTask.projectId);
+  if (wreq) store.getState().grantConsent(wreq.id);
+}
+check('consent arranged for the review-loop task', selectConsentForProject(store.getState().eco, workTask.freelancerId, workTask.projectId)?.status === 'granted');
 check('approveTask works from in_review', store.getState().approveTask(workTask.id) === true);
 const doneTask = store.getState().eco!.tasks.find((t) => t.id === workTask.id)!;
 check('approved task is done with progress 100', doneTask.status === 'done' && doneTask.progress === 100);
@@ -221,6 +243,63 @@ check('approveTask on non-in_review rejected', store.getState().approveTask(work
 const detail = selectTaskDetail(store.getState().eco, workTask.id);
 check('selectTaskDetail resolves context', detail !== null && detail.projectTitle !== '' && detail.freelancerName !== '');
 check('selectTaskDetail null-safe', selectTaskDetail(rEco, 't-9999') === null);
+
+/* ---------------- parental gate (Parental Gate, concept §5) ---------------- */
+
+// Work through a fresh task so the ONLY blocker under test is consent.
+const gateEco = store.getState().eco!;
+const gateTask = gateEco.tasks.find((t) => t.status === 'in_progress')!;
+const teenId = gateTask.freelancerId;
+const projectId = gateTask.projectId;
+
+// Move it into review: now approveTask fails ONLY on the consent gate.
+store.getState().submitVersion(gateTask.id, 'Готов к сдаче');
+check('gate task reached in_review', store.getState().startReview(gateTask.id) === true);
+
+// Start: approve must be BLOCKED without an active payment consent.
+const parentOfTeen = gateEco.parents.find((p) => p.childIds.includes(teenId))!;
+check('parent exists for the teen (partition)', parentOfTeen !== undefined);
+check('no consent yet for (teen, project)', selectConsentForProject(gateEco, teenId, projectId) === null);
+check('approve BLOCKED without consent', store.getState().approveTask(gateTask.id) === false);
+
+// Request → pending; idempotent for the same (teen, project).
+const req1 = store.getState().requestConsent(teenId, projectId);
+check('requestConsent creates pending', req1 !== null && req1.status === 'pending');
+check('requestConsent has no token yet', req1 !== null && req1.token === '');
+const reqDup = store.getState().requestConsent(teenId, projectId);
+check('requestConsent idempotent', reqDup !== null && reqDup.id === req1!.id);
+check('approve still BLOCKED while pending', store.getState().approveTask(gateTask.id) === false);
+
+// Parent inbox shows the pending request; deny path returns it cleanly.
+const inbox = selectConsentInbox(store.getState().eco, parentOfTeen.id);
+check('inbox pending contains request', inbox.pending.some((x) => x.consent.id === req1!.id));
+check('deny works from pending', store.getState().denyConsent(req1!.id) === true);
+check('deny on denied rejected', store.getState().denyConsent(req1!.id) === false);
+check('approve BLOCKED after denial', store.getState().approveTask(gateTask.id) === false);
+
+// Second request (denied is final) → grant → approve → revoke → no more approvals.
+const req2 = store.getState().requestConsent(teenId, projectId);
+check('re-request after denial creates new consent', req2 !== null && req2.id !== req1!.id);
+check('grant works from pending', store.getState().grantConsent(req2!.id) === true);
+check('grant on granted rejected', store.getState().grantConsent(req2!.id) === false);
+check('granted consent has token', (store.getState().eco!.consents.find((c) => c.id === req2!.id)?.token ?? '') !== '');
+check('approve allowed WITH consent', store.getState().approveTask(gateTask.id) === true);
+check('approved task done + progress 100', store.getState().eco!.tasks.find((t) => t.id === gateTask.id)!.status === 'done');
+check('revoke works from granted', store.getState().revokeConsent(req2!.id) === true);
+check('revoke on revoked rejected', store.getState().revokeConsent(req2!.id) === false);
+const afterRevoke = store.getState().eco!.tasks.find(
+  (t) => t.freelancerId === teenId && t.id !== gateTask.id && t.status === 'in_progress',
+);
+if (afterRevoke) {
+  // Walk the next task into review — the revoked consent must block approval.
+  store.getState().submitVersion(afterRevoke.id, 'Следующая сдача');
+  store.getState().startReview(afterRevoke.id);
+  check('approve BLOCKED after revocation (next task)', store.getState().approveTask(afterRevoke.id) === false);
+} else {
+  console.log('   (no second in_progress task for the teen — revocation-gate checked via denial path)');
+}
+check('inbox history contains denied+revoked',
+  selectConsentInbox(store.getState().eco, parentOfTeen.id).history.length >= 2);
 
 console.log(failures === 0 ? '\n🔥 SMOKE PASSED — all checks green' : `\n💥 SMOKE FAILED — ${failures} failing`);
 process.exit(failures === 0 ? 0 : 1);

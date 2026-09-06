@@ -28,13 +28,21 @@ export interface Rng {
   chance(p: number): boolean;
   /** integer in [min, max] shaped by a bell curve (sum of 3 uniforms) */
   bell(min: number, max: number): number;
+  /** lowercase hex string of the given length (deterministic, seeded) */
+  hex(len: number): string;
 }
 
 export function createRng(seed: number): Rng {
   const rand = mulberry32(seed);
+  const HEX = '0123456789abcdef';
   const rng: Rng = {
     next: (min, max) => min + rand() * (max - min),
     int: (min, max) => Math.floor(min + rand() * (max - min + 1)),
+    hex: (len) => {
+      let out = '';
+      for (let i = 0; i < len; i++) out += HEX[Math.floor(rand() * 16)];
+      return out;
+    },
     pick<T>(arr: readonly T[]): T {
       if (arr.length === 0) throw new Error('rng.pick: empty array');
       return arr[Math.floor(rand() * arr.length)] as T;

@@ -10,6 +10,8 @@ import type {
   Client,
   Freelancer,
   Mentor,
+  Parent,
+  ParentalConsent,
   Project,
   ProjectStatus,
   SkillName,
@@ -89,6 +91,8 @@ export interface Ecosystem {
   freelancers: Freelancer[];
   mentors: Mentor[];
   clients: Client[];
+  parents: Parent[];
+  consents: ParentalConsent[];
   projects: Project[];
   tasks: Task[];
 }
@@ -100,6 +104,8 @@ export function generateEcosystem(seed = 20260905): Ecosystem {
   const freelancers: Freelancer[] = [];
   const mentors: Mentor[] = [];
   const clients: Client[] = [];
+  const parents: Parent[] = [];
+  const consents: ParentalConsent[] = [];
   const projects: Project[] = [];
   const tasks: Task[] = [];
 
@@ -126,7 +132,7 @@ export function generateEcosystem(seed = 20260905): Ecosystem {
       ? rng.int(0, 8) * 5000 // has already earned something
       : rng.int(0, 3) * 1000; // newcomer
 
-    freelancers.push({
+    const f: Freelancer = {
       id: nextId('f'),
       name,
       role: 'freelancer',
@@ -136,7 +142,33 @@ export function generateEcosystem(seed = 20260905): Ecosystem {
       proofs,
       earnings,
       status: rng.chance(0.5) ? 'looking' : rng.chance(0.6) ? 'active' : 'busy',
-    });
+    };
+    freelancers.push(f);
+
+    /* --- 100 parents: 2 children each = perfect partition of 200 teens (concept §1) --- */
+    if (i % 2 === 0) {
+      parents.push({
+        id: nextId('par'),
+        name: `Родитель ${name}`,
+        role: 'parent',
+        reputation: 0,
+        childIds: [],
+      });
+    }
+    const parent = parents[parents.length - 1] as Parent | undefined;
+    if (parent) {
+      parent.childIds.push(f.id);
+      // Platform rules consent exists from the start; payment consents are requested later.
+      consents.push({
+        id: nextId('cons'),
+        parentId: parent.id,
+        freelancerId: f.id,
+        scope: 'platform_rules',
+        grantedAt: `2026-${d2(rng.int(1, 9))}-${d2(rng.int(1, 28))}`,
+        token: `tok-${rng.hex(12)}`, // mock token; real impl: opaque + hashed at rest
+        status: 'granted',
+      });
+    }
   }
 
   /* --- 50 mentors: level gates complexity (concept §8) --- */
@@ -230,7 +262,7 @@ export function generateEcosystem(seed = 20260905): Ecosystem {
     }
   }
 
-  return { freelancers, mentors, clients, projects, tasks };
+  return { freelancers, mentors, clients, parents, consents, projects, tasks };
 }
 
 /** Economy split reference (concept §11) — used by store selectors. */

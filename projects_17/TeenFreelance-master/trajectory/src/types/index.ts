@@ -161,10 +161,15 @@ export interface ParentalConsent {
   /** What exactly is being consented to (project payment, mentor change...). */
   scope: 'project_payment' | 'mentor_change' | 'platform_rules';
   projectId?: string;
-  grantedAt: ISODate;
+  /** ISODate of the parent's request (absent while not requested yet). */
+  requestedAt?: ISODate;
+  /** Set when the parent grants; absent while pending/denied. */
+  grantedAt?: ISODate;
   revokedAt?: ISODate;
-  /** Opaque confirmation token issued to the parent channel. */
+  /** Opaque confirmation token issued to the parent channel (on grant). */
   token: string;
+  /** Lifecycle: pending → granted | denied; granted → revoked. */
+  status?: 'pending' | 'granted' | 'denied' | 'revoked';
 }
 
 /* ------------------------------------------------------------------ */
