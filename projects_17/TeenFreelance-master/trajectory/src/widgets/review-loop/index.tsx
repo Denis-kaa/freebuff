@@ -57,7 +57,7 @@ export function ReviewLoop() {
         Асинхронный цикл: версия → ревью → пины/правки → аппрув (concept §2)
       </p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '300px minmax(0, 1fr)', gap: 'var(--spacing-lg)', marginTop: 'var(--spacing-lg)' }}>
+      <div className="two-pane pane-queue-first" style={{ marginTop: 'var(--spacing-lg)' }}>
         {/* Queue */}
         <aside>
           <h4 className="type-h4" style={{ marginBottom: 'var(--spacing-md)' }}>

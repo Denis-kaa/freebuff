@@ -47,11 +47,18 @@ def audit_view(page, view):
             }
         });
         const brokenImgs = [...document.images].filter((i) => i.complete && i.naturalWidth === 0).length;
-        return { overflowX, worst, brokenImgs };
+        // two-pane crush check: last pane must stay usable on narrow screens
+        let pane = null;
+        const tp = document.querySelector('.two-pane');
+        if (tp) {
+            const last = tp.lastElementChild;
+            if (last) { const r = last.getBoundingClientRect(); pane = { w: Math.round(r.width), display: getComputedStyle(tp).gridTemplateColumns }; }
+        }
+        return { overflowX, worst, brokenImgs, pane };
     }"""
     )
     report["views"][view] = m
-    print(f"  {view:10} overflowX={m['overflowX']:>4}px  brokenImgs={m['brokenImgs']}  worst={m['worst']}")
+    print(f"  {view:10} overflowX={m['overflowX']:>4}px  brokenImgs={m['brokenImgs']}  pane={m['pane']}  worst={m['worst']}")
 
 
 with sync_playwright() as pw:
@@ -102,6 +109,7 @@ print("---REPORT---")
 print(json.dumps(report, ensure_ascii=False, indent=2))
 bad = (
     any(v["overflowX"] > 2 for v in report["views"].values())
+    or any("pane" in v and v["pane"] and v["pane"]["w"] < 280 for v in report["views"].values())
     or report["anchor"].get("top", 0) < 0
     or report["anchor"].get("top", 99) > 95
 )

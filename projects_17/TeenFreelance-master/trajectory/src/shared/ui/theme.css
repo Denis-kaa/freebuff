@@ -323,6 +323,20 @@ html { scroll-behavior: smooth; }
 /* branded boot screen (before React mounts) */
 .boot-splash { min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); color: var(--c-text-secondary); letter-spacing: 0.08em; }
 
+/*
+ * Two-pane demo layouts (review queue + detail, candidates + roster).
+ * Fixed side track inline was crushing the main pane at mobile widths —
+ * collapse to a single column under 900px instead.
+ */
+.two-pane { display: grid; gap: var(--spacing-lg); align-items: start; }
+.pane-queue-first { grid-template-columns: 300px minmax(0, 1fr); }
+.pane-list-first { grid-template-columns: minmax(0, 1fr) 320px; }
+
+@media (max-width: 900px) {
+  .pane-queue-first,
+  .pane-list-first { grid-template-columns: 1fr; }
+}
+
 /* brand header mark (inline SVG logo + wordmark) */
 .brand-mark { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
 .brand-word { font-family: var(--font-main); font-weight: 700; letter-spacing: -0.02em; }

@@ -107,7 +107,7 @@ export function TeamBuilder() {
       </section>
 
       {/* 3) candidates + roster */}
-      <section style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 320px', gap: 'var(--spacing-lg)' }}>
+      <section className="two-pane pane-list-first">
         <div>
           <div className="flex-between" style={{ marginBottom: 'var(--spacing-md)' }}>
             <h4 className="type-h4">Кандидаты ({draft.results.length})</h4>
