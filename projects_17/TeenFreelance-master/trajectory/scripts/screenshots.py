@@ -42,7 +42,9 @@ def shot(page, name):
 
 
 with sync_playwright() as pw:
-    browser = pw.chromium.launch()
+    # no-user-gesture flag: headless default blocks even muted autoplay,
+    # which would report a false negative for the hero video
+    browser = pw.chromium.launch(args=["--autoplay-policy=no-user-gesture-required"])
 
     # ---------- DESKTOP ----------
     page = browser.new_page(viewport={"width": 1440, "height": 900})
@@ -64,8 +66,15 @@ with sync_playwright() as pw:
             readyState: v.readyState,
             duration: v.duration,
             poster: v.poster !== '',
+            currentTime: v.currentTime,
         };
     }"""
+    )
+
+    # let the video advance, then prove motion by comparing currentTime
+    page.wait_for_timeout(1500)
+    report["video_second_read"] = page.evaluate(
+        "() => { const v = document.querySelector('video'); return v ? { paused: v.paused, currentTime: v.currentTime } : null; }"
     )
 
     page.evaluate("document.querySelector('#concept-diagnosis')?.scrollIntoView()")
