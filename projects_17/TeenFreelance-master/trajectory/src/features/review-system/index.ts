@@ -1,10 +1,12 @@
 /**
  * Feature: review-system (async review loop, concept Часть 1 §2).
  *
- * Phase 2 will implement:
- *   - versioned submissions (TaskVersion v1..vFinal, see @entities/task);
- *   - pinned image-area comments (mentor clicks a region of the mock).
+ * Implemented in Phase 4b (2026-09-06):
+ *   - versioned submissions + state machine live in `app/store.ts`
+ *     (submitVersion / startReview / addReviewNote / requestChanges / approveTask);
+ *   - UI lives in `widgets/review-loop` (queue, version history, pinned zones).
  *
- * Stage 1 ships the contract surface only.
+ * This feature layer stays the contract surface for future domain logic
+ * (mentor assignment checks, notification hooks) — no shape redefinitions here.
  */
 export {};

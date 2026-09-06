@@ -4,9 +4,9 @@
  */
 import { useEffect, useState } from 'react';
 
-export type ViewName = 'intro' | 'dashboard' | 'parent' | 'team';
+export type ViewName = 'intro' | 'dashboard' | 'parent' | 'team' | 'review';
 
-const VALID: readonly ViewName[] = ['intro', 'dashboard', 'parent', 'team'];
+const VALID: readonly ViewName[] = ['intro', 'dashboard', 'parent', 'team', 'review'];
 
 export function parseHash(): ViewName {
   const h = window.location.hash.replace('#', '') as ViewName;

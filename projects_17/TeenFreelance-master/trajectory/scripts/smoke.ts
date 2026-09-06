@@ -169,5 +169,58 @@ check('solo (no mentor) project stays draft', solo !== null && solo!.status === 
 const capSel = selectMentorCapacity(store.getState().eco, seniorMentor.id);
 check('selectMentorCapacity reports level limit', capSel.limit === capSenior && capSel.mentor !== null);
 
+/* ---------------- review loop (Review Loop, concept §2) ---------------- */
+
+import { selectReviewQueue, selectTaskDetail } from '../src/app/store.ts';
+
+const r = store.getState();
+const rEco = r.eco!;
+
+// queue selector: only cycle tasks
+const queueIds = new Set(selectReviewQueue(rEco).map((q) => q.task.id));
+const cycleStatuses = new Set(['submitted', 'in_review', 'changes_requested']);
+check(
+  'selectReviewQueue = exactly the cycle tasks',
+  rEco.tasks.every((t) => queueIds.has(t.id) === cycleStatuses.has(t.status)),
+);
+
+// rejection first: a task outside the submittable states (done/todo)
+const blockedTask = rEco.tasks.find((t) => t.status === 'done') ?? rEco.tasks.find((t) => t.status === 'todo')!;
+check('submitVersion on non-submittable task rejected', blockedTask !== undefined && r.submitVersion(blockedTask.id, 'x') === null);
+
+// happy path on an in_progress task (deterministic seed ⇒ exists)
+const workTask = rEco.tasks.find((t) => t.status === 'in_progress') ?? rEco.tasks[0]!;
+const beforeCount = workTask.versions.length;
+const v1 = store.getState().submitVersion(workTask.id, 'Первая версия макета');
+check('submitVersion returns version', v1 !== null);
+check('submitVersion increments + numbers', v1 !== null && v1.version === beforeCount + 1);
+check('submitVersion → status submitted', store.getState().eco!.tasks.find((t) => t.id === workTask.id)!.status === 'submitted');
+check('submitVersion on submitted rejected (double-send)', store.getState().submitVersion(workTask.id, 'dup') === null);
+
+// mentor review
+check('addReviewNote before review rejected', store.getState().addReviewNote(workTask.id, 'A', 'ранний пин', 'm-0001') === false);
+check('startReview works from submitted', store.getState().startReview(workTask.id) === true);
+check('startReview on non-submitted rejected', store.getState().startReview(workTask.id) === false);
+check('empty note rejected', store.getState().addReviewNote(workTask.id, 'A', '   ', 'm-0001') === false);
+check('pin lands on latest version', store.getState().addReviewNote(workTask.id, 'B', 'логотип больше', 'm-0001') === true);
+const pinned = store.getState().eco!.tasks.find((t) => t.id === workTask.id)!.versions.at(-1)!;
+check('pinned note stored with area+author', (pinned.reviewNotes?.length ?? 0) === 1 && pinned.reviewNotes?.[0]?.area === 'B');
+
+// changes_requested → resubmit → approve
+check('requestChanges works from in_review', store.getState().requestChanges(workTask.id) === true);
+check('requestChanges on done rejected', store.getState().requestChanges(workTask.id) === false);
+const v2 = store.getState().submitVersion(workTask.id, 'Правки по пину B');
+check('resubmit after changes works', v2 !== null && v2.version === beforeCount + 2);
+store.getState().startReview(workTask.id);
+check('approveTask works from in_review', store.getState().approveTask(workTask.id) === true);
+const doneTask = store.getState().eco!.tasks.find((t) => t.id === workTask.id)!;
+check('approved task is done with progress 100', doneTask.status === 'done' && doneTask.progress === 100);
+check('approveTask on non-in_review rejected', store.getState().approveTask(workTask.id) === false);
+
+// task detail selector
+const detail = selectTaskDetail(store.getState().eco, workTask.id);
+check('selectTaskDetail resolves context', detail !== null && detail.projectTitle !== '' && detail.freelancerName !== '');
+check('selectTaskDetail null-safe', selectTaskDetail(rEco, 't-9999') === null);
+
 console.log(failures === 0 ? '\n🔥 SMOKE PASSED — all checks green' : `\n💥 SMOKE FAILED — ${failures} failing`);
 process.exit(failures === 0 ? 0 : 1);

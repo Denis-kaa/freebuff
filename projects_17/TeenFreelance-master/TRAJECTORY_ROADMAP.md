@@ -67,7 +67,8 @@
 | **7. (Phase 2) React-миграция — state/data** ✅ (2026-09-05) | Zustand store (`app/store.ts`), генератор экосистемы 200/50/100/200 (`shared/mock/generator.ts`, seed-детерминированный), ecoStats, селектор-драфт; smoke 26 инвариантов | `tsc` clean + SMOKE PASSED |
 | **8. (Phase 3) React-миграция — UI** ✅ (2026-09-05) | `shared/ui` (theme.css токены из прототипа + `<ImgPlaceholder imgId />`), widgets/dashboard (дашборд подростка), widgets/parent-control (read-only + economy-bar), hash-router (intro/dashboard/parent), App-host с хедером | `tsc` clean + smoke passed |
 | **9. (Phase 4a) Драфт — TeamBuilder** ✅ (2026-09-06) | `widgets/team-builder`: пикер навыков (закрытый словарь) + min-level слайдер → скоринг кандидатов (`draft.results` в store), выбор наставника с гейтом размера команды (Expert→5/Senior→4/Pro→3/Junior→1, §8), ростер + «Создать проект» (`createProjectFromTeam`: p-XXXX уникальный id, статус draft/in_progress по правилу наставник+команда); смоук +17 проверок (43 всего) | `tsc` clean + SMOKE PASSED |
-| **10. (Phase 4b) Остальной интерактив** | Review Loop (версии + пины на макете), Skill Graph (пульсация >80), Parental Gate UI, TanStack Query | `npm run dev` + e2e-смоук |
+| **10. (Phase 4b) Ревью-луп** ✅ (2026-09-06) | `widgets/review-loop`: очередь цикла (submitted/in_review/changes_requested), история версий v1..vN с пинами по зонам, сабмит версии фрилансером, менторские действия (начать ревью → пин/правки/аппрув); стейт-машина в store (`submitVersion/startReview/addReviewNote/requestChanges/approveTask`, аппрув → progress 100); смоук 58 инвариантов (+15) | `tsc` clean + SMOKE PASSED |
+| **11. (Phase 4c) Остальной интерактив** | Skill Graph (пульсация >80), Parental Gate UI, TanStack Query | `npm run dev` + e2e-смоук |
 
 ## 4. Промты (итоговые формулировки, v1)
 

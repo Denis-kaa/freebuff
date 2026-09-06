@@ -8,6 +8,7 @@ import { useHashRoute, navigate, type ViewName } from './router';
 import { Dashboard } from '@widgets/dashboard';
 import { ParentControl } from '@widgets/parent-control';
 import { TeamBuilder } from '@widgets/team-builder';
+import { ReviewLoop } from '@widgets/review-loop';
 import { ImgPlaceholder } from '@shared/ui';
 
 function Intro() {
@@ -41,6 +42,7 @@ function Intro() {
 const NAV: Array<{ id: ViewName; label: string }> = [
   { id: 'dashboard', label: 'Обзор' },
   { id: 'team', label: 'Драфт' },
+  { id: 'review', label: 'Ревью' },
   { id: 'parent', label: 'Родитель' },
 ];
 
@@ -109,6 +111,7 @@ export default function App() {
       {view === 'intro' && <Intro />}
       {view === 'dashboard' && <Dashboard />}
       {view === 'team' && <TeamBuilder />}
+      {view === 'review' && <ReviewLoop />}
       {view === 'parent' && <ParentControl />}
 
       {view === 'intro' && (

@@ -11,6 +11,8 @@ import type {
   MentorLevel,
   Project,
   SkillName,
+  TaskStatus,
+  TaskVersion,
 } from '../types';
 import { generateEcosystem, type Ecosystem } from '../shared/mock/generator.ts';
 import { computeEcosystemStats, type EcosystemStats } from '../shared/mock/ecoStats.ts';
@@ -92,6 +94,20 @@ interface TrajectoryState {
   resetDraft: () => void;
   /** Creates a Project from the assembled team; returns it (null if no eco). */
   createProjectFromTeam: () => Project | null;
+  /* --- review loop (Review Loop, concept Part 1 §2) --- */
+  /** Task opened from the dashboard/queue; null = auto-pick first queue item. */
+  selectedReviewTaskId: string | null;
+  selectReviewTask: (id: string | null) => void;
+  /** Freelancer submits a new version (from in_progress/changes_requested). */
+  submitVersion: (taskId: string, comment: string) => TaskVersion | null;
+  /** Mentor opens the review: submitted → in_review. */
+  startReview: (taskId: string) => boolean;
+  /** Mentor pins a note to an area of the latest version (in_review only). */
+  addReviewNote: (taskId: string, area: string, note: string, authorId: string) => boolean;
+  /** Mentor requests changes: in_review → changes_requested. */
+  requestChanges: (taskId: string) => boolean;
+  /** Mentor approves: in_review → done, progress 100. */
+  approveTask: (taskId: string) => boolean;
 }
 
 export const useTrajectoryStore = create<TrajectoryState>((set, get) => ({
@@ -166,7 +182,111 @@ export const useTrajectoryStore = create<TrajectoryState>((set, get) => ({
     set({ eco: { ...eco, projects: [project, ...eco.projects] }, draft: emptyDraft() });
     return project;
   },
+
+  /* --- review loop actions --- */
+  selectedReviewTaskId: null,
+  selectReviewTask: (id) => set({ selectedReviewTaskId: id }),
+  submitVersion: (taskId, comment) => {
+    const { eco } = get();
+    if (!eco) return null;
+    const task = eco.tasks.find((t) => t.id === taskId);
+    // State machine gate: only work-in-progress accepts submissions.
+    if (!task || (task.status !== 'in_progress' && task.status !== 'changes_requested')) return null;
+    const version: TaskVersion = {
+      id: `v-${task.id}-${task.versions.length + 1}`,
+      version: task.versions.length + 1,
+      attachments: [],
+      comment: comment.trim(),
+      submittedAt: new Date().toISOString().slice(0, 10),
+      reviewNotes: [],
+    };
+    set({
+      eco: {
+        ...eco,
+        tasks: eco.tasks.map((t) =>
+          t.id === taskId ? { ...t, versions: [...t.versions, version], status: 'submitted' as TaskStatus } : t,
+        ),
+      },
+    });
+    return version;
+  },
+  startReview: (taskId) => {
+    const { eco } = get();
+    if (!eco) return false;
+    const task = eco.tasks.find((t) => t.id === taskId);
+    if (!task || task.status !== 'submitted') return false;
+    set({
+      eco: {
+        ...eco,
+        tasks: eco.tasks.map((t) => (t.id === taskId ? { ...t, status: 'in_review' as TaskStatus } : t)),
+      },
+    });
+    return true;
+  },
+  addReviewNote: (taskId, area, note, authorId) => {
+    const { eco } = get();
+    if (!eco) return false;
+    const task = eco.tasks.find((t) => t.id === taskId);
+    // Pinned notes attach to the latest submitted version during review.
+    if (!task || task.status !== 'in_review' || task.versions.length === 0) return false;
+    const trimmed = note.trim();
+    if (!trimmed) return false;
+    set({
+      eco: {
+        ...eco,
+        tasks: eco.tasks.map((t) => {
+          if (t.id !== taskId) return t;
+          const versions = t.versions.slice();
+          const latest = versions[versions.length - 1];
+          if (!latest) return t;
+          versions[versions.length - 1] = {
+            ...latest,
+            reviewNotes: [...(latest.reviewNotes ?? []), { area, note: trimmed, authorId }],
+          };
+          return { ...t, versions };
+        }),
+      },
+    });
+    return true;
+  },
+  requestChanges: (taskId) =>
+    transitionReviewTask(set, get, taskId, 'in_review', 'changes_requested'),
+  approveTask: (taskId) => {
+    const ok = transitionReviewTask(set, get, taskId, 'in_review', 'done');
+    if (!ok) return false;
+    // Approved ⇒ the assignment is complete: progress pinned to 100.
+    const eco = get().eco;
+    if (!eco) return false;
+    set({
+      eco: {
+        ...eco,
+        tasks: eco.tasks.map((t) => (t.id === taskId ? { ...t, progress: 100 } : t)),
+      },
+    });
+    return true;
+  },
 }));
+
+/** Shared status-transition helper for mentor review actions. */
+function transitionReviewTask(
+  set: (partial: { eco: Ecosystem }) => void,
+  get: () => TrajectoryState,
+  taskId: string,
+  from: TaskStatus,
+  to: TaskStatus,
+): boolean {
+  const eco = get().eco;
+  if (!eco) return false;
+  const task = eco.tasks.find((t) => t.id === taskId);
+  if (!task || task.status !== from) return false;
+  set({
+    eco: {
+      ...eco,
+      tasks: eco.tasks.map((t) => (t.id === taskId ? { ...t, status: to } : t)),
+    },
+  });
+  return true;
+}
 
 /* ------------------------- selectors ------------------------- */
 
@@ -221,6 +341,43 @@ export function selectMentorCapacity(
     (p) => p.mentorId === mentor.id && (p.status === 'in_progress' || p.status === 'review'),
   ).length;
   return { mentor, limit: MENTOR_TEAM_LIMIT[mentor.level], activeProjects };
+}
+
+/**
+ * Mentor's review queue: all tasks currently in the review cycle,
+ * enriched with project/freelancer context for the queue list.
+ */
+export function selectReviewQueue(eco: Ecosystem | null) {
+  if (!eco) return [];
+  const IN_CYCLE: readonly TaskStatus[] = ['submitted', 'in_review', 'changes_requested'];
+  return eco.tasks
+    .filter((t) => IN_CYCLE.includes(t.status))
+    .map((t) => {
+      const project = eco.projects.find((p) => p.id === t.projectId);
+      const freelancer = eco.freelancers.find((f) => f.id === t.freelancerId);
+      return {
+        task: t,
+        projectTitle: project?.title ?? '',
+        mentorId: project?.mentorId ?? null,
+        freelancerName: freelancer?.name ?? '',
+      };
+    });
+}
+
+/** One task + its project metadata (review detail view). */
+export function selectTaskDetail(eco: Ecosystem | null, taskId: string | null) {
+  if (!eco || !taskId) return null;
+  const task = eco.tasks.find((t) => t.id === taskId);
+  if (!task) return null;
+  const project = eco.projects.find((p) => p.id === task.projectId);
+  const freelancer = eco.freelancers.find((f) => f.id === task.freelancerId);
+  return {
+    task,
+    projectTitle: project?.title ?? '',
+    projectCoverImgId: project?.coverImgId,
+    mentorId: project?.mentorId ?? null,
+    freelancerName: freelancer?.name ?? '',
+  };
 }
 
 /** Tasks of one freelancer with their project metadata (dashboard source). */

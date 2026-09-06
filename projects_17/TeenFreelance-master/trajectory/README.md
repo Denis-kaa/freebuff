@@ -33,12 +33,18 @@ React-миграция концепта «Траектория» (`../задач
 - `app/router.ts` — новый вид `#team`, навигация в `App.tsx`.
 - Smoke расширен до **43 инвариантов** (+17: скоринг, кэп, дедупликация приглашений, создание проекта, сброс драфта, соло-режим).
 
+## Статус Phase 4b — Ревью-луп (готово)
+
+- `app/store.ts` — стейт-машина ревью: `submitVersion` (только из `in_progress`/`changes_requested`, авто-нумерация v1..vN → `submitted`), `startReview` (`submitted` → `in_review`), `addReviewNote` (пин `{area, note, authorId}` на последнюю версию, только в `in_review`, пустые отклоняются), `requestChanges` / `approveTask` (→ `done`, progress 100). Селекторы: `selectReviewQueue` (все задачи цикла с контекстом), `selectTaskDetail`.
+- `widgets/review-loop` — очередь + карточка задачи: история версий (новые сверху) с пинами, форма сабмита версии, зоны пинов A–F над превью, менторские действия. Новый вид `#review` в роутере и навигации.
+- Smoke расширен до **58 инвариантов** (+15: гейты стейт-машины на каждый неверный переход, пины, аппрув, null-safety селектора).
+
 ## Запуск
 
 ```bash
 npm install
 npm run typecheck   # tsc --noEmit
-npm run smoke       # node --experimental-strip-types scripts/smoke.ts (43 проверки)
+npm run smoke       # node --experimental-strip-types scripts/smoke.ts (58 проверок)
 npm run dev         # vite
 ```
 
