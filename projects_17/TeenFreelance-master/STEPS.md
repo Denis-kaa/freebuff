@@ -110,6 +110,13 @@
 - Верификация: `tsc --noEmit` strict clean (ext4-зеркало, поймал barrel-экспорт ConceptView) + smoke 82/82 + `vite build` — см. Шаг 10 (деплой).
 - **Почему контент отдельным модулем:** один источник текстов = нет расползания формулировок между блоками; статусы как данные (не комментарии) — презентация честно различает концепцию/механику/гипотезу/вопросы на уровне рендера.
 
+### Шаг 10. Деплой Freeстарт-презентации на whimco (паттерн проекта)
+- **Правила деплоя найдены в проекте** (§9 промта): RUNNABLE.md топология A (nginx static + SPA-fallback, :8021), SYNC_RUNBOOK.md (server-first, `auto_deploy.sh pull`). Собственный способ не изобретался — скопирован существующий паттерн `sites-available/teenfreelance`.
+- Сборка на сервере (node 22): `npm install && npm run build` → два фикса исходников по результатам: `@types/node` и `@vitejs/plugin-react` добавлены в devDependencies (на телефоне они были в ext4-зеркале вручную — на свежем чекауте не резолвились). Урок: devDependencies должны быть полными для свежего чекаута, а не «докинутыми в зеркало».
+- nginx: `/etc/nginx/sites-available/freestart` → `listen 8022`, root `/opt/teenfreelance/frontend/freestart` (копия `dist/`), `try_files $uri $uri/ /index.html`, кэш `/assets/` 30d, `/media/` 7d. `nginx -t` ok → reload. Старый :8021 (TeenFreelance-платформа) не тронут.
+- **Проверка на развёрнутом окружении (§8 промта):** `/` 200 + title «Freeстарт…»; `/media/promo.jpg` 200 image/jpeg; `/media/concept.mp4` 200 video/mp4 + **206 Partial Content** на Range (seek работает); favicon-32/icon-192/apple-touch-icon/logo-mark 200; deep-link → 200 (SPA-fallback); публично `http://185.233.184.192:8022/` → 200. `/assets/` 403 — норма (запрет листинга, сами ассеты по хэш-именам отдаются).
+- **Почему :8022, а не перезапись :8021:** презентация — отдельный артефакт концепции; прод-топология платформы задокументирована в RUNNABLE как :8020/:8021 и не должна молча менять смысл порта (Backward Compatibility, AGENTS §1).
+
 ## Статус
 
 | Что | Где | Состояние |

@@ -11,6 +11,7 @@
 | PostgreSQL 16 | системный сервис сервера, db `teenfreelance`, user `teenapp` | `psql -h 127.0.0.1 -U teenapp -d teenfreelance -c 'select 1'` |
 | Backend FastAPI | `systemctl start teenfreelance-backend` (venv uvicorn, :8020) | `curl -s http://127.0.0.1:8020/health` |
 | Frontend | nginx static `/opt/teenfreelance/frontend/build`, :8021 | `curl -sI http://127.0.0.1:8021` → 200 |
+| Freeстарт-презентация | nginx static `/opt/teenfreelance/frontend/freestart`, :8022 (сборка из `trajectory/`: `npm run build` → копия `dist/`) | `curl -s http://127.0.0.1:8022/` → 200, title «Freeстарт…» |
 
 ### B. Локальная разработка (docker-compose проекта)
 
