@@ -104,5 +104,70 @@ if (busy) {
   console.log(`   ${busy.name}: ${tasks.length} tasks, first → «${tasks[0]?.projectTitle}»`);
 }
 
+/* ---------------- draft (TeamBuilder, Этап 3.2) ---------------- */
+
+import { MENTOR_TEAM_LIMIT, selectMentorCapacity } from '../src/app/store.ts';
+
+const d = store.getState();
+check('draft starts empty', d.draft.requiredSkills.length === 0 && d.draft.invitedIds.length === 0);
+
+// 1) skill filter + scoring
+const draftEco = d.eco!;
+d.toggleSkill('Figma');
+d.toggleSkill('Copywriting');
+d.toggleSkill('Figma'); // toggle off → back to 1 skill
+const afterToggle = store.getState().draft;
+check('toggleSkill adds and removes', afterToggle.requiredSkills.length === 1 && afterToggle.requiredSkills[0] === 'Copywriting');
+check('results recomputed on filter change', afterToggle.results.length > 0);
+check(
+  'results: every candidate holds all required skills >= minLevel',
+  afterToggle.results.every((r) =>
+    afterToggle.requiredSkills.every((s) => (r.freelancer.skills[s] ?? 0) >= afterToggle.minLevel),
+  ),
+);
+check(
+  'results sorted by avg desc',
+  afterToggle.results.every((r, i, a) => i === 0 || (a[i - 1]?.avg ?? 0) >= r.avg),
+);
+
+// 2) mentor gate
+const seniorMentor = draftEco.mentors.find((m) => m.level === 'Senior') ?? draftEco.mentors[0]!;
+store.getState().pickMentor(seniorMentor.id);
+const capped = store.getState().draft;
+const capSenior = MENTOR_TEAM_LIMIT[seniorMentor.level];
+check('pickMentor sets mentorId', capped.mentorId === seniorMentor.id);
+check('invites clipped to mentor cap', capped.invitedIds.length <= capSenior);
+
+// invite up to cap + 5 attempts beyond → must stay capped
+for (const c of capped.results.slice(0, capSenior + 5)) store.getState().toggleInvite(c.freelancer.id);
+const full = store.getState().draft;
+check(`toggleInvite enforces cap (Senior → ${capSenior})`, full.invitedIds.length === Math.min(capSenior, full.results.length));
+check('toggleInvite dedupes', new Set(full.invitedIds).size === full.invitedIds.length);
+
+// 3) project creation
+store.getState().setDraftTitle('Смоук-проект драфта');
+const created = store.getState().createProjectFromTeam();
+check('createProjectFromTeam returns project', created !== null);
+check('created project id unique', created !== null && draftEco.projects.every((p) => p.id !== created!.id));
+check('created project carries team + skills', created !== null && created!.teamIds.length > 0 && created!.requiredSkills.length > 0);
+check(
+  'created project status follows mentor+team rule',
+  created !== null && created!.status === (created!.mentorId !== null && created!.teamIds.length > 0 ? 'in_progress' : 'draft'),
+);
+check('draft reset after creation', store.getState().draft.requiredSkills.length === 0 && store.getState().draft.invitedIds.length === 0);
+check('created project persisted in eco', created !== null && store.getState().eco!.projects.some((p) => p.id === created!.id));
+
+// solo mode: no mentor → status draft even with a team
+store.getState().toggleSkill('Blender');
+const soloEco = store.getState().eco!;
+const soloFirst = soloEco.freelancers[0]!;
+store.getState().toggleInvite(soloFirst.id);
+const solo = store.getState().createProjectFromTeam();
+check('solo (no mentor) project stays draft', solo !== null && solo!.status === 'draft');
+
+// capacity selector
+const capSel = selectMentorCapacity(store.getState().eco, seniorMentor.id);
+check('selectMentorCapacity reports level limit', capSel.limit === capSenior && capSel.mentor !== null);
+
 console.log(failures === 0 ? '\n🔥 SMOKE PASSED — all checks green' : `\n💥 SMOKE FAILED — ${failures} failing`);
 process.exit(failures === 0 ? 0 : 1);

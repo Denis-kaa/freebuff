@@ -26,12 +26,19 @@ React-миграция концепта «Траектория» (`../задач
 - `widgets/parent-control` — read-only родительский вид: безопасность, финансы с economy-bar 51/20/20/9, история проектов.
 - `app/router.ts` — hash-роутер (intro/dashboard/parent), `app/App.tsx` — хост с хедером (оборот экосистемы, аватар-плейсхолдер).
 
+## Статус Phase 4a — TeamBuilder (готово)
+
+- `app/store.ts` — draft-состояние (requiredSkills, minLevel, mentorId, invitedIds) + скоринг кандидатов (`results`: только те, у кого ВСЕ выбранные навыки ≥ порога, ранжирование по среднему уровню); действия `toggleSkill/setMinLevel/pickMentor/toggleInvite/createProjectFromTeam`.
+- `widgets/team-builder` — интерфейс драфта: пикер навыков (закрытый словарь `SKILL_NAMES`), слайдер минимального уровня, выбор наставника с **гейтом размера команды** (Expert→5 / Senior→4 / Pro→3 / Junior→1, concept §8; без наставника — соло-лимит 1), ростер и «Создать проект» (уникальный `p-XXXX`, статус `draft`/`in_progress` по правилу «наставник + команда»).
+- `app/router.ts` — новый вид `#team`, навигация в `App.tsx`.
+- Smoke расширен до **43 инвариантов** (+17: скоринг, кэп, дедупликация приглашений, создание проекта, сброс драфта, соло-режим).
+
 ## Запуск
 
 ```bash
 npm install
 npm run typecheck   # tsc --noEmit
-npm run smoke       # node --experimental-strip-types scripts/smoke.ts (26 проверок)
+npm run smoke       # node --experimental-strip-types scripts/smoke.ts (43 проверки)
 npm run dev         # vite
 ```
 

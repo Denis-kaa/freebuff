@@ -7,6 +7,7 @@ import { useTrajectoryStore, selectStats, selectCurrentUser } from './store';
 import { useHashRoute, navigate, type ViewName } from './router';
 import { Dashboard } from '@widgets/dashboard';
 import { ParentControl } from '@widgets/parent-control';
+import { TeamBuilder } from '@widgets/team-builder';
 import { ImgPlaceholder } from '@shared/ui';
 
 function Intro() {
@@ -39,6 +40,7 @@ function Intro() {
 
 const NAV: Array<{ id: ViewName; label: string }> = [
   { id: 'dashboard', label: 'Обзор' },
+  { id: 'team', label: 'Драфт' },
   { id: 'parent', label: 'Родитель' },
 ];
 
@@ -106,6 +108,7 @@ export default function App() {
 
       {view === 'intro' && <Intro />}
       {view === 'dashboard' && <Dashboard />}
+      {view === 'team' && <TeamBuilder />}
       {view === 'parent' && <ParentControl />}
 
       {view === 'intro' && (
