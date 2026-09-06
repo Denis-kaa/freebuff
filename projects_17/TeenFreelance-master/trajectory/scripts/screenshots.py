@@ -93,6 +93,15 @@ with sync_playwright() as pw:
     page.wait_for_timeout(900)
     shot(page, "05-desktop-dashboard")
 
+    # two-pane demo views (fixed to collapse on mobile — show desktop form)
+    page.evaluate("window.location.hash = 'team'")
+    page.wait_for_timeout(900)
+    shot(page, "08-desktop-team")
+
+    page.evaluate("window.location.hash = 'review'")
+    page.wait_for_timeout(900)
+    shot(page, "09-desktop-review")
+
     # ---------- MOBILE ----------
     mob = browser.new_page(
         viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True, device_scale_factor=2
@@ -106,6 +115,15 @@ with sync_playwright() as pw:
     mob.evaluate("window.location.hash = 'dashboard'")
     mob.wait_for_timeout(900)
     shot(mob, "07-mobile-dashboard")
+
+    # the two views that had the pane-crush bug (single column now)
+    mob.evaluate("window.location.hash = 'team'")
+    mob.wait_for_timeout(900)
+    shot(mob, "10-mobile-team")
+
+    mob.evaluate("window.location.hash = 'review'")
+    mob.wait_for_timeout(900)
+    shot(mob, "11-mobile-review")
 
     browser.close()
 
