@@ -118,6 +118,14 @@
 - **Почему :8022, а не перезапись :8021:** презентация — отдельный артефакт концепции; прод-топология платформы задокументирована в RUNNABLE как :8020/:8021 и не должна молча менять смысл порта (Backward Compatibility, AGENTS §1).
 - **Полиш-проход (2a9c1ea) по итогам проверки живой страницы:** og:type исправлен (name→property), хедер flex-wrap + «Концепция» в навигации + скрытие оборота на узких экранах, **найден реальный баг: `.type-display-xl` использовался, но не был объявлен в theme.css** — H1 hero тихо рендерился дефолтным стилем браузера (вирус import-vs-define: tsc CSS не проверяет); добавлены scroll-margin-top под sticky-хедер для якорей, smooth-scroll (с prefers-reduced-motion), boot-splash в index.html против вспышки нестилизованного UI, убран дублирующий CTA внизу. Пересобрано и переоверно на :8022 (новые хэши assets в проде).
 
+### Шаг 11. Browser-pass (Playwright) живой презентации на :8022
+- **Инструмент:** серверный playwright — pip-пакет (python API; chromium уже в кэше) — первый node-вариант скрипта не резолвил модуль и заменён на `scripts/screenshots.py` (node-вариант удалён).
+- **Прогон:** desktop 1440×900 + mobile 390×844 (DPR 2): intro-top, diagnosis, skill-score, open-questions, dashboard. Снимки: `/opt/teenfreelance/frontend/freestart/shots/` → `http://185.233.184.192:8022/shots/*.png` (200) + копия на телефон `Pictures/freestart-shots/`.
+- **Отчёт чистый:** 0 console errors / 0 page errors / 0 failed requests на обоих видах.
+- **Видео:** headless chromium по умолчанию блокирует даже muted autoplay — запуск с `--autoplay-policy=no-user-gesture-required` + проверка движения `currentTime` 1.81→3.32s (paused=false): автовоспроизведение подтверждено фактически, не только readyState.
+- **Пиксельная проверка снимков (PIL):** ни одного пустого рендера; палитра подтверждена — paper-фон, инк-текст, сиенна-акцент точечно (хедер/бейджи/цитаты) — акцент дозирован по дизайн-системе.
+- **Почему скриншоты в web-root `/shots/`:** быстрый просмотр по URL без SSH; autoindex выключен (nginx default), файлы отдаются только по прямым ссылкам.
+
 ## Статус
 
 | Что | Где | Состояние |
