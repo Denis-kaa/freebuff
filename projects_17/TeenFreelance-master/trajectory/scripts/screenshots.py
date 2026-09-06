@@ -77,16 +77,19 @@ with sync_playwright() as pw:
         "() => { const v = document.querySelector('video'); return v ? { paused: v.paused, currentTime: v.currentTime } : null; }"
     )
 
-    page.evaluate("document.querySelector('#concept-diagnosis')?.scrollIntoView()")
+    # smooth-scroll CSS makes scrollIntoView animate; shots caught mid-scroll.
+    # Force instant scrolling for deterministic captures.
+    page.evaluate("document.documentElement.style.scrollBehavior = 'auto'")
+    page.evaluate("document.querySelector('#concept-diagnosis')?.scrollIntoView({ behavior: 'instant', block: 'start' })")
     page.wait_for_timeout(600)
     shot(page, "02-desktop-diagnosis")
 
-    page.evaluate("document.querySelector('#skill-score')?.scrollIntoView()")
-    page.wait_for_timeout(400)
+    page.evaluate("document.querySelector('#skill-score')?.scrollIntoView({ behavior: 'instant', block: 'start' })")
+    page.wait_for_timeout(500)
     shot(page, "03-desktop-skill-score")
 
-    page.evaluate("document.querySelector('#open-questions')?.scrollIntoView()")
-    page.wait_for_timeout(400)
+    page.evaluate("document.querySelector('#open-questions')?.scrollIntoView({ behavior: 'instant', block: 'start' })")
+    page.wait_for_timeout(500)
     shot(page, "04-desktop-open-questions")
 
     page.evaluate("window.location.hash = 'dashboard'")

@@ -71,8 +71,6 @@ h1, h2, h3, h4 {
   padding: 0 var(--spacing-md);
 }
 
-.section-padding { padding: var(--spacing-xl) 0; }
-
 .flex-between {
   display: flex;
   align-items: center;
@@ -203,6 +201,14 @@ h1, h2, h3, h4 {
 .skill-meta { font-size: 0.75rem; color: var(--c-text-secondary); margin-top: 4px; }
 
 /*
+ * Vertical section padding WITHOUT clobbering .container's horizontal
+ * padding: the shorthand `padding: xxl 0` (later in the file, same
+ * specificity) used to zero out the container's side padding, leaving
+ * demo-view text flush against the viewport edges.
+ */
+.section-padding { padding-top: var(--spacing-xxl); padding-bottom: var(--spacing-xxl); }
+
+/*
  * ------------------------------------------------------------------
  * CONCEPT VIEW (FreeStart_Concept.docx presentation, pompts_11/122.md)
  * ------------------------------------------------------------------
@@ -226,6 +232,11 @@ h1, h2, h3, h4 {
 .status-open { border-color: var(--c-accent); color: var(--c-accent); background: rgba(201, 61, 40, 0.06); }
 
 .concept-section { padding: var(--spacing-xl) 0; border-bottom: 1px solid var(--c-border); scroll-margin-top: 84px; }
+
+@media (max-width: 900px) {
+  /* wrapped header is ~140px tall on phones — 84px would land sections under it */
+  .concept-section { scroll-margin-top: 152px; }
+}
 .concept-section:last-of-type { border-bottom: none; }
 
 /* hero: display type + vertical air (was missing → H1 fell back to browser default) */
@@ -307,6 +318,8 @@ h1, h2, h3, h4 {
 .header-nav a { text-decoration: none; padding-bottom: 2px; border-bottom: 1px solid transparent; white-space: nowrap; }
 .header-nav a.active { color: var(--c-text-primary); border-bottom-color: var(--c-accent); }
 .header-eco { display: flex; align-items: center; gap: 10px; }
+/* the 32px avatar circle must not show the IMG-02 prompt layer */
+.header-eco .ph-prompt { display: none; }
 
 /* Hide the turnover on narrow screens; nav stays reachable */
 @media (max-width: 720px) {
