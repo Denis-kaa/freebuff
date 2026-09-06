@@ -7,6 +7,7 @@ import type { Freelancer } from '@entities/user';
 import type { TaskStatus } from '@entities/task';
 import { ImgPlaceholder } from '@shared/ui';
 import { useTrajectoryStore, selectStats, selectCurrentUser, selectTasksOfUser, selectCandidates } from '../../app/store';
+import { navigate } from '../../app/router';
 
 const STATUS_BADGE: Record<TaskStatus, { label: string; cls: string }> = {
   todo: { label: 'Ожидает старта', cls: 'badge-status-pending' },
@@ -114,6 +115,25 @@ export function Dashboard() {
                 <div className="type-mono">{level}%</div>
               </div>
             ))}
+            <button
+              type="button"
+              className="btn btn-secondary skill-graph-link"
+              onClick={() => navigate('skills')}
+            >
+              Граф навыков: {me.name.split(' ')[0]} →
+            </button>
+          </div>
+
+          <div className="card skill-graph-teaser">
+            <div>
+              <h4 className="type-h4" style={{ margin: 0 }}>Граф навыков</h4>
+              <p className="type-caption" style={{ marginTop: 'var(--spacing-sm)' }}>
+                Skill Score + кросс-навыковые бусты · бусты двигают только эффективный уровень, не хранимый Score
+              </p>
+            </div>
+            <button type="button" className="btn btn-primary" onClick={() => navigate('skills')}>
+              Открыть граф →
+            </button>
           </div>
 
           <div className="card" style={{ background: 'var(--c-text-primary)', color: 'var(--c-bg-primary)' }}>

@@ -372,3 +372,14 @@ html { scroll-behavior: smooth; }
 .brand-mark { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
 .brand-word { font-family: var(--font-main); font-weight: 700; letter-spacing: -0.02em; }
 .brand-word .free { font-style: normal; }
+
+/* dashboard → skill graph teaser card + inline link under the skills list */
+.skill-graph-teaser {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+}
+.skill-graph-teaser p { margin: 0; max-width: 40ch; }
+.skill-graph-link { margin-top: var(--spacing-md); width: 100%; }
