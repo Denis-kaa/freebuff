@@ -11,6 +11,13 @@ React-приложение: концепт-презентация по `FreeStar
 - **Медиа** — `public/media/promo.jpg` (промо-кадр 1380×752 в hero) и `public/media/concept.mp4` (видео-манифест 10s): автовоспроизведение muted+loop+playsInline, poster `concept-poster.jpg`, controls, `<source>`-fallback со ссылкой на файл (§5: корректное воспроизведение и деградация).
 - **index.html** — title/description/OG, favicon-связки, theme-color.
 
+## Статус Phase 5 — Skill Graph (готово)
+
+- **Feature layer** (`features/skill-tree`): `buildSkillGraph` — чистая функция над закрытым словарём 8 навыков; курируемая таблица кросс-навыковых бустов `SKILL_BOOSTS` (9 правил, например UX Research → Composition +6), `effective = min(100, round(stored + boost))`, `pulsing` при effective > 80, число proofs через `Proof.skills?` (аддитивное optional-поле).
+- **Widget** (`widgets/skill-graph`): радиальный SVG-граф (узлы 14–36px по уровню, рёбра бустов — толщина по весу, пунктир для отсутствующих навыков, pulse-кольца с `prefers-reduced-motion`-фолбэком), таблица stored-vs-effective (+буст, +proofs), пикер фрилансера из 200. Вид `#skills` в роутере и навигации.
+- **Smoke:** 91 инвариант (+9: самосогласованность узла, закрытость словаря бустов, pulse ⇔ >80, zero-skill случай, среднее).
+- **TanStack Query — сознательно отложен:** он решает серверное состояние, которого пока нет (детерминированная mock-экосистема); подключается первым же шагом при появлении реального API (контракт уже созрел в `shared/api`).
+
 ## Статус Stage 1 (готово)
 
 - `src/types/index.ts` — канонические доменные типы (Freelancer/Mentor/Client/Parent, Project/Task, Skill Score, Proof, ParentalConsent, BudgetDistribution, imagePrompts-модель).
