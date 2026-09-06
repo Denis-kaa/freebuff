@@ -41,7 +41,9 @@ def main() -> int:
         if teaser.count() != 1:
             print(f"FAIL teaser card count = {teaser.count()}")
             return 1
-        if "эффективный" not in teaser.inner_text():
+        teaser_text = teaser.inner_text().lower()
+        if "эффективный" not in teaser_text:
+            print(f"DEBUG teaser text: {teaser.inner_text()!r}")
             print("FAIL teaser does not explain effective-vs-stored")
             return 1
 
