@@ -20,6 +20,7 @@ function nodePos(i: number, total: number): { x: number; y: number } {
 
 export function SkillGraph({ nodes, name }: { nodes: SkillNode[]; name: string }) {
   const pos = new Map(nodes.map((n, i) => [n.skill, nodePos(i, nodes.length)]));
+  const levelOf = new Map(nodes.map((n) => [n.skill, n.level]));
 
   return (
     <svg
@@ -28,12 +29,21 @@ export function SkillGraph({ nodes, name }: { nodes: SkillNode[]; name: string }
       aria-label={`Граф навыков: ${name}`}
       style={{ width: '100%', maxWidth: 560, display: 'block', margin: '0 auto' }}
     >
-      {/* boost edges: only between skills the freelancer actually has */}
+      <defs>
+        <marker id="boost-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L8,4 L0,8 z" fill="var(--c-accent)" />
+        </marker>
+      </defs>
+
+      {/* boost edges: only between skills the freelancer actually has.
+          Thickness encodes the ACTUAL contribution (weight·level/100),
+          not the rule's max — the picture shows real data, not potential. */}
       {SKILL_BOOSTS.map(({ from, to, weight }) => {
         const a = pos.get(from);
         const b = pos.get(to);
         if (!a || !b) return null;
         const active = nodes.some((n) => n.skill === from && n.level > 0) && nodes.some((n) => n.skill === to && n.level > 0);
+        const contribution = ((levelOf.get(from) ?? 0) / 100) * weight;
         return (
           <line
             key={`${from}->${to}`}
@@ -41,16 +51,17 @@ export function SkillGraph({ nodes, name }: { nodes: SkillNode[]; name: string }
             y1={a.y}
             x2={b.x}
             y2={b.y}
-            stroke="var(--c-border)"
-            strokeWidth={active ? Math.max(1, weight / 2) : 0.6}
+            stroke={active ? 'var(--c-accent)' : 'var(--c-border)'}
+            strokeWidth={active ? 1 + 2 * (contribution / weight) : 0.6}
             strokeDasharray={active ? undefined : '3 5'}
-            opacity={active ? 0.9 : 0.35}
+            markerEnd={active ? 'url(#boost-arrow)' : undefined}
+            opacity={active ? 0.8 : 0.35}
           />
         );
       })}
 
       {/* spokes + nodes */}
-      {nodes.map((n) => {
+      {nodes.map((n, i) => {
         const { x, y } = pos.get(n.skill)!;
         const rr = 14 + (n.effective / 100) * 22; // 14..36
         const fill = n.level === 0 ? 'var(--c-bg-secondary)' : n.pulsing ? 'var(--c-accent)' : 'var(--c-text-primary)';
@@ -58,10 +69,19 @@ export function SkillGraph({ nodes, name }: { nodes: SkillNode[]; name: string }
           <g key={n.skill}>
             <line x1={CX} y1={CY} x2={x} y2={y} stroke="var(--c-border)" strokeWidth={1} opacity={0.6} />
             {n.pulsing && (
-              <circle className="skill-pulse" cx={x} cy={y} r={rr + 6} fill="none" stroke="var(--c-accent)" strokeWidth={2} />
+              <circle
+                className="skill-pulse"
+                style={{ animationDelay: `${(i % 5) * 0.4}s` }}
+                cx={x}
+                cy={y}
+                r={rr + 6}
+                fill="none"
+                stroke="var(--c-accent)"
+                strokeWidth={2}
+              />
             )}
             <circle cx={x} cy={y} r={rr} fill={fill} stroke="var(--c-text-primary)" strokeWidth={1.5} />
-            <text x={x} y={y + 4} textAnchor="middle" className="skill-node-num" fill={n.level === 0 ? 'var(--c-text-secondary)' : '#F4F2EE'}>
+            <text x={x} y={y + 4} textAnchor="middle" className="skill-node-num" fill={n.level === 0 ? 'var(--c-text-secondary)' : 'var(--c-bg-primary)'}>
               {n.effective}
             </text>
             <text x={x} y={y + rr + 16} textAnchor="middle" className="skill-node-label">
