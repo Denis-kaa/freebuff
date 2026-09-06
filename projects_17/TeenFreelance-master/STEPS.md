@@ -142,6 +142,13 @@
 - Скрипт снимков: принудительный instant-scroll (CSS smooth-scroll ловил кадры «на полпути» — вторая причина пустоватых 02/03). После фикса: edge-variance L/R ≈ 0–4px на всех 11 снимках, audit exit 0, tsc clean.
 - **Урок:** CSS-шортхенд, повторяющий свойство позже в файле, — тихий убийца padding'ов (тот же класс ошибки, что import-vs-define у классов); при ревью «пустых» зон сначала сверять DOM в точке скролла, потом верить пиксельной метрике.
 
+### Шаг 14. Nightly layout-аудит на сервере (cron)
+- **Wrapper** `scripts/nightly_audit.sh` (в репо): guard на живость :8022 (иначе FAIL и выход без шума), прогон `layout_audit.py` с таймстамп-отчётом, PASS/FAIL-строки в `/var/log/freebuff-layout-audit/nightly.log`, ротация отчётов (keep 14).
+- **Почему логи вне git-дерева** (`/var/log/freebuff-layout-audit/`): untracked-файлы внутри `/opt/freebuff` мешают fast-forward auto_deploy; урок auto_deploy (+x) учтён — вызов через `/bin/bash`, exec-bit не нужен.
+- **Cron:** `17 4 * * * /bin/bash …/nightly_audit.sh # freestart-layout-audit` — установка идемпотентна (grep -v маркера перед добавлением); рядом с существующим `# freebuff-autodeploy` (каждые 5 мин).
+- **Проверка:** ручной прогон wrapper'а — exit 0, `PASS audit ok`, отчёт `report-2026-09-06_100719.log` создан. FAIL-ветка (сайт лежит / дефекты) верифицирована инспекцией, живой nginx ради проверки не гасился.
+- **Почему 04:17:** вне часов пик и не совпадает с круглыми часами (меньше соседнего шума cron); autodeploy каждые 5 мин продолжит синк без конфликтов — audit только читает :8022 и пишет в /var/log.
+
 ## Статус
 
 | Что | Где | Состояние |
