@@ -1,4 +1,9 @@
 /* PrintCalc Pro — минимальные стили Phase 1 (читаемость важнее красоты). */
+/* Пресет «Печатникъ» (2026-09-08, из макета HTML/печатник.html): подключает
+   шрифты макета. Сам пресет (палитра) — отдельным блоком в конце файла,
+   активация классом body.pecatnik. Существующие правила и логику не меняет. */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+
 :root {
   --border: #d0d4da;
   --muted: #667;
@@ -97,3 +102,67 @@ button.icon { padding: 2px 8px; }
 tr.archived td { opacity: 0.55; }
 #dynamic-sections .calc-field label { min-width: 180px; }
 textarea { font-family: inherit; padding: 6px; border: 1px solid var(--border); border-radius: 4px; }
+
+/* ============================================================
+   ПРЕСЕТ «ПЕЧАТНИКЪ» — тёмная тема из макета Дениса.
+   РЕФЕРЕНС (утверждён 2026-09-08): HTML/печатник_1.html.
+   Дополнение — HTML/печатник.html. Отдельный пресет: на текущую
+   светлую тему не влияет, логику/разметку не трогает.
+   Активация: добавить класс "pecatnik" на <body>.
+   ============================================================ */
+body.pecatnik {
+  /* Палитра печатник_1.html 1:1 */
+  --bg: #18181b;
+  --bg-raised: #212124;
+  --bg-card: #26262a;
+  --bg-card-hover: #2c2c31;
+  --wood: #c9a876;
+  --wood-hover: #d4b483;
+  --wood-dim: #8a7457;
+  --amber: #ffb84d;
+  --neon: #ffb84d;
+  --amber-dim: #6b5233;
+  --text: #f0f0ee;
+  --text-dim: #a3a3a8;
+  --text-faint: #6b6b70;
+  --line: #38383d;
+  --good: #7fd88f;
+  --bad: #ff6e6e;
+
+  /* Маппинг на переменные текущего приложения */
+  --border: var(--line);
+  --muted: var(--text-dim);
+  --accent: var(--wood);
+  --ok: var(--good);
+  --warn: var(--amber);
+
+  /* Шрифты макета: Fraunces — заголовки, Inter — интерфейс */
+  --font-display: "Fraunces", Georgia, serif;
+  --font-ui: "Inter", system-ui, sans-serif;
+
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ui);
+}
+
+/* Переопределение правил с жёстко заданными цветами (пресет не трогает
+   сами правила — только перекрывает их в рамках темы). */
+body.pecatnik h1, body.pecatnik h2 { font-family: var(--font-display); color: var(--wood); }
+body.pecatnik nav a { color: var(--amber); }
+body.pecatnik .panel { border-color: var(--line); background: var(--bg-card); }
+body.pecatnik button, body.pecatnik .btn {
+  background: var(--bg-raised); border-color: var(--line); color: var(--text);
+}
+body.pecatnik button.primary { background: var(--wood); border-color: var(--wood); color: #1c1610; }
+body.pecatnik button.danger { color: var(--bad); }
+body.pecatnik input, body.pecatnik select, body.pecatnik textarea {
+  background: var(--bg-raised); border-color: var(--line); color: var(--text);
+}
+body.pecatnik th { background: var(--bg-raised); }
+body.pecatnik th, body.pecatnik td { border-color: var(--line); }
+body.pecatnik .total { color: var(--amber); }
+body.pecatnik .muted { color: var(--text-dim); }
+body.pecatnik .error { color: var(--bad); }
+body.pecatnik .notice { color: var(--good); }
+body.pecatnik .calc-result { background: rgba(127, 216, 143, 0.08); border-color: var(--good); }
+body.pecatnik dialog { background: var(--bg-card); border-color: var(--line); color: var(--text); }
