@@ -44,6 +44,7 @@ async function loadOrders() {
     tr.innerHTML =
       `<td>${order.id}</td>` +
       `<td>${escapeHtml(order.created_at.replace("T", " ").slice(0, 16))}</td>` +
+      `<td>${escapeHtml(order.client_name || "—")}</td>` +
       `<td>${order.items_count}</td>` +
       `<td class="num">${money(order.total)}</td>` +
       `<td>${escapeHtml(order.payment_method)}</td>` +

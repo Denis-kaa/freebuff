@@ -244,19 +244,11 @@ def test_api_client_lifecycle(api: ASGITestClient) -> None:
 
 
 def test_api_material_lifecycle(api: ASGITestClient) -> None:
-    created = api.post(
-        "/api/materials",
-        json={
-            "name": "Баннер 440г",
-            "aliases": ["Баннер 440"],
-            "consumption_mode": "ROLL_NESTING",
-            "roll_width": 1000,
-            "purchase_cost": 80,
-        },
-    )
-    assert created.status_code == 201
-    material = created.json()
-    assert material["purchase_unit"] == "m2"  # дефолт = base_unit
+    # сев при старте уже создал канонические материалы — работаем с ними
+    seeded = api.get("/api/materials").json()["materials"]
+    assert len(seeded) >= 10
+    material = next(m for m in seeded if m["name"] == "Баннер 440г")
+    assert material["roll_width"] == 1000.0
 
     # lookup по алиасу
     looked = api.get("/api/materials/lookup", params={"name": "Баннер 440"})
@@ -266,13 +258,21 @@ def test_api_material_lifecycle(api: ASGITestClient) -> None:
     dup = api.post("/api/materials", json={"name": "Баннер 440г"})
     assert dup.status_code == 400
 
+    # создание нового — 201
+    created = api.post(
+        "/api/materials",
+        json={"name": "Плёнка 800мм", "consumption_mode": "ROLL_NESTING", "roll_width": 800},
+    )
+    assert created.status_code == 201
+
     # патч цены
     patched = api.patch(f"/api/materials/{material['id']}", json={"purchase_cost": 85})
     assert patched.status_code == 200 and patched.json()["purchase_cost"] == 85
 
-    # список
+    # список с active_only
     listed = api.get("/api/materials", params={"active_only": True})
-    assert [m["id"] for m in listed.json()["materials"]] == [material["id"]]
+    ids = [m["id"] for m in listed.json()["materials"]]
+    assert material["id"] in ids and created.json()["id"] in ids
 
     # 404
     assert api.get("/api/materials/999").status_code == 404
@@ -298,3 +298,100 @@ def test_api_order_client_binding(api: ASGITestClient) -> None:
 
     missing = api.patch(f"/api/orders/{order_id}/client", json={"client_id": 999})
     assert missing.status_code == 400
+
+
+# ---------- заказ с клиентом (Этап 1: выбор клиента на главном экране) ----------
+
+
+def test_create_order_with_client(conn: sqlite3.Connection) -> None:
+    client = store.create_client(conn, name="Иван")
+    order = store.create_order(
+        conn,
+        status="новый",
+        payment_method="наличные",
+        items=[{"kind": "manual", "name": "Визитки", "price": 900, "qty": 1}],
+        client_id=client["id"],
+    )
+    assert order["client_id"] == client["id"]
+    assert order["client_name"] == "Иван"
+
+
+def test_create_order_unknown_client_rejected(conn: sqlite3.Connection) -> None:
+    with pytest.raises(store.StoreError):
+        store.create_order(
+            conn,
+            status="новый",
+            payment_method="наличные",
+            items=[{"kind": "manual", "name": "Визитки", "price": 900, "qty": 1}],
+            client_id=999,
+        )
+
+
+def test_order_without_client_has_null_name(conn: sqlite3.Connection) -> None:
+    order = store.create_order(
+        conn,
+        status="новый",
+        payment_method="наличные",
+        items=[{"kind": "manual", "name": "Визитки", "price": 900, "qty": 1}],
+    )
+    assert order["client_id"] is None
+    assert order["client_name"] is None
+
+
+def test_assign_then_create_keeps_binding(conn: sqlite3.Connection) -> None:
+    """Привязка PATCH-ом и привязка при создании не конфликтуют."""
+    client = store.create_client(conn, name="Анна")
+    order = store.create_order(
+        conn,
+        status="новый",
+        payment_method="карта",
+        items=[{"kind": "manual", "name": "Печать", "price": 50, "qty": 2}],
+    )
+    updated = store.assign_order_client(conn, order["id"], client["id"])
+    assert updated["client_id"] == client["id"]
+
+
+# ---------- сид канонических материалов ----------
+
+
+def test_seed_materials_idempotent_and_content(conn: sqlite3.Connection) -> None:
+    first = store.seed_materials(conn)
+    assert first["created"] == 10  # 4 wide + 6 tablichki
+    assert first["skipped"] == 0
+
+    second = store.seed_materials(conn)
+    assert second["created"] == 0
+    assert second["skipped"] == 10
+
+    # канонические ролики Wide получили ширину рулона
+    banner = store.find_material_by_name(conn, "Баннер 440г")
+    assert banner["consumption_mode"] == "ROLL_NESTING"
+    assert banner["roll_width"] == 1000.0
+    film = store.find_material_by_name(conn, "Самоклейка")  # по алиасу
+    assert film["name"] == "Плёнка самоклеящаяся"
+    assert film["roll_width"] == 1520.0
+
+
+def test_seed_respects_owner_edits(conn: sqlite3.Connection) -> None:
+    """Сид не перетирает правки владельца (куп. цена уже изменена)."""
+    store.seed_materials(conn)
+    material = store.find_material_by_name(conn, "Баннер 440г")
+    store.update_material(conn, material["id"], fields={"purchase_cost": 90.0})
+    again = store.seed_materials(conn)
+    assert again["created"] == 0
+    assert store.get_material(conn, material["id"])["purchase_cost"] == 90.0
+
+
+def test_app_startup_seeds_materials(tmp_path: Path) -> None:
+    """create_app выполняет сев материалов автоматически (идемпотентно)."""
+    from printcalc_web import create_app
+
+    db = tmp_path / "seed.db"
+    create_app(db_path=db)  # первый запуск — сев
+    create_app(db_path=db)  # второй — без дублей
+    conn = connect(db)
+    try:
+        materials = store.list_materials(conn)
+        assert len(materials) == 10
+    finally:
+        conn.close()

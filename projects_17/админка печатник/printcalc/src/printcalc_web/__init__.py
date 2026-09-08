@@ -21,7 +21,8 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from printcalc_web import api, views
-from printcalc_web.store import StoreError
+from printcalc_web.db import connect
+from printcalc_web.store import StoreError, seed_materials, seed_sections
 
 __version__ = "0.1.0"
 
@@ -32,6 +33,18 @@ def create_app(db_path: Path | None = None) -> FastAPI:
     """Фабрика приложения. db_path — путь к SQLite (None → default_db_path)."""
     app = FastAPI(title="PrintCalc Pro — приём заказа (Phase 1)")
     app.state.db_path = db_path
+
+    # Идемпотентные севы при старте: разделы экрана + канонические материалы.
+    # Ошибки сева не должны ронять приложение (БД может быть read-only в миграции).
+    try:
+        conn = connect(db_path)
+        try:
+            seed_sections(conn)
+            seed_materials(conn)
+        finally:
+            conn.close()
+    except Exception:  # noqa: BLE001 — сев не критичен для старта
+        pass
 
     @app.exception_handler(StoreError)
     async def _store_error_handler(_request: Request, exc: StoreError) -> JSONResponse:

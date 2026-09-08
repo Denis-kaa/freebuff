@@ -102,6 +102,7 @@ class OrderIn(BaseModel):
     items: list[OrderItemIn] = Field(min_length=1)
     wishes: str = ""
     section_values: dict[str, str | None] = Field(default_factory=dict)
+    client_id: int | None = None
 
 
 class OrderPatch(BaseModel):
@@ -301,6 +302,7 @@ def create_order(
         items=[item.model_dump() for item in payload.items],
         wishes=payload.wishes,
         section_values=payload.section_values,
+        client_id=payload.client_id,
     )
     return order
 

@@ -384,6 +384,7 @@ def create_order(
     items: list[Mapping[str, Any]],
     wishes: str = "",
     section_values: Mapping[str, str | None] | None = None,
+    client_id: int | None = None,
 ) -> dict[str, Any]:
     """Создаёт заказ: резолв позиций, сумма, счётчики использования."""
     if status not in ORDER_STATUSES:
@@ -394,15 +395,17 @@ def create_order(
         raise StoreError(f"недопустимый способ оплаты: '{payment_method}'")
     if not items:
         raise StoreError("заказ без позиций сохранить нельзя")
+    if client_id is not None and get_client(conn, client_id) is None:
+        raise StoreError(f"клиент {client_id} не найден")
 
     now = utc_now()
     resolved = [_resolve_item(conn, raw, index) for index, raw in enumerate(items)]
     total = round(sum(item["price"] * item["qty"] for item in resolved), 2)
 
     cursor = conn.execute(
-        "INSERT INTO orders (status, payment_method, total, created_at, updated_at)"
-        " VALUES (?, ?, ?, ?, ?)",
-        (status, payment_method, total, now, now),
+        "INSERT INTO orders (status, payment_method, total, client_id, created_at, updated_at)"
+        " VALUES (?, ?, ?, ?, ?, ?)",
+        (status, payment_method, total, client_id, now, now),
     )
     lastrowid = cursor.lastrowid
     order_id = int(lastrowid if lastrowid is not None else 0)
@@ -433,7 +436,7 @@ def create_order(
 
 
 def _order_row_to_dict(
-    row: sqlite3.Row, item_rows: list[sqlite3.Row]
+    conn: sqlite3.Connection, row: sqlite3.Row, item_rows: list[sqlite3.Row]
 ) -> dict[str, Any]:
     """Собирает словарь заказа; item_rows — уже отсортированные позиции."""
     order: dict[str, Any] = {
@@ -445,6 +448,7 @@ def _order_row_to_dict(
         "updated_at": row["updated_at"],
         "wishes": row["wishes"] if "wishes" in row.keys() else "",
         "client_id": row["client_id"] if "client_id" in row.keys() else None,
+        "client_name": _client_name_for_order(conn, row),
         "items": [
             {
                 "kind": item["kind"],
@@ -485,9 +489,19 @@ def list_orders(
             "total": row["total"],
             "created_at": row["created_at"],
             "items_count": row["items_count"],
+            "client_id": row["client_id"] if "client_id" in row.keys() else None,
+            "client_name": _client_name_for_order(conn, row),
         }
         for row in conn.execute(sql, params)
     ]
+
+
+def _client_name_for_order(conn: sqlite3.Connection, row: sqlite3.Row) -> str | None:
+    """Имя клиента заказа (для списков без JOIN на стороне вызывающего кода)."""
+    if "client_id" not in row.keys() or row["client_id"] is None:
+        return None
+    client = get_client(conn, int(row["client_id"]))
+    return client["name"] if client else None
 
 
 def get_order(conn: sqlite3.Connection, order_id: int) -> dict[str, Any]:
@@ -498,7 +512,7 @@ def get_order(conn: sqlite3.Connection, order_id: int) -> dict[str, Any]:
     item_rows = conn.execute(
         "SELECT * FROM order_items WHERE order_id = ? ORDER BY position", (order_id,)
     ).fetchall()
-    return _order_row_to_dict(row, item_rows)
+    return _order_row_to_dict(conn, row, item_rows)
 
 
 def update_order(
@@ -1135,3 +1149,80 @@ def update_material(
     result = get_material(conn, material_id)
     assert result is not None
     return result
+
+
+# ---------- сид канонических материалов (Этап 1+: деплой) ----------
+
+#: Канонические материалы Wide из frozen-конфига (calculators/wide/config.py):
+#: только закупочные цены НЕ известны из legacy (там sell-пары) — цена закупки
+#: UNKNOWN, поэтому 0 и помечается владельцем при первом заполнении реестра.
+CANONICAL_WIDE_MATERIALS: tuple[dict[str, Any], ...] = (
+    {
+        "name": "Баннер 440г",
+        "aliases": ["Баннер 440", "Баннер (обычный)"],
+        "category": "wide",
+        "consumption_mode": "ROLL_NESTING",
+        "base_unit": "m2",
+        "purchase_unit": "m2",
+        "price_unit": "m2",
+        "roll_width": 1000.0,
+    },
+    {
+        "name": "Баннер 510г",
+        "aliases": ["Баннер 510"],
+        "category": "wide",
+        "consumption_mode": "ROLL_NESTING",
+        "base_unit": "m2",
+        "purchase_unit": "m2",
+        "price_unit": "m2",
+        "roll_width": 1000.0,
+    },
+    {
+        "name": "Плёнка самоклеящаяся",
+        "aliases": ["Самоклеящаяся", "Самоклейка", "Плёнка"],
+        "category": "wide",
+        "consumption_mode": "ROLL_NESTING",
+        "base_unit": "m2",
+        "purchase_unit": "m2",
+        "price_unit": "m2",
+        "roll_width": 1520.0,
+    },
+    {
+        "name": "Холст",
+        "aliases": ["Холст печатный"],
+        "category": "wide",
+        "consumption_mode": "ROLL_NESTING",
+        "base_unit": "m2",
+        "purchase_unit": "m2",
+        "price_unit": "m2",
+        "roll_width": 1100.0,
+    },
+)
+
+#: Канонические материалы Табличек (листовые заготовки — SHEET-режим).
+CANONICAL_TABLICHKI_MATERIALS: tuple[dict[str, Any], ...] = (
+    {"name": "ПВХ 3 мм", "aliases": ["ПВХ"], "category": "tablichki", "consumption_mode": "SHEET", "base_unit": "m2"},
+    {"name": "ПВХ 5 мм", "aliases": [], "category": "tablichki", "consumption_mode": "SHEET", "base_unit": "m2"},
+    {"name": "Акрил 3 мм", "aliases": ["Оргстекло 3 мм"], "category": "tablichki", "consumption_mode": "SHEET", "base_unit": "m2"},
+    {"name": "Акрил 5 мм", "aliases": [], "category": "tablichki", "consumption_mode": "SHEET", "base_unit": "m2"},
+    {"name": "Композит 3 мм", "aliases": [], "category": "tablichki", "consumption_mode": "SHEET", "base_unit": "m2"},
+    {"name": "Композит 5 мм", "aliases": [], "category": "tablichki", "consumption_mode": "SHEET", "base_unit": "m2"},
+)
+
+
+def seed_materials(conn: sqlite3.Connection) -> dict[str, int]:
+    """Идемпотентный сид канонических материалов (дух seed_sections).
+
+    Ключ идемпотентности — точное имя материала. Существующие не изменяются
+    (владелец мог поправить закупочную цену). Возвращает счётчики.
+    """
+    created = 0
+    skipped = 0
+    for fields in CANONICAL_WIDE_MATERIALS + CANONICAL_TABLICHKI_MATERIALS:
+        if find_material_by_name(conn, fields["name"]) is not None:
+            skipped += 1
+            continue
+        create_material(conn, fields=fields)
+        created += 1
+    conn.commit()
+    return {"created": created, "skipped": skipped}

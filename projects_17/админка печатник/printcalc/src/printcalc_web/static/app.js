@@ -349,12 +349,26 @@ function collectSectionValues() {
   return values;
 }
 
+/* ---------- клиент заказа (Этап 1) ---------- */
+
+async function loadClients() {
+  const data = await apiFetch("/clients");
+  const select = $("#order-client");
+  const current = select.value;
+  select.innerHTML =
+    '<option value="">— без клиента —</option>' +
+    data.clients.map((c) => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join("");
+  if (current) select.value = current;
+}
+
 /* ---------- сохранение заказа («Добавить») ---------- */
 
 async function loadPaymentMethods() {
   const data = await apiFetch("/settings/payment-methods");
   $("#payment-method").innerHTML = data.methods.map((m) => `<option>${escapeHtml(m)}</option>`).join("");
 }
+
+$("#btn-client-new").addEventListener("click", () => { window.location.href = "/clients"; });
 
 $("#btn-save").addEventListener("click", async () => {
   $("#draft-error").textContent = "";
@@ -377,6 +391,7 @@ $("#btn-save").addEventListener("click", async () => {
     })),
     wishes: $("#order-wishes").value,
     section_values: collectSectionValues(),
+    client_id: $("#order-client").value ? Number($("#order-client").value) : null,
   };
   try {
     const order = await apiFetch("/orders", { method: "POST", body: JSON.stringify(body) });
@@ -391,3 +406,4 @@ $("#btn-save").addEventListener("click", async () => {
 loadPaymentMethods();
 renderDraft();
 loadOrderSections();
+loadClients().catch(() => {}); // сев/список клиентов не блокирует приём заказа
