@@ -1,0 +1,1013 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Печатникъ — Система управления</title>
+    
+    <!-- Подключаем Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Настройка цветов бренда -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            bg: '#18181b',
+                            raised: '#212124',
+                            card: '#26262a',
+                            wood: '#c9a876',
+                            woodHover: '#d4b483',
+                            neon: '#ffb84d',
+                            text: '#f0f0ee',
+                            dim: '#a3a3a8',
+                            faint: '#6b6b70',
+                            line: '#38383d'
+                        }
+                    },
+                    fontFamily: {
+                        display: ['Georgia', 'serif'], // Имитация Fraunces
+                        sans: ['Inter', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Подключаем React и ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- Babel для компиляции JSX прямо в браузере -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Lucide Icons (глобальная версия) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        body { background-color: #18181b; color: #f0f0ee; }
+        /* Кастомный скроллбар */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #212124; }
+        ::-webkit-scrollbar-thumb { background: #38383d; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #c9a876; }
+        
+        .animate-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // --- КОМПОНЕНТ ИКОНОК (Адаптер для Lucide Global) ---
+        const Icon = ({ name, size = 20, className = "" }) => {
+            useEffect(() => {
+                if (window.lucide) window.lucide.createIcons();
+            });
+            return <i data-lucide={name} width={size} height={size} className={className}></i>;
+        };
+
+        // --- MOCK DATA & CONSTANTS ---
+        const STATUS_FLOW = [
+            { id: 'new', label: 'Новый', color: 'bg-blue-500' },
+            { id: 'accepted', label: 'Принят', color: 'bg-indigo-500' },
+            { id: 'payment_pending', label: 'Ожидает оплаты', color: 'bg-orange-500' },
+            { id: 'preparation', label: 'Подготовка', color: 'bg-yellow-500' },
+            { id: 'production', label: 'Производство', color: 'bg-purple-500' },
+            { id: 'qc', label: 'Контроль качества', color: 'bg-pink-500' },
+            { id: 'ready', label: 'Готов', color: 'bg-green-500' },
+            { id: 'closed', label: 'Закрыт', color: 'bg-gray-500' },
+        ];
+
+        const INITIAL_CLIENTS = [
+            { id: 1, name: "Иванова Е. С.", type: "Физ. лицо", phone: "+7 (900) 123-45-67", email: "ivanova@mail.ru", lastOrder: "10.09.2023", totalSpent: 15400, debt: 0, status: "active" },
+            { id: 2, name: "ООО «СеверСтрой»", type: "Юр. лицо", phone: "+7 (3462) 22-14-56", email: "info@severstroy.ru", lastOrder: "08.09.2023", totalSpent: 124500, debt: 5000, status: "vip" },
+            { id: 3, name: "Смирнов А. П.", type: "Физ. лицо", phone: "+7 (900) 555-22-33", email: "smirnov@gmail.com", lastOrder: "01.09.2023", totalSpent: 3200, debt: 0, status: "active" },
+            { id: 4, name: "ИП Дроздов В. С.", type: "ИП", phone: "+7 (922) 600-44-11", email: "drozdov@bk.ru", lastOrder: "12.09.2023", totalSpent: 45000, debt: 0, status: "active" },
+        ];
+
+        const INITIAL_ORDERS = [
+            { 
+                id: 1048, clientId: 1, clientName: "Иванова Е. С.", date: "08.09.2023", sum: 4200, paid: 2000, 
+                status: "production", items: [{name: "Баннер 2x1м", qty: 1, price: 3800}, {name: "Люверсы", qty: 1, price: 400}],
+                history: ["Создан заказ", "Частичная оплата"]
+            },
+            { 
+                id: 1047, clientId: 2, clientName: "ООО «СеверСтрой»", date: "08.09.2023", sum: 1800, paid: 1800, 
+                status: "ready", items: [{name: "Визитки 200шт", qty: 1, price: 1800}],
+                history: ["Создан заказ", "Оплачен полностью", "Передан в производство", "Готов к выдаче"]
+            },
+            { 
+                id: 1046, clientId: 3, clientName: "Смирнов А. П.", date: "07.09.2023", sum: 450, paid: 450, 
+                status: "closed", items: [{name: "Фото на паспорт", qty: 1, price: 200}, {name: "Ламинация А4", qty: 5, price: 50}],
+                history: ["Создан заказ", "Оплачен", "Выполнен", "Выдан"]
+            },
+        ];
+
+        const MATERIALS = [
+            { id: 1, name: "Баннерная ткань 440г/м²", unit: "м²", stock: 12.5, reserved: 8.0, min: 10 },
+            { id: 2, name: "Бумага для визиток 300г", unit: "пачка", stock: 5, reserved: 0, min: 2 },
+            { id: 3, name: "Чернила сольвентные (Cyan)", unit: "л", stock: 0.5, reserved: 0.2, min: 1 },
+            { id: 4, name: "Люверсы металлические", unit: "шт", stock: 500, reserved: 100, min: 200 },
+        ];
+
+        // --- UI COMPONENTS ---
+        const Button = ({ children, variant = 'primary', size = 'md', className = '', onClick, disabled }) => {
+            const base = "inline-flex items-center justify-center font-medium transition-colors rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-brand-bg";
+            const variants = {
+                primary: "bg-brand-wood text-brand-bg hover:bg-brand-woodHover focus:ring-brand-wood",
+                secondary: "bg-brand-card text-brand-text border border-brand-line hover:bg-brand-line focus:ring-brand-line",
+                ghost: "text-brand-dim hover:text-brand-text hover:bg-brand-card",
+                danger: "bg-red-900/20 text-red-400 border border-red-900/50 hover:bg-red-900/40",
+                neon: "bg-transparent text-brand-neon border border-brand-neon shadow-[0_0_10px_rgba(255,184,77,0.2)] hover:bg-brand-neon/10"
+            };
+            const sizes = { sm: "h-8 px-3 text-xs", md: "h-10 px-4 text-sm", lg: "h-12 px-6 text-base" };
+            
+            return (
+                <button 
+                    onClick={onClick} 
+                    disabled={disabled}
+                    className={`${base} ${variants[variant]} ${sizes[size]} ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                    {children}
+                </button>
+            );
+        };
+
+        const Badge = ({ status }) => {
+            const config = STATUS_FLOW.find(s => s.id === status) || { label: status, color: 'bg-gray-500' };
+            // Преобразуем bg-color в text-color и bg-opacity для темной темы
+            const colorClass = config.color.replace('bg-', 'text-').replace('500', '400');
+            const bgClass = config.color.replace('bg-', 'bg-').replace('500', '500/10');
+            const borderClass = config.color.replace('bg-', 'border-').replace('500', '500/20');
+
+            return (
+                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${bgClass} ${colorClass} ${borderClass}`}>
+                    {config.label}
+                </span>
+            );
+        };
+
+        const Input = ({ label, ...props }) => (
+            <div className="mb-4">
+                {label && <label className="block text-xs text-brand-dim mb-1.5 uppercase tracking-wider">{label}</label>}
+                <input 
+                    className="w-full bg-brand-raised border border-brand-line rounded-md px-3 py-2 text-brand-text placeholder-brand-faint focus:outline-none focus:border-brand-wood focus:ring-1 focus:ring-brand-wood transition-all"
+                    {...props}
+                />
+            </div>
+        );
+
+        const Card = ({ children, className = '', title, action }) => (
+            <div className={`bg-brand-card border border-brand-line rounded-lg overflow-hidden ${className}`}>
+                {(title || action) && (
+                    <div className="px-5 py-4 border-b border-brand-line flex justify-between items-center bg-brand-raised">
+                        {title && <h3 className="font-display text-lg font-semibold text-brand-text">{title}</h3>}
+                        {action && <div>{action}</div>}
+                    </div>
+                )}
+                <div className="p-5">{children}</div>
+            </div>
+        );
+
+        // --- MAIN APP LOGIC ---
+        const App = () => {
+            const [currentView, setCurrentView] = useState('dashboard');
+            const [selectedId, setSelectedId] = useState(null);
+            const [clients, setClients] = useState(INITIAL_CLIENTS);
+            const [orders, setOrders] = useState(INITIAL_ORDERS);
+            const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+            const navigateTo = (view, id = null) => {
+                setCurrentView(view);
+                if (id) setSelectedId(id);
+            };
+
+            const handleCreateOrderFromEstimate = (estimateData) => {
+                const newOrder = {
+                    id: Math.floor(Math.random() * 1000) + 1050,
+                    clientId: estimateData.clientId,
+                    clientName: clients.find(c => c.id === estimateData.clientId)?.name || "Unknown",
+                    date: new Date().toLocaleDateString('ru-RU'),
+                    sum: estimateData.total,
+                    paid: 0,
+                    status: 'new',
+                    items: estimateData.items,
+                    history: ["Создан из сметы"]
+                };
+                setOrders([newOrder, ...orders]);
+                navigateTo('orders', newOrder.id);
+            };
+
+            const updateOrderStatus = (orderId, newStatus) => {
+                setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus, history: [...o.history, `Статус изменен на: ${STATUS_FLOW.find(s=>s.id===newStatus).label}`] } : o));
+            };
+
+            // Рендер контента
+            const renderContent = () => {
+                switch (currentView) {
+                    case 'dashboard': return <DashboardView orders={orders} materials={MATERIALS} onNavigate={navigateTo} />;
+                    case 'clients': return <ClientsView clients={clients} onSelect={(id) => navigateTo('client_detail', id)} />;
+                    case 'client_detail': return <ClientDetailView client={clients.find(c => c.id === selectedId)} orders={orders.filter(o => o.clientId === selectedId)} onRepeatOrder={(clientId) => navigateTo('inquiry', clientId)} />;
+                    case 'inquiry': return <InquiryView clients={clients} onStartEstimate={(data) => navigateTo('calculator', data)} />;
+                    case 'calculator': return <CalculatorView initialData={selectedId ? { clientId: selectedId } : {}} onComplete={(data) => navigateTo('estimate', data)} />;
+                    case 'estimate': return <EstimateView data={selectedId} onSave={() => {}} onCreateOrder={handleCreateOrderFromEstimate} />;
+                    case 'orders': return <OrdersView orders={orders} onSelect={(id) => navigateTo('order_detail', id)} />;
+                    case 'order_detail': return <OrderDetailView order={orders.find(o => o.id === selectedId)} onUpdateStatus={updateOrderStatus} />;
+                    case 'warehouse': return <WarehouseView materials={MATERIALS} />;
+                    default: return <div className="p-10 text-center text-brand-faint">Раздел в разработке</div>;
+                }
+            };
+
+            return (
+                <div className="flex h-screen bg-brand-bg text-brand-text font-sans selection:bg-brand-wood selection:text-brand-bg">
+                    {/* Sidebar */}
+                    <aside className={`${isSidebarOpen ? 'w-64' : 'w-20'} flex-shrink-0 bg-brand-raised border-r border-brand-line transition-all duration-300 flex flex-col z-20`}>
+                        <div className="h-16 flex items-center px-6 border-b border-brand-line">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full border-2 border-brand-wood flex items-center justify-center text-brand-wood">
+                                    <Icon name="printer" size={16} />
+                                </div>
+                                {isSidebarOpen && <span className="font-display text-xl font-bold tracking-wide text-brand-text">Печатникъ</span>}
+                            </div>
+                        </div>
+
+                        <nav className="flex-1 py-6 px-3 space-y-1 overflow-y-auto custom-scrollbar">
+                            <NavItem icon="layout-dashboard" label="Главная" active={currentView === 'dashboard'} collapsed={!isSidebarOpen} onClick={() => navigateTo('dashboard')} />
+                            <NavItem icon="users" label="Клиенты" active={currentView.includes('client')} collapsed={!isSidebarOpen} onClick={() => navigateTo('clients')} />
+                            <NavItem icon="file-text" label="Обращения" active={currentView === 'inquiry'} collapsed={!isSidebarOpen} onClick={() => navigateTo('inquiry')} />
+                            <NavItem icon="calculator" label="Калькулятор" active={currentView === 'calculator'} collapsed={!isSidebarOpen} onClick={() => navigateTo('calculator')} />
+                            <NavItem icon="shopping-cart" label="Сметы" active={currentView === 'estimate'} collapsed={!isSidebarOpen} onClick={() => {}} />
+                            <NavItem icon="package" label="Заказы" active={currentView.includes('order')} collapsed={!isSidebarOpen} onClick={() => navigateTo('orders')} />
+                            <NavItem icon="factory" label="Производство" active={false} collapsed={!isSidebarOpen} onClick={() => {}} />
+                            <NavItem icon="credit-card" label="Оплаты" active={false} collapsed={!isSidebarOpen} onClick={() => {}} />
+                            <NavItem icon="folder-open" label="Склад" active={currentView === 'warehouse'} collapsed={!isSidebarOpen} onClick={() => navigateTo('warehouse')} />
+                            <NavItem icon="bot" label="AI Помощник" active={false} collapsed={!isSidebarOpen} highlight onClick={() => {}} />
+                        </nav>
+
+                        <div className="p-4 border-t border-brand-line">
+                           <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="w-full flex items-center justify-center p-2 rounded-md hover:bg-brand-card text-brand-faint">
+                             {isSidebarOpen ? <Icon name="arrow-left" size={18} /> : <Icon name="menu" size={18} />}
+                           </button>
+                        </div>
+                    </aside>
+
+                    {/* Main Content */}
+                    <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                        <header className="h-16 bg-brand-raised/80 backdrop-blur-md border-b border-brand-line flex items-center justify-between px-6 z-10">
+                            <div className="flex items-center flex-1 max-w-xl">
+                                <div className="relative w-full group">
+                                    <Icon name="search" className="absolute left-3 top-1/2 -translate-y-1/2 text-brand-faint group-focus-within:text-brand-wood transition-colors" size={18} />
+                                    <input 
+                                        type="text" 
+                                        placeholder="Поиск заказов, клиентов, материалов..." 
+                                        className="w-full bg-brand-raised border border-brand-line rounded-full pl-10 pr-4 py-2 text-sm text-brand-text focus:outline-none focus:border-brand-wood focus:ring-1 focus:ring-brand-wood transition-all"
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-4 ml-4">
+                                <button className="relative p-2 text-brand-faint hover:text-brand-text transition-colors">
+                                    <Icon name="bell" size={20} />
+                                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                                </button>
+                                <div className="h-8 w-px bg-brand-line"></div>
+                                <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
+                                    <div className="text-right hidden sm:block">
+                                        <div className="text-sm font-medium text-brand-text">Денис С.</div>
+                                        <div className="text-xs text-brand-faint">Администратор</div>
+                                    </div>
+                                    <div className="w-9 h-9 rounded-full bg-brand-wood flex items-center justify-center text-brand-bg font-bold text-sm">ДС</div>
+                                </div>
+                            </div>
+                        </header>
+
+                        <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+                            <div className="max-w-7xl mx-auto animate-in fade-in duration-300">
+                                {renderContent()}
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            );
+        };
+
+        // --- SUB-VIEWS ---
+        const NavItem = ({ icon, label, active, collapsed, onClick, highlight }) => {
+            return (
+                <button 
+                    onClick={onClick}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200 group relative
+                        ${active 
+                          ? 'bg-brand-card text-brand-wood border-l-2 border-brand-wood' 
+                          : 'text-brand-dim hover:bg-brand-raised hover:text-brand-text border-l-2 border-transparent'
+                        }
+                        ${highlight ? 'text-brand-neon hover:text-brand-neon' : ''}
+                    `}
+                >
+                    <span className={`${active ? 'text-brand-wood' : highlight ? 'text-brand-neon' : 'text-brand-faint group-hover:text-brand-text'}`}>
+                        <Icon name={icon} size={20} />
+                    </span>
+                    {!collapsed && <span className="text-sm font-medium whitespace-nowrap">{label}</span>}
+                    {collapsed && (
+                        <div className="absolute left-full ml-2 px-2 py-1 bg-brand-card text-brand-text text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50 border border-brand-line shadow-xl">
+                            {label}
+                        </div>
+                    )}
+                </button>
+            );
+        };
+
+        const DashboardView = ({ orders, materials, onNavigate }) => {
+            const stats = [
+                { label: "В работе", value: orders.filter(o => o.status === 'production').length, sub: "заказов", color: "border-l-brand-wood" },
+                { label: "Готово к выдаче", value: orders.filter(o => o.status === 'ready').length, sub: "клиентов ждут", color: "border-l-green-500" },
+                { label: "Выручка сегодня", value: "12 400 ₽", sub: "+15% к вчера", color: "border-l-brand-neon" },
+                { label: "Задолженность", value: "5 000 ₽", sub: "1 клиент", color: "border-l-red-500" },
+            ];
+
+            return (
+                <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {stats.map((stat, i) => (
+                            <Card key={i} className={`border-l-4 ${stat.color} !p-6`}>
+                                <div className="text-brand-faint text-xs uppercase tracking-wider font-semibold mb-2">{stat.label}</div>
+                                <div className="text-3xl font-display font-bold text-brand-text mb-1">{stat.value}</div>
+                                <div className="text-xs text-brand-dim">{stat.sub}</div>
+                            </Card>
+                        ))}
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2 space-y-6">
+                            <Card title="Активные заказы" action={<Button variant="ghost" size="sm" onClick={() => onNavigate('orders')}>Все заказы</Button>}>
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-sm">
+                                        <thead className="text-brand-faint border-b border-brand-line">
+                                            <tr>
+                                                <th className="pb-3 font-medium">№ Заказа</th>
+                                                <th className="pb-3 font-medium">Клиент</th>
+                                                <th className="pb-3 font-medium">Сумма</th>
+                                                <th className="pb-3 font-medium">Статус</th>
+                                                <th className="pb-3 font-medium text-right">Действие</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-brand-line">
+                                            {orders.slice(0, 5).map(order => (
+                                                <tr key={order.id} className="group hover:bg-brand-card transition-colors cursor-pointer" onClick={() => onNavigate('order_detail', order.id)}>
+                                                    <td className="py-3 text-brand-wood font-mono">#{order.id}</td>
+                                                    <td className="py-3 text-brand-text">{order.clientName}</td>
+                                                    <td className="py-3 text-brand-text">{order.sum.toLocaleString()} ₽</td>
+                                                    <td className="py-3"><Badge status={order.status} /></td>
+                                                    <td className="py-3 text-right">
+                                                        <Icon name="chevron-right" size={16} className="inline text-brand-faint group-hover:text-brand-text" />
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </Card>
+                        </div>
+
+                        <div className="space-y-6">
+                            <Card title="Склад: Внимание">
+                                <div className="space-y-4">
+                                    {materials.filter(m => m.stock <= m.min).map(mat => (
+                                        <div key={mat.id} className="flex items-start gap-3 p-3 bg-red-900/10 border border-red-900/30 rounded-md">
+                                            <Icon name="alert-triangle" className="text-red-400 shrink-0 mt-0.5" size={16} />
+                                            <div>
+                                                <div className="text-sm font-medium text-red-200">{mat.name}</div>
+                                                <div className="text-xs text-red-300/70 mt-1">Остаток: {mat.stock} {mat.unit} (Мин: {mat.min})</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    {materials.filter(m => m.stock <= m.min).length === 0 && (
+                                        <div className="text-center py-8 text-brand-faint text-sm">Нет критических остатков</div>
+                                    )}
+                                </div>
+                            </Card>
+                            
+                            <Card title="Быстрые действия" className="!p-4">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <Button variant="secondary" size="sm" className="h-auto py-3 flex flex-col gap-2" onClick={() => onNavigate('inquiry')}>
+                                        <Icon name="plus" size={20} /> Новое обращение
+                                    </Button>
+                                    <Button variant="secondary" size="sm" className="h-auto py-3 flex flex-col gap-2" onClick={() => onNavigate('calculator')}>
+                                        <Icon name="calculator" size={20} /> Расчет
+                                    </Button>
+                                </div>
+                            </Card>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const ClientsView = ({ clients, onSelect }) => {
+            return (
+                <Card title="База клиентов" action={<Button size="sm"><Icon name="plus" size={16} className="mr-2"/> Добавить клиента</Button>}>
+                    <div className="flex gap-4 mb-6">
+                        <Input placeholder="Поиск по имени, телефону..." className="mb-0 max-w-md" />
+                    </div>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                            <thead className="text-brand-faint border-b border-brand-line">
+                                <tr>
+                                    <th className="pb-3 font-medium">Клиент</th>
+                                    <th className="pb-3 font-medium">Тип</th>
+                                    <th className="pb-3 font-medium">Контакты</th>
+                                    <th className="pb-3 font-medium text-right">Сумма заказов</th>
+                                    <th className="pb-3 font-medium text-right">Действие</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-brand-line">
+                                {clients.map(client => (
+                                    <tr key={client.id} className="hover:bg-brand-card transition-colors">
+                                        <td className="py-4">
+                                            <div className="font-medium text-brand-text">{client.name}</div>
+                                            {client.status === 'vip' && <span className="text-[10px] text-brand-wood uppercase tracking-wider font-bold">VIP Клиент</span>}
+                                        </td>
+                                        <td className="py-4 text-brand-dim">{client.type}</td>
+                                        <td className="py-4 text-brand-dim">
+                                            <div>{client.phone}</div>
+                                            <div className="text-xs opacity-70">{client.email}</div>
+                                        </td>
+                                        <td className="py-4 text-right font-mono text-brand-text">{client.totalSpent.toLocaleString()} ₽</td>
+                                        <td className="py-4 text-right">
+                                            <Button variant="ghost" size="sm" onClick={() => onSelect(client.id)}>Открыть</Button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </Card>
+            );
+        };
+
+        const ClientDetailView = ({ client, orders, onRepeatOrder }) => {
+            if (!client) return <div>Клиент не найден</div>;
+            
+            return (
+                <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="w-16 h-16 rounded-full bg-brand-card border border-brand-line flex items-center justify-center text-2xl font-display text-brand-wood">
+                                {client.name.charAt(0)}
+                            </div>
+                            <div>
+                                <h1 className="text-2xl font-display font-bold text-brand-text">{client.name}</h1>
+                                <div className="text-brand-faint text-sm mt-1">{client.type} • {client.phone}</div>
+                            </div>
+                        </div>
+                        <div className="flex gap-3">
+                            <Button variant="secondary">Редактировать</Button>
+                            <Button onClick={() => onRepeatOrder(client.id)}>+ Новый заказ</Button>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2 space-y-6">
+                            <Card title="История заказов">
+                                {orders.length > 0 ? (
+                                    <div className="space-y-4">
+                                        {orders.map(order => (
+                                            <div key={order.id} className="flex items-center justify-between p-4 bg-brand-raised rounded-lg border border-brand-line">
+                                                <div>
+                                                    <div className="text-brand-wood font-mono font-bold">#{order.id}</div>
+                                                    <div className="text-xs text-brand-faint mt-1">{order.date}</div>
+                                                </div>
+                                                <div className="flex-1 px-6">
+                                                    <div className="text-sm text-brand-text truncate max-w-[200px]">{order.items.map(i => i.name).join(', ')}</div>
+                                                </div>
+                                                <div className="text-right mr-6">
+                                                    <div className="font-medium text-brand-text">{order.sum.toLocaleString()} ₽</div>
+                                                    <Badge status={order.status} />
+                                                </div>
+                                                <Button variant="ghost" size="sm">Подробнее</Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-10 text-brand-faint">У этого клиента пока нет заказов</div>
+                                )}
+                            </Card>
+                        </div>
+                        
+                        <div className="space-y-6">
+                            <Card title="Финансы">
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center pb-3 border-b border-brand-line">
+                                        <span className="text-brand-dim">Всего потрачено</span>
+                                        <span className="font-mono text-brand-text">{client.totalSpent.toLocaleString()} ₽</span>
+                                    </div>
+                                    <div className="flex justify-between items-center pb-3 border-b border-brand-line">
+                                        <span className="text-brand-dim">Текущий долг</span>
+                                        <span className={`font-mono ${client.debt > 0 ? 'text-red-400' : 'text-green-400'}`}>{client.debt.toLocaleString()} ₽</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-brand-dim">Количество заказов</span>
+                                        <span className="font-mono text-brand-text">{orders.length}</span>
+                                    </div>
+                                </div>
+                            </Card>
+                            
+                            <Card title="Комментарии">
+                                <textarea className="w-full bg-brand-raised border border-brand-line rounded-md p-3 text-sm text-brand-text h-32 resize-none focus:outline-none focus:border-brand-wood" placeholder="Заметки о клиенте..."></textarea>
+                                <div className="mt-3 flex justify-end">
+                                    <Button size="sm">Сохранить</Button>
+                                </div>
+                            </Card>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const InquiryView = ({ clients, onStartEstimate }) => {
+            const [query, setQuery] = useState("");
+            const [analyzing, setAnalyzing] = useState(false);
+            const [result, setResult] = useState(null);
+
+            const handleAnalyze = () => {
+                if (!query.trim()) return;
+                setAnalyzing(true);
+                setTimeout(() => {
+                    setAnalyzing(false);
+                    setResult({
+                        service: "Широкоформатная печать (Баннер)",
+                        width: 3000,
+                        height: 1000,
+                        material: "Баннер 440г/м²",
+                        extras: ["Люверсы", "Наружная установка"],
+                        hasDesign: true
+                    });
+                }, 1500);
+            };
+
+            return (
+                <div className="max-w-3xl mx-auto space-y-8">
+                    <div className="text-center space-y-2 mb-8">
+                        <h2 className="text-3xl font-display font-bold text-brand-text">Новое обращение</h2>
+                        <p className="text-brand-faint">Опишите задачу клиента своими словами или выберите параметры вручную</p>
+                    </div>
+
+                    <Card className="relative overflow-visible">
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-brand-dim mb-2">Клиент</label>
+                            <select className="w-full bg-brand-raised border border-brand-line rounded-md px-3 py-2.5 text-brand-text focus:outline-none focus:border-brand-wood">
+                                <option value="">Выберите клиента или введите нового...</option>
+                                {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                            </select>
+                        </div>
+
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-brand-dim mb-2">Что нужно сделать?</label>
+                            <div className="relative">
+                                <textarea 
+                                    value={query}
+                                    onChange={(e) => setQuery(e.target.value)}
+                                    className="w-full bg-brand-raised border border-brand-line rounded-lg p-4 text-brand-text h-32 focus:outline-none focus:border-brand-wood focus:ring-1 focus:ring-brand-wood transition-all resize-none"
+                                    placeholder='Например: "Нужен баннер 3 на 1 метр для улицы, с люверсами, макет у меня есть"'
+                                />
+                                <div className="absolute bottom-3 right-3">
+                                    <Button onClick={handleAnalyze} disabled={analyzing || !query}>
+                                        {analyzing ? <Icon name="zap" className="animate-spin mr-2" size={16}/> : <Icon name="zap" className="mr-2" size={16}/>}
+                                        Распознать
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {result && (
+                            <div className="animate-in slide-in-from-bottom-4 duration-500">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-display font-semibold text-brand-wood">Распознанные параметры</h3>
+                                    <span className="text-xs text-brand-faint bg-brand-raised px-2 py-1 rounded border border-brand-line">AI Confidence: 98%</span>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 gap-4 mb-6">
+                                    <div className="bg-brand-raised p-3 rounded border border-brand-line">
+                                        <div className="text-xs text-brand-faint uppercase">Услуга</div>
+                                        <div className="text-brand-text font-medium">{result.service}</div>
+                                    </div>
+                                    <div className="bg-brand-raised p-3 rounded border border-brand-line">
+                                        <div className="text-xs text-brand-faint uppercase">Размеры</div>
+                                        <div className="text-brand-text font-medium">{result.width} x {result.height} мм</div>
+                                    </div>
+                                    <div className="bg-brand-raised p-3 rounded border border-brand-line">
+                                        <div className="text-xs text-brand-faint uppercase">Материал</div>
+                                        <div className="text-brand-text font-medium">{result.material}</div>
+                                    </div>
+                                    <div className="bg-brand-raised p-3 rounded border border-brand-line">
+                                        <div className="text-xs text-brand-faint uppercase">Дополнительно</div>
+                                        <div className="text-brand-text font-medium">{result.extras.join(", ")}</div>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3 pt-4 border-t border-brand-line">
+                                    <Button variant="secondary" onClick={() => setResult(null)}>Исправить</Button>
+                                    <Button className="flex-1" onClick={() => onStartEstimate({ clientId: 1, ...result })}>Подтвердить и рассчитать</Button>
+                                </div>
+                            </div>
+                        )}
+                    </Card>
+                </div>
+            );
+        };
+
+        const CalculatorView = ({ initialData, onComplete }) => {
+            const [params, setParams] = useState({
+                width: initialData.width || 3000,
+                height: initialData.height || 1000,
+                qty: 1,
+                lamination: false
+            });
+
+            const area = (params.width * params.height * params.qty) / 1000000;
+            const pricePerM2 = 900;
+            const total = Math.round(area * pricePerM2 * (params.lamination ? 1.3 : 1));
+
+            return (
+                <div className="max-w-4xl mx-auto">
+                    <div className="flex items-center gap-2 mb-6 text-brand-faint text-sm">
+                        <span>Обращение</span> <Icon name="chevron-right" size={14}/> <span className="text-brand-text">Калькуляция</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2 space-y-6">
+                            <Card title="Параметры расчета">
+                                <div className="grid grid-cols-2 gap-6">
+                                    <Input label="Ширина (мм)" type="number" value={params.width} onChange={e => setParams({...params, width: Number(e.target.value)})} />
+                                    <Input label="Высота (мм)" type="number" value={params.height} onChange={e => setParams({...params, height: Number(e.target.value)})} />
+                                    <Input label="Количество" type="number" value={params.qty} onChange={e => setParams({...params, qty: Number(e.target.value)})} />
+                                    
+                                    <div className="mb-4">
+                                        <label className="block text-xs text-brand-dim mb-1.5 uppercase tracking-wider">Цена за м²</label>
+                                        <div className="w-full bg-brand-raised border border-brand-line rounded-md px-3 py-2 text-brand-text cursor-not-allowed opacity-70">900 ₽</div>
+                                    </div>
+                                </div>
+                                
+                                <div className="mt-4 pt-4 border-t border-brand-line">
+                                    <label className="flex items-center gap-3 cursor-pointer group">
+                                        <div className={`w-5 h-5 rounded border flex items-center justify-center transition-colors ${params.lamination ? 'bg-brand-wood border-brand-wood' : 'border-brand-faint bg-transparent'}`}>
+                                            {params.lamination && <Icon name="check" size={14} className="text-brand-bg" />}
+                                        </div>
+                                        <input type="checkbox" checked={params.lamination} onChange={e => setParams({...params, lamination: e.target.checked})} className="hidden" />
+                                        <span className="text-brand-text group-hover:text-brand-wood transition-colors">Добавить ламинацию (+30%)</span>
+                                    </label>
+                                </div>
+                            </Card>
+
+                            <Card title="Рекомендации AI">
+                                <div className="flex items-start gap-4 p-3 bg-brand-neon/5 border border-brand-neon/20 rounded-lg">
+                                    <Icon name="zap" className="text-brand-neon shrink-0 mt-1" size={18} />
+                                    <div>
+                                        <div className="text-sm font-medium text-brand-neon">Для наружного использования рекомендуется усиленная проклейка краев.</div>
+                                        <div className="text-xs text-brand-dim mt-1">Это увеличит стоимость на 200₽, но продлит срок службы изделия.</div>
+                                        <button className="text-xs text-brand-wood hover:underline mt-2">Добавить в расчет</button>
+                                    </div>
+                                </div>
+                            </Card>
+                        </div>
+
+                        <div className="lg:col-span-1">
+                            <Card className="sticky top-6">
+                                <h3 className="text-lg font-display font-bold text-brand-text mb-6">Итого</h3>
+                                
+                                <div className="space-y-3 mb-6 text-sm">
+                                    <div className="flex justify-between text-brand-dim">
+                                        <span>Площадь</span>
+                                        <span className="text-brand-text">{area.toFixed(2)} м²</span>
+                                    </div>
+                                    <div className="flex justify-between text-brand-dim">
+                                        <span>Материал</span>
+                                        <span className="text-brand-text">{Math.round(area * pricePerM2).toLocaleString()} ₽</span>
+                                    </div>
+                                    {params.lamination && (
+                                        <div className="flex justify-between text-brand-dim">
+                                            <span>Ламинация</span>
+                                            <span className="text-brand-text">{Math.round(area * pricePerM2 * 0.3).toLocaleString()} ₽</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="pt-4 border-t border-brand-line mb-6">
+                                    <div className="flex justify-between items-end">
+                                        <span className="text-brand-faint text-sm">Всего к оплате</span>
+                                        <span className="text-3xl font-display font-bold text-brand-wood">{total.toLocaleString()} ₽</span>
+                                    </div>
+                                </div>
+
+                                <Button className="w-full mb-3" onClick={() => onComplete({
+                                    clientId: initialData.clientId,
+                                    items: [{ name: "Баннер широкоформатный", qty: area, price: total }],
+                                    total: total
+                                })}>Создать смету</Button>
+                                <Button variant="ghost" className="w-full">Сохранить расчет</Button>
+                            </Card>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const EstimateView = ({ data, onCreateOrder }) => {
+            return (
+                <div className="max-w-4xl mx-auto">
+                    <div className="flex justify-between items-center mb-6">
+                        <div>
+                            <h2 className="text-2xl font-display font-bold text-brand-text">Смета #СМ-2023-089</h2>
+                            <p className="text-brand-faint text-sm">Черновик • Создана сегодня</p>
+                        </div>
+                        <div className="flex gap-3">
+                            <Button variant="secondary"><Icon name="download" size={16} className="mr-2"/> PDF</Button>
+                            <Button variant="neon">Отправить клиенту</Button>
+                        </div>
+                    </div>
+
+                    <Card>
+                        <div className="flex justify-between mb-8 pb-4 border-b border-brand-line">
+                            <div>
+                                <div className="text-xs text-brand-faint uppercase mb-1">Клиент</div>
+                                <div className="text-brand-text font-medium">Иванова Е. С.</div>
+                            </div>
+                            <div>
+                                <div className="text-xs text-brand-faint uppercase mb-1">Менеджер</div>
+                                <div className="text-brand-text font-medium">Денис С.</div>
+                            </div>
+                            <div>
+                                <div className="text-xs text-brand-faint uppercase mb-1">Срок действия</div>
+                                <div className="text-brand-text font-medium">до 15.09.2023</div>
+                            </div>
+                        </div>
+
+                        <table className="w-full text-left text-sm mb-8">
+                            <thead className="text-brand-faint border-b border-brand-line">
+                                <tr>
+                                    <th className="pb-3 font-medium">Наименование</th>
+                                    <th className="pb-3 font-medium text-right">Кол-во</th>
+                                    <th className="pb-3 font-medium text-right">Цена</th>
+                                    <th className="pb-3 font-medium text-right">Сумма</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-brand-line">
+                                {data?.items.map((item, i) => (
+                                    <tr key={i}>
+                                        <td className="py-4 text-brand-text">{item.name}</td>
+                                        <td className="py-4 text-right text-brand-dim">{item.qty} м²</td>
+                                        <td className="py-4 text-right text-brand-dim">{(item.price/item.qty).toFixed(0)} ₽</td>
+                                        <td className="py-4 text-right font-mono text-brand-text">{item.price.toLocaleString()} ₽</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                            <tfoot className="border-t border-brand-line">
+                                <tr>
+                                    <td colSpan="3" className="pt-4 text-right text-brand-dim">Итого:</td>
+                                    <td className="pt-4 text-right font-mono text-xl font-bold text-brand-wood">{data?.total.toLocaleString()} ₽</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+
+                        <div className="flex justify-end gap-4 pt-4 border-t border-brand-line">
+                            <Button variant="ghost">Редактировать</Button>
+                            <Button onClick={() => onCreateOrder(data)}>Принять и создать заказ</Button>
+                        </div>
+                    </Card>
+                </div>
+            );
+        };
+
+        const OrdersView = ({ orders, onSelect }) => {
+            return (
+                <Card title="Все заказы" action={
+                    <div className="flex gap-2">
+                        <select className="bg-brand-raised border border-brand-line rounded-md px-3 py-1.5 text-sm text-brand-text focus:outline-none">
+                            <option>Все статусы</option>
+                            <option>В работе</option>
+                            <option>Готовы</option>
+                        </select>
+                    </div>
+                }>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                            <thead className="text-brand-faint border-b border-brand-line">
+                                <tr>
+                                    <th className="pb-3 font-medium">№</th>
+                                    <th className="pb-3 font-medium">Дата</th>
+                                    <th className="pb-3 font-medium">Клиент</th>
+                                    <th className="pb-3 font-medium">Состав</th>
+                                    <th className="pb-3 font-medium text-right">Сумма</th>
+                                    <th className="pb-3 font-medium text-center">Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-brand-line">
+                                {orders.map(order => (
+                                    <tr key={order.id} onClick={() => onSelect(order.id)} className="group hover:bg-brand-card transition-colors cursor-pointer">
+                                        <td className="py-4 font-mono text-brand-wood">#{order.id}</td>
+                                        <td className="py-4 text-brand-dim">{order.date}</td>
+                                        <td className="py-4 text-brand-text font-medium">{order.clientName}</td>
+                                        <td className="py-4 text-brand-dim truncate max-w-[200px]">{order.items.map(i => i.name).join(", ")}</td>
+                                        <td className="py-4 text-right font-mono text-brand-text">{order.sum.toLocaleString()} ₽</td>
+                                        <td className="py-4 text-center"><Badge status={order.status} /></td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </Card>
+            );
+        };
+
+        const OrderDetailView = ({ order, onUpdateStatus }) => {
+            if (!order) return <div>Заказ не найден</div>;
+            const currentStatusIndex = STATUS_FLOW.findIndex(s => s.id === order.status);
+
+            return (
+                <div className="space-y-6">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-brand-card p-6 rounded-lg border border-brand-line">
+                        <div>
+                            <div className="flex items-center gap-3 mb-2">
+                                <h1 className="text-2xl font-display font-bold text-brand-text">Заказ #{order.id}</h1>
+                                <Badge status={order.status} />
+                            </div>
+                            <div className="text-brand-dim text-sm flex items-center gap-4">
+                                <span className="flex items-center gap-1"><Icon name="user" size={14}/> {order.clientName}</span>
+                                <span className="flex items-center gap-1"><Icon name="clock" size={14}/> {order.date}</span>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-xs text-brand-faint uppercase mb-1">К оплате</div>
+                            <div className="text-2xl font-mono font-bold text-brand-text">{order.sum.toLocaleString()} ₽</div>
+                            <div className="text-xs text-green-400">Оплачено: {order.paid.toLocaleString()} ₽</div>
+                        </div>
+                    </div>
+
+                    <div className="bg-brand-card p-6 rounded-lg border border-brand-line">
+                        <h3 className="text-sm font-medium text-brand-faint uppercase tracking-wider mb-6">Статус выполнения</h3>
+                        <div className="relative flex justify-between items-center">
+                            <div className="absolute top-1/2 left-0 w-full h-0.5 bg-brand-line -z-0"></div>
+                            
+                            {STATUS_FLOW.map((status, idx) => {
+                                const isCompleted = idx <= currentStatusIndex;
+                                const isCurrent = idx === currentStatusIndex;
+                                
+                                return (
+                                    <div key={status.id} className="relative z-10 flex flex-col items-center gap-2 bg-brand-card px-2">
+                                        <button 
+                                            onClick={() => onUpdateStatus(order.id, status.id)}
+                                            className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300
+                                                ${isCompleted ? 'bg-brand-wood border-brand-wood text-brand-bg' : 'bg-brand-bg border-brand-line text-brand-line'}
+                                                ${isCurrent ? 'ring-4 ring-brand-wood/20 scale-110' : ''}
+                                            `}
+                                        >
+                                            {isCompleted ? <Icon name="check" size={14} strokeWidth={3} /> : <div className="w-2 h-2 rounded-full bg-current"></div>}
+                                        </button>
+                                        <span className={`text-xs font-medium transition-colors ${isCompleted || isCurrent ? 'text-brand-text' : 'text-brand-faint'}`}>
+                                            {status.label}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div className="lg:col-span-2 space-y-6">
+                            <Card title="Состав заказа">
+                                <table className="w-full text-sm">
+                                    <thead className="text-brand-faint border-b border-brand-line">
+                                        <tr><th className="pb-2 text-left">Наименование</th><th className="pb-2 text-right">Кол-во</th><th className="pb-2 text-right">Цена</th></tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-brand-line">
+                                        {order.items.map((item, i) => (
+                                            <tr key={i}>
+                                                <td className="py-3 text-brand-text">{item.name}</td>
+                                                <td className="py-3 text-right text-brand-dim">{item.qty}</td>
+                                                <td className="py-3 text-right font-mono text-brand-text">{item.price.toLocaleString()} ₽</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </Card>
+
+                            <Card title="Производственные задачи">
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-3 p-3 bg-brand-raised rounded border border-brand-line">
+                                        <div className="w-5 h-5 rounded border border-brand-wood bg-brand-wood flex items-center justify-center text-brand-bg"><Icon name="check" size={12}/></div>
+                                        <span className="text-brand-dim line-through">Проверка макета</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 p-3 bg-brand-raised rounded border border-brand-wood/50">
+                                        <div className="w-5 h-5 rounded border border-brand-wood flex items-center justify-center text-brand-wood"><div className="w-2 h-2 bg-brand-wood rounded-full animate-pulse"></div></div>
+                                        <span className="text-brand-text font-medium">Печать баннера</span>
+                                        <span className="ml-auto text-xs text-brand-faint">Ответственный: Сергей</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 p-3 bg-brand-raised rounded border border-brand-line opacity-60">
+                                        <div className="w-5 h-5 rounded border border-brand-line"></div>
+                                        <span className="text-brand-dim">Установка люверсов</span>
+                                    </div>
+                                </div>
+                            </Card>
+                        </div>
+
+                        <div className="space-y-6">
+                            <Card title="Информация">
+                                <div className="space-y-4 text-sm">
+                                    <div>
+                                        <div className="text-brand-faint mb-1">Пожелания клиента</div>
+                                        <div className="text-brand-text bg-brand-raised p-3 rounded border border-brand-line italic">
+                                            "Тёмно-синий фон, как на прошлом макете."
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div className="text-brand-faint mb-1">Файлы</div>
+                                        <div className="flex items-center gap-2 p-2 bg-brand-raised rounded border border-brand-line cursor-pointer hover:border-brand-wood transition-colors">
+                                            <Icon name="file-text" size={16} className="text-brand-wood"/>
+                                            <span className="text-brand-text truncate flex-1">banner_v2_final.pdf</span>
+                                            <span className="text-xs text-brand-faint">2.4MB</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Card>
+                            
+                            <Card title="История изменений">
+                                <div className="space-y-4 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-px before:bg-brand-line">
+                                    {order.history.map((event, i) => (
+                                        <div key={i} className="relative pl-8">
+                                            <div className="absolute left-0 top-1.5 w-[22px] h-[22px] bg-brand-card border border-brand-line rounded-full flex items-center justify-center z-10">
+                                                <div className="w-1.5 h-1.5 bg-brand-faint rounded-full"></div>
+                                            </div>
+                                            <div className="text-xs text-brand-faint mb-0.5">Сегодня, 14:3{i}</div>
+                                            <div className="text-sm text-brand-text">{event}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </Card>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const WarehouseView = ({ materials }) => {
+            return (
+                <Card title="Склад материалов" action={<Button size="sm">Приход материала</Button>}>
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left text-sm">
+                            <thead className="text-brand-faint border-b border-brand-line">
+                                <tr>
+                                    <th className="pb-3 font-medium">Наименование</th>
+                                    <th className="pb-3 font-medium">Ед. изм.</th>
+                                    <th className="pb-3 font-medium text-right">Остаток</th>
+                                    <th className="pb-3 font-medium text-right">Резерв</th>
+                                    <th className="pb-3 font-medium text-right">Доступно</th>
+                                    <th className="pb-3 font-medium text-center">Статус</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-brand-line">
+                                {materials.map(mat => {
+                                    const available = mat.stock - mat.reserved;
+                                    const isLow = available < mat.min;
+                                    
+                                    return (
+                                        <tr key={mat.id} className="hover:bg-brand-card transition-colors">
+                                            <td className="py-4 text-brand-text font-medium">{mat.name}</td>
+                                            <td className="py-4 text-brand-dim">{mat.unit}</td>
+                                            <td className="py-4 text-right font-mono text-brand-text">{mat.stock}</td>
+                                            <td className="py-4 text-right font-mono text-brand-faint">{mat.reserved}</td>
+                                            <td className={`py-4 text-right font-mono font-bold ${isLow ? 'text-red-400' : 'text-green-400'}`}>
+                                                {available.toFixed(1)}
+                                            </td>
+                                            <td className="py-4 text-center">
+                                                {isLow ? (
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-900/20 text-red-400 border border-red-900/30">
+                                                        Заканчивается
+                                                    </span>
+                                                ) : (
+                                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-900/20 text-green-400 border border-green-900/30">
+                                                        Норма
+                                                    </span>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+                </Card>
+            );
+        };
+
+        // --- RENDER ---
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

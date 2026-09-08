@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Печатникъ — прототип</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#18181b;
+  --bg-raised:#212124;
+  --bg-card:#26262a;
+  --bg-card-hover:#2c2c31;
+  --wood:#c9a876;
+  --wood-dim:#8a7457;
+  --amber:#ffb84d;
+  --amber-dim:#6b5233;
+  --text:#f0f0ee;
+  --text-dim:#a3a3a8;
+  --text-faint:#6b6b70;
+  --line:#38383d;
+  --good:#7fd88f;
+  --warn:#ffb84d;
+  --bad:#ff6e6e;
+  --radius:3px;
+  --font-display:'Fraunces', serif;
+  --font-ui:'Inter', -apple-system, sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-ui);font-size:14px;line-height:1.5;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;font-size:inherit;}
+input,select,textarea{font-family:inherit;}
+a{color:inherit;text-decoration:none;}
+
+.app{display:flex;height:100vh;overflow:hidden;}
+
+/* Sidebar */
+.sidebar{width:240px;flex-shrink:0;background:var(--bg-raised);border-right:1px solid var(--line);display:flex;flex-direction:column;}
+.brand{display:flex;align-items:center;gap:10px;padding:20px;border-bottom:1px solid var(--line);}
+.brand-mark{width:38px;height:38px;border-radius:50%;border:2px solid var(--wood);display:flex;align-items:center;justify-content:center;color:var(--wood);flex-shrink:0;background:var(--bg);}
+.brand-mark svg{width:19px;height:19px;}
+.brand-name{font-family:var(--font-display);font-size:19px;font-weight:600;letter-spacing:.2px;}
+.brand-sub{font-size:10px;color:var(--wood);text-transform:uppercase;letter-spacing:.12em;margin-top:1px;}
+
+.nav{flex:1;overflow-y:auto;padding:12px 10px;display:flex;flex-direction:column;gap:2px;}
+.nav-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:var(--radius);color:var(--text-dim);font-size:13.5px;transition:background .12s,color .12s;text-align:left;width:100%;}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.85;}
+.nav-item:hover{background:var(--bg-card);color:var(--text);}
+.nav-item.active{background:var(--bg-card);color:var(--wood);border-right:3px solid var(--wood);}
+.nav-group-label{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-faint);padding:16px 12px 6px;}
+
+.sidebar-foot{padding:14px 20px;border-top:1px solid var(--line);display:flex;align-items:center;gap:9px;}
+.avatar{width:28px;height:28px;border-radius:50%;background:var(--wood);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+.who{font-size:12.5px;}
+.role{font-size:10.5px;color:var(--text-faint);}
+
+/* Main */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;}
+.topbar{height:60px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 26px;border-bottom:1px solid var(--line);background:rgba(38,38,42,.5);backdrop-filter:blur(6px);}
+.topbar h1{font-family:var(--font-display);font-size:19px;font-weight:600;color:var(--wood);}
+.content{flex:1;overflow-y:auto;padding:24px 26px 60px;}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 16px;border-radius:var(--radius);font-size:13px;font-weight:600;border:1px solid var(--line);background:var(--bg-card);color:var(--text);white-space:nowrap;transition:border-color .12s,background .12s;}
+.btn:hover{border-color:var(--wood-dim);background:var(--bg-card-hover);}
+.btn-primary{background:var(--wood);border-color:var(--wood);color:#1c1610;}
+.btn-primary:hover{background:#d8b988;border-color:#d8b988;}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed;}
+.btn-ghost{background:transparent;border-color:transparent;color:var(--text-dim);}
+.btn-ghost:hover{background:var(--bg-card);color:var(--text);}
+.btn-sm{padding:6px 11px;font-size:12px;}
+.btn-danger{color:var(--bad);}
+.icon-btn{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;border-radius:var(--radius);border:1px solid var(--line);background:var(--bg-card);color:var(--text-dim);flex-shrink:0;}
+.icon-btn:hover{color:var(--text);border-color:var(--wood-dim);}
+.icon-btn svg{width:14px;height:14px;}
+
+/* Cards */
+.card{background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;}
+.card+.card{margin-top:14px;}
+.grid{display:grid;gap:14px;}
+.grid-2{grid-template-columns:1fr 1fr;}
+.grid-3{grid-template-columns:repeat(3,1fr);}
+.grid-4{grid-template-columns:repeat(4,1fr);}
+
+.stat-card{background:var(--bg-card);border:1px solid var(--line);border-left:2px solid var(--wood);border-radius:var(--radius);padding:16px 18px;}
+.stat-card .label{font-size:11.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.06em;}
+.stat-card .value{font-family:var(--font-display);font-size:25px;margin-top:6px;font-weight:600;}
+.stat-card .delta{font-size:12px;margin-top:4px;color:var(--good);}
+.stat-card .delta.down{color:var(--bad);}
+.stat-card.amber{border-left-color:var(--amber);}
+.stat-card.amber .value{color:var(--amber);}
+
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.section-head h2{font-family:var(--font-display);font-size:16.5px;font-weight:600;}
+.section-head .sub{font-size:12px;color:var(--text-faint);margin-top:2px;}
+
+/* Table */
+.table{width:100%;border-collapse:collapse;}
+.table th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);font-weight:600;padding:8px 12px;border-bottom:1px solid var(--line);}
+.table td{padding:11px 12px;border-bottom:1px solid var(--line);font-size:13.5px;}
+.table tr:last-child td{border-bottom:none;}
+.table tr.clickable{cursor:pointer;}
+.table tr.clickable:hover td{background:var(--bg-card-hover);}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid var(--line);white-space:nowrap;}
+.badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+.badge-new{color:var(--text-dim);}
+.badge-progress{color:var(--amber);border-color:var(--amber-dim);background:rgba(255,184,77,.08);}
+.badge-done{color:var(--good);border-color:#2f4a35;background:rgba(127,216,143,.08);}
+.badge-closed{color:var(--text-faint);}
+.badge-warn{color:var(--bad);border-color:#5c2d2d;background:rgba(255,110,110,.08);}
+.badge-unverified{color:var(--amber);border:1px dashed var(--amber-dim);}
+
+/* Forms */
+label{display:block;font-size:12px;color:var(--text-dim);margin-bottom:5px;}
+input[type=text],input[type=number],input[type=search],input[type=date],select,textarea{
+  width:100%;background:var(--bg-raised);border:1px solid var(--line);border-radius:var(--radius);
+  padding:9px 11px;color:var(--text);font-family:inherit;font-size:13.5px;
+}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--wood);}
+textarea{resize:vertical;min-height:60px;}
+.field{margin-bottom:14px;}
+.field-row{display:flex;gap:12px;}
+.field-row .field{flex:1;}
+.hint{font-size:11px;color:var(--text-faint);margin-top:4px;}
+
+.search-input{position:relative;}
+.search-input svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:var(--text-faint);}
+.search-input input{padding-left:32px;}
+
+.pill-group{display:flex;gap:8px;flex-wrap:wrap;}
+.pill{padding:8px 14px;border-radius:20px;border:1px solid var(--line);font-size:12.5px;color:var(--text-dim);background:var(--bg-raised);}
+.pill.selected{border-color:var(--wood);color:var(--wood);background:rgba(201,168,118,.08);}
+
+/* Order builder */
+.order-layout{display:grid;grid-template-columns:1fr 340px;gap:16px;align-items:start;}
+.line-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg-raised);}
+.line-item+.line-item{margin-top:8px;}
+.li-name{font-size:13.5px;}
+.li-tag{font-size:10.5px;color:var(--text-faint);margin-top:2px;}
+.li-price{font-family:var(--font-display);font-size:15px;color:var(--amber);white-space:nowrap;font-weight:600;}
+
+.summary-card{position:sticky;top:0;background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;}
+.summary-total{display:flex;justify-content:space-between;align-items:baseline;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin:14px 0;}
+.summary-total .amount{font-family:var(--font-display);font-size:30px;color:var(--amber);font-weight:600;}
+
+.status-track{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;}
+.status-step{flex:1;min-width:64px;text-align:center;padding:8px 4px;border-radius:var(--radius);font-size:11px;font-weight:600;border:1px solid var(--line);color:var(--text-faint);cursor:pointer;transition:.12s;}
+.status-step:hover{border-color:var(--wood-dim);}
+.status-step.done{color:var(--good);border-color:#2f4a35;}
+.status-step.active{color:var(--amber);border-color:var(--amber);background:rgba(255,184,77,.08);}
+
+.empty{text-align:center;padding:40px 20px;color:var(--text-faint);border:1px dashed var(--line);border-radius:var(--radius);}
+.empty .t{font-family:var(--font-display);font-size:15px;color:var(--text-dim);margin-bottom:4px;font-weight:600;}
+
+/* Modal */
+.modal-backdrop{position:fixed;inset:0;background:rgba(10,10,11,.65);display:none;align-items:center;justify-content:center;z-index:50;backdrop-filter:blur(2px);}
+.modal-backdrop.open{display:flex;}
+.modal{width:440px;max-width:92vw;max-height:86vh;overflow:auto;background:var(--bg-card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;}
+.modal h3{font-family:var(--font-display);font-size:18px;margin-bottom:16px;font-weight:600;}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;}
+
+.text-dim{color:var(--text-dim);}
+.text-faint{color:var(--text-faint);}
+.mono-num{font-variant-numeric:tabular-nums;}
+.divider{height:1px;background:var(--line);margin:16px 0;}
+.flex-between{display:flex;align-items:center;justify-content:space-between;}
+.tag-row{display:flex;gap:6px;flex-wrap:wrap;}
+.small-tag{font-size:10.5px;padding:2px 7px;border:1px solid var(--line);border-radius:3px;color:var(--text-faint);}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg-card);border:1px solid var(--wood);color:var(--text);padding:11px 20px;border-radius:var(--radius);font-size:13px;opacity:0;transition:.2s;z-index:100;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+@media (max-width: 980px){
+  .sidebar{position:fixed;left:-240px;top:0;bottom:0;z-index:40;transition:left .2s;}
+  .sidebar.open{left:0;}
+  .order-layout{grid-template-columns:1fr;}
+  .grid-4{grid-template-columns:repeat(2,1fr);}
+  .grid-3{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="brand-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="8" width="18" height="8" rx="1"/><path d="M6 8V4h12v4M6 16v4h12v-4"/></svg></div>
+      <div><div class="brand-name">Печатникъ</div><div class="brand-sub">типографія</div></div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sidebar-foot">
+      <div class="avatar">ДС</div>
+      <div><div class="who">Денис</div><div class="role">Администратор</div></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <h1 id="page-title">Главная</h1>
+      <button class="btn btn-primary" onclick="openOrderModal()">+ Новый заказ</button>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ ДАННЫЕ (моки, живут в памяти) ============ */
+
+let priceList = [
+  {id:1, name:"Печать документов А4, ч/б", unit:"лист", price:3, unverified:false},
+  {id:2, name:"Печать документов А4, цвет", unit:"лист", price:15, unverified:false},
+  {id:3, name:"Фото на паспорт (4 шт)", unit:"компл.", price:200, unverified:false},
+  {id:4, name:"Ламинация А4", unit:"шт", price:40, unverified:false},
+  {id:5, name:"Ламинация А5", unit:"шт", price:25, unverified:false},
+  {id:6, name:"Копирование А4", unit:"лист", price:5, unverified:false},
+  {id:7, name:"Сканирование документа", unit:"страница", price:20, unverified:true},
+  {id:8, name:"Визитки стандарт, 100 шт", unit:"компл.", price:900, unverified:false},
+  {id:9, name:"Брошюровка на пружину", unit:"шт", price:80, unverified:true},
+];
+let nextPriceId = 10;
+
+// калькулятор "Широкоформат" — упрощённая, но реально считающая формула
+const calculators = {
+  wide: {
+    label: "Широкоформатная печать / наклейки",
+    minPrice: 150,
+    compute(params){
+      const area = (params.width/100) * (params.height/100) * params.qty;
+      let price = area * params.pricePerM2;
+      if (params.lamination) price += area * 120;
+      price = Math.max(price, this.minPrice);
+      return {area: area.toFixed(2), price: Math.round(price)};
+    }
+  }
+};
+
+let orders = [
+  {id:1048, client:"Иванова Е. С.", items:[{name:"Баннер 2×1 м, 440 г/м²",price:3800},{name:"Монтаж баннера",price:400}], sum:4200, status:"production", payment:"card", paid:2000, date:"08.09", wishes:"Тёмно-синий фон, как на прошлом макете."},
+  {id:1047, client:"ООО «СеверСтрой»", items:[{name:"Визитки 200 шт",price:1800}], sum:1800, status:"done", payment:"cash", paid:1800, date:"08.09", wishes:""},
+  {id:1046, client:"Смирнов А. П.", items:[{name:"Фото на паспорт",price:200},{name:"Ламинация А4",price:250}], sum:450, status:"closed", payment:"cash", paid:450, date:"08.09", wishes:""},
+  {id:1044, client:"ИП Дроздов", items:[{name:"Наклейки А5, 50 шт",price:2100}], sum:2100, status:"production", payment:"transfer", paid:0, date:"08.09", wishes:""},
+  {id:1042, client:"ООО «Гарант-Сервис»", items:[{name:"Буклеты А4, 500 шт",price:6400}], sum:6400, status:"production", payment:"card", paid:6400, date:"07.09", wishes:""},
+];
+let nextOrderId = 1049;
+
+let clients = [
+  {name:"Иванова Екатерина Сергеевна", type:"физ. лицо", phone:"+7 900 555-12-34", orders:7},
+  {name:"ООО «СеверСтрой»", type:"организация", phone:"+7 3462 22-14-56", orders:14},
+  {name:"Смирнов Андрей Павлович", type:"физ. лицо", phone:"+7 900 111-22-33", orders:3},
+  {name:"ИП Дроздов В. С.", type:"организация", phone:"+7 922 600-44-11", orders:9},
+  {name:"ООО «Гарант-Сервис»", type:"организация", phone:"+7 3462 55-33-21", orders:22},
+];
+
+let materials = [
+  {name:"Баннерная плёнка 440 г/м²", unit:"м²", stock:6.4, reserved:4.0, min:5},
+  {name:"Бумага А4 80 г/м²", unit:"пачка", stock:18, reserved:2, min:5},
+  {name:"Плёнка для ламинации А4", unit:"шт", stock:240, reserved:30, min:50},
+  {name:"Люверсы 12 мм", unit:"шт", stock:14, reserved:20, min:30},
+  {name:"Картон для визиток", unit:"пачка", stock:6, reserved:1, min:2},
+];
+
+const STATUS_FLOW = [
+  {key:"new", label:"Новый"},
+  {key:"production", label:"В работе"},
+  {key:"done", label:"Выполнен"},
+  {key:"closed", label:"Завершён"},
+];
+function statusLabel(k){ return (STATUS_FLOW.find(s=>s.key===k)||{}).label || k; }
+function statusBadgeClass(k){
+  return {new:"badge-new", production:"badge-progress", done:"badge-done", closed:"badge-closed"}[k] || "badge-new";
+}
+
+// текущий строящийся заказ (для формы "Новый заказ")
+let draftOrder = { items: [], client: "", payment: "cash", status: "new", wishes: "" };
+
+/* ============ УТИЛИТЫ ============ */
+
+function fmt(n){ return Math.round(n).toLocaleString('ru-RU') + ' ₽'; }
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+function closeModal(){ document.getElementById('modalBackdrop').classList.remove('open'); document.getElementById('modalBackdrop').innerHTML=''; }
+function openModal(html){
+  const bd = document.getElementById('modalBackdrop');
+  bd.innerHTML = `<div class="modal">${html}</div>`;
+  bd.classList.add('open');
+}
+
+/* ============ НАВИГАЦИЯ ============ */
+
+const NAV = [
+  {key:"dashboard", label:"Главная", group:null, icon:'<rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>'},
+  {key:"clients", label:"Клиенты", group:null, icon:'<circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-4 3-6.5 6.5-6.5S15.5 16 15.5 20"/><circle cx="17" cy="9" r="2.4"/><path d="M15.2 13.5c2.7.2 4.8 2.4 4.8 6.5"/>'},
+  {key:"orders", label:"Заказы", group:null, icon:'<path d="M4 7h16l-1.2 11.5A2 2 0 0 1 17 20H7a2 2 0 0 1-2-1.5L4 7z"/><path d="M8 7V5a4 4 0 0 1 8 0v2"/>'},
+  {key:"quotes", label:"Сметы", group:null, icon:'<path d="M6 3h9l4 4v14H6z"/><path d="M15 3v4h4"/><path d="M9 12h7M9 16h7"/>'},
+  {key:"cashier", label:"Касса", group:null, icon:'<rect x="3" y="7" width="18" height="13" rx="1.5"/><path d="M3 11h18M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>'},
+  {key:"warehouse", label:"Склад", group:"Производство", icon:'<path d="M3 9.5 12 4l9 5.5V20H3z"/><path d="M9 20v-7h6v7"/>'},
+  {key:"production", label:"Цех", group:"Производство", icon:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9M4.6 9a1.7 1.7 0 0 0-.3-1.9"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/>'},
+  {key:"analytics", label:"Аналитика", group:"Производство", icon:'<path d="M4 20V10M11 20V4M18 20v-7"/>'},
+  {key:"pricelist", label:"Прайс-каталог", group:"Настройки", icon:'<path d="M3 12l8-8 9 9-8 8z"/><circle cx="8.5" cy="8.5" r="1.5"/>'},
+  {key:"settings", label:"Настройки", group:"Настройки", icon:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.6-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.6V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.6 1H21a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.5 1z"/>'},
+];
+
+function renderNav(active){
+  const nav = document.getElementById('nav');
+  let html = '';
+  let lastGroup = null;
+  NAV.forEach(item=>{
+    if (item.group && item.group !== lastGroup){
+      html += `<div class="nav-group-label">${item.group}</div>`;
+      lastGroup = item.group;
+    }
+    if (!item.group) lastGroup = null;
+    html += `<button class="nav-item ${item.key===active?'active':''}" onclick="route('${item.key}')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">${item.icon}</svg>${item.label}
+    </button>`;
+  });
+  nav.innerHTML = html;
+}
+
+const TITLES = {dashboard:"Главная", clients:"Клиенты", orders:"Заказы", quotes:"Сметы", cashier:"Касса", warehouse:"Склад", production:"Цех", analytics:"Аналитика", pricelist:"Прайс-каталог", settings:"Настройки"};
+
+function route(key){
+  renderNav(key);
+  document.getElementById('page-title').textContent = TITLES[key];
+  document.getElementById('content').innerHTML = RENDERERS[key]();
+  document.getElementById('sidebar').classList.remove('open');
+}
+
+/* ============ РЕНДЕРЫ СТРАНИЦ ============ */
+
+const RENDERERS = {
+
+  dashboard(){
+    const inProgress = orders.filter(o=>o.status==='production').length;
+    const readyToGive = orders.filter(o=>o.status==='done').length;
+    const revenueToday = orders.reduce((s,o)=>s+o.sum,0);
+    return `
+      <div class="grid grid-4">
+        <div class="stat-card"><div class="label">В работе</div><div class="value">${inProgress}</div><div class="delta">заказов на производстве</div></div>
+        <div class="stat-card"><div class="label">Готово к выдаче</div><div class="value">${readyToGive}</div><div class="delta">ждут клиента</div></div>
+        <div class="stat-card amber"><div class="label">Выручка сегодня</div><div class="value">${fmt(revenueToday)}</div><div class="delta">по текущим заказам</div></div>
+        <div class="stat-card"><div class="label">Средний чек</div><div class="value">${fmt(revenueToday/orders.length)}</div><div class="delta down">по выборке ниже</div></div>
+      </div>
+      <div class="divider"></div>
+      <div class="grid grid-2" style="align-items:start;">
+        <div>
+          <div class="section-head"><div><h2>Заказы</h2><div class="sub">клик — открыть карточку</div></div></div>
+          <div class="card" style="padding:0;">
+            <table class="table"><thead><tr><th>№</th><th>Клиент</th><th>Сумма</th><th>Статус</th></tr></thead>
+            <tbody>${orders.slice(0,5).map(o=>`
+              <tr class="clickable" onclick="openOrderDetail(${o.id})">
+                <td class="text-dim">№${o.id}</td><td>${o.client}</td><td class="mono-num">${fmt(o.sum)}</td>
+                <td><span class="badge ${statusBadgeClass(o.status)}"><span class="dot"></span>${statusLabel(o.status)}</span></td>
+              </tr>`).join('')}</tbody></table>
+          </div>
+        </div>
+        <div>
+          <div class="section-head"><h2>Требует внимания</h2></div>
+          <div class="card">
+            ${materials.filter(m=>m.stock-m.reserved<m.min).map(m=>`
+              <div class="flex-between" style="margin-bottom:8px;"><span>⚠️ ${m.name} — доступно ${(m.stock-m.reserved).toFixed(1)} ${m.unit}</span></div>`).join('') || '<div class="text-faint">Всё в порядке</div>'}
+          </div>
+        </div>
+      </div>
+    `;
+  },
+
+  clients(){
+    return `
+      <div class="search-input" style="width:300px;margin-bottom:16px;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="text" placeholder="имя, телефон, организация…">
+      </div>
+      <div class="card" style="padding:0;">
+        <table class="table"><thead><tr><th>Клиент</th><th>Тип</th><th>Телефон</th><th>Заказов</th></tr></thead>
+        <tbody>${clients.map(c=>`<tr><td>${c.name}</td><td class="text-faint">${c.type}</td><td class="mono-num">${c.phone}</td><td>${c.orders}</td></tr>`).join('')}</tbody></table>
+      </div>
+    `;
+  },
+
+  orders(){
+    return `
+      <div class="flex-between" style="margin-bottom:16px;">
+        <div class="pill-group">
+          ${STATUS_FLOW.map(s=>`<div class="pill ${document.body.dataset.orderFilter===s.key?'selected':''}" onclick="filterOrders('${s.key}')">${s.label} (${orders.filter(o=>o.status===s.key).length})</div>`).join('')}
+          <div class="pill selected" onclick="filterOrders('')" id="pill-all">Все (${orders.length})</div>
+        </div>
+      </div>
+      <div class="card" style="padding:0;">
+        <table class="table"><thead><tr><th>№</th><th>Клиент</th><th>Состав</th><th>Сумма</th><th>Статус</th><th>Дата</th></tr></thead>
+        <tbody id="orders-tbody">${ordersRows(orders)}</tbody></table>
+      </div>
+    `;
+  },
+
+  quotes(){
+    return `
+      <div class="card" style="padding:0;">
+        <table class="table"><thead><tr><th>№</th><th>Клиент</th><th>Состав</th><th>Сумма</th><th>Статус</th></tr></thead>
+        <tbody>
+          <tr><td class="text-dim">СМ-214</td><td>Волкова М. И.</td><td>Календарь настенный А2</td><td class="mono-num">1 650 ₽</td><td><span class="badge badge-warn">Отправлена</span></td></tr>
+          <tr><td class="text-dim">СМ-213</td><td>ООО «Прогресс»</td><td>Каталог продукции</td><td class="mono-num">24 800 ₽</td><td><span class="badge badge-new">Черновик</span></td></tr>
+        </tbody></table>
+      </div>
+      <div class="empty" style="margin-top:16px;"><div class="t">Принятая смета превращается в заказ без повторного ввода</div></div>
+    `;
+  },
+
+  cashier(){
+    const unpaid = orders.filter(o=>o.paid<o.sum);
+    return `
+      <div class="order-layout">
+        <div class="card">
+          <div class="section-head"><h2>Заказы с задолженностью</h2></div>
+          ${unpaid.map(o=>`
+            <div class="line-item">
+              <div style="flex:1;"><div class="li-name">№${o.id} — ${o.client}</div><div class="li-tag">оплачено ${fmt(o.paid)} из ${fmt(o.sum)}</div></div>
+              <button class="btn btn-primary btn-sm" onclick="payOrder(${o.id})">Принять доплату</button>
+            </div>`).join('') || '<div class="text-faint">Все заказы оплачены</div>'}
+        </div>
+        <div class="summary-card">
+          <div class="section-head" style="margin-bottom:6px;"><h2 style="font-size:15px;">Итого в кассе</h2></div>
+          <div class="amount" style="font-family:var(--font-display);font-size:26px;color:var(--amber);">${fmt(orders.reduce((s,o)=>s+o.paid,0))}</div>
+        </div>
+      </div>
+    `;
+  },
+
+  warehouse(){
+    return `
+      <div class="card" style="padding:0;">
+        <table class="table"><thead><tr><th>Материал</th><th>Ед.</th><th>Остаток</th><th>Резерв</th><th>Доступно</th><th>Статус</th></tr></thead>
+        <tbody>${materials.map(m=>{
+          const avail = m.stock-m.reserved;
+          const low = avail < m.min;
+          return `<tr><td>${m.name}</td><td class="text-faint">${m.unit}</td><td class="mono-num">${m.stock}</td><td class="mono-num text-faint">${m.reserved}</td><td class="mono-num">${avail.toFixed(1)}</td>
+          <td><span class="badge ${low?'badge-warn':'badge-done'}"><span class="dot"></span>${low?'заканчивается':'в норме'}</span></td></tr>`;
+        }).join('')}</tbody></table>
+      </div>
+    `;
+  },
+
+  production(){
+    const byStatus = k => orders.filter(o=>o.status===k);
+    return `
+      <div class="grid grid-3">
+        <div class="card"><div class="section-head" style="margin-bottom:10px;"><h2 style="font-size:14px;">Новые</h2></div>
+          ${byStatus('new').map(o=>`<div class="line-item"><div class="li-name">№${o.id} — ${o.client}</div></div>`).join('') || '<span class="text-faint">пусто</span>'}</div>
+        <div class="card"><div class="section-head" style="margin-bottom:10px;"><h2 style="font-size:14px;">В работе</h2></div>
+          ${byStatus('production').map(o=>`<div class="line-item"><div class="li-name">№${o.id} — ${o.client}</div></div>`).join('') || '<span class="text-faint">пусто</span>'}</div>
+        <div class="card"><div class="section-head" style="margin-bottom:10px;"><h2 style="font-size:14px;">Выполнено</h2></div>
+          ${byStatus('done').map(o=>`<div class="line-item"><div class="li-name">№${o.id} — ${o.client}</div></div>`).join('') || '<span class="text-faint">пусто</span>'}</div>
+      </div>
+    `;
+  },
+
+  analytics(){
+    const total = orders.reduce((s,o)=>s+o.sum,0);
+    return `
+      <div class="grid grid-4">
+        <div class="stat-card amber"><div class="label">Выручка</div><div class="value">${fmt(total)}</div></div>
+        <div class="stat-card"><div class="label">Заказов</div><div class="value">${orders.length}</div></div>
+        <div class="stat-card"><div class="label">Средний чек</div><div class="value">${fmt(total/orders.length)}</div></div>
+        <div class="stat-card"><div class="label">Клиентов</div><div class="value">${clients.length}</div></div>
+      </div>
+    `;
+  },
+
+  pricelist(){
+    return `
+      <div class="flex-between" style="margin-bottom:16px;">
+        <div class="search-input" style="width:280px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input type="text" placeholder="искать позицию…" oninput="filterPriceList(this.value)">
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="openAddPriceModal()">+ Добавить позицию</button>
+      </div>
+      <div class="card" style="padding:0;">
+        <table class="table"><thead><tr><th>Наименование</th><th>Ед.</th><th>Цена</th><th></th></tr></thead>
+        <tbody id="pricelist-tbody">${priceListRows(priceList)}</tbody></table>
+      </div>
+    `;
+  },
+
+  settings(){
+    return `
+      <div class="section-head"><h2>Минимальные цены и настройки калькуляторов</h2></div>
+      <div class="card">
+        <div class="field">
+          <label>Минимальная стоимость заказа «Широкоформат», ₽</label>
+          <input type="number" id="minPriceWide" value="${calculators.wide.minPrice}">
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="saveMinPrice()">Сохранить</button>
+        <div class="hint">Минимальная цена применяется, если расчёт по формуле даёт меньшую сумму</div>
+      </div>
+    `;
+  },
+};
+
+function ordersRows(list){
+  return list.map(o=>`
+    <tr class="clickable" onclick="openOrderDetail(${o.id})">
+      <td class="text-dim">№${o.id}</td><td>${o.client}</td><td>${o.items.map(i=>i.name).join(', ')}</td>
+      <td class="mono-num">${fmt(o.sum)}</td>
+      <td><span class="badge ${statusBadgeClass(o.status)}"><span class="dot"></span>${statusLabel(o.status)}</span></td>
+      <td class="text-faint">${o.date}</td>
+    </tr>`).join('');
+}
+function filterOrders(status){
+  document.body.dataset.orderFilter = status;
+  const list = status ? orders.filter(o=>o.status===status) : orders;
+  document.getElementById('orders-tbody').innerHTML = ordersRows(list);
+  route('orders'); // re-render pills state
+}
+
+function priceListRows(list){
+  return list.map(p=>`
+    <tr><td>${p.name} ${p.unverified?'<span class="badge badge-unverified" style="margin-left:6px;">не проверено</span>':''}</td>
+    <td class="text-faint">${p.unit}</td><td class="mono-num">${fmt(p.price)}</td>
+    <td style="display:flex;gap:6px;">
+      <button class="icon-btn" onclick="verifyPrice(${p.id})" title="подтвердить">${p.unverified?'✓':''}</button>
+      <button class="icon-btn btn-danger" onclick="deletePrice(${p.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </td></tr>`).join('');
+}
+function filterPriceList(q){
+  const list = priceList.filter(p=>p.name.toLowerCase().includes(q.toLowerCase()));
+  document.getElementById('pricelist-tbody').innerHTML = priceListRows(list);
+}
+function verifyPrice(id){
+  const p = priceList.find(x=>x.id===id);
+  if (p){ p.unverified=false; route('pricelist'); toast('Позиция подтверждена'); }
+}
+function deletePrice(id){
+  priceList = priceList.filter(x=>x.id!==id);
+  route('pricelist');
+  toast('Позиция удалена');
+}
+function saveMinPrice(){
+  const v = parseFloat(document.getElementById('minPriceWide').value);
+  if (!isNaN(v) && v>=0){ calculators.wide.minPrice = v; toast('Минимальная цена сохранена: ' + fmt(v)); }
+}
+
+/* ============ МОДАЛКА: ДОБАВИТЬ ПОЗИЦИЮ В ПРАЙС ============ */
+function openAddPriceModal(){
+  openModal(`
+    <h3>Новая позиция прайса</h3>
+    <div class="field"><label>Наименование</label><input type="text" id="newPriceName" placeholder="например: Брошюровка на пружину"></div>
+    <div class="field"><label>Значение (цена, ₽)</label><input type="number" id="newPriceValue" placeholder="0"></div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" onclick="submitAddPrice()">Добавить</button>
+    </div>
+  `);
+}
+function submitAddPrice(){
+  const name = document.getElementById('newPriceName').value.trim();
+  const value = parseFloat(document.getElementById('newPriceValue').value);
+  if (!name || isNaN(value)){ toast('Заполните название и цену'); return; }
+  priceList.push({id: nextPriceId++, name, unit:'шт', price:value, unverified:true});
+  closeModal();
+  route('pricelist');
+  toast('Позиция добавлена');
+}
+
+/* ============ ЭКРАН "НОВЫЙ ЗАКАЗ" (модалка, реально считает) ============ */
+
+function openOrderModal(){
+  draftOrder = { items: [], client: "", payment: "cash", status: "new", wishes: "" };
+  renderOrderModal();
+}
+
+function renderOrderModal(){
+  const total = draftOrder.items.reduce((s,i)=>s+i.price,0);
+  openModal(`
+    <h3>Новый заказ</h3>
+    <div class="field"><label>Клиент</label><input type="text" id="draftClient" value="${draftOrder.client}" placeholder="имя или телефон" oninput="draftOrder.client=this.value"></div>
+
+    <div class="section-head" style="margin-bottom:8px;"><h2 style="font-size:14px;">Позиции</h2>
+      <button class="btn btn-ghost btn-sm" onclick="draftAddMode='menu'; renderOrderModal();">+ добавить</button>
+    </div>
+
+    <div id="draft-items">
+      ${draftOrder.items.length ? draftOrder.items.map((it,idx)=>`
+        <div class="line-item">
+          <div style="flex:1;"><div class="li-name">${it.name}</div>${it.tag?`<div class="li-tag">${it.tag}</div>`:''}</div>
+          <div class="li-price">${fmt(it.price)}</div>
+          <button class="icon-btn" onclick="removeDraftItem(${idx})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        </div>`).join('') : '<div class="text-faint" style="padding:8px 0;">Пока пусто — добавьте первую позицию</div>'}
+    </div>
+
+    ${draftAddMode==='menu' ? `
+      <div class="pill-group" style="margin:12px 0;">
+        <div class="pill selected" onclick="draftAddMode='price'; renderOrderModal();">Из прайса</div>
+        <div class="pill" onclick="draftAddMode='calc'; renderOrderModal();">Калькулятор</div>
+        <div class="pill" onclick="draftAddMode='manual'; renderOrderModal();">Вручную</div>
+      </div>` : ''}
+
+    ${draftAddMode==='price' ? renderPricePicker() : ''}
+    ${draftAddMode==='calc' ? renderCalcPicker() : ''}
+    ${draftAddMode==='manual' ? renderManualAdd() : ''}
+
+    <div class="divider"></div>
+    <div class="field"><label>Пожелания заказчика</label><textarea oninput="draftOrder.wishes=this.value">${draftOrder.wishes}</textarea></div>
+
+    <div class="field"><label>Способ оплаты</label>
+      <div class="pill-group">
+        <div class="pill ${draftOrder.payment==='cash'?'selected':''}" onclick="draftOrder.payment='cash'; renderOrderModal();">Наличные</div>
+        <div class="pill ${draftOrder.payment==='card'?'selected':''}" onclick="draftOrder.payment='card'; renderOrderModal();">Карта</div>
+        <div class="pill ${draftOrder.payment==='transfer'?'selected':''}" onclick="draftOrder.payment='transfer'; renderOrderModal();">Перевод</div>
+      </div>
+    </div>
+
+    <div class="summary-total"><span class="text-dim">Итого</span><span class="amount">${fmt(total)}</span></div>
+
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal()">Отмена</button>
+      <button class="btn btn-primary" ${draftOrder.items.length===0?'disabled':''} onclick="submitOrder()">Добавить заказ</button>
+    </div>
+  `);
+}
+
+let draftAddMode = null;
+
+function renderPricePicker(){
+  return `
+    <div class="card" style="max-height:220px;overflow-y:auto;margin-bottom:10px;">
+      ${priceList.map(p=>`
+        <div class="flex-between" style="padding:7px 0;cursor:pointer;" onclick="addDraftFromPrice(${p.id})">
+          <span>${p.name} <span class="text-faint">(${p.unit})</span></span><span class="mono-num text-dim">${fmt(p.price)}</span>
+        </div>`).join('')}
+    </div>
+  `;
+}
+function addDraftFromPrice(id){
+  const p = priceList.find(x=>x.id===id);
+  draftOrder.items.push({name:p.name, price:p.price, tag:'из прайс-каталога'});
+  draftAddMode = null;
+  renderOrderModal();
+}
+
+function renderCalcPicker(){
+  return `
+    <div class="card" style="margin-bottom:10px;">
+      <div class="field-row">
+        <div class="field"><label>Ширина, см</label><input type="number" id="calcW" value="100"></div>
+        <div class="field"><label>Высота, см</label><input type="number" id="calcH" value="100"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Количество</label><input type="number" id="calcQty" value="1"></div>
+        <div class="field"><label>Цена за м², ₽</label><input type="number" id="calcPrice" value="900"></div>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;"><input type="checkbox" id="calcLam" style="width:auto;"> Ламинация</label>
+      <div id="calc-preview" class="text-dim" style="margin-bottom:10px;font-size:13px;"></div>
+      <button class="btn btn-primary btn-sm" onclick="addDraftFromCalc()">Добавить в заказ</button>
+    </div>
+  `;
+}
+function addDraftFromCalc(){
+  const params = {
+    width: parseFloat(document.getElementById('calcW').value)||0,
+    height: parseFloat(document.getElementById('calcH').value)||0,
+    qty: parseFloat(document.getElementById('calcQty').value)||1,
+    pricePerM2: parseFloat(document.getElementById('calcPrice').value)||0,
+    lamination: document.getElementById('calcLam').checked,
+  };
+  const r = calculators.wide.compute(params);
+  draftOrder.items.push({
+    name: `Широкоформатная печать ${params.width}×${params.height} см × ${params.qty}${params.lamination?', ламинация':''}`,
+    price: r.price,
+    tag: `расчёт · площадь ${r.area} м² · мин. цена ${fmt(calculators.wide.minPrice)}`
+  });
+  draftAddMode = null;
+  renderOrderModal();
+}
+
+function renderManualAdd(){
+  return `
+    <div class="card" style="margin-bottom:10px;">
+      <div class="field"><label>Наименование</label><input type="text" id="manualName" placeholder="например: Ламинация А4"></div>
+      <div class="field"><label>Значение (цена, ₽)</label><input type="number" id="manualPrice" placeholder="0"></div>
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:12.5px;"><input type="checkbox" id="manualRemember" checked style="width:auto;"> Сохранить как позицию в прайсе</label>
+      <button class="btn btn-primary btn-sm" onclick="addDraftManual()">Добавить в заказ</button>
+    </div>
+  `;
+}
+function addDraftManual(){
+  const name = document.getElementById('manualName').value.trim();
+  const price = parseFloat(document.getElementById('manualPrice').value);
+  if (!name || isNaN(price)){ toast('Заполните название и цену'); return; }
+  draftOrder.items.push({name, price, tag:'добавлено вручную'});
+  if (document.getElementById('manualRemember').checked){
+    priceList.push({id: nextPriceId++, name, unit:'шт', price, unverified:true});
+  }
+  draftAddMode = null;
+  renderOrderModal();
+}
+
+function removeDraftItem(idx){
+  draftOrder.items.splice(idx,1);
+  renderOrderModal();
+}
+
+function submitOrder(){
+  const total = draftOrder.items.reduce((s,i)=>s+i.price,0);
+  const order = {
+    id: nextOrderId++,
+    client: draftOrder.client || 'Без имени',
+    items: draftOrder.items.map(i=>({name:i.name, price:i.price})),
+    sum: total,
+    status: 'new',
+    payment: draftOrder.payment,
+    paid: 0,
+    date: '08.09',
+    wishes: draftOrder.wishes,
+  };
+  orders.unshift(order);
+  closeModal();
+  route('orders');
+  toast(`Заказ №${order.id} создан на сумму ${fmt(total)}`);
+}
+
+/* live-preview калькулятора при вводе */
+document.addEventListener('input', (e)=>{
+  if (['calcW','calcH','calcQty','calcPrice'].includes(e.target.id) || e.target.id==='calcLam'){
+    updateCalcPreview();
+  }
+});
+document.addEventListener('change', (e)=>{
+  if (e.target.id==='calcLam') updateCalcPreview();
+});
+function updateCalcPreview(){
+  const w = document.getElementById('calcW'), h = document.getElementById('calcH');
+  if (!w || !h) return;
+  const params = {
+    width: parseFloat(w.value)||0, height: parseFloat(h.value)||0,
+    qty: parseFloat(document.getElementById('calcQty').value)||1,
+    pricePerM2: parseFloat(document.getElementById('calcPrice').value)||0,
+    lamination: document.getElementById('calcLam').checked,
+  };
+  const r = calculators.wide.compute(params);
+  document.getElementById('calc-preview').textContent = `Площадь: ${r.area} м² → предварительная цена: ${fmt(r.price)}`;
+}
+
+/* ============ КАРТОЧКА ЗАКАЗА ============ */
+
+function openOrderDetail(id){
+  const o = orders.find(x=>x.id===id);
+  if (!o) return;
+  openModal(`
+    <h3>Заказ №${o.id}</h3>
+    <div class="text-dim" style="margin-bottom:14px;">${o.client}</div>
+    ${o.items.map(i=>`<div class="line-item"><div class="li-name" style="flex:1;">${i.name}</div><div class="li-price">${fmt(i.price)}</div></div>`).join('')}
+    ${o.wishes ? `<div class="divider"></div><label>Пожелания</label><p class="text-dim">${o.wishes}</p>` : ''}
+    <div class="divider"></div>
+    <label>Статус</label>
+    <div class="status-track">
+      ${STATUS_FLOW.map(s=>`<div class="status-step ${o.status===s.key?'active':(STATUS_FLOW.findIndex(x=>x.key===o.status)>STATUS_FLOW.findIndex(x=>x.key===s.key)?'done':'')}" onclick="setOrderStatus(${o.id}, '${s.key}')">${s.label}</div>`).join('')}
+    </div>
+    <div class="modal-foot"><button class="btn btn-ghost" onclick="closeModal()">Закрыть</button></div>
+  `);
+}
+function setOrderStatus(id, status){
+  const o = orders.find(x=>x.id===id);
+  if (o){ o.status = status; openOrderDetail(id); route(document.body.dataset.currentRoute||'orders'); toast(`Статус изменён: ${statusLabel(status)}`); }
+}
+function payOrder(id){
+  const o = orders.find(x=>x.id===id);
+  if (o){ o.paid = o.sum; route('cashier'); toast(`Заказ №${id} полностью оплачен`); }
+}
+
+/* ============ СТАРТ ============ */
+route('dashboard');
+</script>
+</body>
+</html>
