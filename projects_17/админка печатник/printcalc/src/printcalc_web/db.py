@@ -78,18 +78,68 @@ CREATE TABLE IF NOT EXISTS order_section_values (
     PRIMARY KEY (order_id, section_id)
 );
 
+-- Клиенты и контакты (Этап 1 роадмапа v6, §6 промт_4): клиент ≠ контакт —
+-- один клиент может иметь несколько контактов разных каналов.
+CREATE TABLE IF NOT EXISTS clients (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT NOT NULL,
+    kind        TEXT NOT NULL DEFAULT 'физлицо',
+    note        TEXT NOT NULL DEFAULT '',
+    archived    INTEGER NOT NULL DEFAULT 0,
+    created_at  TEXT NOT NULL,
+    updated_at  TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS contacts (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    client_id   INTEGER NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
+    channel     TEXT NOT NULL,
+    value       TEXT NOT NULL,
+    created_at  TEXT NOT NULL,
+    UNIQUE (channel, value)
+);
+
+-- Единый реестр материалов (Этап 1, §18 промт_4): один материал — одна
+-- сущность с алиасами (BR-W1). roll/sheet размеры в мм (consumption engine).
+CREATE TABLE IF NOT EXISTS materials (
+    id               INTEGER PRIMARY KEY AUTOINCREMENT,
+    name             TEXT NOT NULL UNIQUE,
+    aliases_json     TEXT NOT NULL DEFAULT '[]',
+    category         TEXT NOT NULL DEFAULT 'general',
+    consumption_mode TEXT NOT NULL DEFAULT 'AREA',
+    base_unit        TEXT NOT NULL DEFAULT 'm2',
+    purchase_unit    TEXT NOT NULL DEFAULT 'm2',
+    purchase_cost    REAL NOT NULL DEFAULT 0,
+    price_unit       TEXT NOT NULL DEFAULT 'm2',
+    roll_width       REAL,
+    roll_length      REAL,
+    sheet_width      REAL,
+    sheet_height     REAL,
+    min_stock        REAL NOT NULL DEFAULT 0,
+    supplier         TEXT,
+    active           INTEGER NOT NULL DEFAULT 1,
+    created_at       TEXT NOT NULL,
+    updated_at       TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
 CREATE INDEX IF NOT EXISTS idx_price_items_name ON price_list_items(name);
 CREATE INDEX IF NOT EXISTS idx_sections_position ON ui_sections(position);
+CREATE INDEX IF NOT EXISTS idx_contacts_client ON contacts(client_id);
+CREATE INDEX IF NOT EXISTS idx_contacts_value ON contacts(value);
+CREATE INDEX IF NOT EXISTS idx_materials_name ON materials(name);
 """
 
 
 def _migrate(conn: sqlite3.Connection) -> None:
-    """Аддитивные миграции (idемпотентно): колонки wishes у orders."""
+    """Аддитивные миграции (idемпотентно): wishes и client_id у orders."""
     columns = {row[1] for row in conn.execute("PRAGMA table_info(orders)")}
     if "wishes" not in columns:
         conn.execute("ALTER TABLE orders ADD COLUMN wishes TEXT NOT NULL DEFAULT ''")
+    if "client_id" not in columns:
+        # Этап 1: заказ узнаёт клиента (nullable — старые заказы анонимны).
+        conn.execute("ALTER TABLE orders ADD COLUMN client_id INTEGER REFERENCES clients(id)")
 
 
 def default_db_path() -> Path:

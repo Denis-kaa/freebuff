@@ -444,6 +444,7 @@ def _order_row_to_dict(
         "created_at": row["created_at"],
         "updated_at": row["updated_at"],
         "wishes": row["wishes"] if "wishes" in row.keys() else "",
+        "client_id": row["client_id"] if "client_id" in row.keys() else None,
         "items": [
             {
                 "kind": item["kind"],
@@ -753,3 +754,384 @@ def off_catalog_report(
         }
         for row in conn.execute(sql, params)
     ]
+
+
+# ---------- клиенты и контакты (Этап 1, §6 промт_4) ----------
+
+#: Закрытый словарь каналов контактов (ANTI-6b); расширение — новой редакцией.
+CONTACT_CHANNELS: tuple[str, ...] = (
+    "phone",
+    "telegram",
+    "vk",
+    "max",
+    "email",
+    "web",
+)
+
+#: Закрытый словарь типов клиента.
+CLIENT_KINDS: tuple[str, ...] = ("физлицо", "компания")
+
+
+def _client_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "name": row["name"],
+        "kind": row["kind"],
+        "note": row["note"],
+        "archived": bool(row["archived"]),
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+    }
+
+
+def _contact_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "client_id": row["client_id"],
+        "channel": row["channel"],
+        "value": row["value"],
+        "created_at": row["created_at"],
+    }
+
+
+def create_client(
+    conn: sqlite3.Connection,
+    *,
+    name: str,
+    kind: str = "физлицо",
+    note: str = "",
+) -> dict[str, Any]:
+    """Создаёт клиента. Raises StoreError при пустом имени/неизвестном типе."""
+    if not name.strip():
+        raise StoreError("имя клиента не может быть пустым")
+    if kind not in CLIENT_KINDS:
+        raise StoreError(f"неизвестный тип клиента: {kind} (допустимо: {CLIENT_KINDS})")
+    now = utc_now()
+    cursor = conn.execute(
+        "INSERT INTO clients (name, kind, note, created_at, updated_at) VALUES (?, ?, ?, ?, ?)",
+        (name.strip(), kind, note, now, now),
+    )
+    conn.commit()
+    row = conn.execute("SELECT * FROM clients WHERE id = ?", (cursor.lastrowid,)).fetchone()
+    return _client_row_to_dict(row)
+
+
+def get_client(conn: sqlite3.Connection, client_id: int) -> dict[str, Any] | None:
+    """Клиент по id (включая архив) или None."""
+    row = conn.execute("SELECT * FROM clients WHERE id = ?", (client_id,)).fetchone()
+    return _client_row_to_dict(row) if row else None
+
+
+def list_clients(
+    conn: sqlite3.Connection, *, query: str | None = None, include_archived: bool = False
+) -> list[dict[str, Any]]:
+    """Список клиентов; query ищет по имени и значению контактов (глобальный поиск)."""
+    if query:
+        like = f"%{query.strip()}%"
+        rows = conn.execute(
+            """
+            SELECT DISTINCT c.* FROM clients c
+            LEFT JOIN contacts ct ON ct.client_id = c.id
+            WHERE (c.name LIKE ? OR ct.value LIKE ?) AND (? OR c.archived = 0)
+            ORDER BY c.name
+            """,
+            (like, like, include_archived),
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT * FROM clients WHERE (? OR archived = 0) ORDER BY name",
+            (include_archived,),
+        ).fetchall()
+    return [_client_row_to_dict(row) for row in rows]
+
+
+def update_client(
+    conn: sqlite3.Connection,
+    client_id: int,
+    *,
+    name: str | None = None,
+    kind: str | None = None,
+    note: str | None = None,
+    archived: bool | None = None,
+) -> dict[str, Any]:
+    """Частичная правка клиента. Raises StoreError если не найден."""
+    current = get_client(conn, client_id)
+    if current is None:
+        raise StoreError(f"клиент {client_id} не найден")
+    if name is not None and not name.strip():
+        raise StoreError("имя клиента не может быть пустым")
+    if kind is not None and kind not in CLIENT_KINDS:
+        raise StoreError(f"неизвестный тип клиента: {kind}")
+    fields: list[str] = []
+    params: list[Any] = []
+    for column, value in (
+        ("name", name.strip() if name is not None else None),
+        ("kind", kind),
+        ("note", note),
+        ("archived", int(archived) if archived is not None else None),
+    ):
+        if value is not None:
+            fields.append(f"{column} = ?")
+            params.append(value)
+    if fields:
+        fields.append("updated_at = ?")
+        params.append(utc_now())
+        params.append(client_id)
+        conn.execute(f"UPDATE clients SET {', '.join(fields)} WHERE id = ?", params)
+        conn.commit()
+    result = get_client(conn, client_id)
+    assert result is not None  # проверено выше
+    return result
+
+
+def add_contact(
+    conn: sqlite3.Connection, client_id: int, *, channel: str, value: str
+) -> dict[str, Any]:
+    """Добавляет контакт клиенту. Raises StoreError: клиент/канал/дубль."""
+    if get_client(conn, client_id) is None:
+        raise StoreError(f"клиент {client_id} не найден")
+    if channel not in CONTACT_CHANNELS:
+        raise StoreError(f"неизвестный канал: {channel} (допустимо: {CONTACT_CHANNELS})")
+    if not value.strip():
+        raise StoreError("значение контакта не может быть пустым")
+    now = utc_now()
+    try:
+        cursor = conn.execute(
+            "INSERT INTO contacts (client_id, channel, value, created_at) VALUES (?, ?, ?, ?)",
+            (client_id, channel, value.strip(), now),
+        )
+    except sqlite3.IntegrityError as exc:
+        raise StoreError(f"контакт {channel}:{value} уже существует") from exc
+    conn.commit()
+    row = conn.execute("SELECT * FROM contacts WHERE id = ?", (cursor.lastrowid,)).fetchone()
+    return _contact_row_to_dict(row)
+
+
+def list_contacts(conn: sqlite3.Connection, client_id: int) -> list[dict[str, Any]]:
+    """Контакты клиента (все каналы)."""
+    rows = conn.execute(
+        "SELECT * FROM contacts WHERE client_id = ? ORDER BY channel, value", (client_id,)
+    ).fetchall()
+    return [_contact_row_to_dict(row) for row in rows]
+
+
+def delete_contact(conn: sqlite3.Connection, contact_id: int) -> None:
+    """Удаляет контакт (сам контакт, не клиента). Raises StoreError если нет."""
+    cursor = conn.execute("DELETE FROM contacts WHERE id = ?", (contact_id,))
+    if cursor.rowcount == 0:
+        raise StoreError(f"контакт {contact_id} не найден")
+    conn.commit()
+
+
+def find_client_by_contact(
+    conn: sqlite3.Connection, *, channel: str, value: str
+) -> dict[str, Any] | None:
+    """Поиск клиента по контакту — основа client matching (§45 промт_4)."""
+    row = conn.execute(
+        "SELECT c.* FROM clients c JOIN contacts ct ON ct.client_id = c.id "
+        "WHERE ct.channel = ? AND ct.value = ?",
+        (channel, value.strip()),
+    ).fetchone()
+    return _client_row_to_dict(row) if row else None
+
+
+def assign_order_client(
+    conn: sqlite3.Connection, order_id: int, client_id: int | None
+) -> dict[str, Any]:
+    """Привязывает клиента к заказу (None — отвязать). Raises StoreError."""
+    if client_id is not None and get_client(conn, client_id) is None:
+        raise StoreError(f"клиент {client_id} не найден")
+    row = conn.execute("SELECT id FROM orders WHERE id = ?", (order_id,)).fetchone()
+    if row is None:
+        raise StoreError(f"заказ {order_id} не найден")
+    conn.execute(
+        "UPDATE orders SET client_id = ?, updated_at = ? WHERE id = ?",
+        (client_id, utc_now(), order_id),
+    )
+    conn.commit()
+    return get_order(conn, order_id)  # type: ignore[return-value]
+
+
+# ---------- реестр материалов (Этап 1, §18 промт_4) ----------
+
+#: Закрытые словари material registry (ANTI-6b; совместимы с consumption engine).
+MATERIAL_MODES: tuple[str, ...] = (
+    "AREA",
+    "LINEAR",
+    "SHEET",
+    "PIECE",
+    "ROLL_NESTING",
+    "SHEET_NESTING",
+    "COUNT",
+    "CUSTOM",
+)
+MATERIAL_UNITS: tuple[str, ...] = ("m2", "lm", "mm", "шт", "лист")
+
+
+def _material_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "name": row["name"],
+        "aliases": json.loads(row["aliases_json"]),
+        "category": row["category"],
+        "consumption_mode": row["consumption_mode"],
+        "base_unit": row["base_unit"],
+        "purchase_unit": row["purchase_unit"],
+        "purchase_cost": row["purchase_cost"],
+        "price_unit": row["price_unit"],
+        "roll_width": row["roll_width"],
+        "roll_length": row["roll_length"],
+        "sheet_width": row["sheet_width"],
+        "sheet_height": row["sheet_height"],
+        "min_stock": row["min_stock"],
+        "supplier": row["supplier"],
+        "active": bool(row["active"]),
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+    }
+
+
+def create_material(conn: sqlite3.Connection, *, fields: dict[str, Any]) -> dict[str, Any]:
+    """Создаёт материал. Raises StoreError: пустое имя/дубль/неизвестные словари."""
+    name = str(fields.get("name", "")).strip()
+    if not name:
+        raise StoreError("название материала не может быть пустым")
+    mode = fields.get("consumption_mode", "AREA")
+    if mode not in MATERIAL_MODES:
+        raise StoreError(f"неизвестный режим расхода: {mode}")
+    base_unit = fields.get("base_unit", "m2")
+    if base_unit not in MATERIAL_UNITS:
+        raise StoreError(f"неизвестная единица: {base_unit}")
+    purchase_cost = float(fields.get("purchase_cost", 0.0))
+    if purchase_cost < 0:
+        raise StoreError("закупочная цена не может быть отрицательной")
+    aliases = list(fields.get("aliases", []))
+    if name in aliases or len(set(aliases)) != len(aliases):
+        raise StoreError("алиасы не должны содержать имя или дублироваться")
+    roll_width = fields.get("roll_width")
+    if mode == "ROLL_NESTING" and (roll_width is None or float(roll_width) <= 0):
+        raise StoreError("рулонный материал требует положительную ширину рулона")
+    now = utc_now()
+    try:
+        cursor = conn.execute(
+            """
+            INSERT INTO materials (name, aliases_json, category, consumption_mode,
+                base_unit, purchase_unit, purchase_cost, price_unit, roll_width,
+                roll_length, sheet_width, sheet_height, min_stock, supplier,
+                active, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                name,
+                json.dumps(aliases, ensure_ascii=False),
+                fields.get("category", "general"),
+                mode,
+                base_unit,
+                fields.get("purchase_unit", base_unit),
+                purchase_cost,
+                fields.get("price_unit", base_unit),
+                roll_width,
+                fields.get("roll_length"),
+                fields.get("sheet_width"),
+                fields.get("sheet_height"),
+                float(fields.get("min_stock", 0.0)),
+                fields.get("supplier"),
+                int(fields.get("active", True)),
+                now,
+                now,
+            ),
+        )
+    except sqlite3.IntegrityError as exc:
+        raise StoreError(f"материал «{name}» уже существует") from exc
+    conn.commit()
+    row = conn.execute("SELECT * FROM materials WHERE id = ?", (cursor.lastrowid,)).fetchone()
+    return _material_row_to_dict(row)
+
+
+def get_material(conn: sqlite3.Connection, material_id: int) -> dict[str, Any] | None:
+    """Материал по id или None."""
+    row = conn.execute("SELECT * FROM materials WHERE id = ?", (material_id,)).fetchone()
+    return _material_row_to_dict(row) if row else None
+
+
+def list_materials(
+    conn: sqlite3.Connection, *, active_only: bool = False, category: str | None = None
+) -> list[dict[str, Any]]:
+    """Список материалов (опционально только активные / по категории)."""
+    sql = "SELECT * FROM materials WHERE (? OR active = 1)"
+    params: list[Any] = [not active_only]
+    if category:
+        sql += " AND category = ?"
+        params.append(category)
+    sql += " ORDER BY name"
+    return [_material_row_to_dict(row) for row in conn.execute(sql, params)]
+
+
+def find_material_by_name(
+    conn: sqlite3.Connection, name: str
+) -> dict[str, Any] | None:
+    """Поиск по имени ИЛИ алиасу — защита от дрейфа словаря (BR-W1)."""
+    row = conn.execute("SELECT * FROM materials WHERE name = ?", (name,)).fetchone()
+    if row:
+        return _material_row_to_dict(row)
+    rows = conn.execute(
+        "SELECT * FROM materials WHERE active = 1", ()
+    ).fetchall()
+    for candidate in rows:
+        if name in json.loads(candidate["aliases_json"]):
+            return _material_row_to_dict(candidate)
+    return None
+
+
+def update_material(
+    conn: sqlite3.Connection, material_id: int, *, fields: dict[str, Any]
+) -> dict[str, Any]:
+    """Частичная правка материала. Raises StoreError: не найден/недопустимые значения."""
+    current = get_material(conn, material_id)
+    if current is None:
+        raise StoreError(f"материал {material_id} не найден")
+    allowed = {
+        "name", "aliases", "category", "consumption_mode", "base_unit",
+        "purchase_unit", "purchase_cost", "price_unit", "roll_width",
+        "roll_length", "sheet_width", "sheet_height", "min_stock",
+        "supplier", "active",
+    }
+    unknown = set(fields) - allowed
+    if unknown:
+        raise StoreError(f"неизвестные поля материала: {sorted(unknown)}")
+    if "consumption_mode" in fields and fields["consumption_mode"] not in MATERIAL_MODES:
+        raise StoreError(f"неизвестный режим расхода: {fields['consumption_mode']}")
+    if "base_unit" in fields and fields["base_unit"] not in MATERIAL_UNITS:
+        raise StoreError(f"неизвестная единица: {fields['base_unit']}")
+    if "purchase_cost" in fields and float(fields["purchase_cost"]) < 0:
+        raise StoreError("закупочная цена не может быть отрицательной")
+    if "name" in fields and not str(fields["name"]).strip():
+        raise StoreError("название материала не может быть пустым")
+    new_mode = fields.get("consumption_mode", current["consumption_mode"])
+    new_roll = fields.get("roll_width", current["roll_width"])
+    if new_mode == "ROLL_NESTING" and (new_roll is None or float(new_roll) <= 0):
+        raise StoreError("рулонный материал требует положительную ширину рулона")
+
+    assignments: list[str] = []
+    params: list[Any] = []
+    column_values: dict[str, Any] = dict(fields)
+    if "aliases" in column_values:
+        column_values["aliases_json"] = json.dumps(
+            list(column_values.pop("aliases")), ensure_ascii=False
+        )
+    if "active" in column_values:
+        column_values["active"] = int(column_values["active"])
+    for column, value in column_values.items():
+        assignments.append(f"{column} = ?")
+        params.append(value)
+    assignments.append("updated_at = ?")
+    params.append(utc_now())
+    params.append(material_id)
+    try:
+        conn.execute(f"UPDATE materials SET {', '.join(assignments)} WHERE id = ?", params)
+        conn.commit()
+    except sqlite3.IntegrityError as exc:
+        raise StoreError(f"материал «{fields.get('name')}» уже существует") from exc
+    result = get_material(conn, material_id)
+    assert result is not None
+    return result

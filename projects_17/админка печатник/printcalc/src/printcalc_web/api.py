@@ -410,3 +410,171 @@ def read_off_catalog_report(
             store.off_catalog_report, conn, date_from=date_from, date_to=date_to
         )
     }
+
+
+# ---------- клиенты (Этап 1, §6 промт_4: клиент ≠ контакт) ----------
+
+
+class ClientIn(BaseModel):
+    """Создание клиента."""
+
+    name: str = Field(min_length=1)
+    kind: str = "физлицо"
+    note: str = ""
+
+
+class ClientPatch(BaseModel):
+    """Правка/архив клиента."""
+
+    name: str | None = Field(default=None, min_length=1)
+    kind: str | None = None
+    note: str | None = None
+    archived: bool | None = None
+
+
+class ContactIn(BaseModel):
+    """Добавление контакта клиенту (канал из закрытого словаря store)."""
+
+    channel: str
+    value: str = Field(min_length=1)
+
+
+@router.get("/clients")
+def list_clients(
+    q: str | None = None,
+    include_archived: bool = False,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Список клиентов; q — поиск по имени и контактам (глобальный поиск §53)."""
+    return {"clients": store.list_clients(conn, query=q, include_archived=include_archived)}
+
+
+@router.post("/clients", status_code=201)
+def create_client(payload: ClientIn, conn: sqlite3.Connection = Depends(get_conn)) -> dict[str, Any]:
+    return _store_guard(store.create_client, conn, name=payload.name, kind=payload.kind, note=payload.note)
+
+
+@router.get("/clients/lookup")
+def lookup_client(
+    channel: str, value: str, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """Client matching по контакту (§45 промт_4): вернуть клиента или null."""
+    found = store.find_client_by_contact(conn, channel=channel, value=value)
+    return {"client": found}
+
+
+@router.get("/clients/{client_id}")
+def read_client(client_id: int, conn: sqlite3.Connection = Depends(get_conn)) -> dict[str, Any]:
+    client = store.get_client(conn, client_id)
+    if client is None:
+        raise HTTPException(status_code=404, detail=f"клиент {client_id} не найден")
+    return {**client, "contacts": store.list_contacts(conn, client_id)}
+
+
+@router.patch("/clients/{client_id}")
+def patch_client(
+    client_id: int, payload: ClientPatch, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    return _store_guard(
+        store.update_client,
+        conn,
+        client_id,
+        name=payload.name,
+        kind=payload.kind,
+        note=payload.note,
+        archived=payload.archived,
+    )
+
+
+@router.post("/clients/{client_id}/contacts", status_code=201)
+def add_contact(
+    client_id: int, payload: ContactIn, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    return _store_guard(store.add_contact, conn, client_id, channel=payload.channel, value=payload.value)
+
+
+@router.delete("/clients/{client_id}/contacts/{contact_id}", status_code=204)
+def remove_contact(
+    client_id: int, contact_id: int, conn: sqlite3.Connection = Depends(get_conn)
+) -> Response:
+    _store_guard(store.delete_contact, conn, contact_id)
+    return Response(status_code=204)
+
+
+class OrderClientPatch(BaseModel):
+    """Привязка клиента к заказу (None — отвязать)."""
+
+    client_id: int | None = None
+
+
+@router.patch("/orders/{order_id}/client")
+def patch_order_client(
+    order_id: int, payload: OrderClientPatch, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    return _store_guard(store.assign_order_client, conn, order_id, payload.client_id)
+
+
+# ---------- реестр материалов (Этап 1, §18 промт_4) ----------
+
+
+class MaterialIn(BaseModel):
+    """Создание материала (режим/единицы — закрытые словари store)."""
+
+    name: str = Field(min_length=1)
+    aliases: list[str] = Field(default_factory=list)
+    category: str = "general"
+    consumption_mode: str = "AREA"
+    base_unit: str = "m2"
+    purchase_unit: str | None = None
+    purchase_cost: float = Field(default=0, ge=0)
+    price_unit: str | None = None
+    roll_width: float | None = Field(default=None, gt=0)
+    roll_length: float | None = Field(default=None, gt=0)
+    sheet_width: float | None = Field(default=None, gt=0)
+    sheet_height: float | None = Field(default=None, gt=0)
+    min_stock: float = Field(default=0, ge=0)
+    supplier: str | None = None
+    active: bool = True
+
+
+@router.get("/materials")
+def list_materials(
+    active_only: bool = False,
+    category: str | None = None,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Список материалов (active_only — для подбора в UI заказа)."""
+    return {"materials": store.list_materials(conn, active_only=active_only, category=category)}
+
+
+@router.post("/materials", status_code=201)
+def create_material(payload: MaterialIn, conn: sqlite3.Connection = Depends(get_conn)) -> dict[str, Any]:
+    fields = payload.model_dump()
+    if fields.get("purchase_unit") is None:
+        fields["purchase_unit"] = fields["base_unit"]
+    if fields.get("price_unit") is None:
+        fields["price_unit"] = fields["base_unit"]
+    return _store_guard(store.create_material, conn, fields=fields)
+
+
+@router.get("/materials/lookup")
+def lookup_material(
+    name: str, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """Поиск материала по имени или алиасу (BR-W1: защита от дрейфа словаря)."""
+    return {"material": store.find_material_by_name(conn, name)}
+
+
+@router.get("/materials/{material_id}")
+def read_material(material_id: int, conn: sqlite3.Connection = Depends(get_conn)) -> dict[str, Any]:
+    material = store.get_material(conn, material_id)
+    if material is None:
+        raise HTTPException(status_code=404, detail=f"материал {material_id} не найден")
+    return material
+
+
+@router.patch("/materials/{material_id}")
+def patch_material(
+    material_id: int, payload: dict[str, Any], conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    return _store_guard(store.update_material, conn, material_id, fields=payload)

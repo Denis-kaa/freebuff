@@ -1,0 +1,69 @@
+{% include "_shell_top.html" %}
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Материалы</h2>
+    <button id="btn-new-material" class="btn btn-primary" type="button">
+      <svg class="ic"><use href="#i-plus"/></svg> Новый материал
+    </button>
+  </div>
+  <div class="toolbar">
+    <label class="check"><input id="materials-active" type="checkbox" checked> только активные</label>
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>Название</th><th>Алиасы</th><th>Режим</th><th>Ед.</th><th>Закупка</th><th>Рулон/лист</th><th></th></tr>
+      </thead>
+      <tbody id="materials-body"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- Диалог материала -->
+<div class="modal-backdrop hidden" id="material-modal">
+  <div class="modal modal-wide">
+    <div class="modal-head">
+      <h3 id="material-modal-title">Новый материал</h3>
+      <button class="btn btn-ghost" id="material-close" type="button">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <label class="span2">Название<input id="material-name" class="field-input" type="text"></label>
+        <label class="span2">Алиасы (через запятую)<input id="material-aliases" class="field-input" type="text" placeholder="Баннер 440, Баннер (обычный)"></label>
+        <label>Режим расхода
+          <select id="material-mode" class="field-input">
+            <option value="AREA">AREA (м²)</option>
+            <option value="LINEAR">LINEAR (пог.м)</option>
+            <option value="SHEET">SHEET (лист)</option>
+            <option value="PIECE">PIECE (шт)</option>
+            <option value="ROLL_NESTING">ROLL_NESTING (рулон)</option>
+            <option value="SHEET_NESTING">SHEET_NESTING (раскрой листа)</option>
+            <option value="COUNT">COUNT (счёт)</option>
+          </select>
+        </label>
+        <label>Единица
+          <select id="material-unit" class="field-input">
+            <option value="m2">м²</option>
+            <option value="lm">пог.м</option>
+            <option value="шт">шт</option>
+            <option value="лист">лист</option>
+          </select>
+        </label>
+        <label>Закупка, ₽<input id="material-cost" class="field-input" type="number" min="0" step="0.01" value="0"></label>
+        <label>Мин. запас<input id="material-minstock" class="field-input" type="number" min="0" step="0.1" value="0"></label>
+        <label>Ширина рулона, мм<input id="material-rollwidth" class="field-input" type="number" min="1" placeholder="для ROLL_NESTING"></label>
+        <label>Длина рулона, мм<input id="material-rolllength" class="field-input" type="number" min="1"></label>
+        <label>Лист: ширина, мм<input id="material-sheetw" class="field-input" type="number" min="1"></label>
+        <label>Лист: высота, мм<input id="material-sheth" class="field-input" type="number" min="1"></label>
+        <label class="span2">Поставщик<input id="material-supplier" class="field-input" type="text"></label>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button id="material-save" class="btn btn-primary" type="button">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/materials.js"></script>
+{% include "_shell_bottom.html" %}

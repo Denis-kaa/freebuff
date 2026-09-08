@@ -59,3 +59,15 @@ def price_list_page(request: Request):
 def constructor_page(request: Request):
     """Конструктор разделов главного экрана заказа."""
     return _render(request, "constructor.html")
+
+
+@router.get("/clients")
+def clients_page(request: Request):
+    """Клиенты: список/поиск, карточка с контактами (Этап 1)."""
+    return _render(request, "clients.html", {"active": "clients"})
+
+
+@router.get("/materials")
+def materials_page(request: Request):
+    """Реестр материалов (Этап 1)."""
+    return _render(request, "materials.html", {"active": "materials"})

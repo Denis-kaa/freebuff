@@ -535,3 +535,67 @@ dialog .muted { margin-top: 6px; }
   .topbar { padding: 10px 14px; }
   .topbar-hint { display: none; }
 }
+
+/* ==========================================================================
+   КЛИЕНТЫ / МАТЕРИАЛЫ (Этап 1): таблицы, тулбар, диалоги, чипы
+   ========================================================================== */
+
+.toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.toolbar .field-input { max-width: 360px; }
+.check { display: inline-flex; align-items: center; gap: 6px; color: var(--text-dim); font-size: 13px; cursor: pointer; }
+
+.field-input {
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 8px 10px;
+  font: inherit;
+  min-width: 0;
+}
+.field-input:focus { border-color: var(--wood); outline: none; box-shadow: 0 0 0 1px var(--wood); }
+
+.table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.table th {
+  text-align: left; font-weight: 600; color: var(--text-dim);
+  padding: 8px 10px; border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+.table td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.table tr:last-child td { border-bottom: none; }
+.row-actions { text-align: right; white-space: nowrap; }
+
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 50;
+  background: rgba(10, 10, 12, 0.6); backdrop-filter: blur(2px);
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 6vh 16px; overflow: auto;
+}
+.modal {
+  background: var(--bg-card); border: 1px solid var(--line); border-radius: 14px;
+  width: 100%; max-width: 560px; box-shadow: 0 18px 60px rgba(0,0,0,.45);
+}
+.modal-wide { max-width: 720px; }
+.modal-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; border-bottom: 1px solid var(--line);
+}
+.modal-head h3 { margin: 0; font-size: 16px; }
+.modal-body { padding: 14px 18px; display: grid; gap: 12px; }
+.modal-foot {
+  display: flex; justify-content: flex-end; gap: 8px;
+  padding: 12px 18px; border-top: 1px solid var(--line);
+}
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+.form-grid label { display: grid; gap: 4px; font-size: 13px; color: var(--text-dim); }
+.form-grid .span2 { grid-column: span 2; }
+
+.plain-list { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 6px; }
+.plain-list li { display: flex; align-items: center; gap: 8px; }
+
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 999px;
+  background: rgba(201, 168, 118, 0.15); color: var(--wood);
+  border: 1px solid rgba(201, 168, 118, 0.35);
+  font-size: 12px; white-space: nowrap;
+}

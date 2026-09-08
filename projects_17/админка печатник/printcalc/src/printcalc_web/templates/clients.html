@@ -1,0 +1,69 @@
+{% include "_shell_top.html" %}
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Клиенты</h2>
+    <button id="btn-new-client" class="btn btn-primary" type="button">
+      <svg class="ic"><use href="#i-plus"/></svg> Новый клиент
+    </button>
+  </div>
+  <div class="toolbar">
+    <input id="client-search" class="field-input" type="search"
+           placeholder="Поиск по имени или контакту (телефон, @ник, email)…">
+    <label class="check"><input id="client-archived" type="checkbox"> показывать архив</label>
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>Имя</th><th>Тип</th><th>Контакты</th><th>Заметка</th><th></th></tr>
+      </thead>
+      <tbody id="clients-body"></tbody>
+    </table>
+  </div>
+</section>
+
+<!-- Диалог клиента: создание/правка + контакты -->
+<div class="modal-backdrop hidden" id="client-modal">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="client-modal-title">Новый клиент</h3>
+      <button class="btn btn-ghost" id="client-close" type="button">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <label>Имя<input id="client-name" class="field-input" type="text"></label>
+        <label>Тип
+          <select id="client-kind" class="field-input">
+            <option value="физлицо">физлицо</option>
+            <option value="компания">компания</option>
+          </select>
+        </label>
+        <label class="span2">Заметка<input id="client-note" class="field-input" type="text"></label>
+      </div>
+
+      <div id="client-contacts-block" class="hidden">
+        <h4>Контакты</h4>
+        <div class="toolbar">
+          <select id="contact-channel" class="field-input">
+            <option value="phone">телефон</option>
+            <option value="telegram">telegram</option>
+            <option value="vk">vk</option>
+            <option value="max">max</option>
+            <option value="email">email</option>
+            <option value="web">web</option>
+          </select>
+          <input id="contact-value" class="field-input" type="text" placeholder="значение контакта">
+          <button id="btn-add-contact" class="btn" type="button">Добавить</button>
+        </div>
+        <ul id="contacts-list" class="plain-list"></ul>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button id="client-archive" class="btn btn-ghost hidden" type="button">В архив</button>
+      <button id="client-save" class="btn btn-primary" type="button">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/clients.js"></script>
+{% include "_shell_bottom.html" %}

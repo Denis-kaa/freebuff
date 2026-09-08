@@ -70,11 +70,11 @@
       </a>
 
       <div class="nav-label">Дальше по плану</div>
-      <a class="nav-item disabled" title="Раздел появится в одном из следующих этапов">
-        <svg class="ic"><use href="#i-users"/></svg><span>Клиенты</span><span class="soon">скоро</span>
+      <a class="nav-item {{ 'active' if active == 'clients' }}" href="/clients">
+        <svg class="ic"><use href="#i-users"/></svg><span>Клиенты</span>
       </a>
-      <a class="nav-item disabled" title="Раздел появится в одном из следующих этапов">
-        <svg class="ic"><use href="#i-package"/></svg><span>Склад</span><span class="soon">скоро</span>
+      <a class="nav-item {{ 'active' if active == 'materials' }}" href="/materials">
+        <svg class="ic"><use href="#i-package"/></svg><span>Материалы</span>
       </a>
       <a class="nav-item disabled" title="Раздел появится в одном из следующих этапов">
         <svg class="ic"><use href="#i-card"/></svg><span>Оплаты</span><span class="soon">скоро</span>

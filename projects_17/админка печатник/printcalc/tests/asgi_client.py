@@ -97,3 +97,6 @@ class ASGITestClient:
 
     def put(self, path: str, **kwargs: Any) -> ASGIResponse:
         return self.request("PUT", path, **kwargs)
+
+    def delete(self, path: str, **kwargs: Any) -> ASGIResponse:
+        return self.request("DELETE", path, **kwargs)
