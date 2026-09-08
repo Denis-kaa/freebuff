@@ -20,11 +20,11 @@ router = APIRouter(include_in_schema=False)
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
 #: starlette <0.29: TemplateResponse(name, context); >=0.29: (request, name, context).
-#: Определяем по имени первого параметра — работает на обеих сигнатурах.
-_TEMPLATE_NEW_STYLE = (
-    bool(inspect.signature(Jinja2Templates.TemplateResponse).parameters)
-    and next(iter(inspect.signature(Jinja2Templates.TemplateResponse).parameters)) == "request"
-)
+#: Первый параметр после self — 'request' в новой сигнатуре, 'name' в старой.
+_TEMPLATE_PARAMS = [
+    name for name in inspect.signature(Jinja2Templates.TemplateResponse).parameters if name != "self"
+]
+_TEMPLATE_NEW_STYLE = bool(_TEMPLATE_PARAMS) and _TEMPLATE_PARAMS[0] == "request"
 
 
 def _render(request: Request, name: str, context: dict[str, Any] | None = None) -> Response:
