@@ -6,33 +6,50 @@ UI Phase 1: функциональность по Р5б важнее красо�
 
 from __future__ import annotations
 
+import inspect
 from pathlib import Path
+from typing import Any
 
 from fastapi import APIRouter, Request
 from fastapi.templating import Jinja2Templates
+from starlette.responses import Response
 
 from printcalc_web.db import default_db_path
 
 router = APIRouter(include_in_schema=False)
 templates = Jinja2Templates(directory=str(Path(__file__).parent / "templates"))
 
+#: starlette <0.29: TemplateResponse(name, context); >=0.29: (request, name, context).
+#: Определяем по имени первого параметра — работает на обеих сигнатурах.
+_TEMPLATE_NEW_STYLE = (
+    bool(inspect.signature(Jinja2Templates.TemplateResponse).parameters)
+    and next(iter(inspect.signature(Jinja2Templates.TemplateResponse).parameters)) == "request"
+)
+
+
+def _render(request: Request, name: str, context: dict[str, Any] | None = None) -> Response:
+    """Рендер шаблона, совместимый со старой и новой сигнатурой starlette."""
+    ctx = dict(context or {})
+    # mypy не может выбрать ветку по runtime-флагу — приводим к Any.
+    respond: Any = templates.TemplateResponse
+    if _TEMPLATE_NEW_STYLE:
+        return respond(request, name, ctx)
+    return respond(name, {**ctx, "request": request})
+
 
 @router.get("/")
 def home(request: Request):
     """Главный экран приёма заказа (Р5б v3)."""
-    # starlette 0.27: старая сигнатура TemplateResponse(name, context).
-    return templates.TemplateResponse(
-        "index.html", {"request": request, "db_path": str(default_db_path())}
-    )
+    return _render(request, "index.html", {"db_path": str(default_db_path())})
 
 
 @router.get("/orders")
 def orders_page(request: Request):
     """Список заказов с фильтром по статусу (Р2 + Р5б)."""
-    return templates.TemplateResponse("orders.html", {"request": request})
+    return _render(request, "orders.html")
 
 
 @router.get("/price-list")
 def price_list_page(request: Request):
     """Прайс-каталог: список, «+», импорт, выгрузка, непроверенные."""
-    return templates.TemplateResponse("price_list.html", {"request": request})
+    return _render(request, "price_list.html")
