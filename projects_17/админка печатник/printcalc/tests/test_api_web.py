@@ -152,3 +152,72 @@ def test_payment_methods_settings_roundtrip(client: ASGITestClient) -> None:
 
     empty = client.put("/api/settings/payment-methods", json={"methods": ["  "]})
     assert empty.status_code == 400
+
+
+def test_constructor_crud_reorder_and_order_sections(client: ASGITestClient) -> None:
+    """Конструктор: сид, CRUD, reorder; заказ с пожеланиями и значениями разделов."""
+    seeded = client.get("/api/sections").json()["sections"]
+    assert [s["title"] for s in seeded] == ["Пожелания заказчика", "Срочность", "Доставка"]
+    wishes_id = seeded[0]["id"]
+
+    created = client.post(
+        "/api/sections", json={"title": "Номер машины", "kind": "text", "required": False}
+    ).json()
+    assert created["kind"] == "text"
+
+    bad_kind = client.post("/api/sections", json={"title": "X", "kind": "dropdown"})
+    assert bad_kind.status_code == 400
+
+    patched = client.patch(
+        f"/api/sections/{created['id']}", json={"title": "Авто на доставку", "required": True}
+    ).json()
+    assert patched["required"] is True
+
+    ids = [s["id"] for s in client.get("/api/sections").json()["sections"]]
+    reordered = client.post("/api/sections/reorder", json={"ids": list(reversed(ids))}).json()
+    assert [s["id"] for s in reordered["sections"]] == list(reversed(ids))
+
+    # Заказ с пожеланиями (свободная форма) + значения разделов.
+    price_item = client.post("/api/price-list", json={"name": "Печать", "price": 10.0}).json()
+    order = client.post(
+        "/api/orders",
+        json={
+            "status": "новый",
+            "payment_method": "наличные",
+            "items": [{"kind": "price_list", "price_list_item_id": price_item["id"]}],
+            "wishes": "Позвонить за час до готовности",
+            "section_values": {str(wishes_id): "Без полей — свободная форма"},
+        },
+    ).json()
+    assert order["wishes"] == "Позвонить за час до готовности"
+
+    values = client.get(f"/api/orders/{order['id']}/sections").json()["sections"]
+    by_id = {s["section_id"]: s for s in values}
+    assert by_id[wishes_id]["value"] == "Без полей — свободная форма"
+
+    # PATCH пожеланий отдельно.
+    updated = client.patch(f"/api/orders/{order['id']}", json={"wishes": "Обновили пожелание"}).json()
+    assert updated["wishes"] == "Обновили пожелание"
+
+    # export.txt содержит блок пожеланий.
+    export_text = client.get(f"/api/orders/{order['id']}/export.txt").text
+    assert "Пожелания заказчика:" in export_text
+    assert "Обновили пожелание" in export_text
+
+    # Обязательный раздел без значения → 400.
+    req = client.post("/api/sections", json={"title": "Контакт", "kind": "text", "required": True}).json()
+    order2 = client.post(
+        "/api/orders",
+        json={
+            "status": "новый",
+            "payment_method": "наличные",
+            "items": [{"kind": "price_list", "price_list_item_id": price_item["id"]}],
+            "section_values": {str(req["id"]): ""},
+        },
+    )
+    assert order2.status_code == 400
+
+    # Конструкторская страница отдаётся.
+    page = client.get("/constructor")
+    assert page.status_code == 200
+    assert "Конструктор" in page.text

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Печатник — конструктор экрана</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/">Приём заказа</a>
+    <a href="/orders">Заказы</a>
+    <a href="/price-list">Прайс-каталог</a>
+    <a href="/constructor" class="current">Конструктор</a>
+  </nav>
+
+  <h1>Конструктор разделов заказа</h1>
+  <p class="muted">Разделы появляются на главном экране приёма заказа в этом же порядке.
+     Раздел «Пожелания заказчика» — свободная форма, его можно менять как любой другой.</p>
+
+  <div class="panel">
+    <h2>Разделы</h2>
+    <table id="sections-table">
+      <thead>
+        <tr><th></th><th>Название</th><th>Тип</th><th>Варианты / подсказка</th><th>Обязателен</th><th></th></tr>
+      </thead>
+      <tbody id="sections-body"></tbody>
+    </table>
+    <div id="sections-error" class="error"></div>
+    <div class="row" style="margin-top:8px">
+      <button id="btn-reorder-save" class="btn" disabled>Сохранить порядок</button>
+      <button id="btn-reorder-reset" class="btn" disabled>Сбросить порядок</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Новый раздел</h2>
+    <div class="row">
+      <input id="new-section-title" placeholder="Название раздела" style="flex:1">
+      <select id="new-section-kind">
+        <option value="textarea">текст (многострочный)</option>
+        <option value="text">текст (одна строка)</option>
+        <option value="select">выбор из вариантов</option>
+        <option value="checkbox">галочка</option>
+        <option value="number">число</option>
+        <option value="date">дата</option>
+      </select>
+      <label class="row"><input type="checkbox" id="new-section-required"> обязателен</label>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <input id="new-section-options" style="flex:1" placeholder="Варианты через запятую (только для «выбор из вариантов»)">
+    </div>
+    <div id="new-section-error" class="error"></div>
+    <div class="row" style="margin-top:8px">
+      <button id="btn-add-section" class="primary">Добавить раздел</button>
+    </div>
+  </div>
+
+  <!-- Диалог правки раздела -->
+  <dialog id="dlg-section">
+    <h2>Правка раздела</h2>
+    <div class="row">
+      <input id="edit-section-title" style="flex:1" placeholder="Название">
+      <select id="edit-section-kind">
+        <option value="textarea">текст (многострочный)</option>
+        <option value="text">текст (одна строка)</option>
+        <option value="select">выбор из вариантов</option>
+        <option value="checkbox">галочка</option>
+        <option value="number">число</option>
+        <option value="date">дата</option>
+      </select>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <input id="edit-section-options" style="flex:1" placeholder="Варианты через запятую">
+      <label class="row"><input type="checkbox" id="edit-section-required"> обязателен</label>
+    </div>
+    <div id="edit-section-error" class="error"></div>
+    <div class="row" style="margin-top:8px">
+      <button id="btn-section-save" class="primary">Сохранить</button>
+      <button id="btn-section-archive">В архив</button>
+      <button data-close>Отмена</button>
+    </div>
+  </dialog>
+
+  <script src="/static/constructor.js"></script>
+</body>
+</html>

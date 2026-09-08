@@ -11,6 +11,7 @@
     <a href="/">Приём заказа</a>
     <a href="/orders" class="current">Заказы</a>
     <a href="/price-list">Прайс-каталог</a>
+    <a href="/constructor">Конструктор</a>
   </nav>
 
   <h1>Заказы</h1>
@@ -34,6 +35,11 @@
   <dialog id="dlg-order">
     <h2>Заказ #<span id="dlg-order-id"></span></h2>
     <table id="dlg-order-items"></table>
+    <div id="dlg-order-wishes" class="hidden" style="margin-top:8px">
+      <b>Пожелания заказчика:</b>
+      <div id="dlg-order-wishes-text" class="notice" style="white-space:pre-wrap"></div>
+    </div>
+    <div id="dlg-order-sections" style="margin-top:8px"></div>
     <div class="row">
       <label>Статус:
         <select id="dlg-order-status">

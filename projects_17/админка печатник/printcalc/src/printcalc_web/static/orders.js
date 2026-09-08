@@ -81,6 +81,20 @@ async function openOrder(orderId) {
       .join("") +
     "</tbody>";
   $("#dlg-order-status").value = currentOrder.status;
+  // Пожелания заказчика (свободная форма).
+  const wishes = String(currentOrder.wishes || "").trim();
+  if (wishes) {
+    $("#dlg-order-wishes").classList.remove("hidden");
+    $("#dlg-order-wishes-text").textContent = wishes;
+  } else {
+    $("#dlg-order-wishes").classList.add("hidden");
+  }
+  // Значения динамических разделов.
+  const sectionsData = await apiFetch(`/orders/${orderId}/sections`);
+  const filled = sectionsData.sections.filter((s) => String(s.value).trim() !== "");
+  $("#dlg-order-sections").innerHTML = filled.length
+    ? filled.map((s) => `<div><b>${escapeHtml(s.title)}:</b> ${escapeHtml(s.value)}</div>`).join("")
+    : "";
   $("#btn-order-export").href = `/api/orders/${orderId}/export.txt`;
   $("#dlg-order-msg").textContent = "";
   $("#dlg-order").showModal();

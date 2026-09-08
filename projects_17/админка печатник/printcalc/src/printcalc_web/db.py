@@ -56,10 +56,40 @@ CREATE TABLE IF NOT EXISTS settings (
     value TEXT NOT NULL
 );
 
+-- Конструктор разделов заказа (2026-09-08): пользователь сам добавляет/
+-- меняет/сортирует разделы главного экрана. kinds — закрытый словарь
+-- (ANTI-6b), проверяется в store.
+CREATE TABLE IF NOT EXISTS ui_sections (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    title       TEXT NOT NULL,
+    kind        TEXT NOT NULL,
+    required    INTEGER NOT NULL DEFAULT 0,
+    options_json TEXT NOT NULL DEFAULT '[]',
+    position    INTEGER NOT NULL DEFAULT 0,
+    archived    INTEGER NOT NULL DEFAULT 0,
+    created_at  TEXT NOT NULL,
+    updated_at  TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS order_section_values (
+    order_id   INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    section_id INTEGER NOT NULL REFERENCES ui_sections(id) ON DELETE CASCADE,
+    value      TEXT NOT NULL DEFAULT '',
+    PRIMARY KEY (order_id, section_id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
 CREATE INDEX IF NOT EXISTS idx_price_items_name ON price_list_items(name);
+CREATE INDEX IF NOT EXISTS idx_sections_position ON ui_sections(position);
 """
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    """Аддитивные миграции (idемпотентно): колонки wishes у orders."""
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(orders)")}
+    if "wishes" not in columns:
+        conn.execute("ALTER TABLE orders ADD COLUMN wishes TEXT NOT NULL DEFAULT ''")
 
 
 def default_db_path() -> Path:
@@ -80,4 +110,5 @@ def connect(db_path: Path | None = None) -> sqlite3.Connection:
     conn.execute("PRAGMA foreign_keys = ON")
     conn.execute("PRAGMA journal_mode = WAL")
     conn.executescript(_SCHEMA)
+    _migrate(conn)
     return conn

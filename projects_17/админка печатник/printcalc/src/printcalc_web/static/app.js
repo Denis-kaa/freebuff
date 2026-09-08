@@ -308,6 +308,47 @@ $("#btn-calc-add").addEventListener("click", () => {
   dlgCalc.close();
 });
 
+/* ---------- динамические разделы (конструктор) + пожелания ---------- */
+
+let orderSections = [];
+
+function sectionControlHtml(section) {
+  const id = "section-" + section.id;
+  let control;
+  if (section.kind === "textarea") {
+    control = `<textarea id="${id}" rows="2" style="width:100%"></textarea>`;
+  } else if (section.kind === "select") {
+    const options = section.options.map((opt) => `<option value="${escapeHtml(opt)}">${escapeHtml(opt)}</option>`).join("");
+    control = `<select id="${id}"><option value="">—</option>${options}</select>`;
+  } else if (section.kind === "checkbox") {
+    return `<div class="calc-field"><label><input type="checkbox" id="${id}"> ${escapeHtml(section.title)}${section.required ? " *" : ""}</label></div>`;
+  } else if (section.kind === "number") {
+    control = `<input type="number" id="${id}" step="any">`;
+  } else if (section.kind === "date") {
+    control = `<input type="date" id="${id}">`;
+  } else {
+    control = `<input type="text" id="${id}">`;
+  }
+  return `<div class="calc-field"><label for="${id}">${escapeHtml(section.title)}${section.required ? " *" : ""}</label>${control}</div>`;
+}
+
+async function loadOrderSections() {
+  const data = await apiFetch("/sections");
+  orderSections = data.sections;
+  $("#dynamic-sections").innerHTML = orderSections.map(sectionControlHtml).join("");
+}
+
+function collectSectionValues() {
+  const values = {};
+  orderSections.forEach((section) => {
+    const el = document.getElementById("section-" + section.id);
+    if (!el) return;
+    if (section.kind === "checkbox") values[String(section.id)] = el.checked ? "да" : "";
+    else values[String(section.id)] = el.value;
+  });
+  return values;
+}
+
 /* ---------- сохранение заказа («Добавить») ---------- */
 
 async function loadPaymentMethods() {
@@ -334,6 +375,8 @@ $("#btn-save").addEventListener("click", async () => {
       price: item.price,
       save_to_catalog: item.save_to_catalog !== false,
     })),
+    wishes: $("#order-wishes").value,
+    section_values: collectSectionValues(),
   };
   try {
     const order = await apiFetch("/orders", { method: "POST", body: JSON.stringify(body) });
@@ -347,3 +390,4 @@ $("#btn-save").addEventListener("click", async () => {
 
 loadPaymentMethods();
 renderDraft();
+loadOrderSections();

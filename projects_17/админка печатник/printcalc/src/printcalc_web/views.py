@@ -53,3 +53,9 @@ def orders_page(request: Request):
 def price_list_page(request: Request):
     """Прайс-каталог: список, «+», импорт, выгрузка, непроверенные."""
     return _render(request, "price_list.html")
+
+
+@router.get("/constructor")
+def constructor_page(request: Request):
+    """Конструктор разделов главного экрана заказа."""
+    return _render(request, "constructor.html")

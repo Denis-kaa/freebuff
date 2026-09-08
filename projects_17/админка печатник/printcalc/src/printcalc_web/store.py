@@ -30,6 +30,16 @@ ORDER_STATUSES: tuple[str, ...] = ("новый", "в работе", "выпол�
 #: Способы оплаты (решение Q2 от 2026-09-07); редактируется без кода.
 DEFAULT_PAYMENT_METHODS: tuple[str, ...] = ("наличные", "карта", "перевод")
 
+#: Конструктор разделов (2026-09-08): закрытый словарь типов раздела (ANTI-6b).
+SECTION_KINDS: tuple[str, ...] = ("text", "select", "checkbox", "number", "date")
+
+#: Разделы по умолчанию (сид при первом запуске; пользователь меняет их свободно).
+DEFAULT_SECTIONS: tuple[dict[str, Any], ...] = (
+    {"title": "Пожелания заказчика", "kind": "textarea", "required": False, "options": []},
+    {"title": "Срочность", "kind": "select", "required": False, "options": ["обычная", "к завтрашнему дню", "срочно"]},
+    {"title": "Доставка", "kind": "select", "required": False, "options": ["самовывоз", "доставка", "доставка + монтаж"]},
+)
+
 _IMPORT_SEPARATOR = re.compile(r"\s+[-—–]\s+|\t")
 
 
@@ -372,6 +382,8 @@ def create_order(
     status: str,
     payment_method: str,
     items: list[Mapping[str, Any]],
+    wishes: str = "",
+    section_values: Mapping[str, str | None] | None = None,
 ) -> dict[str, Any]:
     """Создаёт заказ: резолв позиций, сумма, счётчики использования."""
     if status not in ORDER_STATUSES:
@@ -413,6 +425,9 @@ def create_order(
             ),
         )
     increment_usage(conn, [i["price_list_item_id"] for i in resolved if i["price_list_item_id"]])
+    conn.execute("UPDATE orders SET wishes = ? WHERE id = ?", (wishes.strip(), order_id))
+    if section_values:
+        set_order_sections(conn, order_id, section_values)
     conn.commit()
     return get_order(conn, order_id)
 
@@ -428,6 +443,7 @@ def _order_row_to_dict(
         "total": row["total"],
         "created_at": row["created_at"],
         "updated_at": row["updated_at"],
+        "wishes": row["wishes"] if "wishes" in row.keys() else "",
         "items": [
             {
                 "kind": item["kind"],
@@ -490,8 +506,9 @@ def update_order(
     *,
     status: str | None = None,
     payment_method: str | None = None,
+    wishes: str | None = None,
 ) -> dict[str, Any]:
-    """Меняет статус и/или способ оплаты (состав заказа после «Добавить» закрыт)."""
+    """Меняет статус/оплату/пожелания (состав заказа после «Добавить» закрыт)."""
     get_order(conn, order_id)
     if status is not None:
         if status not in ORDER_STATUSES:
@@ -505,9 +522,200 @@ def update_order(
         conn.execute(
             "UPDATE orders SET payment_method = ? WHERE id = ?", (payment_method, order_id)
         )
+    if wishes is not None:
+        conn.execute("UPDATE orders SET wishes = ? WHERE id = ?", (wishes.strip(), order_id))
     conn.execute("UPDATE orders SET updated_at = ? WHERE id = ?", (utc_now(), order_id))
     conn.commit()
     return get_order(conn, order_id)
+
+
+# ---------- конструктор разделов заказа ----------
+
+
+def _section_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "title": row["title"],
+        "kind": row["kind"],
+        "required": bool(row["required"]),
+        "options": json.loads(row["options_json"]),
+        "position": row["position"],
+        "archived": bool(row["archived"]),
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+    }
+
+
+def seed_sections(conn: sqlite3.Connection) -> None:
+    """Сид разделов по умолчанию (идемпотентно): только если таблица пуста."""
+    count = conn.execute("SELECT COUNT(*) FROM ui_sections").fetchone()[0]
+    if count:
+        return
+    now = utc_now()
+    for position, section in enumerate(DEFAULT_SECTIONS):
+        conn.execute(
+            "INSERT INTO ui_sections (title, kind, required, options_json, position, created_at, updated_at)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                section["title"],
+                section["kind"],
+                int(section["required"]),
+                json.dumps(section["options"], ensure_ascii=False),
+                position,
+                now,
+                now,
+            ),
+        )
+    conn.commit()
+
+
+def list_sections(
+    conn: sqlite3.Connection, *, include_archived: bool = False
+) -> list[dict[str, Any]]:
+    """Разделы главного экрана по позиции (архив — по флагу)."""
+    sql = "SELECT * FROM ui_sections"
+    if not include_archived:
+        sql += " WHERE archived = 0"
+    sql += " ORDER BY position, id"
+    return [_section_row_to_dict(row) for row in conn.execute(sql)]
+
+
+def add_section(
+    conn: sqlite3.Connection,
+    *,
+    title: str,
+    kind: str,
+    required: bool = False,
+    options: list[str] | None = None,
+) -> dict[str, Any]:
+    """Новый раздел конструктора. kind — закрытый словарь SECTION_KINDS."""
+    clean_title = title.strip()
+    if not clean_title:
+        raise StoreError("название раздела не может быть пустым")
+    if kind not in SECTION_KINDS:
+        raise StoreError(
+            f"недопустимый тип раздела: '{kind}' (допустимо: {', '.join(SECTION_KINDS)})"
+        )
+    clean_options = [option.strip() for option in (options or []) if option.strip()]
+    if kind == "select" and not clean_options:
+        raise StoreError("для типа select нужен список вариантов")
+    max_pos = conn.execute(
+        "SELECT COALESCE(MAX(position), -1) FROM ui_sections"
+    ).fetchone()[0]
+    now = utc_now()
+    cursor = conn.execute(
+        "INSERT INTO ui_sections (title, kind, required, options_json, position, created_at, updated_at)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (clean_title, kind, int(required), json.dumps(clean_options, ensure_ascii=False), int(max_pos) + 1, now, now),
+    )
+    conn.commit()
+    row = conn.execute("SELECT * FROM ui_sections WHERE id = ?", (cursor.lastrowid,)).fetchone()
+    return _section_row_to_dict(row)
+
+
+def update_section(
+    conn: sqlite3.Connection,
+    section_id: int,
+    *,
+    title: str | None = None,
+    kind: str | None = None,
+    required: bool | None = None,
+    options: list[str] | None = None,
+    archived: bool | None = None,
+) -> dict[str, Any]:
+    """Правка/архивирование раздела (Additive: ничего не удаляем физически)."""
+    row = conn.execute("SELECT * FROM ui_sections WHERE id = ?", (section_id,)).fetchone()
+    if row is None:
+        raise StoreError(f"раздел не найден: id={section_id}")
+    new_title = title.strip() if title is not None else row["title"]
+    if not new_title:
+        raise StoreError("название раздела не может быть пустым")
+    new_kind = kind if kind is not None else row["kind"]
+    if new_kind not in SECTION_KINDS:
+        raise StoreError(
+            f"недопустимый тип раздела: '{new_kind}' (допустимо: {', '.join(SECTION_KINDS)})"
+        )
+    new_options = (
+        [option.strip() for option in options if option.strip()] if options is not None else json.loads(row["options_json"])
+    )
+    if new_kind == "select" and not new_options:
+        raise StoreError("для типа select нужен список вариантов")
+    new_required = int(required) if required is not None else row["required"]
+    new_archived = int(archived) if archived is not None else row["archived"]
+    conn.execute(
+        "UPDATE ui_sections SET title = ?, kind = ?, required = ?, options_json = ?,"
+        " archived = ?, updated_at = ? WHERE id = ?",
+        (new_title, new_kind, new_required, json.dumps(new_options, ensure_ascii=False), new_archived, utc_now(), section_id),
+    )
+    conn.commit()
+    updated = conn.execute("SELECT * FROM ui_sections WHERE id = ?", (section_id,)).fetchone()
+    return _section_row_to_dict(updated)
+
+
+def reorder_sections(conn: sqlite3.Connection, ordered_ids: list[int]) -> list[dict[str, Any]]:
+    """Пересортировка разделов: полный порядок идентификаторов обязателен."""
+    existing = {row["id"] for row in conn.execute("SELECT id FROM ui_sections WHERE archived = 0")}
+    if set(ordered_ids) != existing or len(ordered_ids) != len(existing):
+        raise StoreError("список reorder должен содержать все активные разделы ровно один раз")
+    for position, section_id in enumerate(ordered_ids):
+        conn.execute(
+            "UPDATE ui_sections SET position = ?, updated_at = ? WHERE id = ?",
+            (position, utc_now(), section_id),
+        )
+    conn.commit()
+    return list_sections(conn)
+
+
+def set_order_sections(
+    conn: sqlite3.Connection,
+    order_id: int,
+    values: Mapping[str, str | None],
+) -> None:
+    """Сохраняет значения разделов заказа. Ключ — id раздела (строкой).
+
+    Значение None/'' для необязательного раздела = пусто; для required-раздела
+    пустое значение — StoreError (правило: обязательное — значит обязательное).
+    """
+    get_order(conn, order_id)
+    sections = {str(section["id"]): section for section in list_sections(conn)}
+    for section_id, raw in values.items():
+        if section_id not in sections:
+            raise StoreError(f"неизвестный раздел: id={section_id}")
+        section = sections[section_id]
+        value = "" if raw is None else str(raw).strip()
+        if section["required"] and not value:
+            raise StoreError(f"раздел «{section['title']}» обязателен")
+        if section["kind"] == "select" and value and value not in section["options"]:
+            raise StoreError(
+                f"значение «{value}» не входит в варианты раздела «{section['title']}»"
+            )
+        conn.execute(
+            "INSERT INTO order_section_values (order_id, section_id, value) VALUES (?, ?, ?)"
+            " ON CONFLICT(order_id, section_id) DO UPDATE SET value = excluded.value",
+            (order_id, int(section_id), value),
+        )
+    conn.commit()
+
+
+def get_order_sections(conn: sqlite3.Connection, order_id: int) -> list[dict[str, Any]]:
+    """Значения разделов заказа вместе с метаданными раздела (для UI/экспорта)."""
+    rows = conn.execute(
+        "SELECT s.id, s.title, s.kind, s.required, s.position, v.value"
+        " FROM ui_sections s"
+        " LEFT JOIN order_section_values v ON v.section_id = s.id AND v.order_id = ?"
+        " WHERE s.archived = 0 ORDER BY s.position, s.id",
+        (order_id,),
+    ).fetchall()
+    return [
+        {
+            "section_id": row["id"],
+            "title": row["title"],
+            "kind": row["kind"],
+            "required": bool(row["required"]),
+            "value": row["value"] if row["value"] is not None else "",
+        }
+        for row in rows
+    ]
 
 
 def off_catalog_report(

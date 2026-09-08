@@ -100,13 +100,41 @@ class OrderIn(BaseModel):
     status: str = store.ORDER_STATUSES[0]
     payment_method: str = Field(min_length=1)
     items: list[OrderItemIn] = Field(min_length=1)
+    wishes: str = ""
+    section_values: dict[str, str | None] = Field(default_factory=dict)
 
 
 class OrderPatch(BaseModel):
-    """Смена статуса/оплаты существующего заказа (Р2)."""
+    """Смена статуса/оплаты/пожеланий существующего заказа (Р2)."""
 
     status: str | None = None
     payment_method: str | None = None
+    wishes: str | None = None
+
+
+class SectionIn(BaseModel):
+    """Создание раздела конструктора."""
+
+    title: str = Field(min_length=1)
+    kind: str
+    required: bool = False
+    options: list[str] = Field(default_factory=list)
+
+
+class SectionPatch(BaseModel):
+    """Правка/архив раздела конструктора."""
+
+    title: str | None = Field(default=None, min_length=1)
+    kind: str | None = None
+    required: bool | None = None
+    options: list[str] | None = None
+    archived: bool | None = None
+
+
+class SectionReorderIn(BaseModel):
+    """Пересортировка разделов: полный список id в новом порядке."""
+
+    ids: list[int] = Field(min_length=1)
 
 
 class ParseIn(BaseModel):
@@ -271,6 +299,8 @@ def create_order(
         status=payload.status,
         payment_method=payload.payment_method,
         items=[item.model_dump() for item in payload.items],
+        wishes=payload.wishes,
+        section_values=payload.section_values,
     )
     return order
 
@@ -297,6 +327,7 @@ def patch_order(
         order_id,
         status=payload.status,
         payment_method=payload.payment_method,
+        wishes=payload.wishes,
     )
 
 
@@ -306,11 +337,62 @@ def export_order_txt(
 ) -> Response:
     """OrderExport (Р1): текст для ручного переноса в WF."""
     order = _store_guard(store.get_order, conn, order_id)
+    sections = _store_guard(store.get_order_sections, conn, order_id)
     return Response(
-        content=export.order_to_text(order),
+        content=export.order_to_text(order, sections),
         media_type="text/plain; charset=utf-8",
         headers={"Content-Disposition": f'attachment; filename="order-{order_id}.txt"'},
     )
+
+
+# ---------- конструктор разделов ----------
+
+
+@router.get("/sections")
+def read_sections(
+    include_archived: bool = False, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """Разделы главного экрана (конструктор)."""
+    store.seed_sections(conn)
+    return {
+        "sections": _store_guard(store.list_sections, conn, include_archived=include_archived)
+    }
+
+
+@router.post("/sections", status_code=201)
+def create_section(
+    payload: SectionIn, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    return _store_guard(
+        store.add_section,
+        conn,
+        title=payload.title,
+        kind=payload.kind,
+        required=payload.required,
+        options=payload.options,
+    )
+
+
+@router.patch("/sections/{section_id}")
+def patch_section(
+    section_id: int, payload: SectionPatch, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    return _store_guard(store.update_section, conn, section_id, **payload.model_dump(exclude_none=True))
+
+
+@router.post("/sections/reorder")
+def reorder_sections(
+    payload: SectionReorderIn, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    return {"sections": _store_guard(store.reorder_sections, conn, payload.ids)}
+
+
+@router.get("/orders/{order_id}/sections")
+def read_order_sections(
+    order_id: int, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """Значения разделов конкретного заказа."""
+    return {"sections": _store_guard(store.get_order_sections, conn, order_id)}
 
 
 # ---------- отчёты ----------
