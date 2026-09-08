@@ -17,6 +17,8 @@ from printcalc.calculators.riso import register as register_riso
 from printcalc.calculators.riso.config import AREA_MULTIPLIERS
 from printcalc.calculators.tablichki import TablichkiConfig
 from printcalc.calculators.tablichki import register as register_tablichki
+from printcalc.calculators.wide import WideConfig
+from printcalc.calculators.wide import register as register_wide
 from printcalc.engine.registry import CalculatorRegistry
 from printcalc.engine.result import CalcResult
 from printcalc.engine.spec import CalculatorSpec, FieldKind, FieldSpec
@@ -24,10 +26,11 @@ from printcalc.engine.spec import CalculatorSpec, FieldKind, FieldSpec
 
 @lru_cache(maxsize=1)
 def get_registry() -> CalculatorRegistry:
-    """Собирает реестр калькуляторов (Riso + таблички)."""
+    """Собирает реестр калькуляторов (Riso + таблички + широкоформат)."""
     registry = CalculatorRegistry()
     register_riso(registry)
     register_tablichki(registry)
+    register_wide(registry)
     return registry
 
 
@@ -53,10 +56,22 @@ def _tablichki_option_lists() -> dict[str, tuple[str, ...]]:
     }
 
 
+@lru_cache(maxsize=1)
+def _wide_option_lists() -> dict[str, tuple[str, ...]]:
+    """Допустимые наборы STRING-полей широкоформата из канонического конфига."""
+    config = WideConfig()
+    return {
+        "material": tuple(config.material_names),
+        "print": tuple(config.print_names),
+        "mount": tuple(config.mount_names),
+    }
+
+
 #: Резолверы опций STRING-полей по id калькулятора.
 _OPTION_RESOLVERS: dict[str, Callable[[], dict[str, tuple[str, ...]]]] = {
     "riso": _riso_option_lists,
     "tablichki": _tablichki_option_lists,
+    "wide": _wide_option_lists,
 }
 
 
