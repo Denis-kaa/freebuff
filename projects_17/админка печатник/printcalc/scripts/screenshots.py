@@ -69,7 +69,7 @@ def seed() -> None:
     for item in DEMO_PRICE_ITEMS:
         status, created = api("POST", "/price-list", item)
         assert status == 201, f"price item failed: {status} {created}"
-        ids[item["name"]] = created["id"]
+        ids[str(item["name"])] = int(created["id"])
     status, order = api(
         "POST",
         "/orders",

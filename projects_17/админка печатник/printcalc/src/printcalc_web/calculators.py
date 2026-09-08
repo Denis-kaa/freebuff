@@ -2,28 +2,32 @@
 
 Реестр — единственный источник цен расчётных позиций: заказ пересчитывает
 цены на сервере и не доверяет клиентским значениям. Опции STRING-полей
-(format/paper/color у Riso) зависят от RisoConfig — для UI они достаются
-из канонического конфига (Phase 3 заменит это динамическими ENUM).
+(format/paper/color у Riso, material/print/mount у табличек) зависят от
+канонического конфига калькулятора — для UI они достаются из конфига через
+per-calculator резолвер (Phase 3 заменит это динамическими ENUM).
 """
 
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Any
+from typing import Any, Callable
 
 from printcalc.calculators.riso import RisoConfig
 from printcalc.calculators.riso import register as register_riso
 from printcalc.calculators.riso.config import AREA_MULTIPLIERS
+from printcalc.calculators.tablichki import TablichkiConfig
+from printcalc.calculators.tablichki import register as register_tablichki
 from printcalc.engine.registry import CalculatorRegistry
 from printcalc.engine.result import CalcResult
-from printcalc.engine.spec import CalculatorSpec, FieldKind
+from printcalc.engine.spec import CalculatorSpec, FieldKind, FieldSpec
 
 
 @lru_cache(maxsize=1)
 def get_registry() -> CalculatorRegistry:
-    """Собирает реестр калькуляторов Phase 1 (пока только Riso)."""
+    """Собирает реестр калькуляторов (Riso + таблички)."""
     registry = CalculatorRegistry()
     register_riso(registry)
+    register_tablichki(registry)
     return registry
 
 
@@ -38,10 +42,30 @@ def _riso_option_lists() -> dict[str, tuple[str, ...]]:
     }
 
 
-def _field_to_dict(field_spec: Any, spec_id: str) -> dict[str, Any]:
+@lru_cache(maxsize=1)
+def _tablichki_option_lists() -> dict[str, tuple[str, ...]]:
+    """Допустимые наборы STRING-полей табличек из канонического конфига."""
+    config = TablichkiConfig()
+    return {
+        "material": tuple(config.materials),
+        "print": tuple(config.prints),
+        "mount": tuple(config.mounts),
+    }
+
+
+#: Резолверы опций STRING-полей по id калькулятора.
+_OPTION_RESOLVERS: dict[str, Callable[[], dict[str, tuple[str, ...]]]] = {
+    "riso": _riso_option_lists,
+    "tablichki": _tablichki_option_lists,
+}
+
+
+def _field_to_dict(field_spec: FieldSpec, spec_id: str) -> dict[str, Any]:
     options: list[str] = list(field_spec.options)
-    if spec_id == "riso" and field_spec.kind is FieldKind.STRING and not options:
-        options = list(_riso_option_lists().get(field_spec.name, ()))
+    if field_spec.kind is FieldKind.STRING and not options:
+        resolver = _OPTION_RESOLVERS.get(spec_id)
+        if resolver is not None:
+            options = list(resolver().get(field_spec.name, ()))
     return {
         "name": field_spec.name,
         "kind": field_spec.kind.value,
@@ -68,7 +92,10 @@ def spec_to_dict(spec: CalculatorSpec) -> dict[str, Any]:
 def list_calculators() -> list[dict[str, Any]]:
     """Список калькуляторов реестра (для диалога расчёта)."""
     registry = get_registry()
-    return [spec_to_dict(registration.spec) for calculator_id in registry.ids() for registration in [registry.get(calculator_id)]]
+    return [
+        spec_to_dict(registry.get(calculator_id).spec)
+        for calculator_id in registry.ids()
+    ]
 
 
 def result_to_dict(result: CalcResult) -> dict[str, Any]:

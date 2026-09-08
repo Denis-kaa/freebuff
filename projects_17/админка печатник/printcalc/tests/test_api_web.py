@@ -76,12 +76,22 @@ def test_calculate_endpoint_validation_error(client: ASGITestClient) -> None:
     assert "qty" in str(response.json()["detail"])
 
 
-def test_calculators_endpoint_lists_riso(client: ASGITestClient) -> None:
+def test_calculators_endpoint_lists_all(client: ASGITestClient) -> None:
     data = client.get("/api/calculators").json()
     ids = [spec["id"] for spec in data["calculators"]]
-    assert ids == ["riso"]
-    fields = {field["name"]: field for field in data["calculators"][0]["fields"]}
-    assert set(fields["format"]["options"]) == {"A4", "A5", "A6", "A3"}
+    # Riso + таблички (этап B).
+    assert ids == ["riso", "tablichki"]
+    by_id = {spec["id"]: spec for spec in data["calculators"]}
+
+    riso_fields = {field["name"]: field for field in by_id["riso"]["fields"]}
+    assert set(riso_fields["format"]["options"]) == {"A4", "A5", "A6", "A3"}
+
+    # Таблички: STRING-поля получают опции из конфига, работы — булевы флаги.
+    tab_fields = {field["name"]: field for field in by_id["tablichki"]["fields"]}
+    assert set(tab_fields["material"]["options"]) >= {"ПВХ 3 мм", "Акрил 5 мм", "Композит 3 мм"}
+    assert set(tab_fields["print"]["options"]) == {"Без печати", "УФ-печать", "УФ-печать + лак"}
+    assert tab_fields["work_eyelets"]["kind"] == "boolean"
+    assert tab_fields["work_eyelets_qty"]["unit"] == "шт"
 
 
 def test_order_flow_end_to_end(client: ASGITestClient) -> None:
