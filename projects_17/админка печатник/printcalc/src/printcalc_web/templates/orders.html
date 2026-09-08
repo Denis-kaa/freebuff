@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Печатник — заказы</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/">Приём заказа</a>
+    <a href="/orders" class="current">Заказы</a>
+    <a href="/price-list">Прайс-каталог</a>
+  </nav>
+
+  <h1>Заказы</h1>
+
+  <div class="row" id="status-filter">
+    <button data-status="" class="btn primary">все</button>
+    <button data-status="новый" class="btn">новый</button>
+    <button data-status="в работе" class="btn">в работе</button>
+    <button data-status="выполнен" class="btn">выполнен</button>
+    <button data-status="завершён" class="btn">завершён</button>
+  </div>
+
+  <table id="orders-table">
+    <thead>
+      <tr><th>#</th><th>Создан</th><th>Позиции</th><th class="num">Сумма</th><th>Оплата</th><th>Статус</th><th></th></tr>
+    </thead>
+    <tbody id="orders-body"></tbody>
+  </table>
+
+  <!-- Диалог заказа: статус + OrderExport (Р1) -->
+  <dialog id="dlg-order">
+    <h2>Заказ #<span id="dlg-order-id"></span></h2>
+    <table id="dlg-order-items"></table>
+    <div class="row">
+      <label>Статус:
+        <select id="dlg-order-status">
+          <option>новый</option>
+          <option>в работе</option>
+          <option>выполнен</option>
+          <option>завершён</option>
+        </select>
+      </label>
+      <button id="btn-order-status-save" class="primary">Сохранить статус</button>
+      <div class="spacer"></div>
+      <a id="btn-order-export" class="btn" target="_blank">Экспорт для WF</a>
+      <button id="btn-order-copy">Копировать текст</button>
+    </div>
+    <div id="dlg-order-msg" class="notice"></div>
+    <div class="row" style="margin-top:8px">
+      <button data-close>Закрыть</button>
+    </div>
+  </dialog>
+
+  <script src="/static/orders.js"></script>
+</body>
+</html>

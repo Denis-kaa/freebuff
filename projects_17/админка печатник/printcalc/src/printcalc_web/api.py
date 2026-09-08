@@ -1,0 +1,330 @@
+"""REST API printcalc_web: прайс-каталог, расчёты, заказы, отчёты.
+
+Границы доверия: клиент присылает только выбор (id позиции, параметры
+калькулятора, название+цена ручной позиции); все цены позиций из
+каталога и все расчёты выполняются на сервере.
+"""
+
+from __future__ import annotations
+
+import csv
+import io
+import sqlite3
+from collections.abc import Iterator
+from typing import Any, Literal
+
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from pydantic import BaseModel, Field
+
+from printcalc.engine.errors import CalcInputError, RegistryError
+from printcalc.engine.registry import calculate as engine_calculate
+from printcalc_web import export, parser, store
+from printcalc_web.calculators import get_registry, list_calculators, result_to_dict
+from printcalc_web.db import connect
+
+router = APIRouter(prefix="/api")
+
+
+def get_conn(request: Request) -> Iterator[sqlite3.Connection]:
+    """Зависимость: соединение с БД приложения (один коннект на запрос)."""
+    db_path = request.app.state.db_path
+    conn = connect(db_path)
+    try:
+        yield conn
+    finally:
+        conn.close()
+
+
+def _store_guard(call: Any, *args: Any, **kwargs: Any) -> Any:
+    try:
+        return call(*args, **kwargs)
+    except store.StoreError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from None
+
+
+class PriceItemIn(BaseModel):
+    """Создание позиции каталога (Р5а: Наименование + Значение, остальное опционально)."""
+
+    name: str = Field(min_length=1)
+    price: float = Field(ge=0)
+    unit: str | None = None
+    category: str | None = None
+
+
+class PriceItemPatch(BaseModel):
+    """Частичная правка позиции каталога (админка прайса)."""
+
+    name: str | None = Field(default=None, min_length=1)
+    price: float | None = Field(default=None, ge=0)
+    unit: str | None = None
+    category: str | None = None
+    unverified: bool | None = None
+    synonyms: list[str] | None = None
+
+
+class SynonymIn(BaseModel):
+    """Добавление синонима (идея №5)."""
+
+    word: str = Field(min_length=1)
+
+
+class ImportIn(BaseModel):
+    """Массовый импорт списком (идея №6)."""
+
+    text: str
+
+
+class CalculateIn(BaseModel):
+    """Запуск калькулятора движка."""
+
+    calculator_id: str
+    params: dict[str, Any] = Field(default_factory=dict)
+
+
+class OrderItemIn(BaseModel):
+    """Позиция черновика заказа (Р5б)."""
+
+    kind: Literal["price_list", "calculator", "manual"]
+    price_list_item_id: int | None = None
+    qty: float = Field(default=1.0, gt=0)
+    calculator_id: str | None = None
+    params: dict[str, Any] | None = None
+    name: str | None = None
+    price: float | None = Field(default=None, ge=0)
+    save_to_catalog: bool = True
+
+
+class OrderIn(BaseModel):
+    """Сохранение заказа («Добавить» на главном экране)."""
+
+    status: str = store.ORDER_STATUSES[0]
+    payment_method: str = Field(min_length=1)
+    items: list[OrderItemIn] = Field(min_length=1)
+
+
+class OrderPatch(BaseModel):
+    """Смена статуса/оплаты существующего заказа (Р2)."""
+
+    status: str | None = None
+    payment_method: str | None = None
+
+
+class ParseIn(BaseModel):
+    """Быстрый ввод свободным текстом (Р6, ступень 1)."""
+
+    text: str = Field(min_length=1)
+
+
+class PaymentMethodsIn(BaseModel):
+    """Редактирование списка способов оплаты (решение Q2)."""
+
+    methods: list[str] = Field(min_length=1)
+
+
+# ---------- настройки ----------
+
+
+@router.get("/settings/payment-methods")
+def read_payment_methods(conn: sqlite3.Connection = Depends(get_conn)) -> dict[str, Any]:
+    return {"methods": store.get_payment_methods(conn)}
+
+
+@router.put("/settings/payment-methods")
+def replace_payment_methods(
+    payload: PaymentMethodsIn, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    return {"methods": _store_guard(store.set_payment_methods, conn, payload.methods)}
+
+
+# ---------- прайс-каталог ----------
+
+
+@router.get("/price-list")
+def read_price_list(
+    q: str | None = None,
+    unverified: bool | None = None,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    items = _store_guard(
+        store.list_price_items, conn, query=q, unverified=unverified
+    )
+    return {"items": items}
+
+
+@router.post("/price-list", status_code=201)
+def create_price_item(
+    payload: PriceItemIn, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    return _store_guard(
+        store.add_price_item,
+        conn,
+        name=payload.name,
+        price=payload.price,
+        unit=payload.unit,
+        category=payload.category,
+    )
+
+
+@router.patch("/price-list/{item_id}")
+def patch_price_item(
+    item_id: int, payload: PriceItemPatch, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    return _store_guard(store.update_price_item, conn, item_id, payload.model_dump())
+
+
+@router.post("/price-list/{item_id}/synonyms")
+def post_synonym(
+    item_id: int, payload: SynonymIn, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    return _store_guard(store.add_synonym, conn, item_id, payload.word)
+
+
+@router.get("/price-list/similar")
+def read_similar(
+    q: str, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """Fuzzy-подсказка «похожее уже есть» (идея №8) — не блокирует создание."""
+    return {"items": store.find_similar(conn, q)}
+
+
+@router.post("/price-list/import")
+def import_price_list(
+    payload: ImportIn, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """Массовый импорт «Название - Цена» (идея №6)."""
+    return _store_guard(store.import_price_items, conn, payload.text)
+
+
+@router.get("/price-list/export.csv")
+def export_price_list_csv(conn: sqlite3.Connection = Depends(get_conn)) -> Response:
+    """Выгрузка всего каталога CSV (идея №9) — страховка от потери данных."""
+    items = store.export_price_items(conn)
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(
+        ["name", "price", "unit", "category", "synonyms", "usage_count", "unverified"]
+    )
+    for item in items:
+        writer.writerow(
+            [
+                item["name"],
+                item["price"],
+                item["unit"] or "",
+                item["category"] or "",
+                " | ".join(item["synonyms"]),
+                item["usage_count"],
+                1 if item["unverified"] else 0,
+            ]
+        )
+    content = "\ufeff" + buffer.getvalue()  # BOM — чтобы Excel читал UTF-8
+    return Response(
+        content=content,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="price-list.csv"'},
+    )
+
+
+# ---------- калькуляторы ----------
+
+
+@router.get("/calculators")
+def read_calculators() -> dict[str, Any]:
+    """Спеки калькуляторов для schema-driven диалога (Р7)."""
+    return {"calculators": list_calculators()}
+
+
+@router.post("/calculate")
+def run_calculation(
+    payload: CalculateIn, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """Запускает калькулятор движка: валидация схемы → compute()."""
+    _ = conn
+    try:
+        result = engine_calculate(get_registry(), payload.calculator_id, payload.params)
+    except CalcInputError as exc:
+        raise HTTPException(
+            status_code=400, detail={"field": exc.field, "message": exc.message}
+        ) from None
+    except RegistryError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from None
+    return result_to_dict(result)
+
+
+@router.post("/parse")
+def parse_text(
+    payload: ParseIn, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """Быстрый ввод (Р6 ступень 1): словарь, без silent fallback."""
+    return parser.parse(conn, payload.text)
+
+
+# ---------- заказы ----------
+
+
+@router.post("/orders", status_code=201)
+def create_order(
+    payload: OrderIn, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    order = _store_guard(
+        store.create_order,
+        conn,
+        status=payload.status,
+        payment_method=payload.payment_method,
+        items=[item.model_dump() for item in payload.items],
+    )
+    return order
+
+
+@router.get("/orders")
+def read_orders(
+    status: str | None = None, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    return {"orders": _store_guard(store.list_orders, conn, status=status)}
+
+
+@router.get("/orders/{order_id}")
+def read_order(order_id: int, conn: sqlite3.Connection = Depends(get_conn)) -> dict[str, Any]:
+    return _store_guard(store.get_order, conn, order_id)
+
+
+@router.patch("/orders/{order_id}")
+def patch_order(
+    order_id: int, payload: OrderPatch, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    return _store_guard(
+        store.update_order,
+        conn,
+        order_id,
+        status=payload.status,
+        payment_method=payload.payment_method,
+    )
+
+
+@router.get("/orders/{order_id}/export.txt", response_class=Response)
+def export_order_txt(
+    order_id: int, conn: sqlite3.Connection = Depends(get_conn)
+) -> Response:
+    """OrderExport (Р1): текст для ручного переноса в WF."""
+    order = _store_guard(store.get_order, conn, order_id)
+    return Response(
+        content=export.order_to_text(order),
+        media_type="text/plain; charset=utf-8",
+        headers={"Content-Disposition": f'attachment; filename="order-{order_id}.txt"'},
+    )
+
+
+# ---------- отчёты ----------
+
+
+@router.get("/report/off-catalog")
+def read_off_catalog_report(
+    date_from: str | None = None,
+    date_to: str | None = None,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Отчёт «что вводилось мимо каталога» (идея №10)."""
+    return {
+        "items": _store_guard(
+            store.off_catalog_report, conn, date_from=date_from, date_to=date_to
+        )
+    }

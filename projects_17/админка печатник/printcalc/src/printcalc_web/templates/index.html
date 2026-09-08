@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Печатник — приём заказа</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/" class="current">Приём заказа</a>
+    <a href="/orders">Заказы</a>
+    <a href="/price-list">Прайс-каталог</a>
+  </nav>
+
+  <h1>Новый заказ</h1>
+
+  <div class="panel">
+    <div class="row">
+      <input id="quick-input" style="flex:1" placeholder="Быстрый ввод: «риза 500, печать документов 10, наклейки»">
+      <button id="quick-parse">Разобрать</button>
+    </div>
+    <div id="parse-unknown" class="muted hidden"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Позиции заказа</h2>
+    <table id="draft-table">
+      <thead>
+        <tr><th>Название</th><th class="num">Цена</th><th class="num">Кол-во</th><th class="num">Сумма</th><th></th></tr>
+      </thead>
+      <tbody id="draft-body">
+        <tr id="draft-empty"><td colspan="5" class="muted">Пусто — добавьте позиции кнопкой «+»</td></tr>
+      </tbody>
+    </table>
+    <div class="row">
+      <button id="btn-add-price" class="btn">+ из прайса</button>
+      <button id="btn-add-calc" class="btn">+ расчёт</button>
+      <button id="btn-add-manual" class="btn">+ вручную</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Итог</h2>
+    <div class="row">
+      <label>Оплата:
+        <select id="payment-method"></select>
+      </label>
+      <label>Статус:
+        <select id="order-status">
+          <option>новый</option>
+          <option>в работе</option>
+          <option>выполнен</option>
+          <option>завершён</option>
+        </select>
+      </label>
+      <div class="spacer"></div>
+      <div class="total">Итого: <span id="draft-total">0.00</span> ₽</div>
+    </div>
+    <div id="draft-error" class="error"></div>
+    <div class="row" style="margin-top:10px">
+      <button id="btn-save" class="primary">Добавить</button>
+      <span class="muted">«Добавить» фиксирует заказ и переносит его в список заказов</span>
+    </div>
+  </div>
+
+  <!-- Диалог выбора из прайса -->
+  <dialog id="dlg-price">
+    <h2>Добавить из прайс-каталога</h2>
+    <input id="price-search" placeholder="Поиск по названию…" style="width:100%">
+    <div id="price-similar" class="hidden"></div>
+    <table id="price-pick-table">
+      <thead><tr><th>Название</th><th class="num">Цена</th><th class="num">Кол-во</th><th></th></tr></thead>
+      <tbody id="price-pick-body"></tbody>
+    </table>
+    <div class="row" style="margin-top:8px">
+      <button id="btn-new-item" class="btn">+ новая позиция</button>
+      <div class="spacer"></div>
+      <button data-close>Закрыть</button>
+    </div>
+  </dialog>
+
+  <!-- Диалог новой позиции (Р5а: Наименование + Значение) -->
+  <dialog id="dlg-new-item">
+    <h2>Новая позиция прайса</h2>
+    <div class="row">
+      <input id="new-item-name" placeholder="Наименование" style="flex:1">
+      <input id="new-item-price" type="number" min="0" step="0.01" placeholder="Значение (цена)">
+      <select id="new-item-unit">
+        <option value="">шт</option>
+        <option value="лист">лист</option>
+        <option value="копия">копия</option>
+        <option value="м²">м²</option>
+      </select>
+    </div>
+    <label class="row" style="margin-top:8px">
+      <input type="checkbox" id="new-item-save" checked>
+      сохранить в прайс-каталог на будущее
+    </label>
+    <div id="new-item-error" class="error"></div>
+    <div class="row" style="margin-top:8px">
+      <button id="btn-new-item-save" class="primary">Добавить в заказ</button>
+      <button data-close>Отмена</button>
+    </div>
+  </dialog>
+
+  <!-- Диалог калькулятора -->
+  <dialog id="dlg-calc">
+    <h2>Расчёт</h2>
+    <label>Калькулятор:
+      <select id="calc-select"></select>
+    </label>
+    <form id="calc-form"></form>
+    <div id="calc-result" class="calc-result hidden"></div>
+    <div id="calc-error" class="error"></div>
+    <div class="row" style="margin-top:8px">
+      <button id="btn-calc-run">Рассчитать</button>
+      <button id="btn-calc-add" class="primary" disabled>Добавить в заказ</button>
+      <button data-close>Отмена</button>
+    </div>
+  </dialog>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

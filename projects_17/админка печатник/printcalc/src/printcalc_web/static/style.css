@@ -1,0 +1,93 @@
+/* PrintCalc Pro — минимальные стили Phase 1 (читаемость важнее красоты). */
+:root {
+  --border: #d0d4da;
+  --muted: #667;
+  --accent: #1a56db;
+  --ok: #0a7d33;
+  --warn: #b45309;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  font: 15px/1.45 system-ui, sans-serif;
+  margin: 0 auto;
+  max-width: 960px;
+  padding: 12px;
+  color: #222;
+}
+
+h1 { font-size: 20px; margin: 8px 0; }
+h2 { font-size: 16px; margin: 16px 0 8px; }
+
+nav { display: flex; gap: 16px; margin-bottom: 12px; }
+nav a { color: var(--accent); text-decoration: none; }
+nav a.current { font-weight: 700; }
+
+.panel { border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 16px; }
+
+button, .btn {
+  font: inherit;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #f6f7f9;
+  cursor: pointer;
+  text-decoration: none;
+  color: #222;
+  display: inline-block;
+}
+button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+button.danger { color: #b91c1c; }
+button:disabled { opacity: 0.5; cursor: default; }
+
+input, select, textarea {
+  font: inherit;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+input[type="number"] { width: 90px; }
+textarea { width: 100%; min-height: 90px; }
+
+table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+th, td { border-bottom: 1px solid var(--border); padding: 6px 8px; text-align: left; }
+th { background: #f3f4f6; font-weight: 600; }
+td.num, th.num { text-align: right; white-space: nowrap; }
+
+.badge {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+}
+.badge.unverified { color: var(--warn); border-color: var(--warn); }
+.badge.status-новый { color: var(--accent); border-color: var(--accent); }
+.badge.status-в.work, .badge.status-вработе { color: var(--warn); border-color: var(--warn); }
+.badge.status-выполнен { color: var(--ok); border-color: var(--ok); }
+.badge.status-завершён { color: var(--muted); }
+
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.spacer { flex: 1; }
+.muted { color: var(--muted); font-size: 13px; }
+.total { font-size: 18px; font-weight: 700; }
+.hidden { display: none; }
+
+.error { color: #b91c1c; margin: 6px 0; white-space: pre-wrap; }
+.notice { color: var(--ok); margin: 6px 0; }
+
+dialog {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  max-width: 640px;
+  width: 92%;
+}
+dialog::backdrop { background: rgba(0, 0, 0, 0.35); }
+
+.calc-field { margin: 8px 0; display: flex; gap: 8px; align-items: center; }
+.calc-field label { min-width: 180px; }
+.calc-hint { font-size: 12px; color: var(--muted); }
+.calc-result { background: #f0fdf4; border: 1px solid var(--ok); border-radius: 6px; padding: 8px; margin: 8px 0; }
+.calc-lines { font-size: 13px; color: var(--muted); }

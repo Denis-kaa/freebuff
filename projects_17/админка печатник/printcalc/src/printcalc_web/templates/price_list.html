@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Печатник — прайс-каталог</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <nav>
+    <a href="/">Приём заказа</a>
+    <a href="/orders">Заказы</a>
+    <a href="/price-list" class="current">Прайс-каталог</a>
+  </nav>
+
+  <h1>Прайс-каталог услуг на кассе</h1>
+
+  <div class="panel">
+    <div class="row">
+      <input id="search" placeholder="Поиск по названию/категории…" style="flex:1">
+      <label class="row"><input type="checkbox" id="only-unverified"> только непроверенные</label>
+      <button id="btn-add" class="primary">+ позиция</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Массовый импорт списком (одна строка = «Название - Цена»)</h2>
+    <textarea id="import-text" placeholder="Ламинация А4 - 15&#10;Копия ч/б - 5&#10;Фото на документы - 200"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button id="btn-import">Импортировать</button>
+      <span id="import-result" class="muted"></span>
+    </div>
+  </div>
+
+  <table id="items-table">
+    <thead>
+      <tr><th>Название</th><th class="num">Цена</th><th>Ед.</th><th>Категория</th><th class="num">Использований</th><th></th></tr>
+    </thead>
+    <tbody id="items-body"></tbody>
+  </table>
+
+  <div class="panel">
+    <div class="row">
+      <a class="btn" href="/api/price-list/export.csv">Выгрузить каталог (CSV)</a>
+      <a class="btn" href="/api/report/off-catalog" target="_blank">Отчёт «мимо каталога»</a>
+      <div class="spacer"></div>
+      <span class="muted">Экспорт — страховка от потери вручную накопленных данных (идея №9)</span>
+    </div>
+  </div>
+
+  <!-- Диалог создания/правки -->
+  <dialog id="dlg-item">
+    <h2 id="dlg-title">Новая позиция</h2>
+    <div class="row">
+      <input id="item-name" placeholder="Наименование" style="flex:1">
+      <input id="item-price" type="number" min="0" step="0.01" placeholder="Цена">
+      <input id="item-unit" placeholder="Ед. (опц.)" style="width:90px">
+      <input id="item-category" placeholder="Категория (опц.)" style="width:140px">
+    </div>
+    <div id="item-error" class="error"></div>
+    <div class="row" style="margin-top:8px">
+      <button id="btn-item-save" class="primary">Сохранить</button>
+      <button data-close>Отмена</button>
+    </div>
+  </dialog>
+
+  <script src="/static/price_list.js"></script>
+</body>
+</html>
