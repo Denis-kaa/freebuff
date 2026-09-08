@@ -32,12 +32,21 @@ tests/                      golden + validate + registry + store + API (45 те�
 
 ## Phase 1 web (v3): приём заказа
 
-Запуск из корня printcalc:
+Локальный запуск (телефон/разработка):
 
 ```bash
 PRINTCALC_WEB_DB=data/printcalc.db python3 -m printcalc_web
-# http://127.0.0.1:8000 — главный экран Р5б
+# http://127.0.0.1:8300 — главный экран Р5б
 ```
+
+### Продакшн-развёртывание (сервер whimco, ADR-022)
+
+- **URL:** `http://185.233.184.192:8300` (0.0.0.0, systemd-юнит `printcalc-web.service`)
+- **venv:** `/opt/printcalc-venv` (fastapi/uvicorn/jinja2)
+- **БД:** `/opt/printcalc/data/printcalc.db` (env `PRINTCALC_WEB_DB`)
+- **Код:** `/opt/freebuff/projects_17/админка печатник/printcalc` (обновление:
+  `git fetch origin && git checkout -f -B master origin/master && systemctl restart printcalc-web`)
+- **Логи:** `journalctl -u printcalc-web.service -f`
 
 Реализовано:
 - **Прайс-каталог (Р5/Р5а)** — CRUD, поиск «похожих» при добавлении, синонимы,
