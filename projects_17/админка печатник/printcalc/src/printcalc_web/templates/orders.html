@@ -1,46 +1,41 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Печатник — заказы</title>
-  <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-  <nav>
-    <a href="/">Приём заказа</a>
-    <a href="/orders" class="current">Заказы</a>
-    <a href="/price-list">Прайс-каталог</a>
-    <a href="/constructor">Конструктор</a>
-  </nav>
+{% set active = 'orders' %}
+{% set page_title = 'Заказы' %}
+{% set page_script %}<script src="/static/orders.js"></script>{% endset %}
+{% include "_shell_top.html" %}
 
-  <h1>Заказы</h1>
-
-  <div class="row" id="status-filter">
-    <button data-status="" class="btn primary">все</button>
-    <button data-status="новый" class="btn">новый</button>
-    <button data-status="в работе" class="btn">в работе</button>
-    <button data-status="выполнен" class="btn">выполнен</button>
-    <button data-status="завершён" class="btn">завершён</button>
+  <div class="panel">
+    <div class="panel-head">
+      <h2>Все заказы</h2>
+      <div class="seg" id="status-filter" role="tablist" aria-label="Фильтр по статусу">
+        <button data-status="" class="primary">все</button>
+        <button data-status="новый">новый</button>
+        <button data-status="в работе">в работе</button>
+        <button data-status="выполнен">выполнен</button>
+        <button data-status="завершён">завершён</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="orders-table">
+        <thead>
+          <tr><th>№</th><th>Создан</th><th>Позиции</th><th class="num">Сумма</th><th>Оплата</th><th>Статус</th><th></th></tr>
+        </thead>
+        <tbody id="orders-body"></tbody>
+      </table>
+    </div>
   </div>
-
-  <table id="orders-table">
-    <thead>
-      <tr><th>#</th><th>Создан</th><th>Позиции</th><th class="num">Сумма</th><th>Оплата</th><th>Статус</th><th></th></tr>
-    </thead>
-    <tbody id="orders-body"></tbody>
-  </table>
 
   <!-- Диалог заказа: статус + OrderExport (Р1) -->
   <dialog id="dlg-order">
-    <h2>Заказ #<span id="dlg-order-id"></span></h2>
-    <table id="dlg-order-items"></table>
-    <div id="dlg-order-wishes" class="hidden" style="margin-top:8px">
-      <b>Пожелания заказчика:</b>
-      <div id="dlg-order-wishes-text" class="notice" style="white-space:pre-wrap"></div>
+    <h2>Заказ <small>№ <span id="dlg-order-id"></span></small></h2>
+    <div class="table-wrap">
+      <table id="dlg-order-items"></table>
     </div>
-    <div id="dlg-order-sections" style="margin-top:8px"></div>
-    <div class="row">
+    <div id="dlg-order-wishes" class="hidden" style="margin-top:12px">
+      <div class="muted" style="margin-bottom:6px">Пожелания заказчика</div>
+      <div id="dlg-order-wishes-text" class="wishes-quote"></div>
+    </div>
+    <div id="dlg-order-sections" style="margin-top:10px"></div>
+    <div class="row" style="margin-top:14px">
       <label>Статус:
         <select id="dlg-order-status">
           <option>новый</option>
@@ -51,15 +46,13 @@
       </label>
       <button id="btn-order-status-save" class="primary">Сохранить статус</button>
       <div class="spacer"></div>
-      <a id="btn-order-export" class="btn" target="_blank">Экспорт для WF</a>
+      <a id="btn-order-export" class="btn" target="_blank" rel="noopener">Экспорт для WF</a>
       <button id="btn-order-copy">Копировать текст</button>
     </div>
     <div id="dlg-order-msg" class="notice"></div>
-    <div class="row" style="margin-top:8px">
+    <div class="dlg-actions">
       <button data-close>Закрыть</button>
     </div>
   </dialog>
 
-  <script src="/static/orders.js"></script>
-</body>
-</html>
+{% include "_shell_bottom.html" %}

@@ -1,35 +1,27 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Печатник — конструктор экрана</title>
-  <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-  <nav>
-    <a href="/">Приём заказа</a>
-    <a href="/orders">Заказы</a>
-    <a href="/price-list">Прайс-каталог</a>
-    <a href="/constructor" class="current">Конструктор</a>
-  </nav>
-
-  <h1>Конструктор разделов заказа</h1>
-  <p class="muted">Разделы появляются на главном экране приёма заказа в этом же порядке.
-     Раздел «Пожелания заказчика» — свободная форма, его можно менять как любой другой.</p>
+{% set active = 'constructor' %}
+{% set page_title = 'Конструктор экрана' %}
+{% set page_script %}<script src="/static/constructor.js"></script>{% endset %}
+{% include "_shell_top.html" %}
 
   <div class="panel">
-    <h2>Разделы</h2>
-    <table id="sections-table">
-      <thead>
-        <tr><th></th><th>Название</th><th>Тип</th><th>Варианты / подсказка</th><th>Обязателен</th><th></th></tr>
-      </thead>
-      <tbody id="sections-body"></tbody>
-    </table>
+    <div class="panel-head">
+      <h2>Разделы заказа</h2>
+      <span class="muted">Появляются на главном экране приёма заказа в этом же порядке.
+        «Пожелания заказчика» — свободная форма, его можно менять как любой другой.</span>
+    </div>
+    <div class="table-wrap">
+      <table id="sections-table">
+        <thead>
+          <tr><th></th><th>Название</th><th>Тип</th><th>Варианты / подсказка</th><th>Обязателен</th><th></th></tr>
+        </thead>
+        <tbody id="sections-body"></tbody>
+      </table>
+    </div>
     <div id="sections-error" class="error"></div>
-    <div class="row" style="margin-top:8px">
+    <div class="row" style="margin-top:12px">
       <button id="btn-reorder-save" class="btn" disabled>Сохранить порядок</button>
       <button id="btn-reorder-reset" class="btn" disabled>Сбросить порядок</button>
+      <span class="muted">Стрелки ↑↓ меняют порядок, затем «Сохранить порядок».</span>
     </div>
   </div>
 
@@ -51,7 +43,7 @@
       <input id="new-section-options" style="flex:1" placeholder="Варианты через запятую (только для «выбор из вариантов»)">
     </div>
     <div id="new-section-error" class="error"></div>
-    <div class="row" style="margin-top:8px">
+    <div class="dlg-actions">
       <button id="btn-add-section" class="primary">Добавить раздел</button>
     </div>
   </div>
@@ -75,13 +67,12 @@
       <label class="row"><input type="checkbox" id="edit-section-required"> обязателен</label>
     </div>
     <div id="edit-section-error" class="error"></div>
-    <div class="row" style="margin-top:8px">
+    <div class="dlg-actions">
       <button id="btn-section-save" class="primary">Сохранить</button>
       <button id="btn-section-archive">В архив</button>
+      <div class="spacer"></div>
       <button data-close>Отмена</button>
     </div>
   </dialog>
 
-  <script src="/static/constructor.js"></script>
-</body>
-</html>
+{% include "_shell_bottom.html" %}

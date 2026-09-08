@@ -1,116 +1,11 @@
-/* PrintCalc Pro — минимальные стили Phase 1 (читаемость важнее красоты). */
-/* Пресет «Печатникъ» (2026-09-08, из макета HTML/печатник.html): подключает
-   шрифты макета. Сам пресет (палитра) — отдельным блоком в конце файла,
-   активация классом body.pecatnik. Существующие правила и логику не меняет. */
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap');
+/* ==========================================================================
+   «Печатникъ» — тёмная тема printcalc.
+   РЕФЕРЕНС (утверждён Денисом): HTML/печатник_1.html (палитра 1:1).
+   Шрифты без CDN: Georgia (заголовки) + system-ui (интерфейс) — макет так и
+   задуман («Имитация Fraunces»), чтобы приложение работало без интернета.
+   ========================================================================== */
 
 :root {
-  --border: #d0d4da;
-  --muted: #667;
-  --accent: #1a56db;
-  --ok: #0a7d33;
-  --warn: #b45309;
-}
-
-* { box-sizing: border-box; }
-
-body {
-  font: 15px/1.45 system-ui, sans-serif;
-  margin: 0 auto;
-  max-width: 960px;
-  padding: 12px;
-  color: #222;
-}
-
-h1 { font-size: 20px; margin: 8px 0; }
-h2 { font-size: 16px; margin: 16px 0 8px; }
-
-nav { display: flex; gap: 16px; margin-bottom: 12px; }
-nav a { color: var(--accent); text-decoration: none; }
-nav a.current { font-weight: 700; }
-
-.panel { border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 16px; }
-
-button, .btn {
-  font: inherit;
-  padding: 6px 14px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: #f6f7f9;
-  cursor: pointer;
-  text-decoration: none;
-  color: #222;
-  display: inline-block;
-}
-button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-button.danger { color: #b91c1c; }
-button:disabled { opacity: 0.5; cursor: default; }
-
-input, select, textarea {
-  font: inherit;
-  padding: 6px 8px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-}
-input[type="number"] { width: 90px; }
-textarea { width: 100%; min-height: 90px; }
-
-table { border-collapse: collapse; width: 100%; margin: 8px 0; }
-th, td { border-bottom: 1px solid var(--border); padding: 6px 8px; text-align: left; }
-th { background: #f3f4f6; font-weight: 600; }
-td.num, th.num { text-align: right; white-space: nowrap; }
-
-.badge {
-  display: inline-block;
-  padding: 1px 8px;
-  border-radius: 999px;
-  font-size: 12px;
-  border: 1px solid var(--border);
-}
-.badge.unverified { color: var(--warn); border-color: var(--warn); }
-.badge.status-новый { color: var(--accent); border-color: var(--accent); }
-.badge.status-в.work, .badge.status-вработе { color: var(--warn); border-color: var(--warn); }
-.badge.status-выполнен { color: var(--ok); border-color: var(--ok); }
-.badge.status-завершён { color: var(--muted); }
-
-.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-.spacer { flex: 1; }
-.muted { color: var(--muted); font-size: 13px; }
-.total { font-size: 18px; font-weight: 700; }
-.hidden { display: none; }
-
-.error { color: #b91c1c; margin: 6px 0; white-space: pre-wrap; }
-.notice { color: var(--ok); margin: 6px 0; }
-
-dialog {
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 16px;
-  max-width: 640px;
-  width: 92%;
-}
-dialog::backdrop { background: rgba(0, 0, 0, 0.35); }
-
-.calc-field { margin: 8px 0; display: flex; gap: 8px; align-items: center; }
-.calc-field label { min-width: 180px; }
-.calc-hint { font-size: 12px; color: var(--muted); }
-.calc-result { background: #f0fdf4; border: 1px solid var(--ok); border-radius: 6px; padding: 8px; margin: 8px 0; }
-.calc-lines { font-size: 13px; color: var(--muted); }
-
-/* Конструктор разделов (2026-09-08) */
-button.icon { padding: 2px 8px; }
-tr.archived td { opacity: 0.55; }
-#dynamic-sections .calc-field label { min-width: 180px; }
-textarea { font-family: inherit; padding: 6px; border: 1px solid var(--border); border-radius: 4px; }
-
-/* ============================================================
-   ПРЕСЕТ «ПЕЧАТНИКЪ» — тёмная тема из макета Дениса.
-   РЕФЕРЕНС (утверждён 2026-09-08): HTML/печатник_1.html.
-   Дополнение — HTML/печатник.html. Отдельный пресет: на текущую
-   светлую тему не влияет, логику/разметку не трогает.
-   Активация: добавить класс "pecatnik" на <body>.
-   ============================================================ */
-body.pecatnik {
   /* Палитра печатник_1.html 1:1 */
   --bg: #18181b;
   --bg-raised: #212124;
@@ -118,51 +13,525 @@ body.pecatnik {
   --bg-card-hover: #2c2c31;
   --wood: #c9a876;
   --wood-hover: #d4b483;
-  --wood-dim: #8a7457;
-  --amber: #ffb84d;
+  --wood-deep: #1c1610;
   --neon: #ffb84d;
-  --amber-dim: #6b5233;
   --text: #f0f0ee;
   --text-dim: #a3a3a8;
   --text-faint: #6b6b70;
   --line: #38383d;
-  --good: #7fd88f;
-  --bad: #ff6e6e;
 
-  /* Маппинг на переменные текущего приложения */
+  /* Статусы (оттенки из макета) */
+  --st-blue: #60a5fa;
+  --st-purple: #c084fc;
+  --st-green: #4ade80;
+  --st-gray: #9ca3af;
+  --st-red: #f87171;
+  --st-yellow: #facc15;
+
+  /* Шрифты */
+  --font-display: Georgia, "Times New Roman", serif;
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", Menlo, Consolas, monospace;
+
+  /* Совместимость со старыми именами переменных */
   --border: var(--line);
   --muted: var(--text-dim);
   --accent: var(--wood);
-  --ok: var(--good);
-  --warn: var(--amber);
+  --ok: var(--st-green);
+  --warn: var(--neon);
+}
 
-  /* Шрифты макета: Fraunces — заголовки, Inter — интерфейс */
-  --font-display: "Fraunces", Georgia, serif;
-  --font-ui: "Inter", system-ui, sans-serif;
+* { box-sizing: border-box; }
 
+html { height: 100%; }
+
+body {
+  margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-ui);
+  font: 15px/1.5 var(--font-ui);
+  min-height: 100%;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Переопределение правил с жёстко заданными цветами (пресет не трогает
-   сами правила — только перекрывает их в рамках темы). */
-body.pecatnik h1, body.pecatnik h2 { font-family: var(--font-display); color: var(--wood); }
-body.pecatnik nav a { color: var(--amber); }
-body.pecatnik .panel { border-color: var(--line); background: var(--bg-card); }
-body.pecatnik button, body.pecatnik .btn {
-  background: var(--bg-raised); border-color: var(--line); color: var(--text);
+::selection { background: var(--wood); color: var(--wood-deep); }
+
+/* Кастомный скроллбар (как в макете) */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-raised); }
+::-webkit-scrollbar-thumb { background: var(--line); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--wood); }
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 0;
 }
-body.pecatnik button.primary { background: var(--wood); border-color: var(--wood); color: #1c1610; }
-body.pecatnik button.danger { color: var(--bad); }
-body.pecatnik input, body.pecatnik select, body.pecatnik textarea {
-  background: var(--bg-raised); border-color: var(--line); color: var(--text);
+h1 { font-size: 22px; }
+h2 { font-size: 17px; margin-bottom: 12px; }
+
+/* ==========================================================================
+   КАРКАС: сайдбар + шапка + контент (макет печатник_1.html)
+   ========================================================================== */
+
+.app { display: flex; min-height: 100vh; }
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  flex: 0 0 240px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-raised);
+  border-right: 1px solid var(--line);
 }
-body.pecatnik th { background: var(--bg-raised); }
-body.pecatnik th, body.pecatnik td { border-color: var(--line); }
-body.pecatnik .total { color: var(--amber); }
-body.pecatnik .muted { color: var(--text-dim); }
-body.pecatnik .error { color: var(--bad); }
-body.pecatnik .notice { color: var(--good); }
-body.pecatnik .calc-result { background: rgba(127, 216, 143, 0.08); border-color: var(--good); }
-body.pecatnik dialog { background: var(--bg-card); border-color: var(--line); color: var(--text); }
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 64px;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+  color: var(--text);
+  flex-shrink: 0;
+}
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border: 2px solid var(--wood);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--wood);
+}
+.brand-mark .ic { width: 18px; height: 18px; }
+.brand-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.nav {
+  flex: 1;
+  overflow-y: auto;
+  padding: 14px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.nav-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-faint);
+  padding: 12px 12px 4px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border-left: 2px solid transparent;
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+.nav-item .ic { width: 18px; height: 18px; color: var(--text-faint); flex-shrink: 0; }
+.nav-item:hover { background: var(--bg-card); color: var(--text); }
+.nav-item:hover .ic { color: var(--text-dim); }
+.nav-item.active {
+  background: var(--bg-card);
+  border-left-color: var(--wood);
+  color: var(--wood);
+}
+.nav-item.active .ic { color: var(--wood); }
+.nav-item.disabled { opacity: 0.55; cursor: default; }
+.nav-item.disabled:hover { background: none; color: var(--text-dim); }
+.nav-item.disabled .ic { color: var(--text-faint); }
+
+.soon {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  color: var(--wood);
+  border: 1px solid var(--line);
+  background: var(--bg);
+  padding: 1px 7px;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+
+.sidebar-foot {
+  flex-shrink: 0;
+  border-top: 1px solid var(--line);
+  padding: 12px 16px;
+}
+.user-chip { display: flex; align-items: center; gap: 10px; }
+.avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: var(--wood);
+  color: var(--wood-deep);
+  font-weight: 700;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.user-name { font-size: 13px; font-weight: 600; }
+.user-role { font-size: 11px; color: var(--text-faint); }
+
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 28px;
+  background: rgba(33, 33, 36, 0.85);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line);
+}
+.topbar h1 { font-size: 22px; }
+.topbar-hint { font-size: 12px; color: var(--text-faint); text-align: right; }
+
+.content {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px 28px 48px;
+  animation: rise 0.25s ease-out;
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Двухколоночная сетка (главный экран и пр.) */
+.cols { display: grid; grid-template-columns: 1fr 360px; gap: 16px; align-items: start; }
+.cols > * { min-width: 0; }
+@media (max-width: 1050px) { .cols { grid-template-columns: 1fr; } }
+
+/* ==========================================================================
+   КАРТОЧКИ (панели)
+   ========================================================================== */
+
+.panel {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 16px;
+}
+.panel > h2:first-child { margin-bottom: 14px; }
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.panel-head > h2 { margin-bottom: 0; }
+
+.panel-title-strip {
+  background: var(--bg-raised);
+  border-bottom: 1px solid var(--line);
+  margin: -18px -20px 16px;
+  padding: 14px 20px;
+  border-radius: 12px 12px 0 0;
+}
+.panel-title-strip h2 { margin: 0; font-size: 16px; }
+
+/* ==========================================================================
+   КНОПКИ (variants макета: primary/secondary/ghost/danger/neon)
+   ========================================================================== */
+
+button, .btn {
+  font: 500 14px/1 var(--font-ui);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 9px 15px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg-card);
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+button:hover, .btn:hover { background: var(--bg-card-hover); border-color: var(--text-faint); }
+button.primary, .btn.primary {
+  background: var(--wood);
+  border-color: var(--wood);
+  color: var(--wood-deep);
+  font-weight: 600;
+}
+button.primary:hover, .btn.primary:hover { background: var(--wood-hover); border-color: var(--wood-hover); }
+button.danger, .btn.danger { color: var(--st-red); background: transparent; border-color: transparent; }
+button.danger:hover { background: rgba(248, 113, 113, 0.08); border-color: var(--st-red); }
+button.ghost, .btn.ghost { background: transparent; }
+button.ghost:hover { background: var(--bg-card-hover); border-color: transparent; }
+button.neon, .btn.neon {
+  background: transparent;
+  color: var(--neon);
+  border-color: var(--neon);
+  box-shadow: 0 0 10px rgba(255, 184, 77, 0.15);
+}
+button.neon:hover { background: rgba(255, 184, 77, 0.08); }
+button:disabled { opacity: 0.45; cursor: default; }
+button:disabled:hover { background: var(--bg-card); border-color: var(--line); }
+button:focus-visible, .btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 1px solid var(--wood);
+  outline-offset: 1px;
+}
+
+/* Кнопка-иконка (стрелки конструктора, удаление) */
+button.icon { padding: 4px 9px; border-radius: 6px; background: transparent; border-color: transparent; color: var(--text-dim); font-size: 14px; }
+button.icon:hover { background: var(--bg-card-hover); color: var(--text); border-color: transparent; }
+button.icon.danger { color: var(--st-red); }
+
+/* Сегменты-фильтр (статусы заказов) */
+.seg {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 4px;
+}
+.seg button {
+  border: none;
+  background: transparent;
+  border-radius: 7px;
+  padding: 7px 13px;
+  font-size: 13px;
+}
+.seg button:hover { background: var(--bg-card); }
+.seg button.primary { background: var(--wood); color: var(--wood-deep); }
+
+/* ==========================================================================
+   ПОЛЯ ВВОДА
+   ========================================================================== */
+
+input, select, textarea {
+  font: 400 14px/1.4 var(--font-ui);
+  color: var(--text);
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 11px;
+  transition: border-color 0.15s;
+}
+input::placeholder, textarea::placeholder { color: var(--text-faint); }
+input:focus, select:focus, textarea:focus { border-color: var(--wood); outline: none; box-shadow: 0 0 0 1px var(--wood); }
+select { cursor: pointer; }
+input[type="number"] { width: 90px; }
+input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--wood); }
+textarea { width: 100%; min-height: 84px; resize: vertical; }
+
+/* Поле с иконкой внутри (поиск) */
+.field { position: relative; }
+.field .ic {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px; height: 16px;
+  color: var(--text-faint);
+  pointer-events: none;
+}
+.field input { padding-left: 34px; width: 100%; }
+
+/* ==========================================================================
+   ТАБЛИЦЫ
+   ========================================================================== */
+
+.table-wrap { overflow-x: auto; margin: 0 -4px; }
+table { border-collapse: collapse; width: 100%; }
+th {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-faint);
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  background: none;
+}
+td {
+  padding: 12px 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+  text-align: left;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr { transition: background 0.12s; }
+tbody tr:hover { background: var(--bg-card-hover); }
+tbody tr.archived { opacity: 0.5; }
+td.num, th.num { text-align: right; white-space: nowrap; }
+td.num, .money { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.muted { color: var(--text-dim); font-size: 13px; }
+.num-id { color: var(--wood); font-family: var(--font-mono); font-weight: 600; }
+
+/* ==========================================================================
+   БЕЙДЖИ (пилюли статусов — макет: цветной фон 10% + текст 400 + граница 20%)
+   ========================================================================== */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+  background: transparent;
+  white-space: nowrap;
+}
+.badge.unverified { color: var(--st-yellow); border-color: rgba(250, 204, 21, 0.25); background: rgba(250, 204, 21, 0.08); }
+.badge.st-new    { color: var(--st-blue);   border-color: rgba(96, 165, 250, 0.25);   background: rgba(96, 165, 250, 0.10); }
+.badge.st-work   { color: var(--st-purple); border-color: rgba(192, 132, 252, 0.25); background: rgba(192, 132, 252, 0.10); }
+.badge.st-done   { color: var(--st-green);  border-color: rgba(74, 222, 128, 0.25);  background: rgba(74, 222, 128, 0.10); }
+.badge.st-closed { color: var(--st-gray);   border-color: rgba(156, 163, 175, 0.25); background: rgba(156, 163, 175, 0.10); }
+.badge.st-red    { color: var(--st-red);    border-color: rgba(248, 113, 113, 0.25); background: rgba(248, 113, 113, 0.10); }
+
+/* ==========================================================================
+   ПРОЧИЕ ЭЛЕМЕНТЫ ФОРМ/СТРАНИЦ
+   ========================================================================== */
+
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.spacer { flex: 1; }
+.total { font-size: 18px; font-weight: 700; color: var(--neon); font-family: var(--font-mono); }
+.total b { font-size: 24px; }
+.hidden { display: none !important; }
+
+.error { color: var(--st-red); margin: 6px 0; white-space: pre-wrap; font-size: 13px; }
+.notice { color: var(--st-green); margin: 6px 0; font-size: 13px; }
+
+/* Сообщение-карточка «не распознано» */
+.warnbox {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border: 1px solid rgba(250, 204, 21, 0.3);
+  background: rgba(250, 204, 21, 0.06);
+  border-radius: 8px;
+  color: var(--st-yellow);
+  font-size: 13px;
+}
+.similar-hint {
+  margin-top: 10px;
+  padding: 10px 14px;
+  border: 1px solid rgba(192, 132, 252, 0.3);
+  background: rgba(192, 132, 252, 0.06);
+  border-radius: 8px;
+  color: var(--st-purple);
+  font-size: 13px;
+}
+
+/* Пожелания заказчика — акцентная рамка */
+.wishes-box { border-color: rgba(201, 168, 118, 0.45); }
+.wishes-box h2 { color: var(--wood); }
+.wishes-quote {
+  background: var(--bg-raised);
+  border-left: 3px solid var(--wood);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 14px;
+  color: var(--text-dim);
+  font-style: italic;
+  white-space: pre-wrap;
+}
+
+/* ==========================================================================
+   КАЛЬКУЛЯТОР
+   ========================================================================== */
+
+.calc-field { margin: 10px 0; display: flex; gap: 10px; align-items: center; }
+.calc-field label { min-width: 200px; font-size: 14px; }
+.calc-hint { font-size: 12px; color: var(--text-faint); }
+.calc-result {
+  background: rgba(74, 222, 128, 0.06);
+  border: 1px solid var(--st-green);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+.calc-lines { font-size: 13px; color: var(--text-dim); margin-top: 6px; }
+#dynamic-sections .calc-field label { min-width: 200px; }
+@media (max-width: 640px) {
+  .calc-field { flex-direction: column; align-items: stretch; }
+  .calc-field label { min-width: 0; }
+}
+
+/* ==========================================================================
+   ДИАЛОГИ
+   ========================================================================== */
+
+dialog {
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  color: var(--text);
+  padding: 22px 24px;
+  max-width: 680px;
+  width: calc(100% - 32px);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+}
+dialog::backdrop { background: rgba(10, 10, 12, 0.6); backdrop-filter: blur(2px); }
+dialog h2 {
+  font-size: 19px;
+  color: var(--wood);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+dialog h2 small { font-size: 13px; color: var(--text-dim); font-weight: 400; font-family: var(--font-ui); }
+.dlg-actions { display: flex; gap: 8px; margin-top: 14px; align-items: center; flex-wrap: wrap; }
+.dlg-actions .spacer { flex: 1; }
+dialog table { margin: 6px 0 10px; }
+dialog .muted { margin-top: 6px; }
+
+/* ==========================================================================
+   АДАПТИВНОСТЬ
+   ========================================================================== */
+
+@media (max-width: 860px) {
+  .sidebar { flex-basis: 62px; }
+  .sidebar .brand { justify-content: center; padding: 0; }
+  .brand-name, .sidebar .user-name, .sidebar .user-role, .nav-item span, .nav-label, .soon { display: none; }
+  .sidebar-foot { padding: 12px 0; display: flex; justify-content: center; }
+  .nav { padding: 10px 8px; }
+  .nav-item { justify-content: center; padding: 11px 0; }
+  .content { padding: 18px 14px 40px; }
+  .topbar { padding: 10px 14px; }
+  .topbar-hint { display: none; }
+}

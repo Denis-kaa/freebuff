@@ -8,6 +8,14 @@ const money = (n) => Number(n).toFixed(2);
 let currentStatus = "";
 let currentOrder = null;
 
+// Класс-пилюля бейджа для каждого статуса (тёмная тема «Печатникъ»).
+const STATUS_STYLE = {
+  "новый": "st-new",
+  "в работе": "st-work",
+  "выполнен": "st-done",
+  "завершён": "st-closed",
+};
+
 async function apiFetch(path, options = {}) {
   const response = await fetch("/api" + path, {
     headers: { "Content-Type": "application/json" },
@@ -39,7 +47,7 @@ async function loadOrders() {
       `<td>${order.items_count}</td>` +
       `<td class="num">${money(order.total)}</td>` +
       `<td>${escapeHtml(order.payment_method)}</td>` +
-      `<td><span class="badge status-${escapeHtml(order.status)}">${escapeHtml(order.status)}</span></td>` +
+      `<td><span class="badge ${STATUS_STYLE[order.status] || "st-red"}">${escapeHtml(order.status)}</span></td>` +
       `<td><button data-open="${order.id}">открыть</button></td>`;
     body.appendChild(tr);
   });

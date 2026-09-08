@@ -37,7 +37,7 @@ function renderDraft() {
       `<td class="num">${money(item.price)}</td>` +
       `<td class="num"><input type="number" min="0.001" step="any" value="${item.qty}" data-qty="${index}" style="width:70px"></td>` +
       `<td class="num">${money(item.price * item.qty)}</td>` +
-      `<td><button class="danger" data-remove="${index}">✕</button></td>`;
+      `<td><button class="icon danger" data-remove="${index}" title="Убрать позицию">✕</button></td>`;
     body.appendChild(tr);
   });
   $("#draft-total").textContent = money(draftTotal());

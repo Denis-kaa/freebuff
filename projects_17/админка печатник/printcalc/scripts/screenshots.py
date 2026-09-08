@@ -2,7 +2,7 @@
 
 Сценарий:
 1. Сидит демо-данные через API (3 позиции прайса + заказ с пожеланиями и разделами).
-2. Делает скриншоты всех страниц (десктоп, тёмная тема «Печатникъ», мобильный).
+2. Делает скриншоты страниц и диалогов (тёмная тема «Печатникъ» — по умолчанию).
 3. Очищает демо-данные — БД остаётся чистой.
 
 Запуск на сервере whimco (где крутится приложение на 127.0.0.1:8300):
@@ -96,30 +96,38 @@ def main() -> None:
 
     pages = [
         ("/", "01-main.png"),
-        ("/orders", "02-orders.png"),
-        ("/price-list", "03-price-list.png"),
-        ("/constructor", "04-constructor.png"),
+        ("/orders", "04-orders.png"),
+        ("/price-list", "05-price-list.png"),
+        ("/constructor", "07-constructor.png"),
     ]
     with sync_playwright() as p:
         browser = p.chromium.launch()
-        page = browser.new_page(viewport={"width": 1280, "height": 800})
+        page = browser.new_page(viewport={"width": 1440, "height": 900})
         for path, name in pages:
             page.goto(BASE + path, wait_until="load", timeout=20000)
-            page.wait_for_timeout(500)
+            page.wait_for_timeout(600)
             page.screenshot(path=str(OUT / name), full_page=True)
             print("shot:", name)
 
-        # Тёмная тема «Печатникъ» — пресет активируется классом, логику не трогаем.
+        # Диалог выбора из прайса (модальное окно в теме).
         page.goto(BASE + "/", wait_until="load", timeout=20000)
-        page.evaluate("document.body.classList.add('pecatnik')")
-        page.wait_for_timeout(500)
-        page.screenshot(path=str(OUT / "05-main-dark.png"), full_page=True)
-        print("shot: 05-main-dark.png")
+        page.click("#btn-add-price")
+        page.wait_for_timeout(700)
+        page.screenshot(path=str(OUT / "02-dialog-price.png"), full_page=True)
+        print("shot: 02-dialog-price.png")
 
-        # Мобильный вид главного экрана.
+        # Заказы: открытый диалог заказа с пожеланиями и бейджем статуса.
+        page.goto(BASE + "/orders", wait_until="load", timeout=20000)
+        page.wait_for_timeout(600)
+        page.click("#orders-body [data-open]")
+        page.wait_for_timeout(700)
+        page.screenshot(path=str(OUT / "03-dialog-order.png"), full_page=True)
+        print("shot: 03-dialog-order.png")
+
+        # Мобильный вид главного экрана (сайдбар схлопывается в иконки).
         mobile = browser.new_page(viewport={"width": 390, "height": 844})
         mobile.goto(BASE + "/", wait_until="load", timeout=20000)
-        mobile.wait_for_timeout(500)
+        mobile.wait_for_timeout(600)
         mobile.screenshot(path=str(OUT / "06-main-mobile.png"), full_page=True)
         print("shot: 06-main-mobile.png")
         browser.close()
