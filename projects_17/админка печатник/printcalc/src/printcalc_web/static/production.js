@@ -138,11 +138,16 @@ $("#task-start").addEventListener("click", async () => {
 
 $("#task-complete").addEventListener("click", async () => {
   try {
-    await apiFetch(`/production/tasks/${currentTask.id}/complete`, {
+    const task = await apiFetch(`/production/tasks/${currentTask.id}/complete`, {
       method: "POST",
       body: JSON.stringify({ checklist: readChecklist(), notes: $("#task-notes").value }),
     });
     $("#task-dialog").close();
+    // Этап 5b: последнее задание заказа списывает материалы со склада автоматически
+    if (task.stock_auto_consume) {
+      const n = (task.stock_auto_consume.consumed || []).length;
+      window.alert(`Задание завершено. Все работы по заказу готовы — материалы списаны со склада (позиций: ${n}).`);
+    }
     await loadTasks();
   } catch (error) {
     $("#task-error").textContent = error.message;

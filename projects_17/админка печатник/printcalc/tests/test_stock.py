@@ -23,6 +23,7 @@ def conn(tmp_path):
 
     connection = connect(tmp_path / "stock.db")
     store.seed_sections(connection)
+    store.seed_operations(connection)  # для тестов 5b (план заданий)
     yield connection
     connection.close()
 
@@ -117,6 +118,105 @@ def _order_with_consumption(conn: sqlite3.Connection, material_id: int, area: fl
     )
     conn.commit()
     return order["id"]
+
+
+# ---------- Этап 5b: автосписание при завершении производства ----------
+
+
+def _reserve_and_plan(conn: sqlite3.Connection, order_id: int) -> list[dict]:
+    """Резерв заказа + план заданий (типовой путь: резерв кладёт оператор)."""
+    store.reserve_order_materials(conn, order_id)
+    return store.generate_production_plan(conn, order_id=order_id)
+
+
+def test_auto_consume_when_all_tasks_done(conn: sqlite3.Connection) -> None:
+    """5b: последний завершённый таск конвертирует резерв в списание."""
+    material = _material(conn)
+    store.record_stock_movement(conn, material_id=material["id"], kind="PURCHASE", quantity=100.0)
+    order_id = _order_with_consumption(conn, material["id"], area=7.4)
+    tasks = _reserve_and_plan(conn, order_id)
+    assert len(tasks) >= 1
+
+    # завершаем все задания кроме последнего — списания ещё нет
+    for task in tasks[:-1]:
+        store.start_task(conn, task["id"])
+        required = task["operation"]["checklist"]
+        store.complete_task(conn, task["id"], checklist=[True] * len(required))
+    pos = store.stock_position(conn, material["id"])
+    assert pos["physical"] == 100.0  # ещё держится резерв
+
+    # последний таск — триггер автосписания
+    last = tasks[-1]
+    store.start_task(conn, last["id"])
+    required = last["operation"]["checklist"]
+    result = store.complete_task(conn, last["id"], checklist=[True] * len(required))
+    auto = result["stock_auto_consume"]
+    assert auto is not None
+    assert len(auto["consumed"]) == 1
+    assert auto["consumed"][0]["quantity"] == pytest.approx(7.4)
+    pos = store.stock_position(conn, material["id"])
+    assert pos["physical"] == pytest.approx(92.6)  # 100 − 7.4
+    assert pos["reserved"] == 0.0
+
+
+def test_no_auto_consume_until_all_done(conn: sqlite3.Connection) -> None:
+    material = _material(conn)
+    store.record_stock_movement(conn, material_id=material["id"], kind="PURCHASE", quantity=100.0)
+    order_id = _order_with_consumption(conn, material["id"], area=5.0)
+    tasks = _reserve_and_plan(conn, order_id)
+    assert len(tasks) >= 2  # иначе тест не имеет смысла
+
+    first = tasks[0]
+    store.start_task(conn, first["id"])
+    required = first["operation"]["checklist"]
+    result = store.complete_task(conn, first["id"], checklist=[True] * len(required))
+    assert result["stock_auto_consume"] is None
+    pos = store.stock_position(conn, material["id"])
+    assert pos["physical"] == 100.0
+    assert pos["reserved"] == pytest.approx(5.0)
+
+
+def test_auto_consume_without_reserve_still_consumes(conn: sqlite3.Connection) -> None:
+    """Резерв забыли, но расход рассчитан сервером: при полном завершении
+    производства материалы всё равно списываются (§20 MASTER)."""
+    material = _material(conn)
+    store.record_stock_movement(conn, material_id=material["id"], kind="PURCHASE", quantity=50.0)
+    order_id = _order_with_consumption(conn, material["id"], area=3.0)
+    tasks = store.generate_production_plan(conn, order_id=order_id)
+    assert len(tasks) >= 1
+    for task in tasks:
+        store.start_task(conn, task["id"])
+        required = task["operation"]["checklist"]
+        result = store.complete_task(conn, task["id"], checklist=[True] * len(required))
+    auto = result["stock_auto_consume"]
+    assert auto is not None
+    assert auto["consumed"][0]["quantity"] == pytest.approx(3.0)
+    assert auto["released"] == []  # резерва не было
+    pos = store.stock_position(conn, material["id"])
+    assert pos["physical"] == pytest.approx(47.0)
+
+
+def test_auto_consume_idempotent_on_retrigger(conn: sqlite3.Connection) -> None:
+    """Повторный триггер (правка/повторный вызов) не дублирует списание."""
+    material = _material(conn)
+    store.record_stock_movement(conn, material_id=material["id"], kind="PURCHASE", quantity=100.0)
+    order_id = _order_with_consumption(conn, material["id"], area=4.0)
+    tasks = _reserve_and_plan(conn, order_id)
+    for task in tasks[:-1]:
+        store.start_task(conn, task["id"])
+        required = task["operation"]["checklist"]
+        store.complete_task(conn, task["id"], checklist=[True] * len(required))
+    last = tasks[-1]
+    store.start_task(conn, last["id"])
+    required = last["operation"]["checklist"]
+    first_result = store.complete_task(conn, last["id"], checklist=[True] * len(required))
+    assert first_result["stock_auto_consume"] is not None
+
+    # повторный вызов consume напрямую — StoreError; автосписание молча пропускается
+    result = store._auto_consume_if_ready(conn, order_id)
+    assert result is None
+    pos = store.stock_position(conn, material["id"])
+    assert pos["physical"] == pytest.approx(96.0)  # не списалось дважды
 
 
 def test_reserve_order_from_consumption(conn: sqlite3.Connection) -> None:

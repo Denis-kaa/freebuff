@@ -2037,7 +2037,26 @@ def complete_task(
         (json.dumps(checked, ensure_ascii=False), notes.strip(), utc_now(), task_id),
     )
     conn.commit()
-    return get_task(conn, task_id)
+    task = get_task(conn, task_id)
+    task["stock_auto_consume"] = _auto_consume_if_ready(conn, task["order_id"])
+    return task
+
+
+def _auto_consume_if_ready(conn: sqlite3.Connection, order_id: int) -> dict[str, Any] | None:
+    """Этап 5b (связка Склад×Производство): когда ВСЕ задания заказа выполнены,
+    резерв заказа автоматически конвертируется в списание (RESERVE→CONSUME).
+
+    Никогда не ломает завершение задания: любая ошибка склада (нет расхода,
+    уже списан, нет материалов в реестре) гасится и возвращает None.
+    Идемпотентно: consume_order_materials сам запрещает повторное списание.
+    """
+    progress = production_progress(conn, order_id)
+    if not progress["all_done"]:
+        return None
+    try:
+        return consume_order_materials(conn, order_id)
+    except StoreError:
+        return None
 
 
 def block_task(conn: sqlite3.Connection, task_id: int, *, reason: str) -> dict[str, Any]:
