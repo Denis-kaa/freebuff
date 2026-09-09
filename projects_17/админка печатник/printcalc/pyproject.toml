@@ -12,6 +12,7 @@ dependencies = []
 [project.optional-dependencies]
 web = ["fastapi>=0.110", "uvicorn>=0.27", "jinja2>=3.1"]
 test = ["httpx>=0.27"]
+telegram = ["httpx>=0.27"]  # Этап 6: Telegram-поллер (без него приложение стартует, поллер отключён)
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
