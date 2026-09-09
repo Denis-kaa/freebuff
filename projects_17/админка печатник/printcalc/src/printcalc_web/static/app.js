@@ -287,6 +287,12 @@ $("#btn-calc-run").addEventListener("click", async () => {
     const lines = lastResult.lines.map((line) => `${escapeHtml(line.label)}: ${money(line.amount)}₽`).join("<br>");
     const warnings = lastResult.warnings.length ? "<div>" + lastResult.warnings.map(escapeHtml).join("; ") + "</div>" : "";
     box.innerHTML = `<b>Цена: ${money(lastResult.price)} ₽</b><div class="calc-lines">${lines}</div>${warnings}`;
+    // Расход материала (Этап 3) — только для позиций, где он считается.
+    const consumption = lastResult.details && lastResult.details.consumption;
+    if (consumption && consumption.production_area_m2) {
+      const c = consumption;
+      box.innerHTML += `<div class="calc-lines muted">Расход: ${Number(c.production_area_m2).toFixed(2)} м² · ${c.pieces_across}×${c.rows} (${escapeHtml(c.orientation)}) · отход ${Number(c.waste_percent).toFixed(1)}%</div>`;
+    }
     box.classList.remove("hidden");
     $("#btn-calc-add").disabled = false;
   } catch (error) {
@@ -297,13 +303,18 @@ $("#btn-calc-run").addEventListener("click", async () => {
 $("#btn-calc-add").addEventListener("click", () => {
   if (!lastResult) return;
   const spec = calcSpecs.find((s) => s.id === lastResult.calculator_id);
+  // Ручная ширина рулона (правило владельца): передаётся серверу вместе с
+  // параметрами, чтобы расход считался по фактическому рулону.
+  const params = lastResult.details && lastResult.details.inputs ? { ...lastResult.details.inputs } : {};
+  const rollWidth = Number($("#calc-roll-width").value);
+  if (rollWidth > 0) params.roll_width_mm = rollWidth;
   addItem({
     kind: "calculator",
     name: spec ? spec.title : lastResult.calculator_id,
     price: lastResult.price,
     qty: 1,
     calculator_id: lastResult.calculator_id,
-    params: lastResult.details && lastResult.details.inputs ? lastResult.details.inputs : null,
+    params: Object.keys(params).length ? params : null,
   });
   dlgCalc.close();
 });

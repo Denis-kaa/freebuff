@@ -128,6 +128,16 @@ def build_spec() -> CalculatorSpec:
                 default=False,
                 required=False,
             ),
+            FieldSpec(
+                name="roll_width_mm",
+                kind=FieldKind.NUMBER,
+                title="Ширина загруженного рулона, мм (для расчёта расхода)",
+                default=None,
+                min_value=0,
+                exclusive_min=True,
+                unit="мм",
+                required=False,
+            ),
         ),
     )
 

@@ -115,9 +115,14 @@ def choose_plan(
     if orientation_policy not in ("MIN_WASTE", "MIN_LENGTH", "FIXED_ORIENTATION"):
         raise ConsumptionError("INVALID_POLICY", f"неизвестная политика ориентации: {orientation_policy}")
 
-    plan_a = plan_orientation(eff=eff, quantity=quantity, swapped=False)
+    plan_a: OrientationPlan | None = None
     plan_b: OrientationPlan | None = None
     warnings: list[str] = []
+
+    try:
+        plan_a = plan_orientation(eff=eff, quantity=quantity, swapped=False)
+    except ConsumptionError:
+        plan_a = None  # «как введено» не влезает — возможно, влезет поворотом
 
     if allow_rotation:
         try:
@@ -125,10 +130,25 @@ def choose_plan(
         except ConsumptionError:
             plan_b = None  # поворот не помещается — не ошибка, просто нет варианта
 
-    if orientation_policy == "FIXED_ORIENTATION" or plan_b is None:
+    if plan_a is None and plan_b is None:
+        raise ConsumptionError(
+            "PRODUCT_DOES_NOT_FIT",
+            f"изделие {eff.width:g}×{eff.height:g} мм не помещается на полезную "
+            f"ширину рулона {eff.usable_roll_width:g} мм ни прямо, ни поворотом",
+        )
+
+    if plan_a is None:
+        # Правило владельца (2026-09-09): если изделие не влезает по ширине рулона,
+        # разворачиваем изображение (ширина↔высота) и считаем повёрнутым.
+        chosen = plan_b
+        warnings.append(
+            f"Изделие {eff.width:g}×{eff.height:g} мм не помещается на рулон прямо — "
+            f"рассчитано повёрнутым ('{plan_b.label if plan_b else ''}')."
+        )
+    elif plan_b is None:
         chosen = plan_a
-        if orientation_policy == "FIXED_ORIENTATION" and fixed_orientation == "landscape" and plan_b:
-            chosen = plan_b
+    elif orientation_policy == "FIXED_ORIENTATION":
+        chosen = plan_b if fixed_orientation == "landscape" else plan_a
     else:
         # MIN_WASTE: минимальный production_area (== минимальный waste при равной product_area)
         # MIN_LENGTH: минимальная длина раскладки
@@ -143,12 +163,12 @@ def choose_plan(
                 plan_b if plan_b.production_area < plan_a.production_area else plan_a
             )
 
-    if plan_b is not None and chosen is plan_a:
-        alt = plan_b
-    elif plan_b is not None and chosen is plan_b:
-        alt = plan_a
-    else:
-        alt = None
+    if chosen is None:  # недостижимо (plan_a/plan_b хотя бы один есть), но сужает тип для mypy
+        raise ConsumptionError("PRODUCT_DOES_NOT_FIT", "нет допустимого плана раскладки")
+
+    alt: OrientationPlan | None = None
+    if plan_a is not None and plan_b is not None:
+        alt = plan_b if chosen is plan_a else plan_a
 
     if alt is not None:
         saved = abs(chosen.production_area - alt.production_area)

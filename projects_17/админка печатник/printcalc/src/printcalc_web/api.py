@@ -279,6 +279,42 @@ def run_calculation(
     return result_to_dict(result)
 
 
+class ConsumptionCalculateIn(BaseModel):
+    """Расход материала для изделия (Этап 3, §48 промт_4).
+
+    Материал — из реестра (id); размеры в см (интерфейс оператора);
+    policy_overrides — необязательные припуски (bleed/gap/margins, мм).
+    """
+
+    material_id: int = Field(ge=1)
+    width_cm: float = Field(gt=0)
+    height_cm: float = Field(gt=0)
+    quantity: float = Field(default=1, gt=0)
+    policy_overrides: dict[str, Any] | None = None
+    roll_width_mm: float | None = Field(default=None, gt=0)
+
+
+@router.post("/consumption/calculate")
+def calculate_consumption(
+    payload: ConsumptionCalculateIn, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """Физический расход материала (не цена): раскрой, отход, трассировка.
+
+    roll_width_mm — ручная ширина загруженного рулона (правило владельца:
+    сменил плоттер на 3 м — ввёл фактическую ширину в расчёте).
+    """
+    return _store_guard(
+        store.calculate_material_consumption,
+        conn,
+        material_id=payload.material_id,
+        width_cm=payload.width_cm,
+        height_cm=payload.height_cm,
+        quantity=payload.quantity,
+        policy_overrides=payload.policy_overrides,
+        roll_width_mm=payload.roll_width_mm,
+    )
+
+
 @router.post("/parse")
 def parse_text(
     payload: ParseIn, conn: sqlite3.Connection = Depends(get_conn)

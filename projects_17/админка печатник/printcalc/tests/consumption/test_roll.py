@@ -55,16 +55,29 @@ def test_golden_multi_piece() -> None:
     assert result.waste_area == pytest.approx(500_000.0)
 
 
-# Test 9: изделие шире рулона → ошибка PRODUCT_DOES_NOT_FIT, не приблизительный результат
-def test_product_does_not_fit() -> None:
+# Test 9 (обновлён 2026-09-09, правило владельца): изделие шире рулона —
+# разворачивается (ширина↔высота) и считается повёрнутым; ошибка только если
+# не влезает НИ прямо, НИ поворотом (см. test_product_does_not_fit_at_all).
+def test_product_wider_than_roll_is_rotated() -> None:
+    result = ConsumptionEngine().calculate(
+        _film(1000.0),
+        {"width": 1200.0, "height": 800.0, "quantity": 1.0},
+        MaterialConsumptionPolicy(material_id="film_white", mode="ROLL_NESTING"),
+    )
+    assert result.orientation == "800x1200"
+    assert result.production_area == pytest.approx(1_200_000.0)
+    assert any("повёрнутым" in w for w in result.warnings)
+
+
+def test_product_does_not_fit_at_all() -> None:
+    """Ни прямо, ни поворотом — честная ошибка, не приблизительный результат."""
     with pytest.raises(ConsumptionError) as exc:
         ConsumptionEngine().calculate(
             _film(1000.0),
-            {"width": 1200.0, "height": 800.0, "quantity": 1.0},
+            {"width": 1200.0, "height": 1300.0, "quantity": 1.0},
             MaterialConsumptionPolicy(material_id="film_white", mode="ROLL_NESTING"),
         )
-    # Портрет не влезает, но альбом (800×1200) — тоже: оба варианта проверены.
-    assert exc.value.code in ("PRODUCT_DOES_NOT_FIT", "ROLL_WIDTH_TOO_SMALL")
+    assert exc.value.code == "PRODUCT_DOES_NOT_FIT"
 
 
 def test_product_fits_only_rotated() -> None:

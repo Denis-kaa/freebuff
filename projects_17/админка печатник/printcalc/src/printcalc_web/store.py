@@ -292,6 +292,150 @@ def increment_usage(conn: sqlite3.Connection, item_ids: list[int]) -> None:
 
 # ---------- заказы ----------
 
+#: Калькуляторы, для которых расход считается движком при сохранении (Этап 3).
+#: Геометрия берётся из params (см → мм на границе движка).
+CONSUMPTION_CALCULATORS: dict[str, dict[str, str]] = {
+    # calculator_id → {ширина, высота, тираж} имена полей в params
+    "wide": {"width": "width", "height": "height", "qty": "qty"},
+}
+
+
+def _row_to_engine_material(row: sqlite3.Row) -> Any:
+    """Строка реестра материалов → доменная Material движка расхода."""
+    from printcalc.engine.consumption.models import Material
+
+    return Material(
+        id=str(row["id"]),
+        name=row["name"],
+        category=row["category"],
+        consumption_mode=row["consumption_mode"],
+        base_unit=row["base_unit"],
+        purchase_unit=row["purchase_unit"],
+        roll_width=row["roll_width"],
+        roll_length=row["roll_length"],
+        sheet_width=row["sheet_width"],
+        sheet_height=row["sheet_height"],
+        purchase_price=row["purchase_cost"],
+        price_unit=row["price_unit"],
+        active=bool(row["active"]),
+    )
+
+
+def calculate_material_consumption(
+    conn: sqlite3.Connection,
+    *,
+    material_id: int,
+    width_cm: float,
+    height_cm: float,
+    quantity: float,
+    policy_overrides: Mapping[str, Any] | None = None,
+    roll_width_mm: float | None = None,
+) -> dict[str, Any]:
+    """Расход материала для изделия (Этап 3, ТЗ промт_4 §48).
+
+    Материал и его режим — из реестра; политика — дефолты движка +
+    overrides вызывающего (bleed/gap/margins). Вход в см (интерфейс
+    оператора), движок получает мм. Результат — to_dict() движка
+    (мм²→м² уже на границе, трассировка включена).
+
+    roll_width_mm (правило владельца 2026-09-09): ручная ширина загруженного
+    рулона (1 м / 1.5 м / 3 м плоттер…) — перекрывает значение реестра,
+    потому что фактическая ширина известна оператору «на месте».
+    """
+    from printcalc.engine.consumption.engine import ConsumptionEngine
+    from printcalc.engine.consumption.errors import ConsumptionError
+    from printcalc.engine.consumption.models import Material, MaterialConsumptionPolicy
+
+    row = conn.execute("SELECT * FROM materials WHERE id = ?", (material_id,)).fetchone()
+    if row is None:
+        raise StoreError(f"материал {material_id} не найден")
+    material = _row_to_engine_material(row)
+    if roll_width_mm is not None:
+        if isinstance(roll_width_mm, bool) or not isinstance(roll_width_mm, (int, float)) or roll_width_mm <= 0:
+            raise StoreError("roll_width_mm должен быть положительным числом")
+        material = Material(
+            id=material.id,
+            name=material.name,
+            category=material.category,
+            consumption_mode=material.consumption_mode,
+            base_unit=material.base_unit,
+            purchase_unit=material.purchase_unit,
+            roll_width=float(roll_width_mm),  # ручной рулон вместо реестра
+            roll_length=material.roll_length,
+            sheet_width=material.sheet_width,
+            sheet_height=material.sheet_height,
+            purchase_price=material.purchase_price,
+            price_unit=material.price_unit,
+            active=material.active,
+        )
+
+    for name, value in (("width_cm", width_cm), ("height_cm", height_cm), ("quantity", quantity)):
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or value <= 0:
+            raise StoreError(f"{name} должен быть положительным числом")
+
+    engine = ConsumptionEngine()
+    policy = MaterialConsumptionPolicy(
+        material_id=material.id,
+        mode=material.consumption_mode,
+        **dict(policy_overrides or {}),
+    )
+    try:
+        result = engine.calculate(
+            material,
+            {
+                "width": width_cm * 10.0,  # см → мм
+                "height": height_cm * 10.0,
+                "quantity": float(quantity),
+            },
+            policy,
+        )
+    except ConsumptionError as exc:
+        # Стабильный машинный код наружу (§38): ROLL_WIDTH_TOO_SMALL, PRODUCT_DOES_NOT_FIT…
+        raise StoreError(f"[{exc.code}] {exc.message}") from None
+    except ValueError as exc:
+        raise StoreError(str(exc)) from None
+    return result.to_dict()
+
+
+def _consumption_for_calculator_item(
+    conn: sqlite3.Connection, calculator_id: str, params: Mapping[str, Any]
+) -> dict[str, Any] | None:
+    """Расход для расчётной позиции (Этап 3) или None, если не применим.
+
+    Материал выбирается по имени из params (legacy-поле material),
+    резолвится через реестр материалов (алиасы, BR-W1). Материал не найден
+    или у калькулятора нет геометрии — расход просто не записывается
+    (цена заказа от этого не зависит).
+    """
+    geometry = CONSUMPTION_CALCULATORS.get(calculator_id)
+    if geometry is None:
+        return None
+    material_name = params.get("material")
+    if not isinstance(material_name, str) or not material_name.strip():
+        return None
+    width = params.get(geometry["width"])
+    height = params.get(geometry["height"])
+    qty = params.get(geometry["qty"], 1)
+    if not all(isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0 for v in (width, height, qty)):
+        return None
+    material = find_material_by_name(conn, material_name)
+    if material is None:
+        return None
+    assert width is not None and height is not None and qty is not None  # проверено выше
+    try:
+        return calculate_material_consumption(
+            conn,
+            material_id=material["id"],
+            width_cm=float(width),
+            height_cm=float(height),
+            quantity=float(qty),
+        )
+    except StoreError:
+        # Не блокируем приём заказа из-за расхода (например, материал без
+        # roll_width) — цена уже посчитана калькулятором; расход можно
+        # досчитать вручную через /api/consumption/calculate.
+        return None
+
 
 def _resolve_item(
     conn: sqlite3.Connection, raw: Mapping[str, Any], position: int
@@ -317,6 +461,7 @@ def _resolve_item(
             "price_list_item_id": item["id"],
             "saved_to_catalog": 1,
             "position": position,
+            "consumption": None,
         }
 
     if kind == "calculator":
@@ -331,6 +476,7 @@ def _resolve_item(
         except RegistryError:
             raise StoreError(f"неизвестный калькулятор: '{calculator_id}'") from None
         title = get_registry().get(str(calculator_id)).spec.title
+        consumption = _consumption_for_calculator_item(conn, str(calculator_id), params)
         return {
             "kind": "calculator",
             "name": title,
@@ -341,6 +487,7 @@ def _resolve_item(
             "price_list_item_id": None,
             "saved_to_catalog": 1,
             "position": position,
+            "consumption": consumption,
         }
 
     if kind == "manual":
@@ -373,6 +520,7 @@ def _resolve_item(
             "price_list_item_id": None,
             "saved_to_catalog": 0,
             "position": position,
+            "consumption": None,
         }
 
     raise StoreError(f"неизвестный тип позиции: '{kind}'")
@@ -413,21 +561,22 @@ def create_order(
     order_id = int(lastrowid if lastrowid is not None else 0)
     for item in resolved:
         conn.execute(
-            "INSERT INTO order_items (order_id, kind, name, price, qty, calculator_id,"
-            " params_json, price_list_item_id, saved_to_catalog, position)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            (
-                order_id,
-                item["kind"],
-                item["name"],
-                item["price"],
-                item["qty"],
-                item["calculator_id"],
-                item["params_json"],
-                item["price_list_item_id"],
-                item["saved_to_catalog"],
-                item["position"],
-            ),
+        "INSERT INTO order_items (order_id, kind, name, price, qty, calculator_id,"
+        " params_json, price_list_item_id, saved_to_catalog, position, consumption_json)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            order_id,
+            item["kind"],
+            item["name"],
+            item["price"],
+            item["qty"],
+            item["calculator_id"],
+            item["params_json"],
+            item["price_list_item_id"],
+            item["saved_to_catalog"],
+            item["position"],
+            json.dumps(item["consumption"], ensure_ascii=False) if item.get("consumption") else None,
+        ),
         )
     increment_usage(conn, [i["price_list_item_id"] for i in resolved if i["price_list_item_id"]])
     conn.execute("UPDATE orders SET wishes = ? WHERE id = ?", (wishes.strip(), order_id))
@@ -462,6 +611,9 @@ def _order_row_to_dict(
                 "params": json.loads(item["params_json"]) if item["params_json"] else None,
                 "price_list_item_id": item["price_list_item_id"],
                 "saved_to_catalog": bool(item["saved_to_catalog"]),
+                "consumption": (
+                    json.loads(item["consumption_json"]) if item["consumption_json"] else None
+                ),
             }
             for item in item_rows
         ],
@@ -1584,8 +1736,8 @@ def create_order_from_estimate(
     for position, item in enumerate(estimate["items"]):
         conn.execute(
             "INSERT INTO order_items (order_id, kind, name, price, qty, calculator_id,"
-            " params_json, price_list_item_id, saved_to_catalog, position)"
-            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            " params_json, price_list_item_id, saved_to_catalog, position, consumption_json)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 order_id,
                 item["kind"],
@@ -1597,6 +1749,7 @@ def create_order_from_estimate(
                 item["price_list_item_id"],
                 0 if item["kind"] == "manual" else 1,
                 position,
+                None,  # расход сметы не копируется: пересчитается при заказе, если применим
             ),
         )
     conn.commit()

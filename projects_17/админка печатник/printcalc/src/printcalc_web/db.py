@@ -186,6 +186,12 @@ def _migrate(conn: sqlite3.Connection) -> None:
         # Этап 2: заказ из сметы (§9 промт_4) — происхождение без ручного переноса.
         conn.execute("ALTER TABLE orders ADD COLUMN estimate_id INTEGER REFERENCES estimates(id)")
 
+    item_columns = {row[1] for row in conn.execute("PRAGMA table_info(order_items)")}
+    if "consumption_json" not in item_columns:
+        # Этап 3: snapshot расхода материала позиции (расчёт движком при
+        # сохранении заказа; неизменяем после сохранения — §49 дух).
+        conn.execute("ALTER TABLE order_items ADD COLUMN consumption_json TEXT")
+
 
 def default_db_path() -> Path:
     """Возвращает путь БД: env PRINTCALC_WEB_DB или <корень printcalc>/data/printcalc.db."""

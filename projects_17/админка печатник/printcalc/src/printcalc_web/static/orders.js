@@ -83,7 +83,21 @@ async function openOrder(orderId) {
     currentOrder.items
       .map((item) => {
         const badge = item.saved_to_catalog ? "" : ' <span class="badge unverified">мимо каталога</span>';
-        return `<td>${escapeHtml(item.name)}${badge}</td><td class="num">${money(item.price)}</td>` +
+        // Расход материала (Этап 3): краткая строка под названием позиции.
+        let consumptionRow = "";
+        if (item.consumption) {
+          const c = item.consumption;
+          const parts = [];
+          if (c.production_area_m2) parts.push(`расход ${Number(c.production_area_m2).toFixed(2)} м²`);
+          if (c.billing_quantity && c.billing_unit === "lm") parts.push(`${Number(c.billing_quantity).toFixed(2)} пог.м`);
+          if (c.pieces_across && c.rows && c.orientation) parts.push(`${c.pieces_across}×${c.rows} (${c.orientation})`);
+          if (c.waste_percent) parts.push(`отход ${Number(c.waste_percent).toFixed(1)}%`);
+          if (c.remnant && c.remnant.status === "REMNANT") parts.push(`остаток ${Number(c.remnant.width_m).toFixed(2)}×${Number(c.remnant.length_m).toFixed(2)} м`);
+          if (parts.length) {
+            consumptionRow = `<div class="consumption-line muted">⟶ ${parts.map(escapeHtml).join(" · ")}</div>`;
+          }
+        }
+        return `<td>${escapeHtml(item.name)}${badge}${consumptionRow}</td><td class="num">${money(item.price)}</td>` +
           `<td class="num">${item.qty}</td><td class="num">${money(item.price * item.qty)}</td>`;
       })
       .map((cells) => "<tr>" + cells + "</tr>")

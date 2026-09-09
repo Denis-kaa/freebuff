@@ -34,10 +34,17 @@ from printcalc.engine.result import CalcResult, CostLine
 #: legacy-арифметика: см² → м² (wide_format.py:665) и см → пог.м (671).
 _SQCM_PER_SQM = 10000.0
 _CM_PER_M = 100.0
+#: см → мм (граница consumption engine).
+_CM_PER_MM = 10.0
 
 
 def compute(inputs: Mapping[str, Any], config: WideConfig | None = None) -> CalcResult:
-    """Считает закупку/продажу широкоформата по входам и конфигу."""
+    """Считает закупку/продажу широкоформата по входам и конфигу.
+
+    inputs["roll_width_mm"] (необязательно, правило владельца 2026-09-09):
+    ручная ширина загруженного рулона — включает расчёт физического расхода
+    движком (consumption engine) и попадает в details["consumption"].
+    """
     cfg = config if config is not None else WideConfig()
 
     width = _num_input(inputs, "width")
@@ -148,6 +155,22 @@ def compute(inputs: Mapping[str, Any], config: WideConfig | None = None) -> Calc
         "install": install,
         "used_min": used_min,
     }
+
+    # Физический расход (Этап 3): движок вызывается ТОЛЬКО с ручной шириной
+    # рулона (правило владельца: оператор знает фактический рулон). Ошибка
+    # расхода не валит цену — расход идёт в details.consumption или отсутствует.
+    roll_width_mm = inputs.get("roll_width_mm")
+    if isinstance(roll_width_mm, (int, float)) and not isinstance(roll_width_mm, bool) and roll_width_mm > 0:
+        from printcalc.engine.consumption.adapters import wide_material_consumption
+
+        consumption_result = wide_material_consumption(
+            width_mm=width * _CM_PER_MM,
+            height_mm=height * _CM_PER_MM,
+            quantity=qty,
+            roll_width_mm=float(roll_width_mm),
+            policy_overrides={"orientation_policy": "MIN_WASTE"},
+        )
+        details["consumption"] = consumption_result.to_dict()
 
     return CalcResult(
         calculator_id="wide",
