@@ -55,4 +55,10 @@ def create_app(db_path: Path | None = None) -> FastAPI:
     app.include_router(views.router)
     static_dir = Path(__file__).parent / "static"
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+
+    # Этап 6: Telegram-поллер (daemon; без PRINTCALC_TG_TOKEN — no-op).
+    from printcalc_web import telegram
+
+    telegram.start_poller(app)
+
     return app

@@ -1,0 +1,82 @@
+{% set page_script %}<script src="/static/inbox.js"></script>{% endset %}
+{% include "_shell_top.html" %}
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Входящие</h2>
+    <div class="row-actions">
+      <button id="btn-inbox-refresh" class="btn" type="button">Обновить</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <select id="inbox-status-filter" class="field-input">
+      <option value="">все</option>
+      <option value="new">новые</option>
+      <option value="inquiry">с заявкой</option>
+      <option value="archived">архив</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>Получено</th><th>Канал</th><th>Отправитель</th><th>Сообщение</th><th>Распознано</th><th>Статус</th><th></th></tr>
+      </thead>
+      <tbody id="inbox-body">
+        <tr><td colspan="7" class="muted">Загрузка…</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p id="inbox-error" class="error muted"></p>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Заявки</h2>
+    <div class="row-actions">
+      <select id="inquiry-status-filter" class="field-input">
+        <option value="">все</option>
+        <option value="new">новые</option>
+        <option value="estimated">со сметой</option>
+        <option value="archived">архив</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>№</th><th>Создана</th><th>Клиент</th><th>Суть</th><th>Смета</th><th>Статус</th><th></th></tr>
+      </thead>
+      <tbody id="inquiries-body">
+        <tr><td colspan="7" class="muted">Загрузка…</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p id="inquiries-error" class="error muted"></p>
+</section>
+
+<dialog id="inquiry-dialog" class="modal">
+  <div class="modal-head">
+    <h3 id="inquiry-dialog-title">Заявка</h3>
+    <button class="icon" data-close type="button">✕</button>
+  </div>
+
+  <div class="form-grid">
+    <label>Клиент
+      <select id="inq-client" class="field-input">
+        <option value="">— не выбран —</option>
+      </select>
+    </label>
+    <label>Суть заявки
+      <input id="inq-summary" class="field-input" type="text" placeholder="Что нужно клиенту">
+    </label>
+  </div>
+
+  <div class="modal-actions">
+    <button id="inq-save" class="btn" type="button">Сохранить</button>
+    <button id="inq-to-estimate" class="btn btn-primary" type="button">Создать смету</button>
+  </div>
+  <p id="inquiry-error" class="error muted"></p>
+</dialog>

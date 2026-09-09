@@ -927,3 +927,137 @@ def purchase_plan_endpoint(
 ) -> dict[str, Any]:
     """План закупок: Need = Required - Available - Reserved, округление до упаковки."""
     return {"plan": store.purchase_plan(conn, required=payload.required)}
+
+
+# ---------- коммуникации: входящие и заявки (Этап 6, §44/§45 промт_4) ----------
+
+
+class InboxMessageIn(BaseModel):
+    """Приём сообщения из канала (Telegram-поллер или ручной ввод)."""
+
+    channel: Literal["telegram", "manual", "email"]
+    external_id: str = Field(min_length=1)
+    chat_id: str = ""
+    sender_name: str = ""
+    sender_handle: str = ""
+    text: str = ""
+    received_at: str | None = None
+
+
+class InquiryCreateIn(BaseModel):
+    """Сообщение → заявка (client_id None — авто-matching по контакту §45)."""
+
+    client_id: int | None = None
+
+
+class InquiryPatchIn(BaseModel):
+    """Правка заявки: перепривязка клиента (manual) и описание."""
+
+    client_id: int | None = None
+    summary: str | None = None
+
+
+class InquiryEstimateIn(BaseModel):
+    """Привязка созданной сметы к заявке (жизненный цикл new → estimated)."""
+
+    estimate_id: int
+
+
+@router.get("/inbox")
+def list_inbox_endpoint(
+    status: str | None = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=500),
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Единый входящий ящик (Unified Inbox §44)."""
+    return {"messages": store.list_inbox(conn, status=status, limit=limit)}
+
+
+@router.post("/inbox", status_code=201)
+def receive_message_endpoint(
+    payload: InboxMessageIn, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """Приём сообщения (идемпотентность §55: дубликат → 200 с created=false).
+
+    Через FastAPI-валидацию различить 201/200 нельзя — поэтому 201 только
+    для созданных; дубликат вернётся как существующее сообщение тоже с 201
+    (клиент ориентируется на поле created).
+    """
+    message, created = _store_guard(
+        store.record_incoming_message,
+        conn,
+        channel=payload.channel,
+        external_id=payload.external_id,
+        chat_id=payload.chat_id,
+        sender_name=payload.sender_name,
+        sender_handle=payload.sender_handle,
+        text=payload.text,
+        received_at=payload.received_at,
+    )
+    return {"message": message, "created": created}
+
+
+@router.post("/inbox/{message_id}/archive")
+def archive_message_endpoint(
+    message_id: int, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    return {"message": _store_guard(store.archive_inbox_message, conn, message_id)}
+
+
+@router.post("/inbox/{message_id}/inquiry", status_code=201)
+def create_inquiry_endpoint(
+    message_id: int,
+    payload: InquiryCreateIn | None = None,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Сообщение → заявка (§45: авто-matching, дубль сообщения → существующая)."""
+    client_id = payload.client_id if payload is not None else None
+    return _store_guard(store.create_inquiry_from_message, conn, message_id, client_id=client_id)
+
+
+@router.get("/inquiries")
+def list_inquiries_endpoint(
+    status: str | None = Query(default=None),
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    return {"inquiries": store.list_inquiries(conn, status=status)}
+
+
+@router.get("/inquiries/{inquiry_id}")
+def get_inquiry_endpoint(
+    inquiry_id: int, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    return _store_guard(store.get_inquiry, conn, inquiry_id)
+
+
+@router.patch("/inquiries/{inquiry_id}")
+def patch_inquiry_endpoint(
+    inquiry_id: int,
+    payload: InquiryPatchIn,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """PATCH-семантика: client_id перепривязывает (None — отвязать).
+
+    Отличаем «не передано» от «передан null» по наличию поля в модели.
+    """
+    fields = payload.model_dump(exclude_unset=True)
+    return _store_guard(
+        store.update_inquiry,
+        conn,
+        inquiry_id,
+        client_id=fields.get("client_id", ...),
+        summary=fields.get("summary"),
+    )
+
+
+@router.post("/inquiries/{inquiry_id}/estimate")
+def attach_estimate_endpoint(
+    inquiry_id: int,
+    payload: InquiryEstimateIn,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Заявка → смета: привязка существующей сметы (создание сметы — обычный
+    POST /estimates с client_id заявки), статус new → estimated."""
+    return _store_guard(
+        store.attach_estimate_to_inquiry, conn, inquiry_id, payload.estimate_id
+    )

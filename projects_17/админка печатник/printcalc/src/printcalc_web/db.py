@@ -214,6 +214,39 @@ CREATE TABLE IF NOT EXISTS production_tasks (
     created_at  TEXT NOT NULL
 );
 
+-- Коммуникации (Этап 6 роадмапа v6, промт_4 §44/§45/§55): входящие
+-- сообщения — факты (никогда не редактируются), заявки — работа оператора.
+-- Идемпотентность приёма — UNIQUE(channel, external_id) (§55).
+CREATE TABLE IF NOT EXISTS inbox_messages (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    channel      TEXT NOT NULL,
+    external_id  TEXT NOT NULL,
+    chat_id      TEXT NOT NULL DEFAULT '',
+    sender_name  TEXT NOT NULL DEFAULT '',
+    sender_handle TEXT NOT NULL DEFAULT '',
+    text         TEXT NOT NULL DEFAULT '',
+    status       TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new','inquiry','archived')),
+    parsed_json  TEXT NOT NULL DEFAULT '{}',
+    inquiry_id   INTEGER,
+    received_at  TEXT NOT NULL,
+    UNIQUE (channel, external_id)
+);
+
+CREATE TABLE IF NOT EXISTS inquiries (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    message_id   INTEGER NOT NULL REFERENCES inbox_messages(id),
+    client_id    INTEGER REFERENCES clients(id),
+    client_match TEXT NOT NULL DEFAULT 'none' CHECK (client_match IN ('none','auto','manual')),
+    summary      TEXT NOT NULL DEFAULT '',
+    status       TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new','estimated','archived')),
+    estimate_id  INTEGER REFERENCES estimates(id),
+    created_at   TEXT NOT NULL,
+    updated_at   TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_inbox_status ON inbox_messages(status);
+CREATE INDEX IF NOT EXISTS idx_inquiries_status ON inquiries(status);
+
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
 CREATE INDEX IF NOT EXISTS idx_price_items_name ON price_list_items(name);
@@ -250,6 +283,9 @@ def _migrate(conn: sqlite3.Connection) -> None:
     if "pack_size" not in material_columns:
         # Этап 5: фасовка закупки (планировщик округляет вверх до pack_size).
         conn.execute("ALTER TABLE materials ADD COLUMN pack_size REAL")
+
+    # Таблицы Этапа 6 (inbox_messages/inquiries) — CREATE IF NOT EXISTS в
+    # схеме выше; отдельных ALTER не требуют (создаются целиком).
 
 
 def default_db_path() -> Path:

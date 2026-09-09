@@ -18,11 +18,13 @@ import json
 import re
 import sqlite3
 from datetime import datetime, timezone
+from types import EllipsisType
 from typing import Any, Mapping
 
 import printcalc
 from printcalc.engine.errors import CalcInputError, RegistryError
 from printcalc.engine.registry import calculate
+from printcalc_web import parser
 from printcalc_web.calculators import get_registry
 
 #: Статусы заказа Phase 1 (Р2). Хранение — TEXT; расширение набора в Phase 2
@@ -2419,3 +2421,248 @@ def purchase_plan(
         })
     plan.sort(key=lambda row: -row["deficit"])
     return plan
+
+
+# ---------- коммуникации: входящие и заявки (Этап 6, §44/§45/§55 промт_4) ----------
+
+#: Закрытые словари коммуникаций (ANTI-6b).
+INBOX_CHANNELS: tuple[str, ...] = ("telegram", "manual", "email")
+INBOX_STATUSES: tuple[str, ...] = ("new", "inquiry", "archived")
+INQUIRY_STATUSES: tuple[str, ...] = ("new", "estimated", "archived")
+CLIENT_MATCH_KINDS: tuple[str, ...] = ("none", "auto", "manual")
+
+
+def _message_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "channel": row["channel"],
+        "external_id": row["external_id"],
+        "chat_id": row["chat_id"],
+        "sender_name": row["sender_name"],
+        "sender_handle": row["sender_handle"],
+        "text": row["text"],
+        "status": row["status"],
+        "parsed": json.loads(row["parsed_json"] or "{}"),
+        "inquiry_id": row["inquiry_id"],
+        "received_at": row["received_at"],
+    }
+
+
+def _inquiry_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "message_id": row["message_id"],
+        "client_id": row["client_id"],
+        "client_match": row["client_match"],
+        "summary": row["summary"],
+        "status": row["status"],
+        "estimate_id": row["estimate_id"],
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+    }
+
+
+def record_incoming_message(
+    conn: sqlite3.Connection,
+    *,
+    channel: str,
+    external_id: str,
+    chat_id: str = "",
+    sender_name: str = "",
+    sender_handle: str = "",
+    text: str = "",
+    received_at: str | None = None,
+) -> tuple[dict[str, Any], bool]:
+    """Принимает сообщение (§55): дубликат по (channel, external_id) не создаёт
+    строку, а возвращает существующую (created=False). Парсер запускается
+    детерминированный (printcalc_web.parser.parse)."""
+    if channel not in INBOX_CHANNELS:
+        raise StoreError(f"неизвестный канал: {channel} (допустимо: {INBOX_CHANNELS})")
+    if not external_id.strip():
+        raise StoreError("external_id обязателен (идемпотентность §55)")
+    existing = conn.execute(
+        "SELECT * FROM inbox_messages WHERE channel = ? AND external_id = ?",
+        (channel, external_id),
+    ).fetchone()
+    if existing is not None:
+        return _message_row_to_dict(existing), False
+
+    parsed = parser.parse(conn, text or "")
+    now = received_at or utc_now()
+    cursor = conn.execute(
+        "INSERT INTO inbox_messages (channel, external_id, chat_id, sender_name,"
+        " sender_handle, text, status, parsed_json, received_at)"
+        " VALUES (?, ?, ?, ?, ?, ?, 'new', ?, ?)",
+        (channel, external_id.strip(), chat_id, sender_name, sender_handle,
+         text or "", json.dumps(parsed, ensure_ascii=False), now),
+    )
+    conn.commit()
+    row = conn.execute(
+        "SELECT * FROM inbox_messages WHERE id = ?", (cursor.lastrowid,)
+    ).fetchone()
+    return _message_row_to_dict(row), True
+
+
+def list_inbox(
+    conn: sqlite3.Connection, *, status: str | None = None, limit: int = 100
+) -> list[dict[str, Any]]:
+    """Входящие, новые сверху (по убыванию received_at)."""
+    if status is not None and status not in INBOX_STATUSES:
+        raise StoreError(f"неизвестный статус входящих: {status}")
+    query = "SELECT * FROM inbox_messages"
+    params: list[Any] = []
+    if status is not None:
+        query += " WHERE status = ?"
+        params.append(status)
+    query += " ORDER BY received_at DESC, id DESC LIMIT ?"
+    params.append(limit)
+    return [_message_row_to_dict(row) for row in conn.execute(query, params).fetchall()]
+
+
+def get_inbox_message(conn: sqlite3.Connection, message_id: int) -> dict[str, Any] | None:
+    row = conn.execute("SELECT * FROM inbox_messages WHERE id = ?", (message_id,)).fetchone()
+    return _message_row_to_dict(row) if row else None
+
+
+def archive_inbox_message(conn: sqlite3.Connection, message_id: int) -> dict[str, Any]:
+    """Спрятать сообщение без заявки (спам/дубль-сообщение)."""
+    row = conn.execute("SELECT * FROM inbox_messages WHERE id = ?", (message_id,)).fetchone()
+    if row is None:
+        raise StoreError(f"сообщение {message_id} не найдено")
+    conn.execute(
+        "UPDATE inbox_messages SET status = 'archived' WHERE id = ?", (message_id,)
+    )
+    conn.commit()
+    return get_inbox_message(conn, message_id)  # type: ignore[return-value]
+
+
+def _normalize_telegram_handle(value: str) -> str:
+    v = value.strip().lstrip("@")
+    return v.lower()
+
+
+def match_client_for_message(
+    conn: sqlite3.Connection, message: dict[str, Any]
+) -> dict[str, Any] | None:
+    """Client matching (§45): точное совпадение по telegram-контакту."""
+    handle = _normalize_telegram_handle(message.get("sender_handle") or "")
+    if handle:
+        client = find_client_by_contact(conn, channel="telegram", value=handle)
+        if client is not None:
+            return client
+    return None
+
+
+def create_inquiry_from_message(
+    conn: sqlite3.Connection, message_id: int, *, client_id: int | None = None
+) -> dict[str, Any]:
+    """Сообщение → заявка. client_id=None — авто-matching (§45); найденный
+    клиент привязывается (client_match='auto'), иначе 'none'. Повторный вызов
+    для одного сообщения возвращает существующую заявку (идемпотентно)."""
+    message = get_inbox_message(conn, message_id)
+    if message is None:
+        raise StoreError(f"сообщение {message_id} не найдено")
+    existing = conn.execute(
+        "SELECT * FROM inquiries WHERE message_id = ?", (message_id,)
+    ).fetchone()
+    if existing is not None:
+        return _inquiry_row_to_dict(existing)
+    if client_id is not None and get_client(conn, client_id) is None:
+        raise StoreError(f"клиент {client_id} не найден")
+
+    match_kind = "manual" if client_id is not None else "none"
+    if client_id is None:
+        auto = match_client_for_message(conn, message)
+        if auto is not None:
+            client_id = auto["id"]
+            match_kind = "auto"
+
+    summary_items = message.get("parsed", {}).get("items") or []
+    summary = "; ".join(
+        str(item.get("name", "?")) for item in summary_items
+    ) or (message["text"] or "")[:120]
+
+    now = utc_now()
+    cursor = conn.execute(
+        "INSERT INTO inquiries (message_id, client_id, client_match, summary, status,"
+        " created_at, updated_at) VALUES (?, ?, ?, ?, 'new', ?, ?)",
+        (message_id, client_id, match_kind, summary, now, now),
+    )
+    inquiry_id = int(cursor.lastrowid if cursor.lastrowid is not None else 0)
+    conn.execute(
+        "UPDATE inbox_messages SET status = 'inquiry', inquiry_id = ? WHERE id = ?",
+        (inquiry_id, message_id),
+    )
+    conn.commit()
+    return get_inquiry(conn, inquiry_id)
+
+
+def get_inquiry(conn: sqlite3.Connection, inquiry_id: int) -> dict[str, Any]:
+    row = conn.execute("SELECT * FROM inquiries WHERE id = ?", (inquiry_id,)).fetchone()
+    if row is None:
+        raise StoreError(f"заявка не найдена: id={inquiry_id}")
+    return _inquiry_row_to_dict(row)
+
+
+def list_inquiries(
+    conn: sqlite3.Connection, *, status: str | None = None
+) -> list[dict[str, Any]]:
+    if status is not None and status not in INQUIRY_STATUSES:
+        raise StoreError(f"неизвестный статус заявки: {status}")
+    query = "SELECT * FROM inquiries"
+    params: list[Any] = []
+    if status is not None:
+        query += " WHERE status = ?"
+        params.append(status)
+    query += " ORDER BY updated_at DESC, id DESC"
+    return [_inquiry_row_to_dict(row) for row in conn.execute(query, params).fetchall()]
+
+
+def update_inquiry(
+    conn: sqlite3.Connection,
+    inquiry_id: int,
+    *,
+    client_id: int | None | EllipsisType = ...,
+    summary: str | None = None,
+) -> dict[str, Any]:
+    """Правка заявки оператором: перепривязка клиента (manual) и описание."""
+    current = get_inquiry(conn, inquiry_id)
+    fields: list[str] = []
+    params: list[Any] = []
+    if client_id is not ...:
+        if client_id is not None and get_client(conn, client_id) is None:
+            raise StoreError(f"клиент {client_id} не найден")
+        fields.append("client_id = ?")
+        params.append(client_id)
+        fields.append("client_match = ?")
+        params.append("manual" if client_id is not None else "none")
+    if summary is not None:
+        fields.append("summary = ?")
+        params.append(summary.strip())
+    if fields:
+        fields.append("updated_at = ?")
+        params.append(utc_now())
+        params.append(inquiry_id)
+        conn.execute(f"UPDATE inquiries SET {', '.join(fields)} WHERE id = ?", params)
+        conn.commit()
+    return get_inquiry(conn, inquiry_id)
+
+
+def attach_estimate_to_inquiry(
+    conn: sqlite3.Connection, inquiry_id: int, estimate_id: int
+) -> dict[str, Any]:
+    """Смета → заявка (жизненный цикл new → estimated). Идемпотентно:
+    повторная привязка той же сметы возвращается без ошибки."""
+    inquiry = get_inquiry(conn, inquiry_id)
+    if inquiry["estimate_id"] == estimate_id and inquiry["status"] == "estimated":
+        return inquiry
+    row = conn.execute("SELECT id FROM estimates WHERE id = ?", (estimate_id,)).fetchone()
+    if row is None:
+        raise StoreError(f"смета {estimate_id} не найдена")
+    conn.execute(
+        "UPDATE inquiries SET estimate_id = ?, status = 'estimated', updated_at = ?"
+        " WHERE id = ?",
+        (estimate_id, utc_now(), inquiry_id),
+    )
+    conn.commit()
+    return get_inquiry(conn, inquiry_id)
