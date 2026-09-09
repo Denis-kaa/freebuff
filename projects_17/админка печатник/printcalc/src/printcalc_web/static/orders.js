@@ -143,4 +143,16 @@ $("#btn-order-copy").addEventListener("click", async () => {
   $("#dlg-order-msg").textContent = "Текст заказа скопирован — вставьте в WF";
 });
 
+/* Производство: генерация заданий заказа (Этап 4). */
+$("#btn-order-produce").addEventListener("click", async () => {
+  try {
+    const result = await apiFetch(`/orders/${currentOrder.id}/production/generate`, { method: "POST" });
+    $("#dlg-order-msg").textContent = result.created.length
+      ? `Создано заданий: ${result.created.length} — раздел «Производство»`
+      : `Задания уже существуют (${result.progress.total} шт) — раздел «Производство»`;
+  } catch (error) {
+    $("#dlg-order-msg").textContent = "Ошибка: " + error.message;
+  }
+});
+
 loadOrders();

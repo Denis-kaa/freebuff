@@ -747,3 +747,89 @@ def create_order_from_estimate(
         payment_method=payload.payment_method,
         status=payload.status,
     )
+
+
+# ---------- производство (Этап 4 роадмапа v6) ----------
+
+
+class TaskCompleteIn(BaseModel):
+    """Завершение задания: чек-лист обязателен (§10 OPERATIONS_CATALOG)."""
+
+    checklist: list[bool] = Field(default_factory=list)
+    notes: str = ""
+
+
+class TaskBlockIn(BaseModel):
+    """Блокировка задания с причиной."""
+
+    reason: str = Field(min_length=1)
+
+
+@router.get("/operations")
+def list_operations(
+    enabled_only: bool = False, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """Каталог операций (данные, редактируются в настройках)."""
+    return {"operations": store.list_operations(conn, enabled_only=enabled_only)}
+
+
+@router.post("/orders/{order_id}/production/generate", status_code=201)
+def generate_production(
+    order_id: int, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """Генерирует задания заказа по правилам (идемпотентно)."""
+    created = _store_guard(store.generate_production_plan, conn, order_id)
+    return {"created": created, "progress": store.production_progress(conn, order_id)}
+
+
+@router.get("/orders/{order_id}/production")
+def read_production(
+    order_id: int, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """Задания заказа + прогресс."""
+    return {
+        "tasks": store.list_production_tasks(conn, order_id=order_id),
+        "progress": store.production_progress(conn, order_id),
+    }
+
+
+@router.get("/production/tasks")
+def read_production_tasks(
+    status: str | None = None,
+    order_id: int | None = None,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Все задания (раздел «Производство»), фильтры по статусу/заказу."""
+    return {
+        "tasks": _store_guard(
+            store.list_production_tasks, conn, order_id=order_id, status=status
+        )
+    }
+
+
+@router.post("/production/tasks/{task_id}/start")
+def start_task(
+    task_id: int, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    return _store_guard(store.start_task, conn, task_id)
+
+
+@router.post("/production/tasks/{task_id}/complete")
+def complete_task(
+    task_id: int,
+    payload: TaskCompleteIn,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Завершить задание: без полного чек-листа — 400 (§10)."""
+    return _store_guard(
+        store.complete_task, conn, task_id, checklist=payload.checklist, notes=payload.notes
+    )
+
+
+@router.post("/production/tasks/{task_id}/block")
+def block_task(
+    task_id: int,
+    payload: TaskBlockIn,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    return _store_guard(store.block_task, conn, task_id, reason=payload.reason)

@@ -67,6 +67,12 @@ def constructor_page(request: Request):
     return _render(request, "constructor.html")
 
 
+@router.get("/production")
+def production_page(request: Request):
+    """Производство: доска заданий с чек-листами (Этап 4)."""
+    return _render(request, "production.html", {"active": "production"})
+
+
 @router.get("/clients")
 def clients_page(request: Request):
     """Клиенты: список/поиск, карточка с контактами (Этап 1)."""

@@ -211,6 +211,100 @@ class ConsumptionEngine:
 
     # ---------- Прямые режимы (AREA/LINEAR/SHEET/PIECE/COUNT) ----------
 
+    def _calculate_sheet_nesting(
+        self,
+        material: Material,
+        pol: MaterialConsumptionPolicy,
+        width: float,
+        height: float,
+        quantity: float,
+        *,
+        sheet_width: float,
+        sheet_height: float,
+    ) -> MaterialConsumptionResult:
+        """Раскрой листовых материалов (Этап 3b, Таблички): сколько листов нужно.
+
+        Изделие Ш×В размещается на листе sheet_width×sheet_height (мм) в обеих
+        ориентациях (правило владельца о повороте действует и здесь); берётся
+        лучшая укладка. Расход — целые листы; product_area — площадь изделий;
+        waste — разница с площадью потраченных листов. Полистной раскрой,
+        а не гильотинная упаковка (nesting для упаковки — §54, Phase 4).
+        """
+        import math
+
+        eff_w = width + pol.bleed_left + pol.bleed_right + pol.trim_allowance
+        eff_h = height + pol.bleed_top + pol.bleed_bottom + pol.trim_allowance
+        if eff_w <= 0 or eff_h <= 0:
+            raise ConsumptionError("INVALID_DIMENSION", "эффективные размеры должны быть > 0")
+
+        sw, sh = sheet_width, sheet_height
+        # Ориентация A: eff_w по ширине листа; B: повёрнуто.
+        per_sheet_a = math.floor(sw / eff_w) * math.floor(sh / eff_h)
+        per_sheet_b = math.floor(sw / eff_h) * math.floor(sh / eff_w)
+        if per_sheet_a <= 0 and per_sheet_b <= 0:
+            raise ConsumptionError(
+                "PRODUCT_DOES_NOT_FIT",
+                f"изделие {eff_w:g}×{eff_h:g} мм не помещается на лист "
+                f"{sw:g}×{sh:g} мм ни прямо, ни поворотом",
+            )
+        # Выбираем ориентацию с большей укладкой; при равенстве — A (как введено).
+        per_sheet = max(per_sheet_a, per_sheet_b)
+        orientation = f"{eff_w:g}x{eff_h:g}" if per_sheet_a >= per_sheet_b else f"{eff_h:g}x{eff_w:g}"
+
+        sheets = math.ceil(quantity / per_sheet)
+        product_mm2 = width * height * quantity
+        sheet_area = sw * sh
+        production_mm2 = sheet_area * sheets
+        waste = max(0.0, production_mm2 - product_mm2)
+        waste_pct = (waste / production_mm2 * 100.0) if production_mm2 > 0 else 0.0
+
+        billing = float(sheets)
+        if pol.min_billing_consumption > 0 and billing < pol.min_billing_consumption:
+            billing = pol.min_billing_consumption
+        warnings: list[str] = [
+            f"На листе помещается {per_sheet} шт ({orientation}); расход: {sheets} лист(а)."
+        ]
+
+        return MaterialConsumptionResult(
+            material_id=material.id,
+            product_area=product_mm2,
+            production_area=production_mm2,
+            production_length=0.0,
+            production_width=sw,
+            billing_quantity=billing,
+            billing_unit="лист",
+            waste_area=waste,
+            waste_percent=waste_pct,
+            usable_width=sw,
+            unusable_width=0.0,
+            pieces_across=(
+                math.floor(sw / eff_w) if per_sheet_a >= per_sheet_b else math.floor(sw / eff_h)
+            ),
+            rows=(
+                math.floor(sh / eff_h) if per_sheet_a >= per_sheet_b else math.floor(sh / eff_w)
+            ),
+            orientation=orientation,
+            alternative_orientation=None,
+            setup_consumption=0.0,
+            trim_consumption=0.0,
+            remnant=None,
+            warnings=tuple(warnings),
+            calculation_trace=(
+                {"step": "mode", "value": "SHEET_NESTING"},
+                {"step": "sheet", "width_mm": sw, "height_mm": sh},
+                {"step": "per_sheet", "value": per_sheet, "orientation": orientation},
+                {"step": "sheets", "value": sheets, "of": math.ceil(quantity)},
+                {"step": "billing_quantity", "value": billing, "unit": "лист"},
+            ),
+            layout={
+                "mode": "SHEET_NESTING",
+                "sheet_width_mm": sw,
+                "sheet_height_mm": sh,
+                "per_sheet": per_sheet,
+                "sheets": sheets,
+            },
+        )
+
     def _calculate_direct(
         self,
         material: Material,
@@ -274,6 +368,21 @@ class ConsumptionEngine:
                 ),
                 layout={"mode": "AREA"},
             )
+        # SHEET_NESTING (Этап 3b): листовые заготовки (ПВХ/акрил/композит).
+        # Раскрой по листу реестра: сколько изделий размещается на листе,
+        # расход = целые листы (production) ≠ площадь изделий (product).
+        if (
+            material.consumption_mode == "SHEET"
+            and material.sheet_width is not None
+            and material.sheet_height is not None
+            and material.sheet_width > 0
+            and material.sheet_height > 0
+        ):
+            return self._calculate_sheet_nesting(
+                material, pol, width, height, quantity,
+                sheet_width=material.sheet_width, sheet_height=material.sheet_height,
+            )
+
         # LINEAR/SHEET/PIECE/COUNT: количество = quantity в base_unit.
         unit = material.base_unit
         production_qty = quantity

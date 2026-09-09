@@ -297,6 +297,7 @@ def increment_usage(conn: sqlite3.Connection, item_ids: list[int]) -> None:
 CONSUMPTION_CALCULATORS: dict[str, dict[str, str]] = {
     # calculator_id → {ширина, высота, тираж} имена полей в params
     "wide": {"width": "width", "height": "height", "qty": "qty"},
+    "tablichki": {"width": "width", "height": "height", "qty": "qty"},
 }
 
 
@@ -422,6 +423,10 @@ def _consumption_for_calculator_item(
     if material is None:
         return None
     assert width is not None and height is not None and qty is not None  # проверено выше
+    # Ручной рулон из params (поле спеки wide); Таблички его не имеют — None.
+    roll_width_mm = params.get("roll_width_mm")
+    if not isinstance(roll_width_mm, (int, float)) or isinstance(roll_width_mm, bool) or roll_width_mm <= 0:
+        roll_width_mm = None
     try:
         return calculate_material_consumption(
             conn,
@@ -429,6 +434,7 @@ def _consumption_for_calculator_item(
             width_cm=float(width),
             height_cm=float(height),
             quantity=float(qty),
+            roll_width_mm=roll_width_mm,
         )
     except StoreError:
         # Не блокируем приём заказа из-за расхода (например, материал без
@@ -1357,12 +1363,13 @@ CANONICAL_WIDE_MATERIALS: tuple[dict[str, Any], ...] = (
 
 #: Канонические материалы Табличек (листовые заготовки — SHEET-режим).
 CANONICAL_TABLICHKI_MATERIALS: tuple[dict[str, Any], ...] = (
-    {"name": "ПВХ 3 мм", "aliases": ["ПВХ"], "category": "tablichki", "consumption_mode": "SHEET", "base_unit": "m2"},
-    {"name": "ПВХ 5 мм", "aliases": [], "category": "tablichki", "consumption_mode": "SHEET", "base_unit": "m2"},
-    {"name": "Акрил 3 мм", "aliases": ["Оргстекло 3 мм"], "category": "tablichki", "consumption_mode": "SHEET", "base_unit": "m2"},
-    {"name": "Акрил 5 мм", "aliases": [], "category": "tablichki", "consumption_mode": "SHEET", "base_unit": "m2"},
-    {"name": "Композит 3 мм", "aliases": [], "category": "tablichki", "consumption_mode": "SHEET", "base_unit": "m2"},
-    {"name": "Композит 5 мм", "aliases": [], "category": "tablichki", "consumption_mode": "SHEET", "base_unit": "m2"},
+    # Листовые заготовки: стандартный лист 3000×2000 мм (Этап 3b — SHEET_NESTING).
+    {"name": "ПВХ 3 мм", "aliases": ["ПВХ"], "category": "tablichki", "consumption_mode": "SHEET", "base_unit": "m2", "sheet_width": 3000.0, "sheet_height": 2000.0},
+    {"name": "ПВХ 5 мм", "aliases": [], "category": "tablichki", "consumption_mode": "SHEET", "base_unit": "m2", "sheet_width": 3000.0, "sheet_height": 2000.0},
+    {"name": "Акрил 3 мм", "aliases": ["Оргстекло 3 мм"], "category": "tablichki", "consumption_mode": "SHEET", "base_unit": "m2", "sheet_width": 3000.0, "sheet_height": 2000.0},
+    {"name": "Акрил 5 мм", "aliases": [], "category": "tablichki", "consumption_mode": "SHEET", "base_unit": "m2", "sheet_width": 3000.0, "sheet_height": 2000.0},
+    {"name": "Композит 3 мм", "aliases": [], "category": "tablichki", "consumption_mode": "SHEET", "base_unit": "m2", "sheet_width": 3000.0, "sheet_height": 2000.0},
+    {"name": "Композит 5 мм", "aliases": [], "category": "tablichki", "consumption_mode": "SHEET", "base_unit": "m2", "sheet_width": 3000.0, "sheet_height": 2000.0},
 )
 
 
@@ -1754,3 +1761,306 @@ def create_order_from_estimate(
         )
     conn.commit()
     return get_order(conn, order_id)
+
+
+# ---------- производство (Этап 4 роадмапа v6, OPERATIONS_CATALOG) ----------
+
+#: Статусы производственного задания (закрытый словарь, ANTI-6b).
+TASK_STATUSES: tuple[str, ...] = ("pending", "in_progress", "done", "blocked")
+
+#: Стартовый каталог операций (OPERATIONS_CATALOG §2, стартовый скелет).
+#: trigger: 'always' | 'wide' | 'tablichki' | 'riso' | flag-имя доп. работы.
+DEFAULT_OPERATIONS: tuple[dict[str, Any], ...] = (
+    {"code": "OP-01", "name": "Проверить макет", "description": "Размер, вылеты, разрешение, цвет",
+     "steps": ["Открыть макет", "Сверить размер с заказом", "Проверить разрешение и цвет"],
+     "checklist": ["размер соответствует заказу", "разрешение достаточное", "цвет CMYK"],
+     "equipment": "графический редактор", "minutes": 10, "trigger": "always", "position": 1},
+    {"code": "OP-02", "name": "Подготовить файл к печати", "description": "Масштаб 1:1, CMYK, текст в кривые",
+     "steps": ["Масштабировать 1:1", "Перевести в CMYK", "Текст в кривые"],
+     "checklist": ["размер = заказ", "текст в кривых", "файл открывается после экспорта"],
+     "equipment": "CorelDRAW/PS/AI", "minutes": 15, "trigger": "always", "position": 2},
+    {"code": "OP-04", "name": "Напечатать (широкоформат)", "description": "Печать баннеров/плёнки/холста",
+     "steps": ["Заложить материал", "Отправить файл на печать", "Контроль качества печати"],
+     "checklist": ["цвет совпадает с макетом", "нет полос и артефактов"],
+     "equipment": "Roland VP540/SJ645", "minutes": 40, "trigger": "wide", "position": 3},
+    {"code": "OP-07", "name": "УФ-печать на жёстком", "description": "Печать на ПВХ/акриле/композите",
+     "steps": ["Закрепить лист", "Отправить задание", "Контроль печати"],
+     "checklist": ["изображение ровное", "краска закреплена"],
+     "equipment": "УФ-принтер", "minutes": 35, "trigger": "tablichki", "position": 3},
+    {"code": "OP-05", "name": "Напечатать (ризограф)", "description": "Мастера, краска, приладка",
+     "steps": ["Установить мастер", "Приладка", "Печать тиража"],
+     "checklist": ["приладка по контрольному листу", "тираж полный"],
+     "equipment": "RISO RZ300EP", "minutes": 30, "trigger": "riso", "position": 3},
+    {"code": "OP-09", "name": "Резать/подрезать", "description": "Гильотина/резак",
+     "steps": ["Разметить", "Резать", "Проверить размеры"],
+     "checklist": ["размеры по заказу", "края ровные"],
+     "equipment": "гильотина/резак", "minutes": 15, "trigger": "always", "position": 4},
+    {"code": "OP-08", "name": "Ламинировать", "description": "Ламинация отпечатка",
+     "steps": ["Прогреть ламинатор", "Пропустить отпечаток", "Контроль пузырей"],
+     "checklist": ["без пузырей", "края запечатаны"],
+     "equipment": "Bulros FM650A", "minutes": 15, "trigger": "work_laminate_mount", "position": 5},
+    {"code": "OP-13", "name": "Установить люверсы", "description": "Пробивка и фиксация колец по краю",
+     "steps": ["Разметить шаг", "Пробить отверстия", "Установить кольца"],
+     "checklist": ["шаг равномерный", "кольца не прокручиваются", "край не порван"],
+     "equipment": "пуансон/пресс", "minutes": 20, "trigger": "work_eyelets", "position": 5},
+    {"code": "OP-14", "name": "Загибка / карман", "description": "Загибка краёв, карман под трубку",
+     "steps": ["Разметить линию загиба", "Прошить/проклеить"],
+     "checklist": ["загиб ровный", "карман нужной ширины"],
+     "equipment": "швейная машина/лента", "minutes": 20, "trigger": "work_hemming", "position": 5},
+    {"code": "OP-19", "name": "Монтаж на объекте", "description": "Установка на месте (высотные работы)",
+     "steps": ["Подготовить крепёж", "Смонтировать", "Убрать за собой"],
+     "checklist": ["установлено по уровню", "надёжно закреплено"],
+     "equipment": "лестница/вышка, дюбели", "minutes": 60, "trigger": "install", "position": 8},
+    {"code": "OP-20", "name": "Контроль качества", "description": "Проверка изделия по чек-листу заказа",
+     "steps": ["Сверить с заказом", "Осмотреть изделие"],
+     "checklist": ["комплектность по заказу", "нет дефектов", "размеры сходятся"],
+     "equipment": "", "minutes": 10, "trigger": "always", "position": 6},
+    {"code": "OP-21", "name": "Упаковать и выдать", "description": "Упаковка и передача клиенту",
+     "steps": ["Упаковать", "Оформить выдачу"],
+     "checklist": ["упаковка целая", "клиент предупреждён о правилах хранения"],
+     "equipment": "", "minutes": 5, "trigger": "always", "position": 7},
+)
+
+
+def seed_operations(conn: sqlite3.Connection) -> dict[str, int]:
+    """Идемпотентный сид каталога операций (ключ — code)."""
+    created = 0
+    skipped = 0
+    now = utc_now()
+    for op in DEFAULT_OPERATIONS:
+        exists = conn.execute(
+            "SELECT 1 FROM operations WHERE code = ?", (op["code"],)
+        ).fetchone()
+        if exists:
+            skipped += 1
+            continue
+        conn.execute(
+            "INSERT INTO operations (code, name, description, steps_json, checklist_json,"
+            " equipment, minutes, role, trigger, position, enabled, created_at, updated_at)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)",
+            (
+                op["code"],
+                op["name"],
+                op.get("description", ""),
+                json.dumps(op.get("steps", []), ensure_ascii=False),
+                json.dumps(op.get("checklist", []), ensure_ascii=False),
+                op.get("equipment", ""),
+                int(op.get("minutes", 0)),
+                op.get("role", "производство"),
+                op["trigger"],
+                int(op.get("position", 0)),
+                now,
+                now,
+            ),
+        )
+        created += 1
+    conn.commit()
+    return {"created": created, "skipped": skipped}
+
+
+def _operation_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "code": row["code"],
+        "name": row["name"],
+        "description": row["description"],
+        "steps": json.loads(row["steps_json"]),
+        "checklist": json.loads(row["checklist_json"]),
+        "equipment": row["equipment"],
+        "minutes": row["minutes"],
+        "role": row["role"],
+        "trigger": row["trigger"],
+        "position": row["position"],
+        "enabled": bool(row["enabled"]),
+    }
+
+
+def list_operations(
+    conn: sqlite3.Connection, *, enabled_only: bool = False
+) -> list[dict[str, Any]]:
+    """Каталог операций (§1 OPERATIONS_CATALOG) — источник правил и UI."""
+    sql = "SELECT * FROM operations"
+    if enabled_only:
+        sql += " WHERE enabled = 1"
+    sql += " ORDER BY position, code"
+    return [_operation_row_to_dict(row) for row in conn.execute(sql)]
+
+
+def _triggers_for_order(
+    conn: sqlite3.Connection, items: list[dict[str, Any]]
+) -> set[str]:
+    """Набор триггеров заказа (§3 каталога): калькуляторы + доп-работы + флаги."""
+    triggers: set[str] = set()
+    for item in items:
+        calculator_id = item.get("calculator_id")
+        if calculator_id:
+            triggers.add(str(calculator_id))
+        params = item.get("params") or {}
+        for key, value in params.items():
+            if value is True and key.startswith("work_"):
+                triggers.add(key)
+            if value is True and key in ("install", "delivery"):
+                triggers.add(key)
+    return triggers
+
+
+def generate_production_plan(
+    conn: sqlite3.Connection, order_id: int
+) -> list[dict[str, Any]]:
+    """Генерирует задания заказа по правилам (OPERATIONS_CATALOG §3).
+
+    Правила — данные: операция попадает в план, если её trigger есть в
+    наборе триггеров заказа (калькуляторы, доп-работы, флаги) либо
+    trigger='always'. Монтаж (install) — всегда в конце; если он не в
+    заказе, последними идут QC и упаковка (по position). Повторная
+    генерация идемпотентна: существующие (не-done) задания не дублируются.
+    """
+    order = get_order(conn, order_id)
+    triggers = _triggers_for_order(conn, order["items"])
+    operations = [
+        op for op in list_operations(conn, enabled_only=True) if op["trigger"] in triggers or op["trigger"] == "always"
+    ]
+    operations.sort(key=lambda op: (op["position"], op["code"]))
+
+    existing = {
+        row["operation_id"]: row
+        for row in conn.execute(
+            "SELECT * FROM production_tasks WHERE order_id = ?", (order_id,)
+        )
+    }
+    now = utc_now()
+    created: list[dict[str, Any]] = []
+    for sequence, op in enumerate(operations, start=1):
+        if op["id"] in existing:
+            continue
+        cursor = conn.execute(
+            "INSERT INTO production_tasks (order_id, operation_id, status, sequence, created_at)"
+            " VALUES (?, ?, 'pending', ?, ?)",
+            (order_id, op["id"], sequence, now),
+        )
+        task_id = int(cursor.lastrowid if cursor.lastrowid is not None else 0)
+        created.append(get_task(conn, task_id))
+    conn.commit()
+    return created
+
+
+def _task_row_to_dict(
+    conn: sqlite3.Connection, row: sqlite3.Row
+) -> dict[str, Any]:
+    op_row = conn.execute(
+        "SELECT * FROM operations WHERE id = ?", (row["operation_id"],)
+    ).fetchone()
+    return {
+        "id": row["id"],
+        "order_id": row["order_id"],
+        "operation": _operation_row_to_dict(op_row) if op_row else None,
+        "status": row["status"],
+        "sequence": row["sequence"],
+        "checklist": json.loads(row["checklist_result"]) if row["checklist_result"] else [],
+        "notes": row["notes"],
+        "started_at": row["started_at"],
+        "completed_at": row["completed_at"],
+        "created_at": row["created_at"],
+    }
+
+
+def get_task(conn: sqlite3.Connection, task_id: int) -> dict[str, Any]:
+    row = conn.execute("SELECT * FROM production_tasks WHERE id = ?", (task_id,)).fetchone()
+    if row is None:
+        raise StoreError(f"задание не найдено: id={task_id}")
+    return _task_row_to_dict(conn, row)
+
+
+def list_production_tasks(
+    conn: sqlite3.Connection,
+    *,
+    order_id: int | None = None,
+    status: str | None = None,
+) -> list[dict[str, Any]]:
+    """Задания (для раздела «Производство»), фильтры по заказу и статусу."""
+    if status is not None and status not in TASK_STATUSES:
+        raise StoreError(f"недопустимый статус задания: '{status}'")
+    sql = "SELECT * FROM production_tasks WHERE 1=1"
+    params: list[Any] = []
+    if order_id is not None:
+        sql += " AND order_id = ?"
+        params.append(order_id)
+    if status is not None:
+        sql += " AND status = ?"
+        params.append(status)
+    sql += " ORDER BY order_id, sequence, id"
+    return [_task_row_to_dict(conn, row) for row in conn.execute(sql, params)]
+
+
+def start_task(conn: sqlite3.Connection, task_id: int) -> dict[str, Any]:
+    """Взять задание в работу (pending → in_progress)."""
+    task = get_task(conn, task_id)
+    if task["status"] not in ("pending", "blocked"):
+        raise StoreError(f"задание в статусе '{task['status']}' нельзя взять в работу")
+    conn.execute(
+        "UPDATE production_tasks SET status = 'in_progress', started_at = ? WHERE id = ?",
+        (utc_now(), task_id),
+    )
+    conn.commit()
+    return get_task(conn, task_id)
+
+
+def complete_task(
+    conn: sqlite3.Connection,
+    task_id: int,
+    *,
+    checklist: list[bool] | None = None,
+    notes: str = "",
+) -> dict[str, Any]:
+    """Завершить задание. QC-правило (§10 каталога): все пункты чек-листа
+    операции должны быть отмечены — «Готово» без галочек запрещено."""
+    task = get_task(conn, task_id)
+    if task["status"] != "in_progress":
+        raise StoreError(f"завершить можно только задание в работе (сейчас: '{task['status']}')")
+    operation = task["operation"] or {}
+    required = operation.get("checklist") or []
+    checked = checklist if checklist is not None else []
+    if len(checked) < len(required):
+        raise StoreError(
+            f"чек-лист не пройден: отмечено {len(checked)} из {len(required)} (§10: "
+            "операция не завершается без выполненных пунктов)"
+        )
+    if not all(checked):
+        raise StoreError("не все пункты чек-листа отмечены выполненными")
+    conn.execute(
+        "UPDATE production_tasks SET status = 'done', checklist_result = ?, notes = ?,"
+        " completed_at = ? WHERE id = ?",
+        (json.dumps(checked, ensure_ascii=False), notes.strip(), utc_now(), task_id),
+    )
+    conn.commit()
+    return get_task(conn, task_id)
+
+
+def block_task(conn: sqlite3.Connection, task_id: int, *, reason: str) -> dict[str, Any]:
+    """Заблокировать задание (нет материала, ждём клиента…)."""
+    task = get_task(conn, task_id)
+    if task["status"] in ("done",):
+        raise StoreError("выполненное задание нельзя заблокировать")
+    conn.execute(
+        "UPDATE production_tasks SET status = 'blocked', notes = ? WHERE id = ?",
+        (reason.strip(), task_id),
+    )
+    conn.commit()
+    return get_task(conn, task_id)
+
+
+def production_progress(conn: sqlite3.Connection, order_id: int) -> dict[str, Any]:
+    """Прогресс заказа в производстве: счётчики по статусам + готовность."""
+    tasks = list_production_tasks(conn, order_id=order_id)
+    counts = {status: 0 for status in TASK_STATUSES}
+    for task in tasks:
+        counts[task["status"]] += 1
+    total = len(tasks)
+    done = counts["done"]
+    return {
+        "order_id": order_id,
+        "total": total,
+        "counts": counts,
+        "all_done": total > 0 and done == total,
+        "progress_percent": round(done / total * 100.0, 1) if total else 0.0,
+    }

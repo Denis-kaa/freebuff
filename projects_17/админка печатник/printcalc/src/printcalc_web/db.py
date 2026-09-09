@@ -162,6 +162,40 @@ CREATE TABLE IF NOT EXISTS calc_snapshots (
     created_at  TEXT NOT NULL
 );
 
+-- Производство (Этап 4 роадмапа v6, OPERATIONS_CATALOG): каталог операций —
+-- данные (пользователь редактирует), задания заказа генерируются по правилам
+-- (§3 каталога). checklist_result — JSON {пункт: true/false}; завершение
+-- без пройденных required-пунктов запрещено (§10 каталога).
+CREATE TABLE IF NOT EXISTS operations (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    code        TEXT NOT NULL UNIQUE,
+    name        TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    steps_json      TEXT NOT NULL DEFAULT '[]',
+    checklist_json  TEXT NOT NULL DEFAULT '[]',
+    equipment       TEXT NOT NULL DEFAULT '',
+    minutes         INTEGER NOT NULL DEFAULT 0,
+    role            TEXT NOT NULL DEFAULT 'производство',
+    trigger     TEXT NOT NULL DEFAULT 'always',
+    position    INTEGER NOT NULL DEFAULT 0,
+    enabled     INTEGER NOT NULL DEFAULT 1,
+    created_at  TEXT NOT NULL,
+    updated_at  TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS production_tasks (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id    INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    operation_id INTEGER NOT NULL REFERENCES operations(id),
+    status      TEXT NOT NULL DEFAULT 'pending',
+    sequence    INTEGER NOT NULL DEFAULT 0,
+    checklist_result TEXT,
+    notes       TEXT NOT NULL DEFAULT '',
+    started_at  TEXT,
+    completed_at TEXT,
+    created_at  TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
 CREATE INDEX IF NOT EXISTS idx_price_items_name ON price_list_items(name);
@@ -171,6 +205,8 @@ CREATE INDEX IF NOT EXISTS idx_contacts_value ON contacts(value);
 CREATE INDEX IF NOT EXISTS idx_materials_name ON materials(name);
 CREATE INDEX IF NOT EXISTS idx_estimates_status ON estimates(status);
 CREATE INDEX IF NOT EXISTS idx_estimate_items_estimate ON estimate_items(estimate_id);
+CREATE INDEX IF NOT EXISTS idx_ptasks_order ON production_tasks(order_id);
+CREATE INDEX IF NOT EXISTS idx_ptasks_status ON production_tasks(status);
 """
 
 

@@ -262,6 +262,23 @@ function renderCalcForm() {
   $("#calc-error").textContent = "";
   $("#btn-calc-add").disabled = true;
   lastResult = null;
+  // Подсказка расхода: для wide показываем ширину рулона из реестра материалов,
+  // совпадающую с выбранным материалом (правило владельца: ручной рулон).
+  if (spec && spec.id === "wide") {
+    const materialSelect = document.getElementById("calc-material");
+    const rollInput = document.getElementById("calc-roll_width_mm");
+    if (materialSelect && rollInput) {
+      const syncRoll = async () => {
+        try {
+          const data = await apiFetch("/materials/lookup?name=" + encodeURIComponent(materialSelect.value));
+          const mat = data.material;
+          if (mat && mat.roll_width && !rollInput.value) rollInput.placeholder = "из реестра: " + mat.roll_width + " мм";
+        } catch { /* подсказка не критична */ }
+      };
+      materialSelect.addEventListener("change", syncRoll);
+      syncRoll();
+    }
+  }
 }
 
 $("#calc-select").addEventListener("change", renderCalcForm);

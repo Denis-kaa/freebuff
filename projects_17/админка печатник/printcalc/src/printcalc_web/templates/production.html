@@ -1,0 +1,48 @@
+{% set page_script %}<script src="/static/production.js"></script>{% endset %}
+{% include "_shell_top.html" %}
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Производство</h2>
+    <div class="row-actions">
+      <button class="btn pill-filter" data-filter="" type="button">все</button>
+      <button class="btn pill-filter" data-filter="pending" type="button">ожидают</button>
+      <button class="btn pill-filter" data-filter="in_progress" type="button">в работе</button>
+      <button class="btn pill-filter" data-filter="blocked" type="button">блок</button>
+      <button class="btn pill-filter" data-filter="done" type="button">готовы</button>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>Заказ</th><th>№</th><th>Операция</th><th>Оборудование</th><th>~мин</th><th>Статус</th><th></th></tr>
+      </thead>
+      <tbody id="tasks-body">
+        <tr><td colspan="7" class="muted">Загрузка…</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p id="tasks-error" class="error muted"></p>
+</section>
+
+<dialog id="task-dialog" class="modal">
+  <div class="modal-head">
+    <h3>Заказ №<span id="task-order"></span> — <span id="task-op-name"></span></h3>
+    <button class="icon" data-close type="button">✕</button>
+  </div>
+  <div id="task-body" style="padding: 12px 18px; display: grid; gap: 10px;"></div>
+  <div id="task-checklist" style="padding: 0 18px; display: grid; gap: 6px;"></div>
+  <label style="display:grid; gap:4px; padding: 10px 18px 0;">Заметка
+    <input id="task-notes" class="field-input" type="text" placeholder="причина блокировки или комментарий">
+  </label>
+  <p id="task-error" class="error muted" style="padding: 6px 18px 0;"></p>
+  <div class="modal-actions">
+    <button class="btn" data-close type="button">Закрыть</button>
+    <button id="task-block" class="btn danger" type="button">Заблокировать</button>
+    <button id="task-start" class="btn" type="button">Взять в работу</button>
+    <button id="task-complete" class="btn btn-primary" type="button">Выполнено</button>
+  </div>
+</dialog>
+
+{% include "_shell_bottom.html" %}
