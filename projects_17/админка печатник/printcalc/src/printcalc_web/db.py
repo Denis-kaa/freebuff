@@ -122,6 +122,46 @@ CREATE TABLE IF NOT EXISTS materials (
     updated_at       TEXT NOT NULL
 );
 
+-- Сметы (Этап 2 роадмапа v6, §22/§24/§49 промт_4): смета создаётся из
+-- расчёта/черновика, статусы — закрытый словарь в store; ACCEPTED фиксирует
+-- snapshot версий (неизменяемость задним числом).
+CREATE TABLE IF NOT EXISTS estimates (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    status      TEXT NOT NULL DEFAULT 'draft',
+    total       REAL NOT NULL DEFAULT 0,
+    client_id   INTEGER REFERENCES clients(id),
+    note        TEXT NOT NULL DEFAULT '',
+    valid_until TEXT,
+    created_at  TEXT NOT NULL,
+    updated_at  TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS estimate_items (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    estimate_id   INTEGER NOT NULL REFERENCES estimates(id) ON DELETE CASCADE,
+    kind          TEXT NOT NULL CHECK (kind IN ('price_list', 'calculator', 'manual')),
+    name          TEXT NOT NULL,
+    price         REAL NOT NULL,
+    qty           REAL NOT NULL DEFAULT 1,
+    calculator_id TEXT,
+    params_json   TEXT,
+    price_list_item_id INTEGER REFERENCES price_list_items(id),
+    position      INTEGER NOT NULL DEFAULT 0
+);
+
+-- Snapshot версий при ACCEPTED (§49): создаётся ровно один на смету,
+-- после ACCEPTED не изменяется (неизменяемость проверяется тестом).
+CREATE TABLE IF NOT EXISTS calc_snapshots (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    estimate_id INTEGER NOT NULL UNIQUE REFERENCES estimates(id),
+    engine_version     TEXT NOT NULL,
+    registry_checksum  TEXT NOT NULL,
+    catalog_checksum   TEXT NOT NULL,
+    policy_version     TEXT NOT NULL DEFAULT 'v1',
+    details_json       TEXT NOT NULL DEFAULT '{}',
+    created_at  TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
 CREATE INDEX IF NOT EXISTS idx_price_items_name ON price_list_items(name);
@@ -129,6 +169,8 @@ CREATE INDEX IF NOT EXISTS idx_sections_position ON ui_sections(position);
 CREATE INDEX IF NOT EXISTS idx_contacts_client ON contacts(client_id);
 CREATE INDEX IF NOT EXISTS idx_contacts_value ON contacts(value);
 CREATE INDEX IF NOT EXISTS idx_materials_name ON materials(name);
+CREATE INDEX IF NOT EXISTS idx_estimates_status ON estimates(status);
+CREATE INDEX IF NOT EXISTS idx_estimate_items_estimate ON estimate_items(estimate_id);
 """
 
 
@@ -140,6 +182,9 @@ def _migrate(conn: sqlite3.Connection) -> None:
     if "client_id" not in columns:
         # Этап 1: заказ узнаёт клиента (nullable — старые заказы анонимны).
         conn.execute("ALTER TABLE orders ADD COLUMN client_id INTEGER REFERENCES clients(id)")
+    if "estimate_id" not in columns:
+        # Этап 2: заказ из сметы (§9 промт_4) — происхождение без ручного переноса.
+        conn.execute("ALTER TABLE orders ADD COLUMN estimate_id INTEGER REFERENCES estimates(id)")
 
 
 def default_db_path() -> Path:

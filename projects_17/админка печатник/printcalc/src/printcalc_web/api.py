@@ -578,5 +578,136 @@ def read_material(material_id: int, conn: sqlite3.Connection = Depends(get_conn)
 @router.patch("/materials/{material_id}")
 def patch_material(
     material_id: int, payload: dict[str, Any], conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:        return _store_guard(store.update_material, conn, material_id, fields=payload)
+
+
+# ---------- сметы (Этап 2 роадмапа v6) ----------
+
+
+class EstimateItemIn(BaseModel):
+    """Позиция сметы — тот же контракт, что у позиций заказа."""
+
+    kind: Literal["price_list", "calculator", "manual"]
+    price_list_item_id: int | None = None
+    qty: float = Field(default=1, gt=0)
+    calculator_id: str | None = None
+    params: dict[str, Any] | None = None
+    name: str | None = None
+    price: float | None = Field(default=None, ge=0)
+    save_to_catalog: bool = True
+
+
+class EstimateIn(BaseModel):
+    """Создание сметы (§22): позиции + клиент + примечание + срок действия."""
+
+    items: list[EstimateItemIn] = Field(min_length=1)
+    client_id: int | None = None
+    note: str = ""
+    valid_until: str | None = None
+
+
+class EstimatePatch(BaseModel):
+    """Правка meta-полей сметы (запрещена после ACCEPTED — §49)."""
+
+    client_id: int | None = None
+    note: str | None = None
+    valid_until: str | None = None
+
+
+class EstimateStatusPatch(BaseModel):
+    """Перевод статуса (§24) или принятие (accept — отдельный алиас)."""
+
+    status: Literal["draft", "sent", "viewed", "accepted", "rejected", "expired"]
+
+
+class OrderFromEstimateIn(BaseModel):
+    """Заказ из принятой сметы: оператор выбирает только способ оплаты (§9)."""
+
+    payment_method: str = Field(min_length=1)
+    status: str = Field(default="новый")
+
+
+@router.get("/estimates")
+def list_estimates(
+    status: str | None = None,
+    client_id: int | None = None,
+    conn: sqlite3.Connection = Depends(get_conn),
 ) -> dict[str, Any]:
-    return _store_guard(store.update_material, conn, material_id, fields=payload)
+    """Список смет с фильтрами (для страницы «Сметы»)."""
+    return {
+        "estimates": _store_guard(
+            store.list_estimates, conn, status=status, client_id=client_id
+        )
+    }
+
+
+@router.post("/estimates", status_code=201)
+def create_estimate(
+    payload: EstimateIn, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """Создаёт смету из позиций (цены резолвит сервер)."""
+    return _store_guard(
+        store.create_estimate,
+        conn,
+        items=[item.model_dump() for item in payload.items],
+        client_id=payload.client_id,
+        note=payload.note,
+        valid_until=payload.valid_until,
+    )
+
+
+@router.get("/estimates/{estimate_id}")
+def read_estimate(
+    estimate_id: int, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """Смета целиком: позиции + snapshot (если принят)."""
+    return _store_guard(store.get_estimate, conn, estimate_id)
+
+
+@router.patch("/estimates/{estimate_id}")
+def patch_estimate(
+    estimate_id: int,
+    payload: EstimatePatch,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Правка примечания/срока/клиента до принятия (§49).
+
+    exclude_unset: отсутствие поля в запросе ≠ «очистить поле» — иначе
+    патч одного note сбрасывал бы клиента в NULL.
+    """
+    fields = payload.model_dump(exclude_unset=True)
+    return _store_guard(store.update_estimate, conn, estimate_id, **fields)
+
+
+@router.post("/estimates/{estimate_id}/status")
+def change_estimate_status(
+    estimate_id: int,
+    payload: EstimateStatusPatch,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Перевод по статусам (§24); accept фиксирует snapshot (§49)."""
+    return _store_guard(store.transition_estimate, conn, estimate_id, payload.status)
+
+
+@router.post("/estimates/{estimate_id}/accept")
+def accept_estimate(
+    estimate_id: int, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """Принять смету: snapshot версий калькулятора/каталога (§49)."""
+    return _store_guard(store.accept_estimate, conn, estimate_id)
+
+
+@router.post("/estimates/{estimate_id}/order", status_code=201)
+def create_order_from_estimate(
+    estimate_id: int,
+    payload: OrderFromEstimateIn,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Заказ из принятой сметы без ручного переноса (§9 промт_4)."""
+    return _store_guard(
+        store.create_order_from_estimate,
+        conn,
+        estimate_id,
+        payment_method=payload.payment_method,
+        status=payload.status,
+    )

@@ -49,6 +49,12 @@ def orders_page(request: Request):
     return _render(request, "orders.html")
 
 
+@router.get("/estimates")
+def estimates_page(request: Request):
+    """Сметы: статусы DRAFT→ACCEPTED, snapshot, заказ из сметы (Этап 2)."""
+    return _render(request, "estimates.html", {"active": "estimates"})
+
+
 @router.get("/price-list")
 def price_list_page(request: Request):
     """Прайс-каталог: список, «+», импорт, выгрузка, непроверенные."""

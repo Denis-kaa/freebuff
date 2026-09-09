@@ -13,12 +13,14 @@
 from __future__ import annotations
 
 import difflib
+import hashlib
 import json
 import re
 import sqlite3
 from datetime import datetime, timezone
 from typing import Any, Mapping
 
+import printcalc
 from printcalc.engine.errors import CalcInputError, RegistryError
 from printcalc.engine.registry import calculate
 from printcalc_web.calculators import get_registry
@@ -448,6 +450,7 @@ def _order_row_to_dict(
         "updated_at": row["updated_at"],
         "wishes": row["wishes"] if "wishes" in row.keys() else "",
         "client_id": row["client_id"] if "client_id" in row.keys() else None,
+        "estimate_id": row["estimate_id"] if "estimate_id" in row.keys() else None,
         "client_name": _client_name_for_order(conn, row),
         "items": [
             {
@@ -490,6 +493,7 @@ def list_orders(
             "created_at": row["created_at"],
             "items_count": row["items_count"],
             "client_id": row["client_id"] if "client_id" in row.keys() else None,
+            "estimate_id": row["estimate_id"] if "estimate_id" in row.keys() else None,
             "client_name": _client_name_for_order(conn, row),
         }
         for row in conn.execute(sql, params)
@@ -1226,3 +1230,374 @@ def seed_materials(conn: sqlite3.Connection) -> dict[str, int]:
         created += 1
     conn.commit()
     return {"created": created, "skipped": skipped}
+
+
+# ---------- сметы (Этап 2 роадмапа v6, §22/§24/§49 промт_4) ----------
+
+#: Статусы сметы (§24): закрытый словарь (ANTI-6b). Терминальные —
+#: accepted / rejected / expired; из draft разрешён переход в sent.
+ESTIMATE_STATUSES: tuple[str, ...] = (
+    "draft",
+    "sent",
+    "viewed",
+    "accepted",
+    "rejected",
+    "expired",
+)
+
+#: Разрешённые переходы статусов сметы (§24). Всё, что не указано — запрещено.
+ESTIMATE_TRANSITIONS: dict[str, tuple[str, ...]] = {
+    "draft": ("sent", "accepted", "rejected", "expired"),
+    "sent": ("viewed", "accepted", "rejected", "expired"),
+    "viewed": ("accepted", "rejected", "expired"),
+    "accepted": (),
+    "rejected": (),
+    "expired": (),
+}
+
+
+def _estimate_row_to_dict(
+    conn: sqlite3.Connection, row: sqlite3.Row, item_rows: list[sqlite3.Row]
+) -> dict[str, Any]:
+    estimate: dict[str, Any] = {
+        "id": row["id"],
+        "status": row["status"],
+        "total": row["total"],
+        "client_id": row["client_id"],
+        "client_name": _client_name_for_order(conn, row),
+        "note": row["note"],
+        "valid_until": row["valid_until"],
+        "created_at": row["created_at"],
+        "updated_at": row["updated_at"],
+        "items": [
+            {
+                "kind": item["kind"],
+                "name": item["name"],
+                "price": item["price"],
+                "qty": item["qty"],
+                "calculator_id": item["calculator_id"],
+                "params": json.loads(item["params_json"]) if item["params_json"] else None,
+                "price_list_item_id": item["price_list_item_id"],
+            }
+            for item in item_rows
+        ],
+    }
+    snapshot = conn.execute(
+        "SELECT * FROM calc_snapshots WHERE estimate_id = ?", (row["id"],)
+    ).fetchone()
+    estimate["snapshot"] = _snapshot_row_to_dict(snapshot) if snapshot else None
+    return estimate
+
+
+def _snapshot_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "engine_version": row["engine_version"],
+        "registry_checksum": row["registry_checksum"],
+        "catalog_checksum": row["catalog_checksum"],
+        "policy_version": row["policy_version"],
+        "details": json.loads(row["details_json"]),
+        "created_at": row["created_at"],
+    }
+
+
+def _catalog_checksum(conn: sqlite3.Connection) -> str:
+    """Стабильная подпись прайс-каталога (id, цена, количество активных позиций)."""
+    rows = conn.execute(
+        "SELECT id, price, unit FROM price_list_items WHERE archived = 0 ORDER BY id"
+    ).fetchall()
+    payload = json.dumps(
+        [[row["id"], row["price"], row["unit"]] for row in rows],
+        ensure_ascii=False,
+        sort_keys=True,
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def _registry_checksum() -> str:
+    """Подпись реестра калькуляторов: id + версия спеки + поля (детерминированно)."""
+    registry = get_registry()
+    payload = json.dumps(
+        {
+            calculator_id: {
+                "version": reg.spec.version,
+                "fields": [
+                    [f.name, f.kind.value, f.required] for f in reg.spec.fields
+                ],
+            }
+            for calculator_id, reg in ((cid, registry.get(cid)) for cid in registry.ids())
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+        default=str,
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def create_estimate(
+    conn: sqlite3.Connection,
+    *,
+    items: list[Mapping[str, Any]],
+    client_id: int | None = None,
+    note: str = "",
+    valid_until: str | None = None,
+) -> dict[str, Any]:
+    """Создаёт смету из позиций (§22): Client, Items, Note, Validity.
+
+    Позиции резолвятся тем же _resolve_item, что и заказы: цены — только
+    с сервера (каталог/движок); клиентская цена доверия не имеет.
+    """
+    if not items:
+        raise StoreError("смета без позиций не имеет смысла")
+    if client_id is not None and get_client(conn, client_id) is None:
+        raise StoreError(f"клиент {client_id} не найден")
+    if valid_until is not None:
+        try:
+            datetime.fromisoformat(valid_until)
+        except ValueError:
+            raise StoreError(f"некорректная дата valid_until: '{valid_until}'") from None
+
+    now = utc_now()
+    resolved = [_resolve_item(conn, raw, index) for index, raw in enumerate(items)]
+    total = round(sum(item["price"] * item["qty"] for item in resolved), 2)
+
+    cursor = conn.execute(
+        "INSERT INTO estimates (status, total, client_id, note, valid_until, created_at, updated_at)"
+        " VALUES ('draft', ?, ?, ?, ?, ?, ?)",
+        (total, client_id, note.strip(), valid_until, now, now),
+    )
+    estimate_id = int(cursor.lastrowid if cursor.lastrowid is not None else 0)
+    for item in resolved:
+        conn.execute(
+            "INSERT INTO estimate_items (estimate_id, kind, name, price, qty, calculator_id,"
+            " params_json, price_list_item_id, position)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                estimate_id,
+                item["kind"],
+                item["name"],
+                item["price"],
+                item["qty"],
+                item["calculator_id"],
+                item["params_json"],
+                item["price_list_item_id"],
+                item["position"],
+            ),
+        )
+    conn.commit()
+    return get_estimate(conn, estimate_id)
+
+
+def get_estimate(conn: sqlite3.Connection, estimate_id: int) -> dict[str, Any]:
+    """Смета целиком (позиции + snapshot, если есть)."""
+    row = conn.execute("SELECT * FROM estimates WHERE id = ?", (estimate_id,)).fetchone()
+    if row is None:
+        raise StoreError(f"смета не найдена: id={estimate_id}")
+    item_rows = conn.execute(
+        "SELECT * FROM estimate_items WHERE estimate_id = ? ORDER BY position, id",
+        (estimate_id,),
+    ).fetchall()
+    return _estimate_row_to_dict(conn, row, list(item_rows))
+
+
+def list_estimates(
+    conn: sqlite3.Connection, *, status: str | None = None, client_id: int | None = None
+) -> list[dict[str, Any]]:
+    """Список смет (краткий), фильтры по статусу и клиенту."""
+    if status is not None and status not in ESTIMATE_STATUSES:
+        raise StoreError(f"недопустимый статус сметы: '{status}'")
+    sql = (
+        "SELECT e.*, COUNT(i.id) AS items_count FROM estimates e"
+        " LEFT JOIN estimate_items i ON i.estimate_id = e.id"
+    )
+    params: list[Any] = []
+    where: list[str] = []
+    if status is not None:
+        where.append("e.status = ?")
+        params.append(status)
+    if client_id is not None:
+        where.append("e.client_id = ?")
+        params.append(client_id)
+    if where:
+        sql += " WHERE " + " AND ".join(where)
+    sql += " GROUP BY e.id ORDER BY e.id DESC"
+    return [
+        {
+            "id": row["id"],
+            "status": row["status"],
+            "total": row["total"],
+            "client_id": row["client_id"],
+            "client_name": _client_name_for_order(conn, row),
+            "valid_until": row["valid_until"],
+            "created_at": row["created_at"],
+            "items_count": row["items_count"],
+        }
+        for row in conn.execute(sql, params)
+    ]
+
+
+def update_estimate(
+    conn: sqlite3.Connection,
+    estimate_id: int,
+    *,
+    note: str | None = None,
+    valid_until: str | None = None,
+    client_id: int | None = ...,  # type: ignore[assignment]
+) -> dict[str, Any]:
+    """Правка meta-полей сметы (только пока не ACCEPTED — §49)."""
+    estimate = get_estimate(conn, estimate_id)
+    if estimate["status"] == "accepted":
+        raise StoreError("принятая смета неизменяема (§49: snapshot запрещает правку задним числом)")
+    sets: list[str] = []
+    params: list[Any] = []
+    if client_id is not ...:
+        if client_id is not None and get_client(conn, client_id) is None:
+            raise StoreError(f"клиент {client_id} не найден")
+        sets.append("client_id = ?")
+        params.append(client_id)
+    if note is not None:
+        sets.append("note = ?")
+        params.append(note.strip())
+    if valid_until is not None:
+        try:
+            datetime.fromisoformat(valid_until)
+        except ValueError:
+            raise StoreError(f"некорректная дата valid_until: '{valid_until}'") from None
+        sets.append("valid_until = ?")
+        params.append(valid_until)
+    if sets:
+        params.append(utc_now())
+        params.append(estimate_id)
+        conn.execute(
+            f"UPDATE estimates SET {', '.join(sets)}, updated_at = ? WHERE id = ?", params
+        )
+        conn.commit()
+    return get_estimate(conn, estimate_id)
+
+
+def transition_estimate(
+    conn: sqlite3.Connection, estimate_id: int, new_status: str
+) -> dict[str, Any]:
+    """Перевод сметы по статусам (§24). В accepted фиксирует snapshot (§49).
+
+    Переход в rejected/expired разрешён из любого активного статуса —
+    клиент может отказать или «передумать» на любом шаге.
+    """
+    if new_status not in ESTIMATE_STATUSES:
+        raise StoreError(f"недопустимый статус сметы: '{new_status}'")
+    row = conn.execute("SELECT status FROM estimates WHERE id = ?", (estimate_id,)).fetchone()
+    if row is None:
+        raise StoreError(f"смета не найдена: id={estimate_id}")
+    current = row["status"]
+    if current == new_status:
+        return get_estimate(conn, estimate_id)
+    if new_status not in ESTIMATE_TRANSITIONS[current]:
+        raise StoreError(f"переход '{current}' → '{new_status}' запрещён")
+    if new_status == "accepted":
+        return accept_estimate(conn, estimate_id)
+    conn.execute(
+        "UPDATE estimates SET status = ?, updated_at = ? WHERE id = ?",
+        (new_status, utc_now(), estimate_id),
+    )
+    conn.commit()
+    return get_estimate(conn, estimate_id)
+
+
+def accept_estimate(conn: sqlite3.Connection, estimate_id: int) -> dict[str, Any]:
+    """Принимает смету: статус accepted + snapshot версий (§49)."""
+    estimate = get_estimate(conn, estimate_id)
+    if estimate["status"] == "accepted":
+        return estimate  # идемпотентно: повторный accept ничего не меняет
+    if estimate["status"] not in ("draft", "sent", "viewed"):
+        raise StoreError(f"смета в статусе '{estimate['status']}' не может быть принята")
+    now = utc_now()
+    conn.execute(
+        "INSERT INTO calc_snapshots (estimate_id, engine_version, registry_checksum,"
+        " catalog_checksum, policy_version, details_json, created_at)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (
+            estimate_id,
+            printcalc.__version__,
+            _registry_checksum(),
+            _catalog_checksum(conn),
+            "v1",
+            json.dumps(
+                {
+                    "total": estimate["total"],
+                    "items": [
+                        {"name": i["name"], "price": i["price"], "qty": i["qty"]}
+                        for i in estimate["items"]
+                    ],
+                },
+                ensure_ascii=False,
+            ),
+            now,
+        ),
+    )
+    conn.execute(
+        "UPDATE estimates SET status = 'accepted', updated_at = ? WHERE id = ?",
+        (now, estimate_id),
+    )
+    conn.commit()
+    return get_estimate(conn, estimate_id)
+
+
+def create_order_from_estimate(
+    conn: sqlite3.Connection,
+    estimate_id: int,
+    *,
+    payment_method: str,
+    status: str = "новый",
+) -> dict[str, Any]:
+    """Заказ из сметы (§9 промт_4): все поля переносятся, ручного ввода нет.
+
+    Цены берутся из сохранённых позиций сметы БЕЗ пересчёта — смета уже
+    согласована с клиентом; изменение цен в каталоге задним числом
+    не влияет на принятую смету (§49). Повторный вызов запрещён:
+    одна смета — один заказ (идемпотентность по estimate_id).
+    """
+    estimate = get_estimate(conn, estimate_id)
+    if estimate["status"] != "accepted":
+        raise StoreError(
+            f"заказ можно создать только из принятой сметы (сейчас: '{estimate['status']}')"
+        )
+    existing = conn.execute(
+        "SELECT id FROM orders WHERE estimate_id = ?", (estimate_id,)
+    ).fetchone()
+    if existing is not None:
+        raise StoreError(f"заказ из сметы {estimate_id} уже создан (заказ {existing['id']})")
+
+    now = utc_now()
+    cursor = conn.execute(
+        "INSERT INTO orders (status, payment_method, total, client_id, estimate_id,"
+        " created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (
+            status,
+            payment_method,
+            estimate["total"],
+            estimate["client_id"],
+            estimate_id,
+            now,
+            now,
+        ),
+    )
+    order_id = int(cursor.lastrowid if cursor.lastrowid is not None else 0)
+    for position, item in enumerate(estimate["items"]):
+        conn.execute(
+            "INSERT INTO order_items (order_id, kind, name, price, qty, calculator_id,"
+            " params_json, price_list_item_id, saved_to_catalog, position)"
+            " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                order_id,
+                item["kind"],
+                item["name"],
+                item["price"],
+                item["qty"],
+                item["calculator_id"],
+                json.dumps(item["params"], ensure_ascii=False) if item["params"] else None,
+                item["price_list_item_id"],
+                0 if item["kind"] == "manual" else 1,
+                position,
+            ),
+        )
+    conn.commit()
+    return get_order(conn, order_id)

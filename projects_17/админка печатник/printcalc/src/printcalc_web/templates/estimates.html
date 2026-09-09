@@ -1,0 +1,122 @@
+{% set page_script %}<script src="/static/estimates.js"></script>{% endset %}
+{% include "_shell_top.html" %}
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>Сметы</h2>
+    <div class="row-actions">
+      <button id="btn-new-estimate" class="btn btn-primary" type="button">
+        <svg class="ic"><use href="#i-plus"/></svg> Новая смета
+      </button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <select id="estimate-status-filter" class="field-input">
+      <option value="">все статусы</option>
+      <option value="draft">черновик</option>
+      <option value="sent">отправлена</option>
+      <option value="viewed">просмотрена</option>
+      <option value="accepted">принята</option>
+      <option value="rejected">отказ</option>
+      <option value="expired">просрочена</option>
+    </select>
+  </div>
+
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>№</th><th>Создана</th><th>Клиент</th><th>Позиции</th><th class="num">Сумма</th><th>Годна до</th><th>Статус</th><th></th></tr>
+      </thead>
+      <tbody id="estimates-body">
+        <tr><td colspan="8" class="muted">Загрузка…</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p id="estimates-error" class="error muted"></p>
+</section>
+
+<dialog id="estimate-dialog" class="modal modal-wide">
+  <div class="modal-head">
+    <h3 id="estimate-dialog-title">Смета</h3>
+    <button class="icon" data-close type="button">✕</button>
+  </div>
+
+  <div class="form-grid">
+    <label>Клиент
+      <select id="est-client" class="field-input">
+        <option value="">— без клиента —</option>
+      </select>
+    </label>
+    <label>Годна до
+      <input id="est-valid-until" class="field-input" type="date">
+    </label>
+    <label class="span2">Примечание
+      <input id="est-note" class="field-input" type="text" placeholder="условия, скидка, комментарий…">
+    </label>
+  </div>
+
+  <h4>Позиции</h4>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Наименование</th><th class="num">Цена</th><th class="num">Кол-во</th><th class="num">Сумма</th><th></th></tr></thead>
+      <tbody id="est-items-body"></tbody>
+    </table>
+  </div>
+  <div class="est-items-actions">
+    <button id="est-add-price" class="btn" type="button">+ из прайса</button>
+    <button id="est-add-manual" class="btn" type="button">+ вручную</button>
+  </div>
+
+  <div class="est-total-row">Итого: <b id="est-total">0.00</b> ₽</div>
+  <p id="est-error" class="error muted"></p>
+
+  <div class="modal-actions">
+    <button class="btn" data-close type="button">Отмена</button>
+    <button id="est-save" class="btn btn-primary" type="button">Сохранить смету</button>
+  </div>
+</dialog>
+
+<dialog id="est-view-dialog" class="modal modal-wide">
+  <div class="modal-head">
+    <h3>Смета №<span id="estv-number"></span> <span id="estv-status" class="pill"></span></h3>
+    <button class="icon" data-close type="button">✕</button>
+  </div>
+  <div id="estv-body"></div>
+  <p class="muted" id="estv-snapshot"></p>
+  <div class="modal-actions">
+    <button id="estv-sent" class="btn" type="button">Отправлена</button>
+    <button id="estv-viewed" class="btn" type="button">Просмотрена</button>
+    <button id="estv-accept" class="btn btn-primary" type="button">Принять (снять snapshot)</button>
+    <button id="estv-reject" class="btn danger" type="button">Отказ</button>
+    <button id="estv-to-order" class="btn btn-primary" type="button">Создать заказ</button>
+  </div>
+  <p id="estv-error" class="error muted"></p>
+</dialog>
+
+<dialog id="est-order-dialog" class="modal">
+  <div class="modal-head">
+    <h3>Заказ из сметы №<span id="estord-number"></span></h3>
+    <button class="icon" data-close type="button">✕</button>
+  </div>
+  <label>Способ оплаты
+    <select id="estord-payment" class="field-input"></select>
+  </label>
+  <p class="muted">Все позиции, сумма и клиент переносятся из сметы автоматически — вводить ничего не нужно.</p>
+  <div class="modal-actions">
+    <button class="btn" data-close type="button">Отмена</button>
+    <button id="estord-create" class="btn btn-primary" type="button">Создать заказ</button>
+  </div>
+  <p id="estord-error" class="error muted"></p>
+</dialog>
+
+<dialog id="est-price-dialog" class="modal">
+  <div class="modal-head">
+    <h3>Выбрать из прайса</h3>
+    <button class="icon" data-close type="button">✕</button>
+  </div>
+  <input id="est-price-search" class="field-input" type="search" placeholder="Поиск услуги…">
+  <div class="plain-list" id="est-price-results"></div>
+</dialog>
+
+{% include "_shell_bottom.html" %}
