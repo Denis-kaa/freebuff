@@ -117,6 +117,7 @@ CREATE TABLE IF NOT EXISTS materials (
     sheet_height     REAL,
     min_stock        REAL NOT NULL DEFAULT 0,
     supplier         TEXT,
+    pack_size        REAL,
     active           INTEGER NOT NULL DEFAULT 1,
     created_at       TEXT NOT NULL,
     updated_at       TEXT NOT NULL
@@ -161,6 +162,23 @@ CREATE TABLE IF NOT EXISTS calc_snapshots (
     details_json       TEXT NOT NULL DEFAULT '{}',
     created_at  TEXT NOT NULL
 );
+
+-- Склад (Этап 5 роадмапа v6, промт_4 §19-21): движение — единственный
+-- источник истины по остатку (ledger). Расчётный остаток (estimated) —
+-- сумма движений; физический подтверждается инвентаризацией (ADJUST).
+-- Типы движков — закрытый словарь (ANTI-6b), проверяется в store.
+CREATE TABLE IF NOT EXISTS stock_movements (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    material_id INTEGER NOT NULL REFERENCES materials(id),
+    order_id    INTEGER REFERENCES orders(id) ON DELETE SET NULL,
+    kind        TEXT NOT NULL CHECK (kind IN ('PURCHASE','RESERVE','RELEASE','CONSUME','ADJUST')),
+    quantity    REAL NOT NULL,
+    note        TEXT NOT NULL DEFAULT '',
+    created_at  TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_stock_mov_material ON stock_movements(material_id);
+CREATE INDEX IF NOT EXISTS idx_stock_mov_order ON stock_movements(order_id);
 
 -- Производство (Этап 4 роадмапа v6, OPERATIONS_CATALOG): каталог операций —
 -- данные (пользователь редактирует), задания заказа генерируются по правилам
@@ -227,6 +245,11 @@ def _migrate(conn: sqlite3.Connection) -> None:
         # Этап 3: snapshot расхода материала позиции (расчёт движком при
         # сохранении заказа; неизменяем после сохранения — §49 дух).
         conn.execute("ALTER TABLE order_items ADD COLUMN consumption_json TEXT")
+
+    material_columns = {row[1] for row in conn.execute("PRAGMA table_info(materials)")}
+    if "pack_size" not in material_columns:
+        # Этап 5: фасовка закупки (планировщик округляет вверх до pack_size).
+        conn.execute("ALTER TABLE materials ADD COLUMN pack_size REAL")
 
 
 def default_db_path() -> Path:

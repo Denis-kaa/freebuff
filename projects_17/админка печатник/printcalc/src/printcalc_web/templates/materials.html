@@ -20,6 +20,41 @@
   </div>
 </section>
 
+<!-- Склад (Этап 5): позиции, движения, инвентаризация, план закупок -->
+<section class="panel" style="margin-top:16px">
+  <div class="panel-head">
+    <h2>Склад</h2>
+    <div class="row-actions">
+      <button id="btn-stock-refresh" class="btn" type="button">Обновить</button>
+      <button id="btn-purchase-plan" class="btn" type="button">План закупок</button>
+    </div>
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr><th>Материал</th><th class="num">Расчётный (~)</th><th class="num">Резерв</th><th class="num">Физический</th><th class="num">Мин. запас</th><th>Действия</th></tr>
+      </thead>
+      <tbody id="stock-body"></tbody>
+    </table>
+  </div>
+  <div id="purchase-plan-box" class="hidden" style="margin-top:12px">
+    <div class="muted" style="margin-bottom:6px">План закупок (Need = Required - Available - Reserved, округление до упаковки)</div>
+    <div class="table-wrap">
+      <table class="table">
+        <thead><tr><th>Материал</th><th class="num">Дефицит</th><th class="num">Купить</th><th>Ед.</th><th>Округлено</th></tr></thead>
+        <tbody id="purchase-plan-body"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="muted" style="margin-top:10px">Последние движения</div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Когда</th><th>Материал</th><th>Тип</th><th class="num">Кол-во</th><th>Заказ</th><th>Комментарий</th></tr></thead>
+      <tbody id="stock-movements-body"></tbody>
+    </table>
+  </div>
+</section>
+
 <!-- Диалог материала -->
 <div class="modal-backdrop hidden" id="material-modal">
   <div class="modal modal-wide">

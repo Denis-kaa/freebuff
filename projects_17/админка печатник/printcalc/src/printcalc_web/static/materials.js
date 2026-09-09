@@ -114,4 +114,79 @@ $("#materials-body").addEventListener("click", (event) => {
 });
 $("#materials-active").addEventListener("change", () => reload().catch((e) => alert(e.message)));
 
+/* ---------- Склад (Этап 5): позиции, движения, инвентаризация, план закупок ---------- */
+
+const KIND_LABELS = {
+  PURCHASE: "закупка", RESERVE: "резерв", RELEASE: "снятие резерва",
+  CONSUME: "списание", ADJUST: "инвентаризация",
+};
+
+async function loadStock() {
+  const data = await apiFetch("/stock");
+  $("#stock-body").innerHTML = data.positions.map((p) => `
+    <tr data-id="${p.material_id}">
+      <td>${esc(p.material_name)}</td>
+      <td class="num">${p.estimated}</td>
+      <td class="num">${p.reserved}</td>
+      <td class="num">${p.physical}</td>
+      <td class="num">${p.min_stock}</td>
+      <td class="row-actions">
+        <button class="btn btn-ghost" data-adjust>инвентаризация</button>
+        <button class="btn btn-ghost" data-purchase>закупка</button>
+      </td>
+    </tr>`).join("");
+  const moves = await apiFetch("/stock/movements?limit=15");
+  $("#stock-movements-body").innerHTML = moves.movements.length
+    ? moves.movements.map((m) => `
+      <tr>
+        <td class="muted">${esc((m.created_at || "").replace("T", " ").slice(0, 16))}</td>
+        <td>${esc(m.material_name)}</td>
+        <td><span class="badge">${KIND_LABELS[m.kind] || esc(m.kind)}</span></td>
+        <td class="num">${m.quantity}</td>
+        <td>${m.order_id ? "№" + m.order_id : "—"}</td>
+        <td class="muted">${esc(m.note)}</td>
+      </tr>`).join("")
+    : `<tr><td colspan="6" class="muted">Движений пока нет</td></tr>`;
+}
+
+$("#btn-stock-refresh").addEventListener("click", () => loadStock().catch((e) => alert(e.message)));
+
+$("#stock-body").addEventListener("click", (event) => {
+  const adjustBtn = event.target.closest("[data-adjust]");
+  const purchaseBtn = event.target.closest("[data-purchase]");
+  if (!adjustBtn && !purchaseBtn) return;
+  const id = Number(event.target.closest("tr").dataset.id);
+  const pos = materials.find((m) => m.id === id);
+  const unit = pos ? pos.base_unit : "";
+  const prompt_text = adjustBtn
+    ? `Инвентаризация: сколько ${unit} фактически на складе?`
+    : `Приёмка закупки: сколько ${unit} пришло?`;
+  const value = window.prompt(prompt_text, "0");
+  if (value === null) return;
+  const num = Number(value);
+  if (Number.isNaN(num) || num < 0) { alert("Введите неотрицательное число"); return; }
+  const request = adjustBtn
+    ? apiFetch(`/stock/adjust?material_id=${id}`, { method: "POST", body: JSON.stringify({ counted: num }) })
+    : apiFetch(`/materials/${id}/purchase`, { method: "POST", body: JSON.stringify({ quantity: num }) });
+  request.then(() => loadStock().catch(() => {})).catch((e) => alert(e.message));
+});
+
+$("#btn-purchase-plan").addEventListener("click", async () => {
+  try {
+    const data = await apiFetch("/stock/purchase-plan", { method: "POST", body: JSON.stringify({ required: {} }) });
+    const box = $("#purchase-plan-box");
+    box.classList.toggle("hidden", data.plan.length === 0);
+    $("#purchase-plan-body").innerHTML = data.plan.map((row) => `
+      <tr>
+        <td>${esc(row.material_name)}</td>
+        <td class="num">${row.deficit}</td>
+        <td class="num"><b>${row.recommendation}</b></td>
+        <td>${esc(row.unit)}</td>
+        <td>${row.rounded_to_pack ? "до упаковки " + row.pack_size : "—"}</td>
+      </tr>`).join("");
+    if (!data.plan.length) alert("Дефицита нет — закупать нечего");
+  } catch (e) { alert(e.message); }
+});
+
 reload().catch((e) => alert(e.message));
+loadStock().catch((e) => alert(e.message));

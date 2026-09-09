@@ -13,7 +13,7 @@ import sqlite3
 from collections.abc import Iterator
 from typing import Any, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, Field
 
 from printcalc.engine.errors import CalcInputError, RegistryError
@@ -266,7 +266,7 @@ def read_calculators() -> dict[str, Any]:
 def run_calculation(
     payload: CalculateIn, conn: sqlite3.Connection = Depends(get_conn)
 ) -> dict[str, Any]:
-    """Запускает калькулятор движка: валидация схемы → compute()."""
+    """Запускает калькулятор движка: валидация схемы -> compute()."""
     _ = conn
     try:
         result = engine_calculate(get_registry(), payload.calculator_id, payload.params)
@@ -571,6 +571,7 @@ class MaterialIn(BaseModel):
     sheet_width: float | None = Field(default=None, gt=0)
     sheet_height: float | None = Field(default=None, gt=0)
     min_stock: float = Field(default=0, ge=0)
+    pack_size: float | None = Field(default=None, gt=0)
     supplier: str | None = None
     active: bool = True
 
@@ -614,7 +615,8 @@ def read_material(material_id: int, conn: sqlite3.Connection = Depends(get_conn)
 @router.patch("/materials/{material_id}")
 def patch_material(
     material_id: int, payload: dict[str, Any], conn: sqlite3.Connection = Depends(get_conn)
-) -> dict[str, Any]:        return _store_guard(store.update_material, conn, material_id, fields=payload)
+) -> dict[str, Any]:
+    return _store_guard(store.update_material, conn, material_id, fields=payload)
 
 
 # ---------- сметы (Этап 2 роадмапа v6) ----------
@@ -833,3 +835,95 @@ def block_task(
     conn: sqlite3.Connection = Depends(get_conn),
 ) -> dict[str, Any]:
     return _store_guard(store.block_task, conn, task_id, reason=payload.reason)
+
+
+# ---------- склад (Этап 5, промт_4 §19-21) ----------
+
+
+class StockAdjustIn(BaseModel):
+    """Инвентаризация: counted — физически посчитанный остаток."""
+
+    counted: float = Field(ge=0)
+    note: str = ""
+
+
+class StockPurchaseIn(BaseModel):
+    """Приёмка закупки (приход)."""
+
+    quantity: float = Field(gt=0)
+    note: str = ""
+
+
+class PurchasePlanIn(BaseModel):
+    """Планировщик закупок: внешний спрос по материалам."""
+
+    required: dict[int, float] = Field(default_factory=dict)
+
+
+@router.get("/stock")
+def read_stock(conn: sqlite3.Connection = Depends(get_conn)) -> dict[str, Any]:
+    """Позиции склада всех активных материалов (estimated/reserved/physical)."""
+    return {"positions": store.list_stock(conn)}
+
+
+@router.get("/stock/movements")
+def read_stock_movements(
+    material_id: int | None = None,
+    order_id: int | None = None,
+    kind: str | None = None,
+    limit: int = 200,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Лента движений (ledger) с фильтрами — источник истины по остаткам."""
+    return {"movements": store.list_stock_movements(conn, material_id=material_id, order_id=order_id, kind=kind, limit=limit)}
+
+
+@router.post("/stock/adjust")
+def adjust_stock_endpoint(
+    payload: StockAdjustIn,
+    material_id: int = Query(...),
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Инвентаризация: коррекция остатка к посчитанному (ADJUST)."""
+    return _store_guard(
+        store.adjust_stock, conn, material_id, counted_quantity=payload.counted, note=payload.note
+    )
+
+
+@router.post("/materials/{material_id}/purchase", status_code=201)
+def purchase_material(
+    material_id: int,
+    payload: StockPurchaseIn,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Приёмка закупки: PURCHASE-движение (физический приход)."""
+    return _store_guard(
+        store.record_stock_movement, conn, material_id=material_id,
+        kind="PURCHASE", quantity=payload.quantity, note=payload.note or "приёмка закупки",
+    )
+
+
+@router.post("/orders/{order_id}/materials/reserve", status_code=201)
+def reserve_order(order_id: int, conn: sqlite3.Connection = Depends(get_conn)) -> dict[str, Any]:
+    """Резерв материалов заказа по рассчитанному расходу (идемпотентно)."""
+    return _store_guard(store.reserve_order_materials, conn, order_id)
+
+
+@router.post("/orders/{order_id}/materials/release")
+def release_order(order_id: int, conn: sqlite3.Connection = Depends(get_conn)) -> dict[str, Any]:
+    return _store_guard(store.release_order_materials, conn, order_id)
+
+
+@router.post("/orders/{order_id}/materials/consume")
+def consume_order(order_id: int, conn: sqlite3.Connection = Depends(get_conn)) -> dict[str, Any]:
+    """Списание по выдаче заказа: RESERVE -> CONSUME."""
+    return _store_guard(store.consume_order_materials, conn, order_id)
+
+
+@router.post("/stock/purchase-plan")
+def purchase_plan_endpoint(
+    payload: PurchasePlanIn,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """План закупок: Need = Required - Available - Reserved, округление до упаковки."""
+    return {"plan": store.purchase_plan(conn, required=payload.required)}

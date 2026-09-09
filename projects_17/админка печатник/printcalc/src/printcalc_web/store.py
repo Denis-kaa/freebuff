@@ -1161,6 +1161,7 @@ def _material_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
         "sheet_height": row["sheet_height"],
         "min_stock": row["min_stock"],
         "supplier": row["supplier"],
+        "pack_size": row["pack_size"],
         "active": bool(row["active"]),
         "created_at": row["created_at"],
         "updated_at": row["updated_at"],
@@ -1194,8 +1195,8 @@ def create_material(conn: sqlite3.Connection, *, fields: dict[str, Any]) -> dict
             INSERT INTO materials (name, aliases_json, category, consumption_mode,
                 base_unit, purchase_unit, purchase_cost, price_unit, roll_width,
                 roll_length, sheet_width, sheet_height, min_stock, supplier,
-                active, created_at, updated_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                pack_size, active, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 name,
@@ -1212,6 +1213,7 @@ def create_material(conn: sqlite3.Connection, *, fields: dict[str, Any]) -> dict
                 fields.get("sheet_height"),
                 float(fields.get("min_stock", 0.0)),
                 fields.get("supplier"),
+                fields.get("pack_size"),
                 int(fields.get("active", True)),
                 now,
                 now,
@@ -1270,7 +1272,7 @@ def update_material(
         "name", "aliases", "category", "consumption_mode", "base_unit",
         "purchase_unit", "purchase_cost", "price_unit", "roll_width",
         "roll_length", "sheet_width", "sheet_height", "min_stock",
-        "supplier", "active",
+        "supplier", "pack_size", "active",
     }
     unknown = set(fields) - allowed
     if unknown:
@@ -1281,6 +1283,8 @@ def update_material(
         raise StoreError(f"неизвестная единица: {fields['base_unit']}")
     if "purchase_cost" in fields and float(fields["purchase_cost"]) < 0:
         raise StoreError("закупочная цена не может быть отрицательной")
+    if "pack_size" in fields and fields["pack_size"] is not None and float(fields["pack_size"]) <= 0:
+        raise StoreError("размер упаковки должен быть положительным")
     if "name" in fields and not str(fields["name"]).strip():
         raise StoreError("название материала не может быть пустым")
     new_mode = fields.get("consumption_mode", current["consumption_mode"])
@@ -2064,3 +2068,335 @@ def production_progress(conn: sqlite3.Connection, order_id: int) -> dict[str, An
         "all_done": total > 0 and done == total,
         "progress_percent": round(done / total * 100.0, 1) if total else 0.0,
     }
+
+
+# ---------- склад (Этап 5 роадмапа v6, промт_4 §19-21) ----------
+
+#: Типы движений склада (§7.1 промт_5). Закрытый словарь (ANTI-6b).
+STOCK_MOVEMENT_KINDS: tuple[str, ...] = (
+    "PURCHASE",   # закупка (приход, физически подтверждён)
+    "RESERVE",    # резерв под заказ (расчётный, не физический приход)
+    "RELEASE",    # снятие резерва (отказ/правка заказа)
+    "CONSUME",    # фактическое списание в производство
+    "ADJUST",     # инвентаризация: коррекция к физическому остатку
+)
+
+#: Знак влияния движения на остаток: +1 приход, −1 расход, 0 — только память.
+_MOVEMENT_SIGN: dict[str, int] = {
+    "PURCHASE": 1,
+    "RESERVE": 0,   # резерв не меняет физический остаток (§19: estimated ≠ physical)
+    "RELEASE": 0,
+    "CONSUME": -1,
+    "ADJUST": 0,    # ADJUST задаёт остаток напрямую (set), а не складывается
+}
+
+#: Единицы склада — единица РАСХОДА материала (base_unit реестра, BR-W3).
+
+
+def record_stock_movement(
+    conn: sqlite3.Connection,
+    *,
+    material_id: int,
+    kind: str,
+    quantity: float,
+    order_id: int | None = None,
+    note: str = "",
+) -> dict[str, Any]:
+    """Записывает движение склада (ledger). Raises StoreError на неизвестный тип."""
+    if kind not in STOCK_MOVEMENT_KINDS:
+        raise StoreError(f"неизвестный тип движения: '{kind}'")
+    if isinstance(quantity, bool) or not isinstance(quantity, (int, float)) or quantity == 0:
+        raise StoreError("количество должно быть ненулевым числом")
+    if get_material(conn, material_id) is None:
+        raise StoreError(f"материал {material_id} не найден")
+    conn.execute(
+        "INSERT INTO stock_movements (material_id, order_id, kind, quantity, note, created_at)"
+        " VALUES (?, ?, ?, ?, ?, ?)",
+        (material_id, order_id, kind, float(quantity), note.strip(), utc_now()),
+    )
+    conn.commit()
+    return {"material_id": material_id, "order_id": order_id, "kind": kind, "quantity": float(quantity)}
+
+
+def stock_position(conn: sqlite3.Connection, material_id: int) -> dict[str, Any]:
+    """Позиция склада материала (§19-20 промт_4).
+
+    physical  — PURCHASE − CONSUME (только подтверждённые движения);
+    reserved  — RESERVE − RELEASE (под заказы);
+    estimated — physical − reserved (доступно для новых заказов);
+    Признак «~» (расчётный) — estimated всегда расчётный, physical
+    подтверждается только инвентаризацией (ADJUST).
+    """
+    rows = conn.execute(
+        "SELECT kind, quantity FROM stock_movements WHERE material_id = ?", (material_id,)
+    ).fetchall()
+    physical = 0.0
+    reserved = 0.0
+    for row in rows:
+        kind, qty = row["kind"], float(row["quantity"])
+        if kind == "PURCHASE":
+            physical += qty
+        elif kind == "CONSUME":
+            physical -= qty
+        elif kind == "ADJUST":
+            physical += qty  # дельта может быть любой: set-семантика инвентаризации
+        elif kind == "RESERVE":
+            reserved += qty
+        elif kind == "RELEASE":
+            reserved -= qty
+    material = get_material(conn, material_id)
+    unit = material["base_unit"] if material else "m2"
+    return {
+        "material_id": material_id,
+        "material_name": material["name"] if material else None,
+        "unit": unit,
+        "physical": round(physical, 4),
+        "reserved": round(reserved, 4),
+        "estimated": round(physical - reserved, 4),  # «~» — расчётный остаток
+        "min_stock": material["min_stock"] if material else 0,
+    }
+
+
+def list_stock_movements(
+    conn: sqlite3.Connection,
+    *,
+    material_id: int | None = None,
+    order_id: int | None = None,
+    kind: str | None = None,
+    limit: int = 200,
+) -> list[dict[str, Any]]:
+    """Лента движений склада (ledger) с фильтрами, новые первыми."""
+    sql = "SELECT * FROM stock_movements"
+    conditions: list[str] = []
+    params: list[Any] = []
+    if material_id is not None:
+        conditions.append("material_id = ?")
+        params.append(material_id)
+    if order_id is not None:
+        conditions.append("order_id = ?")
+        params.append(order_id)
+    if kind is not None:
+        if kind not in STOCK_MOVEMENT_KINDS:
+            raise StoreError(f"неизвестный тип движения: '{kind}'")
+        conditions.append("kind = ?")
+        params.append(kind)
+    if conditions:
+        sql += " WHERE " + " AND ".join(conditions)
+    sql += " ORDER BY id DESC LIMIT ?"
+    params.append(int(limit))
+    rows = conn.execute(sql, params).fetchall()
+    material_names = {m["id"]: m["name"] for m in list_materials(conn, active_only=False)}
+    return [
+        {
+            "id": row["id"],
+            "material_id": row["material_id"],
+            "material_name": material_names.get(row["material_id"]),
+            "order_id": row["order_id"],
+            "kind": row["kind"],
+            "quantity": float(row["quantity"]),
+            "note": row["note"],
+            "created_at": row["created_at"],
+        }
+        for row in rows
+    ]
+
+
+def list_stock(conn: sqlite3.Connection) -> list[dict[str, Any]]:
+    """Склад целиком: позиции всех активных материалов."""
+    materials = list_materials(conn, active_only=True)
+    return [stock_position(conn, m["id"]) for m in materials]
+
+
+def adjust_stock(
+    conn: sqlite3.Connection, material_id: int, *, counted_quantity: float, note: str = ""
+) -> dict[str, Any]:
+    """Инвентаризация (§19): коррекция к физически посчитанному остатку.
+
+    ADJUST — единственное движение, задающее остаток напрямую (set):
+    дельта = counted − current_physical записывается как ADJUST-движение.
+    """
+    current = stock_position(conn, material_id)
+    delta = float(counted_quantity) - current["physical"]
+    if abs(delta) < 1e-9:
+        return {"adjusted": False, "movement": None, "position": current}
+    movement = record_stock_movement(
+        conn,
+        material_id=material_id,
+        kind="ADJUST",
+        quantity=delta,
+        note=note or f"инвентаризация: посчитано {counted_quantity}",
+    )
+    return {"adjusted": True, "movement": movement, "position": stock_position(conn, material_id)}
+
+
+def _order_consumption_by_material(
+    conn: sqlite3.Connection, items: list[dict[str, Any]]
+) -> dict[int, float]:
+    """Суммирует production-расход заказа по материалам (из consumption_json).
+
+    Ключ агрегации — billing/production в ЕДИНИЦЕ РАСХОДА материала:
+    ROLL_NESTING → пог.м (production_length_m), иначе м² (production_area_m2).
+    """
+    totals: dict[int, float] = {}
+    for item in items:
+        consumption = item.get("consumption")
+        if not consumption:
+            continue
+        try:
+            material_id = int(consumption["material_id"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        unit = consumption.get("billing_unit", "")
+        if unit == "lm":
+            qty = float(consumption.get("production_length_m") or 0.0)
+        elif unit == "лист":
+            qty = float(consumption.get("billing_quantity") or 0.0)
+        else:
+            qty = float(consumption.get("production_area_m2") or 0.0)
+        if qty > 0:
+            totals[material_id] = totals.get(material_id, 0.0) + qty
+    return totals
+
+
+def reserve_order_materials(
+    conn: sqlite3.Connection, order_id: int
+) -> dict[str, Any]:
+    """Резерв материалов заказа (§20): Production Consumption → RESERVE.
+
+    Расход берётся из consumption_json позиций заказа (уже посчитан движком
+    при сохранении). Повторный вызов идемпотентен: заказ с активным резервом
+    не резервируется второй раз. Один материал — одно RESERVE-движение.
+    """
+    order = get_order(conn, order_id)
+    existing = conn.execute(
+        "SELECT COUNT(*) FROM stock_movements WHERE order_id = ? AND kind = 'RESERVE'",
+        (order_id,),
+    ).fetchone()[0]
+    if existing:
+        raise StoreError(f"заказ {order_id} уже зарезервирован на складе")
+    totals = _order_consumption_by_material(conn, order["items"])
+    if not totals:
+        raise StoreError("у заказа нет рассчитанного расхода — резервировать нечего")
+    created: list[dict[str, Any]] = []
+    for material_id, qty in sorted(totals.items()):
+        created.append(
+            record_stock_movement(
+                conn, material_id=material_id, kind="RESERVE", quantity=qty,
+                order_id=order_id, note=f"резерв под заказ {order_id}",
+            )
+        )
+    return {"order_id": order_id, "reserved": created}
+
+
+def release_order_materials(conn: sqlite3.Connection, order_id: int) -> dict[str, Any]:
+    """Снятие резерва заказа (отказ, правка состава). Идемпотентно: снимает
+    только существующие RESERVE; CONSUME после списания блокирует снятие."""
+    consumed = conn.execute(
+        "SELECT COUNT(*) FROM stock_movements WHERE order_id = ? AND kind = 'CONSUME'",
+        (order_id,),
+    ).fetchone()[0]
+    if consumed:
+        raise StoreError("заказ уже списан со склада — снятие резерва невозможно")
+    reserves = conn.execute(
+        "SELECT * FROM stock_movements WHERE order_id = ? AND kind = 'RESERVE'",
+        (order_id,),
+    ).fetchall()
+    if not reserves:
+        raise StoreError(f"у заказа {order_id} нет активного резерва")
+    released: list[dict[str, Any]] = []
+    for row in reserves:
+        released.append(
+            record_stock_movement(
+                conn, material_id=row["material_id"], kind="RELEASE",
+                quantity=float(row["quantity"]), order_id=order_id,
+                note=f"снятие резерва заказа {order_id}",
+            )
+        )
+    return {"order_id": order_id, "released": released}
+
+
+def consume_order_materials(conn: sqlite3.Connection, order_id: int) -> dict[str, Any]:
+    """Фактическое списание по выдаче (§20 MASTER: «материалы списываются»).
+
+    Резерв конвертируется: RESERVE-движения заказа заменяются CONSUME
+    (физический остаток уменьшается, резерв обнуляется RELEASE'ом).
+    """
+    reserves = conn.execute(
+        "SELECT * FROM stock_movements WHERE order_id = ? AND kind = 'RESERVE'",
+        (order_id,),
+    ).fetchall()
+    consumed_before = conn.execute(
+        "SELECT COUNT(*) FROM stock_movements WHERE order_id = ? AND kind = 'CONSUME'",
+        (order_id,),
+    ).fetchone()[0]
+    if consumed_before:
+        raise StoreError(f"заказ {order_id} уже списан")
+    order = get_order(conn, order_id)
+    totals = _order_consumption_by_material(conn, order["items"])
+    if not totals and not reserves:
+        raise StoreError("у заказа нет рассчитанного расхода — списывать нечего")
+    released: list[dict[str, Any]] = []
+    for row in reserves:
+        released.append(
+            record_stock_movement(
+                conn, material_id=row["material_id"], kind="RELEASE",
+                quantity=float(row["quantity"]), order_id=order_id,
+                note=f"конвертация резерва в списание (заказ {order_id})",
+            )
+        )
+    consumed: list[dict[str, Any]] = []
+    for material_id, qty in sorted(totals.items()):
+        consumed.append(
+            record_stock_movement(
+                conn, material_id=material_id, kind="CONSUME", quantity=qty,
+                order_id=order_id, note=f"списание по заказу {order_id}",
+            )
+        )
+    return {"order_id": order_id, "consumed": consumed, "released": released}
+
+
+def _round_up_pack(quantity: float, pack_size: float | None) -> tuple[float, bool]:
+    """Округление закупки до упаковки/рулона (§21). Возвращает (кол-во, округлено)."""
+    if pack_size is not None and pack_size > 0:
+        import math
+
+        packed = math.ceil(quantity / pack_size) * pack_size
+        return packed, packed > quantity
+    return quantity, False
+
+
+def purchase_plan(
+    conn: sqlite3.Connection, *, required: dict[int, float] | None = None
+) -> list[dict[str, Any]]:
+    """Планировщик закупок (§21): Need = Required − Available − Reserved.
+
+    required — внешний дополнительный спрос (material_id → количество),
+    например сумма планов производства. По умолчанию — только min_stock.
+    Рекомендация округляется вверх до pack_size (упаковка/рулон).
+    Порог срабатывания: below min_stock ИЛИ внешний required превышает
+    estimated. Нулевые рекомендации не возвращаются.
+    """
+    plan: list[dict[str, Any]] = []
+    for material in list_materials(conn, active_only=True):
+        position = stock_position(conn, material["id"])
+        extra = float((required or {}).get(material["id"], 0.0))
+        min_stock = float(material["min_stock"] or 0.0)
+        deficit = (min_stock + extra) - position["estimated"]
+        if deficit <= 1e-9:
+            continue
+        recommendation, rounded = _round_up_pack(deficit, material.get("pack_size"))
+        plan.append({
+            "material_id": material["id"],
+            "material_name": material["name"],
+            "unit": position["unit"],
+            "estimated": position["estimated"],
+            "reserved": position["reserved"],
+            "min_stock": min_stock,
+            "extra_required": extra if extra > 0 else None,
+            "deficit": round(deficit, 4),
+            "recommendation": round(recommendation, 4),
+            "rounded_to_pack": rounded,
+            "pack_size": material.get("pack_size"),
+        })
+    plan.sort(key=lambda row: -row["deficit"])
+    return plan

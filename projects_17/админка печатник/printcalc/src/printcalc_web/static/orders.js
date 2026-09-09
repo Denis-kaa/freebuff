@@ -155,4 +155,24 @@ $("#btn-order-produce").addEventListener("click", async () => {
   }
 });
 
+/* Склад (Этап 5): резерв и списание по рассчитанному расходу заказа. */
+$("#btn-order-reserve").addEventListener("click", async () => {
+  try {
+    const result = await apiFetch(`/orders/${currentOrder.id}/materials/reserve`, { method: "POST" });
+    $("#dlg-order-msg").textContent = `Зарезервировано позиций: ${result.reserved.length} — страница «Материалы», блок «Склад»`;
+  } catch (error) {
+    $("#dlg-order-msg").textContent = "Ошибка: " + error.message;
+  }
+});
+
+$("#btn-order-consume").addEventListener("click", async () => {
+  if (!window.confirm("Списать материалы по заказу со склада? После списания резерв снять нельзя.")) return;
+  try {
+    const result = await apiFetch(`/orders/${currentOrder.id}/materials/consume`, { method: "POST" });
+    $("#dlg-order-msg").textContent = `Списано позиций: ${result.consumed.length}`;
+  } catch (error) {
+    $("#dlg-order-msg").textContent = "Ошибка: " + error.message;
+  }
+});
+
 loadOrders();
