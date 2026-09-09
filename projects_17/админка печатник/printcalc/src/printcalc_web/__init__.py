@@ -13,6 +13,7 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -57,8 +58,12 @@ def create_app(db_path: Path | None = None) -> FastAPI:
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
     # Этап 6: Telegram-поллер (daemon; без PRINTCALC_TG_TOKEN — no-op).
-    from printcalc_web import telegram
+    # Не обязателен: без httpx (или при ошибке) приложение стартует без поллера.
+    try:
+        from printcalc_web import telegram
 
-    telegram.start_poller(app)
+        telegram.start_poller(app)
+    except Exception as exc:  # noqa: BLE001 — поллер не критичен для старта
+        logging.getLogger("uvicorn.error").warning("telegram poller disabled: %s", exc)
 
     return app
