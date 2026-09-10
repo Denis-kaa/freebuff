@@ -22,6 +22,7 @@ from printcalc_web.calculators import get_registry
 #: «ризограф/ризография» выведены из title «Калькулятор ризографии RISO RZ300EP».
 CALC_KEYWORDS: dict[str, tuple[str, ...]] = {
     "riso": ("ризограф", "ризография"),
+    "digital": ("цифра", "цифровая", "цифровую"),
 }
 
 _TITLE_STOPWORDS = {"калькулятор"}

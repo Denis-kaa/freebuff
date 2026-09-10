@@ -12,6 +12,8 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Any, Callable
 
+from printcalc.calculators.digital import DigitalConfig
+from printcalc.calculators.digital import register as register_digital
 from printcalc.calculators.riso import RisoConfig
 from printcalc.calculators.riso import register as register_riso
 from printcalc.calculators.riso.config import AREA_MULTIPLIERS
@@ -26,12 +28,25 @@ from printcalc.engine.spec import CalculatorSpec, FieldKind, FieldSpec
 
 @lru_cache(maxsize=1)
 def get_registry() -> CalculatorRegistry:
-    """Собирает реестр калькуляторов (Riso + таблички + широкоформат)."""
+    """Собирает реестр калькуляторов (Digital + Riso + таблички + широкоформат)."""
     registry = CalculatorRegistry()
+    register_digital(registry)
     register_riso(registry)
     register_tablichki(registry)
     register_wide(registry)
     return registry
+
+
+@lru_cache(maxsize=1)
+def _digital_option_lists() -> dict[str, tuple[str, ...]]:
+    """Допустимые наборы STRING-полей Digital из канонического конфига."""
+    config = DigitalConfig()
+    return {
+        "product": tuple(t.name for t in config.templates),
+        "paper": tuple(config.papers),
+        "color": tuple(config.ink),
+        "sheet_format": tuple(config.sheet_formats),
+    }
 
 
 @lru_cache(maxsize=1)
@@ -69,6 +84,7 @@ def _wide_option_lists() -> dict[str, tuple[str, ...]]:
 
 #: Резолверы опций STRING-полей по id калькулятора.
 _OPTION_RESOLVERS: dict[str, Callable[[], dict[str, tuple[str, ...]]]] = {
+    "digital": _digital_option_lists,
     "riso": _riso_option_lists,
     "tablichki": _tablichki_option_lists,
     "wide": _wide_option_lists,
