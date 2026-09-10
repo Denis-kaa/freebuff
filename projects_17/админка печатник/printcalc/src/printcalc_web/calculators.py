@@ -14,6 +14,8 @@ from typing import Any, Callable
 
 from printcalc.calculators.cnc import CncConfig
 from printcalc.calculators.cnc import register as register_cnc
+from printcalc.calculators.design import DesignConfig
+from printcalc.calculators.design import register as register_design
 from printcalc.calculators.digital import DigitalConfig
 from printcalc.calculators.digital import register as register_digital
 from printcalc.calculators.riso import RisoConfig
@@ -41,6 +43,7 @@ def get_registry() -> CalculatorRegistry:
     register_wide(registry)
     register_sign(registry)
     register_cnc(registry)
+    register_design(registry)
     return registry
 
 
@@ -119,6 +122,19 @@ def _cnc_option_lists() -> dict[str, tuple[str, ...]]:
     }
 
 
+@lru_cache(maxsize=1)
+def _design_option_lists() -> dict[str, tuple[str, ...]]:
+    """Допустимые наборы полей Дизайна из канонического прайса:
+    услуги (42), уровни/варианты и стороны (legacy-зависимые селекты)."""
+    config = DesignConfig()
+    return {
+        "service": config.services(),
+        "option": tuple(
+            dict.fromkeys(item.option for item in config.prices if item.option)
+        ),
+    }
+
+
 #: Резолверы опций STRING-полей по id калькулятора.
 _OPTION_RESOLVERS: dict[str, Callable[[], dict[str, tuple[str, ...]]]] = {
     "digital": _digital_option_lists,
@@ -127,6 +143,7 @@ _OPTION_RESOLVERS: dict[str, Callable[[], dict[str, tuple[str, ...]]]] = {
     "wide": _wide_option_lists,
     "sign": _sign_option_lists,
     "cnc": _cnc_option_lists,
+    "design": _design_option_lists,
 }
 
 

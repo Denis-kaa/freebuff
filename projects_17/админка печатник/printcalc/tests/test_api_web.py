@@ -82,8 +82,8 @@ def test_calculate_endpoint_validation_error(client: ASGITestClient) -> None:
 
 def test_calculators_endpoint_lists_all(client: ASGITestClient) -> None:
     data = client.get("/api/calculators").json()
-    ids = [spec["id"] for spec in data["calculators"]]        # Digital + Riso + таблички + широкоформат (этап B) + Вывески + ЧПУ.
-    assert ids == ["cnc", "digital", "riso", "sign", "tablichki", "wide"]
+    ids = [spec["id"] for spec in data["calculators"]]        # Digital + Riso + таблички + широкоформат (этап B) + Вывески + ЧПУ + Дизайн.
+    assert ids == ["cnc", "design", "digital", "riso", "sign", "tablichki", "wide"]
     by_id = {spec["id"]: spec for spec in data["calculators"]}
 
     riso_fields = {field["name"]: field for field in by_id["riso"]["fields"]}
