@@ -14,6 +14,8 @@ from typing import Any, Callable
 
 from printcalc.calculators.cnc import CncConfig
 from printcalc.calculators.cnc import register as register_cnc
+from printcalc.calculators.cost import CostConfig
+from printcalc.calculators.cost import register as register_cost
 from printcalc.calculators.design import DesignConfig
 from printcalc.calculators.design import register as register_design
 from printcalc.calculators.digital import DigitalConfig
@@ -44,6 +46,7 @@ def get_registry() -> CalculatorRegistry:
     register_sign(registry)
     register_cnc(registry)
     register_design(registry)
+    register_cost(registry)
     return registry
 
 
@@ -135,6 +138,22 @@ def _design_option_lists() -> dict[str, tuple[str, ...]]:
     }
 
 
+@lru_cache(maxsize=1)
+def _cost_option_lists() -> dict[str, tuple[str, ...]]:
+    """Допустимые наборы полей Себестоимости из канонического конфига:
+    станки + материалы каждого станка (legacy-селекты)."""
+    config = CostConfig()
+    assert config.equipment is not None
+    return {
+        "equipment": tuple(config.equipment),
+        "material": tuple(
+            dict.fromkeys(
+                m for eq in config.equipment.values() for m in eq.materials
+            )
+        ),
+    }
+
+
 #: Резолверы опций STRING-полей по id калькулятора.
 _OPTION_RESOLVERS: dict[str, Callable[[], dict[str, tuple[str, ...]]]] = {
     "digital": _digital_option_lists,
@@ -144,6 +163,7 @@ _OPTION_RESOLVERS: dict[str, Callable[[], dict[str, tuple[str, ...]]]] = {
     "sign": _sign_option_lists,
     "cnc": _cnc_option_lists,
     "design": _design_option_lists,
+    "cost": _cost_option_lists,
 }
 
 
