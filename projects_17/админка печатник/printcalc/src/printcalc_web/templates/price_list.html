@@ -20,9 +20,12 @@
   </div>
 
   <div class="panel">
-    <h2>Массовый импорт списком</h2>
-    <div class="muted" style="margin-bottom:8px">Одна строка = «Название - Цена». Например: Ламинация А4 - 15, Копия ч/б - 5, Фото на документы - 200.</div>
-    <textarea id="import-text" rows="4" placeholder="Ламинация А4 - 15&#10;Копия ч/б - 5&#10;Фото на документы - 200"></textarea>
+    <h2>Прайс в Excel: правка цен</h2>
+    <div class="muted" style="margin-bottom:8px">1) Скачайте шаблон → 2) поправьте цены в Excel → 3) скопируйте строки в поле ниже и нажмите «Импортировать». Цены существующих позиций обновятся, новые — добавятся. Строки «# …» и заголовок игнорируются.</div>
+    <div class="row" style="margin-bottom:8px">
+      <a class="btn" href="/api/price-list/template.csv"><svg class="ic"><use href="#i-download"/></svg> Скачать прайс-шаблон (CSV)</a>
+    </div>
+    <textarea id="import-text" rows="4" placeholder="Ксерокопия ч/б А4;20;шт;ксерокс | копия&#10;Фото 10×15;30;шт;фото | фотки"></textarea>
     <div class="row" style="margin-top:8px">
       <button id="btn-import">Импортировать</button>
       <span id="import-result" class="muted"></span>

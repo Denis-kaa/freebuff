@@ -30,7 +30,11 @@ def test_price_item_crud_and_similar(client: ASGITestClient) -> None:
     assert created["unverified"] is True
 
     similar = client.get("/api/price-list/similar", params={"q": "ламинация"}).json()
-    assert similar["items"][0]["id"] == created["id"]
+    # P0-сид даёт «Ламинация документа» с точным синонимом «ламинация» (ratio 1.0) —
+    # она первая; созданная позиция обязана присутствовать в подсказках.
+    similar_ids = [item["id"] for item in similar["items"]]
+    assert similar_ids[0] != created["id"]
+    assert created["id"] in similar_ids
 
     patched = client.patch(
         f"/api/price-list/{created['id']}", json={"unverified": False, "category": "пост-обработка"}
@@ -129,8 +133,13 @@ def test_order_flow_end_to_end(client: ASGITestClient) -> None:
 
 def test_parse_endpoint_dictionary_flow(client: ASGITestClient) -> None:
     """Р6 ступень 1: известные слова → позиции; неизвестные → unknown (без fallback)."""
-    client.post("/api/price-list", json={"name": "Печать документов", "price": 10.0})
-    client.post("/api/price-list/1/synonyms", json={"word": "распечатать"})
+    # Сид P0 занимает первые id — синоним вешаем на созданную позицию.
+    created = client.post(
+        "/api/price-list", json={"name": "Печать документов", "price": 10.0}
+    ).json()
+    client.post(
+        f"/api/price-list/{created['id']}/synonyms", json={"word": "распечатать"}
+    )
 
     parsed = client.post("/api/parse", json={"text": "распечатать 10, риза 500"}).json()
     assert len(parsed["items"]) == 1

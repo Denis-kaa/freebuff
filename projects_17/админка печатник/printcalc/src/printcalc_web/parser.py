@@ -29,6 +29,11 @@ _TITLE_STOPWORDS = {"калькулятор"}
 _NUMBER_RE = re.compile(r"^\d+([.,]\d+)?$")
 _TOKEN_SPLIT = re.compile(r"[,;]+")
 
+#: Наивные русские флексии (ступень 1, без морфоанализа): «ксерокса» →
+#: «ксерокс», «фотки» → «фотка». Применяются к токену, если сам токен
+#: и его начальная форма не в словаре. Не для калькуляторных слов.
+_FLEX_SUFFIXES = ("а", "ы", "у", "е", "и", "ой", "ов", "ам", "ами", "ах")
+
 
 def _tokenize(text: str) -> list[str]:
     """Строчные токены: по пробелам и знакам-разделителям перечисления."""
@@ -70,7 +75,11 @@ def _build_dictionary(conn: sqlite3.Connection) -> dict[str, dict[str, Any]]:
 def _match_at(
     tokens: list[str], start: int, dictionary: dict[str, dict[str, Any]]
 ) -> tuple[dict[str, Any], int] | None:
-    """Ищет самую длинную фразу-совпадение, начиная с токена start."""
+    """Ищет самую длинную фразу-совпадение, начиная с токена start.
+
+    Последний токен фразы пробуется также в «начальной форме» (отрезание
+    частотных флексий): «2 ксерокса» находит «ксерокс».
+    """
     for length in (3, 2, 1):
         if start + length > len(tokens):
             continue
@@ -78,6 +87,15 @@ def _match_at(
         entry = dictionary.get(phrase)
         if entry is not None:
             return entry, length
+        # Флексия только на ПОСЛЕДНЕМ слове фразы (как в речи: «2 ксерокса»).
+        last = tokens[start + length - 1]
+        for suffix in _FLEX_SUFFIXES:
+            if last.endswith(suffix) and len(last) > len(suffix) + 3:
+                stem = last[: -len(suffix)]
+                candidate = " ".join(tokens[start : start + length - 1] + [stem])
+                entry = dictionary.get(candidate)
+                if entry is not None:
+                    return entry, length
     return None
 
 
@@ -91,6 +109,7 @@ def parse(conn: sqlite3.Connection, text: str) -> dict[str, Any]:
     items: list[dict[str, Any]] = []
     unknown: list[str] = []
     index = 0
+    _consumed_number = False
     while index < len(tokens):
         match = _match_at(tokens, index, dictionary)
         if match is None:
@@ -104,6 +123,12 @@ def parse(conn: sqlite3.Connection, text: str) -> dict[str, Any]:
         if next_index < len(tokens) and _is_number(tokens[next_index]):
             qty = _to_number(tokens[next_index])
             next_index += 1
+        elif index > 0 and _is_number(tokens[index - 1]) and not _consumed_number:
+            # Число ПЕРЕД услугой («2 ксерокса», R-материал: порядок свободный).
+            # numbers чуть ранее могли быть «размером» (10×15) — берём только
+            # непосредственно примыкающее одиночное число.
+            qty = _to_number(tokens[index - 1])
+            _consumed_number = True
         if entry["type"] == "price":
             items.append(
                 {

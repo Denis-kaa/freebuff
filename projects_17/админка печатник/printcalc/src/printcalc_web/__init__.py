@@ -23,7 +23,13 @@ from starlette.responses import JSONResponse
 
 from printcalc_web import api, views
 from printcalc_web.db import connect
-from printcalc_web.store import StoreError, seed_materials, seed_operations, seed_sections
+from printcalc_web.store import (
+    StoreError,
+    seed_materials,
+    seed_operations,
+    seed_p0_services,
+    seed_sections,
+)
 
 __version__ = "0.1.0"
 
@@ -43,6 +49,7 @@ def create_app(db_path: Path | None = None) -> FastAPI:
             seed_sections(conn)
             seed_materials(conn)
             seed_operations(conn)
+            seed_p0_services(conn)
         finally:
             conn.close()
     except Exception:  # noqa: BLE001 — сев не критичен для старта

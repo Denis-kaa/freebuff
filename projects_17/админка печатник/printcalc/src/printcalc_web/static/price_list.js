@@ -109,14 +109,22 @@ $("#btn-item-save").addEventListener("click", async () => {
   }
 });
 
-$("#btn-import").addEventListener("click", async () => {
+$( "#btn-import").addEventListener("click", async () => {
   const text = $("#import-text").value;
   if (!text.trim()) return;
   try {
-    const result = await apiFetch("/price-list/import", { method: "POST", body: JSON.stringify({ text }) });
-    $("#import-result").textContent =
-      `Создано: ${result.created}` +
-      (result.skipped.length ? `; пропущено: ${result.skipped.length} (${result.skipped[0].line.slice(0, 30)}…)` : "");
+    // «;»-формат (шаблон из Excel) — обновляет цены; старый «-»-формат — только добавляет.
+    const isTemplate = text.includes(";");
+    const endpoint = isTemplate ? "/price-list/import-template" : "/price-list/import";
+    const result = await apiFetch(endpoint, { method: "POST", body: JSON.stringify({ text }) });
+    if (isTemplate) {
+      $("#import-result").textContent =
+        `Обновлено: ${result.updated}; создано: ${result.created}`;
+    } else {
+      $("#import-result").textContent =
+        `Создано: ${result.created}` +
+        (result.skipped.length ? `; пропущено: ${result.skipped.length} (${result.skipped[0].line.slice(0, 30)}…)` : "");
+    }
     $("#import-text").value = "";
     loadItems();
   } catch (error) {

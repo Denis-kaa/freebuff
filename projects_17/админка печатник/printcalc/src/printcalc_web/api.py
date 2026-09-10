@@ -253,6 +253,29 @@ def export_price_list_csv(conn: sqlite3.Connection = Depends(get_conn)) -> Respo
     )
 
 
+@router.get("/price-list/template.csv")
+def download_price_template(conn: sqlite3.Connection = Depends(get_conn)) -> Response:
+    """Прайс-шаблон с разделами (Excel-RU «;») для правки цен владельцем.
+
+    Round-trip: скачать → отредактировать в Excel → вставить в
+    «Импортировать» — цены обновятся, новые позиции добавятся.
+    """
+    content = "\ufeff" + store.price_template_csv(conn)
+    return Response(
+        content=content,
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="price-template.csv"'},
+    )
+
+
+@router.post("/price-list/import-template")
+def import_price_template_endpoint(
+    payload: ImportIn, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """Импорт отредактированного шаблона: обновить цены + добавить новое."""
+    return _store_guard(store.import_price_template, conn, payload.text)
+
+
 # ---------- калькуляторы ----------
 
 

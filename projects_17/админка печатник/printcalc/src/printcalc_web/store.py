@@ -1379,6 +1379,143 @@ CANONICAL_TABLICHKI_MATERIALS: tuple[dict[str, Any], ...] = (
 )
 
 
+# ---------- кассовые услуги P0 (RESEARCH_ADOPTION_PLAN §5-Б, блок B) ----------
+
+
+def seed_p0_services(conn: sqlite3.Connection) -> dict[str, int]:
+    """Идемпотентный сид кассовых услуг P0 из исследования (p0_services.py).
+
+    Ключ идемпотентности — точное имя. Существующие позиции НЕ изменяются:
+    цены — собственность владельца, сид только дополняет каталог.
+    Синонимы добавляются идемпотентно (add_synonym). unverified=0 — это
+    канонические значения исследования, но владелец может править цену.
+    """
+    from printcalc_web.p0_services import P0_SERVICES
+
+    created = 0
+    skipped = 0
+    for spec in P0_SERVICES:
+        row = conn.execute(
+            "SELECT id FROM price_list_items WHERE lower(name) = lower(?) AND archived = 0",
+            (spec["name"],),
+        ).fetchone()
+        if row is None:
+            item = add_price_item(
+                conn,
+                name=spec["name"],
+                price=spec["price"],
+                unit=spec["unit"],
+                category=spec["category"],
+            )
+            conn.execute(
+                "UPDATE price_list_items SET unverified = 0 WHERE id = ?", (item["id"],)
+            )
+            for word in spec["synonyms"]:
+                add_synonym(conn, item["id"], word)
+            created += 1
+        else:
+            # Синонимы досыпаем даже существующим (словарь растёт аддитивно).
+            item = _price_row_to_dict(
+                conn.execute(
+                    "SELECT * FROM price_list_items WHERE id = ?", (row["id"],)
+                ).fetchone()
+            )
+            known = {s.lower() for s in item["synonyms"]}
+            for word in spec["synonyms"]:
+                if word.lower() not in known and word.lower() != item["name"].lower():
+                    add_synonym(conn, item["id"], word)
+            skipped += 1
+    conn.commit()
+    return {"created": created, "skipped": skipped}
+
+
+def price_template_csv(conn: sqlite3.Connection) -> str:
+    """Прайс-шаблон с разделами (вертикальная иерархия) для round-trip.
+
+    Формат Excel-RU: разделитель «;», UTF-8 BOM (добавляет caller).
+    Строки разделов: «# РАЗДЕЛ» (пропускаются импортом, служат визуальной
+    иерархией в Excel). Строки позиций:
+    «Название;Цена;Ед;Синонимы (через |)» — импорт обновляет цену
+    существующей позиции по имени, добавляет новую, если имени нет.
+    """
+    items = export_price_items(conn)
+    by_category: dict[str, list[dict[str, Any]]] = {}
+    for item in items:
+        category = item["category"] or "9. БЕЗ РАЗДЕЛА"
+        by_category.setdefault(category, []).append(item)
+
+    lines: list[str] = [
+        "# Прайс-лист Печатникъ — правьте ЦЕНУ и добавляйте позиции;",
+        "# разделы (строки #) не редактировать; синонимы — через |;",
+        "# сохранить CSV (UTF-8) и загрузить через «Импортировать».",
+        "Название;Цена;Ед;Синонимы",
+    ]
+    for category in sorted(by_category):
+        lines.append(f"# {category}")
+        for item in by_category[category]:
+            price = f"{item['price']:.2f}".rstrip("0").rstrip(".")
+            lines.append(
+                f"{item['name']};{price};{item['unit'] or ''};"
+                + " | ".join(item["synonyms"])
+            )
+    return "\n".join(lines) + "\n"
+
+
+def _parse_template_line(line: str) -> tuple[str, float, str, list[str]] | None:
+    """«Название;Цена;Ед;Синонимы» → кортеж; None для разделов/мусора."""
+    if line.startswith("#") or line.lower().startswith("название;"):
+        return None
+    parts = [p.strip() for p in line.split(";")]
+    if len(parts) < 2 or not parts[0]:
+        return None
+    try:
+        price = float(parts[1].replace("₽", "").replace(",", "."))
+    except ValueError:
+        return None
+    if price < 0:
+        return None
+    synonyms = [s for s in (parts[3].split("|") if len(parts) > 3 else []) if s.strip()]
+    return parts[0], price, (parts[2] if len(parts) > 2 else ""), synonyms
+
+
+def import_price_template(conn: sqlite3.Connection, text: str) -> dict[str, Any]:
+    """Импорт прайс-шаблона round-trip: обновить цены, добавить новое.
+
+    Отличие от import_price_items (формат «Название - Цена»): здесь
+    «;»-формат с синонимами, существующие позиции находятся по имени
+    (case-insensitive) и получают новую ЦЕНУ (и единицу/синонимы, если
+    заданы), новые — создаются. Возвращает счётчики.
+    """
+    updated = 0
+    created = 0
+    skipped: list[dict[str, str]] = []
+    for line in text.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        parsed = _parse_template_line(line)
+        if parsed is None:
+            continue
+        name, price, unit, synonyms = parsed
+        row = conn.execute(
+            "SELECT id FROM price_list_items WHERE lower(name) = lower(?) AND archived = 0",
+            (name,),
+        ).fetchone()
+        if row is not None:
+            update_price_item(
+                conn, int(row["id"]), {"price": price, **({"unit": unit} if unit else {})}
+            )
+            item_id = int(row["id"])
+            updated += 1
+        else:
+            item = add_price_item(conn, name=name, price=price, unit=unit or None)
+            item_id = item["id"]
+            created += 1
+        for word in synonyms:
+            add_synonym(conn, item_id, word)
+    return {"created": created, "updated": updated, "skipped": skipped}
+
+
 def seed_materials(conn: sqlite3.Connection) -> dict[str, int]:
     """Идемпотентный сид канонических материалов (дух seed_sections).
 
