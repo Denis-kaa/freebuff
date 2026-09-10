@@ -445,6 +445,15 @@ def _consumption_for_calculator_item(
         return None
 
 
+
+def _segment_of(raw: Mapping[str, Any]) -> int | None:
+    """Сегмент мультизаказа (парсер v2) из черновика; вне [0..999] → None."""
+    value = raw.get("segment_id")
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    ivalue = int(value)
+    return ivalue if 0 <= ivalue <= 999 else None
+
 def _resolve_item(
     conn: sqlite3.Connection, raw: Mapping[str, Any], position: int
 ) -> dict[str, Any]:
@@ -469,6 +478,7 @@ def _resolve_item(
             "price_list_item_id": item["id"],
             "saved_to_catalog": 1,
             "position": position,
+            "segment_id": _segment_of(raw),
             "consumption": None,
         }
 
@@ -495,6 +505,7 @@ def _resolve_item(
             "price_list_item_id": None,
             "saved_to_catalog": 1,
             "position": position,
+            "segment_id": _segment_of(raw),
             "consumption": consumption,
         }
 
@@ -517,6 +528,7 @@ def _resolve_item(
                 "price_list_item_id": created["id"],
                 "saved_to_catalog": 1,
                 "position": position,
+                "segment_id": _segment_of(raw),
             }
         return {
             "kind": "manual",
@@ -528,6 +540,7 @@ def _resolve_item(
             "price_list_item_id": None,
             "saved_to_catalog": 0,
             "position": position,
+            "segment_id": _segment_of(raw),
             "consumption": None,
         }
 
@@ -570,8 +583,9 @@ def create_order(
     for item in resolved:
         conn.execute(
         "INSERT INTO order_items (order_id, kind, name, price, qty, calculator_id,"
-        " params_json, price_list_item_id, saved_to_catalog, position, consumption_json)"
-        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        " params_json, price_list_item_id, saved_to_catalog, position, consumption_json,"
+        " segment_id)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             order_id,
             item["kind"],
@@ -584,6 +598,8 @@ def create_order(
             item["saved_to_catalog"],
             item["position"],
             json.dumps(item["consumption"], ensure_ascii=False) if item.get("consumption") else None,
+            # Сегмент мультизаказа (парсер v2): int из черновика либо NULL.
+            int(item["segment_id"]) if item.get("segment_id") is not None else None,
         ),
         )
     increment_usage(conn, [i["price_list_item_id"] for i in resolved if i["price_list_item_id"]])
@@ -619,6 +635,9 @@ def _order_row_to_dict(
                 "params": json.loads(item["params_json"]) if item["params_json"] else None,
                 "price_list_item_id": item["price_list_item_id"],
                 "saved_to_catalog": bool(item["saved_to_catalog"]),
+                "segment_id": (
+                    item["segment_id"] if "segment_id" in item.keys() else None
+                ),
                 "consumption": (
                     json.loads(item["consumption_json"]) if item["consumption_json"] else None
                 ),

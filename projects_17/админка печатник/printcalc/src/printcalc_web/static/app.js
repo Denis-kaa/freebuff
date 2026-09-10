@@ -32,8 +32,13 @@ function renderDraft() {
   draft.forEach((item, index) => {
     const tr = document.createElement("tr");
     const badge = item.kind === "manual" ? ' <span class="badge unverified">не в прайсе</span>' : "";
+    // Мультизаказ (парсер v2): сегмент перечисления показываем меткой,
+    // чтобы оператор видел группы из одного сообщения.
+    const segBadge = typeof item.segment_id === "number"
+      ? ` <span class="badge segment" title="Группа из быстрого ввода (перечисление)">сегм. ${item.segment_id + 1}</span>`
+      : "";
     tr.innerHTML =
-      `<td>${escapeHtml(item.name)}${badge}</td>` +
+      `<td>${escapeHtml(item.name)}${badge}${segBadge}</td>` +
       `<td class="num">${money(item.price)}</td>` +
       `<td class="num"><input type="number" min="0.001" step="any" value="${item.qty}" data-qty="${index}" style="width:70px"></td>` +
       `<td class="num">${money(item.price * item.qty)}</td>` +
@@ -103,16 +108,26 @@ $("#quick-parse").addEventListener("click", async () => {
   $("#parse-unknown").classList.add("hidden");
   try {
     const data = await apiFetch("/parse", { method: "POST", body: JSON.stringify({ text }) });
+    const segments = new Set();
     data.items.forEach((parsed) => {
+      const segmentId = typeof parsed.segment_id === "number" ? parsed.segment_id : null;
+      if (segmentId !== null) segments.add(segmentId);
       if (parsed.type === "price") {
-        addItem({ kind: "price_list", name: parsed.name, price: parsed.price, qty: parsed.qty, price_list_item_id: parsed.price_list_item_id });
+        addItem({ kind: "price_list", name: parsed.name, price: parsed.price, qty: parsed.qty, price_list_item_id: parsed.price_list_item_id, segment_id: segmentId });
       } else {
-        addItem({ kind: "calculator", name: parsed.name, price: 0, qty: 1, calculator_id: parsed.calculator_id, needs_calc: true });
+        addItem({ kind: "calculator", name: parsed.name, price: 0, qty: 1, calculator_id: parsed.calculator_id, needs_calc: true, segment_id: segmentId });
       }
     });
+    const notes = [];
+    if (segments.size > 1) notes.push(`мультизаказ: ${segments.size} групп — позиции помечены сегментами`);
+    if (data.volume_hints && data.volume_hints.length) notes.push(data.volume_hints.join(", "));
+    if (data.needs_operator) notes.push("⚠ передать оператору: " + (data.reasons || []).join("; "));
     if (data.unknown.length) {
+      notes.push("Не распознано: " + data.unknown.join(", ") + " — добавьте вручную через «+» (позиция запомнится)");
+    }
+    if (notes.length) {
       const box = $("#parse-unknown");
-      box.textContent = "Не распознано: " + data.unknown.join(", ") + " — добавьте вручную через «+» (позиция запомнится)";
+      box.textContent = notes.join(" · ");
       box.classList.remove("hidden");
     }
     $("#quick-input").value = "";

@@ -82,7 +82,11 @@ class CalculateIn(BaseModel):
 
 
 class OrderItemIn(BaseModel):
-    """Позиция черновика заказа (Р5б)."""
+    """Позиция черновика заказа (Р5б).
+
+    segment_id — сегмент мультизаказа из парсера v2 («ксерокс 5 и фото 20»
+    → сегменты 0 и 1); опционален, при отсутствии сохраняется как NULL.
+    """
 
     kind: Literal["price_list", "calculator", "manual"]
     price_list_item_id: int | None = None
@@ -92,6 +96,7 @@ class OrderItemIn(BaseModel):
     name: str | None = None
     price: float | None = Field(default=None, ge=0)
     save_to_catalog: bool = True
+    segment_id: int | None = Field(default=None, ge=0, le=999)
 
 
 class OrderIn(BaseModel):

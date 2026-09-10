@@ -163,3 +163,49 @@ def test_off_catalog_report(conn: sqlite3.Connection) -> None:
     report = store.off_catalog_report(conn)
     assert len(report) == 1  # идея №10: только несохранённые
     assert report[0]["name"] == "Забыл сохранить"
+
+
+# ---------- мультизаказ (парсер v2, segment_id) ----------
+
+
+def test_order_items_keep_segment_id(conn: sqlite3.Connection) -> None:
+    """Сегменты перечисления сохраняются: «ксерокс 5 и фото 20» → 2 группы."""
+    a = store.add_price_item(conn, name="Ксерокопия ч/б А4", price=15.0)
+    b = store.add_price_item(conn, name="Фото 10×15", price=25.0)
+    order = store.create_order(
+        conn,
+        status="новый",
+        payment_method="наличные",
+        items=[
+            {"kind": "price_list", "price_list_item_id": a["id"], "qty": 5, "segment_id": 0},
+            {"kind": "price_list", "price_list_item_id": b["id"], "qty": 20, "segment_id": 1},
+        ],
+    )
+    segments = [item["segment_id"] for item in order["items"]]
+    assert segments == [0, 1]
+
+
+def test_order_items_without_segment_are_null(conn: sqlite3.Connection) -> None:
+    """Позиции из прайса/расчёта без сегмента — NULL (обратная совместимость)."""
+    item = store.add_price_item(conn, name="Скан", price=20.0)
+    order = store.create_order(
+        conn,
+        status="новый",
+        payment_method="наличные",
+        items=[{"kind": "price_list", "price_list_item_id": item["id"], "qty": 1}],
+    )
+    assert order["items"][0]["segment_id"] is None
+
+
+def test_segment_id_out_of_range_is_dropped(conn: sqlite3.Connection) -> None:
+    """Мусорный сегмент не сохраняется (guard в _segment_of)."""
+    item = store.add_price_item(conn, name="Копия", price=15.0)
+    order = store.create_order(
+        conn,
+        status="новый",
+        payment_method="наличные",
+        items=[
+            {"kind": "price_list", "price_list_item_id": item["id"], "qty": 1, "segment_id": 5000}
+        ],
+    )
+    assert order["items"][0]["segment_id"] is None

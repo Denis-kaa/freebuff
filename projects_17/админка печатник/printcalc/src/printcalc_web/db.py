@@ -278,6 +278,10 @@ def _migrate(conn: sqlite3.Connection) -> None:
         # Этап 3: snapshot расхода материала позиции (расчёт движком при
         # сохранении заказа; неизменяем после сохранения — §49 дух).
         conn.execute("ALTER TABLE order_items ADD COLUMN consumption_json TEXT")
+    if "segment_id" not in item_columns:
+        # Парсер v2 (мультизаказ): сегмент перечисления, из которого пришла
+        # позиция (0, 1, 2…). NULL — позиция добавлена вручную/из прайса.
+        conn.execute("ALTER TABLE order_items ADD COLUMN segment_id INTEGER")
 
     material_columns = {row[1] for row in conn.execute("PRAGMA table_info(materials)")}
     if "pack_size" not in material_columns:
