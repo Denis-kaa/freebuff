@@ -112,6 +112,7 @@ def test_parser_matches_p0_synonyms(conn: sqlite3.Connection) -> None:
             "name": "Ксерокопия ч/б А4",
             "price": 15.0,
             "qty": 2.0,
+            "segment_id": 0,
         }
     ]
 

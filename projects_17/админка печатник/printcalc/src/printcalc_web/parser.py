@@ -22,7 +22,21 @@ from printcalc_web.calculators import get_registry
 #: «ризограф/ризография» выведены из title «Калькулятор ризографии RISO RZ300EP».
 CALC_KEYWORDS: dict[str, tuple[str, ...]] = {
     "riso": ("ризограф", "ризография"),
-    "digital": ("цифра", "цифровая", "цифровую"),
+    "digital": (
+        "цифра",
+        "цифровая",
+        "цифровую",
+        # Изделия DigitalConfig (стемы после флексий): «визитки/визитка» →
+        # визитк; печатная продукция = цифровая печать (R-материал).
+        "визитк",
+        "листовк",
+        "буклет",
+        "открытк",
+        "календар",
+        "сертификат",
+        "приглашени",
+    ),
+    "sign": ("вывеск", "буква", "буквы", "контражур"),
 }
 
 _TITLE_STOPWORDS = {"калькулятор"}
@@ -33,6 +47,11 @@ _TOKEN_SPLIT = re.compile(r"[,;]+")
 #: «ксерокс», «фотки» → «фотка». Применяются к токену, если сам токен
 #: и его начальная форма не в словаре. Не для калькуляторных слов.
 _FLEX_SUFFIXES = ("а", "ы", "у", "е", "и", "ой", "ов", "ам", "ами", "ах")
+
+#: Служебные слова перечисления (правило 1 исследования,
+#: 05_combined_orders.md): разбивают привязку параметров к услугам.
+#: Запятая/точка с запятой уже разделители токенизации.
+_ENUM_WORDS = frozenset({"и", "плюс", "ещё", "еще", "также", "а", "да"})
 
 
 def _tokenize(text: str) -> list[str]:
@@ -99,6 +118,31 @@ def _match_at(
     return None
 
 
+def _volume_hints(items: list[dict[str, Any]]) -> list[str]:
+    """Тиражные подсказки (Блок C п.6, RESEARCH_ADOPTION_PLAN §5-C):
+    «от 101 шт — дешевле». Источник — канонические диапазоны прайса
+    Digital (DigitalConfig.price_ranges): если тираж ниже ближайшего
+    порога диапазона — подсказка. Плоские прайс-позиции подсказок не дают.
+    """
+    from printcalc.calculators.digital import DigitalConfig
+
+    cfg = DigitalConfig()
+    thresholds: set[int] = set()
+    for ranges in cfg.product_prices.values():
+        for r in ranges:
+            if r.start > 1:
+                thresholds.add(r.start)
+    hints: list[str] = []
+    for item in items:
+        if item["type"] != "calculator" or item.get("calculator_id") != "digital":
+            continue
+        qty = float(item.get("qty", 1.0))
+        bigger = sorted(t for t in thresholds if t > qty)
+        if bigger:
+            hints.append(f"от {bigger[0]} шт — дешевле")
+    return hints
+
+
 def _operator_signals(
     items: list[dict[str, Any]], unknown: list[str], text: str
 ) -> tuple[bool, list[str]]:
@@ -122,9 +166,18 @@ def _operator_signals(
 
 
 def parse(conn: sqlite3.Connection, text: str) -> dict[str, Any]:
-    """Разбирает свободный ввод на позиции заказа (ступень 1, Р6).
+    """Разбирает свободный ввод на позиции заказа (ступень 1, Р6; v2 — мультизаказ).
 
-    Returns: {"items": [{type, ...}], "unknown": [токены]}.
+    v2 (Блок C, RESEARCH_ADOPTION_PLAN §5-C + 05_combined_orders.md):
+    - токены-перечисления («и», «плюс», «ещё») РАЗБИВАЮТ привязку чисел:
+      после перечисления число относится к СЛЕДУЮЩЕЙ услуге (правило 2
+      исследования — привязка к ближайшему intent слева);
+    - каждая позиция знает свой индекс в тексте (segment_id — кластер между
+      перечислениями, правило 1);
+    - непонятые фрагменты НЕ съедаются: unknown + needs_operator (правило 5).
+
+    Returns: {"items", "unknown", "needs_operator", "reasons"} — набор полей
+    обратной совместимости сохранён, новые поля аддитивны.
     """
     tokens = _tokenize(text)
     dictionary = _build_dictionary(conn)
@@ -132,7 +185,14 @@ def parse(conn: sqlite3.Connection, text: str) -> dict[str, Any]:
     unknown: list[str] = []
     index = 0
     _consumed_number = False
+    segment = 0
     while index < len(tokens):
+        if tokens[index] in _ENUM_WORDS:
+            # Перечисление: следующий параметр принадлежит следующей услуге.
+            segment += 1
+            _consumed_number = False
+            index += 1
+            continue
         match = _match_at(tokens, index, dictionary)
         if match is None:
             if not _is_number(tokens[index]):
@@ -142,6 +202,13 @@ def parse(conn: sqlite3.Connection, text: str) -> dict[str, Any]:
         entry, length = match
         qty = 1.0
         next_index = index + length
+        # Продолжение той же услуги («цифровая печать» = одно intent, а не два):
+        # следующий токен, ссылающийся на ТУ ЖЕ запись словаря, поглощается.
+        while True:
+            follow = _match_at(tokens, next_index, dictionary)
+            if follow is None or follow[0] is not entry:
+                break
+            next_index += follow[1]
         if next_index < len(tokens) and _is_number(tokens[next_index]):
             qty = _to_number(tokens[next_index])
             next_index += 1
@@ -159,6 +226,7 @@ def parse(conn: sqlite3.Connection, text: str) -> dict[str, Any]:
                     "name": entry["name"],
                     "price": entry["price"],
                     "qty": qty,
+                    "segment_id": segment,
                 }
             )
         else:
@@ -168,8 +236,16 @@ def parse(conn: sqlite3.Connection, text: str) -> dict[str, Any]:
                     "calculator_id": entry["id"],
                     "name": entry["name"],
                     "qty": qty,
+                    "segment_id": segment,
                 }
             )
         index = next_index
     needs_operator, reasons = _operator_signals(items, unknown, text)
-    return {"items": items, "unknown": unknown, "needs_operator": needs_operator, "reasons": reasons}
+    return {
+        "items": items,
+        "unknown": unknown,
+        "unassigned_fragments": list(unknown),  # JSON-модель 05_combined_orders.md
+        "volume_hints": _volume_hints(items),
+        "needs_operator": needs_operator,
+        "reasons": reasons,
+    }

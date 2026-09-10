@@ -24,6 +24,9 @@ from printcalc.calculators.wide import register as register_wide
 from printcalc.engine.registry import CalculatorRegistry
 from printcalc.engine.result import CalcResult
 from printcalc.engine.spec import CalculatorSpec, FieldKind, FieldSpec
+from printcalc.calculators.sign import SignConfig
+from printcalc.calculators.sign import register as register_sign
+from printcalc.calculators.sign.config import COMPLEXITY_FACTORS, MOUNT_VARIANTS
 
 
 @lru_cache(maxsize=1)
@@ -34,6 +37,7 @@ def get_registry() -> CalculatorRegistry:
     register_riso(registry)
     register_tablichki(registry)
     register_wide(registry)
+    register_sign(registry)
     return registry
 
 
@@ -72,6 +76,23 @@ def _tablichki_option_lists() -> dict[str, tuple[str, ...]]:
 
 
 @lru_cache(maxsize=1)
+def _sign_option_lists() -> dict[str, tuple[str, ...]]:
+    """Допустимые наборы STRING-полей Вывесок из канонического конфига."""
+    config = SignConfig()
+    return {
+        "product": tuple(config.product_model),
+        "complexity": tuple(COMPLEXITY_FACTORS),
+        "front_material": ("Авто", *tuple(config.materials)),
+        "side_material": ("Авто", *tuple(config.materials)),
+        "back_material": ("Авто", *tuple(config.materials)),
+        "image_type": tuple(config.image_prices),
+        "mounting": MOUNT_VARIANTS,
+        "substrate_material": tuple(config.materials),
+        "frame_material": tuple(config.frame_prices),
+    }
+
+
+@lru_cache(maxsize=1)
 def _wide_option_lists() -> dict[str, tuple[str, ...]]:
     """Допустимые наборы STRING-полей широкоформата из канонического конфига."""
     config = WideConfig()
@@ -88,6 +109,7 @@ _OPTION_RESOLVERS: dict[str, Callable[[], dict[str, tuple[str, ...]]]] = {
     "riso": _riso_option_lists,
     "tablichki": _tablichki_option_lists,
     "wide": _wide_option_lists,
+    "sign": _sign_option_lists,
 }
 
 
