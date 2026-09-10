@@ -12,6 +12,8 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Any, Callable
 
+from printcalc.calculators.cnc import CncConfig
+from printcalc.calculators.cnc import register as register_cnc
 from printcalc.calculators.digital import DigitalConfig
 from printcalc.calculators.digital import register as register_digital
 from printcalc.calculators.riso import RisoConfig
@@ -38,6 +40,7 @@ def get_registry() -> CalculatorRegistry:
     register_tablichki(registry)
     register_wide(registry)
     register_sign(registry)
+    register_cnc(registry)
     return registry
 
 
@@ -103,6 +106,19 @@ def _wide_option_lists() -> dict[str, tuple[str, ...]]:
     }
 
 
+@lru_cache(maxsize=1)
+def _cnc_option_lists() -> dict[str, tuple[str, ...]]:
+    """Допустимые наборы полей ЧПУ из канонического конфига: материал +
+    толщины по станку (legacy fillMaterialSelect/fillThicknessSelect)."""
+    config = CncConfig()
+    return {
+        "material": config.material_names(),
+        "thickness": tuple(
+            str(t) for m in config.material_names() for t in config.thickness_options("laser", m)
+        ),
+    }
+
+
 #: Резолверы опций STRING-полей по id калькулятора.
 _OPTION_RESOLVERS: dict[str, Callable[[], dict[str, tuple[str, ...]]]] = {
     "digital": _digital_option_lists,
@@ -110,6 +126,7 @@ _OPTION_RESOLVERS: dict[str, Callable[[], dict[str, tuple[str, ...]]]] = {
     "tablichki": _tablichki_option_lists,
     "wide": _wide_option_lists,
     "sign": _sign_option_lists,
+    "cnc": _cnc_option_lists,
 }
 
 
