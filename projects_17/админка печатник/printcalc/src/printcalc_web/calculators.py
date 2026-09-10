@@ -91,6 +91,21 @@ _OPTION_RESOLVERS: dict[str, Callable[[], dict[str, tuple[str, ...]]]] = {
 }
 
 
+@lru_cache(maxsize=1)
+def _min_order_hints() -> dict[str, str]:
+    """Подсказки R5 (RESEARCH_ADOPTION_PLAN §5-Б.2): min_order КАК ЕСТЬ из
+    канонических конфигов — показываем оператору ДО расчёта. Только
+    ненулевые пороги; конфиг — единственный источник (ANTI-6b)."""
+    digital = DigitalConfig()
+    riso = RisoConfig()
+    hints: dict[str, str] = {}
+    if digital.min_order_price > 0:
+        hints["digital"] = f"Минимальная сумма заказа: {digital.min_order_price:.0f} ₽"
+    if riso.min_order > 0:
+        hints["riso"] = f"Минимальный тираж: {riso.min_order:.0f} шт"
+    return hints
+
+
 def _field_to_dict(field_spec: FieldSpec, spec_id: str) -> dict[str, Any]:
     options: list[str] = list(field_spec.options)
     if field_spec.kind is FieldKind.STRING and not options:
@@ -117,6 +132,7 @@ def spec_to_dict(spec: CalculatorSpec) -> dict[str, Any]:
         "title": spec.title,
         "version": spec.version,
         "fields": [_field_to_dict(field_spec, spec.id) for field_spec in spec.fields],
+        "hints": [_min_order_hints()[spec.id]] if spec.id in _min_order_hints() else [],
     }
 
 

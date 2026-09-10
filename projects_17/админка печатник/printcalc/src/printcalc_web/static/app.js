@@ -258,6 +258,12 @@ $("#btn-add-calc").addEventListener("click", async () => {
 function renderCalcForm() {
   const spec = calcSpecs.find((s) => s.id === $("#calc-select").value);
   $("#calc-form").innerHTML = spec ? spec.fields.map(fieldHtml).join("") : "";
+  // Подсказка R5: min_order из канонического конфига — до расчёта.
+  const hintBox = document.getElementById("calc-hint");
+  if (hintBox) {
+    hintBox.textContent = spec && spec.hints && spec.hints.length ? spec.hints.join(" · ") : "";
+    hintBox.classList.toggle("hidden", !hintBox.textContent);
+  }
   $("#calc-result").classList.add("hidden");
   $("#calc-error").textContent = "";
   $("#btn-calc-add").disabled = true;

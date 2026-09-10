@@ -99,6 +99,28 @@ def _match_at(
     return None
 
 
+def _operator_signals(
+    items: list[dict[str, Any]], unknown: list[str], text: str
+) -> tuple[bool, list[str]]:
+    """R10 (RESEARCH_ADOPTION_PLAN §5-Б.3): «передать оператору» + reasons.
+
+    Детерминированные сигналы того, что машине не хватает контекста и заявку
+    обязан принять человек (НЕ молча — §5-В.5):
+    - есть нераспознанные токены (unknown);
+    - текст указывает на файл/макет («прикрепил», «файл», «макет») — его
+      качество и формат нужно проверять (Order v2, Блок E);
+    - совместили несколько услуг в одном сообщении (мультизаказ, Блок C).
+    """
+    reasons: list[str] = []
+    if unknown:
+        reasons.append("не распознано: " + ", ".join(unknown))
+    if any(item["type"] == "calculator" for item in items) and len(items) > 1:
+        reasons.append("несколько позиций — параметры уточнит оператор")
+    if re.search(r"файл|макет|прикрепил|вложени|ссылк", text.lower()):
+        reasons.append("упомянут файл/макет — нужен приём файлов")
+    return bool(reasons), reasons
+
+
 def parse(conn: sqlite3.Connection, text: str) -> dict[str, Any]:
     """Разбирает свободный ввод на позиции заказа (ступень 1, Р6).
 
@@ -149,4 +171,5 @@ def parse(conn: sqlite3.Connection, text: str) -> dict[str, Any]:
                 }
             )
         index = next_index
-    return {"items": items, "unknown": unknown}
+    needs_operator, reasons = _operator_signals(items, unknown, text)
+    return {"items": items, "unknown": unknown, "needs_operator": needs_operator, "reasons": reasons}

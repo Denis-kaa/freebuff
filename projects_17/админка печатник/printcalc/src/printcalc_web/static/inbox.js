@@ -53,6 +53,10 @@ async function loadMessages() {
     const parsedHtml = recognized
       ? `${recognized}${unknown ? ` <span class="muted">не распознано: ${esc(unknown)}</span>` : ""}`
       : `<span class="muted">${unknown ? `не распознано: ${esc(unknown)}` : "—"}</span>`;
+    // R10: машина сигнализирует, что заявку должен принять человек.
+    const operator = parsed.needs_operator
+      ? `<div class="muted" title="${esc((parsed.reasons || []).join("; "))}">⚠ передать оператору: ${esc((parsed.reasons || []).join("; "))}</div>`
+      : "";
     const actions = [];
     if (m.status === "new") {
       actions.push(`<button class="btn" data-inquiry="${m.id}" type="button">В заявку</button>`);
@@ -65,7 +69,7 @@ async function loadMessages() {
       <td>${esc(m.channel)}</td>
       <td>${esc(m.sender_name || m.sender_handle || "—")}</td>
       <td>${esc(m.text).slice(0, 120)}</td>
-      <td>${parsedHtml}</td>
+      <td>${parsedHtml}${operator}</td>
       <td><span class="pill">${MESSAGE_STATUS[m.status] || esc(m.status)}</span></td>
       <td class="row-actions">${actions.join(" ")}</td>
     </tr>`;

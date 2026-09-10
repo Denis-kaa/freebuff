@@ -119,3 +119,34 @@ def test_parser_matches_p0_synonyms(conn: sqlite3.Connection) -> None:
     names = [item["name"] for item in parsed["items"]]
     assert "Фото на документы (4 шт)" in names
     assert "Ламинация документа" in names
+
+
+def test_parser_r10_needs_operator(conn: sqlite3.Connection) -> None:
+    """R10 (RESEARCH_ADOPTION_PLAN §5-Б.3): reasons — НЕ молча."""
+    store.seed_p0_services(conn)
+
+    # unknown-токены → нужно оператору
+    parsed = parser.parse(conn, "ксерокс и что-то непонятное штрих")
+    assert parsed["needs_operator"] is True
+    assert any("не распознано" in r for r in parsed["reasons"])
+
+    # чистый запрос → оператор не нужен
+    parsed = parser.parse(conn, "ксерокс 5")
+    assert parsed["needs_operator"] is False
+    assert parsed["reasons"] == []
+
+    # упомянут файл/макет → приём файлов пока ручной
+    parsed = parser.parse(conn, "ксерокс, макет прикрепил")
+    assert parsed["needs_operator"] is True
+    assert any("файл" in r for r in parsed["reasons"])
+
+
+def test_calculator_hints_r5() -> None:
+    """R5 (RESEARCH_ADOPTION_PLAN §5-Б.2): min_order из конфига в спеке."""
+    from printcalc_web.calculators import list_calculators
+
+    specs = {spec["id"]: spec for spec in list_calculators()}
+    assert specs["digital"]["hints"] == ["Минимальная сумма заказа: 500 ₽"]
+    assert specs["riso"]["hints"] == ["Минимальный тираж: 500 шт"]
+    # калькуляторы без порога — пусто, не выдумываем
+    assert specs["wide"]["hints"] == []
