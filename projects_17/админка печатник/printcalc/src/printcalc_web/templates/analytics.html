@@ -1,0 +1,53 @@
+{% set active = 'analytics' %}
+{% set page_title = 'Аналитика' %}
+{% set page_script %}<script src="/static/analytics.js"></script>{% endset %}
+{% include "_shell_top.html" %}
+
+  <div class="panel" id="summary-panel">
+    <div class="panel-head">
+      <h2>Маржинальность: прайс vs себестоимость</h2>
+      <button id="btn-refresh" class="btn">Обновить</button>
+    </div>
+    <div class="muted" style="margin-bottom:8px">
+      Себестоимость считает только движок (калькулятор «Себестоимость», канонический конфиг станков).
+      Riso — на партию 500 шт (мастер — на задачу). «Ниже наценки» — цена прайса меньше цены с наценкой 30%.
+    </div>
+    <div id="summary" class="row" style="gap:16px"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Услуги с маршрутом себестоимости</h2>
+    <div class="table-wrap">
+      <table id="services-table">
+        <thead>
+          <tr><th>Услуга</th><th class="num">Прайс</th><th class="num">Себест./ед.</th><th class="num">Цена с наценкой</th><th class="num">Маржа ₽</th><th class="num">Маржа %</th><th>Станок / материал</th><th></th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Материалы: закупка vs учётная стоимость</h2>
+    <div class="table-wrap">
+      <table id="materials-table">
+        <thead>
+          <tr><th>Материал</th><th class="num">Закупка ₽/ед.</th><th class="num">Конфиг ₽/ед.</th><th class="num">Δ</th><th>Станок / материал конфига</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Без маршрута (gaps — не молча)</h2>
+    <div class="muted" style="margin-bottom:8px">Услуги и материалы, для которых пока нет сопоставления с конфигом себестоимости.</div>
+    <div class="table-wrap">
+      <table id="gaps-table">
+        <thead><tr><th>Название</th><th class="num">Прайс</th><th>Причина</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+{% include "_shell_bottom.html" %}

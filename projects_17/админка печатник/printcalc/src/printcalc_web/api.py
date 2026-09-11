@@ -464,6 +464,14 @@ def read_order_sections(
 # ---------- отчёты ----------
 
 
+@router.get("/margin/report")
+def read_margin_report(conn: sqlite3.Connection = Depends(get_conn)) -> dict[str, Any]:
+    """Маржинальность прайса vs себестоимость (сшивка cost↔каталог, v6)."""
+    from printcalc_web import margin
+
+    return margin.margin_report(conn)
+
+
 @router.get("/report/off-catalog")
 def read_off_catalog_report(
     date_from: str | None = None,

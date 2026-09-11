@@ -85,6 +85,12 @@ def clients_page(request: Request):
     return _render(request, "clients.html", {"active": "clients"})
 
 
+@router.get("/analytics")
+def analytics_page(request: Request):
+    """Аналитика: маржинальность прайса vs себестоимость (сшивка cost)."""
+    return _render(request, "analytics.html", {"active": "analytics"})
+
+
 @router.get("/materials")
 def materials_page(request: Request):
     """Реестр материалов (Этап 1)."""
