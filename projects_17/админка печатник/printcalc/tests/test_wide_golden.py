@@ -207,6 +207,71 @@ def test_golden_piece_work_qty_equals_run() -> None:
     assert works["Проверка качества"] == pytest.approx(4.0)  # = тираж
 
 
+def test_golden_plotter_cut_configurable_m2_price() -> None:
+    """Ревью цены OP-22 (решение Дениса 2026-09-12, РОАДМАП_v7 §10).
+
+    Цена «Плоттерной резки» — НАСТРАИВАЕМЫЙ параметр: дефолт 0/0, цифры
+    вносит владелец инъекцией WideConfig (прайсом). Формула — unit="m2":
+    количество = тиражная площадь (ширина×высота×тираж, compute.py:63),
+    т.е. цена растёт с размером И тиражом (unit="шт" игнорировал бы размер
+    наклейки). Якорь владельца — «Резка по контуру» м² 100/500
+    (wide_format_config.json, GUI-редактор).
+
+    Наклейка 50×30 см × 149 шт: area = 0.5·0.3·149 = 22.35 м²
+    (width/height — в СМ, паритет legacy wide_format.py:665).
+    Плёнка самоклеящаяся 10<22.35 → 280/500; экстерьер 450/800.
+    Вклад работы: 100·22.35 = 2235 cost / 500·22.35 = 11175 sell.
+    """
+    from printcalc.calculators.wide.config import WorkPrice
+
+    inputs = {
+        "width": 50.0,
+        "height": 30.0,
+        "qty": 149.0,
+        "material": "Плёнка самоклеящаяся",
+        "print": "Экстерьерная печать",
+        "mount": "Без монтажа",
+        "work_plotter_cut": True,  # ASCII-слаг (WORK_SLUGS), не русское имя
+    }
+
+    # Дефолт: работа включена, вклад 0 (цена не задана владельцем).
+    base = compute(inputs)
+    works_default = {w["name"]: (w["qty"], w["qty"]) for w in base.details["works"]}
+    assert works_default["Плоттерная резка"][0] == pytest.approx(22.35)  # м² формулы
+
+    # Инъекция прайса владельца: 100/500 ₽/м².
+    config = WideConfig(
+        works=(
+            WorkPrice("Плоттерная резка", unit="m2", cost=100.0, sell=500.0),
+        ),
+    )
+    priced = compute(inputs, config)
+    assert priced.cost == pytest.approx(base.cost + 2235.0)
+    assert priced.price == pytest.approx(base.price + 11175.0)
+
+
+def test_golden_plotter_cut_default_zero_contribution() -> None:
+    """Дефолт 0/0 не меняет суммы заказа (настраиваемость без сюрпризов).
+
+    Один и тот же заказ с флагом work_plotter_cut и без него — одинаковые
+    суммы при каноническом конфиге; работа видна в детализации с qty=м².
+    """
+    inputs = {
+        "width": 50.0,  # см
+        "height": 30.0,  # см
+        "qty": 149.0,
+        "material": "Плёнка самоклеящаяся",
+        "print": "Экстерьерная печать",
+        "mount": "Без монтажа",
+    }
+    without_flag = compute(inputs)
+    with_flag = compute({**inputs, "work_plotter_cut": True})
+    assert with_flag.cost == pytest.approx(without_flag.cost)
+    assert with_flag.price == pytest.approx(without_flag.price)
+    works = {w["name"]: w["qty"] for w in with_flag.details["works"]}
+    assert works["Плоттерная резка"] == pytest.approx(22.35)
+
+
 # ---------- ошибки входа (паритет legacy-веток) ----------
 
 
