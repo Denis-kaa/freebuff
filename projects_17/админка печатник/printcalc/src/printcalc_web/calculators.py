@@ -10,7 +10,7 @@ per-calculator резолвер (Phase 3 заменит это динамиче�
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Any, Callable
+from typing import Any, Callable, Mapping
 
 from printcalc.calculators.cnc import CncConfig
 from printcalc.calculators.cnc import register as register_cnc
@@ -25,14 +25,33 @@ from printcalc.calculators.riso import register as register_riso
 from printcalc.calculators.riso.config import AREA_MULTIPLIERS
 from printcalc.calculators.tablichki import TablichkiConfig
 from printcalc.calculators.tablichki import register as register_tablichki
+from printcalc.calculators.wide import SPEC as WIDE_SPEC
 from printcalc.calculators.wide import WideConfig
-from printcalc.calculators.wide import register as register_wide
+from printcalc.calculators.wide.compute import compute as compute_wide
 from printcalc.engine.registry import CalculatorRegistry
 from printcalc.engine.result import CalcResult
 from printcalc.engine.spec import CalculatorSpec, FieldKind, FieldSpec
 from printcalc.calculators.sign import SignConfig
 from printcalc.calculators.sign import register as register_sign
 from printcalc.calculators.sign.config import COMPLEXITY_FACTORS, MOUNT_VARIANTS
+from printcalc_web import pricing
+
+
+def _register_wide_with_prices(registry: CalculatorRegistry) -> None:
+    """Регистрирует wide с ценами доп. работ из runtime-файла владельца (pricing.py).
+
+    Реестр запрещает повторную регистрацию id, а spec-валидация заказов идёт
+    по имени поля (work_<slug> из WORK_SLUGS) — переопределение cost/sell
+    по имени работы не ломает ни спеку, ни контракт параметров. Compute
+    оборачивается: каждый расчёт получает свежий WideConfig с переопределениями
+    (кэш по mtime внутри pricing — правка файла владельцем подхватывается
+    без рестарта сервиса).
+    """
+
+    def _compute_with_prices(inputs: Mapping[str, Any]) -> CalcResult:
+        return compute_wide(inputs, pricing.get_wide_config())
+
+    registry.register(WIDE_SPEC, _compute_with_prices)
 
 
 @lru_cache(maxsize=1)
@@ -42,7 +61,7 @@ def get_registry() -> CalculatorRegistry:
     register_digital(registry)
     register_riso(registry)
     register_tablichki(registry)
-    register_wide(registry)
+    _register_wide_with_prices(registry)
     register_sign(registry)
     register_cnc(registry)
     register_design(registry)
@@ -103,8 +122,10 @@ def _sign_option_lists() -> dict[str, tuple[str, ...]]:
 
 @lru_cache(maxsize=1)
 def _wide_option_lists() -> dict[str, tuple[str, ...]]:
-    """Допустимые наборы STRING-полей широкоформата из канонического конфига."""
-    config = WideConfig()
+    """Допустимые наборы STRING-полей широкоформата из runtime-конфига (pricing.py):
+    имена материалов/печати/крепежа не редактируются ценовым файлом (он меняет
+    только cost/sell работ), но читаем из одного источника для консистентности."""
+    config = pricing.get_wide_config()
     return {
         "material": tuple(config.material_names),
         "print": tuple(config.print_names),
