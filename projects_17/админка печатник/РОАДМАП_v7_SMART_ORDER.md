@@ -125,12 +125,19 @@
 - **2026-09-12 · ДЕПЛОЙ S1 (`e22cb7e`)** — push (7aab203..e22cb7e) → рестарт printcalc-web →
   живой смоук: сервис active, HTTP 200; под прод-venv 3 пака (sticker 5 правил / banner 4 /
   backlit 3), нормализатор на 4 эталонах интервью даёт канонические вердикты.
+- **2026-09-12 · S2 ГОТОВ — ДВИЖОК ВЕРДИКТОВ** — evaluate_order/evaluate_text (пак по
+  product_label, equality-when_facts, blocking только quantity/size_mm из фактов, require →
+  unblocking с source=rule_id). DoD: бэклит без количества → ready_for_calculator=False;
+  идемпотентность; auto=True запрещён контрактом. Долг S0 закрыт: OP-22 посеян с триггером
+  work_plotter_cut (+ работа wide 0/0 до ревью цены — §10). Полный конвейер проверен тестом:
+  create_order → generate_production_plan → задание OP-22.
 
 | Этап | Статус | Дата | Коммит | Отчёт |
 |---|---|---|---|---|
 | S0 | ✅ завершён и задеплоен | 2026-09-12 | 86eb680 | PHASE_RULES_R0_REPORT.md |
 | S1 | ✅ завершён и задеплоен | 2026-09-12 | e22cb7e | PHASE_RULES_R1_REPORT.md |
-| S2–S5 | 🔲 не начаты | — | — | — |
+| S2 | ✅ завершён (деплой — каденция §8) | 2026-09-12 | — | PHASE_RULES_R2_REPORT.md |
+| S3–S5 | 🔲 не начаты | — | — | — |
 | H1–H6 | 🔲 не начаты | — | — | — |
 
 ## 10. Параллельные решения Дениса (не блокируют, но влияют)

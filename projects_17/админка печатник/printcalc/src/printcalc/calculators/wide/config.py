@@ -107,6 +107,12 @@ _DEFAULT_WORKS: tuple[WorkPrice, ...] = (
     WorkPrice("Карман", unit="m", cost=250.0, sell=400.0),
     WorkPrice("Накатка на жёсткую основу", unit="m2", cost=500.0, sell=900.0),
     WorkPrice("Монтаж на баннерную сетку", unit="m2", cost=300.0, sell=600.0),
+    # S2 (решение Дениса 2026-09-12, РОАДМАП_v7 §10): «Плоттерная резка —
+    # без цены в v1»; цена проставляется на ревью S2/прайсом владельца.
+    # Запись нужна, чтобы флаг work_plotter_cut был валидным входом wide
+    # (validate по FieldSpec) и триггером задания OP-22. unit="шт" без
+    # is_grommet = тираж — тип ветки wide_format.py:708.
+    WorkPrice("Плоттерная резка", unit="шт", cost=0.0, sell=0.0),
 )
 
 

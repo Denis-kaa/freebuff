@@ -27,6 +27,9 @@ WORK_SLUGS: dict[str, str] = {
     "Карман": "pocket",
     "Накатка на жёсткую основу": "laminate_mount",
     "Монтаж на баннерную сетку": "banner_mesh",
+    # S2: «Плоттерная резка» (WORK_PRICES, цена 0/0 до ревью — РОАДМАП_v7 §10);
+    # флаг = триггер задания OP-22 (store.DEFAULT_OPERATIONS).
+    "Плоттерная резка": "plotter_cut",
 }
 
 _UNIT_TITLES = {"m2": "м²", "m": "пог.м", "шт": "шт"}

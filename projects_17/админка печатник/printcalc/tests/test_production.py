@@ -56,9 +56,9 @@ def _banner_order(conn, *, eyelets: bool = True, install: bool = True, laminate:
 
 
 def test_seed_operations_idempotent(conn) -> None:
-    # сид уже применён фикстурой; повторный — ничего не создаёт
+    # сид уже применён фикстурой; повторный — ничего не создаёт (S2: +OP-22 = 13)
     second = store.seed_operations(conn)
-    assert second["created"] == 0 and second["skipped"] == 12
+    assert second["created"] == 0 and second["skipped"] == 13
 
 
 # ---------- генерация по правилам (§3) ----------

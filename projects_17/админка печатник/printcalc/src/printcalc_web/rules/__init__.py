@@ -1,16 +1,27 @@
-"""Слой производственных правил Smart Order Intelligence (S0–S1, РОАДМАП_v7).
+"""Слой производственных правил Smart Order Intelligence (S0–S2, РОАДМАП_v7).
 
 Контракт (промт_печатник_6 §2): ParseResult → OrderDraft → RuleVerdict.
 S0 даёт финализированную схему и валидатор YAML-паков правил
 (`schema.py`) + встроенные паки v1 (`packs/*.yaml`). Нормализация (S1,
 `normalize.py`) переводит свободный текст в OrderDraft; движок вердиктов
-(S2) сядет на этот фундамент аддитивно.
+(S2, `engine.py`) превращает черновик + паки в RuleVerdict — детерминированно,
+без LLM, ничего не применяется без подтверждения сотрудника.
 """
 
 from __future__ import annotations
 
 from pathlib import Path
 
+from printcalc_web.rules.engine import (
+    BLOCKING_FIELDS,
+    MissingItem,
+    OPERATION_LABELS,
+    OperationProposal,
+    RuleVerdict,
+    Suggestion,
+    evaluate_order,
+    evaluate_text,
+)
 from printcalc_web.rules.normalize import (
     KNOWN_FINISHING_TOKENS,
     OrderDraft,
@@ -42,6 +53,7 @@ def load_builtin_packs() -> dict[str, RulePack]:
 
 
 __all__ = [
+    "BLOCKING_FIELDS",
     "KNOWN_FACT_KEYS",
     "KNOWN_FINISHINGS",
     "KNOWN_FINISHING_TOKENS",
@@ -49,12 +61,19 @@ __all__ = [
     "KNOWN_OPERATION_CODES",
     "KNOWN_PRODUCTS",
     "KNOWN_PRODUCT_LABELS",
+    "OPERATION_LABELS",
     "PACKS_DIR",
     "PRODUCT_LABEL_PATTERNS",
     "PackValidationError",
+    "MissingItem",
+    "OperationProposal",
     "OrderDraft",
     "RulePack",
+    "RuleVerdict",
     "SUGGESTION_KINDS",
+    "Suggestion",
+    "evaluate_order",
+    "evaluate_text",
     "load_builtin_packs",
     "load_pack",
     "load_packs",
