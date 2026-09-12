@@ -1,0 +1,58 @@
+# Пак правил продукта «бэклит» (речевой продукт; калькулятор wide).
+#
+# S1 РОАДМАП_v7 · решение Дениса 2026-09-12 (PHASE_RULES_R0_REPORT §6.3):
+# бэклит — ОТДЕЛЬНЫЙ пак (не правило в banner); материал «Бэклит»
+# аддитивно в CANONICAL_WIDE_MATERIALS (universal_calc: 260 ₽/м² cost,
+# Roland VP540/SJ645; TERMS_GLOSSARY S-01 «Материал с подсветкой на
+# просвет»).
+#
+# Эталон промт_6 §4.4: «Бэклит 80×60, 1440 dpi, резка по контуру» →
+# нормализатор S1: product=бэклит, size 800×600 мм, dpi=1440,
+# cutting=contour; количество НЕ указано → вопрос (blocking в S2).
+schema_version: 1
+pack: backlit
+product: wide                # печатается на том же wide-калькуляторе
+product_label: "бэклит"
+
+rules:
+  # §4.4: «резка по контуру» → вероятная технология = плоттерная резка
+  # (та же цепочка, что у наклейки: STICKER_CUT_CONTOUR_PLOTTER).
+  - rule_id: BACKLIT_CUT_CONTOUR_PLOTTER
+    when_facts:
+      cutting: "true"
+      cutting_mode: "contour"
+    propose_operation: OP-22          # «Плоттерная резка» (S0: TERMS_GLOSSARY + чеклисты)
+    require:
+      - quantity
+      - layout_with_cut_contour
+    suggest:
+      - kind: layout
+        label: "Макет: есть готовый макет с контуром резки?"
+        options: ["Да, макет готов", "Нужно подготовить макет", "Макета нет"]
+        reason: "бэклит + cut_contour → контур в макете (промт_6 §4.4; PRODUCTION_CHECKLISTS: контур отдельным слоем)"
+
+  # Подсветка на просвет (TERMS_GLOSSARY S-01) — печатается ярко/на просвет:
+  # печать — производственная необходимость, операция печати wide.
+  # when_facts пуст → правило уровня продукта «бэклит вообще» (§4.5).
+  - rule_id: BACKLIT_PRINT_LUMINOUS
+    when_facts: {}
+    propose_operation: OP-04          # «Напечатать (широкоформат)»
+    require:
+      - quantity
+      - size_mm
+    suggest:
+      - kind: material
+        label: "Материал: бэклит (печать на просвет, подсветка отдельно)"
+        options: ["Ок", "Другой материал"]
+        reason: "бэклит → материал с подсветкой на просвет (TERMS_GLOSSARY S-01; CANONICAL_WIDE_MATERIALS «Бэклит», universal_calc 260 ₽/м²)"
+
+  # Подсветка (LED-контур, блок питания) — оборудование, НЕ операция из
+  # каталога: предлагаем уточнение, не выдумываем операцию (анти-правило 7).
+  - rule_id: BACKLIT_ILLUMINATION_CLARIFY
+    when_facts: {}
+    propose_operation: null
+    suggest:
+      - kind: question
+        label: "Подсветка: нужна LED-подсветка в заказе или печать без подсветки?"
+        options: ["С подсветкой", "Только печать", "Уточнить позже"]
+        reason: "бэклит = «материал с подсветкой на просвет» (TERMS_GLOSSARY S-01); подсветка как работа в каталоге операций отсутствует — UNKNOWN → уточнение"

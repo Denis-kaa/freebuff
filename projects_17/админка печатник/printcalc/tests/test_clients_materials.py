@@ -356,12 +356,12 @@ def test_assign_then_create_keeps_binding(conn: sqlite3.Connection) -> None:
 
 def test_seed_materials_idempotent_and_content(conn: sqlite3.Connection) -> None:
     first = store.seed_materials(conn)
-    assert first["created"] == 10  # 4 wide + 6 tablichki
+    assert first["created"] == 11  # 5 wide (S1: + Бэклит) + 6 tablichki
     assert first["skipped"] == 0
 
     second = store.seed_materials(conn)
     assert second["created"] == 0
-    assert second["skipped"] == 10
+    assert second["skipped"] == 11
 
     # канонические ролики Wide получили ширину рулона
     banner = store.find_material_by_name(conn, "Баннер 440г")
@@ -392,6 +392,6 @@ def test_app_startup_seeds_materials(tmp_path: Path) -> None:
     conn = connect(db)
     try:
         materials = store.list_materials(conn)
-        assert len(materials) == 10
+        assert len(materials) == 11  # 10 + Бэклит (S1)
     finally:
         conn.close()

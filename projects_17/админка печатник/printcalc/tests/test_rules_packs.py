@@ -37,11 +37,11 @@ from printcalc_web.rules import (
 
 def test_builtin_packs_load_and_validate() -> None:
     packs = load_builtin_packs()
-    assert set(packs) == {"sticker", "banner"}, "S0: ровно два пака v1"
+    assert set(packs) == {"sticker", "banner", "backlit"}, "S0: sticker/banner + S1: backlit"
     for name, pack in packs.items():
         assert pack.pack == name
-        assert pack.product == "wide", "наклейка и баннер сидят на калькуляторе wide"
-        assert pack.product_label in {"наклейка", "баннер"}
+        assert pack.product == "wide", "наклейка, баннер и бэклит сидят на калькуляторе wide"
+        assert pack.product_label in {"наклейка", "баннер", "бэклит"}
         assert pack.rules, f"пак {name} не пуст"
         for rule in pack.rules:
             # Правило 6: предлагает операцию ИЛИ хотя бы одну подсказку.
@@ -273,7 +273,7 @@ def test_load_pack_without_yaml_is_loud(tmp_path: Path, monkeypatch: pytest.Monk
 
 def test_packs_dir_contains_yaml_sources() -> None:
     files = sorted(p.name for p in PACKS_DIR.glob("*.yaml"))
-    assert files == ["banner.yaml", "sticker.yaml"]
+    assert files == ["backlit.yaml", "banner.yaml", "sticker.yaml"]
 
 
 def test_store_import_unaffected_by_rules_package() -> None:
