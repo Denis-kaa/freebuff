@@ -1,0 +1,72 @@
+# Пак правил продукта «баннер» (речевой продукт; калькулятор wide).
+#
+# S0 РОАДМАП_v7 · источники: промт_печатник_6 §4.3/§4.5 (интервью),
+# UPSELL_RULES.md R-01/R-03/R-04/R-06/R-12, QUESTION_FLOW.md S-01
+# (#7 люверсы bool, #8 шаг 50 см default, #11 монтаж), wide/config.py
+# (интервал люверсов по умолчанию «50», MOUNT_PRICES).
+#
+# ГЛАВНОЕ (промт_6 §1): люверсы из текста — ФАКТ (подтверждаем),
+# монтаж — БИЗНЕС-ПРАВИЛО (только предложить, никогда не добавлять).
+schema_version: 1
+pack: banner
+product: wide                # тот же калькулятор wide, что и стикеры (product_label различает)
+product_label: "баннер"
+
+rules:
+  # Промт_6 §4.3: «Баннер 3×6 + люверсы 30 см». Люверсы — факт текста:
+  # предлагаем операцию и подтверждаем шаг (30 из текста vs 50 default).
+  - rule_id: BANNER_GROMMETS_STEP_CONFIRM
+    when_facts:
+      grommets: "true"
+    propose_operation: OP-13          # «Установить люверсы» (сид, trigger work_eyelets)
+    require:
+      - quantity
+    suggest:
+      - kind: question
+        label: "Шаг люверсов: 30 см?"
+        options: ["Да, 30 см", "Другой шаг"]
+        reason: "факт текста подтверждаем; default каталога 50 см (QUESTION_FLOW S-01 #8; 30 vs 50 — открытый вопрос Денису, РОАДМАП_v7 §10)"
+
+  # ПРАВИЛО-ИСКЛЮЧЕНИЕ по промт_6 §1: монтаж баннеру ПРЕДЛАГАЕТСЯ
+  # (продажная подсказка), но НЕ добавляется автоматически.
+  # when_facts пуст → правило уровня продукта «баннер вообще» (§4.5).
+  - rule_id: BANNER_MONTAGE_OFFER
+    when_facts: {}
+    propose_operation: null
+    suggest:
+      - kind: upsell
+        label: "Монтаж: нужен монтаж?"
+        options: ["Да", "Нет", "Уточнить позже"]
+        reason: "баннер → вероятно уличный/крупный формат; монтаж как доп-услуга (UPSELL_RULES R-06; QUESTION_FLOW S-01 #11); ТОЛЬКО предложение — промт_6 §1"
+
+  # Контекст улицы: экстерьерная печать и усиленный материал (R-03/R-04).
+  - rule_id: BANNER_OUTDOOR_EXTERIOR_MATERIAL
+    when_facts:
+      usage: "улица"
+    propose_operation: null
+    require:
+      - size_mm
+      - quantity
+    suggest:
+      - kind: upsell
+        label: "Улица: экстерьерная печать (+УФ-стойкость)"
+        options: ["Предложить клиенту", "Не нужно"]
+        reason: "использование = улица → экстерьерная печать вместо интерьерной (UPSELL_RULES R-03)"
+      - kind: material
+        label: "Площадь ≥ 9 м²: баннер 510г вместо 440г (разрыв на ветру)"
+        options: ["Предложить клиенту", "Оставить 440г"]
+        reason: "площадь ≥ 9 м² у баннера → 510г (UPSELL_RULES R-04; оба материала в wide PRICE_MATERIALS)"
+
+  # Макета нет → дизайн (уровень по площади). Пустые when_facts:
+  # вопрос уместен любому баннеру, дорабатывается нормализатором S1,
+  # когда появится факт layout (R-05 в полной форме).
+  - rule_id: BANNER_LAYOUT_MISSING_DESIGN
+    when_facts: {}
+    propose_operation: null
+    require:
+      - layout
+    suggest:
+      - kind: layout
+        label: "Макет: есть готовый макет баннера?"
+        options: ["Да", "Нет — нужен дизайн", "Уточнить позже"]
+        reason: "макета нет → дизайн по площади: до3/до9/от9 м² (UPSELL_RULES R-05; QUESTION_FLOW S-01 #14-15)"
