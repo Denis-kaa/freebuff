@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 
 from printcalc.engine.errors import CalcInputError, RegistryError
 from printcalc.engine.registry import calculate as engine_calculate
-from printcalc_web import emailer, export, outbox, parser, store
+from printcalc_web import emailer, export, outbox, parser, rules, store
 from printcalc_web.calculators import get_registry, list_calculators, result_to_dict
 from printcalc_web.db import connect
 
@@ -147,6 +147,19 @@ class ParseIn(BaseModel):
     """Быстрый ввод свободным текстом (Р6, ступень 1)."""
 
     text: str = Field(min_length=1)
+
+
+class AnalyzeIn(BaseModel):
+    """Разбор заказа правилами (S3, РОАДМАП_v7 §4; ручной ввод — тот же endpoint).
+
+    text — текст от сотрудника/клиента; parse_result — ОПЦИОНАЛЬНЫЙ выход
+    parser v2 (POST /api/parse): только источник qty/unknown (R1-контракт,
+    normalize_order). Клиент не может напрямую указать продукт/факты —
+    нормализация детерминирована на сервере.
+    """
+
+    text: str = Field(min_length=1)
+    parse_result: dict[str, Any] | None = None
 
 
 class PaymentMethodsIn(BaseModel):
@@ -349,6 +362,30 @@ def parse_text(
 ) -> dict[str, Any]:
     """Быстрый ввод (Р6 ступень 1): словарь, без silent fallback."""
     return parser.parse(conn, payload.text)
+
+
+@router.post("/order/analyze")
+def analyze_order_text(
+    payload: AnalyzeIn, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """Умный разбор заказа (S3, РОАДМАП_v7 §4): текст → RuleVerdict JSON.
+
+    Ручной ввод идёт через ТОТ ЖЕ endpoint (ТЗ §4): без parse_result
+    нормализатор читает текст напрямую. Паки правил — встроенные S0/S1
+    (sticker/banner/backlit); вердикт детерминирован, авто-применения нет
+    (auto=False константа движка), подтверждение — действие сотрудника на S4.
+    БД только читается (словарь парсера) — разбор чистый, заказ создаётся отдельно.
+    """
+    packs = rules.load_builtin_packs()
+    parse_result = payload.parse_result
+    if parse_result is None:
+        # Не требуем от клиента предварительного вызова /api/parse: если
+        # parse_result не передан, пробуем парсер v2 сами — qty/unknown из
+        # него попадут в черновик по контракту R1 (неиспользуемые поля
+        # ParseResult нормализатор игнорирует).
+        parse_result = parser.parse(conn, payload.text)
+    verdict = rules.evaluate_text(payload.text, packs, parse_result=parse_result)
+    return verdict.to_json()
 
 
 # ---------- заказы ----------
