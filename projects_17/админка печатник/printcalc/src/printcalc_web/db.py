@@ -265,6 +265,21 @@ CREATE INDEX IF NOT EXISTS idx_inbox_status ON inbox_messages(status);
 CREATE INDEX IF NOT EXISTS idx_inquiries_status ON inquiries(status);
 CREATE INDEX IF NOT EXISTS idx_outbox_inquiry ON outbox_messages(inquiry_id);
 
+CREATE TABLE IF NOT EXISTS suggestion_decisions (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    inquiry_id  INTEGER REFERENCES inquiries(id),
+    decision    TEXT NOT NULL CHECK (decision IN ('accepted','changed','rejected','deferred')),
+    kind        TEXT NOT NULL DEFAULT '' CHECK (kind IN ('operation','question','')),
+    token       TEXT NOT NULL DEFAULT '',
+    field       TEXT NOT NULL DEFAULT '',
+    source_text TEXT NOT NULL DEFAULT '',
+    payload     TEXT NOT NULL DEFAULT '{}',
+    operator    TEXT NOT NULL DEFAULT '',
+    created_at  TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_suggdec_inquiry ON suggestion_decisions(inquiry_id);
+
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
 CREATE INDEX IF NOT EXISTS idx_price_items_name ON price_list_items(name);

@@ -388,6 +388,61 @@ def analyze_order_text(
     return verdict.to_json()
 
 
+class SuggestionDecisionIn(BaseModel):
+    """Подтверждение подсказки сотрудником (S4, РОАДМАП_v7 §5).
+
+    decision — закрытый набор: accepted (✓) / changed (Изменить) /
+    rejected (Нет) / deferred (Уточнить позже). Ничего не применяется
+    само: endpoint только ЛОГИРУЕТ действие сотрудника (кто/когда/что).
+    """
+
+    decision: Literal["accepted", "changed", "rejected", "deferred"]
+    kind: Literal["operation", "question", ""] = ""
+    token: str = ""
+    field: str = ""
+    source_text: str = ""
+    payload: dict[str, Any] = Field(default_factory=dict)
+    inquiry_id: int | None = None
+    operator: str = ""
+
+
+@router.post("/suggestions/decision", status_code=201)
+def record_suggestion_decision(
+    payload: SuggestionDecisionIn, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """Аудит решений по подсказкам (§5: подтверждения логируются).
+
+    Сервер НЕ применяет подсказку автоматически: ответственный за заказ
+    добавляет позицию/факт сам в UI, endpoint фиксирует факт решения.
+    Валидация payload не нужна (свободный JSON-слепок вердикта для аудита).
+    """
+    return _store_guard(
+        store.record_suggestion_decision,
+        conn,
+        decision=payload.decision,
+        inquiry_id=payload.inquiry_id,
+        kind=payload.kind,
+        token=payload.token,
+        field=payload.field,
+        source_text=payload.source_text,
+        payload=payload.payload,
+        operator=payload.operator,
+    )
+
+
+@router.get("/suggestions/decisions")
+def list_suggestion_decisions(
+    inquiry_id: int | None = None,
+    limit: int = Query(200, ge=1, le=1000),
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Журнал решений по подсказкам (новые сверху)."""
+    decisions = _store_guard(
+        store.list_suggestion_decisions, conn, inquiry_id=inquiry_id, limit=limit
+    )
+    return {"decisions": decisions}
+
+
 # ---------- заказы ----------
 
 

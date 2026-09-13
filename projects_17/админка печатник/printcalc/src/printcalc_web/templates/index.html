@@ -1,6 +1,6 @@
 {% set active = 'home' %}
 {% set page_title = 'Приём заказа' %}
-{% set page_script %}<script src="/static/app.js"></script>{% endset %}
+{% set page_script %}<script src="/static/suggestions.js"></script><script src="/static/app.js"></script>{% endset %}
 {% include "_shell_top.html" %}
 
   <div class="panel">
@@ -13,6 +13,11 @@
       <button id="quick-parse" class="primary">Разобрать</button>
     </div>
     <div id="parse-unknown" class="warnbox hidden"></div>
+    <!-- S4: поверхность подсказок Smart Order (РОАДМАП_v7 §5).
+         Блоки «Распознано» → «Предложения» (✓/Изменить) → «Нужно уточнить»
+         (Да/Нет/Уточнить позже). Ничего не применяется без действия
+         сотрудника; каждое решение логируется (кто/когда/что). -->
+    <div id="suggest-box" class="suggest-box hidden"></div>
   </div>
 
   <div class="cols">

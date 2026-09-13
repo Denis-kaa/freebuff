@@ -3007,3 +3007,89 @@ def list_replies(
     query += " ORDER BY created_at DESC, id DESC LIMIT ?"
     params.append(limit)
     return [_outbox_row_to_dict(row) for row in conn.execute(query, params).fetchall()]
+
+
+# ---------- решения по подсказкам Smart Order (S4, РОАДМАП_v7 §5) ----------
+
+_SUGGESTION_DECISIONS: tuple[str, ...] = ("accepted", "changed", "rejected", "deferred")
+
+
+def record_suggestion_decision(
+    conn: sqlite3.Connection,
+    *,
+    decision: str,
+    inquiry_id: int | None = None,
+    kind: str = "",
+    token: str = "",
+    field: str = "",
+    source_text: str = "",
+    payload: dict[str, Any] | None = None,
+    operator: str = "",
+) -> dict[str, Any]:
+    """Аудит подтверждений подсказок (§5: кто/когда подтвердил).
+
+    decision — закрытый набор: accepted (✓), changed (Изменить),
+    rejected (Нет), deferred (Уточнить позже). kind: operation | question.
+    """
+    if decision not in _SUGGESTION_DECISIONS:
+        raise StoreError(
+            f"неизвестное решение {decision!r}; допустимо: {', '.join(_SUGGESTION_DECISIONS)}"
+        )
+    if kind not in ("", "operation", "question"):
+        raise StoreError(f"неизвестный тип подсказки {kind!r}")
+    now = utc_now()
+    cursor = conn.execute(
+        "INSERT INTO suggestion_decisions"
+        " (inquiry_id, decision, kind, token, field, source_text, payload, operator, created_at)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            inquiry_id,
+            decision,
+            kind,
+            token.strip(),
+            field.strip(),
+            source_text.strip(),
+            json.dumps(payload or {}, ensure_ascii=False, sort_keys=True),
+            operator.strip(),
+            now,
+        ),
+    )
+    conn.commit()
+    row = conn.execute(
+        "SELECT * FROM suggestion_decisions WHERE id = ?", (cursor.lastrowid,)
+    ).fetchone()
+    return _suggestion_decision_row_to_dict(row)
+
+
+def _suggestion_decision_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
+    raw = json.loads(row["payload"] or "{}")
+    assert isinstance(raw, dict)
+    return {
+        "id": row["id"],
+        "inquiry_id": row["inquiry_id"],
+        "decision": row["decision"],
+        "kind": row["kind"],
+        "token": row["token"],
+        "field": row["field"],
+        "source_text": row["source_text"],
+        "payload": raw,
+        "operator": row["operator"],
+        "created_at": row["created_at"],
+    }
+
+
+def list_suggestion_decisions(
+    conn: sqlite3.Connection, *, inquiry_id: int | None = None, limit: int = 200
+) -> list[dict[str, Any]]:
+    """Журнал решений, новые сверху; фильтр по заявке."""
+    query = "SELECT * FROM suggestion_decisions"
+    params: list[Any] = []
+    if inquiry_id is not None:
+        query += " WHERE inquiry_id = ?"
+        params.append(inquiry_id)
+    query += " ORDER BY created_at DESC, id DESC LIMIT ?"
+    params.append(limit)
+    return [
+        _suggestion_decision_row_to_dict(row)
+        for row in conn.execute(query, params).fetchall()
+    ]

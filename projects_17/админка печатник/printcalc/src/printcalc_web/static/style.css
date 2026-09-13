@@ -451,6 +451,47 @@ td.num, .money { font-family: var(--font-mono); font-variant-numeric: tabular-nu
   color: var(--st-yellow);
   font-size: 13px;
 }
+
+/* S4: поверхность подсказок Smart Order (Распознано → Предложения →
+   Нужно уточнить); mobile-first — колонка на узких экранах. */
+.suggest-box {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid rgba(121, 210, 156, 0.3);
+  background: rgba(121, 210, 156, 0.05);
+  border-radius: 8px;
+  font-size: 13px;
+  display: grid;
+  gap: 8px;
+}
+.suggest-box .sug-head {
+  font-weight: 600;
+  color: var(--text-dim, #999);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 11px;
+}
+.sug-recognized { color: var(--text, #ddd); }
+.sug-unknown { color: var(--st-yellow, #facc15); }
+.sug-section { border-top: 1px dashed rgba(128, 128, 128, 0.25); padding-top: 8px; display: grid; gap: 6px; }
+.sug-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  justify-content: space-between;
+}
+.sug-row .sug-label { flex: 1 1 220px; min-width: 0; }
+.sug-row .sug-reason { font-size: 12px; }
+.sug-row.sug-blocker { color: var(--st-red, #ff7a7a); }
+.sug-answer { color: var(--st-green, #79d29c); }
+.sug-ready { color: var(--st-green, #79d29c); text-transform: none; letter-spacing: 0; font-size: 12px; }
+.sug-notready { color: var(--amber, #fbbf24); text-transform: none; letter-spacing: 0; font-size: 12px; }
+.sug-footer { font-size: 12px; }
+@media (max-width: 640px) {
+  .sug-row { flex-direction: column; align-items: stretch; }
+  .sug-row .row-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+}
 .similar-hint {
   margin-top: 10px;
   padding: 10px 14px;

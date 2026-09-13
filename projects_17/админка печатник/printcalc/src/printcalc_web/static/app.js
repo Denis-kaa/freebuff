@@ -130,6 +130,15 @@ $("#quick-parse").addEventListener("click", async () => {
       box.textContent = notes.join(" · ");
       box.classList.remove("hidden");
     }
+    // S4: поверхность подсказок Smart Order — вердикт правил (аддитивно,
+    // ошибка анализа не ломает обычный разбор).
+    try {
+      const verdict = await apiFetch("/order/analyze", { method: "POST", body: JSON.stringify({ text, parse_result: data }) });
+      if (window.showSuggestions) window.showSuggestions(verdict, text);
+    } catch (analyzeError) {
+      if (window.showSuggestions) window.showSuggestions(null);
+      console.warn("анализ недоступен:", analyzeError.message);
+    }
     $("#quick-input").value = "";
   } catch (error) {
     alert("Ошибка разбора: " + error.message);
