@@ -78,5 +78,17 @@
     <button id="inq-save" class="btn" type="button">Сохранить</button>
     <button id="inq-to-estimate" class="btn btn-primary" type="button">Создать смету</button>
   </div>
+
+  <div class="reply-block" style="margin-top:16px; border-top:1px solid var(--st-border, #333); padding-top:12px;">
+    <h4 style="margin:0 0 8px;">Ответить клиенту</h4>
+    <p id="inq-reply-target" class="muted" style="margin:0 0 8px; font-size:13px;"></p>
+    <textarea id="inq-reply-body" class="field-input" rows="4"
+              placeholder="Свободный текст ответа (или отправьте смету — текст соберётся автоматически)"></textarea>
+    <div class="modal-actions" style="margin-top:8px;">
+      <button id="inq-reply-custom" class="btn" type="button">Отправить текст</button>
+      <button id="inq-reply-estimate" class="btn btn-primary" type="button">Отправить смету</button>
+    </div>
+    <p id="inq-reply-status" class="muted" style="margin:6px 0 0; font-size:13px;"></p>
+  </div>
   <p id="inquiry-error" class="error muted"></p>
 </dialog>

@@ -244,8 +244,26 @@ CREATE TABLE IF NOT EXISTS inquiries (
     updated_at   TEXT NOT NULL
 );
 
+-- Этап 6b: исходящие ответы (§44/§45). Ответ — факт отправки: текст письма
+-- детерминированный (из сметы, без AI §37), статус closed-vocabulary.
+-- message_id/inquiry_id nullable — «ручная запись» (звонок) без привязки.
+CREATE TABLE IF NOT EXISTS outbox_messages (
+    id           INTEGER PRIMARY KEY AUTOINCREMENT,
+    message_id   INTEGER REFERENCES inbox_messages(id),
+    inquiry_id   INTEGER REFERENCES inquiries(id),
+    channel      TEXT NOT NULL,
+    recipient    TEXT NOT NULL DEFAULT '',
+    subject      TEXT NOT NULL DEFAULT '',
+    body         TEXT NOT NULL DEFAULT '',
+    status       TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft','sent','failed')),
+    error        TEXT NOT NULL DEFAULT '',
+    sent_at      TEXT,
+    created_at   TEXT NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_inbox_status ON inbox_messages(status);
 CREATE INDEX IF NOT EXISTS idx_inquiries_status ON inquiries(status);
+CREATE INDEX IF NOT EXISTS idx_outbox_inquiry ON outbox_messages(inquiry_id);
 
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);

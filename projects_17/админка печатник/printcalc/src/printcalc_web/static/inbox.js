@@ -122,7 +122,72 @@ function openInquiryDialog(inquiry) {
   $("#inq-client").value = inquiry.client_id || "";
   $("#inq-summary").value = inquiry.summary || "";
   $("#inquiry-error").textContent = "";
+  $("#inq-reply-body").value = "";
+  $("#inq-reply-status").textContent = "";
+  updateReplyTarget();
+  loadReplies(inquiry.id);
   $("#inquiry-dialog").showModal();
+}
+
+/* --- Ответы клиенту (Этап 6b) --- */
+
+async function updateReplyTarget() {
+  // Адресат считаетается сервером (store._reply_recipient); UI показывает
+  // только статус канала — чтобы оператор знал, куда уйдёт ответ.
+  if (!currentInquiry) return;
+  const target = $("#inq-reply-target");
+  if (!currentInquiry.estimate_id) {
+    target.textContent = "Смета ещё не создана — кнопка «Отправить смету» недоступна.";
+    $("#inq-reply-estimate").disabled = true;
+    return;
+  }
+  $("#inq-reply-estimate").disabled = false;
+  const client = clients.find((c) => c.id === currentInquiry.client_id);
+  target.textContent = client
+    ? `Клиент: ${client.name}. Канал выберется автоматически (email, затем telegram).`
+    : "Клиент не привязан — ответ уйдёт в telegram-чат входящего сообщения (если он есть).";
+}
+
+async function loadReplies(inquiryId) {
+  try {
+    const data = await apiFetch(`/replies?inquiry_id=${inquiryId}`);
+    const replies = data.replies || [];
+    if (!replies.length) return;
+    const last = replies[0];
+    const when = last.sent_at || last.created_at || "";
+    $("#inq-reply-status").textContent =
+      `Последний ответ: ${last.status === "sent" ? "отправлен" : last.status === "failed" ? "ошибка" : "черновик"}` +
+      `${last.channel ? ` (${last.channel})` : ""}${when ? ` ${when.replace("T", " ").slice(0, 16)}` : ""}` +
+      `${last.error ? ` — ${last.error}` : ""}`;
+  } catch (_) {
+    /* журнал ответов не критичен для работы диалога */
+  }
+}
+
+async function sendReply(kind) {
+  if (!currentInquiry) return;
+  const statusEl = $("#inq-reply-status");
+  try {
+    statusEl.textContent = "Отправка…";
+    const payload = { kind };
+    if (kind === "estimate") {
+      payload.estimate_id = currentInquiry.estimate_id;
+    } else {
+      payload.body = $("#inq-reply-body").value;
+    }
+    const reply = await apiFetch(`/inquiries/${currentInquiry.id}/reply`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    if (reply.status === "sent") {
+      statusEl.textContent = `Отправлено (${reply.channel}: ${reply.recipient})`;
+    } else {
+      statusEl.textContent = `Не отправлено: ${reply.error || "причина неизвестна"}`;
+    }
+    if (kind === "custom") $("#inq-reply-body").value = "";
+  } catch (error) {
+    statusEl.textContent = error.message;
+  }
 }
 
 async function createInquiryFromMessage(messageId) {
@@ -201,6 +266,8 @@ $("#btn-inbox-refresh").addEventListener("click", () => {
 });
 $("#inq-save").addEventListener("click", saveInquiry);
 $("#inq-to-estimate").addEventListener("click", createEstimateFromInquiry);
+$("#inq-reply-custom").addEventListener("click", () => sendReply("custom"));
+$("#inq-reply-estimate").addEventListener("click", () => sendReply("estimate"));
 
 Promise.all([loadClients(), loadMessages(), loadInquiries()]).catch(
   (e) => ($("#inbox-error").textContent = e.message)

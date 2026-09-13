@@ -1091,11 +1091,14 @@ def add_contact(
         raise StoreError(f"неизвестный канал: {channel} (допустимо: {CONTACT_CHANNELS})")
     if not value.strip():
         raise StoreError("значение контакта не может быть пустым")
+    # email регистронезависим — храним в нижнем регистре, чтобы client
+    # matching (§45) совпадал при любом вводе (как telegram-хэндлы).
+    stored_value = value.strip().lower() if channel == "email" else value.strip()
     now = utc_now()
     try:
         cursor = conn.execute(
             "INSERT INTO contacts (client_id, channel, value, created_at) VALUES (?, ?, ?, ?)",
-            (client_id, channel, value.strip(), now),
+            (client_id, channel, stored_value, now),
         )
     except sqlite3.IntegrityError as exc:
         raise StoreError(f"контакт {channel}:{value} уже существует") from exc
@@ -2725,15 +2728,28 @@ def _normalize_telegram_handle(value: str) -> str:
     return v.lower()
 
 
+def _normalize_email(value: str) -> str:
+    return value.strip().lower()
+
+
 def match_client_for_message(
     conn: sqlite3.Connection, message: dict[str, Any]
 ) -> dict[str, Any] | None:
-    """Client matching (§45): точное совпадение по telegram-контакту."""
+    """Client matching (§45): telegram — по хэндлу, email — по адресу.
+
+    email-адрес регистронезависим, поэтому сравнение в нижнем регистре.
+    """
     handle = _normalize_telegram_handle(message.get("sender_handle") or "")
     if handle:
         client = find_client_by_contact(conn, channel="telegram", value=handle)
         if client is not None:
             return client
+    if message.get("channel") == "email":
+        address = _normalize_email(message.get("sender_handle") or "")
+        if address:
+            client = find_client_by_contact(conn, channel="email", value=address)
+            if client is not None:
+                return client
     return None
 
 
@@ -2850,3 +2866,144 @@ def attach_estimate_to_inquiry(
     )
     conn.commit()
     return get_inquiry(conn, inquiry_id)
+
+
+# ---------- исходящие ответы (Этап 6b, §44/§45 промт_4) ----------
+
+#: Закрытый словарь каналов ответа (ANTI-6b): тот же набор, что и входящие.
+REPLY_CHANNELS: tuple[str, ...] = ("telegram", "email", "manual")
+#: Закрытый словарь статусов отправки.
+OUTBOX_STATUSES: tuple[str, ...] = ("draft", "sent", "failed")
+
+
+def _outbox_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "id": row["id"],
+        "message_id": row["message_id"],
+        "inquiry_id": row["inquiry_id"],
+        "channel": row["channel"],
+        "recipient": row["recipient"],
+        "subject": row["subject"],
+        "body": row["body"],
+        "status": row["status"],
+        "error": row["error"],
+        "sent_at": row["sent_at"],
+        "created_at": row["created_at"],
+    }
+
+
+def _reply_recipient(
+    conn: sqlite3.Connection, inquiry_id: int
+) -> tuple[str | None, str | None]:
+    """Адресат ответа из заявки: (channel, recipient) или (None, None).
+
+    Приоритет §45: email-контакт клиента → telegram-контакт клиента →
+    chat_id входящего сообщения (telegram-ответ без сохранённого контакта).
+    """
+    inquiry = get_inquiry(conn, inquiry_id)
+    if inquiry["client_id"] is not None:
+        for contact in list_contacts(conn, inquiry["client_id"]):
+            if contact["channel"] == "email" and contact["value"].strip():
+                return "email", contact["value"].strip()
+        for contact in list_contacts(conn, inquiry["client_id"]):
+            if contact["channel"] == "telegram" and contact["value"].strip():
+                return "telegram", contact["value"].strip()
+    if inquiry["message_id"] is not None:
+        message = get_inbox_message(conn, inquiry["message_id"])
+        if message is not None and message["channel"] == "telegram" and message["chat_id"]:
+            return "telegram", message["chat_id"]
+    return None, None
+
+
+def create_reply(
+    conn: sqlite3.Connection,
+    *,
+    inquiry_id: int | None = None,
+    message_id: int | None = None,
+    channel: str | None = None,
+    recipient: str | None = None,
+    subject: str = "",
+    body: str = "",
+    status: str = "draft",
+    error: str = "",
+) -> dict[str, Any]:
+    """Запись исходящего ответа. status='sent'/'failed' ставит отправитель.
+
+    channel=None → авто-выбор по адресату заявки (_reply_recipient).
+    """
+    if status not in OUTBOX_STATUSES:
+        raise StoreError(f"неизвестный статус ответа: {status}")
+    if inquiry_id is not None:
+        get_inquiry(conn, inquiry_id)  # валидация существования
+    if message_id is not None and get_inbox_message(conn, message_id) is None:
+        raise StoreError(f"сообщение {message_id} не найдено")
+    if channel is None:
+        channel, recipient = _reply_recipient(conn, inquiry_id or 0)
+        if channel is None:
+            raise StoreError(
+                "не найден адресат ответа: у клиента нет email/telegram-контакта "
+                "и входящее сообщение не из telegram"
+            )
+    if channel not in REPLY_CHANNELS:
+        raise StoreError(f"неизвестный канал ответа: {channel} (допустимо: {REPLY_CHANNELS})")
+    if not recipient or not recipient.strip():
+        raise StoreError("получатель ответа обязателен")
+    if not body.strip():
+        raise StoreError("текст ответа не может быть пустым")
+
+    now = utc_now()
+    cursor = conn.execute(
+        "INSERT INTO outbox_messages (message_id, inquiry_id, channel, recipient,"
+        " subject, body, status, error, created_at)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (
+            message_id,
+            inquiry_id,
+            channel,
+            recipient.strip(),
+            subject.strip(),
+            body,
+            status,
+            error.strip(),
+            now,
+        ),
+    )
+    conn.commit()
+    row = conn.execute(
+        "SELECT * FROM outbox_messages WHERE id = ?", (cursor.lastrowid,)
+    ).fetchone()
+    return _outbox_row_to_dict(row)
+
+
+def mark_reply_sent(
+    conn: sqlite3.Connection, reply_id: int, *, ok: bool, error: str = ""
+) -> dict[str, Any]:
+    """Результат отправки: sent (с sent_at) или failed (с текстом ошибки)."""
+    row = conn.execute("SELECT * FROM outbox_messages WHERE id = ?", (reply_id,)).fetchone()
+    if row is None:
+        raise StoreError(f"ответ {reply_id} не найден")
+    if row["status"] == "sent":
+        return _outbox_row_to_dict(row)  # идемпотентно: повторный ok не меняет факт
+    conn.execute(
+        "UPDATE outbox_messages SET status = ?, error = ?, sent_at = ? WHERE id = ?",
+        ("sent" if ok else "failed", error.strip(), utc_now() if ok else None, reply_id),
+    )
+    conn.commit()
+    updated = conn.execute(
+        "SELECT * FROM outbox_messages WHERE id = ?", (reply_id,)
+    ).fetchone()
+    return _outbox_row_to_dict(updated)
+
+
+def list_replies(
+    conn: sqlite3.Connection, *, inquiry_id: int | None = None, limit: int = 100
+) -> list[dict[str, Any]]:
+    """Исходящие, новые сверху; фильтр по заявке."""
+    query = "SELECT * FROM outbox_messages"
+    params: list[Any] = []
+    if inquiry_id is not None:
+        query += " WHERE inquiry_id = ?"
+        params.append(inquiry_id)
+    query += " ORDER BY created_at DESC, id DESC LIMIT ?"
+    params.append(limit)
+    return [_outbox_row_to_dict(row) for row in conn.execute(query, params).fetchall()]

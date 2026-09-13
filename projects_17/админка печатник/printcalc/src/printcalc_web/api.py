@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 
 from printcalc.engine.errors import CalcInputError, RegistryError
 from printcalc.engine.registry import calculate as engine_calculate
-from printcalc_web import export, parser, store
+from printcalc_web import emailer, export, outbox, parser, store
 from printcalc_web.calculators import get_registry, list_calculators, result_to_dict
 from printcalc_web.db import connect
 
@@ -1097,3 +1097,69 @@ def attach_estimate_endpoint(
     return _store_guard(
         store.attach_estimate_to_inquiry, conn, inquiry_id, payload.estimate_id
     )
+
+
+# ---------- исходящие ответы (Этап 6b, §44/§45 промт_4) ----------
+
+
+class ReplySendIn(BaseModel):
+    """Отправка ответа клиенту по заявке.
+
+    estimate_id обязателен для kind='estimate' (письмо строится из сметы
+    детерминированно, §37); для kind='custom' — body обязателен.
+    """
+
+    kind: Literal["estimate", "custom"] = "estimate"
+    estimate_id: int | None = None
+    body: str = ""
+    channel: Literal["telegram", "email", "manual"] | None = None
+    recipient: str | None = None
+
+
+@router.get("/replies")
+def list_replies_endpoint(
+    inquiry_id: int | None = Query(default=None),
+    limit: int = Query(default=100, ge=1, le=500),
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Исходящие ответы (журнал отправок, новые сверху)."""
+    return {"replies": store.list_replies(conn, inquiry_id=inquiry_id, limit=limit)}
+
+
+@router.post("/inquiries/{inquiry_id}/reply", status_code=201)
+def send_reply_endpoint(
+    inquiry_id: int,
+    payload: ReplySendIn,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Ответ клиенту из заявки (Этап 6b).
+
+    kind='estimate': письмо строится из сметы (детерминированно), канал и
+    адресат — авто из контактов клиента (email → telegram → chat_id входящего,
+    §45). kind='custom': свободный текст оператора. Результат — запись outbox
+    со статусом sent/failed и текстом ошибки (не молча).
+    """
+    if payload.kind == "estimate":
+        if payload.estimate_id is None:
+            raise HTTPException(status_code=422, detail="estimate_id обязателен для kind='estimate'")
+        estimate = store.get_estimate(conn, payload.estimate_id)
+        return _store_guard(
+            outbox.send_estimate_reply, conn, estimate, inquiry_id=inquiry_id
+        )
+    if not (payload.body or "").strip():
+        raise HTTPException(status_code=422, detail="body обязателен для kind='custom'")
+
+    def _send_custom() -> dict[str, Any]:
+        reply = store.create_reply(
+            conn,
+            inquiry_id=inquiry_id,
+            channel=payload.channel,
+            recipient=payload.recipient,
+            subject=f"Ответ по вашей заявке — «Печатникъ»",
+            body=payload.body,
+            status="draft",
+        )
+        ok, error = emailer.dispatch(reply["channel"], reply["recipient"], reply["subject"], reply["body"])
+        return store.mark_reply_sent(conn, reply["id"], ok=ok, error=error)
+
+    return _store_guard(_send_custom)
