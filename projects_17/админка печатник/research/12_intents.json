@@ -1,0 +1,255 @@
+{
+  "$comment": "12_intents.json — таксономия intents по §26 промта. customer_phrases — только реальные, из 04_customer_requests.md. confidence_rules по §28.",
+  "version": "1.0",
+  "date": "2026-09-09",
+  "intents": [
+    {
+      "intent": "photo_print",
+      "category": "photo",
+      "customer_phrases": [
+        "Хочу распечатать фотографии на 10×15 (otvet.mail.ru/question/226890050)",
+        "Распечатывала здесь фото, 10 штук, одно фото за 25 руб (2ГИС отзыв, Мир Фото ХМ)",
+        "Даже с телефона можно (otvet.mail.ru)"
+      ],
+      "required_params": ["size", "quantity", "files"],
+      "optional_params": ["paper", "deadline", "delivery", "color_correction"],
+      "inferred_params": ["paper=глянец (стандарт рынка)", "тиражная ступень из quantity"],
+      "clarification": "Сколько фото и какого размера? Файлы с флешки или с телефона?",
+      "automation": "AUTO",
+      "human_check": false
+    },
+    {
+      "intent": "document_photo",
+      "category": "photo",
+      "customer_phrases": [
+        "фото на документы паспорт визу 3х4 (vk.com/fotomirnfy)",
+        "две фотографии размером 3*4 стоят 200р (otvet.mail.ru/question/191507792)",
+        "Заказывал печать фото на документы (jsprav, Советский)"
+      ],
+      "required_params": ["document_type", "package_or_print"],
+      "optional_params": ["quantity", "retouch", "digital_copy", "urgent"],
+      "inferred_params": ["размер блока по document_type (только с подтверждением)"],
+      "clarification": "На какой документ? Снимаем здесь или печатать ваш готовый файл?",
+      "automation": "PARTIAL",
+      "human_check": true,
+      "human_reason": "съёмка выполняется человеком; состав пакета варьируется 200-650₽"
+    },
+    {
+      "intent": "copy_bw",
+      "category": "copy",
+      "customer_phrases": ["Ксерокопия чёрно-белая — 15 ₽ (Яндекс.Карты, Точка Печати НфЮ/ПЯ)"],
+      "required_params": ["pages"],
+      "optional_params": ["color", "scale"],
+      "inferred_params": [],
+      "clarification": "Сколько страниц и нужна ли цветная?",
+      "automation": "AUTO",
+      "human_check": false
+    },
+    {
+      "intent": "print_document",
+      "category": "copy",
+      "customer_phrases": ["Распечатка текстов, документов, рефератов, курсовых и дипломных работ (Avito Югорск)"],
+      "required_params": ["pages", "color"],
+      "optional_params": ["paper", "duplex", "deadline"],
+      "inferred_params": [],
+      "clarification": "Сколько страниц, чёрно-белая или цветная?",
+      "automation": "AUTO",
+      "human_check": false
+    },
+    {
+      "intent": "scan",
+      "category": "copy",
+      "customer_phrases": ["Сканирование документов и фотографий — 20 ₽ (Zoon, Фото Принт Сургут)"],
+      "required_params": ["pages"],
+      "optional_params": ["output_format", "resolution"],
+      "inferred_params": [],
+      "clarification": "Сколько страниц?",
+      "automation": "AUTO",
+      "human_check": false
+    },
+    {
+      "intent": "laminate",
+      "category": "postprint",
+      "customer_phrases": ["Ламинация документа — 60 ₽ (Яндекс.Карты)"],
+      "required_params": ["format"],
+      "optional_params": ["quantity"],
+      "inferred_params": [],
+      "clarification": "Формат документа — А4, А5 или меньше?",
+      "automation": "AUTO",
+      "human_check": false
+    },
+    {
+      "intent": "bind",
+      "category": "postprint",
+      "customer_phrases": ["Можно ли перешить диплом? (People Also Ask)"],
+      "required_params": ["binding_type", "sheet_count"],
+      "optional_params": ["cover", "embossing"],
+      "inferred_params": [],
+      "clarification": "Пружина или твёрдый переплёт? Сколько листов?",
+      "automation": "AUTO",
+      "human_check": false
+    },
+    {
+      "intent": "business_cards",
+      "category": "polygraphy",
+      "customer_phrases": [
+        "Где в Сургуте заказать визитки недорого? (otvet.mail.ru/question/193012030)",
+        "Печатала визитки. Отдала 700 за 100 штук(минимальный тираж) (2ГИС отзыв, Нвартовск)"
+      ],
+      "required_params": ["quantity", "artwork_ready"],
+      "optional_params": ["sides", "paper", "lamination", "corners"],
+      "inferred_params": ["двусторонность по макету (проверкой файла)"],
+      "clarification": "Сколько штук и макет уже готов?",
+      "automation": "PARTIAL",
+      "human_check": true,
+      "human_reason": "Word-макет → отказ; минимальный тираж"
+    },
+    {
+      "intent": "flyers",
+      "category": "polygraphy",
+      "customer_phrases": ["Печать листовок, неров, журналов, буклетов (zsa-print сниппет)"],
+      "required_params": ["format", "quantity"],
+      "optional_params": ["paper", "sides", "deadline"],
+      "inferred_params": [],
+      "clarification": "Формат (А6/А5/Евро) и тираж?",
+      "automation": "AUTO",
+      "human_check": false
+    },
+    {
+      "intent": "stamp",
+      "category": "polygraphy",
+      "customer_phrases": ["Срочное изготовление печатей и штампов! (2ГИС, Нвартовск)"],
+      "required_params": ["stamp_type"],
+      "optional_params": ["diameter", "design", "urgent"],
+      "inferred_params": [],
+      "clarification": "Новая печать или по оттиску? Круглая/прямоугольная?",
+      "automation": "PARTIAL",
+      "human_check": true,
+      "human_reason": "юридическая значимость; «дизайнерское» клише ×3 цены"
+    },
+    {
+      "intent": "design",
+      "category": "design",
+      "customer_phrases": [],
+      "required_params": ["product", "scope"],
+      "optional_params": ["deadline", "references"],
+      "inferred_params": [],
+      "clarification": "Что делаем и есть ли примеры/пожелания?",
+      "automation": "HUMAN",
+      "human_check": true,
+      "human_reason": "оценка работ только дизайнером (1500-6450₽)"
+    },
+    {
+      "intent": "banner",
+      "category": "outdoor",
+      "customer_phrases": ["Это так и называетяся - печать на баннере. И попросите люверсы по периметру (otvet.mail.ru/question/30752742)"],
+      "required_params": ["size_m2", "material"],
+      "optional_params": ["eyelets", "quantity", "file", "deadline", "montage"],
+      "inferred_params": ["площадь из размера (автоматически)", "люверсы НЕ выводятся"],
+      "clarification": "Какой размер и куда повесим? Люверсы нужны? Файл есть?",
+      "automation": "PARTIAL",
+      "human_check": true,
+      "human_reason": "материал/крепёж влияют на производство"
+    },
+    {
+      "intent": "sign",
+      "category": "outdoor",
+      "customer_phrases": ["Сделайте табличку на дверь (пример-иллюстрация промта; реальные прайсы: от 300₽)"],
+      "required_params": ["material", "size", "content"],
+      "optional_params": ["mounting", "sides"],
+      "inferred_params": [],
+      "clarification": "Из какого материала (ПВХ/акрил/металл)? Какой размер и что написать?",
+      "automation": "HUMAN",
+      "human_check": true,
+      "human_reason": "разброс цены ×4 по материалу"
+    },
+    {
+      "intent": "signage",
+      "category": "outdoor",
+      "customer_phrases": [],
+      "required_params": ["type", "measurements"],
+      "optional_params": ["lighting", "montage", "approval"],
+      "inferred_params": [],
+      "clarification": "Нужен замер по адресу — когда можно подъехать?",
+      "automation": "HUMAN",
+      "human_check": true,
+      "human_reason": "замеры, согласование, монтаж"
+    },
+    {
+      "intent": "mug_print",
+      "category": "souvenir",
+      "customer_phrases": ["от 15 штук цена 450 рублей. При заказе 1 штуки - 850 р (express72.ru)"],
+      "required_params": ["quantity"],
+      "optional_params": ["artwork", "base_owner"],
+      "inferred_params": ["тиражная ступень"],
+      "clarification": "Сколько кружек? Одна — 850, от 15 — 450/шт.",
+      "automation": "PARTIAL",
+      "human_check": false
+    },
+    {
+      "intent": "tshirt_print",
+      "category": "souvenir",
+      "customer_phrases": ["Сколько держится принт на футболке? (People Also Ask)"],
+      "required_params": ["print_zone", "quantity"],
+      "optional_params": ["base_owner", "size_clothes"],
+      "inferred_params": [],
+      "clarification": "Свой футболка или наша? Что и где печатаем (грудь/спина)?",
+      "automation": "PARTIAL",
+      "human_check": true,
+      "human_reason": "технология нанесения зависит от ткани"
+    },
+    {
+      "intent": "photo_restore",
+      "category": "photo",
+      "customer_phrases": ["Как восстановить старые фотографии? (FAQ Кадр Сургут)"],
+      "required_params": [],
+      "optional_params": ["scope", "print_after"],
+      "inferred_params": [],
+      "clarification": "Покажите фото — оценим объём работ.",
+      "automation": "HUMAN",
+      "human_check": true,
+      "human_reason": "цена от объёма повреждений"
+    },
+    {
+      "intent": "photo_book",
+      "category": "photo",
+      "customer_phrases": ["Индивидуальный дизайн фотокниг (Фотосфера)"],
+      "required_params": ["page_count_or_photos"],
+      "optional_params": ["design", "format"],
+      "inferred_params": [],
+      "clarification": "Фотографии уже отобраны? Верстка нужна?",
+      "automation": "HUMAN",
+      "human_check": true
+    },
+    {
+      "intent": "photo_canvas",
+      "category": "photo",
+      "customer_phrases": [],
+      "required_params": ["size"],
+      "optional_params": ["frame", "file_quality"],
+      "inferred_params": [],
+      "clarification": "Какой размер? Файл в хорошем разрешении есть?",
+      "automation": "PARTIAL",
+      "human_check": true
+    },
+    {
+      "intent": "photo_digitize",
+      "category": "photo",
+      "customer_phrases": ["Оцифровка видео и аудио — от 23 ₽/мин (Фотосфера)"],
+      "required_params": ["media_type"],
+      "optional_params": ["minutes", "output"],
+      "inferred_params": [],
+      "clarification": "Что за носитель: видеокассета, кинопленка, аудио?",
+      "automation": "PARTIAL",
+      "human_check": false
+    }
+  ],
+  "confidence_rules": {
+    "intent_confidence": "0.9+ при точном совпадении словаря; 0.6-0.9 при синонимах; <0.6 → вопрос",
+    "parameter_confidence": "извлечённый параметр=0.95; контекстный=0.7; требуется подтверждение <0.8 если влияет на цену",
+    "order_confidence": "min(intent_confidence по позициям); <0.6 → передача человеку",
+    "continue_automatically": "order_confidence >= 0.8 и нет missing_required",
+    "ask_question": "есть missing_required или parameter_confidence < 0.8",
+    "escalate_human": "order_confidence < 0.6 или intent.automation=HUMAN или цена > порога (настраивается точкой)"
+  }
+}
