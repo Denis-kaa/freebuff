@@ -37,15 +37,20 @@ function renderDraft() {
     const segBadge = typeof item.segment_id === "number"
       ? ` <span class="badge segment" title="Группа из быстрого ввода (перечисление)">сегм. ${item.segment_id + 1}</span>`
       : "";
+    // Конвенция движка (design/calculators): price=0 = «Цена по запросу» —
+    // не «0.00», который выглядит как «бесплатно».
+    const priceCell = item.price > 0 ? money(item.price) : '<span class="muted">по запросу</span>';
+    const rowTotal = item.price > 0 ? money(item.price * item.qty) : '<span class="muted">—</span>';
     tr.innerHTML =
       `<td>${escapeHtml(item.name)}${badge}${segBadge}</td>` +
-      `<td class="num">${money(item.price)}</td>` +
+      `<td class="num">${priceCell}</td>` +
       `<td class="num"><input type="number" min="0.001" step="any" value="${item.qty}" data-qty="${index}" style="width:70px"></td>` +
-      `<td class="num">${money(item.price * item.qty)}</td>` +
+      `<td class="num">${rowTotal}</td>` +
       `<td><button class="icon danger" data-remove="${index}" title="Убрать позицию">✕</button></td>`;
     body.appendChild(tr);
   });
-  $("#draft-total").textContent = money(draftTotal());
+  const hasOnRequest = draft.some((item) => !(item.price > 0));
+  $("#draft-total").textContent = money(draftTotal()) + (hasOnRequest ? " + по запросу" : "");
   saveDraft();
 }
 
@@ -156,9 +161,14 @@ async function loadPriceList(query = "") {
   data.items.forEach((item) => {
     const tr = document.createElement("tr");
     const badge = item.unverified ? ' <span class="badge unverified">не проверено</span>' : "";
+    // Цена дублируется в data-price: parse текста ячейки («по запросу»)
+    // дал бы NaN в черновике. Источник истины — атрибут, не отображение.
+    const priceCell = item.price > 0
+      ? money(item.price)
+      : '<span class="muted">по запросу</span>';
     tr.innerHTML =
       `<td>${escapeHtml(item.name)}${badge}</td>` +
-      `<td class="num">${money(item.price)}${item.unit ? " / " + escapeHtml(item.unit) : ""}</td>` +
+      `<td class="num" data-price="${item.price}">${priceCell}${item.unit ? " / " + escapeHtml(item.unit) : ""}</td>` +
       `<td class="num"><input type="number" min="0.001" step="any" value="1" data-pick-qty style="width:70px"></td>` +
       `<td><button data-pick="${item.id}">+</button></td>`;
     body.appendChild(tr);
@@ -171,8 +181,8 @@ dlgPrice.addEventListener("click", async (event) => {
     const row = event.target.closest("tr");
     const qty = parseFloat(row.querySelector("[data-pick-qty]").value) || 1;
     const nameCell = row.querySelector("td").textContent.trim();
-    const priceCell = row.querySelectorAll("td")[1].textContent;
-    addItem({ kind: "price_list", name: nameCell.replace(/не проверено$/, "").trim(), price: parseFloat(priceCell), qty, price_list_item_id: Number(pickId) });
+    const price = parseFloat(row.querySelectorAll("td")[1].dataset.price);
+    addItem({ kind: "price_list", name: nameCell.replace(/не проверено$/, "").trim(), price, qty, price_list_item_id: Number(pickId) });
     dlgPrice.close();
   }
 });

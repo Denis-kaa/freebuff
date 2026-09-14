@@ -37,7 +37,7 @@ def test_seed_creates_sections_and_synonyms(conn: sqlite3.Connection) -> None:
 
 
 def test_seed_cascade_additive_no_duplicates(conn: sqlite3.Connection) -> None:
-    """Проход 2 (гео-каскад): 21 базовая + 11 каскадных позиций, без дублей смысла.
+    """Проход 2: 21 базовая + 11 каскадных + 5 по-запросу = 37, без дублей смысла.
 
     Лестница фото на документы (350/450/650) НЕ дублируется: каскадные
     цены Фотосферы (800/860/1000) — другой сегмент (ретушь в пакете),
@@ -45,7 +45,7 @@ def test_seed_cascade_additive_no_duplicates(conn: sqlite3.Connection) -> None:
     """
     from printcalc_web.p0_services import P0_SECTIONS, P0_SERVICES
 
-    assert len(P0_SERVICES) == 32
+    assert len(P0_SERVICES) == 37
     names = [spec["name"] for spec in P0_SERVICES]
     assert len(names) == len(set(names)), "дубль имени в сиде — мусор в кассе"
 
@@ -66,6 +66,39 @@ def test_seed_cascade_additive_no_duplicates(conn: sqlite3.Connection) -> None:
     # Каскадные позиции попадают в существующие разделы (не плодят новых):
     assert items["Сертификат/грамота А4"]["category"] == "2. ПЕЧАТЬ ДОКУМЕНТОВ"
     assert len(P0_SECTIONS) == 7
+
+
+def test_seed_on_request_items_price_zero(conn: sqlite3.Connection) -> None:
+    """E-градусные позиции: цена 0 = «по запросу», не выдуманная цифра.
+
+    Конвенция движка (design/calculators): price=0 → «Цена по запросу».
+    Владелец заполняет цену — сид её НЕ перезапишет (идемпотентность).
+    """
+    store.seed_p0_services(conn)
+    items = {item["name"]: item for item in store.list_price_items(conn)}
+    for name in ("Ламинация А2", "Ламинация А1", "Фото 9×12", "Крафтовый пакет", "Георгиевская лента"):
+        assert name in items, f"E-позиция отсутствует: {name}"
+        assert items[name]["price"] == pytest.approx(0.0), f"{name}: цена должна быть 0 (по запросу)"
+
+    # Владелец заполнил цену → повторный сид НЕ трогает (идемпотентность):
+    item_id = items["Крафтовый пакет"]["id"]
+    store.update_price_item(conn, item_id, {"price": 35.0})
+    store.seed_p0_services(conn)
+    assert store.get_price_item(conn, item_id)["price"] == pytest.approx(35.0)
+
+
+def test_on_request_template_roundtrip(conn: sqlite3.Connection) -> None:
+    """«Цена 0» сериализуется в шаблон и корректно импортируется обратно."""
+    store.seed_p0_services(conn)
+    template = store.price_template_csv(conn)
+    assert "Крафтовый пакет;0;шт;" in template
+    assert "Цена 0 = «по запросу»" in template, "владелец должен видеть подсказку конвенции"
+    # Round-trip: владелец заполняет цену 0-позиции:
+    filled = template.replace("Крафтовый пакет;0;", "Крафтовый пакет;35;")
+    result = store.import_price_template(conn, filled)
+    assert result["updated"] >= 1
+    items = {item["name"]: item for item in store.list_price_items(conn)}
+    assert items["Крафтовый пакет"]["price"] == pytest.approx(35.0)
 
 
 def test_seed_is_idempotent(conn: sqlite3.Connection) -> None:
