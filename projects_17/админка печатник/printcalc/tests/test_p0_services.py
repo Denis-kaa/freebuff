@@ -114,6 +114,28 @@ def test_template_csv_has_sections_and_roundtrip(conn: sqlite3.Connection) -> No
     assert items["Бейдж"]["synonyms"] == ["бейджик"]
 
 
+def test_template_csv_includes_cascade_items(conn: sqlite3.Connection) -> None:
+    """Проход 2: 11 каскадных якорей видны владельцу в прайс-шаблоне (Excel)."""
+    store.seed_p0_services(conn)
+    template = store.price_template_csv(conn)
+    for name, price in (
+        ("Сканирование А3", "40"),
+        ("Печать цветная А3", "60"),
+        ("Сертификат А6 (1+0)", "25"),
+        ("Сертификат А6 (1+1)", "35"),
+        ("Сертификат/грамота А4", "80"),
+        ("Фото 13×18", "30"),
+        ("Фото 30×40", "150"),
+        ("Отправка фото на email", "60"),
+        ("Подстановка костюма", "300"),
+        ("Ретушь фото", "200"),
+        ("Ламинация А3", "110"),
+        ("Переплёт твёрдый (диплом)", "500"),
+    ):
+        row = f"{name};{price};"
+        assert row in template, f"каскадная позиция не видна владельцу: {row}"
+
+
 def test_template_import_ignores_comments_and_header(conn: sqlite3.Connection) -> None:
     text = (
         "# комментарий\n"
