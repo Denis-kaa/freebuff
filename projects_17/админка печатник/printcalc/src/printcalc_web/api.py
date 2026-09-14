@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 
 from printcalc.engine.errors import CalcInputError, RegistryError
 from printcalc.engine.registry import calculate as engine_calculate
-from printcalc_web import emailer, export, outbox, parser, rules, store
+from printcalc_web import emailer, export, orderbridge, outbox, parser, rules, store
 from printcalc_web.calculators import get_registry, list_calculators, result_to_dict
 from printcalc_web.db import connect
 
@@ -388,6 +388,38 @@ def analyze_order_text(
     return verdict.to_json()
 
 
+class BridgeIn(BaseModel):
+    """S5-мост: вердикт → расчётная позиция (РОАДМАП_v7 §6).
+
+    verdict — готовый JSON POST /api/order/analyze; accepted_operations —
+    коды операций, ПОДТВЕРЖДЁННЫХ сотрудником на S4 (аудит). Только они
+    превращаются в work-флаги цены; предложенное, но не подтверждённое,
+    в расчёт не попадает (§1 промт_6).
+    """
+
+    verdict: dict[str, Any]
+    accepted_operations: list[str] = Field(default_factory=list)
+
+
+@router.post("/order/bridge")
+def bridge_verdict_to_calculation(
+    payload: BridgeIn, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """Вердикт правил → {calculator_id, params, result} без повторного ввода.
+
+    ready_for_calculator=false или продукт вне паков — честный 400 с
+    вопросом (не молча, дефолты GUI 200×100 не подставляются). Размеры
+    переводятся в см (спека wide), флаги доп-работ → триггеры заданий OP-*
+    в существующем конвейере generate_production_plan (идемпотентно).
+    """
+    try:
+        return orderbridge.bridge_from_verdict(
+            payload.verdict, accepted_operations=payload.accepted_operations
+        )
+    except orderbridge.BridgeError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from None
+
+
 class SuggestionDecisionIn(BaseModel):
     """Подтверждение подсказки сотрудником (S4, РОАДМАП_v7 §5).
 
@@ -397,7 +429,7 @@ class SuggestionDecisionIn(BaseModel):
     """
 
     decision: Literal["accepted", "changed", "rejected", "deferred"]
-    kind: Literal["operation", "question", ""] = ""
+    kind: Literal["operation", "question", "bridge", ""] = ""
     token: str = ""
     field: str = ""
     source_text: str = ""

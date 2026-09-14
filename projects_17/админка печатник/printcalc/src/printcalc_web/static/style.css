@@ -488,6 +488,8 @@ td.num, .money { font-family: var(--font-mono); font-variant-numeric: tabular-nu
 .sug-ready { color: var(--st-green, #79d29c); text-transform: none; letter-spacing: 0; font-size: 12px; }
 .sug-notready { color: var(--amber, #fbbf24); text-transform: none; letter-spacing: 0; font-size: 12px; }
 .sug-footer { font-size: 12px; }
+.sug-bridge { display: flex; align-items: center; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line, #2a2f3a); }
+.sug-bridge-done { color: var(--st-green, #79d29c); font-size: 12px; margin-top: 8px; }
 @media (max-width: 640px) {
   .sug-row { flex-direction: column; align-items: stretch; }
   .sug-row .row-actions { display: flex; flex-wrap: wrap; gap: 6px; }

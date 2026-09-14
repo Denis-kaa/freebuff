@@ -269,7 +269,7 @@ CREATE TABLE IF NOT EXISTS suggestion_decisions (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     inquiry_id  INTEGER REFERENCES inquiries(id),
     decision    TEXT NOT NULL CHECK (decision IN ('accepted','changed','rejected','deferred')),
-    kind        TEXT NOT NULL DEFAULT '' CHECK (kind IN ('operation','question','')),
+    kind        TEXT NOT NULL DEFAULT '' CHECK (kind IN ('operation','question','bridge','')),
     token       TEXT NOT NULL DEFAULT '',
     field       TEXT NOT NULL DEFAULT '',
     source_text TEXT NOT NULL DEFAULT '',

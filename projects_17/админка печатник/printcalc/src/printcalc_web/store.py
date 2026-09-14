@@ -3029,13 +3029,13 @@ def record_suggestion_decision(
     """Аудит подтверждений подсказок (§5: кто/когда подтвердил).
 
     decision — закрытый набор: accepted (✓), changed (Изменить),
-    rejected (Нет), deferred (Уточнить позже). kind: operation | question.
+    rejected (Нет), deferred (Уточнить позже). kind: operation | question | bridge.
     """
     if decision not in _SUGGESTION_DECISIONS:
         raise StoreError(
             f"неизвестное решение {decision!r}; допустимо: {', '.join(_SUGGESTION_DECISIONS)}"
         )
-    if kind not in ("", "operation", "question"):
+    if kind not in ("", "operation", "question", "bridge"):
         raise StoreError(f"неизвестный тип подсказки {kind!r}")
     now = utc_now()
     cursor = conn.execute(

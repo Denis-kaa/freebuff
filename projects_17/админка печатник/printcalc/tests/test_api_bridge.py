@@ -1,0 +1,141 @@
+"""Тесты S5: POST /api/order/bridge (РОАДМАП_v7 §6, промт_6 PHASE R5).
+
+Контракты поведения:
+- цена считается ТОЛЬКО на сервере движком; клиент не присылает цен;
+- только ПОДТВЕРЖДЁННЫЕ операции (S4-аудит) → work-флаги цены;
+- нет размера/тиража/пака → честный 400 с вопросом (дефолты GUI 200×100
+  не подставляются — §6 «не молча»);
+- work-флаги в params триггерят задания OP-* в существующем идемпотентном
+  конвейере generate_production_plan (отдельного конвейера нет).
+"""
+
+from __future__ import annotations
+
+from collections.abc import Iterator
+from pathlib import Path
+
+import pytest
+
+from printcalc_web import create_app
+
+from asgi_client import ASGITestClient
+
+#: Эталонная фраза DoD (та же, что S3) — сквозной сценарий §6.
+GOLDEN_STICKER = "Наклейка 50×30, 149 шт + резка по контуру"
+
+
+@pytest.fixture()
+def client(tmp_path: Path) -> Iterator[ASGITestClient]:
+    yield ASGITestClient(create_app(db_path=tmp_path / "bridge.db"))
+
+
+def _sticker_verdict(client: ASGITestClient) -> dict:
+    return client.post("/api/order/analyze", json={"text": GOLDEN_STICKER}).json()
+
+
+# --- основной мост ---------------------------------------------------------
+
+
+def test_bridge_golden_sticker_with_accepted_op(client: ASGITestClient) -> None:
+    """DoD: вердикт наклейки + подтверждённая OP-22 → wide-позиция с ценой."""
+    verdict = _sticker_verdict(client)
+    assert verdict["ready_for_calculator"] is True
+
+    response = client.post(
+        "/api/order/bridge",
+        json={
+            "verdict": verdict,
+            "accepted_operations": ["OP-22"],
+        },
+    )
+    assert response.status_code == 200
+    bridge = response.json()
+    assert bridge["calculator_id"] == "wide"
+
+    params = bridge["params"]
+    assert params["width"] == 50.0, "мм → см (спека wide — legacy GUI)"
+    assert params["height"] == 30.0
+    assert params["qty"] == 149.0
+    assert params["work_plotter_cut"] is True, "подтверждённая операция → work-флаг"
+
+    result = bridge["result"]
+    assert result["calculator_id"] == "wide"
+    assert result["price"] > 0, "цена посчитана сервером движком"
+
+
+def test_bridge_without_accepted_ops_no_work_flags(client: ASGITestClient) -> None:
+    """Предложенная, но не подтверждённая операция в цену НЕ попадает (§1)."""
+    verdict = _sticker_verdict(client)
+    bridge = client.post(
+        "/api/order/bridge", json={"verdict": verdict, "accepted_operations": []}
+    ).json()
+    assert not bridge["params"].get("work_plotter_cut"), "дефолт спеки False = работа не включена"
+    price_plain = bridge["result"]["price"]
+
+    bridge_op = client.post(
+        "/api/order/bridge",
+        json={"verdict": verdict, "accepted_operations": ["OP-22"]},
+    ).json()
+    assert bridge_op["params"]["work_plotter_cut"] is True
+    # Цена резки — НАСТРАИВАЕМЫЙ параметр (решение Дениса 2026-09-12,
+    # РОАДМАП_v7 §10): дефолт 0/0, поэтому цена НЕ меняется до наполнения
+    # прайса. Контракт моста — флаг в params (→ задание OP-22 и цена
+    # из прайса владельца), а не конкретная дельта.
+    assert bridge_op["result"]["price"] == pytest.approx(price_plain), (
+        "дефолтная резка 0/0 — цена меняется только через прайс владельца"
+    )
+    assert bridge_op["result"]["price"] >= price_plain
+
+
+# --- честные ошибки (не молча) ---------------------------------------------
+
+
+def test_bridge_missing_size_returns_400(client: ASGITestClient) -> None:
+    """Нет размера → 400 с вопросом; дефолт GUI 200×100 не подставляется."""
+    verdict = _sticker_verdict(client)
+    broken = dict(verdict, size_mm=None)
+    response = client.post("/api/order/bridge", json={"verdict": broken})
+    assert response.status_code == 400
+    assert "размер" in response.json()["detail"].lower()
+
+
+def test_bridge_missing_qty_returns_400(client: ASGITestClient) -> None:
+    verdict = _sticker_verdict(client)
+    broken = dict(verdict, quantity=None)
+    response = client.post("/api/order/bridge", json={"verdict": broken})
+    assert response.status_code == 400
+    assert "тираж" in response.json()["detail"].lower()
+
+
+def test_bridge_unknown_pack_returns_400(client: ASGITestClient) -> None:
+    """Продукт вне паков → 400 с подсказкой «добавьте вручную» (не молча)."""
+    verdict = _sticker_verdict(client)
+    broken = dict(verdict, matched_pack="mug")
+    response = client.post("/api/order/bridge", json={"verdict": broken})
+    assert response.status_code == 400
+    assert "вручную" in response.json()["detail"]
+
+
+def test_bridge_idempotent_same_verdict_same_result(client: ASGITestClient) -> None:
+    """Тот же вердикт → байт-в-байт тот же результат (детерминизм движка)."""
+    verdict = _sticker_verdict(client)
+    first = client.post(
+        "/api/order/bridge",
+        json={"verdict": verdict, "accepted_operations": ["OP-22"]},
+    ).text
+    second = client.post(
+        "/api/order/bridge",
+        json={"verdict": verdict, "accepted_operations": ["OP-22"]},
+    ).text
+    assert first == second
+
+
+def test_bridge_unknown_operation_token_is_ignored(client: ASGITestClient) -> None:
+    """Код вне OPS_TO_WORK_FLAGS не падает и не попадает в параметры (закрытый словарь)."""
+    verdict = _sticker_verdict(client)
+    bridge = client.post(
+        "/api/order/bridge",
+        json={"verdict": verdict, "accepted_operations": ["OP-99"]},
+    ).json()
+    assert bridge["result"]["price"] > 0
+    assert not bridge["params"].get("work_plotter_cut"), "OP-99 вне закрытого маппинга — флаг остался False"

@@ -125,14 +125,69 @@ function renderVerdict() {
   const ready = v.ready_for_calculator
     ? '<span class="sug-ready">готов к расчёту</span>'
     : '<span class="sug-notready">нужны уточнения</span>';
+  const bridgeHtml = v.ready_for_calculator
+    ? `<div class="sug-bridge"><button class="btn btn-primary" data-sug-bridge type="button">В расчёт →</button>
+       <span class="muted">цена считается сервером; работы — только подтверждённые ✓</span></div>`
+    : "";
   box.innerHTML = `
     <div class="sug-head">Распознано ${ready}</div>
     <div class="sug-recognized">${recognizedHtml(v)}</div>
     ${proposalsHtml(v)}
     ${missingHtml(v)}
     ${suggestionsHtml(v)}
+    ${bridgeHtml}
     <div class="sug-footer muted">Подсказки — от правил «Печатника». Ничего не применено без вашего решения.</div>`;
   box.classList.remove("hidden");
+}
+
+/* ---------- S5-мост: вердикт → расчёт ---------- */
+
+let bridgeBusy = false;
+
+async function bridgeToCalculation() {
+  /* «В расчёт»: вердикт + ПОДТВЕРЖДЁННЫЕ операции → сервер считает цену
+   * (клиент цен не считает); результат падает в черновик заказа как
+   * позиция-калькулятор (та же форма, что у обычного расчёта).
+   * Ошибка = честное сообщение (нет размера/тиража/пака). */
+  if (bridgeBusy || !currentVerdict) return;
+  const btn = document.querySelector("[data-sug-bridge]");
+  bridgeBusy = true;
+  if (btn) { btn.disabled = true; btn.textContent = "считаем…"; }
+  try {
+    const accepted = (currentVerdict.proposed_operations || [])
+      .filter((op) => op._done === "accepted")
+      .map((op) => op.operation_token);
+    const bridge = await sugFetch("/order/bridge", {
+      method: "POST",
+      body: JSON.stringify({ verdict: currentVerdict, accepted_operations: accepted }),
+    });
+    const r = bridge.result || {};
+    if (typeof window.addItem === "function") {
+      window.addItem({
+        kind: "calculator",
+        name: `Расчёт: ${currentVerdict.product || bridge.calculator_id}`,
+        price: r.price || 0,
+        qty: 1,
+        calculator_id: bridge.calculator_id,
+        params: bridge.params || null,
+      });
+    }
+    const box = document.getElementById("suggest-box");
+    if (box) {
+      const note = document.createElement("div");
+      note.className = "sug-bridge-done";
+      note.textContent =
+        `Добавлено в заказ: ${bridge.calculator_id} — ${Number(r.price || 0).toFixed(2)} ₽` +
+        (accepted.length ? ` (работы: ${accepted.join(", ")})` : "");
+      box.querySelector(".sug-footer")?.before(note);
+    }
+    logDecision("accepted", { kind: "bridge", token: "order/bridge", payload: { calculator_id: bridge.calculator_id, price: r.price } });
+  } catch (error) {
+    alert("В расчёт: " + error.message);
+    if (btn) { btn.disabled = false; btn.textContent = "В расчёт →"; }
+  } finally {
+    bridgeBusy = false;
+  }
 }
 
 /* ---------- публичная точка входа ---------- */
@@ -163,6 +218,12 @@ window.suggestAddOperation = function (op) {
 document.addEventListener("click", (event) => {
   const box = document.getElementById("suggest-box");
   if (!box || !box.contains(event.target) || !currentVerdict) return;
+
+  const bridgeBtn = event.target.closest("[data-sug-bridge]");
+  if (bridgeBtn) {
+    bridgeToCalculation();
+    return;
+  }
 
   const acceptBtn = event.target.closest("[data-sug-accept]");
   if (acceptBtn) {
