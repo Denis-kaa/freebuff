@@ -63,8 +63,20 @@ def test_bridge_golden_sticker_with_accepted_op(client: ASGITestClient) -> None:
     assert result["price"] > 0, "цена посчитана сервером движком"
 
 
-def test_bridge_without_accepted_ops_no_work_flags(client: ASGITestClient) -> None:
+def test_bridge_without_accepted_ops_no_work_flags(
+    client: ASGITestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Предложенная, но не подтверждённая операция в цену НЕ попадает (§1)."""
+    # Тест про ФЛАГ-контракт, а не про цены владельца: изолируемся от
+    # machine-state (на whimco заполнен data/wide_prices.yaml 100/500 —
+    # иначе дельта легитимна и тест зависел бы от машины). Пустой путь
+    # → резолвер цен даёт канон 0/0.
+    from printcalc_web import pricing
+
+    monkeypatch.setenv(
+        pricing.PRICES_ENV_VAR, str(tmp_path / "wide_prices_absent.yaml")
+    )
+
     verdict = _sticker_verdict(client)
     bridge = client.post(
         "/api/order/bridge", json={"verdict": verdict, "accepted_operations": []}
@@ -78,8 +90,8 @@ def test_bridge_without_accepted_ops_no_work_flags(client: ASGITestClient) -> No
     ).json()
     assert bridge_op["params"]["work_plotter_cut"] is True
     # Цена резки — НАСТРАИВАЕМЫЙ параметр (решение Дениса 2026-09-12,
-    # РОАДМАП_v7 §10): дефолт 0/0, поэтому цена НЕ меняется до наполнения
-    # прайса. Контракт моста — флаг в params (→ задание OP-22 и цена
+    # РОАДМАП_v7 §10): при изолированном прайсе (канон 0/0) дельты нет.
+    # Контракт моста — флаг в params (→ задание OP-22 и цена
     # из прайса владельца), а не конкретная дельта.
     assert bridge_op["result"]["price"] == pytest.approx(price_plain), (
         "дефолтная резка 0/0 — цена меняется только через прайс владельца"

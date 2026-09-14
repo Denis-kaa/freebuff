@@ -36,6 +36,38 @@ def test_seed_creates_sections_and_synonyms(conn: sqlite3.Connection) -> None:
     assert "Фото 10×15" in items  # кавычка-× из реальных формулировок
 
 
+def test_seed_cascade_additive_no_duplicates(conn: sqlite3.Connection) -> None:
+    """Проход 2 (гео-каскад): 21 базовая + 11 каскадных позиций, без дублей смысла.
+
+    Лестница фото на документы (350/450/650) НЕ дублируется: каскадные
+    цены Фотосферы (800/860/1000) — другой сегмент (ретушь в пакете),
+    а локальный якорь 450/4 шт уже сидирован в базе (реп-карта НфЮ).
+    """
+    from printcalc_web.p0_services import P0_SECTIONS, P0_SERVICES
+
+    assert len(P0_SERVICES) == 32
+    names = [spec["name"] for spec in P0_SERVICES]
+    assert len(names) == len(set(names)), "дубль имени в сиде — мусор в кассе"
+
+    store.seed_p0_services(conn)
+    items = {item["name"]: item for item in store.list_price_items(conn)}
+    # Якоря каскада на месте:
+    assert items["Печать цветная А3"]["price"] == pytest.approx(60.0)
+    assert items["Сканирование А3"]["price"] == pytest.approx(40.0)
+    assert items["Сертификат/грамота А4"]["price"] == pytest.approx(80.0)
+    assert items["Ламинация А3"]["price"] == pytest.approx(110.0)
+    assert items["Переплёт твёрдый (диплом)"]["price"] == pytest.approx(500.0)
+    assert items["Ретушь фото"]["price"] == pytest.approx(200.0)
+    assert items["Подстановка костюма"]["price"] == pytest.approx(300.0)
+    assert items["Фото 30×40"]["price"] == pytest.approx(150.0)
+    # Базовая лестница фото на документы не задвоена:
+    doc_photo = [n for n in names if "Фото на документы" in n]
+    assert len(doc_photo) == 3
+    # Каскадные позиции попадают в существующие разделы (не плодят новых):
+    assert items["Сертификат/грамота А4"]["category"] == "2. ПЕЧАТЬ ДОКУМЕНТОВ"
+    assert len(P0_SECTIONS) == 7
+
+
 def test_seed_is_idempotent(conn: sqlite3.Connection) -> None:
     first = store.seed_p0_services(conn)
     second = store.seed_p0_services(conn)
