@@ -389,16 +389,20 @@ def analyze_order_text(
 
 
 class BridgeIn(BaseModel):
-    """S5-мост: вердикт → расчётная позиция (РОАДМАП_v7 §6).
+    """S5-мост: вердикт → расчётная позиция (РОАДМАП_v7 §6; S6 — вопросы).
 
     verdict — готовый JSON POST /api/order/analyze; accepted_operations —
     коды операций, ПОДТВЕРЖДЁННЫХ сотрудником на S4 (аудит). Только они
     превращаются в work-флаги цены; предложенное, но не подтверждённое,
     в расчёт не попадает (§1 промт_6).
+    question_answers (S6) — явные ответы сотрудника на вопросы вердикта
+    (layout/layout_with_cut_contour → yes/no); поле/ответ вне закрытых
+    наборов — 400 (ANTI-6b, не молча).
     """
 
     verdict: dict[str, Any]
     accepted_operations: list[str] = Field(default_factory=list)
+    question_answers: dict[str, str] = Field(default_factory=dict)
 
 
 @router.post("/order/bridge")
@@ -413,8 +417,11 @@ def bridge_verdict_to_calculation(
     в существующем конвейере generate_production_plan (идемпотентно).
     """
     try:
+        orderbridge.validate_question_answers(payload.question_answers)
         return orderbridge.bridge_from_verdict(
-            payload.verdict, accepted_operations=payload.accepted_operations
+            payload.verdict,
+            accepted_operations=payload.accepted_operations,
+            question_answers=payload.question_answers,
         )
     except orderbridge.BridgeError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from None
