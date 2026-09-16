@@ -39,6 +39,24 @@ ssh whimco 'cd /opt/freebuff && bash scripts_01/auto_deploy.sh pull'
 - post-merge hook выполняет deploy-шаги (`DEPLOY_CMD`, по умолчанию пуст);
 - `.env`, `data_13/context.db`, `context_12/events.db` — gitignored, pull их не трогает.
 
+### 1b. После pull: перегенерация Reports Hub (если менялись доки/этапы)
+
+Сайт отчётов (`reports-hub.service`, порт 8310) раздаёт **статичные HTML** из
+`services_08/reports_hub/site/` (gitignored — генерируется, не синхронизируется).
+Если пул принёс изменения доков (PHASE-отчёты, роадмапы, PROJECT_STATUS), сайт
+показывает старые данные до ручной регенерации:
+
+```bash
+ssh whimco 'cd /opt/freebuff && /opt/printcalc-venv/bin/python -m services_08.reports_hub generate --all --platform'
+```
+
+- ~1.3с, перезаписывает `site/` (13 проектов + отчёт платформы + history для diff);
+- рестарт сервиса **не нужен** (HTML статичен; рестарт сбрасывает только zip-кэш в памяти);
+- если менялся код сервиса (`services_08/reports_hub/`) — `systemctl restart reports-hub`;
+- токен живёт в `/etc/default/reports-hub` (chmod 600, вне репо) — при ротации рестарт обязателен.
+
+По расписанию (таймер) — вне v1 (спека reports-hub §10.3, open question §13.2).
+
 ## 2. Нормальный цикл (сервер → база → телефон)
 
 Серверный WIP (новые модули, промты, фиксы) коммитится **на сервере** и пушится; телефон стягивает:
