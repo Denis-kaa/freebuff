@@ -6,6 +6,17 @@
 
 ---
 
+## [5.189.88] — 2026-09-16
+
+### 🆕 Reports Hub H1: каркас сервиса отчётов + ReportModel + автообход (поток B печатника)
+
+- NEW `services_08/reports_hub/` — каркас сервиса (спека `reports-hub-spec.md` §14.1, РОАДМАП_v7 §7 H1): `report/model.py` (ReportModel-контракт, frozen dataclasses, `to_json/from_json`, гвард `schema_version`), `config.py` (ProjectProfile + `discover_projects(projects_17/)`, owner-YAML своим stdlib-парсером — PyYAML не требуется), `cli.py` + `__main__.py` (`list` рабочий: 31 проект, печатник has-docs; generate/serve/diff — честные заглушки H3–H5), пустые пакеты `extract/ design/ templates/`.
+- Тесты спеки 3+5: `tests_09/test_reports_hub_model.py` + `tests_09/test_reports_hub_discovery.py` — **12 passed**; mypy clean (9 файлов); регрессия печатника: bridge+rules 29 passed, прод `printcalc-web` HTTP 200.
+- REGISTER-FIRST: `reports_hub` в MissingRegistry → prompt_written (`reports-hub-spec.md`), `check` ok (52 записи).
+- Отчёт этапа: `projects_17/админка печатник/PHASE_H1_REPORT.md`; журнал в `РОАДМАП_v7_SMART_ORDER.md` §9. Следующий — H2 (extract-слой + тесты 1, 2).
+
+---
+
 ## [5.189.87***REMOVED*** — 2026-09-05
 
 ### 🔄 Server-first sync triangle: телефон ↔ GitHub ↔ whimco (инфра + канон)
