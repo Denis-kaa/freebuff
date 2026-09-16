@@ -73,9 +73,36 @@ def cmd_serve(args: argparse.Namespace) -> int:
 
 
 def cmd_diff(args: argparse.Namespace) -> int:
-    """Заглушка diff (полная реализация — H4)."""
-    print("diff: не реализовано в H3 (этап H4 по спеке §14)", file=sys.stderr)
-    return 2
+    """Diff последней генерации (спека §8, H4): history vs текущие модели.
+
+    Показывает, что изменится при следующей генерации (не пишет сайт).
+    """
+    from services_08.reports_hub.config import discover_projects
+    from services_08.reports_hub.report.diff import diff_models, load_history
+    from services_08.reports_hub.report.project_report import build_project_report
+    from services_08.reports_hub.report.summaries import DeterministicProvider, slugify
+
+    projects_root = Path(args.projects_root) if args.projects_root else _projects_root()
+    site_root = _hub_root() / "site"
+    profiles = discover_projects(projects_root)
+    if args.project:
+        profiles = [p for p in profiles if p.slug == args.project]
+        if not profiles:
+            print(f"проект не найден: {args.project}", file=sys.stderr)
+            return 2
+    shown = 0
+    for profile in profiles:
+        if profile.excluded or profile.invalid_reason or not profile.has_report_docs:
+            continue
+        model = build_project_report(profile, generated_at="", summaries=DeterministicProvider())
+        slug = slugify(profile.slug)
+        diff = diff_models(model, load_history(site_root, slug))
+        print(f"{slug}\t{diff.summary()}")
+        shown += 1
+    if not shown:
+        print("нет проектов с отчётными данными (сначала generate)", file=sys.stderr)
+        return 2
+    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -104,6 +131,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_diff = sub.add_parser("diff", help="diff последней генерации")
     p_diff.add_argument("--project", default=None, help="slug проекта")
+    p_diff.add_argument("--projects-root", default=None, help="каталог projects_17 (для тестов)")
     p_diff.set_defaults(func=cmd_diff)
     return parser
 

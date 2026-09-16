@@ -221,7 +221,8 @@ whimco: pack=sticker, ready=True, work_plotter_cut=True, 50×30 см × 149, ц�
 | H1 | ✅ готов (без деплоя — сервис, не прод) | 2026-09-16 | 30cd7eb | PHASE_H1_REPORT.md |
 | H2 | ✅ готов (без деплоя — сервис, не прод) | 2026-09-16 | ded517b | PHASE_H2_REPORT.md |
 | H3 | ✅ готов (без деплоя — сервис, не прод) | 2026-09-16 | — | PHASE_H3_REPORT.md |
-| H4–H6 |  не начаты | — | — | — |
+| H4 | ✅ готов (без деплоя — сервис, не прод) | 2026-09-16 | см. журнал | PHASE_H4_REPORT.md |
+| H5–H6 |  не начаты | — | — | — |
 
 - **2026-09-16 · H1 ГОТОВ — КАРКАС REPORTS HUB** — `services_08/reports_hub/`:
 каркас + `build/model.py` (ReportModel-контракт, schema_version=1) +
@@ -243,6 +244,19 @@ CLI (`list` рабочий, generate/serve/diff — честные заглуш�
 Тесты спеки 6+9: 13 новых, 40 суммарно; mypy clean (21). Решения: `report/` вместо
 `build/` (build/ в .gitignore), метрики — из статус-дока (иначе поздние PHASE
 перетирали канон), `site/` не коммитится. Отчёт: PHASE_H3_REPORT.md. Следующий — H4.
+- **2026-09-16 · H4 ГОТОВ — DIFF МЕЖДУ ГЕНЕРАЦИЯМИ + SUMMARIES.JSON** —
+`report/diff.py` (восстановлен после повреждения mid-write): `ModelDiff` (timeline_added,
+docs_added/removed, metric_changes, new/removed_sections, item_deltas, summary/has_changes)
++ `diff_models` + атомарные save/load history (`site/data/history/<slug>.json`).
+Проводка в `generate_site` (diff перед записью, save после), diff-блок в странице проекта,
+NEW-бейдж + строка «изменения» на карточках главной, diffs-агрегат в manifest.json (§8),
+CLI `diff` (history vs текущие модели, сайт не пишет). `summaries.json` создан и закоммичен
+(§9): exec-резюме печатника. Тесты спеки 4+8: 25 новых (test_reports_hub_diff 15 +
+test_reports_hub_summaries 10), 65 суммарно; mypy clean (22 файла, --explicit-package-bases).
+Живая генерация: 13 проектов · 229 доков · 13 history-файлов; 2-я генерация → «без изменений»;
+override-резюме видно на странице печатника. Решения: duck-typing `getattr(site, "diffs", …)`
+(HTML-escape тест подаёт заглушку), history пишется сразу после build, CLI diff не пишет сайт.
+Отчёт: PHASE_H4_REPORT.md. Следующий — H5 (сервер token-гейт + отчёт платформы).
 
 ## 10. Параллельные решения Дениса (не блокируют, но влияют)
 

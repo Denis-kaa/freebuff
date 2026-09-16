@@ -5,12 +5,13 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
 from services_08.reports_hub.config import ProjectProfile, discover_projects
 from services_08.reports_hub.extract.markdown import parse_markdown
+from services_08.reports_hub.report.diff import ModelDiff, diff_models, load_history, save_history
 from services_08.reports_hub.report.doclibrary import DocEntry, collect_docs, doc_slug
 from services_08.reports_hub.report.model import ReportModel
 from services_08.reports_hub.report.project_report import build_project_report
@@ -28,6 +29,7 @@ class GenerateResult:
     docs_rendered: int
     diagnostics: list[str]
     orphans: list[str]
+    diffs: dict[str, ModelDiff] = field(default_factory=dict)
 
 
 def _now_iso() -> str:
@@ -67,7 +69,7 @@ def generate_site(
     include_platform: bool = False,
     summaries_path: Path | None = None,
 ) -> GenerateResult:
-    """Сгенерировать сайт отчётов (спека §14.3).
+    """Сгенерировать сайт отчётов (спека §14.3–14.4, H4: diff между генерациями).
 
     Args:
         projects_root: каталог `projects_17/`.
@@ -93,6 +95,7 @@ def generate_site(
     models: list[ReportModel] = []
     no_data: list[tuple[str, str]] = []
     doc_pages: dict[str, str] = {}
+    diffs: dict[str, ModelDiff] = {}
     for profile in profiles:
         if profile.excluded:
             continue
@@ -103,13 +106,15 @@ def generate_site(
             no_data.append((profile.slug, "нет отчётной документации"))
             continue
         model = build_project_report(profile, generated_at=_now_iso(), summaries=provider)
-        models.append(model)
         slug = slugify(profile.slug)
+        diffs[slug] = diff_models(model, load_history(site_root, slug))
+        save_history(site_root, model)
+        models.append(model)
         pages, page_diagnostics = _doc_pages(profile, slug)
         doc_pages.update(pages)
         diagnostics.extend(page_diagnostics)
 
-    site = SiteModel(generated_at=_now_iso(), projects=models, no_data=tuple(no_data))
+    site = SiteModel(generated_at=_now_iso(), projects=models, no_data=tuple(no_data), diffs=diffs)
     write_site(site_root, site, doc_pages)
     orphans = override.orphans() if override else []
     if orphans:
@@ -121,4 +126,5 @@ def generate_site(
         docs_rendered=len(doc_pages),
         diagnostics=diagnostics,
         orphans=orphans,
+        diffs=diffs,
     )
