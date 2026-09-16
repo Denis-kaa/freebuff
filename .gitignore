@@ -142,3 +142,6 @@ projects_17/severny_chay/.env
 **/secrets/**
 projects_17/torrent_dl_web/credentials.json
 /'/
+
+# Reports Hub generated site (re-generate on deploy; source of truth — docs)
+services_08/reports_hub/site/

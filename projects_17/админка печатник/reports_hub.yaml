@@ -1,0 +1,20 @@
+# reports_hub.yaml — профиль отчёта для reports_hub
+# Первый профиль сервиса (reports-hub-spec.md §2, §4.3): проект «печатник».
+# Additive: файл только читается сервисом, ничего в проекте не меняет.
+title: "Печатникъ — админка печатного цеха"
+# accent не задан: акцента из логотипа нет → системный синий (спека §6.3).
+docs:
+  - "PROJECT_STATUS_REPORT.md"
+  - "РОАДМАП_v7_SMART_ORDER.md"
+  - "РОАДМАП_v6_ЕДИНАЯ_СИСТЕМА.md"
+  - "PHASE_*_REPORT.md"
+  - "PHASE1_OPEN_QUESTIONS.md"
+  - "research/FINAL_REPORT.md"
+  - "IMPLEMENTATION_AUDIT_REPORT.md"
+timeline_sources:
+  - "PROJECT_STATUS_REPORT.md"
+metrics:
+  loc_paths:
+    - "printcalc/src/**/*.py"
+roadmap: "РОАДМАП_v7_SMART_ORDER.md"
+blockers: "PROJECT_STATUS_REPORT.md"

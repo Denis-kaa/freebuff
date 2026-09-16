@@ -18,6 +18,11 @@ def _projects_root() -> Path:
     return here.parents[2] / "projects_17"
 
 
+def _hub_root() -> Path:
+    """Каталог сервиса (для site/ и summaries.json)."""
+    return Path(__file__).resolve().parent
+
+
 def cmd_list(args: argparse.Namespace) -> int:
     """Показать обнаруженные проекты (автообход + статусы)."""
     from services_08.reports_hub.config import discover_projects
@@ -38,20 +43,38 @@ def cmd_list(args: argparse.Namespace) -> int:
 
 
 def cmd_generate(args: argparse.Namespace) -> int:
-    """Заглушка generate (полная реализация — H3)."""
-    print("generate: не реализовано в H1 (этап H3 по спеке §14)", file=sys.stderr)
-    return 2
+    """Сгенерировать сайт отчётов (спека §14.3)."""
+    from services_08.reports_hub.report.generate import generate_site
+
+    projects_root = Path(args.projects_root) if args.projects_root else _projects_root()
+    site_root = Path(args.site) if args.site else _hub_root() / "site"
+    summaries = Path(args.summaries) if args.summaries else _hub_root() / "summaries.json"
+    slug = None if (args.all or not args.project) else args.project
+    if args.project and not args.all:
+        slug = args.project
+    result = generate_site(
+        projects_root,
+        site_root,
+        project_slug=slug,
+        include_platform=bool(args.platform),
+        summaries_path=summaries if summaries.exists() else None,
+    )
+    print(f"site: {result.site_root}")
+    print(f"проектов с отчётами: {result.projects} · без данных: {result.no_data} · страниц доков: {result.docs_rendered}")
+    for item in result.diagnostics:
+        print(f"  диагностика: {item}")
+    return 0
 
 
 def cmd_serve(args: argparse.Namespace) -> int:
     """Заглушка serve (полная реализация — H5)."""
-    print("serve: не реализовано в H1 (этап H5 по спеке §14)", file=sys.stderr)
+    print("serve: не реализовано в H3 (этап H5 по спеке §14)", file=sys.stderr)
     return 2
 
 
 def cmd_diff(args: argparse.Namespace) -> int:
     """Заглушка diff (полная реализация — H4)."""
-    print("diff: не реализовано в H1 (этап H4 по спеке §14)", file=sys.stderr)
+    print("diff: не реализовано в H3 (этап H4 по спеке §14)", file=sys.stderr)
     return 2
 
 
@@ -65,6 +88,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_generate.add_argument("--platform", action="store_true", help="включить отчёт платформы")
     p_generate.add_argument("--all", action="store_true", help="все проекты + платформа")
     p_generate.add_argument("--force", action="store_true", help="перегенерировать принудительно")
+    p_generate.add_argument("--site", default=None, help="каталог вывода (по умолчанию services_08/reports_hub/site)")
+    p_generate.add_argument("--projects-root", default=None, help="каталог projects_17 (для тестов)")
+    p_generate.add_argument("--summaries", default=None, help="путь к summaries.json (override-резюме)")
     p_generate.set_defaults(func=cmd_generate)
 
     p_serve = sub.add_parser("serve", help="локальный сервер просмотра")

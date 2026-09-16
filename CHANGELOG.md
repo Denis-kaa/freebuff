@@ -22,6 +22,14 @@
 - Живая проверка: печатник — 21 секция, 249 passed + mypy clean (50 файлов), git 5, реестр 52, tests_09 2785 collected.
 - Отчёт этапа: `projects_17/админка печатник/PHASE_H2_REPORT.md`. Следующий — H3.
 
+### 🆕 Reports Hub H3: рендер, Apple-токены, главная, отчёт печатника
+
+- NEW `services_08/reports_hub/report/{project_report,doclibrary,summaries,render,generate}.py` + `design/{tokens,accent}.py` — сборка ReportModel (§7.1), библиотека доков, резюме (override/детерминированные), самодостаточный HTML (inline CSS/JS, только относительные ссылки → file://), главная-галерея, `manifest.json`.
+- NEW первый профиль сервиса `projects_17/админка печатник/reports_hub.yaml` (спека §2/§4.3) — аддитивный owner-файл, проект не изменялся.
+- Тесты спеки 6+9: `tests_09/test_reports_hub_render.py` + `test_reports_hub_golden_pechatnik.py` — **40 passed суммарно** (13 новых); mypy clean (21 файл).
+- Живая генерация на whimco: **13 проектов с отчётами · 228 страниц доков · 1.28с**; страница печатника: 249 passed, mypy clean (50 файлов), 13 этапов timeline, 26 доков.
+- Отчёт этапа: `projects_17/админка печатник/PHASE_H3_REPORT.md`. Следующий — H4 (diff + summaries.json).
+
 ---
 
 ## [5.189.87***REMOVED*** — 2026-09-05
