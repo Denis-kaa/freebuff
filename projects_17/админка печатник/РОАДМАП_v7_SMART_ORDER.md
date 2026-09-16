@@ -1,6 +1,6 @@
 # РОАДМАП_v7_SMART_ORDER.md — Умный технологический разбор заказа + Reports Hub
 
-> **Статус:** ACTIVE — поток A (S0–S5) ЗАВЕРШЁН 2026-09-13; следующий — поток B (H1) · **Дата:** 2026-09-12
+> **Статус:** ACTIVE — поток A (S0–S5) ЗАВЕРШЁН 2026-09-13 · поток B (H1–H6) ЗАВЕРШЁН И ЗАДЕПЛОЕН 2026-09-16 · **Дата:** 2026-09-12
 > **Основа:** промт_печатник_6.md (Smart Order Intelligence, фазы R0–R5) ·
 > reports-hub-spec.md (сервис отчётов, §14 порядок) · PROJECT_STATUS_REPORT.md (13 этапов, parser v2).
 > **Принципы:** ANTI-5 (один сценарий за раз) · каждый этап = модель + API + тесты + UI + отчёт +
@@ -222,8 +222,8 @@ whimco: pack=sticker, ready=True, work_plotter_cut=True, 50×30 см × 149, ц�
 | H2 | ✅ готов (без деплоя — сервис, не прод) | 2026-09-16 | ded517b | PHASE_H2_REPORT.md |
 | H3 | ✅ готов (без деплоя — сервис, не прод) | 2026-09-16 | — | PHASE_H3_REPORT.md |
 | H4 | ✅ готов (без деплоя — сервис, не прод) | 2026-09-16 | 2bb3ddf | PHASE_H4_REPORT.md |
-| H5 | ✅ готов (без деплоя — сервис, не прод) | 2026-09-16 | см. журнал | PHASE_H5_REPORT.md |
-| H6 |  не начат | — | — | — |
+| H5 | ✅ готов (без деплоя — сервис, не прод) | 2026-09-16 | 1167515 | PHASE_H5_REPORT.md |
+| H6 | ✅ задеплоен, active/enabled | 2026-09-16 | см. журнал | PHASE_H6_REPORT.md |
 
 - **2026-09-16 · H1 ГОТОВ — КАРКАС REPORTS HUB** — `services_08/reports_hub/`:
 каркас + `build/model.py` (ReportModel-контракт, schema_version=1) +
@@ -272,6 +272,18 @@ ThreadingHTTPServer): token-гейт (`?token=`/cookie `rh_token`, env `REPORTS_
 серверы после проверки остановлены. Решения: cookie HttpOnly после первого входа,
 платформа вне projects-списка (SiteModel.platform), RegistrySummary отдельным аргументом
 рендера. Отчёт: PHASE_H5_REPORT.md. Следующий — H6 (systemd-юнит + деплой + смоук).
+- **2026-09-16 · H6 ГОТОВ — ДЕПЛОЙ; ПОТОК B ЗАВЕРШЁН** — `deploy/reports-hub.service`
+(юнит в репо, шаблон printcalc-web: WorkingDirectory=/opt/freebuff, порт 8310,
+Restart=on-failure, EnvironmentFile=/etc/default/reports-hub) → установлен на whimco
+(cp + daemon-reload + enable --now), active/enabled (symlink multi-user.target.wants).
+Токен `REPORTS_HUB_TOKEN` сгенерирован (secrets.token_urlsafe(32), chmod 600,
+серверно-локально — вне репо). Сайт регенерирован с платформой (13 проектов · 231 док).
+Смоук :8310: 401 без токена → 200 с токеном → печатник 200 → платформа 200 →
+cookie HttpOnly → zip 260 файлов → 404; journalctl «Started reports-hub.service».
+Решения: секрет в /etc/default (юнит без секрета коммитится), регенерация ручная
+(ExecStartPost не заворачиваем — файлы под живым сервером), 0.0.0.0 под token-гейтом.
+Отчёт: PHASE_H6_REPORT.md. **Спека reports-hub §14 выполнена полностью (H1–H6).**
+Открытые вопросы вне v1: регенерация по расписанию, PDF-экспорт, RSS/TG-уведомление.
 
 ## 10. Параллельные решения Дениса (не блокируют, но влияют)
 
