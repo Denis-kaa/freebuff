@@ -15,6 +15,13 @@
 - REGISTER-FIRST: `reports_hub` в MissingRegistry → prompt_written (`reports-hub-spec.md`), `check` ok (52 записи).
 - Отчёт этапа: `projects_17/админка печатник/PHASE_H1_REPORT.md`; журнал в `РОАДМАП_v7_SMART_ORDER.md` §9. Следующий — H2 (extract-слой + тесты 1, 2).
 
+### 🆕 Reports Hub H2: extract-слой (поток B печатника)
+
+- NEW `services_08/reports_hub/extract/{markdown,metrics,gitstats,pytestinfo,registry}.py` — детерминированный слой (§5.1 спеки): парсер h1–h4/таблицы/цитаты, regex-метрики с источником `файл:строка`, git-история, счётчик collect-only с кэшем, сводка MissingRegistry без зависимости от core_02.
+- Тесты спеки 1+2: `tests_09/test_reports_hub_extract.py` + `tests_09/test_reports_hub_metrics.py` — **27 passed суммарно** (15 новых); mypy clean (14 файлов).
+- Живая проверка: печатник — 21 секция, 249 passed + mypy clean (50 файлов), git 5, реестр 52, tests_09 2785 collected.
+- Отчёт этапа: `projects_17/админка печатник/PHASE_H2_REPORT.md`. Следующий — H3.
+
 ---
 
 ## [5.189.87***REMOVED*** — 2026-09-05
