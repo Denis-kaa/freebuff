@@ -221,8 +221,9 @@ whimco: pack=sticker, ready=True, work_plotter_cut=True, 50×30 см × 149, ц�
 | H1 | ✅ готов (без деплоя — сервис, не прод) | 2026-09-16 | 30cd7eb | PHASE_H1_REPORT.md |
 | H2 | ✅ готов (без деплоя — сервис, не прод) | 2026-09-16 | ded517b | PHASE_H2_REPORT.md |
 | H3 | ✅ готов (без деплоя — сервис, не прод) | 2026-09-16 | — | PHASE_H3_REPORT.md |
-| H4 | ✅ готов (без деплоя — сервис, не прод) | 2026-09-16 | см. журнал | PHASE_H4_REPORT.md |
-| H5–H6 |  не начаты | — | — | — |
+| H4 | ✅ готов (без деплоя — сервис, не прод) | 2026-09-16 | 2bb3ddf | PHASE_H4_REPORT.md |
+| H5 | ✅ готов (без деплоя — сервис, не прод) | 2026-09-16 | см. журнал | PHASE_H5_REPORT.md |
+| H6 |  не начат | — | — | — |
 
 - **2026-09-16 · H1 ГОТОВ — КАРКАС REPORTS HUB** — `services_08/reports_hub/`:
 каркас + `build/model.py` (ReportModel-контракт, schema_version=1) +
@@ -257,6 +258,20 @@ test_reports_hub_summaries 10), 65 суммарно; mypy clean (22 файла, 
 override-резюме видно на странице печатника. Решения: duck-typing `getattr(site, "diffs", …)`
 (HTML-escape тест подаёт заглушку), history пишется сразу после build, CLI diff не пишет сайт.
 Отчёт: PHASE_H4_REPORT.md. Следующий — H5 (сервер token-гейт + отчёт платформы).
+- **2026-09-16 · H5 ГОТОВ — СЕРВЕР + ОТЧЁТ ПЛАТФОРМЫ** — `server.py` (stdlib
+ThreadingHTTPServer): token-гейт (`?token=`/cookie `rh_token`, env `REPORTS_HUB_TOKEN`;
+нет токена → сервер работает, всё 401 + подсказка в лог), раздача site/, `/download/zip`
+(архив в памяти), path traversal заблокирован, честный 404. Отчёт платформы §7.3:
+`report/platform_report.py` — TASK.md (только открытые чекбоксы), CHANGELOG-лента,
+живые метрики (pytest collect-only с кэшем, MissingRegistry implemented/total, git
+коммиты/неделю + ветки, счётчики docs_10 ADR/аудиты/runbook) + `render_platform_page`
+с прогресс-баром реестра; `--platform` в generate больше не заглушка.
+Тесты спеки 7 + платформа: 15 новых (test_reports_hub_server 8 + test_reports_hub_platform 7),
+80 суммарно; mypy clean (24 файла). Живой сервер: 401 без токена → 200 с токеном →
+печатник 200 → платформа 200 → zip 259 файлов → 404; реестр живой: 34/52 implemented (65%);
+серверы после проверки остановлены. Решения: cookie HttpOnly после первого входа,
+платформа вне projects-списка (SiteModel.platform), RegistrySummary отдельным аргументом
+рендера. Отчёт: PHASE_H5_REPORT.md. Следующий — H6 (systemd-юнит + деплой + смоук).
 
 ## 10. Параллельные решения Дениса (не блокируют, но влияют)
 

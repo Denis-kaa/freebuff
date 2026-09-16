@@ -67,9 +67,24 @@ def cmd_generate(args: argparse.Namespace) -> int:
 
 
 def cmd_serve(args: argparse.Namespace) -> int:
-    """Заглушка serve (полная реализация — H5)."""
-    print("serve: не реализовано в H3 (этап H5 по спеке §14)", file=sys.stderr)
-    return 2
+    """Сервер отчётов (спека §10.2, H5): token-гейт + раздача site/ + zip."""
+    import os
+
+    from services_08.reports_hub.server import serve
+
+    site_root = Path(args.site) if args.site else _hub_root() / "site"
+    if not (site_root / "index.html").exists():
+        print("serve: site/ не сгенерирован — сначала `generate`", file=sys.stderr)
+        return 2
+    token = os.environ.get("REPORTS_HUB_TOKEN")
+    httpd = serve(site_root, args.host, args.port, token)
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        httpd.server_close()
+    return 0
 
 
 def cmd_diff(args: argparse.Namespace) -> int:
@@ -120,9 +135,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_generate.add_argument("--summaries", default=None, help="путь к summaries.json (override-резюме)")
     p_generate.set_defaults(func=cmd_generate)
 
-    p_serve = sub.add_parser("serve", help="локальный сервер просмотра")
+    p_serve = sub.add_parser("serve", help="локальный сервер просмотра (token-гейт)")
     p_serve.add_argument("--host", default="127.0.0.1")
     p_serve.add_argument("--port", type=int, default=8310)
+    p_serve.add_argument("--site", default=None, help="каталог site/ (по умолчанию services_08/reports_hub/site)")
     p_serve.set_defaults(func=cmd_serve)
 
     p_list = sub.add_parser("list", help="обнаруженные проекты")

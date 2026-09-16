@@ -15,7 +15,7 @@ from services_08.reports_hub.design.tokens import build_css, theme_script
 from services_08.reports_hub.extract.markdown import ParsedDocument
 from services_08.reports_hub.report.diff import ModelDiff
 from services_08.reports_hub.report.doclibrary import DocEntry, doc_slug
-from services_08.reports_hub.report.model import ReportModel, ReportSection
+from services_08.reports_hub.report.model import ReportModel, ReportSection  # noqa: F401 (ReportSection в render_platform_page)
 from services_08.reports_hub.report.summaries import slugify
 
 SECTION_TITLES: dict[str, str] = {
@@ -33,12 +33,13 @@ STATUS_LABEL: dict[str, str] = {
 
 @dataclass(frozen=True)
 class SiteModel:
-    """Модель сайта: главная-галерея + проектные страницы + diff-сводки."""
+    """Модель сайта: главная-галерея + проектные страницы + diff-сводки + платформа."""
 
     generated_at: str
     projects: list[ReportModel]
     no_data: tuple[tuple[str, str], ...] = ()
     diffs: dict[str, ModelDiff] = field(default_factory=dict)
+    platform: ReportModel | None = None
 
 
 def esc(value: str) -> str:
@@ -211,6 +212,45 @@ def render_index(site: SiteModel) -> str:
         body.append('<h2 class="section-title">Без отчётных данных</h2>')
         body.append(f'<div class="doc-grid">{"".join(no_data)}</div>')
     return _page("Отчёты", "".join(body))
+def render_platform_page(model: ReportModel, registry: object = None) -> str:
+    """Отчёт платформы (спека §7.3): плитки, задачи, релизы, прогресс реестра."""
+    implemented = total = 0
+    if registry is not None:
+        implemented = getattr(registry, "by_status", {}).get("implemented", 0)
+        total = getattr(registry, "total", 0)
+    progress = ""
+    if total:
+        percent = round(100 * implemented / total)
+        progress = (
+            '<div class="progress-wrap"><div class="progress-bar" '
+            f'style="width:{percent}%"></div></div>'
+            f'<p class="diag">Реестр возможностей: {implemented}/{total} implemented ({percent}%)</p>'
+        )
+    body_parts = [
+        f'<h1 class="large-title">{esc(model.title)}</h1>',
+        f'<p class="subtitle">состояние на {esc(model.generated_at)} · источник: {esc(model.exec_source)}</p>',
+        f'<details class="card" open><summary>Кратко</summary><p>{esc(model.exec_summary)}</p></details>',
+        _metric_tiles(model),
+        progress,
+    ]
+    titles = {
+        "tasks": "Открытые задачи (TASK.md)",
+        "releases": "Лента релизов (CHANGELOG)",
+        "registry": "Реестр возможностей",
+        "docs10": "docs_10 · счётчики",
+    }
+    for section in model.sections:
+        title = titles.get(section.name, section.name)
+        body_parts.append(_section_block(ReportSection(name=title, items=section.items)))
+    if model.diagnostics:
+        items = "".join(f"<li>{esc(item)}</li>" for item in model.diagnostics)
+        body_parts.append(
+            '<details class="card"><summary>Диагностика генерации</summary>'
+            f'<ul class="diag">{items}</ul></details>'
+        )
+    return _page(model.title, "".join(body_parts), back_href="../index.html", back_label="← Все отчёты")
+
+
 def render_doc_page(entry: DocEntry, doc: ParsedDocument) -> str:
     """Полный рендер Markdown-документа (спека §7.2)."""
     parts = [f'<h1 class="large-title">{esc(entry.filename)}</h1>']
@@ -248,13 +288,19 @@ def write_site(site_root: Path, site: SiteModel, doc_pages: dict[str, str]) -> N
         docs_dir = project_dir / "docs"
         docs_dir.mkdir(parents=True, exist_ok=True)
         (project_dir / "index.html").write_text(render_project_page(model, site.diffs.get(slug)), encoding="utf-8")
-        for rel_path, content in doc_pages.items():
-            prefix = f"{slug}/"
-            if not rel_path.startswith(prefix):
-                continue
-            target = docs_dir / rel_path[len(prefix) :]
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(content, encoding="utf-8")
+    if site.platform is not None:
+        platform_dir = site_root / "platform"
+        platform_dir.mkdir(parents=True, exist_ok=True)
+        platform_page = doc_pages.pop("platform/index.html", None)
+        if platform_page is not None:
+            (platform_dir / "index.html").write_text(platform_page, encoding="utf-8")
+    for rel_path, content in doc_pages.items():
+        prefix = f"{slug}/"
+        if not rel_path.startswith(prefix):
+            continue
+        target = docs_dir / rel_path[len(prefix) :]
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(content, encoding="utf-8")
     manifest = {
         "generated_at": site.generated_at,
         "projects": [

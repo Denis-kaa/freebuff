@@ -15,7 +15,7 @@ from services_08.reports_hub.report.diff import ModelDiff, diff_models, load_his
 from services_08.reports_hub.report.doclibrary import DocEntry, collect_docs, doc_slug
 from services_08.reports_hub.report.model import ReportModel
 from services_08.reports_hub.report.project_report import build_project_report
-from services_08.reports_hub.report.render import SiteModel, render_doc_page, write_site
+from services_08.reports_hub.report.render import SiteModel, render_doc_page, render_platform_page, write_site
 from services_08.reports_hub.report.summaries import DeterministicProvider, OverrideProvider, SummaryProvider, slugify
 
 
@@ -83,8 +83,6 @@ def generate_site(
     """
     provider, override = _provider(summaries_path)
     diagnostics: list[str] = []
-    if include_platform:
-        diagnostics.append("отчёт платформы — этап H5 (в H3 не генерируется)")
 
     profiles = discover_projects(projects_root)
     if project_slug is not None:
@@ -114,7 +112,26 @@ def generate_site(
         doc_pages.update(pages)
         diagnostics.extend(page_diagnostics)
 
+    platform_model: ReportModel | None = None
+    if include_platform:
+        from services_08.reports_hub.report.platform_report import build_platform_report
+
+        platform_model, _registry = build_platform_report(
+            projects_root.parent, generated_at=_now_iso(), python_exe=None
+        )
+        doc_pages["platform/index.html"] = render_platform_page(platform_model, _registry)
+    else:
+        diagnostics.append("отчёт платформы не запрошен (флаг --platform)")
+
     site = SiteModel(generated_at=_now_iso(), projects=models, no_data=tuple(no_data), diffs=diffs)
+    if platform_model is not None:
+        site = SiteModel(
+            generated_at=site.generated_at,
+            projects=models,
+            no_data=tuple(no_data),
+            diffs=diffs,
+            platform=platform_model,
+        )
     write_site(site_root, site, doc_pages)
     orphans = override.orphans() if override else []
     if orphans:

@@ -55,6 +55,8 @@ details.card summary{{cursor:pointer;min-height:44px;font-weight:600}}
 .doc-card p{{margin:4px 0;font-size:14px;color:var(--text-secondary)}}
 .badge-new{{display:inline-block;background:var(--good);color:#fff;font-size:12px;font-weight:700;border-radius:6px;padding:2px 8px}}
 .diff-block{{background:var(--card);border:1px solid var(--separator);border-left:3px solid var(--good);border-radius:var(--radius);padding:12px 16px;margin:0 0 16px;font-size:14px}}
+.progress-wrap{{height:10px;background:var(--separator);border-radius:5px;overflow:hidden;margin:8px 0 4px}}
+.progress-bar{{height:100%;background:var(--good);border-radius:5px}}
 table.stages{{width:100%;border-collapse:collapse;font-size:14px}}
 table.stages th,table.stages td{{text-align:left;padding:10px;border-bottom:1px solid var(--separator);vertical-align:top}}
 @media (max-width:719px){{table.stages thead{{display:none}}table.stages tr{{display:block;border:1px solid var(--separator);border-radius:var(--radius);margin:0 0 12px;padding:8px 12px}}table.stages td{{display:block;border:0;padding:4px 0}}}}
