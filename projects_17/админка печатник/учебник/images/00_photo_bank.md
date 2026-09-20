@@ -2,23 +2,50 @@
 
 > Единственное место, где слот = файл + подпись + лицензия (гл. 19.2).
 > Статусы: `TODO` (ждёт сессию с вебом) → `READY` (файл+автор+лицензия+подпись на месте).
-> Имя файла в `images/` = якорь: `pb-014__pvx_srez.jpg`.
+> Имя файла в `images/` = якорь: `pb-c01__coated_paper_samples.jpg`.
 > Источник по умолчанию: Wikimedia Commons (CC BY / CC BY-SA / PD). Скриншоты — запрещены.
+> **Приоритет 1, сессия 2026-09-20: 6 из 10 слотов закрыты через Commons API.**
 
 ## Приоритет 1 — Обязательные сравнения (ТЗ §19)
 
-| Якорь | Слот | Глава | Категория/поиск Commons | Статус |
+| Якорь | Слот | Глава | Источник (Commons) | Статус |
 |---|---|---|---|---|
-| pb-c01 | Мелованная vs немелованная (срез/капля краски) | 3 | `Category:Coated paper` | TODO |
-| pb-c02 | Frontlit vs Backlit на просвет | 3 | поиск: `backlit banner` | TODO |
-| pb-c03 | Баннерная сетка против света (дырки видны) | 3 | поиск: `mesh banner` | TODO |
-| pb-c04 | ПВХ vs акрил — срез вблизи | 3 | поиск: `foam PVC sheet` / `acrylic sheet` | TODO |
-| pb-c05 | Срез композита (сэндвич алюминий-полимер) | 3 | поиск: `aluminium composite panel edge` | TODO |
-| pb-c06 | Перфорированная плёнка крупным планом | 3 | поиск: `one way vision film` | TODO |
-| pb-c07 | Контражур: ночь vs день на фасаде | 7 | поиск: `halo lit letters night` | TODO |
-| pb-c08 | Биговка: ровный сгиб vs трещина без биговки | 11 | поиск: `paper crease score` | TODO |
-| pb-c09 | Люверс крупным планом (установленный) | 6 | поиск: `banner grommet eyelet` | TODO |
-| pb-c10 | Контурная резка: плёнка до / выборка / готово | 6 | поиск: `plotter cutting vinyl weeding` | TODO |
+| pb-c01 | Мелованная vs немелованная (срез/капля краски) | 3 | `Paper Coated paper.JPG` | **READY** |
+| pb-c02 | Frontlit vs Backlit на просвет | 3 | `Breda Bibliotheek Centrum 2024-12-01.jpg` | **READY** |
+| pb-c03 | Баннерная сетка против света (дырки видны) | 3 | — (поиски не дали) | TODO |
+| pb-c04 | ПВХ vs акрил — срез вблизи | 3 | — (поиски не дали) | TODO |
+| pb-c05 | Срез композита (сэндвич алюминий-полимер) | 3 | `Aluminium composite material.png` | **READY** |
+| pb-c06 | Перфорированная плёнка крупным планом | 3 | — (поиски не дали) | TODO |
+| pb-c07 | Контражур: ночь vs день на фасаде | 7 | `Maverick Reverse Channel Letters at night.jpg` | **READY** |
+| pb-c08 | Биговка: ровный сгиб vs трещина без биговки | 11 | — (поиски не дали) | TODO |
+| pb-c09 | Люверс крупным планом (установленный) | 6 | `Bandera … Ojales de latón.jpg` | **READY** |
+| pb-c10 | Контурная резка: плёнка до / выборка / готово | 6 | `Vinyl cutter wall sample…jpg` (частично — см. карточку) | **READY** |
+
+## Карточки READY (подписи из 3 частей + атрибуция)
+
+### pb-c01 — `images/pb-c01__coated_paper_samples.jpg`
+- **Подпись:** Сэмплы мелованных бумаг Oji Paper (TOPKOTE GLOSS 127 г/м², OK TOPKOTE DULL 157 г/м² и др.) → несколько видов покрытия разной плотности на одном листе → гл. 3.1: показать, что «мелованная» — это спектр, а не один материал.
+- **Автор:** User:健ちゃん · **Лицензия:** CC BY-SA 3.0 · [Страница файла](https://commons.wikimedia.org/wiki/File:Paper_Coated_paper.JPG)
+
+### pb-c02 — `images/pb-c02__backlit_banner_breda.jpg`
+- **Подпись:** Backlit-баннеры Breda Game Week у входа в библиотеку (Бреда, Нидерланды) → бэклит в реальном применении: свет проходит сквозь полотно → гл. 3.3 (сравнение с Frontlit) и гл. 4 (backlit-технология).
+- **Автор:** Renée Kools (User:ReneeWrites) · **Лицензия:** CC BY 4.0 · [Страница файла](https://commons.wikimedia.org/wiki/File:Breda_Bibliotheek_Centrum_2024-12-01.jpg)
+
+### pb-c05 — `images/pb-c05__acm_sandwich.png`
+- **Подпись:** Схема структуры алюминиевого композита (ACM) → сэндвич «алюминий–полимерное ядро–алюминий» в разрезе → гл. 3.6: почему композит жёсткий при малом весе и почему его нельзя сгибать как ПВХ.
+- **Автор:** Phoenix7777 · **Лицензия:** CC BY-SA 4.0 · [Страница файла](https://commons.wikimedia.org/wiki/File:Aluminium_composite_material.png)
+
+### pb-c07 — `images/pb-c07__halo_letters_night.jpg`
+- **Подпись:** Контражурные буквы (reverse channel letters) ночью → гало вокруг силуэта, лицо тёмное — эталонная работа контражура → гл. 7.4: как должен выглядеть правильный зазор от стены.
+- **Автор:** Xjburton · **Лицензия:** CC BY-SA 4.0 · [Страница файла](https://commons.wikimedia.org/wiki/File:Maverick_Reverse_Channel_Letters_at_night.jpg)
+
+### pb-c09 — `images/pb-c09__brass_grommets.jpg`
+- **Подпись:** Флаг-баннер с латунными люверсами по углам → установленные металлические люверсы на усиленном крае → гл. 6.10: что просит клиент словом «с люверсами» и как выглядит штатная установка.
+- **Автор:** Guadalupe el Tricolor · **Лицензия:** CC BY-SA 4.0 · [Страница файла](https://commons.wikimedia.org/wiki/File:Bandera_de_la_Virgen_Mar%C3%ADa_Guadalupe_de_M%C3%A9xico_3%27X5_%27Banner_Ojales_de_lat%C3%B3n.jpg)
+
+### pb-c10 — `images/pb-c10__vinyl_cutter_sample.jpg`
+- **Подпись:** Режущий плоттер и апплицированный на стену образец → результат контурной резки (стадия «готово»): плёнка вырезана, выборка снята, изделие на объекте → гл. 6.4а. *Честная оговорка:* слот задумывался серией «до / выборка / готово» — Commons серию не даёт; закрыта финальная стадия + машина. Серия из трёх кадров — хвост для собственной съёмки в цеху.
+- **Автор:** Komal Sambhudas · **Лицензия:** CC BY-SA 4.0 · [Страница файла](https://commons.wikimedia.org/wiki/File:Vinyl_cutter_wall_sample_at_Fab_Lab_Vigyan_Ashram.jpg)
 
 ## Приоритет 2 — Оборудование (гл. 5)
 
@@ -78,6 +105,21 @@
 - ✅ `Category:Risograph` — открыта, 11 файлов (pb-e01/e02 обеспечены кандидатами).
 - ❌ `Category:Vinyl_banners`, `Category:Large_format_printers` — 404; искать через
   поисковую строку Commons или другие названия категорий (когда веб вернётся).
+
+## Журнал наполнения (сессия 2026-09-20, Приоритет 1 через Commons API)
+
+- ✅ **6 слотов закрыты** (c01, c02, c05, c07, c09, c10): поиск `srnamespace=6` → imageinfo
+  (автор/лицензия/URL) → скачивание оригиналов → якоря в гл. 3 (уже были), 6.4а, 6.10, 7.4 (проставлены).
+- ❌ **pb-c03 (сетка):** `mesh banner` → STL-модели игры; `"banner mesh"` 0; `"construction mesh" banner` 0;
+  `"banner on fence"` — обычный баннер, не сетка. TODO.
+- ❌ **pb-c04 (ПВХ vs акрил):** `foam PVC sheet` → PDF-отчёты; `Sintra PVC` → готовые вывески (не срез);
+  `plexiglass sheet edge` → PDF. TODO.
+- ❌ **pb-c06 (перфорировка):** `"one way vision"` → PDF; `"perforated vinyl"` → автокресла AMC;
+  `"perforated window film"` 0; `"one way vision film"` 0. TODO.
+- ❌ **pb-c08 (биговка):** `paper crease fold crack` → PDF журналов Paper Trade Journal. TODO.
+- ℹ️ Промежуточные находки в реестр не вписывались (правило 4): STL, PDF, автокресла — не слоты.
+- ℹ️ pb-c09: идентификационные баннеры (AM 2016.22.8-*) с контентом, недопустимым для учебника,
+  пропущены сознательно — взят баннер с латунными люверсами.
 
 ## Правила ведения реестра
 
