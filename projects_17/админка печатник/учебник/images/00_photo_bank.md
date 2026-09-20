@@ -49,22 +49,70 @@
 
 ## Приоритет 2 — Оборудование (гл. 5)
 
-| Якорь | Слот | Категория/поиск Commons | Статус |
+| Якорь | Слот | Источник (Commons) | Статус |
 |---|---|---|---|
-| pb-e01 | Ризограф общий план (мастер-замена) | `Category:Risograph` ✅ проверена (11 файлов, напр. Riso-drum-swap.jpg) | TODO |
-| pb-e02 | Ризограф в печати, лоток оттисков | `Category:Risograph` | TODO |
-| pb-e03 | Широкоформатный принтер в работе | `Category:Printers` ✅ → подкатегории plotter | TODO |
-| pb-e04 | Режущий плоттер с ножом крупно | поиск: `cutting plotter` | TODO |
-| pb-e05 | Ламинатор валами | поиск: `laminating machine roll` | TODO |
-| pb-e06 | Термопресс для кружек/футболок | поиск: `heat press machine` | TODO |
-| pb-e07 | Люверсовщик (пресс) крупно | поиск: `grommet machine` | TODO |
-| pb-e08 | Гильотина/сабельник со стопой | поиск: `paper guillotine stack` | TODO |
-| pb-e09 | Биндер/пружина в работе | поиск: `spiral binding machine` | TODO |
-| pb-e10 | Сварщик баннеров (шов) | поиск: `banner welding machine` | TODO |
-| pb-e11 | Минилаб (фото) | поиск: `minilab printer photo` | TODO |
-| pb-e12 | УФ-принтер плоскопечатный | поиск: `UV flatbed printer` | TODO |
-| pb-e13 | Сублимационный рулонный принтер | поиск: `dye sublimation printer` | TODO |
-| pb-e14 | Фрезер с ЧПУ (таблички/буквы) | поиск: `CNC router sign` | TODO |
+| pb-e01 | Ризограф общий план (мастер-замена) | `Riso-drum-swap.jpg` | **READY** |
+| pb-e02 | Ризограф в печати, лоток оттисков | `Impressão em risografia em dua cores, 2014.jpg` | **READY** |
+| pb-e03 | Широкоформатный принтер в работе | `Plotter A0 nouvelle génération (2020).jpg` | **READY** |
+| pb-e04 | Режущий плоттер с ножом крупно | `Vinyl Cutter Machine.jpg` | **READY** |
+| pb-e05 | Ламинатор валами | `Thermal Lamination process.jpg` | **READY** |
+| pb-e06 | Термопресс для кружек/футболок | `Heat press for fabirc screen printing.jpg` | **READY** |
+| pb-e07 | Люверсовщик (пресс) крупно | `ハトメパンチ.jpg` (ручной пробойник — см. карточку) | **READY** |
+| pb-e08 | Гильотина/сабельник со стопой | `Hans Opitz …Papierschneidemaschine…jpg` (музейный) | **READY** |
+| pb-e09 | Биндер/пружина в работе | `Ibico Ibimatic (20140502 190004).jpg` (гребёнка) | **READY** |
+| pb-e10 | Сварщик баннеров (шов) | — (класс отсутствует на Commons) | TODO |
+| pb-e11 | Минилаб (фото) | `Noritsu Koki QSS-3301Digital.jpg` | **READY** |
+| pb-e12 | УФ-принтер плоскопечатный | `Océ Arizona 480 GT UV.JPG` | **READY** |
+| pb-e13 | Сублимационный рулонный принтер | — (CottonBee: технология не подтверждена) | TODO |
+| pb-e14 | Фрезер с ЧПУ (таблички/буквы) | `DMS CNC router at SITU Fabrication (12480).jpg` | **READY** |
+
+### pb-e01 — `images/pb-e01__riso_drum_swap.jpg`
+- **Подпись:** Замена барабана с краской в Riso S-3700 → обслуживание ризографа: откинут блок, барабан наполовину вынут → гл. 5.2а: ризограф — машина с расходниками-мастерами, замена — регулярная операция, не ремонт.
+- **Автор:** Yoleeth · **Лицензия:** CC BY-SA 4.0 · [Файл](https://commons.wikimedia.org/wiki/File:Riso-drum-swap.jpg)
+
+### pb-e02 — `images/pb-e02__riso_two_color_print.jpg`
+- **Подпись:** Ризопечать А3 в два цвета → оттиск рисографии с характерной зернистой заливкой → гл. 5.2а и гл. 4.8: результат работы ризографа, для которого нужны немелованные бумаги (pb-c01).
+- **Автор:** Mario Felipe · **Лицензия:** CC BY 2.0 · [Файл](https://commons.wikimedia.org/wiki/File:Impress%C3%A3o_em_risografia_em_dua_cores,_2014.jpg)
+
+### pb-e03 — `images/pb-e03__canon_a0_plotter.jpg`
+- **Подпись:** Широкоформатный струйный принтер формата А0 (Canon) → общий план рулонной машины: стойка, приёмный лоток, панель → гл. 5.3: как выглядит класс «wide»-принтера, на котором печатают баннеры и плёнки.
+- **Автор:** Luca Cavaliere · **Лицензия:** CC BY-SA 4.0 · [Файл](https://commons.wikimedia.org/wiki/File:Plotter_A0_nouvelle_g%C3%A9n%C3%A9ration_(2020).jpg)
+
+### pb-e04 — `images/pb-e04__vinyl_cutter.jpg`
+- **Подпись:** Режущий плоттер (виниловый каттер) → машина контурной резки: прижимные ролики, каретка с ножом, рулон плёнки → гл. 5.11 и 6.4а: тот самый исполнитель OP-22 «плоттерная резка».
+- **Автор:** Yash Sinalkar · **Лицензия:** CC BY-SA 4.0 · [Файл](https://commons.wikimedia.org/wiki/File:Vinyl_Cutter_Machine.jpg)
+
+### pb-e05 — `images/pb-e05__thermal_lamination.jpg`
+- **Подпись:** Ламинационная машина в работе (Аурангабад) → лист на подаче, валы прикатки → гл. 5.4 и 6: как выглядит процесс ламинации, который в каталоге стоит строкой «Ламинация».
+- **Автор:** Sachinkothari123 · **Лицензия:** CC BY-SA 4.0 · [Файл](https://commons.wikimedia.org/wiki/File:Thermal_Lamination_process.jpg)
+
+### pb-e06 — `images/pb-e06__heat_press.jpg`
+- **Подпись:** Термопресс в мастерской (закрытая рама, ткань на столе) → фиксация краски/трансфера жаром → гл. 5.6 и 13: без термопресса не выйдут ни DTF-принт, ни сублимация на кружке.
+- **Автор:** Scrud123 · **Лицензия:** CC BY-SA 3.0 · [Файл](https://commons.wikimedia.org/wiki/File:Heat_press_for_fabirc_screen_printing.jpg)
+
+### pb-e07 — `images/pb-e07__hatome_punch.jpg`
+- **Подпись:** Люверсный пробойник (в центре), документы с установленными люверсами (сверху), люверсная фурнитура (справа внизу) → весь набор операции «люверсы»: инструмент, результат, расходник → гл. 5.7 и 6.10. *Оговорка:* ручной инструмент, а не пневмопресс — производственный пресс на Commons отсутствует (хвост для съёмки в цеху).
+- **Автор:** ＋－ · **Лицензия:** CC BY-SA 3.0 · [Файл](https://commons.wikimedia.org/wiki/File:%E3%83%8F%E3%83%88%E3%83%A1%E3%83%91%E3%83%B3%E3%83%81.jpg)
+
+### pb-e08 — `images/pb-e08__paper_sabre_cutter.jpg`
+- **Подпись:** Сабельная резальная машина Hans Opitz (Музей печати, Лейпциг) → классический однорычажный сабельник: стол, прижим, рычаг ножа → гл. 5.10: «резать лист» — это эта машина, а не плоттер. *Оговорка:* музейный экземпляр, современный сабельник выглядит компактнее.
+- **Автор:** Bernd Schwabe in Hannover · **Лицензия:** CC BY-SA 4.0 · [Файл](https://commons.wikimedia.org/wiki/File:Hans_Opitz_%26_Co._Hannover_Papierschneidemaschine_im_Museum_f%C3%BCr_Druckkunst.jpg)
+
+### pb-e09 — `images/pb-e09__comb_binding.jpg`
+- **Подпись:** Биндер Ibico Ibimatic (пружина-гребёнка) → настольный переплётчик: дырокол-гребёнка с рычагом → гл. 5.9: «брошюра на пружине» из каталога собирается за два движения: пробить блок, надеть гребёнку. *Оговорка:* гребёнка (comb), металлическая/пластиковая навивка (coil) — соседний класс.
+- **Автор:** Matti Blume · **Лицензия:** CC BY-SA 4.0 · [Файл](https://commons.wikimedia.org/wiki/File:Ibico_Ibimatic_(20140502_190004).jpg)
+
+### pb-e11 — `images/pb-e11__noritsu_minilab.jpg`
+- **Подпись:** Минилаб Noritsu QSS-3301 → классический фотолаб: приёмный стол, процессор, выход отпечатков → гл. 5.13 и 12: «фото 10×15» и «фото на документы» печатаются именно здесь.
+- **Автор:** Bastet78 · **Лицензия:** CC BY-SA 3.0 · [Файл](https://commons.wikimedia.org/wiki/File:Noritsu_Koki_QSS-3301Digital.jpg)
+
+### pb-e12 — `images/pb-e12__oce_arizona_uv.jpg`
+- **Подпись:** UV-плоскопечатный принтер Océ Arizona 480 GT → flatbed с вакуумным столом: печать по жёстким листам → гл. 5.3б и 8: таблички на ПВХ/АКП печатаются напрямую, без оклейки.
+- **Автор:** Almanji · **Лицензия:** CC BY-SA 4.0 · [Файл](https://commons.wikimedia.org/wiki/File:Oc%C3%A9_Arizona_480_GT_UV.JPG)
+
+### pb-e14 — `images/pb-e14__cnc_router.jpg`
+- **Подпись:** Фрезерный станок с ЧПУ (DMS) в производственной мастерской → станина, шпиндель, зона обработки крупногабаритных листов → гл. 5.12: объёмные буквы, пазы под свет, кромки АКП.
+- **Автор:** Rhododendrites · **Лицензия:** CC BY-SA 4.0 · [Файл](https://commons.wikimedia.org/wiki/File:DMS_CNC_router_at_SITU_Fabrication_(12480).jpg) · *1600px-версия по рекомендации Wikimedia (429 на оригинал 10 МБ).*
 
 ## Приоритет 3 — Материалы ракурсом «крупно» (гл. 3)
 
@@ -124,6 +172,23 @@
   `"see-through graphic"/"see through vinyl"` 0; `cardboard fold crack edge` → PDF.
   Вывод: макро-снимки материалов (сетка, срез ПВХ/акрила, перфорация, биговка) на Commons
   отсутствуют — закрыть собственной фотосъёмкой в цеху (стол U13-хвост).
+
+## Журнал наполнения (сессия 2026-09-20, Приоритет 2 через Commons API)
+
+- ✅ **12 из 14 слотов закрыты**: imageinfo-батчи по мере находок → скачивание оригиналов →
+  якоря в гл. 5 (5.2а, 5.3, 5.3б, 5.4, 5.9, 5.10, 5.12, 5.13 — добавлены; 5.2а/e01, 5.6/e06, 5.7/e07, 5.11/e04 были).
+- ❌ **pb-e10 (сварщик баннеров):** `banner welding` → PDF; `hot wedge welding`/`banner seam` → PDF;
+  `Leister welding machine` → PDF. Класс оборудования на Commons отсутствует. TODO (съёмка в цеху).
+- ❌ **pb-e13 (сублимационный рулонный):** единственный кандидат `CottonBee drukarka.jpg` —
+  рулонный текстильный принтер, но сублимация в описании не подтверждена (правило 4: не вписываем).
+- ⚠️ **Отбраковано по правилу 4:** `Outdoor-banner-flag-wide-format-printer-flag.jpg` — по имени
+  «wide-format-printer», по описанию «graphic image of a flag… logo» — рендер, не фото принтера.
+- ℹ️ **Отклонения типов от слота — честно в карточках:** e07 — ручной пробойник (не пневмопресс),
+  e08 — музейный сабельник, e09 — гребёнка (comb, не coil).
+- ℹ️ **429 rate limit:** после ~10 больших оригиналов Wikimedia ограничил IP; e12/e14 взяты
+  1920px thumb через `iiurlwidth` (домен thumb.wikimedia.org) — рекомендация из самой ошибки.
+- ℹ️ **Альтернативы в запасе:** минилаб — Fujifilm Frontier DL650 Pro dry (WTFPL); люверсные
+  клещи — `Klieste na sedlové nity.jpg` (PD); каталог `Category:Risograph` (11 файлов) — для замены e01/e02.
 
 ## Правила ведения реестра
 
