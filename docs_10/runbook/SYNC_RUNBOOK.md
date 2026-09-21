@@ -55,7 +55,16 @@ ssh whimco 'cd /opt/freebuff && /opt/printcalc-venv/bin/python -m services_08.re
 - если менялся код сервиса (`services_08/reports_hub/`) — `systemctl restart reports-hub`;
 - токен живёт в `/etc/default/reports-hub` (chmod 600, вне репо) — при ротации рестарт обязателен.
 
-По расписанию (таймер) — вне v1 (спека reports-hub §10.3, open question §13.2).
+**Автоматика (с 2026-09-21):** регенерация срабатывает сама при смене HEAD:
+
+- `scripts_01/regen_reports_hub.sh` — гвард по stamp-файлу
+  (`site/.last_regen` = HEAD последней успешной генерации): HEAD не изменился → тихий
+  выход, ошибка генерации → stamp не обновляется (retry при следующем триггере);
+- триггер 1 — `auto_deploy.sh deploy_steps()` после каждого pull (post-merge hook);
+- триггер 2 — cron `*/5 * * * * … regen_reports_hub.sh # reports-hub-regen` (ловит
+  коммиты, сделанные прямо на сервере);
+- ручной обход гварда: `bash scripts_01/regen_reports_hub.sh --force`; лог —
+  `/var/log/freebuff-reports-regen.log`.
 
 ## 2. Нормальный цикл (сервер → база → телефон)
 
