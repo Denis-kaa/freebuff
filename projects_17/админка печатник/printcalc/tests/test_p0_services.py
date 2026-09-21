@@ -37,15 +37,17 @@ def test_seed_creates_sections_and_synonyms(conn: sqlite3.Connection) -> None:
 
 
 def test_seed_cascade_additive_no_duplicates(conn: sqlite3.Connection) -> None:
-    """Проход 2: 21 базовая + 11 каскадных + 5 по-запросу = 37, без дублей смысла.
+    """Проход 2: 21 базовая + 11 каскадных + 5 по-запросу + 5 полиграфии = 42.
 
     Лестница фото на документы (350/450/650) НЕ дублируется: каскадные
     цены Фотосферы (800/860/1000) — другой сегмент (ретушь в пакете),
     а локальный якорь 450/4 шт уже сидирован в базе (реп-карта НфЮ).
+    PHASE_UNITS (09-21): +5 позиций «8. ОПЕРАТИВНАЯ ПОЛИГРАФИЯ» —
+    кейс «наклейка 20 на 30» (носителей наклеек/листовок не было).
     """
     from printcalc_web.p0_services import P0_SECTIONS, P0_SERVICES
 
-    assert len(P0_SERVICES) == 37
+    assert len(P0_SERVICES) == 42
     names = [spec["name"] for spec in P0_SERVICES]
     assert len(names) == len(set(names)), "дубль имени в сиде — мусор в кассе"
 
@@ -200,6 +202,7 @@ def test_parser_matches_p0_synonyms(conn: sqlite3.Connection) -> None:
             "price": 15.0,
             "qty": 2.0,
             "segment_id": 0,
+            "unit": "шт",  # PHASE_UNITS: единица едет из каталога в заказ
         }
     ]
 

@@ -24,10 +24,10 @@ def conn(tmp_path):
 
 
 def test_report_seeded_catalog(conn: sqlite3.Connection) -> None:
-    """Каталог P0 (21 базовая + 11 каскадных + 5 по-запросу = 37)."""
+    """Каталог P0 (21 базовая + 11 каскадных + 5 по-запросу + 5 полиграфии = 42)."""
     report = margin.margin_report(conn)
     total = report["summary"]["routed"] + report["summary"]["gaps"]
-    assert total == 37
+    assert total == 42
     for gap in report["service_gaps"]:
         assert gap["reason"], "gap без причины — «молча», запрещено"
 

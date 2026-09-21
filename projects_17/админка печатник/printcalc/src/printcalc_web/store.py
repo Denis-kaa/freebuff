@@ -100,6 +100,77 @@ def set_payment_methods(conn: sqlite3.Connection, methods: list[str]) -> list[st
 
 # ---------- прайс-каталог ----------
 
+#: Закрытый словарь единиц измерения позиций каталога (2026-09-21, отчёт
+#: PHASE_UNITS_REPORT §2). Источники: живой каталог (шт/пакет/м²/заказ/услуга),
+#: MATERIAL_UNITS (лист), orders.js (пог.м), практика прайсов района. unit=None
+#: валиден (legacy-позиции; отображается как «шт»). Валидация — loud ValueError
+#: через StoreError (ANTI-6b: тихий фолбэк запрещён).
+UNIT_CATALOG: dict[str, str] = {
+    "шт": "штука (позиция за штуку — дефолт)",
+    "компл": "комплект (набор позиций, продаётся одним)",
+    "пачка": "пачка (несколько одинаковых листов/штук)",
+    "упак": "упаковка (розничная упаковка товара)",
+    "рулон": "рулон (позиция целиком за рулон)",
+    "лист": "лист (один физический лист)",
+    "копия": "копия (количество копий; при двусторонней печати может ≠ листам)",
+    "м²": "квадратный метр (широкоформат: площадь печати)",
+    "пог.м": "погонный метр (длина без ширины: рамки, торцы)",
+    "час": "час работы (сдельная работа: монтаж, дизайн)",
+    "пакет": "пакет услуг (готовый набор: фото на документы 4/6 шт)",
+    "услуга": "услуга (разовая работа, не тиражируемая)",
+    "заказ": "заказ (один заказ = одна позиция: дизайн, запись)",
+}
+#: Алиасы → канон (нормализация при вводе/импорте: «штука»→«шт», «м2»→«м²»).
+UNIT_ALIASES: dict[str, str] = {
+    "штука": "шт",
+    "штук": "шт",
+    "штуки": "шт",
+    "шт.": "шт",
+    "pcs": "шт",
+    "комплект": "компл",
+    "комп": "компл",
+    "пачек": "пачка",
+    "pack": "пачка",
+    "упаковка": "упак",
+    "рул": "рулон",
+    "м2": "м²",
+    "кв.м": "м²",
+    "кв. м": "м²",
+    # NB: латинское m2/m² обрабатывается в normalize_unit ДО алиасов (→ «м²»).
+    "погонный метр": "пог.м",
+    "п.м.": "пог.м",
+    "п.м": "пог.м",
+    "погм": "пог.м",
+    "hours": "час",
+    "ч": "час",
+    "набор": "пакет",
+}
+
+
+def normalize_unit(unit: str | None) -> str | None:
+    """Нормализует единицу к канону UNIT_CATALOG (алиас → канон, trim).
+
+    None/пустая строка → None (валидный legacy: отображается как «шт»).
+    Неизвестная единица → StoreError (ANTI-6b: loud, не молча) с перечнем
+    допустимых — владелец сразу видит, что можно исправить.
+    Латинская «m2»/«m²» (частая опечатка Excel) → «м²» — не ошибка, а забота:
+    единица физически однозначна, ошибка бы остановила весь CSV-импорт.
+    """
+    if unit is None:
+        return None
+    cleaned = unit.strip()
+    if not cleaned:
+        return None
+    if cleaned in ("m2", "m²"):
+        return "м²"
+    canonical = UNIT_ALIASES.get(cleaned.lower(), cleaned)
+    if canonical not in UNIT_CATALOG:
+        allowed = ", ".join(UNIT_CATALOG)
+        raise StoreError(
+            f"неизвестная единица измерения: '{unit}' (допустимо: {allowed})"
+        )
+    return canonical
+
 
 def add_price_item(
     conn: sqlite3.Connection,
@@ -109,12 +180,16 @@ def add_price_item(
     unit: str | None = None,
     category: str | None = None,
 ) -> dict[str, Any]:
-    """Создаёт позицию каталога (unverified=1 — идея №4). Дубликаты не блокируются (идея №8)."""
+    """Создаёт позицию каталога (unverified=1 — идея №4). Дубликаты не блокируются (идея №8).
+
+    unit нормализуется к UNIT_CATALOG (алиасы; неизвестная → StoreError).
+    """
     clean_name = name.strip()
     if not clean_name:
         raise StoreError("название позиции не может быть пустым")
     if price < 0:
         raise StoreError("цена не может быть отрицательной")
+    unit = normalize_unit(unit)
     now = utc_now()
     cursor = conn.execute(
         "INSERT INTO price_list_items (name, price, unit, category, created_at, updated_at)"
@@ -162,11 +237,16 @@ _UPDATABLE_FIELDS = ("name", "price", "unit", "category", "unverified")
 def update_price_item(
     conn: sqlite3.Connection, item_id: int, fields: Mapping[str, Any]
 ) -> dict[str, Any]:
-    """Частично обновляет позицию. Synonyms передаётся списком строк."""
+    """Частично обновляет позицию. Synonyms передаётся списком строк.
+
+    unit нормализуется (алиасы; неизвестная → StoreError).
+    """
     updates: dict[str, Any] = {}
     for key in _UPDATABLE_FIELDS:
         if key in fields and fields[key] is not None:
             updates[key] = fields[key]
+    if "unit" in updates:
+        updates["unit"] = normalize_unit(updates["unit"])
     if "unverified" in updates:
         updates["unverified"] = 1 if updates["unverified"] else 0
     if "price" in updates:
@@ -468,6 +548,9 @@ def _resolve_item(
         if not isinstance(item_id, int):
             raise StoreError("для позиции из каталога нужен price_list_item_id")
         item = get_price_item(conn, item_id)
+        # Единица: явный выбор оператора сильнее каталога (перекрыть можно,
+        # например, «шт» каталога на «м²» — при площади). Обе через normalize.
+        raw_unit = normalize_unit(raw.get("unit")) if raw.get("unit") else None
         return {
             "kind": "price_list",
             "name": item["name"],
@@ -479,6 +562,7 @@ def _resolve_item(
             "saved_to_catalog": 1,
             "position": position,
             "segment_id": _segment_of(raw),
+            "unit": raw_unit or item.get("unit") or None,
             "consumption": None,
         }
 
@@ -516,8 +600,9 @@ def _resolve_item(
             raise StoreError("для ручной позиции нужны название и цена")
         if float(price) < 0:
             raise StoreError("цена не может быть отрицательной")
+        manual_unit = normalize_unit(raw.get("unit")) if raw.get("unit") else None
         if bool(raw.get("save_to_catalog", True)):
-            created = add_price_item(conn, name=name, price=float(price))
+            created = add_price_item(conn, name=name, price=float(price), unit=manual_unit)
             return {
                 "kind": "price_list",
                 "name": name,
@@ -529,6 +614,7 @@ def _resolve_item(
                 "saved_to_catalog": 1,
                 "position": position,
                 "segment_id": _segment_of(raw),
+                "unit": manual_unit or created.get("unit") or None,
             }
         return {
             "kind": "manual",
@@ -541,6 +627,7 @@ def _resolve_item(
             "saved_to_catalog": 0,
             "position": position,
             "segment_id": _segment_of(raw),
+            "unit": manual_unit,
             "consumption": None,
         }
 
@@ -584,8 +671,8 @@ def create_order(
         conn.execute(
         "INSERT INTO order_items (order_id, kind, name, price, qty, calculator_id,"
         " params_json, price_list_item_id, saved_to_catalog, position, consumption_json,"
-        " segment_id)"
-        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        " segment_id, unit)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         (
             order_id,
             item["kind"],
@@ -600,6 +687,8 @@ def create_order(
             json.dumps(item["consumption"], ensure_ascii=False) if item.get("consumption") else None,
             # Сегмент мультизаказа (парсер v2): int из черновика либо NULL.
             int(item["segment_id"]) if item.get("segment_id") is not None else None,
+            # Единица позиции (PHASE_UNITS): из каталога/ручного выбора либо NULL.
+            item.get("unit"),
         ),
         )
     increment_usage(conn, [i["price_list_item_id"] for i in resolved if i["price_list_item_id"]])
@@ -638,6 +727,7 @@ def _order_row_to_dict(
                 "segment_id": (
                     item["segment_id"] if "segment_id" in item.keys() else None
                 ),
+                "unit": item["unit"] if "unit" in item.keys() else None,
                 "consumption": (
                     json.loads(item["consumption_json"]) if item["consumption_json"] else None
                 ),
@@ -1621,6 +1711,10 @@ def _estimate_row_to_dict(
                 "calculator_id": item["calculator_id"],
                 "params": json.loads(item["params_json"]) if item["params_json"] else None,
                 "price_list_item_id": item["price_list_item_id"],
+                # Единица позиции (PHASE_UNITS): NULL — legacy; отображение «шт».
+                "unit": (
+                    _resolve_item_unit(conn, item) if item["kind"] == "price_list" else None
+                ),
             }
             for item in item_rows
         ],
@@ -1630,6 +1724,24 @@ def _estimate_row_to_dict(
     ).fetchone()
     estimate["snapshot"] = _snapshot_row_to_dict(snapshot) if snapshot else None
     return estimate
+
+
+def _resolve_item_unit(conn: sqlite3.Connection, item: sqlite3.Row) -> str | None:
+    """Единица позиции сметы: своя (estimate_items без unit-колонки нет —
+    сметы резолвятся тем же _resolve_item, но INSERT смет unit не пишет —
+    исторически; для price_list берём из каталога по ссылке).
+
+    Legacy-примечание: колонку unit в estimate_items НЕ добавляем (аддитивность
+    минимальна): единица восстановима из каталога по price_list_item_id;
+    ручные позиции в сметах — редкость, показываются как «шт».
+    """
+    ref = item["price_list_item_id"]
+    if ref is None:
+        return None
+    row = conn.execute(
+        "SELECT unit FROM price_list_items WHERE id = ?", (int(ref),)
+    ).fetchone()
+    return row["unit"] if row is not None else None
 
 
 def _snapshot_row_to_dict(row: sqlite3.Row) -> dict[str, Any]:

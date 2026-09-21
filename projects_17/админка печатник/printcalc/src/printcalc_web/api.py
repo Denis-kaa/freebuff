@@ -97,6 +97,9 @@ class OrderItemIn(BaseModel):
     price: float | None = Field(default=None, ge=0)
     save_to_catalog: bool = True
     segment_id: int | None = Field(default=None, ge=0, le=999)
+    #: Единица позиции (PHASE_UNITS): перекрывает единицу каталога; валидация
+    #: в store.normalize_unit (закрытый UNIT_CATALOG, ANTI-6b).
+    unit: str | None = None
 
 
 class OrderIn(BaseModel):
@@ -800,6 +803,8 @@ class EstimateItemIn(BaseModel):
     name: str | None = None
     price: float | None = Field(default=None, ge=0)
     save_to_catalog: bool = True
+    #: Единица позиции (PHASE_UNITS) — отображение в смете; хранение из каталога.
+    unit: str | None = None
 
 
 class EstimateIn(BaseModel):

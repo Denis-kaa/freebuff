@@ -134,6 +134,25 @@ P0_CASCADE_SECTIONS: tuple[tuple[str, tuple[tuple[str, float, str, tuple[str, ..
 #: E-градусные позиции (research/17_catalog_prices.md §Ограничения):
 #: цену в открытых источниках района не публикуют. price=0 = «Цена по
 #: запросу» (конвенция движка); владелец заполняет в каталоге.
+#: Оперативная полиграфия (research/17_catalog_prices.md §5): кейс 09-21
+#: «наклейка 20 на 30» не нашлась — позиций-носителей в каталоге не было.
+#: Цены: B-градусные зафиксированы, C — модельные, E-флаг → «цена по запросу»
+#: (0.0; конвенция движка). Синонимы — только реально встречающиеся (включая
+#: размерные «фото 10 на 15» — размер теперь НЕ съедается как тираж).
+P0_PRINT_SECTIONS: tuple[tuple[str, tuple[tuple[str, float, str, tuple[str, ...]], ...]], ...] = (
+    (
+        "8. ОПЕРАТИВНАЯ ПОЛИГРАФИЯ",
+        (
+            ("Листовка А4", 15.0, "шт", ("листовка а4", "лист А4", "листовки")),
+            ("Листовка А5", 10.0, "шт", ("листовка а5", "лист А5", "листовки")),
+            ("Листовка А6", 7.0, "шт", ("листовка а6", "лист А6", "листовки")),
+            # 5000 шт А6 = 4800 ₽ (66print, B) → 0.96; окр. до 1 ₽; 1000 шт А4 ≈ 8 ₽ (set-w B).
+            ("Наклейка А4 (самоклейка)", 8.0, "шт", ("наклейка", "наклейка а4", "стикер", "наклейки")),
+            ("Наклейка А4 на м²", 360.0, "м²", ("наклейка на метр", "наклейка м2", "наклейка м²")),
+        ),
+    ),
+)
+
 P0_ON_REQUEST_SECTIONS: tuple[tuple[str, tuple[tuple[str, float, str, tuple[str, ...]], ...]], ...] = (
     (
         "3. ФОТОПЕЧАТЬ",
@@ -163,9 +182,9 @@ P0_SERVICES: tuple[dict[str, Any], ...] = tuple(
         "name": name,
         "price": price,
         "unit": unit,
-        "category": section,
+        "category": section, 
         "synonyms": list(synonyms),
     }
-    for section, items in P0_SECTIONS + P0_CASCADE_SECTIONS + P0_ON_REQUEST_SECTIONS
+    for section, items in P0_SECTIONS + P0_CASCADE_SECTIONS + P0_PRINT_SECTIONS + P0_ON_REQUEST_SECTIONS
     for name, price, unit, synonyms in items
 )

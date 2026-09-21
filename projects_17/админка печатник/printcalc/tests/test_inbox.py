@@ -46,7 +46,9 @@ def test_record_message_parses_catalog_items(conn: sqlite3.Connection) -> None:
     assert len(items) == 1
     assert items[0]["name"] == "Баннер 440г"
     assert items[0]["qty"] == 2.0
-    assert "штуки" in message["parsed"]["unknown"]
+    # PHASE_UNITS: «штуки» — слово-тираж, квалифицирует число и поглощается
+    # (раньше падало в unknown и поднимало needs_operator — ложная эскалация).
+    assert "штуки" not in message["parsed"]["unknown"]
 
 
 def test_record_message_duplicate_is_idempotent(conn: sqlite3.Connection) -> None:

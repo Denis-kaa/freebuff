@@ -97,7 +97,9 @@ async function openOrder(orderId) {
             consumptionRow = `<div class="consumption-line muted">⟶ ${parts.map(escapeHtml).join(" · ")}</div>`;
           }
         }
-        return `<td>${escapeHtml(item.name)}${badge}${consumptionRow}</td><td class="num">${money(item.price)}</td>` +
+        // PHASE_UNITS: единица позиции рядом с количеством (NULL — legacy → шт).
+        const unit = item.unit || "шт";
+        return `<td>${escapeHtml(item.name)}${badge}${consumptionRow}</td><td class="num">${money(item.price)} / ${escapeHtml(unit)}</td>` +
           `<td class="num">${item.qty}</td><td class="num">${money(item.price * item.qty)}</td>`;
       })
       .map((cells) => "<tr>" + cells + "</tr>")
