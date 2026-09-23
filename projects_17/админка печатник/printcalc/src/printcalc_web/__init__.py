@@ -73,4 +73,13 @@ def create_app(db_path: Path | None = None) -> FastAPI:
     except Exception as exc:  # noqa: BLE001 — поллер не критичен для старта
         logging.getLogger("uvicorn.error").warning("telegram poller disabled: %s", exc)
 
+    # Hub v2 (§43): IMAP-поллер входящих писем (daemon; без PRINTCALC_IMAP_HOST
+    # и PRINTCALC_IMAP_USER — тихий no-op, канал email просто «не включён»).
+    try:
+        from printcalc_web import mail_poller
+
+        mail_poller.start_poller(app)
+    except Exception as exc:  # noqa: BLE001 — поллер не критичен для старта
+        logging.getLogger("uvicorn.error").warning("email poller disabled: %s", exc)
+
     return app

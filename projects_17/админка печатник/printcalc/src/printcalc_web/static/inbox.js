@@ -118,6 +118,7 @@ async function loadClients() {
 
 function openInquiryDialog(inquiry) {
   currentInquiry = inquiry;
+  currentMessageId = inquiry.message_id || null;
   $("#inquiry-dialog-title").textContent = `Заявка №${inquiry.id}`;
   $("#inq-client").value = inquiry.client_id || "";
   $("#inq-summary").value = inquiry.summary || "";
@@ -129,7 +130,42 @@ function openInquiryDialog(inquiry) {
   $("#inquiry-dialog").showModal();
 }
 
-/* --- Ответы клиенту (Этап 6b) --- */
+/* --- Ответы клиенту (Этап 6b + шаблоны R1/R2/R3 Hub v2) --- */
+
+async function loadReplyTemplates() {
+  // Закрытый словарь с сервера (ANTI-6b): R1/R2/R3. Вставка — только в
+  // textarea; оператор видит и правит текст до отправки (§37).
+  try {
+    const data = await apiFetch("/reply-templates");
+    replyTemplatesCache = data.templates || [];
+    const select = $("#inq-reply-template");
+    const options = replyTemplatesCache
+      .map((t) => `<option value="${t.template_id}">${esc(t.title)}</option>`)
+      .join("");
+    select.innerHTML = '<option value="">— шаблон ответа —</option>' + options;
+  } catch (_) {
+    /* шаблоны не критичны: останется только свободный текст */
+  }
+}
+
+let currentMessageId = null; // письмо-источник заявки (для рендера шаблонов)
+let replyTemplatesCache = [];
+
+async function insertReplyTemplate() {
+  // Рендер — на сервере (§37: детерминированная подстановка parsed-фактов);
+  // без письма-источника шаблон вставляется с «…» и оператор правит сам.
+  const templateId = $("#inq-reply-template").value;
+  if (!templateId) return;
+  try {
+    const data = await apiFetch(`/reply-templates/${templateId}/render`, {
+      method: "POST",
+      body: JSON.stringify({ message_id: currentMessageId }),
+    });
+    $("#inq-reply-body").value = data.text;
+  } catch (error) {
+    $("#inquiry-error").textContent = error.message;
+  }
+}
 
 async function updateReplyTarget() {
   // Адресат считаетается сервером (store._reply_recipient); UI показывает
@@ -268,7 +304,8 @@ $("#inq-save").addEventListener("click", saveInquiry);
 $("#inq-to-estimate").addEventListener("click", createEstimateFromInquiry);
 $("#inq-reply-custom").addEventListener("click", () => sendReply("custom"));
 $("#inq-reply-estimate").addEventListener("click", () => sendReply("estimate"));
+$("#inq-reply-template-insert").addEventListener("click", insertReplyTemplate);
 
-Promise.all([loadClients(), loadMessages(), loadInquiries()]).catch(
+Promise.all([loadClients(), loadMessages(), loadInquiries(), loadReplyTemplates()]).catch(
   (e) => ($("#inbox-error").textContent = e.message)
 );
