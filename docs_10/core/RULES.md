@@ -47,6 +47,7 @@
 | **SECURITY.md** | Уязвимости, отчёты, практики | Проблема безопасности |
 | **MIGRATION.md** | Версионирование, breaking changes, обновление | Breaking change |
 | **runbook/SYNC_RUNBOOK.md** | Операционный manual Server-first sync (git-треугольник телефон ↔ GitHub ↔ whimco; emergency bundle-через-SSH) | Синхронизация узлов, работа с сервером whimco |
+| **runbook/DESKTOP_AGENT_ACCESS_RUNBOOK.md** | Доступ к серверу whimco + MCP Freebuff для агента на компьютере (Linux/Codebuff): SSH-алиас, stdio-над-SSH, правила whimco | Подключение нового узла/агента, MCP-доступ к платформе |
 | **PERFORMANCE.md** | Метрики, бенчмарки, оптимизации | Оптимизация |
 | **TESTING.md** | Стратегия тестирования, coverage | Изменение тестов |
 | **CHANGELOG.md** | Изменения по версиям | Релиз |

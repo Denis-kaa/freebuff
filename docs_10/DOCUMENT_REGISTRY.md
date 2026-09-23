@@ -510,6 +510,13 @@ Bump: ACTIVE 86 → 88 (реестровые записи: шаблон + инд
 
 Bump: ACTIVE 79 → 86 (7 новых; ADR-013/014 — 13-14-й ADR платформы). Примечание: bump выполнен в v5.146.0 (v5.145.0 реестр не бумпался); P3-дизайн/исследование — v5.145.0, ADR/MANIFEST/прогоны — v5.146.0.
 
+### ACTIVE entries added 2026-09-06
+
+| File | Type | Status | Provenance |
+|------|------|--------|------------|
+| `docs_10/audits/AUDIT_CODEBUFF_2026-09-06.md` | Audit / Research | ACTIVE | Source-backed analysis of Codebuff/Freebuff pricing, quota dimensions, security/privacy, server and SDK use, and comparison with Claude Code, Cursor, GitHub Copilot, OpenAI Codex, Aider, and OpenCode; sources retrieved 2026-09-06 |
+| `docs_10/runbook/DESKTOP_AGENT_ACCESS_RUNBOOK.md` | Runbook | ACTIVE | Handoff-инструкция для агента на компьютере (Linux + Codebuff): SSH-алиас `whimco` + MCP-сервер Freebuff (`scripts_01/mcp_server.py`) через stdio-над-SSH в `.agents/mcp.json` (запасной вариант — HTTP :8765 через SSH-туннель с bearer `FREEBUFF_MCP_TOKEN`); правила whimco (не удалять, бэкап, checkout -f -B) унаследованы от SERVER_ACCESS_WHIMCO.md; создан 2026-09-22 телефонной сессией (handoff телефон → десктоп) |
+
 ## Сводка (подсчёт по таблицам выше)
 
 | Статус | Кол-во файлов | Состав |

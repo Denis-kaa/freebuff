@@ -1,0 +1,20 @@
+[Unit]
+Description=Freebuff mailbox agent (buffy-server) — живой агент whimco, канал /opt/freebuff-mailbox
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/freebuff
+Environment=FREEBUFF_MAILBOX_DIR=/opt/freebuff-mailbox
+Environment=FREEBUFF_MAILBOX_AGENT_ID=buffy-server
+Environment=FREEBUFF_MAILBOX_INTERVAL_S=300
+ExecStart=/usr/bin/python3 /opt/freebuff/scripts_01/mailbox_agent.py --loop
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=freebuff-mailbox-agent
+
+[Install]
+WantedBy=multi-user.target
