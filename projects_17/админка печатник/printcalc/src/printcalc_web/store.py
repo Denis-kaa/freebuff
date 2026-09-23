@@ -3010,8 +3010,9 @@ def _reply_recipient(
 ) -> tuple[str | None, str | None]:
     """Адресат ответа из заявки: (channel, recipient) или (None, None).
 
-    Приоритет §45: email-контакт клиента → telegram-контакт клиента →
-    chat_id входящего сообщения (telegram-ответ без сохранённого контакта).
+    Приоритет §45 (+Hub v2): email-контакт клиента → telegram-контакт клиента →
+    chat_id входящего telegram-сообщения → адрес отправителя входящего
+    email-письма (ответ туда, откуда пришёл запрос).
     """
     inquiry = get_inquiry(conn, inquiry_id)
     if inquiry["client_id"] is not None:
@@ -3023,8 +3024,13 @@ def _reply_recipient(
                 return "telegram", contact["value"].strip()
     if inquiry["message_id"] is not None:
         message = get_inbox_message(conn, inquiry["message_id"])
-        if message is not None and message["channel"] == "telegram" and message["chat_id"]:
+        if message is None:
+            return None, None
+        if message["channel"] == "telegram" and message["chat_id"]:
             return "telegram", message["chat_id"]
+        # Email-ответ (Hub v2): письмо → ответ на адрес отправителя.
+        if message["channel"] == "email" and (message["sender_handle"] or "").strip():
+            return "email", message["sender_handle"].strip()
     return None, None
 
 

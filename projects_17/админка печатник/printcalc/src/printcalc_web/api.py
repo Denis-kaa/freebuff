@@ -18,7 +18,7 @@ from pydantic import BaseModel, Field
 
 from printcalc.engine.errors import CalcInputError, RegistryError
 from printcalc.engine.registry import calculate as engine_calculate
-from printcalc_web import emailer, export, orderbridge, outbox, parser, rules, store
+from printcalc_web import emailer, export, orderbridge, outbox, parser, reply_templates, rules, store
 from printcalc_web.calculators import get_registry, list_calculators, result_to_dict
 from printcalc_web.db import connect
 
@@ -1250,6 +1250,46 @@ class ReplySendIn(BaseModel):
     body: str = ""
     channel: Literal["telegram", "email", "manual"] | None = None
     recipient: str | None = None
+
+
+@router.get("/reply-templates")
+def list_reply_templates_endpoint() -> dict[str, Any]:
+    """Шаблоны быстрых ответов R1/R2/R3 (RESEARCH_ADOPTION_PLAN §5-Б п.11).
+
+    Подстановка фактов — на клиенте при выборе шаблона (parsed сообщения
+    там уже есть); сервер отдаёт закрытый словарь.
+    """
+    return {"templates": reply_templates.REPLY_TEMPLATES}
+
+
+class TemplateRenderIn(BaseModel):
+    """Запрос рендера шаблона с фактами входящего сообщения (§37)."""
+
+    message_id: int | None = None
+
+
+@router.post("/reply-templates/{template_id}/render")
+def render_reply_template_endpoint(
+    template_id: str,
+    payload: TemplateRenderIn | None = None,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Детерминированный рендер шаблона по parsed-фактам сообщения.
+
+    Без message_id — шаблон с placeholder «…» (заполнит оператор).
+    """
+    parsed: dict[str, Any] = {}
+    if payload is not None and payload.message_id is not None:
+        message = _store_guard(store.get_inbox_message, conn, payload.message_id)
+        if message is not None:
+            raw = message.get("parsed") or {}
+            assert isinstance(raw, dict)
+            parsed = raw
+    try:
+        text = reply_templates.render(template_id, parsed=parsed)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    return {"template_id": template_id, "text": text}
 
 
 @router.get("/replies")

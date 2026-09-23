@@ -1,7 +1,7 @@
 # PROJECT_STATUS_REPORT.md — полный отчёт по этапам и соответствие кода
 
 > Дата: 2026-09-20 · HEAD: `68c29bf` (мастер = GitHub = сервер)
-> Состояние: **436 тестов printcalc зелёные (после S6) + 80 тестов Reports Hub, mypy clean, оба сервиса активны (printcalc-web :8300, reports-hub :8310)**
+> Состояние: **481 тест printcalc зелёные (после Hub v2) + 80 тестов Reports Hub, mypy clean, оба сервиса активны (printcalc-web :8300, reports-hub :8310)**
 > Код: `printcalc/` — движок + web-слой + тесты · `services_08/reports_hub/` — сервис отчётов (поток B) · `учебник/` + отчёты — контент-слой (после S6 код приложения не менялся: единственный коммит — `7b2808a`)
 
 > **Потоки после 2026-09-10 (детали — РОАДМАП_v7_SMART_ORDER.md §9):**
@@ -159,7 +159,7 @@
 | **Не молча (анти-галлюцинация)** | unknown-токены возвращаются; needs_operator+reasons; unassigned_fragments; жаргон не выдумывается (словарь только из каталога+спек) | `parser.py` |
 | **Server-first (ADR-022)** | Каждый этап: коммит → push в GitHub → pull на whimco → рестарт → живой смоук → чистка смоук-данных | история деплоев, лог роадмапа |
 
-**Верификация на текущий момент:** `436 passed` printcalc (после S6) + 80 Reports Hub, mypy clean, оба сервиса active (:8300 / :8310); контент-слой верифицирован перекрёстными grep-проверками связок (U15) и сверкой якорей фотобанка с реестром.
+**Верификация на текущий момент:** `481 passed` printcalc (после Hub v2; 436 → 469 Units → 481 Hub v2) + 80 Reports Hub, mypy clean, оба сервиса active (:8300 / :8310); контент-слой верифицирован перекрёстными grep-проверками связок (U15) и сверкой якорей фотобанка с реестром.
 
 ---
 
@@ -203,10 +203,20 @@
 +5 позиций «8. ОПЕРАТИВНАЯ ПОЛИГРАФИЯ» (исследование 17). 469 passed (+33),
 mypy clean. Отчёт: PHASE_UNITS_REPORT.md.
 
-### Этап 6b — Communication Hub v2
+### Этап 20 — Communication Hub v2 (PHASE_HUB_V2, 09-21)
 
-4. **Email-канал** (EmailAdapter §43) + **ответы из системы** (reply из «Входящих» с шаблонами R1/R2/R3).
-5. **Активация Telegram-бота** — нужен токен от Дениса: `PRINTCALC_TG_TOKEN` (+ `PRINTCALC_TG_ADMIN`) в env юнита и рестарт; код готов и ждёт.
+Email-канал (EmailAdapter §43) + ответы из системы закрыты: `mail_poller.py`
+(IMAP-приём, зеркало telegram.py, идемпотентность по Message-ID, без кредов —
+тихий no-op), шаблоны ответов R1/R2/R3 (`reply_templates.py`, закрытый
+словарь, детерминированная подстановка фактов на сервере), API
+`GET /api/reply-templates` + `POST /…/{id}/render`, email-fallback в
+`_reply_recipient`, UI-селектор шаблона в диалоге «Входящих». 481 passed
+(+12), mypy clean. Включение канала — env `PRINTCALC_IMAP_*` (креды от
+владельца). Отчёт: PHASE_HUB_V2_REPORT.md.
+
+### Этап 6b — Communication Hub v2 (остаток)
+
+5. **Активация Telegram-бота** — нужен токен от Дениса: `PRINTCALC_TG_TOKEN` (+ `PRINTCALC_TG_ADMIN`) в env юнита и рестарт; код готов и ждёт. Email-канал — код готов (этап 20), нужен IMAP-ящик от владельца.
 
 ### Этап 7 — Payment Hub
 

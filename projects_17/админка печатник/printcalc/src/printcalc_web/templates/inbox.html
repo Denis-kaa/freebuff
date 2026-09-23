@@ -82,6 +82,12 @@
   <div class="reply-block" style="margin-top:16px; border-top:1px solid var(--st-border, #333); padding-top:12px;">
     <h4 style="margin:0 0 8px;">Ответить клиенту</h4>
     <p id="inq-reply-target" class="muted" style="margin:0 0 8px; font-size:13px;"></p>
+    <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+      <select id="inq-reply-template" class="field-input" style="flex:1;">
+        <option value="">— шаблон ответа —</option>
+      </select>
+      <button id="inq-reply-template-insert" class="btn" type="button">Вставить</button>
+    </div>
     <textarea id="inq-reply-body" class="field-input" rows="4"
               placeholder="Свободный текст ответа (или отправьте смету — текст соберётся автоматически)"></textarea>
     <div class="modal-actions" style="margin-top:8px;">
