@@ -63,8 +63,20 @@ def test_bridge_golden_sticker_with_accepted_op(client: ASGITestClient) -> None:
     assert result["price"] > 0, "цена посчитана сервером движком"
 
 
-def test_bridge_without_accepted_ops_no_work_flags(client: ASGITestClient) -> None:
+def test_bridge_without_accepted_ops_no_work_flags(
+    client: ASGITestClient, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Предложенная, но не подтверждённая операция в цену НЕ попадает (§1)."""
+    # Тест про ФЛАГ-контракт, а не про цены владельца: изолируемся от
+    # machine-state (на whimco заполнен data/wide_prices.yaml 100/500 —
+    # иначе дельта легитимна и тест зависел бы от машины). Пустой путь
+    # → резолвер цен даёт канон 0/0.
+    from printcalc_web import pricing
+
+    monkeypatch.setenv(
+        pricing.PRICES_ENV_VAR, str(tmp_path / "wide_prices_absent.yaml")
+    )
+
     verdict = _sticker_verdict(client)
     bridge = client.post(
         "/api/order/bridge", json={"verdict": verdict, "accepted_operations": []}
@@ -78,8 +90,8 @@ def test_bridge_without_accepted_ops_no_work_flags(client: ASGITestClient) -> No
     ).json()
     assert bridge_op["params"]["work_plotter_cut"] is True
     # Цена резки — НАСТРАИВАЕМЫЙ параметр (решение Дениса 2026-09-12,
-    # РОАДМАП_v7 §10): дефолт 0/0, поэтому цена НЕ меняется до наполнения
-    # прайса. Контракт моста — флаг в params (→ задание OP-22 и цена
+    # РОАДМАП_v7 §10): при изолированном прайсе (канон 0/0) дельты нет.
+    # Контракт моста — флаг в params (→ задание OP-22 и цена
     # из прайса владельца), а не конкретная дельта.
     assert bridge_op["result"]["price"] == pytest.approx(price_plain), (
         "дефолтная резка 0/0 — цена меняется только через прайс владельца"
@@ -139,3 +151,102 @@ def test_bridge_unknown_operation_token_is_ignored(client: ASGITestClient) -> No
     ).json()
     assert bridge["result"]["price"] > 0
     assert not bridge["params"].get("work_plotter_cut"), "OP-99 вне закрытого маппинга — флаг остался False"
+
+
+# --- S6: ответы на вопросы (layout) → позиции дизайна -----------------------
+
+
+def test_s6_layout_no_with_op22_adds_design_position(client: ASGITestClient) -> None:
+    """«Макета нет» + подтверждённая OP-22 → доп. позиция «Макет под плоттерную резку».
+
+    Сотрудник явно ответил «no» на вопрос вердикта; позиция дизайна посчитана
+    сервером (design-калькулятор) — nothing auto: без ответа позиция не возникает.
+    """
+    verdict = _sticker_verdict(client)
+    assert any(m["field"] == "layout_with_cut_contour" for m in verdict["missing"]), "вердикт golden-фразы спрашивает про макет с контуром"
+    bridge = client.post(
+        "/api/order/bridge",
+        json={
+            "verdict": verdict,
+            "accepted_operations": ["OP-22"],
+            "question_answers": {"layout_with_cut_contour": "no"},
+        },
+    ).json()
+    extras = bridge["extra_positions"]
+    assert len(extras) == 1, "ровно одна дизайн-позиция"
+    extra = extras[0]
+    assert extra["calculator_id"] == "design"
+    assert extra["name"] == "Макет под плоттерную резку"
+    assert extra["result"]["price"] > 0, "цена дизайна посчитана сервером"
+    assert bridge["facts_applied"] == {"layout_with_cut_contour": "no"}
+
+
+def test_s6_layout_yes_adds_nothing(client: ASGITestClient) -> None:
+    """«Макет есть» → позиция НЕ добавляется (факт фиксируется в facts_applied)."""
+    verdict = _sticker_verdict(client)
+    bridge = client.post(
+        "/api/order/bridge",
+        json={
+            "verdict": verdict,
+            "accepted_operations": ["OP-22"],
+            "question_answers": {"layout_with_cut_contour": "yes"},
+        },
+    ).json()
+    assert bridge["extra_positions"] == []
+    assert bridge["facts_applied"] == {"layout_with_cut_contour": "yes"}
+
+
+def test_s6_layout_no_without_accepted_op22_adds_nothing(client: ASGITestClient) -> None:
+    """«Макета нет» БЕЗ подтверждённой OP-22 — позиция не создаётся (не молча)."""
+    verdict = _sticker_verdict(client)
+    bridge = client.post(
+        "/api/order/bridge",
+        json={
+            "verdict": verdict,
+            "accepted_operations": [],
+            "question_answers": {"layout_with_cut_contour": "no"},
+        },
+    ).json()
+    assert bridge["extra_positions"] == [], "вопрос производства ≠ операция без подтверждения"
+
+
+def test_s6_no_answer_no_extras_backward_compatible(client: ASGITestClient) -> None:
+    """Без question_answers контракт S5 не изменился (extras пуст, facts_applied {})."""
+    verdict = _sticker_verdict(client)
+    bridge = client.post(
+        "/api/order/bridge",
+        json={"verdict": verdict, "accepted_operations": ["OP-22"]},
+    ).json()
+    assert bridge["extra_positions"] == []
+    assert bridge["facts_applied"] == {}
+    assert bridge["result"]["price"] > 0
+
+
+def test_s6_unknown_question_field_is_400(client: ASGITestClient) -> None:
+    """Поле вопроса вне закрытого набора — честный 400 (ANTI-6b, не молча)."""
+    verdict = _sticker_verdict(client)
+    response = client.post(
+        "/api/order/bridge",
+        json={
+            "verdict": verdict,
+            "accepted_operations": ["OP-22"],
+            "question_answers": {"mount_height": "no"},
+        },
+    )
+    assert response.status_code == 400
+    assert "не поддерживается" in response.json()["detail"]
+
+
+def test_s6_unknown_answer_value_is_400(client: ASGITestClient) -> None:
+    """Значение ответа вне {yes, no} — честный 400 (ANTI-6b)."""
+    verdict = _sticker_verdict(client)
+    response = client.post(
+        "/api/order/bridge",
+        json={
+            "verdict": verdict,
+            "accepted_operations": ["OP-22"],
+            "question_answers": {"layout": "maybe"},
+        },
+    )
+    assert response.status_code == 400
+    assert "вне набора" in response.json()["detail"]

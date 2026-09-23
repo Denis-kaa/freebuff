@@ -1,0 +1,21 @@
+# /etc/systemd/system/reports-hub.service — Reports Hub (поток B печатника, H6)
+# Спека: reports-hub-spec.md §10.3 · РОАДМАП_v7 §7 · аналог printcalc-web.service.
+# Токен: EnvironmentFile=/etc/default/reports-hub (REPORTS_HUB_TOKEN; chmod 600).
+# Регенерация сайта: вручную после git pull — `python -m services_08.reports_hub generate --all --platform`
+# (по расписанию — вне v1, спека §10.3 / open question §13.2).
+
+[Unit]
+Description=Reports Hub - platform report service (pechatnik stream B)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/freebuff
+Environment=PYTHONUNBUFFERED=1
+EnvironmentFile=/etc/default/reports-hub
+ExecStart=/opt/printcalc-venv/bin/python -m services_08.reports_hub serve --host 0.0.0.0 --port 8310
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

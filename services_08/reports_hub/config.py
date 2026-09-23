@@ -1,165 +1,278 @@
-"""Автообход projects_17 + профили reports_hub.yaml (спека §4.3, тест №5).
+"""Профили проектов и автообход projects_17/ (спека §4.3).
 
-Контракты:
-- проект с сигнатурами отчётности → DiscoveredProject(has_data=True);
-- без сигнатур → DiscoveredProject(has_data=False, reason='нет отчётной
-  документации') — карточка «нет данных», не молча (решение №12);
-- битый reports_hub.yaml → has_data=False, reason='профиль невалиден: …',
-  ошибка видна в диагностике (§11);
-- конфликт slug → DiscoveryError с перечислением (B-Rule 5, §11);
-- исключаемые каталоги — закрытый список EXCLUDED_DIRS + per-project
-  `exclude: true` в yaml.
-
-Slug-правило (§11, открытый вопрос №1 v1): кириллица/пробелы → хеш-суффикс
-при небезопасном имени; оригинальное имя хранится в title.
+Owner-файл проекта: ``projects_17/<slug>/reports_hub.yaml``.
+Нет файла — default-профиль по сигнатурам отчётности.
+Нет сигнатур — карточка «нет данных» (серая, с причиной).
 """
 
 from __future__ import annotations
 
-import hashlib
-import re
+import os
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import yaml
 
-#: Сигнатуры отчётности (спека §4.3 «Автообход»).
+#: Сигнатуры отчётной документации (спека §4.3, автообход).
 REPORT_SIGNATURES: tuple[str, ...] = (
     "PROJECT_STATUS_REPORT.md",
+    "PHASE_*_REPORT.md",
+    "ROADMAP*.md",
+    "РОАДМАП*.md",
     "FINAL_REPORT.md",
     "MANIFEST.md",
 )
-#: Glob-сигнатуры (проверяются отдельно).
-REPORT_GLOBS: tuple[str, ...] = (
-    "PHASE_*_REPORT.md",
-    "PHASE_*.md",
-    "ROADMAP*.md",
-    "РОАДМАП*.md",
-    "AUDIT*.md",
-    "*AUDIT*.md",
+
+#: Служебные каталоги, исключаемые из автообхода (спека §4.3).
+EXCLUDED_DIRS: tuple[str, ...] = (
+    ".freezer",
+    "trash_21",
+    "__pycache__",
+    ".git",
+    ".venv",
+    "node_modules",
 )
 
-#: Служебные/мусорные каталоги (спека §4.3): обходится мимо всегда.
-EXCLUDED_DIRS: frozenset[str] = frozenset(
-    {
-        ".freezer",
-        "trash_21",
-        "__pycache__",
-        "node_modules",
-        ".git",
-        ".venv",
-        "venv",
-    }
-)
 
-_SLUG_UNSAFE = re.compile(r"[^a-z0-9_-]+")
+@dataclass(frozen=True)
+class ProjectProfile:
+    """Профиль отчёта одного проекта."""
 
-
-class DiscoveryError(RuntimeError):
-    """Ошибка обхода (например, конфликт slug — §11)."""
-
-
-@dataclass
-class DiscoveredProject:
-    """Результат обхода одного каталога projects_17/<name>."""
-
-    name: str  # оригинальное имя каталога
-    slug: str  # URL-безопасный слаг
+    slug: str
     path: Path
-    has_data: bool
-    reason: str = ""  # почему has_data=False (для карточки «нет данных»)
-    profile: dict[str, Any] = field(default_factory=dict)  # reports_hub.yaml
-    profile_error: str = ""  # битый yaml → текст ошибки в диагностику
+    title: str
+    accent: str = ""
+    logo: str = ""
+    docs: tuple[str, ...] = ()
+    timeline_sources: tuple[str, ...] = ()
+    loc_paths: tuple[str, ...] = ()
+    roadmap: str = ""
+    blockers: str = ""
+    excluded: bool = False
+    has_report_docs: bool = False
+    invalid_reason: str = ""
+
+    def to_json(self) -> dict[str, Any]:
+        """Сериализовать профиль в JSON-совместимый словарь."""
+        payload = {
+            "slug": self.slug,
+            "path": str(self.path),
+            "title": self.title,
+            "accent": self.accent,
+            "logo": self.logo,
+            "docs": list(self.docs),
+            "timeline_sources": list(self.timeline_sources),
+            "loc_paths": list(self.loc_paths),
+            "roadmap": self.roadmap,
+            "blockers": self.blockers,
+            "excluded": self.excluded,
+            "has_report_docs": self.has_report_docs,
+            "invalid_reason": self.invalid_reason,
+        }
+        return payload
 
 
-def make_slug(name: str, *, taken: set[str] | None = None) -> str:
-    """URL-безопасный слаг из имени каталога (§11: кириллица → хеш при коллизии).
+def _strip_quotes(value: str) -> str:
+    """Снять одну пару совпадающих кавычек (одинарные/двойные)."""
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in ("\"", "'"):
+        return value[1:-1]
+    return value
 
-    Простой случай (латиница/цифры/дефис) — транслит не нужен, имя уже валидно.
-    Иначе — хеш-суффикс: «админка печатник» → «ad"-hash» невозможен, поэтому
-    слаг = 'p' + 12 hex-символов sha256 имени (детерминированно).
+
+def _parse_owner_text(text: str, project_name: str) -> dict[str, Any]:
+    """Минимальный парсер reports_hub.yaml без внешних зависимостей.
+
+    Подмножество YAML, достаточное для профиля (§4.3 спеки): скаляры
+    (title/accent/logo/roadmap/blockers/exclude), списки (docs,
+    timeline_sources, metrics.loc_paths). Вложенность — только
+    ``metrics:`` → ``loc_paths:``. Комментарии ``#`` и пустые строки
+    игнорируются.
+
+    Raises:
+        ValueError: битый файл (табы, незакрытая кавычка, мусор) — проект
+            помечается невалидным (спека §11), обход не падает.
     """
-    base = name.strip().lower().replace(" ", "-")
-    safe = _SLUG_UNSAFE.sub("-", base).strip("-")
-    if safe and safe == _SLUG_UNSAFE.sub("", base) and base == safe:
-        slug = safe
-    else:
-        digest = hashlib.sha256(name.encode("utf-8")).hexdigest()[:12]
-        slug = f"p-{digest}"
-    if taken is not None and slug in taken:
-        raise DiscoveryError(
-            f"конфликт slug {slug!r} для проектов: {sorted(taken)} + {name!r} (B-Rule 5)"
-        )
-    return slug
-
-
-def _has_report_signatures(project_dir: Path) -> tuple[bool, str]:
-    """Есть ли в каталоге сигнатуры отчётности (файлы или globs)."""
-    for sig in REPORT_SIGNATURES:
-        if (project_dir / sig).is_file():
-            return True, sig
-    for pattern in REPORT_GLOBS:
-        if any(project_dir.glob(pattern)):
-            return True, pattern
-    return False, "нет отчётной документации"
-
-
-def _load_profile(project_dir: Path) -> tuple[dict[str, Any], str]:
-    """Читает reports_hub.yaml (опционален); битый → пусто + ошибка (не молча)."""
-    profile_path = project_dir / "reports_hub.yaml"
-    if not profile_path.is_file():
-        return {}, ""
-    try:
-        data = yaml.safe_load(profile_path.read_text(encoding="utf-8"))
-    except yaml.YAMLError as exc:
-        return {}, f"профиль невалиден: {exc}"
-    if data is None:
-        return {}, ""
-    if not isinstance(data, dict):
-        return {}, f"профиль невалиден: ожидается словарь, получено {type(data).__name__}"
-    if data.get("exclude") is True:
-        return {}, "excluded"
-    return data, ""
-
-
-def discover_projects(root: Path) -> list[DiscoveredProject]:
-    """Обход projects_17/<name>/ (спека §4.3): сигнатуры + профиль + слаг.
-
-    Результат отсортирован по имени; слаги уникальны (конфликт → DiscoveryError).
-    """
-    if not root.is_dir():
-        raise DiscoveryError(f"корень обхода не найден: {root}")
-
-    discovered: list[DiscoveredProject] = []
-    taken: set[str] = set()
-    for entry in sorted(root.iterdir(), key=lambda p: p.name):
-        if not entry.is_dir() or entry.name in EXCLUDED_DIRS or entry.name.startswith("."):
+    data: dict[str, Any] = {}
+    current_list_key: str | None = None
+    in_metrics = False
+    loc_paths: list[str] = []
+    for line_no, raw_line in enumerate(text.splitlines(), start=1):
+        if "\t" in raw_line:
+            raise ValueError(
+                f"битый reports_hub.yaml в {project_name}: таб в строке {line_no}"
+            )
+        stripped = raw_line.split("#", 1)[0].rstrip()
+        if not stripped.strip():
             continue
-        profile, profile_error = _load_profile(entry)
-        if profile_error == "excluded":
-            continue
-        if profile_error:
-            discovered.append(
-                DiscoveredProject(
-                    name=entry.name,
-                    slug=make_slug(entry.name, taken=taken),
-                    path=entry,
-                    has_data=False,
-                    reason=profile_error,
-                    profile_error=profile_error,
+        indent = len(stripped) - len(stripped.lstrip(" "))
+        content = stripped.strip()
+        if indent == 0:
+            in_metrics = False
+            current_list_key = None
+            if content.startswith("- "):
+                raise ValueError(
+                    f"битый reports_hub.yaml в {project_name}: "
+                    f"элемент списка без ключа (строка {line_no})"
                 )
-            )
+            if ":" not in content:
+                raise ValueError(
+                    f"битый reports_hub.yaml в {project_name}: "
+                    f"нет ':' (строка {line_no})"
+                )
+            key, _, value = content.partition(":")
+            key = key.strip()
+            value = value.strip()
+            if key == "metrics":
+                if value:
+                    raise ValueError(
+                        f"битый reports_hub.yaml в {project_name}: "
+                        f"metrics должен быть mapping (строка {line_no})"
+                    )
+                in_metrics = True
+                continue
+            if key in ("docs", "timeline_sources"):
+                if value:
+                    raise ValueError(
+                        f"битый reports_hub.yaml в {project_name}: "
+                        f"{key} должен быть списком (строка {line_no})"
+                    )
+                data[key] = []
+                current_list_key = key
+                continue
+            if value.startswith("[") and not value.endswith("]"):
+                raise ValueError(
+                    f"битый reports_hub.yaml в {project_name}: "
+                    f"незакрытая скобка (строка {line_no})"
+                )
+            if value.count('"') % 2 != 0 or value.count("'") % 2 != 0:
+                raise ValueError(
+                    f"битый reports_hub.yaml в {project_name}: "
+                    f"незакрытая кавычка (строка {line_no})"
+                )
+            if key == "exclude":
+                data[key] = value.lower() in ("true", "yes", "1")
+            else:
+                data[key] = _strip_quotes(value)
             continue
-        has_data, evidence = _has_report_signatures(entry)
-        discovered.append(
-            DiscoveredProject(
-                name=entry.name,
-                slug=make_slug(entry.name, taken=taken),
-                path=entry,
-                has_data=has_data,
-                reason="" if has_data else evidence,
-                profile=profile,
+        # Вложенная строка: элемент списка или metrics.loc_paths.
+        if not content.startswith("- "):
+            if in_metrics and indent == 2 and content.startswith("loc_paths:"):
+                _, _, value = content.partition(":")
+                value = value.strip()
+                if value:
+                    raise ValueError(
+                        f"битый reports_hub.yaml в {project_name}: "
+                        f"loc_paths должен быть списком (строка {line_no})"
+                    )
+                current_list_key = "__loc_paths__"
+                continue
+            raise ValueError(
+                f"битый reports_hub.yaml в {project_name}: "
+                f"неожиданная вложенная строка {line_no}"
             )
+        item = _strip_quotes(content[2:].strip())
+        if current_list_key == "__loc_paths__":
+            loc_paths.append(item)
+        elif current_list_key in ("docs", "timeline_sources"):
+            data[current_list_key].append(item)
+        else:
+            raise ValueError(
+                f"битый reports_hub.yaml в {project_name}: "
+                f"элемент списка без ключа (строка {line_no})"
+            )
+    if loc_paths:
+        data["metrics"] = {"loc_paths": loc_paths}
+    return data
+
+
+def _read_owner_file(project_dir: Path) -> dict[str, Any]:
+    """Прочитать reports_hub.yaml проекта (пусто при отсутствии).
+
+    Raises:
+        ValueError: если YAML битый (спека §11: проект помечается невалидным).
+    """
+    owner = project_dir / "reports_hub.yaml"
+    if not owner.exists():
+        return {}
+    try:
+        text = owner.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise ValueError(f"не читается reports_hub.yaml в {project_dir.name}: {exc}") from exc
+    data = _parse_owner_text(text, project_dir.name)
+    if not isinstance(data, dict):
+        raise ValueError(f"reports_hub.yaml в {project_dir.name}: корень должен быть mapping")
+    return data
+
+
+def _has_report_docs(project_dir: Path) -> bool:
+    """Проверить сигнатуры отчётности в каталоге проекта."""
+    for signature in REPORT_SIGNATURES:
+        if "*" in signature:
+            if list(project_dir.glob(signature)):
+                return True
+        elif (project_dir / signature).exists():
+            return True
+    return False
+
+
+def build_profile(slug: str, project_dir: Path) -> ProjectProfile:
+    """Построить профиль проекта (owner-файл или default).
+
+    Битый YAML не роняет обход: профиль помечается invalid_reason
+    (спека §11 — сайт генерится без него, ошибка видна в диагностике).
+    """
+    try:
+        owner = _read_owner_file(project_dir)
+    except ValueError as exc:
+        return ProjectProfile(
+            slug=slug,
+            path=project_dir,
+            title=slug,
+            invalid_reason=str(exc),
         )
-    return discovered
+    if owner.get("exclude") is True:
+        return ProjectProfile(slug=slug, path=project_dir, title=slug, excluded=True)
+    has_docs = _has_report_docs(project_dir)
+    docs = tuple(str(x) for x in owner.get("docs", []))
+    timeline_sources = tuple(str(x) for x in owner.get("timeline_sources", []))
+    metrics = owner.get("metrics", {}) if isinstance(owner.get("metrics"), dict) else {}
+    loc_paths = tuple(str(x) for x in metrics.get("loc_paths", []))
+    return ProjectProfile(
+        slug=slug,
+        path=project_dir,
+        title=str(owner.get("title", slug)),
+        accent=str(owner.get("accent", "")),
+        logo=str(owner.get("logo", "")),
+        docs=docs,
+        timeline_sources=timeline_sources,
+        loc_paths=loc_paths,
+        roadmap=str(owner.get("roadmap", "")),
+        blockers=str(owner.get("blockers", "")),
+        has_report_docs=has_docs,
+    )
+
+
+def discover_projects(projects_root: Path) -> list[ProjectProfile]:
+    """Автообход projects_17/ (спека §4.3).
+
+    Args:
+        projects_root: каталог ``projects_17`` (проверяется существование).
+
+    Returns:
+        Список профилей, отсортированный по slug. Служебные каталоги пропущены.
+    """
+    profiles: list[ProjectProfile] = []
+    if not projects_root.exists():
+        return profiles
+    try:
+        entries = sorted(os.listdir(projects_root))
+    except OSError:
+        return profiles
+    for name in entries:
+        if name in EXCLUDED_DIRS or name.startswith("."):
+            continue
+        project_dir = projects_root / name
+        if not project_dir.is_dir():
+            continue
+        profiles.append(build_profile(slug=name, project_dir=project_dir))
+    return profiles

@@ -39,6 +39,33 @@ ssh whimco 'cd /opt/freebuff && bash scripts_01/auto_deploy.sh pull'
 - post-merge hook выполняет deploy-шаги (`DEPLOY_CMD`, по умолчанию пуст);
 - `.env`, `data_13/context.db`, `context_12/events.db` — gitignored, pull их не трогает.
 
+### 1b. После pull: перегенерация Reports Hub (если менялись доки/этапы)
+
+Сайт отчётов (`reports-hub.service`, порт 8310) раздаёт **статичные HTML** из
+`services_08/reports_hub/site/` (gitignored — генерируется, не синхронизируется).
+Если пул принёс изменения доков (PHASE-отчёты, роадмапы, PROJECT_STATUS), сайт
+показывает старые данные до ручной регенерации:
+
+```bash
+ssh whimco 'cd /opt/freebuff && /opt/printcalc-venv/bin/python -m services_08.reports_hub generate --all --platform'
+```
+
+- ~1.3с, перезаписывает `site/` (13 проектов + отчёт платформы + history для diff);
+- рестарт сервиса **не нужен** (HTML статичен; рестарт сбрасывает только zip-кэш в памяти);
+- если менялся код сервиса (`services_08/reports_hub/`) — `systemctl restart reports-hub`;
+- токен живёт в `/etc/default/reports-hub` (chmod 600, вне репо) — при ротации рестарт обязателен.
+
+**Автоматика (с 2026-09-21):** регенерация срабатывает сама при смене HEAD:
+
+- `scripts_01/regen_reports_hub.sh` — гвард по stamp-файлу
+  (`site/.last_regen` = HEAD последней успешной генерации): HEAD не изменился → тихий
+  выход, ошибка генерации → stamp не обновляется (retry при следующем триггере);
+- триггер 1 — `auto_deploy.sh deploy_steps()` после каждого pull (post-merge hook);
+- триггер 2 — cron `*/5 * * * * … regen_reports_hub.sh # reports-hub-regen` (ловит
+  коммиты, сделанные прямо на сервере);
+- ручной обход гварда: `bash scripts_01/regen_reports_hub.sh --force`; лог —
+  `/var/log/freebuff-reports-regen.log`.
+
 ## 2. Нормальный цикл (сервер → база → телефон)
 
 Серверный WIP (новые модули, промты, фиксы) коммитится **на сервере** и пушится; телефон стягивает:

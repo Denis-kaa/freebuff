@@ -1,10 +1,8 @@
-"""python -m services_08.reports_hub — CLI-точка входа (спека решение №18)."""
+"""Entrypoint: python -m services_08.reports_hub … (спека §4.2)."""
 
 from __future__ import annotations
-
-import sys
 
 from services_08.reports_hub.cli import main
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())

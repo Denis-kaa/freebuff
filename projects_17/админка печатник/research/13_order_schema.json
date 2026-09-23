@@ -1,0 +1,71 @@
+{
+  "$comment": "13_order_schema.json — универсальная структура заказа (§27) + система уверенности (§28). Совместима с промтом и расширяема.",
+  "version": "1.0",
+  "order": {
+    "order_id": null,
+    "customer_request": "",
+    "source_channel": "reception|vk|telegram|whatsapp|phone|web",
+    "created_at": null,
+    "items": [
+      {
+        "item_id": 1,
+        "intent": "",
+        "service": "",
+        "span_in_text": [0, 0],
+        "quantity": null,
+        "parameters": {},
+        "files": [
+          {
+            "file_id": null,
+            "format": null,
+            "size_px": null,
+            "dpi_estimate": null,
+            "quality_flag": "ok|warn|reject",
+            "warnings": []
+          }
+        ],
+        "deadline": null,
+        "delivery": null,
+        "confidence": 0.0,
+        "known_params": [],
+        "inferred_params": [],
+        "missing_required": [],
+        "needs_human_confirmation": false,
+        "human_check_reasons": [],
+        "price_draft": null,
+        "price_source": null
+      }
+    ],
+    "unassigned_fragments": [],
+    "clarifications": [
+      {
+        "question_id": 1,
+        "for_item": null,
+        "question": "",
+        "answer": null,
+        "resolved": false
+      }
+    ],
+    "order_confidence": 0.0,
+    "status": "draft|awaiting_clarification|awaiting_confirmation|confirmed|transferred_to_staff|rejected",
+    "staff_note": null
+  },
+  "confidence_system": {
+    "intent_confidence": "0..1 — уверенность распознавания intent позиции",
+    "parameter_confidence": "0..1 — уверенность по каждому параметру (known=0.95, inferred=0.7)",
+    "order_confidence": "min по позициям; после ответов на вопросы пересчитывается",
+    "thresholds": {
+      "auto_continue": 0.8,
+      "ask_question_below": 0.8,
+      "escalate_human_below": 0.6
+    },
+    "rule_inferred_never_auto_known": "INFERRED параметр становится KNOWN только после явного подтверждения клиентом, если ошибка влияет на цену/производство/результат"
+  },
+  "evidence_levels": {
+    "A": "несколько независимых источников",
+    "B": "несколько компаний/источников",
+    "C": "наблюдение у отдельных компаний",
+    "D": "гипотеза",
+    "E": "недостаточно данных"
+  }
+}

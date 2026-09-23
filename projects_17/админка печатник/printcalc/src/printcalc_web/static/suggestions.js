@@ -25,6 +25,11 @@ const DECISION_LABEL = {
 
 let currentVerdict = null;
 
+/* S6: явные ответы сотрудника на вопросы вердикта (layout → yes/no).
+ * Заполняются кнопками ниже; попадают в /order/bridge только по нажатию
+ * «В расчёт» (ничего не применяется само — промт_6 §1). */
+const questionAnswers = {};
+
 async function sugFetch(path, options = {}) {
   const response = await fetch(SUGGEST_API + path, {
     headers: { "Content-Type": "application/json" },
@@ -106,16 +111,27 @@ function suggestionsHtml(v) {
 
 function missingHtml(v) {
   if (!v.missing || !v.missing.length) return "";
-  const rows = v.missing.map((m) => `
+  const rows = v.missing.map((m) => {
+    const isLayout = m.field === "layout" || m.field === "layout_with_cut_contour";
+    const answered = questionAnswers[m.field];
+    if (isLayout && answered) {
+      return `
+    <div class="sug-row">
+      <span class="sug-label">${esc(m.question)} <b class="sug-answer">→ ${answered === "yes" ? "макет есть" : "макета нет — посчитаем"}</b></span>
+    </div>`;
+    }
+    const noLabel = isLayout ? "Нет, посчитать макет" : "Нет";
+    return `
     <div class="sug-row ${m.blocking ? "sug-blocker" : ""}">
       <span class="sug-label">${m.blocking ? "⚠ " : ""}${esc(m.question)}
         <span class="muted">(${esc(m.field)})</span></span>
       <span class="row-actions">
         <button class="btn" data-sug-missing-yes="${esc(m.field)}" type="button" title="Указать вручную">Да, указать</button>
-        <button class="btn" data-sug-missing-no="${esc(m.field)}" type="button">Нет</button>
+        <button class="btn" data-sug-missing-no="${esc(m.field)}" type="button">${esc(noLabel)}</button>
       </span>
-    </div>`).join("");
-  return `<div class="sug-section"><div class="sug-head">Не хватает данных</div>${rows}</div>`;
+    </div>`;
+  });
+  return `<div class="sug-section"><div class="sug-head">Не хватает данных</div>${rows.join("")}</div>`;
 }
 
 function renderVerdict() {
@@ -159,7 +175,11 @@ async function bridgeToCalculation() {
       .map((op) => op.operation_token);
     const bridge = await sugFetch("/order/bridge", {
       method: "POST",
-      body: JSON.stringify({ verdict: currentVerdict, accepted_operations: accepted }),
+      body: JSON.stringify({
+        verdict: currentVerdict,
+        accepted_operations: accepted,
+        question_answers: { ...questionAnswers },
+      }),
     });
     const r = bridge.result || {};
     if (typeof window.addItem === "function") {
@@ -172,13 +192,28 @@ async function bridgeToCalculation() {
         params: bridge.params || null,
       });
     }
+    /* S6: позиции дизайна из ответов «макета нет» — отдельные позиции. */
+    const extras = bridge.extra_positions || [];
+    for (const extra of extras) {
+      if (typeof window.addItem === "function") {
+        window.addItem({
+          kind: "calculator",
+          name: extra.name,
+          price: (extra.result && extra.result.price) || 0,
+          qty: 1,
+          calculator_id: extra.calculator_id,
+          params: extra.params || null,
+        });
+      }
+    }
     const box = document.getElementById("suggest-box");
     if (box) {
       const note = document.createElement("div");
       note.className = "sug-bridge-done";
       note.textContent =
         `Добавлено в заказ: ${bridge.calculator_id} — ${Number(r.price || 0).toFixed(2)} ₽` +
-        (accepted.length ? ` (работы: ${accepted.join(", ")})` : "");
+        (accepted.length ? ` (работы: ${accepted.join(", ")})` : "") +
+        extras.map((e) => ` · ${e.name} — ${Number(e.result?.price || 0).toFixed(2)} ₽`).join("");
       box.querySelector(".sug-footer")?.before(note);
     }
     logDecision("accepted", { kind: "bridge", token: "order/bridge", payload: { calculator_id: bridge.calculator_id, price: r.price } });
@@ -280,6 +315,24 @@ document.addEventListener("click", (event) => {
     const field = noBtn.dataset.sugMissingNo;
     const m = (currentVerdict.missing || []).find((x) => x.field === field);
     logDecision("rejected", { kind: "question", field, payload: { question: m ? m.question : field } });
+    if (field === "layout" || field === "layout_with_cut_contour") {
+      /* S6: «макета нет» — осознанный ответ; в мост уйдёт question_answers
+       * и (если OP-22 подтверждена) вернётся позиция дизайна. */
+      questionAnswers[field] = "no";
+      renderVerdict();
+      return;
+    }
     noBtn.closest(".sug-row").style.opacity = "0.5";
+  }
+
+  const yesBtn2 = event.target.closest("[data-sug-missing-yes]");
+  if (yesBtn2) {
+    const field = yesBtn2.dataset.sugMissingYes;
+    if (field === "layout" || field === "layout_with_cut_contour") {
+      /* S6: «макет есть» — факт фиксируется и уходит в мост (без позиции). */
+      questionAnswers[field] = "yes";
+      renderVerdict();
+      return;
+    }
   }
 });

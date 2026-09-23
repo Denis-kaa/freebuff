@@ -49,6 +49,9 @@ CALC_KEYWORDS: dict[str, tuple[str, ...]] = {
 _TITLE_STOPWORDS = {"калькулятор"}
 _NUMBER_RE = re.compile(r"^\d+([.,]\d+)?$")
 _TOKEN_SPLIT = re.compile(r"[,;]+")
+#: Склеенный размер «20×30»/«20х30»/«20x30» (PHASE_UNITS): один токен,
+#: осмысленный фрагмент (размер) — в unknown не падает, уходит в result["sizes"].
+_GLUED_SIZE_RE = re.compile(r"^\d+(?:[.,]\d+)?[xх×]\d+(?:[.,]\d+)?$")
 
 #: Наивные русские флексии (ступень 1, без морфоанализа): «ксерокса» →
 #: «ксерокс», «фотки» → «фотка». Применяются к токену, если сам токен
@@ -59,6 +62,34 @@ _FLEX_SUFFIXES = ("а", "ы", "у", "е", "и", "ой", "ов", "ам", "ами"
 #: 05_combined_orders.md): разбивают привязку параметров к услугам.
 #: Запятая/точка с запятой уже разделители токенизации.
 _ENUM_WORDS = frozenset({"и", "плюс", "ещё", "еще", "также", "а", "да"})
+
+#: Слова-разделители РАЗМЕРА (PHASE_UNITS, репорт кейса 09-21): «20 на 30»,
+#: «20 х 30», «20 x 30» — размер изделия, а НЕ перечисление и НЕ тираж.
+#: Склейка «20×30»/«20х30» — один токен, числом не является (см. _NUMBER_RE).
+_SIZE_WORDS = frozenset({"на", "х", "x", "×"})
+
+#: Слова, делающие примыкающее число ТИРАЖОМ: «наклейка 100 шт», «20 листов».
+#: Без них «наклейка 20 на 30» (размер) и «наклейка 20» (тираж) неразличимы.
+_QTY_WORDS = frozenset({
+    "шт", "шт.", "штук", "штуки", "штука", "экз", "экземпляр", "экземпляра",
+    "экземпляров", "лист", "листа", "листов", "копия", "копии", "копий",
+    "упак", "упаковка", "упаковки", "упаковок", "пачка", "пачки", "пачек",
+    "рулон", "рулона", "рулонов", "компл", "комплект", "комплекта", "комплектов",
+})
+
+
+def _dimension_indices(tokens: list[str]) -> set[int]:
+    """Индексы токенов, образующих размер «N на M» / «N х M» / «N x M».
+
+    Размер ≠ тираж (PHASE_UNITS): число в размерном trio не съедается как
+    количество, слова-коннекторы не попадают в unknown. Склейка «20×30»
+    обрабатывается сама (токен не число — qty не получает).
+    """
+    dim: set[int] = set()
+    for i in range(len(tokens) - 2):
+        if _is_number(tokens[i]) and tokens[i + 1] in _SIZE_WORDS and _is_number(tokens[i + 2]):
+            dim.update((i, i + 1, i + 2))
+    return dim
 
 
 def _tokenize(text: str) -> list[str]:
@@ -78,8 +109,16 @@ def _to_number(token: str) -> float:
 def _build_dictionary(conn: sqlite3.Connection) -> dict[str, dict[str, Any]]:
     """Словарь «фраза → позиция каталога / калькулятор»."""
     dictionary: dict[str, dict[str, Any]] = {}
-    for row in conn.execute("SELECT id, name, price, synonyms FROM price_list_items WHERE archived = 0"):
-        entry = {"type": "price", "id": row["id"], "name": row["name"], "price": row["price"]}
+    for row in conn.execute(
+        "SELECT id, name, price, unit, synonyms FROM price_list_items WHERE archived = 0"
+    ):
+        entry = {
+            "type": "price",
+            "id": row["id"],
+            "name": row["name"],
+            "price": row["price"],
+            "unit": row["unit"],  # PHASE_UNITS: единица едет в заказ (шт/м²/пачка…)
+        }
         dictionary[row["name"].strip().lower()] = entry
         for synonym in json.loads(row["synonyms"]):
             clean = synonym.strip().lower()
@@ -151,7 +190,10 @@ def _volume_hints(items: list[dict[str, Any]]) -> list[str]:
 
 
 def _operator_signals(
-    items: list[dict[str, Any]], unknown: list[str], text: str
+    items: list[dict[str, Any]],
+    unknown: list[str],
+    text: str,
+    sizes: list[str] | None = None,
 ) -> tuple[bool, list[str]]:
     """R10 (RESEARCH_ADOPTION_PLAN §5-Б.3): «передать оператору» + reasons.
 
@@ -165,6 +207,9 @@ def _operator_signals(
     reasons: list[str] = []
     if unknown:
         reasons.append("не распознано: " + ", ".join(unknown))
+    # Размер без услуги («30 на 40» без изделия) — не молча (PHASE_UNITS).
+    if sizes and not items:
+        reasons.append("указан размер без услуги: " + ", ".join(sizes))
     if any(item["type"] == "calculator" for item in items) and len(items) > 1:
         reasons.append("несколько позиций — параметры уточнит оператор")
     if re.search(r"файл|макет|прикрепил|вложени|ссылк", text.lower()):
@@ -188,6 +233,9 @@ def parse(conn: sqlite3.Connection, text: str) -> dict[str, Any]:
     """
     tokens = _tokenize(text)
     dictionary = _build_dictionary(conn)
+    dim_idx = _dimension_indices(tokens)
+    glued_sizes = {i for i, tok in enumerate(tokens) if _GLUED_SIZE_RE.match(tok)}
+    sizes: list[str] = []  # распознанные размеры (для UI и эскалации «без услуги»)
     items: list[dict[str, Any]] = []
     unknown: list[str] = []
     index = 0
@@ -198,6 +246,22 @@ def parse(conn: sqlite3.Connection, text: str) -> dict[str, Any]:
             # Перечисление: следующий параметр принадлежит следующей услуге.
             segment += 1
             _consumed_number = False
+            index += 1
+            continue
+        if index in dim_idx:
+            # Часть размера «20 на 30» (PHASE_UNITS): не тираж, не unknown.
+            # Первое число тройки собирает размер целиком в result["sizes"].
+            if index + 2 < len(tokens) and tokens[index + 1] in _SIZE_WORDS:
+                sizes.append(f"{tokens[index]} {tokens[index + 1]} {tokens[index + 2]}")
+            index += 1
+            continue
+        if index in glued_sizes:
+            # Склеенный размер «20×30»: осмысленный фрагмент, не unknown.
+            sizes.append(tokens[index])
+            index += 1
+            continue
+        if tokens[index] in _QTY_WORDS and index > 0 and _is_number(tokens[index - 1]):
+            # Слово-тираж после числа («наклейка 100 шт») — квалификатор числа.
             index += 1
             continue
         match = _match_at(tokens, index, dictionary)
@@ -216,13 +280,24 @@ def parse(conn: sqlite3.Connection, text: str) -> dict[str, Any]:
             if follow is None or follow[0] is not entry:
                 break
             next_index += follow[1]
-        if next_index < len(tokens) and _is_number(tokens[next_index]):
+        if (
+            next_index < len(tokens)
+            and _is_number(tokens[next_index])
+            and next_index not in dim_idx
+        ):
             qty = _to_number(tokens[next_index])
             next_index += 1
-        elif index > 0 and _is_number(tokens[index - 1]) and not _consumed_number:
+            # Слово-тираж сразу после числа («наклейка 100 шт») поглощаем.
+            if next_index < len(tokens) and tokens[next_index] in _QTY_WORDS:
+                next_index += 1
+        elif (
+            index > 0
+            and _is_number(tokens[index - 1])
+            and not _consumed_number
+            and (index - 1) not in dim_idx
+        ):
             # Число ПЕРЕД услугой («2 ксерокса», R-материал: порядок свободный).
-            # numbers чуть ранее могли быть «размером» (10×15) — берём только
-            # непосредственно примыкающее одиночное число.
+            # Числа размера («20 на 30 наклейка») тиражом НЕ становятся.
             qty = _to_number(tokens[index - 1])
             _consumed_number = True
         if entry["type"] == "price":
@@ -234,6 +309,7 @@ def parse(conn: sqlite3.Connection, text: str) -> dict[str, Any]:
                     "price": entry["price"],
                     "qty": qty,
                     "segment_id": segment,
+                    "unit": entry.get("unit"),  # PHASE_UNITS: единица из каталога
                 }
             )
         else:
@@ -247,11 +323,12 @@ def parse(conn: sqlite3.Connection, text: str) -> dict[str, Any]:
                 }
             )
         index = next_index
-    needs_operator, reasons = _operator_signals(items, unknown, text)
+    needs_operator, reasons = _operator_signals(items, unknown, text, sizes)
     return {
         "items": items,
         "unknown": unknown,
         "unassigned_fragments": list(unknown),  # JSON-модель 05_combined_orders.md
+        "sizes": sizes,  # PHASE_UNITS: распознанные размеры («20×30», «20 на 30»)
         "volume_hints": _volume_hints(items),
         "needs_operator": needs_operator,
         "reasons": reasons,

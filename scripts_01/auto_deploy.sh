@@ -8,6 +8,8 @@
 #
 # Deploy steps after each pull (edit DEPLOY_CMD below or override with env):
 #   - keep .env / data_13/ / context_12/ untouched (they are gitignored)
+#   - regenerate the Reports Hub site when HEAD changed (has own stamp guard,
+#     see scripts_01/regen_reports_hub.sh + SYNC_RUNBOOK §1b)
 #   - run DEPLOY_CMD (default: none — the checkout itself is the deploy)
 #
 # Usage (run ON THE SERVER, from the repo copy):
@@ -34,6 +36,12 @@ log() { echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*" | tee -a "$DEPLOY_LOG" >&2; }
 
 deploy_steps() {
   log "deploy steps start"
+  # Reports Hub: сайт отчётов следует за HEAD (скрипт сам решает по stamp-файлу,
+  # менялся ли HEAD; ошибка регенерации не валит деплой).
+  if [ -f "$REPO_ROOT/scripts_01/regen_reports_hub.sh" ]; then
+    bash "$REPO_ROOT/scripts_01/regen_reports_hub.sh" >>"$DEPLOY_LOG" 2>&1 \
+      || log "WARN: reports hub regen failed"
+  fi
   if [ -n "$DEPLOY_CMD" ]; then
     ( cd "$REPO_ROOT" && eval "$DEPLOY_CMD" ) >>"$DEPLOY_LOG" 2>&1 \
       || log "WARN: DEPLOY_CMD failed"

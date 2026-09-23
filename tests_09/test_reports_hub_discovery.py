@@ -1,123 +1,87 @@
 #!/usr/bin/env python3
-"""tests_09/test_reports_hub_discovery.py — тест №5 спеки reports-hub.
+"""Tests for Reports Hub discovery (спека §12, тест 5: test_discovery).
 
-Автообход projects_17 (services_08/reports_hub/config.py): проект с доками →
-has_data=True; без доков → has_data=False с причиной «нет отчётной
-документации» (решение №12, не молча); битый reports_hub.yaml → ошибка в
-диагностике (§11); exclude: true пропускает; конфликт slug → DiscoveryError;
-служебные каталоги не обходятся. Hermetic: tmp_path.
+Tmp-дерево projects_17: проект с доками / без доков / с битым yaml / excluded.
 """
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
-import pytest
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(PROJECT_ROOT))
 
-from services_08.reports_hub.config import (
-    DiscoveryError,
-    discover_projects,
-    make_slug,
-)
+from services_08.reports_hub.config import discover_projects
 
 
-def _mk(root: Path, name: str) -> Path:
-    d = root / name
-    d.mkdir(parents=True)
-    return d
+def _make_project(root: Path, name: str, files: dict[str, str]) -> Path:
+    """Создать каталог проекта с файлами (возвращает путь)."""
+    project_dir = root / name
+    project_dir.mkdir(parents=True, exist_ok=True)
+    for filename, content in files.items():
+        (project_dir / filename).write_text(content, encoding="utf-8")
+    return project_dir
 
 
-# --- проект с отчётностью ---------------------------------------------------
+class TestDiscovery:
+    def test_project_with_docs_detected(self, tmp_path: Path) -> None:
+        _make_project(tmp_path, "proj_docs", {"PROJECT_STATUS_REPORT.md": "# status\n"})
+        profiles = discover_projects(tmp_path)
+        by_slug = {p.slug: p for p in profiles}
+        assert by_slug["proj_docs"].has_report_docs is True
+        assert by_slug["proj_docs"].invalid_reason == ""
+        assert by_slug["proj_docs"].excluded is False
 
+    def test_project_without_docs_marked_no_data(self, tmp_path: Path) -> None:
+        _make_project(tmp_path, "proj_empty", {"README.md": "# hi\n"})
+        profiles = discover_projects(tmp_path)
+        by_slug = {p.slug: p for p in profiles}
+        assert by_slug["proj_empty"].has_report_docs is False
+        assert by_slug["proj_empty"].invalid_reason == ""
 
-def test_project_with_status_report(tmp_path: Path) -> None:
-    root = tmp_path
-    _mk(root, "alpha")
-    (root / "alpha" / "PROJECT_STATUS_REPORT.md").write_text("# статус", encoding="utf-8")
-    found = discover_projects(root)
-    assert len(found) == 1
-    assert found[0].has_data is True
-    assert found[0].reason == ""
+    def test_broken_yaml_marks_invalid(self, tmp_path: Path) -> None:
+        _make_project(
+            tmp_path,
+            "proj_broken",
+            {"reports_hub.yaml": "title: [unclosed\n  bad: : :\n"},
+        )
+        profiles = discover_projects(tmp_path)
+        by_slug = {p.slug: p for p in profiles}
+        assert by_slug["proj_broken"].invalid_reason != ""
 
+    def test_excluded_project_skipped(self, tmp_path: Path) -> None:
+        _make_project(
+            tmp_path,
+            "proj_excluded",
+            {
+                "PROJECT_STATUS_REPORT.md": "# status\n",
+                "reports_hub.yaml": "exclude: true\n",
+            },
+        )
+        profiles = discover_projects(tmp_path)
+        by_slug = {p.slug: p for p in profiles}
+        assert by_slug["proj_excluded"].excluded is True
 
-def test_project_with_phase_glob(tmp_path: Path) -> None:
-    root = tmp_path
-    _mk(root, "beta")
-    (root / "beta" / "PHASE_RULES_R0_REPORT.md").write_text("#", encoding="utf-8")
-    assert discover_projects(root)[0].has_data is True
+    def test_owner_title_used(self, tmp_path: Path) -> None:
+        _make_project(
+            tmp_path,
+            "proj_titled",
+            {
+                "PROJECT_STATUS_REPORT.md": "# status\n",
+                "reports_hub.yaml": "title: Мой проект\n",
+            },
+        )
+        profiles = discover_projects(tmp_path)
+        by_slug = {p.slug: p for p in profiles}
+        assert by_slug["proj_titled"].title == "Мой проект"
 
+    def test_service_dirs_excluded(self, tmp_path: Path) -> None:
+        service_dir = tmp_path / ".freezer"
+        service_dir.mkdir()
+        (service_dir / "PROJECT_STATUS_REPORT.md").write_text("# x\n", encoding="utf-8")
+        profiles = discover_projects(tmp_path)
+        assert ".freezer" not in {p.slug for p in profiles}
 
-# --- проект без отчётности ---------------------------------------------------
-
-
-def test_project_without_reports_is_card_no_data(tmp_path: Path) -> None:
-    root = tmp_path
-    _mk(root, "empty_project")
-    (root / "empty_project" / "src").mkdir()
-    found = discover_projects(root)
-    assert found[0].has_data is False
-    assert found[0].reason == "нет отчётной документации"
-
-
-# --- профили ----------------------------------------------------------------
-
-
-def test_broken_yaml_profile_goes_to_diagnostics(tmp_path: Path) -> None:
-    root = tmp_path
-    d = _mk(root, "broken")
-    (d / "PROJECT_STATUS_REPORT.md").write_text("#", encoding="utf-8")
-    (d / "reports_hub.yaml").write_text("title: [oops", encoding="utf-8")  # битый YAML
-    found = discover_projects(root)
-    assert found[0].has_data is False
-    assert "профиль невалиден" in found[0].profile_error
-    assert found[0].reason == found[0].profile_error  # причина видна (не молча)
-
-
-def test_exclude_true_skips_project(tmp_path: Path) -> None:
-    root = tmp_path
-    d = _mk(root, "skipped")
-    (d / "PROJECT_STATUS_REPORT.md").write_text("#", encoding="utf-8")
-    (d / "reports_hub.yaml").write_text("exclude: true\n", encoding="utf-8")
-    assert discover_projects(root) == []
-
-
-def test_valid_profile_is_loaded(tmp_path: Path) -> None:
-    root = tmp_path
-    d = _mk(root, "profiled")
-    (d / "PROJECT_STATUS_REPORT.md").write_text("#", encoding="utf-8")
-    (d / "reports_hub.yaml").write_text('title: "Мой проект"\n', encoding="utf-8")
-    found = discover_projects(root)
-    assert found[0].profile == {"title": "Мой проект"}
-
-
-# --- служебные каталоги и сортировка ----------------------------------------
-
-
-def test_excluded_and_hidden_dirs_skipped(tmp_path: Path) -> None:
-    root = tmp_path
-    _mk(root, "__pycache__")
-    _mk(root, ".git")
-    _mk(root, "node_modules")
-    assert discover_projects(root) == []
-
-
-# --- slug-правила ------------------------------------------------------------
-
-
-def test_slug_cyrillic_is_hashed_deterministically() -> None:
-    a = make_slug("админка печатник")
-    b = make_slug("админка печатник")
-    assert a == b, "слаг детерминирован (идемпотентная генерация, спека §10.1)"
-    assert a.startswith("p-")
-    assert make_slug("plain-name") == "plain-name"
-
-
-def test_slug_collision_raises() -> None:
-    taken = {"plain-name"}
-    with pytest.raises(DiscoveryError, match="конфликт slug"):
-        make_slug("plain-name", taken=taken)
-
-
-def test_discovery_missing_root_raises(tmp_path: Path) -> None:
-    with pytest.raises(DiscoveryError, match="не найден"):
-        discover_projects(tmp_path / "nope")
+    def test_missing_root_returns_empty(self, tmp_path: Path) -> None:
+        assert discover_projects(tmp_path / "no_such_dir") == []

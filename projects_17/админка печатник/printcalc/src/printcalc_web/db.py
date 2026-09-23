@@ -315,6 +315,11 @@ def _migrate(conn: sqlite3.Connection) -> None:
         # Парсер v2 (мультизаказ): сегмент перечисления, из которого пришла
         # позиция (0, 1, 2…). NULL — позиция добавлена вручную/из прайса.
         conn.execute("ALTER TABLE order_items ADD COLUMN segment_id INTEGER")
+    if "unit" not in item_columns:
+        # Единица позиции (2026-09-21, PHASE_UNITS): шт/м²/пог.м/пачка… —
+        # из каталога (price_list_items.unit) либо выбрана оператором.
+        # NULL — legacy-позиции; отображается как «шт» (store.normalize_unit).
+        conn.execute("ALTER TABLE order_items ADD COLUMN unit TEXT")
 
     material_columns = {row[1] for row in conn.execute("PRAGMA table_info(materials)")}
     if "pack_size" not in material_columns:

@@ -84,15 +84,15 @@ def parser_conn() -> sqlite3.Connection:
     conn.row_factory = sqlite3.Row
     conn.execute(
         "CREATE TABLE price_list_items (id INTEGER PRIMARY KEY, name TEXT,"
-        " price REAL, synonyms TEXT, archived INTEGER DEFAULT 0)"
+        " price REAL, unit TEXT, synonyms TEXT, archived INTEGER DEFAULT 0)"
     )
     conn.execute(
-        "INSERT INTO price_list_items (name, price, synonyms) VALUES (?, ?, ?)",
-        ("Ксерокс", 10.0, '["ксерокопия", "копия"]'),
+        "INSERT INTO price_list_items (name, price, unit, synonyms) VALUES (?, ?, ?, ?)",
+        ("Ксерокс", 10.0, "шт", '["ксерокопия", "копия"]'),
     )
     conn.execute(
-        "INSERT INTO price_list_items (name, price, synonyms) VALUES (?, ?, ?)",
-        ("Фото на документы", 200.0, '["фото"]'),
+        "INSERT INTO price_list_items (name, price, unit, synonyms) VALUES (?, ?, ?, ?)",
+        ("Фото на документы", 200.0, "пакет", '["фото"]'),
     )
     return conn
 

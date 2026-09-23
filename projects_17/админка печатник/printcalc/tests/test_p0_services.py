@@ -36,6 +36,73 @@ def test_seed_creates_sections_and_synonyms(conn: sqlite3.Connection) -> None:
     assert "Фото 10×15" in items  # кавычка-× из реальных формулировок
 
 
+def test_seed_cascade_additive_no_duplicates(conn: sqlite3.Connection) -> None:
+    """Проход 2: 21 базовая + 11 каскадных + 5 по-запросу + 5 полиграфии = 42.
+
+    Лестница фото на документы (350/450/650) НЕ дублируется: каскадные
+    цены Фотосферы (800/860/1000) — другой сегмент (ретушь в пакете),
+    а локальный якорь 450/4 шт уже сидирован в базе (реп-карта НфЮ).
+    PHASE_UNITS (09-21): +5 позиций «8. ОПЕРАТИВНАЯ ПОЛИГРАФИЯ» —
+    кейс «наклейка 20 на 30» (носителей наклеек/листовок не было).
+    """
+    from printcalc_web.p0_services import P0_SECTIONS, P0_SERVICES
+
+    assert len(P0_SERVICES) == 42
+    names = [spec["name"] for spec in P0_SERVICES]
+    assert len(names) == len(set(names)), "дубль имени в сиде — мусор в кассе"
+
+    store.seed_p0_services(conn)
+    items = {item["name"]: item for item in store.list_price_items(conn)}
+    # Якоря каскада на месте:
+    assert items["Печать цветная А3"]["price"] == pytest.approx(60.0)
+    assert items["Сканирование А3"]["price"] == pytest.approx(40.0)
+    assert items["Сертификат/грамота А4"]["price"] == pytest.approx(80.0)
+    assert items["Ламинация А3"]["price"] == pytest.approx(110.0)
+    assert items["Переплёт твёрдый (диплом)"]["price"] == pytest.approx(500.0)
+    assert items["Ретушь фото"]["price"] == pytest.approx(200.0)
+    assert items["Подстановка костюма"]["price"] == pytest.approx(300.0)
+    assert items["Фото 30×40"]["price"] == pytest.approx(150.0)
+    # Базовая лестница фото на документы не задвоена:
+    doc_photo = [n for n in names if "Фото на документы" in n]
+    assert len(doc_photo) == 3
+    # Каскадные позиции попадают в существующие разделы (не плодят новых):
+    assert items["Сертификат/грамота А4"]["category"] == "2. ПЕЧАТЬ ДОКУМЕНТОВ"
+    assert len(P0_SECTIONS) == 7
+
+
+def test_seed_on_request_items_price_zero(conn: sqlite3.Connection) -> None:
+    """E-градусные позиции: цена 0 = «по запросу», не выдуманная цифра.
+
+    Конвенция движка (design/calculators): price=0 → «Цена по запросу».
+    Владелец заполняет цену — сид её НЕ перезапишет (идемпотентность).
+    """
+    store.seed_p0_services(conn)
+    items = {item["name"]: item for item in store.list_price_items(conn)}
+    for name in ("Ламинация А2", "Ламинация А1", "Фото 9×12", "Крафтовый пакет", "Георгиевская лента"):
+        assert name in items, f"E-позиция отсутствует: {name}"
+        assert items[name]["price"] == pytest.approx(0.0), f"{name}: цена должна быть 0 (по запросу)"
+
+    # Владелец заполнил цену → повторный сид НЕ трогает (идемпотентность):
+    item_id = items["Крафтовый пакет"]["id"]
+    store.update_price_item(conn, item_id, {"price": 35.0})
+    store.seed_p0_services(conn)
+    assert store.get_price_item(conn, item_id)["price"] == pytest.approx(35.0)
+
+
+def test_on_request_template_roundtrip(conn: sqlite3.Connection) -> None:
+    """«Цена 0» сериализуется в шаблон и корректно импортируется обратно."""
+    store.seed_p0_services(conn)
+    template = store.price_template_csv(conn)
+    assert "Крафтовый пакет;0;шт;" in template
+    assert "Цена 0 = «по запросу»" in template, "владелец должен видеть подсказку конвенции"
+    # Round-trip: владелец заполняет цену 0-позиции:
+    filled = template.replace("Крафтовый пакет;0;", "Крафтовый пакет;35;")
+    result = store.import_price_template(conn, filled)
+    assert result["updated"] >= 1
+    items = {item["name"]: item for item in store.list_price_items(conn)}
+    assert items["Крафтовый пакет"]["price"] == pytest.approx(35.0)
+
+
 def test_seed_is_idempotent(conn: sqlite3.Connection) -> None:
     first = store.seed_p0_services(conn)
     second = store.seed_p0_services(conn)
@@ -82,6 +149,28 @@ def test_template_csv_has_sections_and_roundtrip(conn: sqlite3.Connection) -> No
     assert items["Бейдж"]["synonyms"] == ["бейджик"]
 
 
+def test_template_csv_includes_cascade_items(conn: sqlite3.Connection) -> None:
+    """Проход 2: 11 каскадных якорей видны владельцу в прайс-шаблоне (Excel)."""
+    store.seed_p0_services(conn)
+    template = store.price_template_csv(conn)
+    for name, price in (
+        ("Сканирование А3", "40"),
+        ("Печать цветная А3", "60"),
+        ("Сертификат А6 (1+0)", "25"),
+        ("Сертификат А6 (1+1)", "35"),
+        ("Сертификат/грамота А4", "80"),
+        ("Фото 13×18", "30"),
+        ("Фото 30×40", "150"),
+        ("Отправка фото на email", "60"),
+        ("Подстановка костюма", "300"),
+        ("Ретушь фото", "200"),
+        ("Ламинация А3", "110"),
+        ("Переплёт твёрдый (диплом)", "500"),
+    ):
+        row = f"{name};{price};"
+        assert row in template, f"каскадная позиция не видна владельцу: {row}"
+
+
 def test_template_import_ignores_comments_and_header(conn: sqlite3.Connection) -> None:
     text = (
         "# комментарий\n"
@@ -113,6 +202,7 @@ def test_parser_matches_p0_synonyms(conn: sqlite3.Connection) -> None:
             "price": 15.0,
             "qty": 2.0,
             "segment_id": 0,
+            "unit": "шт",  # PHASE_UNITS: единица едет из каталога в заказ
         }
     ]
 

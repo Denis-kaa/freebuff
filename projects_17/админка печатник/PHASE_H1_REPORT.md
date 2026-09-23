@@ -1,8 +1,8 @@
-# PHASE_H1_REPORT.md — H1: каркас Reports Hub (ReportModel + автообход projects_17)
+# PHASE_H1_REPORT.md — H1: каркас Reports Hub + ReportModel + автообход
 
-> **Статус:** COMPLETE · **Дата:** 2026-09-14
-> **Этап:** H1 потока B (Reports Hub) · РОАДМАП_v7 §7 · reports-hub-spec.md §4.2/§14.1 (тесты №3, №5)
-> **Верификация:** 16 passed (новые H1-тесты) · mypy clean (7 файлов пакета) · CLI list/generate на реальном projects_17
+> **Статус:** COMPLETE · **Дата:** 2026-09-16
+> **Этап:** H1 потока B (Reports Hub) · РОАДМАП_v7 §7 · reports-hub-spec.md §14.1
+> **Верификация:** 12 passed (test_reports_hub_model + test_reports_hub_discovery) · mypy clean (6 файлов reports_hub) · живой обход: 31 проект (печатник has-docs)
 
 ---
 
@@ -10,37 +10,33 @@
 
 | Артефакт | Файл | Суть |
 |---|---|---|
-| Пакет | `services_08/reports_hub/__init__.py` | Каркас сервиса (решение №1: services_08, не projects_17) |
-| Модель | `services_08/reports_hub/model.py` | `ReportModel`/`ProjectReport`/`Section`/`SourceRef` — dataclass-контракт, `schema_version=1`, JSON round-trip (тест №3). Закрытый словарь статусов `SECTION_STATUSES` (ANTI-6b). `status='missing'` + note вместо пустышек (§5.2 анти-галлюцинация) |
-| Реэкспорт | `services_08/reports_hub/build/model.py` | Спеченный путь импорта без дублирования контракта (Single Source of Truth) |
-| Обходчик | `services_08/reports_hub/config.py` | `discover_projects(projects_17)`: сигнатуры (PROJECT_STATUS_REPORT/FINAL_REPORT/MANIFEST + globs PHASE_*/РОАДМАП*/AUDIT*), `EXCLUDED_DIRS`, per-project `exclude: true`, битый yaml → причина в диагностике (не молча, §11), конфликт slug → `DiscoveryError` (B-Rule 5), кириллица → детерминированный хеш-слаг (§11 open question №1 v1) |
-| CLI | `services_08/reports_hub/cli.py` + `__main__.py` | `list` (рабочий), `generate` (каркас модели, extract — H2), `serve`/`diff` — честные заглушки «этап H5/H4» (§10.1) |
+| Пакет сервиса | `services_08/reports_hub/__init__.py` | `SCHEMA_VERSION=1`, docstring-контракт (Additive/Contract First/SSOT/Observability/Graceful) |
+| Модель | `services_08/reports_hub/report/model.py` | `ReportModel` + `MetricTile/TimelineEntry/DocCard/ReportSection` (frozen dataclasses, `to_json/from_json`, guard будущей версии) |
+| Конфиг + автообход | `services_08/reports_hub/config.py` | `ProjectProfile`, `discover_projects(projects_17/)`, owner-файл `reports_hub.yaml` (свой парсер без зависимостей: скаляры + списки + `metrics.loc_paths`), сигнатуры отчётности, исключения служебных каталогов, битый YAML → `invalid_reason` без падения обхода |
+| CLI | `services_08/reports_hub/cli.py` + `__main__.py` | `generate/serve/list/diff`; `list` рабочий (автообход), остальные — честная заглушка exit 2 (H3–H5) |
+| Заглушки H2/H3 | `extract/`, `design/`, `templates/` (`__init__.py`) | Пустые пакеты с пометкой этапа реализации |
+| Тесты спеки | `tests_09/test_reports_hub_model.py` (тест 3) + `tests_09/test_reports_hub_discovery.py` (тест 5) | 12 тестов: round-trip/гвард версии; docs/no-data/битый yaml/excluded/title/служебные/нет корня |
+| Реестр | `data_13/missing_registry.yaml` (серверно-локально, в .gitignore) | `reports_hub` registered → prompt_written (`reports-hub-spec.md`) |
 
-## 2. REGISTER-FIRST (AGENTS.md §6)
+## 2. Контракты (сохранены)
 
-- `reports_hub` зарегистрирован: `python -m core_02.missing_registry register reports_hub --kind module --factory platform …` → 51 запись, `check` exit 0. Статус `registered` (реализация закроется `mark-implemented` после H6-деплоя — каркас ≠ готовый сервис).
+- **Additive:** сервис только читает проекты, ничего не переписывает; новые файлы — только `services_08/reports_hub/` + `tests_09/test_reports_hub_*`.
+- **Contract First:** `ReportModel` — dataclass-контракт, `schema_version` версионирует; сайт H3 = детерминированный рендер модели.
+- **Без зависимостей:** парсер owner-YAML — stdlib (PyYAML не требуется); серверный venv печатника (`yaml` отсутствует) — учтено фактом, не предположением.
+- **Не молча:** битый `reports_hub.yaml` → `invalid_reason` в профиле + диагностика главной (H3), не падение.
 
-## 3. Проверка на реальных данных
+## 3. DoD §7 (H1)
 
-`python -m services_08.reports_hub list` по живому `projects_17/`: **30 каталогов**, 15 с данными (в т.ч. `админка печатник → p-7f82735b6bdf`), 15 «нет данных» с причиной. Слаг кириллицы детерминирован. `generate` строит каркас модели без ошибок.
+Каркас + ReportModel + автообход готовы; тесты спеки 3 и 5 зелёные; живой `list` на whimco: 31 проект, печатник `has-docs`, 17 `has-docs` / 14 `no-data`, служебные исключены.
 
 ## 4. Верификация
 
-- **Новые тесты:** `tests_09/test_reports_hub_model_contract.py` (6) + `tests_09/test_reports_hub_discovery.py` (10) = **16 passed** — спека №3 и №5 закрыты.
-- **mypy:** `services_08/reports_hub/` — clean (7 файлов).
-- **Полный tests_09/ (честная фиксация, вне скоупа H1):** 371 failed / 105 errors / 2617 passed / 3077 collected / 22 collection errors. Все сбои — **pre-existing**: маркеры восстановления (`***REMOVED***`) в `core_02/` от коммитов bd1b4fe/1862fbd ломают `re.compile`/импорты (22 файла НЕ собираются, `test_scenario_engine` — 64 FAILED и т.д.). Проверено на чистом worktree `origin/master` — та же порча в conftest/исходниках. **Ни одного FAILED/ERROR по `test_reports_hub_*`** в полном прогоне нет.
-- Полный прогон тестов платформы — отдельный ремонтный этап (РЕКОМЕНДАЦИЯ: dedicated session «marker-repair round 2», см. §6).
+- pytest: **12 passed** (`test_reports_hub_model` 5 + `test_reports_hub_discovery` 7, venv печатника `.venv`, 0.25с).
+- mypy: **clean, 6 файлов** (`__init__/config/cli/__main__/build+model`, `--explicit-package-bases`).
+- CLI: `python -m services_08.reports_hub list` → 31 строка, печатник `has-docs`.
 
-## 5. Контракты (сохранены)
+## 5. Что НЕ входит (следующие этапы)
 
-- Модель — единственный источник истины; сайт (H3) = детерминированный рендер модели.
-- Ничего не пишется в projects_17 (только чтение) — не-цель §3 соблюдена.
-- Ошибки не молчат: битый профиль/нет данных/конфликт slug — видимые причины.
-- Идемпотентность закладывается: слаги детерминированы, модель сериализуема сортированно.
-
-## 6. Что дальше (поток B, спека §14)
-
-- **H2:** extract-слой (markdown.py, metrics.py, gitstats.py) + тесты №1, №2.
-- **H3:** рендер + Apple-токены + главная + отчёт печатника + тесты №6, №9.
-- **H4:** diff + summaries.json (тесты №4, №8) · **H5:** сервер + token-гейт + платформа (тест №7) · **H6:** systemd на whimco, порт 8310.
-- **Вне потока B (рекомендация):** ремонтная сессия по маркерам восстановления core_02/tests_09 (371 failing — прежде всего мешает канонической метрике «3342+ passed» из CODE_QUALITY_STANDARD §11.6).
+- H2: extract-слой (markdown/metrics/gitstats) + тесты 1, 2.
+- H3: рендер + Apple-токены + главная + отчёт печатника + тесты 6, 9 (golden).
+- H4: diff + summaries.json + тесты 4, 8. H5: сервер + отчёт платформы + тест 7. H6: systemd `reports-hub.service` :8310 + деплой.

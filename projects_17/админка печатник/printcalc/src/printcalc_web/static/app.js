@@ -37,15 +37,22 @@ function renderDraft() {
     const segBadge = typeof item.segment_id === "number"
       ? ` <span class="badge segment" title="Группа из быстрого ввода (перечисление)">сегм. ${item.segment_id + 1}</span>`
       : "";
+    // Конвенция движка (design/calculators): price=0 = «Цена по запросу» —
+    // не «0.00», который выглядит как «бесплатно».
+    const priceCell = item.price > 0 ? money(item.price) : '<span class="muted">по запросу</span>';
+    const rowTotal = item.price > 0 ? money(item.price * item.qty) : '<span class="muted">—</span>';
+    // PHASE_UNITS: у м²-позиций количество — площадь; подсказка на поле.
+    const qtyTitle = item.unit === "м²" ? ' title="Цена за м²: количество = площадь (2.5 = 2,5 м²)"' : "";
     tr.innerHTML =
       `<td>${escapeHtml(item.name)}${badge}${segBadge}</td>` +
-      `<td class="num">${money(item.price)}</td>` +
-      `<td class="num"><input type="number" min="0.001" step="any" value="${item.qty}" data-qty="${index}" style="width:70px"></td>` +
-      `<td class="num">${money(item.price * item.qty)}</td>` +
+      `<td class="num">${priceCell}${item.unit ? " / " + escapeHtml(item.unit) : ""}</td>` +
+      `<td class="num"><input type="number" min="0.001" step="any" value="${item.qty}" data-qty="${index}"${qtyTitle} style="width:70px"></td>` +
+      `<td class="num">${rowTotal}</td>` +
       `<td><button class="icon danger" data-remove="${index}" title="Убрать позицию">✕</button></td>`;
     body.appendChild(tr);
   });
-  $("#draft-total").textContent = money(draftTotal());
+  const hasOnRequest = draft.some((item) => !(item.price > 0));
+  $("#draft-total").textContent = money(draftTotal()) + (hasOnRequest ? " + по запросу" : "");
   saveDraft();
 }
 
@@ -113,7 +120,7 @@ $("#quick-parse").addEventListener("click", async () => {
       const segmentId = typeof parsed.segment_id === "number" ? parsed.segment_id : null;
       if (segmentId !== null) segments.add(segmentId);
       if (parsed.type === "price") {
-        addItem({ kind: "price_list", name: parsed.name, price: parsed.price, qty: parsed.qty, price_list_item_id: parsed.price_list_item_id, segment_id: segmentId });
+        addItem({ kind: "price_list", name: parsed.name, price: parsed.price, qty: parsed.qty, price_list_item_id: parsed.price_list_item_id, segment_id: segmentId, unit: parsed.unit || null });
       } else {
         addItem({ kind: "calculator", name: parsed.name, price: 0, qty: 1, calculator_id: parsed.calculator_id, needs_calc: true, segment_id: segmentId });
       }
@@ -156,9 +163,14 @@ async function loadPriceList(query = "") {
   data.items.forEach((item) => {
     const tr = document.createElement("tr");
     const badge = item.unverified ? ' <span class="badge unverified">не проверено</span>' : "";
+    // Цена дублируется в data-price: parse текста ячейки («по запросу»)
+    // дал бы NaN в черновике. Источник истины — атрибут, не отображение.
+    const priceCell = item.price > 0
+      ? money(item.price)
+      : '<span class="muted">по запросу</span>';
     tr.innerHTML =
       `<td>${escapeHtml(item.name)}${badge}</td>` +
-      `<td class="num">${money(item.price)}${item.unit ? " / " + escapeHtml(item.unit) : ""}</td>` +
+      `<td class="num" data-price="${item.price}" data-unit="${escapeHtml(item.unit || "")}">${priceCell}${item.unit ? " / " + escapeHtml(item.unit) : ""}</td>` +
       `<td class="num"><input type="number" min="0.001" step="any" value="1" data-pick-qty style="width:70px"></td>` +
       `<td><button data-pick="${item.id}">+</button></td>`;
     body.appendChild(tr);
@@ -171,8 +183,9 @@ dlgPrice.addEventListener("click", async (event) => {
     const row = event.target.closest("tr");
     const qty = parseFloat(row.querySelector("[data-pick-qty]").value) || 1;
     const nameCell = row.querySelector("td").textContent.trim();
-    const priceCell = row.querySelectorAll("td")[1].textContent;
-    addItem({ kind: "price_list", name: nameCell.replace(/не проверено$/, "").trim(), price: parseFloat(priceCell), qty, price_list_item_id: Number(pickId) });
+    const price = parseFloat(row.querySelectorAll("td")[1].dataset.price);
+    const unit = row.dataset.unit || null; // PHASE_UNITS: единица из каталога в черновик
+    addItem({ kind: "price_list", name: nameCell.replace(/не проверено$/, "").trim(), price, qty, price_list_item_id: Number(pickId), unit });
     dlgPrice.close();
   }
 });
@@ -234,13 +247,13 @@ $("#btn-new-item-save").addEventListener("click", () => {
     // Идея №2: цена, введённая для клиента, становится позицией каталога.
     apiFetch("/price-list", { method: "POST", body: JSON.stringify({ name, price, unit }) })
       .then((created) => {
-        addItem({ kind: "price_list", name: created.name, price: created.price, qty: 1, price_list_item_id: created.id });
+        addItem({ kind: "price_list", name: created.name, price: created.price, qty: 1, price_list_item_id: created.id, unit });
         dlgNewItem.close();
       })
       .catch((error) => { $("#new-item-error").textContent = error.message; });
   } else {
     // Идея №10: позиция остаётся «мимо каталога» и попадёт в отчёт.
-    addItem({ kind: "manual", name, price, qty: 1, save_to_catalog: false });
+    addItem({ kind: "manual", name, price, qty: 1, save_to_catalog: false, unit });
     dlgNewItem.close();
   }
 });
@@ -441,6 +454,7 @@ $("#btn-save").addEventListener("click", async () => {
       kind: item.kind,
       price_list_item_id: item.price_list_item_id || null,
       qty: item.qty,
+      unit: item.unit || null, // PHASE_UNITS: единица едет в заказ
       calculator_id: item.calculator_id || null,
       params: item.params || null,
       name: item.name,

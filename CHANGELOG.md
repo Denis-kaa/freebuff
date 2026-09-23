@@ -6,6 +6,32 @@
 
 ---
 
+## [5.189.88] — 2026-09-16
+
+### 🆕 Reports Hub H1: каркас сервиса отчётов + ReportModel + автообход (поток B печатника)
+
+- NEW `services_08/reports_hub/` — каркас сервиса (спека `reports-hub-spec.md` §14.1, РОАДМАП_v7 §7 H1): `report/model.py` (ReportModel-контракт, frozen dataclasses, `to_json/from_json`, гвард `schema_version`), `config.py` (ProjectProfile + `discover_projects(projects_17/)`, owner-YAML своим stdlib-парсером — PyYAML не требуется), `cli.py` + `__main__.py` (`list` рабочий: 31 проект, печатник has-docs; generate/serve/diff — честные заглушки H3–H5), пустые пакеты `extract/ design/ templates/`.
+- Тесты спеки 3+5: `tests_09/test_reports_hub_model.py` + `tests_09/test_reports_hub_discovery.py` — **12 passed**; mypy clean (9 файлов); регрессия печатника: bridge+rules 29 passed, прод `printcalc-web` HTTP 200.
+- REGISTER-FIRST: `reports_hub` в MissingRegistry → prompt_written (`reports-hub-spec.md`), `check` ok (52 записи).
+- Отчёт этапа: `projects_17/админка печатник/PHASE_H1_REPORT.md`; журнал в `РОАДМАП_v7_SMART_ORDER.md` §9. Следующий — H2 (extract-слой + тесты 1, 2).
+
+### 🆕 Reports Hub H2: extract-слой (поток B печатника)
+
+- NEW `services_08/reports_hub/extract/{markdown,metrics,gitstats,pytestinfo,registry}.py` — детерминированный слой (§5.1 спеки): парсер h1–h4/таблицы/цитаты, regex-метрики с источником `файл:строка`, git-история, счётчик collect-only с кэшем, сводка MissingRegistry без зависимости от core_02.
+- Тесты спеки 1+2: `tests_09/test_reports_hub_extract.py` + `tests_09/test_reports_hub_metrics.py` — **27 passed суммарно** (15 новых); mypy clean (14 файлов).
+- Живая проверка: печатник — 21 секция, 249 passed + mypy clean (50 файлов), git 5, реестр 52, tests_09 2785 collected.
+- Отчёт этапа: `projects_17/админка печатник/PHASE_H2_REPORT.md`. Следующий — H3.
+
+### 🆕 Reports Hub H3: рендер, Apple-токены, главная, отчёт печатника
+
+- NEW `services_08/reports_hub/report/{project_report,doclibrary,summaries,render,generate}.py` + `design/{tokens,accent}.py` — сборка ReportModel (§7.1), библиотека доков, резюме (override/детерминированные), самодостаточный HTML (inline CSS/JS, только относительные ссылки → file://), главная-галерея, `manifest.json`.
+- NEW первый профиль сервиса `projects_17/админка печатник/reports_hub.yaml` (спека §2/§4.3) — аддитивный owner-файл, проект не изменялся.
+- Тесты спеки 6+9: `tests_09/test_reports_hub_render.py` + `test_reports_hub_golden_pechatnik.py` — **40 passed суммарно** (13 новых); mypy clean (21 файл).
+- Живая генерация на whimco: **13 проектов с отчётами · 228 страниц доков · 1.28с**; страница печатника: 249 passed, mypy clean (50 файлов), 13 этапов timeline, 26 доков.
+- Отчёт этапа: `projects_17/админка печатник/PHASE_H3_REPORT.md`. Следующий — H4 (diff + summaries.json).
+
+---
+
 ## [5.189.87***REMOVED*** — 2026-09-05
 
 ### 🔄 Server-first sync triangle: телефон ↔ GitHub ↔ whimco (инфра + канон)

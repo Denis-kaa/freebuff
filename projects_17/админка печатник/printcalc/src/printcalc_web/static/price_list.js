@@ -37,7 +37,7 @@ async function loadItems() {
     const synonyms = item.synonyms.length ? `<div class="muted">синонимы: ${escapeHtml(item.synonyms.join(", "))}</div>` : "";
     tr.innerHTML =
       `<td>${escapeHtml(item.name)}${badge}${synonyms}</td>` +
-      `<td class="num">${money(item.price)}</td>` +
+      `<td class="num">${item.price > 0 ? money(item.price) : '<span class="muted">по запросу</span>'}</td>` +
       `<td>${escapeHtml(item.unit || "шт")}</td>` +
       `<td>${escapeHtml(item.category || "")}</td>` +
       `<td class="num">${item.usage_count}</td>` +
