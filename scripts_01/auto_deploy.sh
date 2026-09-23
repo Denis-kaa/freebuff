@@ -42,6 +42,12 @@ deploy_steps() {
     bash "$REPO_ROOT/scripts_01/regen_reports_hub.sh" >>"$DEPLOY_LOG" 2>&1 \
       || log "WARN: reports hub regen failed"
   fi
+  # Regcloud reverse-tunnel: whimco → RU VPS (доступ к whimco без VPN;
+  # идемпотентно, самовосстанавливается — см. scripts_01/regcloud_tunnel.sh).
+  if [ -f "$REPO_ROOT/scripts_01/regcloud_tunnel.sh" ]; then
+    bash "$REPO_ROOT/scripts_01/regcloud_tunnel.sh" ensure >>"$DEPLOY_LOG" 2>&1 \
+      || log "WARN: regcloud tunnel ensure failed"
+  fi
   if [ -n "$DEPLOY_CMD" ]; then
     ( cd "$REPO_ROOT" && eval "$DEPLOY_CMD" ) >>"$DEPLOY_LOG" 2>&1 \
       || log "WARN: DEPLOY_CMD failed"
