@@ -167,6 +167,62 @@ class TestIdempotencyAndAtomicity:
         assert ma.process_inbox(tmp_path) == []
 
 
+# ── Интент wip_report (promt03) ──────────────────────────────────────────
+
+
+class TestWipReport:
+    """wip_report: allowlist (shell=False), JSON-структура, graceful-ошибки."""
+
+    def test_allowlist_rejects_foreign_command(self) -> None:
+        ok, err = ma._run_git_allowlisted(("git", "push", "origin", "master"))
+        assert ok is False
+        assert "allowlist" in err
+
+    def test_allowlist_accepts_only_three_commands(self) -> None:
+        assert ma._GIT_STATUS_CMD in (
+            ma._GIT_STATUS_CMD, ma._GIT_HEAD_CMD, ma._GIT_BEHIND_CMD)
+        ok, _ = ma._run_git_allowlisted(("rm", "-rf", "/"))
+        assert ok is False
+
+    def test_wip_report_reply_is_valid_json(self, mailbox: Path, monkeypatch) -> None:
+        fake_repo = tmp_repo_with_git()
+        monkeypatch.setattr(ma, "WIP_REPO_PATH", fake_repo)
+        _write_incoming(mailbox, "w1.md", "buffy-phone", "wip_report")
+        ma.process_inbox(mailbox)
+        reply = next((mailbox / "to-phone").glob("SRV-*.md"))
+        payload = reply.read_text(encoding="utf-8").split("```json")[1].split("```")[0]
+        report = json.loads(payload)
+        assert "suggestion" in report
+        assert report["repo"] == str(fake_repo)
+
+    def test_wip_report_missing_repo_graceful(self, mailbox: Path, monkeypatch) -> None:
+        monkeypatch.setattr(ma, "WIP_REPO_PATH", Path("/nonexistent/repo-xyz"))
+        _write_incoming(mailbox, "w2.md", "buffy-phone", "wip_report")
+        ma.process_inbox(mailbox)
+        reply = next((mailbox / "to-phone").glob("SRV-*.md"))
+        payload = reply.read_text(encoding="utf-8").split("```json")[1].split("```")[0]
+        report = json.loads(payload)
+        assert "error" in report
+        assert "не найден" in report["error"]
+
+    def test_wip_report_in_known_intents(self) -> None:
+        assert "wip_report" in ma._KNOWN_INTENTS
+
+
+def tmp_repo_with_git() -> Path:
+    """Мини-репо с одним коммитом для живого git-пути (tmpdir)."""
+    import tempfile
+    base = Path(tempfile.mkdtemp(prefix="wiprepo-"))
+    subprocess.run(["git", "init", "-q", str(base)], check=True, timeout=30)
+    (base / "f.txt").write_text("x", encoding="utf-8")
+    subprocess.run(["git", "add", "f.txt"], cwd=str(base), check=True, timeout=30)
+    subprocess.run(
+        ["git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "init"],
+        cwd=str(base), check=True, timeout=30,
+    )
+    return base
+
+
 # ── Нумерация SRV-NNN ────────────────────────────────────────────────────
 
 

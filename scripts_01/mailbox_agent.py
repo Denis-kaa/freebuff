@@ -32,6 +32,7 @@ import json
 import os
 import re
 import signal
+import subprocess
 import sys
 import time
 from datetime import datetime
@@ -61,7 +62,15 @@ _HEADER_RE = re.compile(
 _INTENT_RE = re.compile(r"^\s*(?:интент|intent)\s*:\s*(?P<intent>\S+)", re.MULTILINE)
 _STATUS_RE = re.compile(r"статус\s*:\s*(?P<status>\S+)")
 
-_KNOWN_INTENTS = ("ping", "status", "hello")
+_KNOWN_INTENTS = ("ping", "status", "hello", "wip_report")
+
+# Параметры интента wip_report (промт pompts_11/promt03_mailbox_agent_wip_report.md):
+# строго фиксированный allowlist команд, shell=False, read-only.
+WIP_REPO_PATH = Path(os.environ.get("FREEBUFF_WIP_REPO", "/opt/freebuff"))
+WIP_GIT_TIMEOUT_S = 20
+_GIT_STATUS_CMD = ("git", "status", "--porcelain")
+_GIT_HEAD_CMD = ("git", "rev-parse", "--short", "HEAD")
+_GIT_BEHIND_CMD = ("git", "log", "--oneline", "HEAD..origin/master")
 
 _RUNNING = True
 
@@ -245,6 +254,82 @@ def _handle_hello(mailbox: Path, msg: MailMessage) -> Path:
     )
 
 
+def _run_git_allowlisted(args: tuple) -> tuple[bool, str]:
+    """Выполнить одну allowlist-команду git (read-only, shell=False).
+
+    Args:
+        args: полный argv-кортеж команды (только из констант _GIT_*_CMD).
+
+    Returns:
+        (ok, stdout) — ok=False при ненулевом коде/таймауте/ошибке запуска.
+    """
+    if args not in (_GIT_STATUS_CMD, _GIT_HEAD_CMD, _GIT_BEHIND_CMD):
+        return False, f"команда вне allowlist: {args!r}"
+    try:
+        proc = subprocess.run(
+            list(args), cwd=str(WIP_REPO_PATH), shell=False,
+            capture_output=True, text=True, timeout=WIP_GIT_TIMEOUT_S,
+        )
+    except (subprocess.TimeoutExpired, OSError) as exc:
+        return False, f"git error: {exc}"
+    if proc.returncode != 0:
+        return False, (proc.stderr or "unknown git error").strip()[:300]
+    return True, proc.stdout.strip()
+
+
+def _handle_wip_report(mailbox: Path, msg: MailMessage) -> Path:
+    """Интент wip_report → read-only JSON-отчёт о WIP репозитория.
+
+    Источники (промт promt03): allowlist git-команд + файл refs/remotes.
+    Агент ничего не меняет и не исполняет из письма — только докладывает.
+    """
+    if not WIP_REPO_PATH.is_dir():
+        report: Dict[str, object] = {
+            "error": f"репозиторий не найден: {WIP_REPO_PATH}", "repo": str(WIP_REPO_PATH),
+        }
+    else:
+        ok_status, status_out = _run_git_allowlisted(_GIT_STATUS_CMD)
+        ok_head, head_out = _run_git_allowlisted(_GIT_HEAD_CMD)
+        report = {"repo": str(WIP_REPO_PATH)}
+        if not ok_status or not ok_head:
+            report["error"] = f"status: {status_out[:200]}; head: {head_out[:200]}"
+        else:
+            tracked_modified = [
+                line for line in status_out.splitlines()
+                if line.strip() and not line.startswith("??")
+            ]
+            untracked_top = sorted({
+                line[3:].split("/")[0] for line in status_out.splitlines()
+                if line.startswith("??")
+            })[:15]
+            ok_behind, behind_out = _run_git_allowlisted(_GIT_BEHIND_CMD)
+            behind = behind_out.splitlines()[:10] if ok_behind else []
+            origin_ref = WIP_REPO_PATH / ".git" / "refs" / "remotes" / "origin" / "master"
+            origin_master = origin_ref.read_text(encoding="utf-8").strip()[:7] \
+                if origin_ref.is_file() else "unknown"
+            report.update({
+                "head": head_out[:7],
+                "origin_master": origin_master,
+                "in_sync": head_out[:7] == origin_master,
+                "behind_commits": behind,
+                "tracked_modified": tracked_modified,
+                "untracked_top": untracked_top,
+            })
+            if not tracked_modified:
+                report["suggestion"] = "WIP отсутствует: можно пуллить базу напрямую (auto_deploy снимет SKIP)."
+            else:
+                report["suggestion"] = (
+                    "WIP есть: desktop-агенту — (1) secret-scan изменённых файлов, "
+                    "(2) git add <эти пути> + commit wip(server), (3) git fetch origin, "
+                    "(4) git merge origin/master --no-edit, (5) git push origin master. "
+                    "Checkout -f -B запрещён до коммита WIP (CON-69)."
+                )
+    return write_reply(
+        mailbox, _sender_out_dir(msg.sender), msg.sender, "wip_report",
+        "```json\n" + json.dumps(report, ensure_ascii=False, indent=2) + "\n```",
+    )
+
+
 def _handle_unknown(mailbox: Path, msg: MailMessage) -> Path:
     """Неизвестный/отсутствующий интент → письмо-ошибка отправителю."""
     return write_reply(
@@ -262,6 +347,7 @@ INTENT_HANDLERS: Dict[str, Callable[[Path, MailMessage], Path]] = {
     "ping": _handle_ping,
     "status": _handle_status,
     "hello": _handle_hello,
+    "wip_report": _handle_wip_report,
     "unknown": _handle_unknown,
 }
 
