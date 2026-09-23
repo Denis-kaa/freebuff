@@ -97,41 +97,34 @@ deploy_pubkey() {
   fi
 }
 
-port_live() {  # локальный порт слушается? (работает и для -R листенеров)
-  (timeout 3 bash -c "cat < /dev/null > /dev/tcp/127.0.0.1/$1") 2>/dev/null
-}
+# ВАЖНО: реверс-туннель слушает порты на VPS, а НЕ на whimco, поэтому локальный
+# port-check тут не работает. Живость туннеля = живость loop-процесса и его
+# foreground ssh (упал → loop переподключается сам).
 
 has_loop() {
   [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE" 2>/dev/null)" 2>/dev/null
 }
 
 ensure_tunnel() {
-  if port_live "$SSH_PORT_BIND"; then
-    return 0   # туннель уже поднят
-  fi
-  # мёртвый loop — прибрать
   if has_loop; then
-    log "loop pid $(cat "$PIDFILE") не отвечает по портам — перезапускаю"
-    kill "$(cat "$PIDFILE")" 2>/dev/null || true
-    rm -f "$PIDFILE"
+    return 0   # loop жив — он сам держит/переподнимает ssh
   fi
-  log "поднимаю reverse-tunnel → $VPS_USER@$VPS_HOST (-R :$SSH_PORT_BIND→22, :$WEB_PORT_BIND→$WEB_LOCAL_PORT)"
+  rm -f "$PIDFILE"
+  log "запускаю tunnel-loop → $VPS_USER@$VPS_HOST (-R :$SSH_PORT_BIND→22, :$WEB_PORT_BIND→$WEB_LOCAL_PORT)"
   nohup bash "$0" loop >>"$LOG" 2>&1 </dev/null &
   echo $! > "$PIDFILE"
 }
 
 cmd_loop() {
   while true; do
-    if ! port_live "$SSH_PORT_BIND"; then
-      # убить зависший ssh с нашим туннелем, если есть (по cmdline)
-      pkill -f "ssh .*regcloud_tunnel" 2>/dev/null || true
-      log "tunnel down — подключаюсь"
-      ssh $SSH_BASE_OPTS "$VPS_USER@$VPS_HOST" \
-        -R "*:$SSH_PORT_BIND:127.0.0.1:22" \
-        -R "*:$WEB_PORT_BIND:127.0.0.1:$WEB_LOCAL_PORT" \
-        -N -o ExitOnForwardFailure=yes >>"$LOG" 2>&1 \
-        || log "ssh -R завершился с ошибкой (retry через ${LOOP_INTERVAL}s)"
-    fi
+    # прибрать осиротевший ssh от прошлого цикла (по cmdline с нашим маркером)
+    pkill -f "ssh .* -o ServerAliveInterval=30 .*-R \*:$SSH_PORT_BIND:" 2>/dev/null || true
+    log "поднимаю ssh -R"
+    ssh $SSH_BASE_OPTS "$VPS_USER@$VPS_HOST" \
+      -R "*:$SSH_PORT_BIND:127.0.0.1:22" \
+      -R "*:$WEB_PORT_BIND:127.0.0.1:$WEB_LOCAL_PORT" \
+      -N -o ExitOnForwardFailure=yes >>"$LOG" 2>&1 \
+      || log "ssh -R завершился (retry через ${LOOP_INTERVAL}s)"
     sleep "$LOOP_INTERVAL"
   done
 }
@@ -140,8 +133,13 @@ cmd_status() {
   echo "VPS:            $VPS_USER@$VPS_HOST:$VPS_PORT"
   echo "binds:          *:$SSH_PORT_BIND → 127.0.0.1:22 ; *:$WEB_PORT_BIND → 127.0.0.1:$WEB_LOCAL_PORT"
   echo "loop pid:       $(has_loop && cat "$PIDFILE" || echo 'нет')"
-  echo "port $SSH_PORT_BIND:     $(port_live "$SSH_PORT_BIND" && echo LIVE || echo down)"
-  echo "port $WEB_PORT_BIND:     $(port_live "$WEB_PORT_BIND" && echo LIVE || echo down)"
+  # живая проверка туннеля: спросить VPS, слушает ли он наши порты (best effort)
+  if timeout 20 ssh $SSH_BASE_OPTS "$VPS_USER@$VPS_HOST" \
+      "ss -tln | grep -E ':($SSH_PORT_BIND|$WEB_PORT_BIND)\b'" >>"$LOG" 2>&1; then
+    echo "tunnel:         LIVE (VPS слушает порты)"
+  else
+    echo "tunnel:         down/unknown (VPS-проверка не прошла — см. $LOG)"
+  fi
   echo "pubkey file:    $PUBKEY_OUT $([ -f "$PUBKEY_OUT" ] && echo '(есть)' || echo '(нет — ключ ещё не создан)')"
   echo "pubkey repo:    $PUBKEY_REPO $([ -f "$PUBKEY_REPO" ] && echo '(есть)' || echo '(нет)')"
   [ -f "$PUBKEY_REPO" ] && echo "pubkey:         $(cat "$PUBKEY_REPO")"
@@ -149,7 +147,7 @@ cmd_status() {
 
 cmd_stop() {
   if has_loop; then kill "$(cat "$PIDFILE")" 2>/dev/null || true; fi
-  pkill -f "ssh .*regcloud_tunnel" 2>/dev/null || true
+  pkill -f "-R \*:$SSH_PORT_BIND:" 2>/dev/null || true
   rm -f "$PIDFILE"
   log "туннель остановлен (по запросу)"
 }
