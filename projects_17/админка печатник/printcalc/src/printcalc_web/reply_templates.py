@@ -116,7 +116,11 @@ def render(template_id: str, *, parsed: dict[str, Any] | None = None) -> str:
         str(item.get("name", "")) for item in items
     ) or ""
     first_item = str(items[0].get("name", "")) if items else _extract_item(text)
-    qty = str(items[0].get("qty", "")) if items else ""
+    qty_raw: Any = items[0].get("qty", "") if items else ""
+    if isinstance(qty_raw, float) and qty_raw.is_integer():
+        qty = str(int(qty_raw))  # «2.0» → «2» — клиентский текст без дробного мусора
+    else:
+        qty = str(qty_raw)
     sizes = _extract_sizes(str(parsed.get("sizes") or "")) or _extract_sizes(text)
 
     return tpl["text"].format(
