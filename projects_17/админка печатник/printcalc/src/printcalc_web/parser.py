@@ -38,7 +38,10 @@ CALC_KEYWORDS: dict[str, tuple[str, ...]] = {
     ),
     "sign": ("вывеск", "буква", "буквы", "контражур"),
     # Изделия ЧПУ (стемы): фрезеровка/лазерная резка + материалы.
-    "cnc": ("чпу", "фрезер", "лазер", "резк", "фанер", "акрил", "оргстекл", "композит"),
+    # ТЗ Assistant §7 (ред. 2026-09-27): «резк» УДАЛЁН из cnc-ключей —
+    # «резка по контуру» у наклейки/баннера НЕ должна маршрутизировать в ЧПУ.
+    # Калькулятор ЧПУ выбирается явными словами (фрезер/лазер/материал).
+    "cnc": ("чпу", "фрезер", "лазер", "фанер", "акрил", "оргстекл", "композит"),
     # Дизайн: вёрстк(а/у) + макет + логотип (стемы после флексий).
     "design": ("дизайн", "вёрстк", "верстк", "макет", "логотип", "трассировк"),
     # Себестоимость — внутренний инструмент, в сообщениях клиентов почти
@@ -48,10 +51,16 @@ CALC_KEYWORDS: dict[str, tuple[str, ...]] = {
 
 _TITLE_STOPWORDS = {"калькулятор"}
 _NUMBER_RE = re.compile(r"^\d+([.,]\d+)?$")
+#: Запятая/точка с запятой — разделители перечисления, НО НЕ десятичная запятая
+#: между цифрами (ТЗ Assistant §12: «0,5 на 0,5» — это размер 0.5, а не «0» и «5»).
+#: Десятичная запятая (цифра,цифра) защищается плейсхолдером до split и
+#: восстанавливается после.
 _TOKEN_SPLIT = re.compile(r"[,;]+")
+_DECIMAL_COMMA = re.compile(r"(?<=\d),(?=\d)")
+_DECIMAL_PLACEHOLDER = "\x00"
 #: Склеенный размер «20×30»/«20х30»/«20x30» (PHASE_UNITS): один токен,
 #: осмысленный фрагмент (размер) — в unknown не падает, уходит в result["sizes"].
-_GLUED_SIZE_RE = re.compile(r"^\d+(?:[.,]\d+)?[xх×]\d+(?:[.,]\d+)?$")
+_GLUED_SIZE_RE = re.compile(r"^\d+(?:[.,]\d+)?[x×]\d+(?:[.,]\d+)?$")
 
 #: Наивные русские флексии (ступень 1, без морфоанализа): «ксерокса» →
 #: «ксерокс», «фотки» → «фотка». Применяются к токену, если сам токен
@@ -92,10 +101,26 @@ def _dimension_indices(tokens: list[str]) -> set[int]:
     return dim
 
 
+#: Число с НЕ-тиражной единицей: «4 мм» (толщина), «1440 dpi» (качество
+#: печати), «30 см» рядом с «люверсы» (шаг). Единица при числе делает его
+#: параметром изделия/обработки, а не количеством (ТЗ Assistant: без
+#: выдуманных значений — «Табличка ПВХ 4 мм» НЕ тираж 4).
+_UNITED_NUMBER_RE = re.compile(r"^(\d+(?:[.,]\d+)?)(мм|см|м|дм|км|dpi|dpi\.?)$")
+
+
 def _tokenize(text: str) -> list[str]:
-    """Строчные токены: по пробелам и знакам-разделителям перечисления."""
+    """Строчные токены: по пробелам и знакам-разделителям перечисления.
+
+    Десятичная запятая между цифрами НЕ делит токен (ТЗ §12): «0,5» — одно
+    число; «фото, табличка» — перечисление (запятая без цифр вокруг).
+    """
     lowered = text.lower()
-    return [token for token in _TOKEN_SPLIT.split(lowered) for token in token.split() if token]
+    protected = _DECIMAL_COMMA.sub(_DECIMAL_PLACEHOLDER, lowered)
+    tokens: list[str] = []
+    for chunk in _TOKEN_SPLIT.split(protected):
+        for token in chunk.split():
+            tokens.append(token.replace(_DECIMAL_PLACEHOLDER, ","))
+    return tokens
 
 
 def _is_number(token: str) -> bool:
@@ -235,6 +260,30 @@ def parse(conn: sqlite3.Connection, text: str) -> dict[str, Any]:
     dictionary = _build_dictionary(conn)
     dim_idx = _dimension_indices(tokens)
     glued_sizes = {i for i, tok in enumerate(tokens) if _GLUED_SIZE_RE.match(tok)}
+    # Число с не-тиражной единицей («4 мм», «1440 dpi») — параметр изделия,
+    # не число-кандидат в тираж (ТЗ Assistant: без выдуманных значений).
+    # Единица может быть слитной («4мм») или отдельным токеном («4 мм»).
+    _PARAM_UNIT_TOKENS = frozenset({"мм", "см", "м", "дм", "км", "dpi"})
+    parsed_size_idx = {
+        i
+        for i, tok in enumerate(tokens)
+        if _UNITED_NUMBER_RE.match(tok) is not None
+        or (
+            _is_number(tok)
+            and i + 1 < len(tokens)
+            and tokens[i + 1] in _PARAM_UNIT_TOKENS
+        )
+    }
+    # Пара «N + число с единицей» (ТЗ §6: «качество 1440 dpi», «ПВХ 4 мм»):
+    # слово-признак параметра при следующем «число+ед.» — тоже не тираж.
+    _PARAM_LEADS = ("качество", "разрешение", "толщина", "плотность")
+    suffixed_qty_idx: set[int] = {
+        i - 1
+        for i, tok in enumerate(tokens)
+        if i > 0
+        and _UNITED_NUMBER_RE.match(tok) is not None
+        and tokens[i - 1] in _PARAM_LEADS
+    }
     sizes: list[str] = []  # распознанные размеры (для UI и эскалации «без услуги»)
     items: list[dict[str, Any]] = []
     unknown: list[str] = []
@@ -272,6 +321,10 @@ def parse(conn: sqlite3.Connection, text: str) -> dict[str, Any]:
             continue
         entry, length = match
         qty = 1.0
+        # Число явно названо в тексте? Дефолт qty=1.0 — заглушка «одна
+        # услуга» (для м²-позиций это площадь-минимум, НЕ тираж):
+        # потребители (normalize_order) обязаны отличать одно от другого.
+        qty_explicit = False
         next_index = index + length
         # Продолжение той же услуги («цифровая печать» = одно intent, а не два):
         # следующий токен, ссылающийся на ТУ ЖЕ запись словаря, поглощается.
@@ -284,8 +337,10 @@ def parse(conn: sqlite3.Connection, text: str) -> dict[str, Any]:
             next_index < len(tokens)
             and _is_number(tokens[next_index])
             and next_index not in dim_idx
+            and next_index not in parsed_size_idx
         ):
             qty = _to_number(tokens[next_index])
+            qty_explicit = True
             next_index += 1
             # Слово-тираж сразу после числа («наклейка 100 шт») поглощаем.
             if next_index < len(tokens) and tokens[next_index] in _QTY_WORDS:
@@ -295,10 +350,14 @@ def parse(conn: sqlite3.Connection, text: str) -> dict[str, Any]:
             and _is_number(tokens[index - 1])
             and not _consumed_number
             and (index - 1) not in dim_idx
+            and (index - 1) not in parsed_size_idx
+            and (index - 1) not in suffixed_qty_idx
         ):
             # Число ПЕРЕД услугой («2 ксерокса», R-материал: порядок свободный).
-            # Числа размера («20 на 30 наклейка») тиражом НЕ становятся.
+            # Числа размера («20 на 30 наклейка») и числа с единицей («4 мм»
+            # рядом со следующим матчем) тиражом НЕ становятся.
             qty = _to_number(tokens[index - 1])
+            qty_explicit = True
             _consumed_number = True
         if entry["type"] == "price":
             items.append(
@@ -308,6 +367,7 @@ def parse(conn: sqlite3.Connection, text: str) -> dict[str, Any]:
                     "name": entry["name"],
                     "price": entry["price"],
                     "qty": qty,
+                    "qty_explicit": qty_explicit,  # число названо в тексте (не дефолт)
                     "segment_id": segment,
                     "unit": entry.get("unit"),  # PHASE_UNITS: единица из каталога
                 }
@@ -319,6 +379,7 @@ def parse(conn: sqlite3.Connection, text: str) -> dict[str, Any]:
                     "calculator_id": entry["id"],
                     "name": entry["name"],
                     "qty": qty,
+                    "qty_explicit": qty_explicit,  # число названо в тексте (не дефолт)
                     "segment_id": segment,
                 }
             )

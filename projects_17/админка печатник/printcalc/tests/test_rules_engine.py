@@ -205,10 +205,12 @@ class TestIdempotence:
     def test_json_contract_shape(self, packs: dict) -> None:
         """Контракт S3 стабилен: ключи JSON вердикта."""
         payload = evaluate_text("Наклейка 50×30, 149 шт + резка по контуру", packs).to_json()
+        # Контракт S3 стабилен и расширяется аддитивно (ТЗ §13): +"warnings" —
+        # политика пакетов (qty-подсказки фото) без ломки существующих ключей.
         expected_keys = {
             "product", "matched_pack", "size_mm", "quantity", "finishings",
             "facts", "unknown_words", "proposed_operations", "missing",
-            "suggestions", "fired_rules", "ready_for_calculator",
+            "suggestions", "fired_rules", "ready_for_calculator", "warnings",
         }
         assert set(payload) == expected_keys
         assert payload["proposed_operations"][0]["auto"] is False

@@ -95,3 +95,14 @@ def analytics_page(request: Request):
 def materials_page(request: Request):
     """Реестр материалов (Этап 1)."""
     return _render(request, "materials.html", {"active": "materials"})
+
+
+@router.get("/assistant")
+def assistant_page(request: Request):
+    """Локальный помощник (Assistant v2.0, ТЗ §33): чат над Smart Order.
+
+    Чат — ТОЛЬКО интерфейс (ТЗ §36): вся логика в существующем
+    POST /api/order/analyze + /api/order/bridge + /api/suggestions/decision;
+    новых парсеров/движков не создаётся.
+    """
+    return _render(request, "assistant.html", {"active": "assistant"})

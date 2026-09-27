@@ -29,6 +29,7 @@ ready_for_calculator = нет blocking-missing. Блокирующие отсу�
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
@@ -120,6 +121,7 @@ class RuleVerdict:
     suggestions: tuple[Suggestion, ...] = ()
     fired_rules: tuple[str, ...] = ()  # rule_id сработавших правил (аудит)
     ready_for_calculator: bool = True
+    warnings: tuple[str, ...] = ()  # ТЗ Assistant §14: политика количеств, конфликты
 
     def to_json(self) -> dict[str, Any]:
         """Сериализация для API S3 (стабильный контракт, аддитивный)."""
@@ -150,6 +152,7 @@ class RuleVerdict:
             ],
             "fired_rules": list(self.fired_rules),
             "ready_for_calculator": self.ready_for_calculator,
+            "warnings": list(self.warnings),  # ТЗ Assistant §35 (аддитивно)
         }
 
 
@@ -281,6 +284,7 @@ def evaluate_order(draft: OrderDraft, packs: Mapping[str, RulePack]) -> RuleVerd
                 )
 
     missing = _missing_from_draft(draft) + unblocking_missing
+    warnings = _package_policy_warnings(draft)
     return RuleVerdict(
         draft=draft,
         matched_pack=pack.pack if pack is not None else "",
@@ -289,7 +293,55 @@ def evaluate_order(draft: OrderDraft, packs: Mapping[str, RulePack]) -> RuleVerd
         suggestions=tuple(suggestions),
         fired_rules=tuple(fired),
         ready_for_calculator=not any(item.blocking for item in missing),
+        warnings=warnings,
     )
+
+
+#: Пакетные услуги: имя позиции каталога → размер пакета в единицах позиции.
+#: Источник — сид кассы P0 (Фото на документы: 4/6 шт за пакет). ТЗ Assistant
+#: §14: «Фото на паспорт 6 штук» при пакете 4 НЕ превращается молча в 4 —
+#: оператору показывается вопрос политики. Распознавание по подстроке имени
+#: (лестница 4/6/срочные), пополнение — редакцией словаря (не молча).
+_PACKAGE_QUANTITIES: tuple[tuple[str, int], ...] = (
+    ("Фото на документы (4 шт)", 4),
+    ("Фото на документы (6 шт)", 6),
+)
+
+
+def _package_policy_warnings(draft: OrderDraft) -> tuple[str, ...]:
+    """ТЗ §14: конфликт «запрошено N» vs «пакет K» — предупреждение, не конверсия.
+
+    Срабатывает, когда qty парсера относится к пакетной позиции, а число
+    кратно пакету лишь частично (6 при пакете 4). Никакого пересчёта тут
+    нет: решение — за оператором (existing suggestion_decisions S4).
+    """
+    warnings: list[str] = []
+    qty = draft.facts.get("qty")
+    if not isinstance(qty, (int, float)) or draft.product != "фото на документы":
+        return tuple(warnings)
+    # Пакет определяется из текста: «фото на паспорт» = пакет 4 шт (сид P0),
+    # «загранпаспорт» = 6 шт. Детерминированно по словам текста.
+    lowered = draft.text.lower()
+    package_qty: int | None = None
+    if "загран" in lowered:
+        package_qty = 6
+    elif re.search(r"фото\s+на\s+(?:паспорт|документ|права)", lowered):
+        package_qty = 4
+    if package_qty is None:
+        return tuple(warnings)
+    requested = int(qty)
+    if requested != package_qty:
+        if requested % package_qty == 0:
+            warnings.append(
+                f"Запрошено {requested} фото — это {requested // package_qty} пакетов "
+                f"по {package_qty} шт. Подтвердите расчёт пакетами."
+            )
+        else:
+            warnings.append(
+                f"Вы указали {requested} фото. Стандартный пакет — {package_qty}. "
+                f"Рассчитать {requested} фото как индивидуальное количество?"
+            )
+    return tuple(warnings)
 
 
 def evaluate_text(

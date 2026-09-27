@@ -1,0 +1,45 @@
+{% set page_script %}<script src="/static/assistant.js"></script>{% endset %}
+{% include "_shell_top.html" %}
+
+<section class="panel assistant-panel">
+  <div class="panel-head">
+    <h2>Локальный помощник</h2>
+    <div class="row-actions">
+      <select id="assistant-mode" class="field-input" title="Режим ответа (ТЗ §18)">
+        <option value="work" selected>Рабочий</option>
+        <option value="quick">Быстрый</option>
+        <option value="detailed">Подробный</option>
+        <option value="teach">Обучение</option>
+        <option value="clarify">Только уточнения</option>
+        <option value="production">Производство</option>
+        <option value="sales">Продажа</option>
+        <option value="check">Проверка</option>
+      </select>
+      <button id="assistant-clear" class="btn" type="button">Очистить</button>
+    </div>
+  </div>
+
+  <!-- Лента диалога (ТЗ §33) -->
+  <div id="assistant-feed" class="assistant-feed" aria-live="polite"></div>
+
+  <!-- Ввод (ТЗ §33: не перегружать) -->
+  <form id="assistant-form" class="assistant-input" autocomplete="off">
+    <input id="assistant-text" class="field-input" type="text"
+           placeholder="Опишите заказ: «Наклейка 50 на 30 149 шт плюс резка по контуру»" />
+    <button class="btn primary" type="submit">Отправить</button>
+  </form>
+  <p class="muted assistant-note">
+    Цена не называется помощником — расчёт только через калькулятор (ТЗ §30).
+    unknown-слова и все решения логируются (suggestion_decisions).
+  </p>
+</section>
+
+<dialog id="assistant-price-dialog" class="modal">
+  <div class="modal-head">
+    <h3>Расчёт (мост в калькулятор)</h3>
+    <button class="btn btn ghost modal-close" type="button" data-close="assistant-price-dialog">✕</button>
+  </div>
+  <div id="assistant-price-body" class="assistant-price-body"></div>
+</dialog>
+
+{% include "_shell_bottom.html" %}
