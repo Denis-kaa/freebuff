@@ -1,6 +1,7 @@
 # РОАДМАП_v8 — Local Operator Assistant v2 + Deadline Engine
 
 > **Статус:** ACTIVE · **Дата:** 2026-09-27 · **Источник:** prompts/2.md (ТЗ владельца, 2 части)
+> **Прогресс:** Поток A — ГОТОВ (коммит ecd10e5, 507 тестов, отчёт §39); поток B — B1-аудит выполнен 09-29.
 > **Принцип ТЗ:** Preserve existing contracts. Extend, don't rewrite. Чат = интерфейс,
 > Smart Order = бизнес-логика. Никаких параллельных parser/rules/settings/notification систем.
 > **Основа фактов:** PRINTNIK_SERVER_STATE.md (снимок 09-27) — проба 7 запросов уже выявила
@@ -82,32 +83,57 @@ bridge ведёт в калькулятор. 0,5×0,5 не ломается. Ц�
 
 ## Поток B — Deadline Engine + напоминания + управление заказами
 
-### B1. Аудит существующего (ТЗ §33)
-- Order/OrderStatus, production_tasks, API orders, orders.html/js (фильтры/сортировки),
-  settings, notification-механизмы (outbox/inbox), audit log — найти аналоги ДО создания.
+### B1. Аудит существующего (ТЗ §33) — ВЫПОЛНЕН 2026-09-29
+
+| Элемент ТЗ | Что есть в printcalc | Вердикт |
+|---|---|---|
+| Order model | таблица `orders`: id, status, payment_method, total, created_at, updated_at + миграции wishes/client_id/estimate_id | **deadline-полей НЕТ** — добавить аддитивно |
+| OrderStatus | `ORDER_STATUSES = ("новый","в работе","выполнен","завершён")` (store.py:32) | «отменён» отсутствует → **решение владельца 09-29: добавить**; финальные = выполнен/завершён/отменён |
+| ProductionStatus | `TASK_STATUSES = ("pending","in_progress","done","blocked")` (production_tasks) | отдельное измерение, Deadline Engine его НЕ меняет (ТЗ §25) |
+| Deadline fields | нет ни в схеме, ни в миграциях | B2 |
+| API orders | POST/GET/PATCH /api/orders, /orders/{id}/production | PATCH расширить, список — sort/filter параметрами |
+| Frontend orders | orders.html: фильтр-сегменты по статусу; orders.js: loadOrders ?status= | сортировок и дедлайн-колонки нет → B4 |
+| Notifications | outbox_messages (письма по заявкам) + emailer.dispatch; **вешать дедлайны на письма нельзя** — другой домен | **решение владельца 09-29: журнал + UI-лента**, без email в MVP |
+| Settings | таблица settings (key/value), используется payment_methods | пороги дедлайна туда же — не новая система (ТЗ §29) |
+| Audit log | постоянного audit-log нет; есть suggestion_decisions (домен подсказок) | создать `deadline_events` — он и журнал напоминаний, и история изменений (ТЗ §30-31) |
+| Dashboard | analytics.html — своя страница, widget system отсутствует | счётчики добавить в шапку списка заказов (не новый фреймворк, ТЗ §24) |
+| Timezone | `utc_now()` — datetime.now(timezone.utc).isoformat (store.py:54); наивных дат нет | хранить ISO UTC с офсетом; отдавать remaining вычисленным (ТЗ §21) |
+| Assignee | модель ответственного сотрудника отсутствует | уведомление «в ленту всем операторам» (единый журнал), без адресации (ТЗ §27 мин.) |
 
 ### B2. БД (аддитивно)
-- orders: + customer_deadline TEXT (ISO timestamp), + internal_deadline TEXT.
-- deadline_notifications: order_id + deadline_type + threshold (уникальная комбинация,
-  idempotency ТЗ §10); настройки порогов — существующая settings-таблица.
+- orders: + customer_deadline TEXT (ISO UTC с офсетом, NULL = не установлен),
+  + internal_deadline TEXT.
+- `deadline_events`: order_id + deadline_type + threshold UNIQUE — идемпотентность
+  напоминаний (ТЗ §10) и журнал изменений (порог "changed"/"set"/"cleared", payload
+  со старым/новым значением — ТЗ §30).
+- «отменён» → ORDER_STATUSES (миграция не нужна — строковый статус; обновить
+  валидацию create/update и STATUS_STYLE в orders.js).
 
-### B3. Urgency-статус (ТЗ §4–6)
+### B3. DeadlineService (rules->deadline.py, детерминированный)
 - Вычисляемый DeadlineStatus: NORMAL/WARNING/URGENT/CRITICAL/VERY_CRITICAL/OVERDUE
-  (пороги из настроек, не хардкод); remaining_time динамический (не в БД);
-  финальные статусы (completed/delivered/cancelled) не тревожат.
+  (пороги из settings, не хардкод); remaining_time динамический (не в БД);
+  финальные статусы (выполнен/завершён/отменён) не тревожат (ТЗ §8).
 - Отдельное измерение: не смешивать с OrderStatus/Production/Payment (ТЗ §11 ч.2).
-- Валидация internal_deadline <= customer_deadline (ТЗ §20); timezone-aware (ТЗ §21).
+- Валидация internal_deadline <= customer_deadline (ТЗ §20); timezone-aware (ТЗ §21);
+  «Без дедлайна» — None, не «просрочен» (ТЗ §18).
 
 ### B4. API + UI
-- PATCH orders deadline (audit-история изменений ТЗ §30); список: сортировки
-  (дата/дедлайн/срочность/направление/ID), фильтры (все/активные/просроченные/сегодня/
-  завтра/неделя/без дедлайна/направление/статус); карточка: блок ДЕДЛАЙН;
-  компактный индикатор в списке (цвет + текст + remaining — accessibility ТЗ §5);
-  dashboard-счётчики если есть widget system (ТЗ §24).
+- PUT /api/orders/{id}/deadline (set/clear, внутренняя валидация, запись в
+  deadline_events — audit ТЗ §30); GET /api/orders: sort=(created\|deadline\|urgency\
+  \|direction\|id), order=(asc\|desc), filter=(all\|active\|overdue\|today\|tomorrow\
+  \|week\|no_deadline), direction-фильтр по calculator_id позиций (существующий
+  справочник wide/digital/riso/sign/cnc/design — не второй, ТЗ §14);
+  GET /api/deadline/summary — счётчики шапки.
+- UI: колонка «Дедлайн» с ⚪/🟢/🟡/🟠/🔴/⛔ + текст remaining (не только цвет — §5);
+  селекты сортировки/фильтра; блок ДЕДЛАЙН в диалоге заказа; лента событий в шапке
+  (колокольчик + счётчик непрочитанных) — обновление раз в 60 c (§7, не каждую секунду).
 
 ### B5. Напоминания
-- Threshold-based, один раз на порог (idempotency), через существующий outbox/notification
-  слой; при смене дедлайна — пересчёт пройденных порогов без спама (ТЗ §31).
+- Threshold-based: пороги 3д/24ч/12ч/2ч/overdue из настроек; событие пишется ОДИН раз
+  (UNIQUE constraint), повторный sweep не дублирует (ТЗ §10).
+- Sweep = при GET /api/orders (лениво, детерминированно) — отдельный демон не нужен.
+- При смене дедлайна: пересчёт пройденных порогов, старые события типа остаются
+  в истории, новые пороги срабатывают заново без спама (ТЗ §31).
 
 ### B6. Тесты + отчёт
 - ТЗ §32: расчёт времени (8 кейсов), статусы (6), финальные (3), фильтрация, сортировка,

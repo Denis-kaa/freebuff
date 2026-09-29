@@ -507,9 +507,126 @@ def create_order(
 
 @router.get("/orders")
 def read_orders(
-    status: str | None = None, conn: sqlite3.Connection = Depends(get_conn)
+    status: str | None = None,
+    deadline_filter: str | None = None,
+    sort: str | None = None,
+    direction: str | None = None,
+    conn: sqlite3.Connection = Depends(get_conn),
 ) -> dict[str, Any]:
-    return {"orders": _store_guard(store.list_orders, conn, status=status)}
+    """Список заказов + ленивый sweep напоминаний (РОАДМАП_v8 B4/B5).
+
+    Sweep идемпотентен (UNIQUE order_id+type+threshold, ТЗ §10): чтение
+    списка пишет только НОВЫЕ пороговые события. Отдельный демон не
+    нужен — оператор открывает список, дедлайны пересчитываются.
+    """
+    orders = _store_guard(
+        store.list_orders,
+        conn,
+        status=status,
+        deadline_filter=deadline_filter,
+        sort=sort,
+        direction=direction,
+    )
+    from printcalc_web.deadline import (
+        get_thresholds,
+        sweep_deadline_reminders,
+        urgency_for_order,
+    )
+
+    thresholds = get_thresholds(conn)
+    sweep_deadline_reminders(conn, orders)
+    for order in orders:
+        info = urgency_for_order(
+            order["status"],
+            order["customer_deadline"],
+            order["internal_deadline"],
+            thresholds,
+        )
+        order["urgency"] = info
+    return {"orders": orders}
+
+
+@router.get("/deadline/summary")
+def read_deadline_summary(
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Счётчики шапки (ТЗ §24) + лента последних дедлайн-событий."""
+    from printcalc_web.deadline import list_events
+
+    return {
+        "summary": store.deadline_summary(conn),
+        "events": list_events(conn, limit=50),
+    }
+
+
+@router.get("/orders/{order_id}/deadline-events")
+def read_order_deadline_events(
+    order_id: int, conn: sqlite3.Connection = Depends(get_conn)
+) -> dict[str, Any]:
+    """История дедлайна заказа (аудит ТЗ §30)."""
+    from printcalc_web.deadline import list_events
+
+    return {"events": list_events(conn, order_id=order_id)}
+
+
+class DeadlineSetIn(BaseModel):
+    """Установка дедлайна (ТЗ §2/§3): ISO дата-время или null (удалить)."""
+
+    deadline_type: Literal["customer", "internal"]
+    value: str | None = None
+    operator: str = ""
+
+
+@router.put("/orders/{order_id}/deadline")
+def set_order_deadline(
+    order_id: int,
+    payload: DeadlineSetIn,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Set/clear дедлайна с валидацией §20 и аудитом §30/§31."""
+    order = _store_guard(
+        store.set_order_deadline,
+        conn,
+        order_id,
+        deadline_type=payload.deadline_type,
+        value=payload.value,
+    )
+    if payload.operator:
+        # Оператор — метаданные вызова; фиксируем в payload последнего
+        # события заказа (аудит «кто изменил»).
+        conn.execute(
+            "UPDATE deadline_events SET payload_json = json_set(payload_json, '$.operator', ?)"
+            " WHERE id = (SELECT MAX(id) FROM deadline_events WHERE order_id = ?)",
+            (payload.operator, order_id),
+        )
+        conn.commit()
+    return {"order": order}
+
+
+@router.get("/deadline/settings")
+def read_deadline_settings(
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Пороги срочности (ТЗ §29: настройки, не хардкод)."""
+    from printcalc_web.deadline import get_thresholds
+
+    return {"thresholds": get_thresholds(conn)}
+
+
+class DeadlineThresholdsIn(BaseModel):
+    """Частичное обновление порогов (ключи — закрытый словарь)."""
+
+    thresholds: dict[str, float]
+
+
+@router.put("/deadline/settings")
+def replace_deadline_settings(
+    payload: DeadlineThresholdsIn,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    from printcalc_web.deadline import set_thresholds
+
+    return {"thresholds": set_thresholds(conn, payload.thresholds)}
 
 
 @router.get("/orders/{order_id}")

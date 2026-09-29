@@ -280,6 +280,27 @@ CREATE TABLE IF NOT EXISTS suggestion_decisions (
 
 CREATE INDEX IF NOT EXISTS idx_suggdec_inquiry ON suggestion_decisions(inquiry_id);
 
+-- Deadline Engine (РОАДМАП_v8 поток B): единый журнал дедлайн-событий.
+-- ТЗ §10 (idempotency): напоминание порога пишется РОВНО один раз —
+-- частичный UNIQUE только для reminder-строк. ТЗ §30 (audit): set/changed/
+-- cleared накапливаются (каждое — новая строка, история не теряется;
+-- баг пойман тестом test_reschedule_resets_reminders_keeps_audit).
+CREATE TABLE IF NOT EXISTS deadline_events (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id      INTEGER NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    deadline_type TEXT NOT NULL CHECK (deadline_type IN ('customer','internal')),
+    kind          TEXT NOT NULL CHECK (kind IN ('set','changed','cleared','reminder')),
+    threshold     TEXT NOT NULL DEFAULT '',
+    payload_json  TEXT NOT NULL DEFAULT '{}',
+    created_at    TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_deadline_reminder_once
+    ON deadline_events(order_id, deadline_type, threshold)
+    WHERE kind = 'reminder';
+
+CREATE INDEX IF NOT EXISTS idx_deadline_events_order ON deadline_events(order_id);
+
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
 CREATE INDEX IF NOT EXISTS idx_price_items_name ON price_list_items(name);
@@ -325,6 +346,21 @@ def _migrate(conn: sqlite3.Connection) -> None:
     if "pack_size" not in material_columns:
         # Этап 5: фасовка закупки (планировщик округляет вверх до pack_size).
         conn.execute("ALTER TABLE materials ADD COLUMN pack_size REAL")
+
+    # Deadline Engine (РОАДМАП_v8 поток B, ТЗ §2/§3): дедлайны клиента и
+    # производства — отдельное измерение заказа (не статус). NULL = «без
+    # дедлайна» (ТЗ §18: не считать просроченным). Формат — ISO UTC с офсетом
+    # (ТЗ §21 timezone-aware), как utc_now() в store.
+    order_columns = {row[1] for row in conn.execute("PRAGMA table_info(orders)")}
+    if "customer_deadline" not in order_columns:
+        conn.execute("ALTER TABLE orders ADD COLUMN customer_deadline TEXT")
+    if "internal_deadline" not in order_columns:
+        conn.execute("ALTER TABLE orders ADD COLUMN internal_deadline TEXT")
+    # Индекс ПОСЛЕ ALTER: в _SCHEMA его ставить нельзя — на свежей БД
+    # executescript идёт раньше миграции, колонки ещё нет (поймано тестами).
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_orders_customer_deadline ON orders(customer_deadline)"
+    )
 
     # Таблицы Этапа 6 (inbox_messages/inquiries) — CREATE IF NOT EXISTS в
     # схеме выше; отдельных ALTER не требуют (создаются целиком).

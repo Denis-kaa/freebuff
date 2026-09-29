@@ -6,22 +6,56 @@
   <div class="panel">
     <div class="panel-head">
       <h2>Все заказы</h2>
-      <div class="seg" id="status-filter" role="tablist" aria-label="Фильтр по статусу">
-        <button data-status="" class="primary">все</button>
-        <button data-status="новый">новый</button>
-        <button data-status="в работе">в работе</button>
-        <button data-status="выполнен">выполнен</button>
-        <button data-status="завершён">завершён</button>
+      <div class="row-actions">
+        <div class="seg" id="status-filter" role="tablist" aria-label="Фильтр по статусу">
+          <button data-status="" class="primary">все</button>
+          <button data-status="новый">новый</button>
+          <button data-status="в работе">в работе</button>
+          <button data-status="выполнен">выполнен</button>
+          <button data-status="завершён">завершён</button>
+          <button data-status="отменён">отменён</button>
+        </div>
+        <select id="orders-sort" class="field-input" title="Сортировка (ТЗ §12–16)">
+          <option value="created" selected>По дате</option>
+          <option value="urgency">По срочности</option>
+          <option value="deadline">По дедлайну</option>
+          <option value="id">По ID</option>
+        </select>
+        <select id="orders-direction" class="field-input" title="Направление">
+          <option value="desc" selected>↓</option>
+          <option value="asc">↑</option>
+        </select>
       </div>
+    </div>
+    <div class="toolbar">
+      <select id="deadline-filter" class="field-input" title="Фильтр дедлайнов (ТЗ §17/§18)">
+        <option value="">все дедлайны</option>
+        <option value="active">активные</option>
+        <option value="overdue">просроченные</option>
+        <option value="today">сегодня</option>
+        <option value="tomorrow">завтра</option>
+        <option value="week">на этой неделе</option>
+        <option value="no_deadline">без дедлайна</option>
+      </select>
+      <span id="deadline-counters" class="muted deadline-counters"></span>
     </div>
     <div class="table-wrap">
       <table id="orders-table">
         <thead>
-          <tr><th>№</th><th>Создан</th><th>Клиент</th><th>Позиции</th><th class="num">Сумма</th><th>Оплата</th><th>Статус</th><th></th></tr>
+          <tr><th>№</th><th>Создан</th><th>Клиент</th><th>Позиции</th><th class="num">Сумма</th><th>Оплата</th><th>Статус</th><th>Дедлайн</th><th></th></tr>
         </thead>
         <tbody id="orders-body"></tbody>
       </table>
     </div>
+  </div>
+
+  <!-- Лента дедлайн-событий (ТЗ §27/§30): напоминания + история изменений -->
+  <div class="panel" id="deadline-events-panel">
+    <div class="panel-head">
+      <h2>Дедлайн-события</h2>
+      <button id="btn-deadline-refresh" class="btn" type="button">Обновить</button>
+    </div>
+    <div id="deadline-events" class="deadline-events muted">Загрузка…</div>
   </div>
 
   <!-- Диалог заказа: статус + OrderExport (Р1) -->
@@ -35,6 +69,21 @@
       <div id="dlg-order-wishes-text" class="wishes-quote"></div>
     </div>
     <div id="dlg-order-sections" style="margin-top:10px"></div>
+    <!-- ДЕДЛАЙН (ТЗ §22): клиентский + внутренний, remaining, статус -->
+    <div class="dlg-deadline" style="margin-top:14px">
+      <div class="muted" style="margin-bottom:6px">ДЕДЛАЙН</div>
+      <div class="row" style="gap:12px; flex-wrap:wrap">
+        <label>Клиент:
+          <input id="dlg-deadline-customer" class="field-input" type="datetime-local" />
+        </label>
+        <label>Производство:
+          <input id="dlg-deadline-internal" class="field-input" type="datetime-local" />
+        </label>
+        <button id="btn-order-deadline-save" class="primary">Сохранить дедлайны</button>
+        <button id="btn-order-deadline-clear">Убрать оба</button>
+      </div>
+      <div id="dlg-deadline-status" class="muted" style="margin-top:6px"></div>
+    </div>
     <div class="row" style="margin-top:14px">
       <label>Статус:
         <select id="dlg-order-status">
@@ -42,6 +91,7 @@
           <option>в работе</option>
           <option>выполнен</option>
           <option>завершён</option>
+          <option>отменён</option>
         </select>
       </label>
       <button id="btn-order-status-save" class="primary">Сохранить статус</button>

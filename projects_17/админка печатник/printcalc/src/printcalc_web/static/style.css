@@ -762,3 +762,14 @@ dialog .muted { margin-top: 6px; }
 
 .assistant-price-body { padding: 14px 18px; display: grid; gap: 8px; }
 .assistant-price-body code { font-family: var(--font-mono); font-size: 12px; word-break: break-all; color: var(--text-dim); }
+
+/* Deadline Engine (РОАДМАП_v8 B4): тонкие индикаторы, не «светофор» (ТЗ §28). */
+.deadline-pill { white-space: nowrap; font-size: 13px; }
+.dl-normal { color: var(--st-green); }
+.dl-warning { color: var(--st-yellow); }
+.dl-urgent { color: #fb923c; }
+.dl-critical { color: var(--st-red); }
+.dl-overdue { color: var(--st-red); font-weight: 600; }
+.deadline-counters { font-size: 13px; }
+.deadline-events { display: grid; gap: 4px; font-size: 13px; max-height: 200px; overflow-y: auto; }
+.dlg-deadline .field-input { min-width: 200px; }

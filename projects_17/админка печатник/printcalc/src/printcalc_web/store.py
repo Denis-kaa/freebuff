@@ -29,7 +29,11 @@ from printcalc_web.calculators import get_registry
 
 #: Статусы заказа Phase 1 (Р2). Хранение — TEXT; расширение набора в Phase 2
 #: меняет только эту константу (CONFLICT-1 v3: совместимость с workflow).
-ORDER_STATUSES: tuple[str, ...] = ("новый", "в работе", "выполнен", "завершён")
+# Финальные статусы: дедлайн-движок их не тревожит (ТЗ §8 ч.2 Deadline).
+#: Решение владельца 2026-09-29: «отменён» добавлен (ТЗ CANCELLED) —
+#: отмена заказа глушит напоминания, но история дедлайна сохраняется.
+ORDER_STATUSES: tuple[str, ...] = ("новый", "в работе", "выполнен", "завершён", "отменён")
+FINAL_ORDER_STATUSES: frozenset[str] = frozenset({"выполнен", "завершён", "отменён"})
 
 #: Способы оплаты (решение Q2 от 2026-09-07); редактируется без кода.
 DEFAULT_PAYMENT_METHODS: tuple[str, ...] = ("наличные", "карта", "перевод")
@@ -713,6 +717,17 @@ def _order_row_to_dict(
         "wishes": row["wishes"] if "wishes" in row.keys() else "",
         "client_id": row["client_id"] if "client_id" in row.keys() else None,
         "estimate_id": row["estimate_id"] if "estimate_id" in row.keys() else None,
+        # Deadline Engine (B2): NULL = «без дедлайна» (ТЗ §18).
+        "customer_deadline": (
+            row["customer_deadline"]
+            if "customer_deadline" in row.keys()
+            else None
+        ),
+        "internal_deadline": (
+            row["internal_deadline"]
+            if "internal_deadline" in row.keys()
+            else None
+        ),
         "client_name": _client_name_for_order(conn, row),
         "items": [
             {
@@ -739,11 +754,29 @@ def _order_row_to_dict(
 
 
 def list_orders(
-    conn: sqlite3.Connection, *, status: str | None = None
+    conn: sqlite3.Connection,
+    *,
+    status: str | None = None,
+    deadline_filter: str | None = None,
+    sort: str | None = None,
+    direction: str | None = None,
 ) -> list[dict[str, Any]]:
-    """Список заказов (краткий), фильтр по статусу (Р5б: история заказов)."""
+    """Список заказов (краткий), фильтр по статусу (Р5б: история заказов).
+
+    Deadline Engine (РОАДАМП_v8 B4): сортировки ТЗ §12–16 (created/deadline/
+    urgency/id) + фильтр дедлайнов ТЗ §17/§18 (deadline.py — вычисляемые
+    фильтры, SQL не дублирует логику urgency). Существующие вызовы без
+    новых параметров работают как раньше (Backward Compatibility).
+    """
     if status is not None and status not in ORDER_STATUSES:
         raise StoreError(f"недопустимый статус: '{status}'")
+    sort_key = sort or "created"
+    if sort_key not in ("created", "deadline", "urgency", "id"):
+        raise StoreError(f"недопустимая сортировка: '{sort_key}'")
+    reverse = direction != "asc"  # дефолт desc (новые сверху), как было
+    if direction not in (None, "asc", "desc"):
+        raise StoreError(f"недопустимое направление: '{direction}'")
+
     sql = (
         "SELECT o.*, COUNT(i.id) AS items_count FROM orders o"
         " LEFT JOIN order_items i ON i.order_id = o.id"
@@ -753,7 +786,7 @@ def list_orders(
         sql += " WHERE o.status = ?"
         params.append(status)
     sql += " GROUP BY o.id ORDER BY o.id DESC"
-    return [
+    orders = [
         {
             "id": row["id"],
             "status": row["status"],
@@ -764,9 +797,72 @@ def list_orders(
             "client_id": row["client_id"] if "client_id" in row.keys() else None,
             "estimate_id": row["estimate_id"] if "estimate_id" in row.keys() else None,
             "client_name": _client_name_for_order(conn, row),
+            "customer_deadline": (
+                row["customer_deadline"]
+                if "customer_deadline" in row.keys()
+                else None
+            ),
+            "internal_deadline": (
+                row["internal_deadline"]
+                if "internal_deadline" in row.keys()
+                else None
+            ),
         }
         for row in conn.execute(sql, params)
     ]
+
+    if deadline_filter not in (None, ""):
+        from printcalc_web.deadline import deadline_filter_matches
+
+        orders = [
+            order
+            for order in orders
+            if deadline_filter_matches(order, deadline_filter)
+        ]
+
+    if sort_key == "id":
+        orders.sort(key=lambda o: o["id"], reverse=reverse)
+    elif sort_key == "created":
+        orders.sort(key=lambda o: o["created_at"], reverse=reverse)
+    elif sort_key == "deadline":
+        # «Без дедлайна» — в конец при любом направлении (ТЗ §18).
+        orders.sort(
+            key=lambda o: (
+                o["customer_deadline"] is None and o["internal_deadline"] is None,
+            )
+        )
+        from printcalc_web.deadline import _parse_ts as _deadline_ts
+
+        orders.sort(
+            key=lambda o: _deadline_ts(
+                o["customer_deadline"] or o["internal_deadline"]
+            )
+            or datetime.max.replace(tzinfo=timezone.utc),
+            reverse=reverse,
+        )
+    elif sort_key == "urgency":
+        from printcalc_web.deadline import URGENCY_ORDER, get_thresholds, urgency_for_order
+
+        thresholds = get_thresholds(conn)
+
+        def urgency_key(order: dict[str, Any]) -> tuple[int, int, str]:
+            info = urgency_for_order(
+                order["status"],
+                order["customer_deadline"],
+                order["internal_deadline"],
+                thresholds,
+            )
+            if info is None:
+                return (URGENCY_ORDER["none"], 0, "")
+            # ТЗ §13: внутри уровня — по ближайшему дедлайну.
+            return (
+                URGENCY_ORDER[info["status"]],
+                0 if info["remaining_seconds"] >= 0 else 1,
+                info["nearest_deadline"],
+            )
+
+        orders.sort(key=urgency_key)
+    return orders
 
 
 def _client_name_for_order(conn: sqlite3.Connection, row: sqlite3.Row) -> str | None:
@@ -815,6 +911,117 @@ def update_order(
     conn.execute("UPDATE orders SET updated_at = ? WHERE id = ?", (utc_now(), order_id))
     conn.commit()
     return get_order(conn, order_id)
+
+
+# ---------- Deadline Engine (РОАДМАП_v8 поток B) ----------
+
+
+def set_order_deadline(
+    conn: sqlite3.Connection,
+    order_id: int,
+    *,
+    deadline_type: str,
+    value: str | None,
+) -> dict[str, Any]:
+    """Устанавливает/меняет/чистит дедлайн заказа (ТЗ §2, §20, §30, §31).
+
+    value=None — удалить («без дедлайна», ТЗ §18). Валидация: внутренний
+    не позже клиентского (если оба заданы); ISO UTC с офсетом. События
+    set/changed/cleared пишутся в deadline_events (аудит ТЗ §30);
+    reminder-пороги сбрасываются, чтобы сработать заново без спама (§31).
+    """
+    from printcalc_web.deadline import (
+        clear_reminders_for_reschedule,
+        format_deadline_input,
+        record_deadline_change,
+    )
+
+    order = get_order(conn, order_id)
+    if deadline_type not in ("customer", "internal"):
+        raise StoreError(f"недопустимый тип дедлайна: {deadline_type!r}")
+    column = f"{deadline_type}_deadline"
+    old_value: str | None = order.get(column)
+    new_value: str | None = None
+    if value is not None:
+        new_value = format_deadline_input(value)
+    if old_value == new_value:
+        return order  # пустое изменение — не спамим журнал
+    if new_value is not None:
+        # ТЗ §20: internal_deadline <= customer_deadline (если оба заданы).
+        from printcalc_web.deadline import _parse_ts
+
+        if deadline_type == "internal":
+            customer = order.get("customer_deadline")
+            customer_ts = _parse_ts(customer) if customer else None
+            new_ts = _parse_ts(new_value)
+            if customer_ts is not None and new_ts is not None and new_ts > customer_ts:
+                raise StoreError(
+                    "Внутренний дедлайн не может быть позже дедлайна клиента"
+                )
+        else:
+            internal = order.get("internal_deadline")
+            internal_ts = _parse_ts(internal) if internal else None
+            new_ts = _parse_ts(new_value)
+            if internal_ts is not None and new_ts is not None and internal_ts > new_ts:
+                raise StoreError(
+                    "Внутренний дедлайн не может быть позже дедлайна клиента"
+                )
+    conn.execute(
+        f"UPDATE orders SET {column} = ?, updated_at = ? WHERE id = ?",
+        (new_value, utc_now(), order_id),
+    )
+    kind = "set" if old_value is None else "changed"
+    if new_value is None:
+        kind = "cleared"
+    record_deadline_change(
+        conn,
+        order_id,
+        deadline_type,
+        kind,
+        old_value=old_value,
+        new_value=new_value,
+    )
+    clear_reminders_for_reschedule(conn, order_id, deadline_type)
+    conn.commit()
+    return get_order(conn, order_id)
+
+
+def deadline_summary(conn: sqlite3.Connection) -> dict[str, int]:
+    """Счётчики шапки списка (ТЗ §24): overdue/critical/today/no_deadline."""
+    from printcalc_web.deadline import (
+        get_thresholds,
+        urgency_for_order,
+    )
+
+    orders = list_orders(conn)
+    thresholds = get_thresholds(conn)
+    summary = {"overdue": 0, "critical": 0, "today": 0, "no_deadline": 0}
+    from datetime import datetime, timezone
+
+    now = datetime.now(timezone.utc)
+    for order in orders:
+        info = urgency_for_order(
+            order["status"],
+            order["customer_deadline"],
+            order["internal_deadline"],
+            thresholds,
+            now=now,
+        )
+        if info is None:
+            has_deadline = bool(
+                order["customer_deadline"] or order["internal_deadline"]
+            )
+            if not has_deadline:
+                summary["no_deadline"] += 1
+            continue
+        if info["status"] == "overdue":
+            summary["overdue"] += 1
+        elif info["status"] in ("critical", "very_critical"):
+            summary["critical"] += 1
+        nearest = info["nearest_deadline"]
+        if datetime.fromisoformat(nearest).date() == now.date():
+            summary["today"] += 1
+    return summary
 
 
 # ---------- конструктор разделов заказа ----------
