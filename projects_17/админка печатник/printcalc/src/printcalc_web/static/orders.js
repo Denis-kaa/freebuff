@@ -319,3 +319,6 @@ $("#btn-order-consume").addEventListener("click", async () => {
 });
 
 loadOrders();
+
+/* Живая проверка Deadline UI (scripts/deadline_ui_smoke.js) ждёт готовности. */
+document.body.dataset.ordersReady = "1";

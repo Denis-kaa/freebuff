@@ -10,6 +10,7 @@ from __future__ import annotations
 import csv
 import io
 import sqlite3
+from pathlib import Path
 from collections.abc import Iterator
 from typing import Any, Literal
 
@@ -26,12 +27,21 @@ router = APIRouter(prefix="/api")
 
 
 def get_conn(request: Request) -> Iterator[sqlite3.Connection]:
-    """Зависимость: соединение с БД приложения (один коннект на запрос)."""
-    db_path = request.app.state.db_path
-    conn = connect(db_path)
+    """Зависимость: fresh-коннект на запрос (check_same_thread=False).
+
+    Dependency и endpoint одного запроса живут в РАЗНЫХ потоках threadpool
+    (поймано смоуком: ProgrammingError под нагрузкой) — привязка к потоку
+    принципиально не работает. Коннект создаётся на запрос и закрывается
+    после; параллельность между запросами обеспечивает WAL + SQLite-локи.
+    Это ВЕРНУЛО исходную модель «один коннект на запрос» (строже по памяти,
+    чем пул), убрав только потоковую ловушку sqlite3.
+    """
+    conn = connect(request.app.state.db_path)
     try:
         yield conn
     finally:
+        if conn.in_transaction:
+            conn.rollback()  # незакрытая транзакция не переживает запрос
         conn.close()
 
 
@@ -631,7 +641,22 @@ def replace_deadline_settings(
 
 @router.get("/orders/{order_id}")
 def read_order(order_id: int, conn: sqlite3.Connection = Depends(get_conn)) -> dict[str, Any]:
-    return _store_guard(store.get_order, conn, order_id)
+    order = _store_guard(store.get_order, conn, order_id)
+    # urgency в детальном ответе (ТЗ §22): диалог заказа рисует статус
+    # «Осталось: …» из order.urgency; без этого блок ДЕДЛАЙН врёт
+    # («в финальном статусе» для активного заказа) — поймано UI-смоуком.
+    if order.get("status") not in store.FINAL_ORDER_STATUSES:
+        from printcalc_web.deadline import get_thresholds, urgency_for_order
+
+        info = urgency_for_order(
+            order["status"],
+            order["customer_deadline"],
+            order["internal_deadline"],
+            get_thresholds(conn),
+        )
+        if info is not None:
+            order["urgency"] = info
+    return order
 
 
 @router.patch("/orders/{order_id}")

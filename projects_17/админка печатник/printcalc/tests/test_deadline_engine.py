@@ -83,9 +83,12 @@ def test_urgency_computed_not_stored(client: ASGITestClient) -> None:
     orders = client.get("/api/orders").json()["orders"]
     row = next(o for o in orders if o["id"] == order_id)
     assert row["urgency"]["status"] == "critical"
-    # В самом заказе (get_order) поля urgency нет — это вычисляемый слой.
+    # urgency вычисляется на чтении (в БД не хранится); в детальном ответе
+    # присутствует — §22: диалог заказа рисует «Осталось: …» из order.urgency
+    # (правка контракта по итогам живого UI-смоука: без urgency в /orders/{id}
+    # блок ДЕДЛАЙН показывал «в финальном статусе» для активного заказа).
     order = client.get(f"/api/orders/{order_id}").json()
-    assert "urgency" not in order
+    assert order["urgency"]["status"] == "critical"
     # Сам дедлайн хранится (сравнение до секунды: format_deadline_input
     # нормализует микросекунды ввода — timespec="seconds").
     stored = deadline.parse_deadline(order["customer_deadline"])

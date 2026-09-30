@@ -376,10 +376,19 @@ def default_db_path() -> Path:
 
 
 def connect(db_path: Path | None = None) -> sqlite3.Connection:
-    """Открывает соединение и гарантированно создаёт схему (идемпотентно)."""
+    """Открывает соединение и гарантированно создаёт схему (идемпотентно).
+
+    check_same_thread=False (Deadline Engine, 2026-09-29): FastAPI выполняет
+    sync-dependency и sync-endpoint одного запроса в РАЗНЫХ потоках
+    anyio-threadpool — strict-режим давал ProgrammingError/500 под
+    параллельной нагрузкой (поймано живым смоуком /orders). Безопасность
+    обеспечивают: WAL (параллельные читатели/писатели между коннектами),
+    один процесс сервиса и сериализация одного коннекта через threading.Lock
+    в api.get_conn. Пулы потоков — единственный execution-контекст (no forks).
+    """
     path = Path(db_path) if db_path is not None else default_db_path()
     path.parent.mkdir(parents=True, exist_ok=True)
-    conn = sqlite3.connect(path)
+    conn = sqlite3.connect(path, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA foreign_keys = ON")
     conn.execute("PRAGMA journal_mode = WAL")

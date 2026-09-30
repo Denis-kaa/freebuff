@@ -1,6 +1,7 @@
 {% set active = 'orders' %}
 {% set page_title = 'Заказы' %}
 {% set page_script %}<script src="/static/orders.js"></script>{% endset %}
+{%- if deadline_smoke %}{% set page_script %}{{ page_script }}<script src="/static/deadline_ui_smoke.js"></script>{% endset %}{% endif -%}
 {% include "_shell_top.html" %}
 
   <div class="panel">

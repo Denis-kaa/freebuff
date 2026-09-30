@@ -46,7 +46,10 @@ def home(request: Request):
 @router.get("/orders")
 def orders_page(request: Request):
     """Список заказов с фильтром по статусу (Р2 + Р5б)."""
-    return _render(request, "orders.html")
+    # deadline_smoke=1 — живая проверка UI (scripts/deadline_ui_smoke.js).
+    # Флаг только ДОБАВЛЯЕТ смоук-скрипт, бизнес-логику не трогает.
+    smoke = request.query_params.get("deadline_smoke") == "1"
+    return _render(request, "orders.html", {"deadline_smoke": smoke})
 
 
 @router.get("/estimates")
