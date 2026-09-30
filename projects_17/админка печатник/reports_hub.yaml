@@ -5,8 +5,11 @@ title: "Печатникъ — админка печатного цеха"
 # accent не задан: акцента из логотипа нет → системный синий (спека §6.3).
 docs:
   - "PROJECT_STATUS_REPORT.md"
+  - "РОАДМАП_v8_ASSISTANT_DEADLINE.md"
   - "РОАДМАП_v7_SMART_ORDER.md"
   - "РОАДМАП_v6_ЕДИНАЯ_СИСТЕМА.md"
+  - "DEADLINE_ENGINE_IMPLEMENTATION_REPORT.md"
+  - "LOCAL_OPERATOR_ASSISTANT_IMPLEMENTATION_REPORT.md"
   - "PHASE_*_REPORT.md"
   - "PHASE1_OPEN_QUESTIONS.md"
   - "research/FINAL_REPORT.md"

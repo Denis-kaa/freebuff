@@ -35,6 +35,8 @@ VPS_PORT="${REGCLOUD_VPS_PORT:-22}"
 SSH_PORT_BIND="${REGCLOUD_SSH_BIND:-10022}"      # VPS-порт → whimco:22
 WEB_PORT_BIND="${REGCLOUD_WEB_BIND:-10080}"      # VPS-порт → whimco:8300
 WEB_LOCAL_PORT="${REGCLOUD_WEB_LOCAL:-8300}"
+HUB_PORT_BIND="${REGCLOUD_HUB_BIND:-10081}"      # VPS-порт → whimco:8310 (reports-hub)
+HUB_LOCAL_PORT="${REGCLOUD_HUB_LOCAL:-8310}"
 
 PRIVKEY="/root/.ssh/regcloud_tunnel_key"
 PUBKEY_OUT="/tmp/regcloud_tunnel_key.pub"
@@ -109,8 +111,10 @@ ensure_tunnel() {
   if has_loop; then
     return 0   # loop жив — он сам держит/переподнимает ssh
   fi
+  # /run — tmpfs: после перезагрузки каталога нет, создаём обязательно
+  mkdir -p "$STATE_DIR"
   rm -f "$PIDFILE"
-  log "запускаю tunnel-loop → $VPS_USER@$VPS_HOST (-R :$SSH_PORT_BIND→22, :$WEB_PORT_BIND→$WEB_LOCAL_PORT)"
+  log "запускаю tunnel-loop → $VPS_USER@$VPS_HOST (-R :$SSH_PORT_BIND→22, :$WEB_PORT_BIND→$WEB_LOCAL_PORT, :$HUB_PORT_BIND→$HUB_LOCAL_PORT)"
   nohup bash "$0" loop >>"$LOG" 2>&1 </dev/null &
   echo $! > "$PIDFILE"
 }
@@ -123,6 +127,7 @@ cmd_loop() {
     ssh $SSH_BASE_OPTS "$VPS_USER@$VPS_HOST" \
       -R "*:$SSH_PORT_BIND:127.0.0.1:22" \
       -R "*:$WEB_PORT_BIND:127.0.0.1:$WEB_LOCAL_PORT" \
+      -R "*:$HUB_PORT_BIND:127.0.0.1:$HUB_LOCAL_PORT" \
       -N -o ExitOnForwardFailure=yes >>"$LOG" 2>&1 \
       || log "ssh -R завершился (retry через ${LOOP_INTERVAL}s)"
     sleep "$LOOP_INTERVAL"
@@ -131,11 +136,11 @@ cmd_loop() {
 
 cmd_status() {
   echo "VPS:            $VPS_USER@$VPS_HOST:$VPS_PORT"
-  echo "binds:          *:$SSH_PORT_BIND → 127.0.0.1:22 ; *:$WEB_PORT_BIND → 127.0.0.1:$WEB_LOCAL_PORT"
+  echo "binds:          *:$SSH_PORT_BIND → 127.0.0.1:22 ; *:$WEB_PORT_BIND → 127.0.0.1:$WEB_LOCAL_PORT ; *:$HUB_PORT_BIND → 127.0.0.1:$HUB_LOCAL_PORT"
   echo "loop pid:       $(has_loop && cat "$PIDFILE" || echo 'нет')"
   # живая проверка туннеля: спросить VPS, слушает ли он наши порты (best effort)
   if timeout 20 ssh $SSH_BASE_OPTS "$VPS_USER@$VPS_HOST" \
-      "ss -tln | grep -E ':($SSH_PORT_BIND|$WEB_PORT_BIND)\b'" >>"$LOG" 2>&1; then
+      "ss -tln | grep -E ':($SSH_PORT_BIND|$WEB_PORT_BIND|$HUB_PORT_BIND)\b'" >>"$LOG" 2>&1; then
     echo "tunnel:         LIVE (VPS слушает порты)"
   else
     echo "tunnel:         down/unknown (VPS-проверка не прошла — см. $LOG)"
