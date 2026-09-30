@@ -623,6 +623,33 @@ def read_deadline_settings(
     return {"thresholds": get_thresholds(conn)}
 
 
+class DeadlineQueryIn(BaseModel):
+    """Дедлайн-вопрос оператора помощнику (ТЗ §26 второй части)."""
+
+    text: str = Field(min_length=1)
+
+
+@router.post("/deadline/query")
+def post_deadline_query(
+    payload: DeadlineQueryIn,
+    conn: sqlite3.Connection = Depends(get_conn),
+) -> dict[str, Any]:
+    """Отчёт по дедлайн-фразе («что сегодня горит?») или 404 «не дедлайн-вопрос».
+
+    Помощник вызывает этот эндпоинт ПЕРЕД общим analyze: если фраза
+    распознана закрытым словарём интентов (ANTI-6b), отвечает вычисляемый
+    слой Deadline Engine — тот же, что у списка /orders (ТЗ §26: «не
+    создавать отдельный источник данных»); иначе помощник уходит в
+    существующий /order/analyze.
+    """
+    from printcalc_web.deadline import execute_deadline_query
+
+    report = execute_deadline_query(conn, payload.text)
+    if report is None:
+        raise HTTPException(status_code=404, detail="не дедлайн-вопрос")
+    return report
+
+
 class DeadlineThresholdsIn(BaseModel):
     """Частичное обновление порогов (ключи — закрытый словарь)."""
 

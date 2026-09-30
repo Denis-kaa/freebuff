@@ -1,7 +1,7 @@
 # РОАДМАП_v8 — Local Operator Assistant v2 + Deadline Engine
 
 > **Статус:** ACTIVE · **Дата:** 2026-09-27 · **Источник:** prompts/2.md (ТЗ владельца, 2 части)
-> **Прогресс:** Поток A — ГОТОВ (коммит ecd10e5, 507 тестов, отчёт §39); поток B — B1-аудит выполнен 09-29.
+> **Прогресс:** Поток A — ГОТОВ (коммит ecd10e5, 507 тестов, отчёт §39); поток B — ГОТОВ (коммит 7be6d09, 539 тестов) + B7 связь с помощником и B8 thread-фикс/живой смоук (2026-09-30, 556 тестов).
 > **Принцип ТЗ:** Preserve existing contracts. Extend, don't rewrite. Чат = интерфейс,
 > Smart Order = бизнес-логика. Никаких параллельных parser/rules/settings/notification систем.
 > **Основа фактов:** PRINTNIK_SERVER_STATE.md (снимок 09-27) — проба 7 запросов уже выявила
@@ -139,6 +139,31 @@ bridge ведёт в калькулятор. 0,5×0,5 не ломается. Ц�
 - ТЗ §32: расчёт времени (8 кейсов), статусы (6), финальные (3), фильтрация, сортировка,
   уведомления (idempotency), timezone. DEADLINE_ENGINE_IMPLEMENTATION_REPORT.md
   + коммит/деплой/смоук.
+
+### B7. Связь с помощником (ТЗ §26 второй части) — ВЫПОЛНЕН 2026-09-30
+- deadline.py: `DEADLINE_QUERY_INTENTS` — закрытый словарь интентов (ANTI-6b):
+  просрочено/горит/сегодня/завтра/на этой неделе/без дедлайна/активные →
+  существующие фильтры deadline_filter_matches; `match_deadline_query` (нормализация
+  фразы: lowercase, ё→е, пунктуация) + `execute_deadline_query` — отчёт из СУЩЕСТВУЮЩЕГО
+  вычисляемого слоя (urgency_for_order, тот же расчёт, что у списка /orders; «не создавать
+  отдельный источник данных»).
+- POST /api/deadline/query: отчёт по фразе или 404 «не дедлайн-вопрос».
+- assistant.js: перехват дедлайн-фраз ДО /order/analyze; 404 → обычный поток;
+  рендер отчёта (title, счётчики, строки с 🟢🟡🟠🔴⛔ + remaining).
+- Сознательно НЕ распознаётся «до 18:00» (время суток вне закрытого словаря — честное
+  отсутствие вместо ложного ответа; кандидат в следующий этап).
+- Тесты: test_deadline_query.py (17) — интенты, отчёт, финальные, API-контракт.
+
+### B8. Живая проверка /orders и thread-фикс — ВЫПОЛНЕН 2026-09-30
+- Живой смоук выявил прод-баг: GET /orders?sort=urgency ~50-70% ошибок 500 под
+  параллельной нагрузкой (sqlite3 ProgrammingError: sync-dependency и sync-endpoint
+  FastAPI выполняет в разных потоках anyio-threadpool).
+- Фикс: db.connect() → check_same_thread=False; api.get_conn() → fresh-conn-per-request
+  с rollback в finally. Репро 120 параллельных GET → все 200.
+- read_order(): вычисляемый urgency в детальном ответе (§22 — без него диалог показывал
+  неверный статус; поймано UI-смоуком).
+- scripts/deadline_ui_smoke.js (+ static-копия, ?deadline_smoke=1): живой UI-смоук —
+  data-deadline-smoke="ok".
 
 ---
 

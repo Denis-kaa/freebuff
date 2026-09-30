@@ -121,6 +121,45 @@ function warningLines(verdict) {
   return (verdict.warnings || []).map((w) => `⚠ ${esc(w)}`);
 }
 
+/* ---------- Дедлайн-вопросы (ТЗ §26 второй части) ----------
+ * Отчёт рендерится из POST /api/deadline/query — тот же вычисляемый
+ * слой Deadline Engine, что у списка /orders. Отдельного источника
+ * данных помощник не создаёт; LLM нет — закрытый словарь интентов.
+ */
+
+const URGENCY_VIEW = {
+  overdue: "⛔",
+  very_critical: "🔴",
+  critical: "🟠",
+  urgent: "🟡",
+  warning: "🟢",
+  normal: "🟢",
+};
+
+function renderDeadlineReport(report) {
+  const counts = report.counts || {};
+  const counterLine = [
+    `просрочено: ${counts.overdue || 0}`,
+    `критично: ${(counts.very_critical || 0) + (counts.critical || 0)}`,
+    `сегодня: ${counts.urgent || 0}`,
+    `без дедлайна: ${counts.no_deadline || 0}`,
+  ].join(" · ");
+  const rows = (report.orders || []).map((o) => {
+    const icon = URGENCY_VIEW[o.urgency_status] || "⚪";
+    const name = (o.items && o.items.length ? o.items.join(", ") : "заказ");
+    const client = o.client_name ? ` — ${esc(o.client_name)}` : "";
+    return `<div class="chat-line">${icon} <b>#${o.id}</b> ${esc(name)}${client}
+      <span class="muted">· ${esc(o.remaining)} · ${esc(o.status)}</span></div>`;
+  });
+  return [
+    `<div class="chat-block"><div class="chat-block-title">${esc(report.title)}</div>`,
+    `<div class="chat-line muted">${esc(counterLine)}</div>`,
+    rows.length ? rows.join("") : `<div class="chat-line">ничего не найдено.</div>`,
+    `</div>`,
+    `<div class="chat-line muted">Источник: Order/Deadline API (ТЗ §26) — тот же расчёт, что у списка заказов.</div>`,
+  ].join("");
+}
+
 /* ---------- A6: 8 режимов (§18–26) ---------- */
 
 const MODES = {
@@ -301,6 +340,19 @@ async function send(text) {
   addUser(trimmed);
   $("#assistant-text").value = "";
   try {
+    // Дедлайн-вопросы (ТЗ §26) перехватываются ДО analyze: если фраза
+    // распознана закрытым словарём интентов — отвечает Deadline API;
+    // 404 = «не дедлайн-вопрос» → обычный поток анализа.
+    try {
+      const report = await apiFetch("/deadline/query", {
+        method: "POST",
+        body: JSON.stringify({ text: trimmed }),
+      });
+      addBubble("assistant", renderDeadlineReport(report));
+      return;
+    } catch (err) {
+      if (!/не дедлайн-вопрос/.test(String(err.message))) throw err;
+    }
     const verdict = await apiFetch("/order/analyze", { method: "POST", body: JSON.stringify({ text: trimmed }) });
     lastVerdict = verdict;
     window.__assistantAcceptedOps = [];

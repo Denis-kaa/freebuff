@@ -398,3 +398,121 @@ def deadline_filter_matches(
     if filter_key == "week":
         return day <= target <= day + timedelta(days=7)
     raise StoreError(f"неизвестный фильтр дедлайнов: {filter_key!r}")
+
+
+# ---------- запросы помощника (ТЗ §26 второй части) --------------------------
+
+
+#: Закрытый словарь дедлайн-интентов (ANTI-6b, ТЗ §26): фраза-фрагмент →
+#: (фильтр deadline_filter_matches, заголовок отчёта). Распознавание —
+#: детерминированное substring-совпадение нормализованной фразы; LLM нет.
+DEADLINE_QUERY_INTENTS: tuple[tuple[str, str, str], ...] = (
+    ("просроче", "overdue", "Просроченные"),
+    ("горит", "today", "Горит сегодня"),
+    ("сегодня", "today", "Горит сегодня"),
+    ("завтра", "tomorrow", "На завтра"),
+    ("на этой неделе", "week", "На этой неделе"),
+    ("неделе", "week", "На этой неделе"),
+    ("без дедлайна", "no_deadline", "Без дедлайна"),
+    ("активные", "active", "Активные с дедлайном"),
+)
+
+
+def normalize_query(text: str) -> str:
+    """Нормализация фразы для сопоставления интентов: lowercase, ё→е,
+    пунктуация → пробел, схлопывание пробелов."""
+    lowered = text.lower().replace("ё", "е")
+    cleaned = "".join(ch if ch.isalnum() else " " for ch in lowered)
+    return " ".join(cleaned.split())
+
+
+def match_deadline_query(text: str) -> tuple[str, str] | None:
+    """Фраза оператора → (filter_key, title) или None (не дедлайн-вопрос).
+
+    Закрытый словарь (ANTI-6b): неизвестные фразы НЕ выдумывают интент —
+    помощник уходит в обычный analyze. «Что нужно закончить до 18:00»
+    отдельно не распознаётся сознательно (честное отсутствие вместо
+    ложного ответа: TODO-заметка в РОАДМАП_v8).
+    """
+    normalized = normalize_query(text)
+    if not normalized:
+        return None
+    for fragment, filter_key, title in DEADLINE_QUERY_INTENTS:
+        if fragment in normalized:
+            return (filter_key, title)
+    return None
+
+
+def execute_deadline_query(
+    conn: Any,
+    text: str,
+    *,
+    now: datetime | None = None,
+) -> dict[str, Any] | None:
+    """Дедлайн-вопрос оператора → отчёт из СУЩЕСТВУЮЩЕГО Deadline-слоя
+    (ТЗ §26: «не создавать отдельный источник данных»; расчёты — те же
+    urgency_for_order/deadline_filter_matches, что у списка /orders).
+
+    Возвращает None, если фраза не дедлайн-вопрос (помощник уходит в
+    обычный analyze); иначе словарь с интентом, счётчиками и строками.
+    Строка: id, статус, urgency-статус, remaining-текст, клиент, позиции.
+    """
+    matched = match_deadline_query(text)
+    if matched is None:
+        return None
+    filter_key, title = matched
+    from printcalc_web import store
+
+    current = now if now is not None else datetime.now(timezone.utc)
+    thresholds = get_thresholds(conn)
+    orders = store.list_orders(conn, sort="urgency", direction="asc")
+    rows: list[dict[str, Any]] = []
+    for order in orders:
+        if not deadline_filter_matches(order, filter_key, now=current):
+            continue
+        info = urgency_for_order(
+            order["status"],
+            order["customer_deadline"],
+            order["internal_deadline"],
+            thresholds,
+            now=current,
+        )
+        remaining_text = (
+            format_remaining(info["remaining_seconds"]) if info is not None else "—"
+        )
+        rows.append(
+            {
+                "id": order["id"],
+                "status": order["status"],
+                "urgency_status": info["status"] if info is not None else None,
+                "remaining": remaining_text,
+                "nearest_deadline": info["nearest_deadline"] if info is not None else None,
+                "client_name": order.get("client_name") or "",
+                "items": [item["name"] for item in order.get("items", [])],
+            }
+        )
+    counts = {
+        "overdue": 0,
+        "very_critical": 0,
+        "critical": 0,
+        "urgent": 0,
+        "warning": 0,
+        "normal": 0,
+        "no_deadline": 0,
+    }
+    for order in orders:
+        info = urgency_for_order(
+            order["status"],
+            order["customer_deadline"],
+            order["internal_deadline"],
+            thresholds,
+            now=current,
+        )
+        key = info["status"] if info is not None else "no_deadline"
+        counts[key] = counts[key] + 1
+    return {
+        "intent": filter_key,
+        "title": title,
+        "counts": counts,
+        "orders": rows,
+    }
